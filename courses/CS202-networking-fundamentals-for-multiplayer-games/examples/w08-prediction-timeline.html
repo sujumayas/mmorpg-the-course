@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prediction timeline — CS202 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;display:grid;gap:14px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cTrack{height:262px}
+#cTime{height:150px}
+.caption{padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.btn{font:600 .9rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
+.btn.walk{background:var(--ink);color:var(--paper);padding:10px 18px}
+.btn.walk[aria-pressed="true"]{background:var(--moss);border-color:var(--moss)}
+.hint{font-size:.84rem;color:var(--ink-soft)}
+.segs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 14px;font-size:.84rem;margin-top:8px;font-variant-numeric:tabular-nums}
+@media (max-width:600px){.segs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.segs span{display:flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;flex:none}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media (max-width:860px){.controls{grid-template-columns:1fr}}
+.ctl>label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.seg{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px;border:0;padding:0;margin:0;min-width:0}
+.seg legend{font-weight:600;font-size:.92rem;margin-bottom:6px;padding:0}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg span{display:inline-block;font:600 .9rem var(--sans);padding:7px 12px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer}
+.seg input:checked+span{background:var(--ink);color:var(--paper)}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto}
+.tcap{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td:not(:first-child){white-space:nowrap}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 8 · Worked example</p>
+  <h1>Move now, confirm later</h1>
+  <p class="lede">The dumb client waits a full round trip plus four waits before your character moves. The predicted client moves on the next frame, whatever the round trip, unless it snaps to every old snapshot.</p>
+</header>
+
+<div class="panel">
+  <div class="caption" id="insight" aria-live="polite"></div>
+
+  <figure>
+    <figcaption>Track, 0 to 20 m<small>Hollow square = server (the truth). Grey = dumb client (newest snapshot). Filled = predicted client. Red arcs = backward jumps of the predicted client.</small></figcaption>
+    <canvas id="cTrack" role="img" aria-label="Track with server, dumb client and predicted client"></canvas>
+    <div class="btnrow">
+      <button class="btn walk" id="walk" type="button" aria-pressed="false">Hold to walk right</button>
+      <button class="btn" id="replay" type="button">Replay 2 s walk</button>
+      <button class="btn" id="reset" type="button">Reset</button>
+      <span class="hint">Or hold the right arrow key (left arrow walks left).</span>
+    </div>
+  </figure>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rDumb">—</b><span>dumb delay, model average / worst</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rPred">—</b><span>predicted delay, model average</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rOver">—</b><span>dumb overshoot at 6 m/s (average)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rJumps">—</b><span>backward jumps over 1 cm</span></div>
+  </div>
+
+  <figure>
+    <figcaption>One key press, key to screen<small id="timeSub">Each wait drawn at its average, T / 2.</small></figcaption>
+    <canvas id="cTime" role="img" aria-label="Stacked delay bars for the dumb and predicted client"></canvas>
+    <div class="segs" id="segs"></div>
+    <fieldset class="seg" style="margin-top:10px">
+      <legend class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Waits</legend>
+      <label><input type="radio" name="aw" value="avg" checked><span>Average (T / 2)</span></label>
+      <label><input type="radio" name="aw" value="worst"><span>Worst (T)</span></label>
+    </fieldset>
+  </figure>
+
+  <div class="table-wrap">
+    <p class="tcap" id="mCap">Measured in the simulation, last key press</p>
+    <table aria-labelledby="mCap">
+      <thead><tr><th>View</th><th>First visible move</th><th>Stops after release</th><th>Backward jumps</th></tr></thead>
+      <tbody id="mBody"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="rtt">Round trip <output id="oRtt">150 ms</output></label>
+      <input id="rtt" type="range" min="0" max="300" step="10" value="150">
+      <p class="hint" style="margin:4px 0 0">Speed 6 m/s, server tick 60 Hz, fixed.</p>
+    </div>
+    <fieldset class="seg ctl">
+      <legend>Snapshot rate</legend>
+      <label><input type="radio" name="snap" value="10"><span>10 Hz</span></label>
+      <label><input type="radio" name="snap" value="20" checked><span>20 Hz</span></label>
+      <label><input type="radio" name="snap" value="30"><span>30 Hz</span></label>
+      <label><input type="radio" name="snap" value="60"><span>60 Hz</span></label>
+    </fieldset>
+    <fieldset class="seg ctl">
+      <legend>On snapshot</legend>
+      <label><input type="radio" name="mode" value="reconcile"><span>Reconcile (week 9, correct)</span></label>
+      <label><input type="radio" name="mode" value="naive" checked><span>Naive snap</span></label>
+    </fieldset>
+  </div>
+
+  <div class="table-wrap">
+    <p class="tcap" id="tCap">Model delays at this snapshot rate</p>
+    <table aria-labelledby="tCap">
+      <thead><tr><th>Round trip</th><th>Dumb, average</th><th>Dumb, worst</th><th>Predicted, average</th><th>Overshoot, dumb average</th></tr></thead>
+      <tbody id="tBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <p>Model from the week 8 lecture, section 1 and 2: dumb delay = input wait + RTT/2 + server tick wait + snapshot wait + RTT/2 + frame wait; predicted delay = input wait + frame wait. The simulation follows <code>labs/lab09-starter/netsim.py</code> without the snare: 60 Hz ticks, inputs sent every tick with one-way delay RTT/2, the server runs an input on its first tick after arrival, snapshots every 60 / rate ticks, and the client handles a snapshot on its first tick after arrival. The key is sampled on a tick, so measured delays have no input wait.</p>
+  <p id="selftest"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(n,d=1)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const TICK=1/60,SPEED=6,TMS=1000/60,MAXX=20;
+
+// ---------- delay model ----------
+function waits(rtt,rate,worst){const f=worst?1:0.5;return [
+  ['input wait',TMS*f,'--ink-soft'],['up (RTT/2)',rtt/2,'--steel'],['server tick wait',TMS*f,'--moss'],
+  ['snapshot wait',1000/rate*f,'--ochre'],['down (RTT/2)',rtt/2,'--steel'],['frame wait',TMS*f,'--ink-soft']];}
+const dumbDelay=(rtt,rate,worst)=>waits(rtt,rate,worst).reduce((s,w)=>s+w[1],0);
+const predDelay=worst=>(TMS+TMS)*(worst?1:0.5);
+
+// ---------- simulation (matches netsim.py, no snare) ----------
+const r9=v=>Math.round(v*1e9)/1e9;
+function step(x,move){return Math.min(MAXX,Math.max(0,r9(x+move*SPEED*TICK)));}
+function Sim(rtt,rate,mode){
+  this.rtt=rtt;this.every=60/rate;this.mode=mode;this.oneWay=rtt/2000;
+  this.tick=0;this.sx=0;this.ack=0;this.toS=[];this.toC=[];
+  this.dumbX=0;this.predX=0;this.pending=[];
+  this.jumps=[];this.lastMove=0;this.press=null;this.release=null;
+  this.m={dumbFirst:null,predFirst:null,dumbLast:null,predLast:null,back:0,backSum:0};
+  this.prevDumb=0;this.prevPred=0;
+}
+Sim.prototype.run=function(move){
+  const t=this.tick,now=t*TICK+1e-9;
+  // server: run inputs that have arrived, in order
+  const arr=this.toS.filter(m=>m[0]<=now).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  for(const m of arr){this.sx=step(this.sx,m[2]);this.ack=m[1];}
+  this.toS=this.toS.filter(m=>m[0]>now);
+  if(t%this.every===0)this.toC.push([now+this.oneWay,{x:this.sx,ack:this.ack}]);
+  // client: snapshots that have arrived
+  let jump=0;
+  const snaps=this.toC.filter(m=>m[0]<=now).sort((a,b)=>a[0]-b[0]);
+  for(const [,s] of snaps){
+    this.dumbX=s.x;
+    const old=this.predX;this.pending=this.pending.filter(p=>p[0]>s.ack);
+    let x=s.x;if(this.mode==='reconcile')for(const p of this.pending)x=step(x,p[1]);
+    this.predX=x;jump+=x-old;
+  }
+  this.toC=this.toC.filter(m=>m[0]>now);
+  // client: sample and send this tick's input, then predict
+  const seq=t+1;this.toS.push([now+this.oneWay,seq,move]);
+  this.pending.push([seq,move]);
+  const before=this.predX;this.predX=step(this.predX,move);
+  // key press / release bookkeeping
+  if(move!==0&&this.lastMove===0){this.press=t;this.release=null;this.dir=move;
+    this.m={dumbFirst:null,predFirst:null,dumbLast:null,predLast:null,back:0,backSum:0};this.jumps=[];}
+  if(move===0&&this.lastMove!==0)this.release=t;
+  this.lastMove=move;
+  jump=r9(jump);
+  if(this.press!==null){
+    if(Math.abs(jump)>0.01&&Math.sign(jump)===-this.dir){this.m.back++;this.m.backSum+=Math.abs(jump);
+      this.jumps.push({from:r9(before-jump),to:before,ms:(t-this.press)*TMS,size:jump});}
+    if(this.dumbX!==this.prevDumb){if(this.m.dumbFirst===null)this.m.dumbFirst=(t-this.press)*TMS;this.m.dumbLast=t;}
+    if(this.predX!==this.prevPred){if(this.m.predFirst===null)this.m.predFirst=(t-this.press)*TMS;this.m.predLast=t;}
+  }
+  this.prevDumb=this.dumbX;this.prevPred=this.predX;
+  this.tick++;
+};
+Sim.prototype.stops=function(which){const L=this.m[which+'Last'];if(this.release===null||L===null)return null;return Math.max(0,L-this.release)*TMS;};
+function scripted(rtt,rate,mode){const s=new Sim(rtt,rate,mode);for(let t=0;t<=180;t++)s.run(t<120?1:0);return s;}
+
+// ---------- state ----------
+let rtt=150,rate=20,mode='naive',worst=false,sim=null,held={btn:0,right:0,left:0},acc=0,last=null;
+function inputMove(){const r=held.btn||held.right,l=held.left;return r&&!l?1:(l&&!r?-1:0);}
+function prime(){sim=scripted(rtt,rate,mode);render();}
+
+// ---------- drawing ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function drawTrack(){
+  const {g,w,h}=setup($('cTrack'));g.clearRect(0,0,w,h);
+  const L=18,R=w-18,X=x=>L+x/MAXX*(R-L),soft=css('--ink-soft'),ink=css('--ink'),grid=css('--grid'),blood=css('--blood');
+  const lanes=[['server',40],['dumb client',90],['predicted client',140]];
+  g.font='11px '+css('--sans');
+  for(let m=0;m<=MAXX;m++){const x=X(m);g.strokeStyle=grid;g.lineWidth=1;g.beginPath();g.moveTo(x,24);g.lineTo(x,150);g.stroke();
+    if(m%(w<500?5:2)===0){g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText(m+' m',x,152);}}
+  lanes.forEach(([n,y])=>{g.fillStyle=soft;g.textAlign='left';g.textBaseline='bottom';g.fillText(n,L,y-13);g.strokeStyle=soft;g.globalAlpha=.5;g.beginPath();g.moveTo(L,y);g.lineTo(R,y);g.stroke();g.globalAlpha=1;});
+  // jump arcs on the predicted lane, plus a zoomed lane underneath
+  const arc=(a,b,y,hh)=>{g.strokeStyle=blood;g.lineWidth=2;g.beginPath();g.moveTo(a,y);g.quadraticCurveTo((a+b)/2,y+hh,b,y);g.stroke();
+    const d=b<a?1:-1;g.fillStyle=blood;g.beginPath();g.moveTo(b,y);g.lineTo(b+d*7,y+3);g.lineTo(b+d*3,y+8);g.fill();};
+  sim.jumps.forEach(j=>arc(X(j.from),X(j.to),140,18));
+  const zy=196;
+  g.fillStyle=soft;g.textAlign='left';g.textBaseline='bottom';g.font='11px '+css('--sans');
+  if(sim.jumps.length){
+    const xs=sim.jumps.flatMap(j=>[j.from,j.to]),lo=Math.max(0,Math.min(...xs)-0.15),hi=Math.max(...xs)+0.15,Z=x=>L+(x-lo)/(hi-lo)*(R-L);
+    g.fillText('backward jumps, zoomed to '+fmt(lo,2)+'-'+fmt(hi,2)+' m',L,zy-8);
+    g.strokeStyle=soft;g.globalAlpha=.5;g.beginPath();g.moveTo(L,zy);g.lineTo(R,zy);g.stroke();g.globalAlpha=1;
+    for(let m=Math.ceil(lo*10);m<=Math.floor(hi*10);m++){const x=Z(m/10);g.strokeStyle=grid;g.beginPath();g.moveTo(x,zy-5);g.lineTo(x,zy+5);g.stroke();}
+    sim.jumps.slice(0,4).forEach((j,i)=>{const a=Z(j.from),b2=Z(j.to),y=zy+10+i*15;
+      g.strokeStyle=blood;g.lineWidth=2;g.beginPath();g.moveTo(a,y);g.lineTo(b2,y);g.stroke();
+      const d=b2<a?1:-1;g.fillStyle=blood;g.beginPath();g.moveTo(b2,y);g.lineTo(b2+d*7,y-4);g.lineTo(b2+d*7,y+4);g.fill();
+      g.font='600 11px '+css('--sans');g.textBaseline='middle';const lab='−'+fmt(Math.abs(j.size),1)+' m at '+fmt(j.ms)+' ms';
+      const tw=g.measureText(lab).width,right=Math.max(a,b2)+6;if(right+tw<=R){g.textAlign='left';g.fillText(lab,right,y);}else if(Math.min(a,b2)-6-tw>=L){g.textAlign='right';g.fillText(lab,Math.min(a,b2)-6,y);}else{const lx=Math.min(a,b2)+14;g.fillStyle=css('--paper-2');g.fillRect(lx-3,y-7,tw+6,14);g.fillStyle=blood;g.textAlign='left';g.fillText(lab,lx,y);}});
+  } else {
+    g.fillText('backward jumps: none on the last key press',L,zy-8);
+    g.strokeStyle=soft;g.globalAlpha=.5;g.beginPath();g.moveTo(L,zy);g.lineTo(R,zy);g.stroke();g.globalAlpha=1;
+  }
+  // markers
+  const sx=X(sim.sx);g.strokeStyle=ink;g.lineWidth=2.5;g.strokeRect(sx-7,33,14,14);
+  g.fillStyle=css('--ink-soft');g.beginPath();g.arc(X(sim.dumbX),90,8,0,7);g.fill();
+  g.fillStyle=css('--steel');g.beginPath();g.arc(X(sim.predX),140,9,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  $('cTrack').setAttribute('aria-label',`Server at ${fmt(sim.sx,2)} m, dumb client at ${fmt(sim.dumbX,2)} m, predicted client at ${fmt(sim.predX,2)} m. ${sim.m.back} backward jumps.`);
+}
+function drawTime(){
+  const {g,w,h}=setup($('cTime'));g.clearRect(0,0,w,h);
+  const L=78,R=w-12,X=ms=>L+ms/400*(R-L),soft=css('--ink-soft'),grid=css('--grid'),ink=css('--ink');
+  g.font='11px '+css('--sans');
+  for(let ms=0;ms<=400;ms+=50){const x=X(ms);g.strokeStyle=grid;g.beginPath();g.moveTo(x,8);g.lineTo(x,h-22);g.stroke();
+    if(ms%100===0||w>560){g.fillStyle=soft;g.textAlign='center';g.textBaseline='bottom';g.fillText(ms,x,h-6);}}
+  g.textAlign='right';g.fillText('ms',L-8,h-6);
+  const bars=[['dumb',30,waits(rtt,rate,worst)],['predicted',84,[waits(rtt,rate,worst)[0],waits(rtt,rate,worst)[5]]]];
+  bars.forEach(([name,y,segs])=>{
+    g.fillStyle=ink;g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='middle';g.fillText(name,L-8,y+14);
+    let x0=0;segs.forEach((s,i)=>{const a=X(x0),b=X(x0+s[1]);g.fillStyle=css(s[2]);g.globalAlpha=(s[2]==='--ink-soft')?.55:1;g.fillRect(a,y,Math.max(0,b-a),28);g.globalAlpha=1;
+      g.strokeStyle=css('--paper-2');g.lineWidth=1.5;g.strokeRect(a,y,Math.max(0,b-a),28);
+      if(b-a>30){g.fillStyle=css('--paper');g.font='600 11px '+css('--sans');g.textAlign='center';g.fillText(fmt(s[1],s[1]%1?1:0),(a+b)/2,y+14);}
+      x0+=s[1];});
+    g.fillStyle=ink;g.font='700 12px '+css('--sans');g.textAlign='left';g.textBaseline='middle';
+    const tx=X(x0)+6;const lab=fmt(x0,1)+' ms';if(tx+50<w)g.fillText(lab,tx,y+14);else{g.textAlign='right';g.fillStyle=css('--paper');g.fillText(lab,X(x0)-4,y+14);}
+  });
+  $('cTime').setAttribute('aria-label',`Dumb client ${fmt(dumbDelay(rtt,rate,worst))} ms, predicted client ${fmt(predDelay(worst))} ms, ${worst?'worst case':'average'}.`);
+}
+function msText(v){return v===null?'—':(v===0?'same frame (0 ms)':fmt(v)+' ms');}
+function render(){
+  drawTrack();drawTime();
+  const dAvg=dumbDelay(rtt,rate,false),dW=dumbDelay(rtt,rate,true);
+  $('rDumb').textContent=fmt(dAvg)+' / '+fmt(dW)+' ms';
+  $('rPred').textContent=fmt(predDelay(false))+' ms';
+  $('rOver').textContent=fmt(SPEED*dAvg/1000,2)+' m';
+  $('rJumps').textContent=sim.m.back+(sim.m.back?' ('+fmt(sim.m.backSum,1)+' m)':'');
+  $('timeSub').textContent=worst?'Each wait drawn at its worst case, T.':'Each wait drawn at its average, T / 2.';
+  $('segs').innerHTML=waits(rtt,rate,worst).map(s=>`<span><i class="sw" style="background:var(${s[2]});${s[2]==='--ink-soft'?'opacity:.55':''}"></i>${s[0]} ${fmt(s[1])} ms</span>`).join('');
+  const m=sim.m;
+  $('mBody').innerHTML=`<tr><td>Dumb client</td><td>${msText(m.dumbFirst)}</td><td>${msText(sim.stops('dumb'))}</td><td>—</td></tr>`+
+    `<tr class="here"><td>Predicted, ${mode==='naive'?'naive snap':'reconcile'}</td><td>${msText(m.predFirst)}</td><td>${msText(sim.stops('pred'))}</td><td>${m.back}${m.back?' ('+sim.jumps.map(j=>fmt(Math.abs(j.size),1)+' m at '+fmt(j.ms)+' ms').slice(0,4).join(', ')+(m.back>4?', …':'')+')':''}</td></tr>`;
+  $('tCap').textContent=`Model delays at ${rate} Hz snapshots`;
+  $('tBody').innerHTML=[0,50,100,150,250,300].map(r=>`<tr class="${r===rtt?'here':''}"><td>${r} ms</td><td>${fmt(dumbDelay(r,rate,false))} ms</td><td>${fmt(dumbDelay(r,rate,true))} ms</td><td>${fmt(predDelay(false))} ms</td><td>${fmt(SPEED*dumbDelay(r,rate,false)/1000,2)} m</td></tr>`).join('');
+  // caption
+  const st=sim.stops('pred'),df=m.dumbFirst;let c;
+  if(mode==='naive'&&m.back)c=`Predicted, then snapped: starts ${m.predFirst===0?'instantly':'after '+fmt(m.predFirst)+' ms'}, jumps back ${fmt(m.backSum,1)} m, and stops ${st===null?'—':Math.round(st)+' ms'} late. Switch to reconcile.`;
+  else if(mode==='naive')c=`Naive snap at ${rtt} ms round trip: no backward jumps this time${rtt===0?', because snapshots are never older than the prediction':''}. Raise the round trip and replay.`;
+  else c=`Predicted and reconciled: starts in the same frame, ${m.back?m.back+' backward jumps':'no jumps'}, stops ${st===null?'—':(st===0?'in the same frame':Math.round(st)+' ms late')}. The dumb client needs ${df===null?'—':Math.round(df)+' ms'} to start.`;
+  $('insight').textContent=c;
+}
+
+// ---------- loop ----------
+function frame(ts){
+  if(last!==null){acc+=Math.min(0.25,(ts-last)/1000);}
+  last=ts;let n=0;
+  while(acc>=TICK){sim.run(inputMove());acc-=TICK;n++;}
+  if(n)render();
+  requestAnimationFrame(frame);
+}
+
+// ---------- events ----------
+const walk=$('walk');
+function setBtn(v){held.btn=v;walk.setAttribute('aria-pressed',String(!!v));}
+walk.addEventListener('pointerdown',e=>{e.preventDefault();walk.setPointerCapture&&walk.setPointerCapture(e.pointerId);setBtn(1);});
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>walk.addEventListener(ev,()=>setBtn(0)));
+walk.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();setBtn(1);}});
+walk.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')setBtn(0);});
+walk.addEventListener('contextmenu',e=>e.preventDefault());
+function keyTarget(e){const t=e.target;return !(t&&t.matches&&t.matches('input,select,textarea'));}
+window.addEventListener('keydown',e=>{if(!keyTarget(e))return;if(e.key==='ArrowRight'){held.right=1;e.preventDefault();}if(e.key==='ArrowLeft'){held.left=1;e.preventDefault();}});
+window.addEventListener('keyup',e=>{if(e.key==='ArrowRight')held.right=0;if(e.key==='ArrowLeft')held.left=0;});
+window.addEventListener('blur',()=>{held={btn:0,right:0,left:0};walk.setAttribute('aria-pressed','false');});
+$('replay').addEventListener('click',prime);
+$('reset').addEventListener('click',()=>{sim=new Sim(rtt,rate,mode);render();});
+$('rtt').addEventListener('input',e=>{rtt=+e.target.value;$('oRtt').textContent=rtt+' ms';prime();});
+document.querySelectorAll('input[name=snap]').forEach(r=>r.addEventListener('change',()=>{if(r.checked){rate=+r.value;prime();}}));
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',()=>{if(r.checked){mode=r.value;prime();}}));
+document.querySelectorAll('input[name=aw]').forEach(r=>r.addEventListener('change',()=>{if(r.checked){worst=r.value==='worst';render();}}));
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(render,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+
+// ---------- spec test values, checked on load ----------
+function selfTest(){
+  const T=[],eq=(name,got,want)=>T.push({name,got:String(got),want:String(want),ok:String(got)===String(want)});
+  [[0,50,100],[50,100,150],[100,150,200],[150,200,250],[250,300,350]].forEach(([r,a,wst])=>{eq('avg '+r,Math.round(dumbDelay(r,20,false)*10)/10,a);eq('worst '+r,Math.round(dumbDelay(r,20,true)*10)/10,wst);});
+  [[0,'50.0'],[50,'83.3'],[150,'183.3'],[250,'283.3']].forEach(([r,v])=>eq('dumb first '+r,scripted(r,20,'naive').m.dumbFirst.toFixed(1),v));
+  const nv=scripted(150,20,'naive');
+  eq('naive jumps',nv.jumps.map(j=>Math.abs(j.size).toFixed(1)+'@'+j.ms.toFixed(1)).join(' '),'0.5@83.3 0.3@133.3 0.1@183.3');
+  eq('naive stops',nv.stops('pred').toFixed(1),'183.3');
+  eq('predicted avg',predDelay(false).toFixed(1),'16.7');
+  [[0,'0.0'],[50,'83.3'],[150,'183.3'],[250,'283.3']].forEach(([r,v])=>eq('dumb stops '+r,scripted(r,20,'naive').stops('dumb').toFixed(1),v));
+  const rc=scripted(150,20,'reconcile');eq('reconcile jumps',rc.m.back,0);eq('reconcile first',rc.m.predFirst,0);
+  eq('overshoot 150',(SPEED*dumbDelay(150,20,false)/1000).toFixed(2),'1.20');
+  const bad=T.filter(x=>!x.ok);
+  window.CS202_W08_SELFTEST={total:T.length,pass:T.length-bad.length,failures:bad};
+  $('selftest').textContent=`Spec test values checked on load: ${T.length-bad.length} of ${T.length} match the lecture.`;
+  if(bad.length)console.error('Self-test failures',bad);
+}
+selfTest();
+prime();
+requestAnimationFrame(frame);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>

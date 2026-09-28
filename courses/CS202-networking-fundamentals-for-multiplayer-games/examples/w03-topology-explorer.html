@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Topology explorer — CS202 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.caption{font-family:var(--serif);font-size:1.12rem;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"map matrix" "map bars";gap:14px;align-items:start}
+@media (max-width:700px){.grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"map" "matrix" "bars"}}
+.a-map{grid-area:map}.a-matrix{grid-area:matrix}.a-bars{grid-area:bars}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--sans)}
+.node{cursor:grab}
+.node.fixed{cursor:default}
+.node.pick{cursor:pointer}
+.node:focus{outline:none}
+.node:focus-visible .ring{stroke:var(--focus);stroke-width:4}
+.worst{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 8px}
+.worst b{font-size:2rem;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--blood)}
+.worst span{color:var(--ink-soft);font-size:.9rem}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.95rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child{text-align:left}
+td.hot{background:var(--blood);color:var(--paper);font-weight:700;border-radius:4px}
+td.self{color:var(--ink-soft)}
+.nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px;margin-top:16px}
+@media (max-width:900px){.nums{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.1rem;font-variant-numeric:tabular-nums;line-height:1.25}
+.stat small{display:block;font-variant-numeric:tabular-nums;color:var(--ink);font-size:.85rem}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.stat.wide{grid-column:span 2}
+@media (max-width:420px){.stat.wide{grid-column:1/-1}}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:18px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend,.lbl{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+.radio{display:flex;gap:8px;align-items:center;font-weight:400;justify-content:flex-start;margin:2px 0}
+.radio input{accent-color:var(--steel);width:18px;height:18px;margin:0}
+.inline{display:flex;flex-wrap:wrap;gap:4px 14px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+select,input[type=number]{font:inherit;padding:4px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+input[type=number]{width:6em}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.85rem;color:var(--ink-soft);margin:6px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 3 · Worked example</p>
+  <h1>Who pays the upload, and who waits?</h1>
+  <p class="lede">The topology picks whose home connection carries the traffic and which path every action takes. Move the host or the server and watch the worst pair of players change.</p>
+</header>
+
+<section class="panel" aria-label="Topology explorer">
+  <p class="caption" id="caption"></p>
+  <div class="grid">
+    <figure class="a-map">
+      <figcaption>Map<small id="mapHint"></small></figcaption>
+      <svg id="map" viewBox="0 0 640 400" role="group" aria-label="Map of players, server and relay"></svg>
+    </figure>
+    <figure class="a-matrix">
+      <figcaption>One-way latency between players (ms)</figcaption>
+      <div class="worst" aria-live="polite"><b id="worstBig">—</b><span id="worstNote">worst pair</span></div>
+      <table aria-label="One-way latency matrix">
+        <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead>
+        <tbody id="matrix"></tbody>
+      </table>
+    </figure>
+    <figure class="a-bars">
+      <figcaption>Upload per machine<small id="barNote"></small></figcaption>
+      <svg id="bars" viewBox="0 0 420 230" role="img" aria-label="Upload per machine in kbit/s on a log scale"></svg>
+    </figure>
+  </div>
+
+  <div class="nums" aria-live="polite" id="nums"></div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Topology</legend>
+      <label class="radio"><input type="radio" name="topo" value="mesh"> Mesh (peer to peer)</label>
+      <label class="radio"><input type="radio" name="topo" value="server"> Dedicated server</label>
+      <label class="radio"><input type="radio" name="topo" value="listen" checked> Listen server</label>
+      <label class="radio"><input type="radio" name="topo" value="relay"> Relay (P2P through R)</label>
+      <div id="hostWrap" style="margin-top:8px">
+        <span class="lbl">Host</span>
+        <div class="inline" role="radiogroup" aria-label="Listen host">
+          <label class="radio"><input type="radio" name="host" value="A"> A</label>
+          <label class="radio"><input type="radio" name="host" value="B"> B</label>
+          <label class="radio"><input type="radio" name="host" value="C"> C</label>
+          <label class="radio"><input type="radio" name="host" value="D" checked> D</label>
+        </div>
+      </div>
+      <div id="siteWrap" style="margin-top:8px">
+        <span class="lbl">Server site</span>
+        <div class="inline" role="radiogroup" aria-label="Server site">
+          <label class="radio"><input type="radio" name="site" value="S1" checked> S1 (in A's city)</label>
+          <label class="radio"><input type="radio" name="site" value="S2"> S2 (central)</label>
+        </div>
+      </div>
+    </fieldset>
+    <div>
+      <label for="n">Players n <output id="oN">4</output></label>
+      <input id="n" type="range" min="2" max="64" step="1" value="4">
+      <label for="r" style="margin-top:6px">Send rate r <output id="oR">20 Hz</output></label>
+      <input id="r" type="range" min="5" max="60" step="1" value="20">
+      <label for="s" style="margin-top:6px">State bytes s <output id="oS">40</output></label>
+      <input id="s" type="range" min="8" max="200" step="1" value="40">
+      <label for="i" style="margin-top:6px;justify-content:flex-start;align-items:center">Input bytes i <input id="i" type="number" min="1" max="500" step="1" value="12"></label>
+      <p class="hint">Header h = 28 bytes (IPv4 20 + UDP 8), fixed.</p>
+    </div>
+    <div>
+      <fieldset>
+        <legend>Latency source</legend>
+        <label class="radio"><input type="radio" name="src" value="scenario" checked> Scenario (lecture tables)</label>
+        <label class="radio"><input type="radio" name="src" value="map"> Map (0.1 ms per px + 2 ms)</label>
+      </fieldset>
+      <div id="detourWrap" hidden style="margin-top:6px">
+        <label for="detour">Detour on direct A-D <output id="oDetour">25 ms</output></label>
+        <input id="detour" type="range" min="0" max="100" step="1" value="25">
+      </div>
+      <label for="uplink" style="margin-top:10px;justify-content:flex-start;align-items:center">Home uplink
+        <select id="uplink"><option value="1">1 Mbit/s</option><option value="5">5 Mbit/s</option><option value="10" selected>10 Mbit/s</option><option value="20">20 Mbit/s</option></select>
+      </label>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model: week 3 lecture, section 2, and <code>labs/lab03-starter/topology.py</code>. The latency scenario and its numbers are invented for teaching. Mesh peer upload (n − 1) r (s + h). Snapshot n s + h. Client upload r (i + h). Server upload n r (n s + h). Listen host upload (n − 1) r (n s + h). Relay: each peer r (s + h), relay n (n − 1) r (s + h). kbit/s = B/s × 8 / 1000. Latency through a hop is the sum of the two legs.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=x=>Math.round(x).toLocaleString('en-US');
+const k1=x=>(x*8/1000).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const lat=x=>Number.isInteger(x)?String(x):(Math.round(x*10)/10).toFixed(1);
+const P=['A','B','C','D'],H=28;
+const SCN={direct:{'A-B':10,'A-C':35,'A-D':60,'B-C':30,'B-D':55,'C-D':30},
+  servers:{S1:{A:5,B:12,C:33,D:58},S2:{A:25,B:22,C:12,D:25}},relay:{A:20,B:18,C:15,D:20}};
+const SITES={S1:{x:80,y:320},S2:{x:330,y:90}};
+const START={A:{x:40,y:200},B:{x:112,y:150},C:{x:340,y:215},D:{x:600,y:190},S:{...SITES.S1},R:{x:330,y:320}};
+let pos=JSON.parse(JSON.stringify(START));
+let st={topo:'listen',host:'D',site:'S1',src:'scenario',n:4,r:20,s:40,i:12,up:10,detour:25};
+
+// ---- bandwidth (B/s) ----
+const bw={
+  mesh:(n,r,s)=>(n-1)*r*(s+H),
+  snap:(n,s)=>n*s+H,
+  clientDown:(n,r,s)=>r*(n*s+H),
+  clientUp:(r,i)=>r*(i+H),
+  server:(n,r,s)=>n*r*(n*s+H),
+  listen:(n,r,s)=>(n-1)*r*(n*s+H),
+  relayPeer:(r,s)=>r*(s+H),
+  relay:(n,r,s)=>n*(n-1)*r*(s+H)
+};
+// ---- latency ----
+const dist=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y);
+const mapLat=(p,q)=>Math.round((dist(p,q)*0.1+2)*10)/10;
+function d(a,b){
+  if(a===b)return 0;
+  if(st.src==='scenario'){const t=SCN.direct;return t[a+'-'+b]??t[b+'-'+a];}
+  let v=mapLat(pos[a],pos[b]);if((a+b==='AD'||a+b==='DA'))v+=st.detour;return Math.round(v*10)/10;
+}
+function dS(p){return st.src==='scenario'?SCN.servers[st.site][p]:mapLat(pos[p],pos.S);}
+function dR(p){return st.src==='scenario'?SCN.relay[p]:mapLat(pos[p],pos.R);}
+function pair(a,b,topo,via){
+  topo=topo||st.topo;
+  if(topo==='mesh')return d(a,b);
+  if(topo==='server')return Math.round((dS(a)+dS(b))*10)/10;
+  if(topo==='listen'){const h=via||st.host;return Math.round((d(a,h)+d(h,b))*10)/10;}
+  return Math.round((dR(a)+dR(b))*10)/10;
+}
+function worst(topo,via){let best=null;for(let x=0;x<4;x++)for(let y=x+1;y<4;y++){const v=pair(P[x],P[y],topo,via);if(!best||v>best.v+1e-9)best={v,p:P[x]+'-'+P[y],ties:[]};else if(Math.abs(v-best.v)<1e-9)best.ties.push(P[x]+'-'+P[y]);}return best;}
+window.__topo={bw,pair,worst,setState:o=>{Object.assign(st,o);syncControls();update();},state:st};
+
+// ---- map ----
+function nodeLabel(k){
+  if(k==='S')return st.src==='scenario'?`Server ${st.site}. Arrow keys switch site.`:'Server S. Arrow keys move it, Shift for larger steps.';
+  if(k==='R')return st.src==='scenario'?'Relay R, fixed latencies in scenario mode.':'Relay R. Arrow keys move it, Shift for larger steps.';
+  if(st.src==='scenario')return `Player ${k}.`+(st.topo==='listen'?(st.host===k?' Host.':' Press Enter to make host.'):'');
+  return `Player ${k}. Arrow keys move it, Shift for larger steps.`+(st.topo==='listen'?(st.host===k?' Host.':' Press Enter to make host.'):'');
+}
+function drawMap(){
+  const ink=css('--ink'),soft=css('--ink-soft'),steel=css('--steel'),moss=css('--moss'),ochre=css('--ochre'),paper=css('--paper'),blood=css('--blood');
+  const {n,r,s,i}=st,o=[];
+  const K=Math.max(1,Math.min(1.9,640/Math.max(200,$('map').getBoundingClientRect().width||640)));
+  const thick=b=>Math.max(1.2,Math.min(16,1+3*Math.log10(Math.max(1,b)/100)));
+  const line=(p,q,b,c,label)=>{o.push(`<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="${c}" stroke-width="${(thick(b)*Math.sqrt(K)).toFixed(2)}" stroke-opacity=".55" stroke-linecap="round"/>`);
+    if(label){const mx=(p.x+q.x)/2,my=(p.y+q.y)/2;o.push(`<text x="${mx}" y="${my-6}" font-size="${13*K}" text-anchor="middle" fill="${soft}" paint-order="stroke" stroke="${css('--paper-2')}" stroke-width="4">${label}</text>`);}};
+  const w=worst();const hotPairs=[w.p,...w.ties];
+  if(st.topo==='mesh'){for(let x=0;x<4;x++)for(let y=x+1;y<4;y++){const a=P[x],b=P[y];line(pos[a],pos[b],2*bw.relayPeer(r,s),hotPairs.includes(a+'-'+b)?blood:steel,lat(d(a,b)));}}
+  if(st.topo==='server'){P.forEach(p=>line(pos[p],pos.S,bw.clientUp(r,i)+bw.clientDown(n,r,s),steel,lat(dS(p))));}
+  if(st.topo==='listen'){P.filter(p=>p!==st.host).forEach(p=>line(pos[p],pos[st.host],bw.clientUp(r,i)+bw.clientDown(n,r,s),steel,lat(d(p,st.host))));}
+  if(st.topo==='relay'){P.forEach(p=>line(pos[p],pos.R,bw.relayPeer(r,s)*n,steel,lat(dR(p))));}
+  // sites (scenario, server)
+  if(st.src==='scenario'&&st.topo==='server'){Object.entries(SITES).forEach(([k,v])=>{if(k!==st.site){o.push(`<rect x="${v.x-16*K}" y="${v.y-16*K}" width="${32*K}" height="${32*K}" fill="none" stroke="${soft}" stroke-dasharray="4 3" rx="3"/><text x="${v.x}" y="${v.y+32*K}" font-size="${12*K}" text-anchor="middle" fill="${soft}">${k}</text>`);}});}
+  // server square
+  const S=pos.S,showS=st.topo==='server';
+  o.push(`<g class="node${showS?'':' fixed'}" data-k="S" ${showS?'tabindex="0" role="button"':'aria-hidden="true"'} aria-label="${nodeLabel('S')}" opacity="${showS?1:.25}">
+    <rect class="ring" x="${S.x-18*K}" y="${S.y-18*K}" width="${36*K}" height="${36*K}" rx="4" fill="${moss}" stroke="${ink}" stroke-width="1.5"/>
+    <text x="${S.x}" y="${S.y+5*K}" font-size="${15*K}" font-weight="700" text-anchor="middle" fill="${paper}">S</text>
+    ${showS&&st.src==='scenario'?`<text x="${S.x}" y="${S.y+34*K}" font-size="${12*K}" text-anchor="middle" fill="${ink}">${st.site}</text>`:''}</g>`);
+  if(st.topo==='relay'){const R=pos.R;o.push(`<g class="node${st.src==='scenario'?' fixed':''}" data-k="R" tabindex="0" role="button" aria-label="${nodeLabel('R')}">
+    <polygon class="ring" points="${R.x},${R.y-22*K} ${R.x+22*K},${R.y} ${R.x},${R.y+22*K} ${R.x-22*K},${R.y}" fill="${moss}" stroke="${ink}" stroke-width="1.5"/>
+    <text x="${R.x}" y="${R.y+5*K}" font-size="${15*K}" font-weight="700" text-anchor="middle" fill="${paper}">R</text></g>`);}
+  P.forEach(p=>{const q=pos[p],isHost=st.topo==='listen'&&st.host===p;
+    const cls=st.src==='scenario'?(st.topo==='listen'?'node pick':'node fixed'):'node';
+    let crown='';
+    if(isHost){const y=q.y-22*K,c=K;crown=`<polygon points="${q.x-15*c},${y} ${q.x-15*c},${y-14*c} ${q.x-7*c},${y-6*c} ${q.x},${y-17*c} ${q.x+7*c},${y-6*c} ${q.x+15*c},${y-14*c} ${q.x+15*c},${y}" fill="none" stroke="${ochre}" stroke-width="2.5" stroke-linejoin="round"/>`;}
+    o.push(`<g class="${cls}" data-k="${p}" tabindex="0" role="button" aria-label="${nodeLabel(p)}">${crown}
+      <circle class="ring" cx="${q.x}" cy="${q.y}" r="${18*K}" fill="${isHost?ochre:steel}" stroke="${ink}" stroke-width="1.5"/>
+      <text x="${q.x}" y="${q.y+5*K}" font-size="${15*K}" font-weight="700" text-anchor="middle" fill="${paper}">${p}</text></g>`);});
+  const svg=$('map'),f=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.k:null;
+  svg.innerHTML=o.join('');
+  if(f){const g=svg.querySelector(`.node[data-k="${f}"]`);if(g&&g.getAttribute('tabindex'))g.focus({preventScroll:true});}
+  $('mapHint').textContent=(st.src==='scenario'?'Scenario mode: latencies come from the lecture tables. '+(st.topo==='listen'?'Click a player to make it host.':st.topo==='server'?'Drag S between S1 and S2.':'')
+    :'Map mode: drag any machine. Latency = 0.1 ms per px + 2 ms.')+' Line numbers are one-way ms; thickness is bytes per second.';
+}
+// drag
+let drag=null;
+function svgPt(e){const svg=$('map'),pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());}
+function canDrag(k){if(st.src==='map')return k==='S'?st.topo==='server':true;return k==='S'&&st.topo==='server';}
+function clamp(p){p.x=Math.max(22,Math.min(618,p.x));p.y=Math.max(30,Math.min(370,p.y));}
+function snapS(){const a=dist(pos.S,SITES.S1),b=dist(pos.S,SITES.S2);st.site=a<=b?'S1':'S2';pos.S={...SITES[st.site]};document.querySelector(`input[name=site][value=${st.site}]`).checked=true;}
+$('map').addEventListener('pointerdown',e=>{const g=e.target.closest('.node');if(!g)return;const k=g.dataset.k;
+  if(P.includes(k)&&st.topo==='listen'&&st.src==='scenario'){setHost(k);return;}
+  if(!canDrag(k))return;drag={k,moved:false};g.setPointerCapture&&g.setPointerCapture(e.pointerId);e.preventDefault();});
+window.addEventListener('pointermove',e=>{if(!drag)return;const p=svgPt(e);pos[drag.k]={x:p.x,y:p.y};clamp(pos[drag.k]);drag.moved=true;update();});
+window.addEventListener('pointerup',()=>{if(!drag)return;const k=drag.k,moved=drag.moved;drag=null;
+  if(k==='S'&&st.src==='scenario')snapS();
+  if(!moved&&P.includes(k)&&st.topo==='listen')setHost(k);
+  update();});
+$('map').addEventListener('keydown',e=>{const g=e.target.closest('.node');if(!g)return;const k=g.dataset.k;
+  if((e.key==='Enter'||e.key===' ')&&P.includes(k)&&st.topo==='listen'){e.preventDefault();setHost(k);return;}
+  const dirs={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};if(!dirs[e.key])return;
+  if(k==='S'&&st.src==='scenario'&&st.topo==='server'){e.preventDefault();st.site=st.site==='S1'?'S2':'S1';pos.S={...SITES[st.site]};document.querySelector(`input[name=site][value=${st.site}]`).checked=true;update();return;}
+  if(!canDrag(k)||st.src!=='map')return;e.preventDefault();const step=e.shiftKey?50:10;pos[k].x+=dirs[e.key][0]*step;pos[k].y+=dirs[e.key][1]*step;clamp(pos[k]);update();});
+function setHost(k){st.host=k;document.querySelector(`input[name=host][value=${k}]`).checked=true;update();}
+
+// ---- bars ----
+function machines(){
+  const {n,r,s,i,topo}=st,list=[];
+  P.forEach(p=>{let b,role;
+    if(topo==='mesh'){b=bw.mesh(n,r,s);role='peer';}
+    else if(topo==='server'){b=bw.clientUp(r,i);role='client';}
+    else if(topo==='listen'){if(p===st.host){b=bw.listen(n,r,s);role='host';}else{b=bw.clientUp(r,i);role='client';}}
+    else {b=bw.relayPeer(r,s);role='peer';}
+    list.push({k:p,b,role,dc:false});});
+  if(topo==='server')list.push({k:'S',b:bw.server(n,r,s),role:'server',dc:true});
+  if(topo==='relay')list.push({k:'R',b:bw.relay(n,r,s),role:'relay',dc:true});
+  return list;
+}
+function drawBars(){
+  const list=machines(),W=Math.max(260,Math.round($('bars').parentElement.clientWidth-24)),Hh=230,L=52,R=10,T=22,B=40;
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),moss=css('--moss'),ochre=css('--ochre'),blood=css('--blood');
+  const lo=0,hi=5;// log10 kbit/s: 1 .. 100,000
+  const Y=kb=>{const v=Math.log10(Math.max(1,kb));return T+(Hh-T-B)*(1-(Math.min(v,hi)-lo)/(hi-lo));};
+  const o=[];
+  ['1','10','100','1k','10k','100k'].forEach((l,j)=>{const y=Y(Math.pow(10,j));o.push(`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="${grid}"/><text x="${L-6}" y="${y+4}" font-size="11" text-anchor="end" fill="${soft}">${l}</text>`);});
+  o.push(`<text x="4" y="12" font-size="11" fill="${soft}">kbit/s (log)</text>`);
+  const upK=st.up*1000,slot=(W-L-R)/list.length,bwid=Math.min(46,slot*0.6);
+  list.forEach((m,j)=>{const kb=m.b*8/1000,x=L+slot*j+slot/2,over=!m.dc&&kb>upK,c=m.dc?moss:over?blood:(m.role==='host'?ochre:steel);
+    const y=Y(kb);o.push(`<rect x="${x-bwid/2}" y="${y}" width="${bwid}" height="${Math.max(1,Y(1)-y)}" fill="${c}" rx="2"/>`);
+    o.push(`<text x="${x}" y="${y-5}" font-size="11" font-weight="700" text-anchor="middle" fill="${ink}">${kb>=1000?fmt(kb):kb.toFixed(1)}</text>`);
+    o.push(`<text x="${x}" y="${Hh-B+16}" font-size="12" font-weight="700" text-anchor="middle" fill="${ink}">${m.k}</text>`);
+    o.push(`<text x="${x}" y="${Hh-B+30}" font-size="10" text-anchor="middle" fill="${soft}">${m.role}${m.dc?' (DC)':''}</text>`);});
+  const yu=Y(upK);o.push(`<line x1="${L}" y1="${yu}" x2="${W-R}" y2="${yu}" stroke="${ochre}" stroke-width="2" stroke-dasharray="6 4"/>`);
+  const leftOk=list[0].b*8/1000<upK/20;
+  o.push(`<text x="${leftOk?L+4:W-R}" y="${yu-5}" font-size="11" font-weight="700" text-anchor="${leftOk?'start':'end'}" fill="${ochre}" paint-order="stroke" stroke="${css('--paper-2')}" stroke-width="3">home uplink ${st.up} Mbit/s</text>`);
+  $('bars').setAttribute('viewBox',`0 0 ${W} ${Hh}`);$('bars').innerHTML=o.join('');
+  $('barNote').textContent=`Bandwidth for n = ${st.n} players. Green machines sit in a data center and are not compared with the home line.`;
+}
+
+// ---- matrix + numbers ----
+function update(){
+  const {n,r,s,i}=st,w=worst();
+  $('oN').textContent=n;$('oR').textContent=r+' Hz';$('oS').textContent=s;$('oDetour').textContent=st.detour+' ms';
+  // matrix
+  const hot=[w.p,...w.ties];const rows=[];
+  P.forEach(a=>{rows.push(`<tr><th scope="row">${a}</th>`+P.map(b=>{if(a===b)return `<td class="self">—</td>`;const k=a<b?a+'-'+b:b+'-'+a;return `<td class="${hot.includes(k)?'hot':''}">${lat(pair(a,b))}</td>`;}).join('')+'</tr>');});
+  $('matrix').innerHTML=rows.join('');
+  $('worstBig').textContent=`${w.p} ${lat(w.v)} ms`;
+  $('worstNote').textContent='worst pair'+(w.ties.length?` (tied with ${w.ties.join(', ')})`:'')+', '+topoName();
+  // numbers
+  const items=[
+    ['Mesh peer upload',bw.mesh(n,r,s),'--steel'],['Client upload',bw.clientUp(r,i),'--steel'],['Client download',bw.clientDown(n,r,s),'--steel'],
+    ['Dedicated server upload',bw.server(n,r,s),'--moss'],['Listen host upload',bw.listen(n,r,s),'--ochre'],['Relay upload',bw.relay(n,r,s),'--moss'],['Relay peer upload',bw.relayPeer(r,s),'--steel']];
+  let h=items.map(([l,b,c])=>`<div class="stat" style="--c:var(${c})"><b>${fmt(b)} B/s</b><small>${k1(b)} kbit/s</small><span>${l}</span></div>`).join('');
+  h+=`<div class="stat" style="--c:var(--blood)"><b>${lat(w.v)} ms</b><small>${w.p}${w.ties.length?', '+w.ties.join(', '):''}</small><span>worst pair, one way</span></div>`;
+  const rtt=P.map(p=>{let v,to;
+    if(st.topo==='mesh'){v=Math.max(...P.filter(q=>q!==p).map(q=>d(p,q)))*2;to='farthest peer';}
+    else if(st.topo==='server'){v=dS(p)*2;to='S';}
+    else if(st.topo==='listen'){v=d(p,st.host)*2;to=p===st.host?'self':'host '+st.host;}
+    else {v=dR(p)*2;to='R';}
+    return `${p} ${lat(Math.round(v*10)/10)} ms (${to})`;});
+  h+=`<div class="stat wide" style="--c:var(--ink)"><b style="font-size:1rem">${rtt.join(' · ')}</b><span>each player's round trip to what it sends to</span></div>`;
+  h+=`<div class="stat wide" style="--c:var(--ink-soft)"><b style="font-size:1rem">snapshot ${fmt(bw.snap(n,s))} B · header 28 B</b><span>n s + h, one server packet to one client</span></div>`;
+  $('nums').innerHTML=h;
+  // caption: best vs worst host
+  const hosts=P.map(p=>({p,w:worst('listen',p)})).sort((a,b)=>a.w.v-b.w.v);
+  const bestH=hosts[0],worstH=hosts[3];
+  $('caption').textContent=`Same four players. Host at ${bestH.p}: ${lat(bestH.w.v)} ms. Host at ${worstH.p}: ${lat(worstH.w.v)} ms.`;
+  // insight
+  const hostK=bw.listen(n,r,s)*8/1000,upK=st.up*1000,cliK=bw.clientUp(r,i)*8/1000;
+  const nOver=(()=>{for(let m=2;m<=512;m++)if(bw.listen(m,r,s)*8/1000>upK)return m;return null;})();
+  const ws=['mesh','server','listen','relay'].map(t=>t==='server'?['S1','S2'].map(x=>{const keep=st.site;st.site=x;const v=worst('server').v;st.site=keep;return `${x} ${lat(v)}`;}).join(', '):`${t==='listen'?'host '+st.host:t} ${lat(worst(t).v)}`);
+  $('insight').innerHTML=`With ${n} players a listen host uploads <b>${k1(bw.listen(n,r,s))} kbit/s</b>, while each client uploads ${cliK.toFixed(1)}. `+
+    (nOver?`On a ${st.up} Mbit/s uplink the host saturates at <b>${nOver} players</b>. `:'')+
+    `Worst pair by topology, one way: ${ws.join(' · ')} ms.`;
+  drawMap();drawBars();
+}
+function topoName(){return {mesh:'mesh',server:'dedicated server '+(st.src==='scenario'?st.site:'S'),listen:'listen host '+st.host,relay:'relay'}[st.topo];}
+function syncControls(){
+  document.querySelector(`input[name=topo][value=${st.topo}]`).checked=true;
+  document.querySelector(`input[name=host][value=${st.host}]`).checked=true;
+  document.querySelector(`input[name=site][value=${st.site}]`).checked=true;
+  document.querySelector(`input[name=src][value=${st.src}]`).checked=true;
+  $('n').value=st.n;$('r').value=st.r;$('s').value=st.s;$('i').value=st.i;$('uplink').value=st.up;$('detour').value=st.detour;
+  $('hostWrap').hidden=st.topo!=='listen';$('siteWrap').hidden=!(st.topo==='server'&&st.src==='scenario');$('detourWrap').hidden=st.src!=='map';
+  if(st.src==='scenario')pos.S={...SITES[st.site]};
+}
+document.querySelectorAll('input[name=topo]').forEach(x=>x.addEventListener('change',e=>{st.topo=e.target.value;syncControls();update();}));
+document.querySelectorAll('input[name=host]').forEach(x=>x.addEventListener('change',e=>{st.host=e.target.value;update();}));
+document.querySelectorAll('input[name=site]').forEach(x=>x.addEventListener('change',e=>{st.site=e.target.value;pos.S={...SITES[st.site]};update();}));
+document.querySelectorAll('input[name=src]').forEach(x=>x.addEventListener('change',e=>{st.src=e.target.value;if(st.src==='scenario'){pos=JSON.parse(JSON.stringify(START));}syncControls();update();}));
+[['n','n'],['r','r'],['s','s'],['detour','detour']].forEach(([id,k])=>$(id).addEventListener('input',e=>{st[k]=+e.target.value;update();}));
+$('i').addEventListener('input',e=>{const v=+e.target.value;if(v>0){st.i=v;update();}});
+$('uplink').addEventListener('change',e=>{st.up=+e.target.value;update();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(update,60);});
+(function selfTest(){const T=[],eq=(n,g,w)=>T.push({n,g:String(g),w:String(w),ok:String(g)===String(w)});const save={host:st.host,site:st.site,src:st.src};st.src='scenario';
+  eq('mesh8',bw.mesh(8,20,40),9520);eq('up',bw.clientUp(20,12),800);eq('down8',bw.clientDown(8,20,40),6960);eq('server8',bw.server(8,20,40),55680);eq('listen8',bw.listen(8,20,40),48720);eq('server64',bw.server(64,20,40),3312640);
+  const W=(t,v)=>{if(t==='server')st.site=v;if(t==='listen')st.host=v;return worst(t,v).v;};
+  eq('mesh',W('mesh'),60);eq('S1',W('server','S1'),91);eq('S2',W('server','S2'),50);eq('hostA',W('listen','A'),95);eq('hostB',W('listen','B'),85);eq('hostC',W('listen','C'),65);eq('hostD',W('listen','D'),115);eq('relay',W('relay'),40);
+  Object.assign(st,save);const bad=T.filter(x=>!x.ok);window.CS202_W03_SELFTEST={total:T.length,pass:T.length-bad.length,failures:bad};if(bad.length)console.error('Self-test failures',bad);})();
+syncControls();update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rewind hit detection — CS202 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;min-width:0}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:0 0 12px;padding:10px 14px;border-left:4px solid var(--blood);background:var(--paper-2);border-radius:0 10px 10px 0}
+.top{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-bottom:12px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:40px}
+.seg button[aria-checked="true"]{background:var(--ink);color:var(--paper)}
+.sw{display:inline-flex;align-items:center;gap:10px;font:600 .95rem var(--sans);padding:8px 14px 8px 10px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:42px}
+.sw .knob{width:34px;height:20px;border-radius:999px;background:var(--grid);position:relative;flex:0 0 34px}
+.sw .knob::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--paper);box-shadow:0 0 0 1.5px var(--ink-soft);transition:left .15s}
+.sw[aria-checked="true"] .knob{background:var(--moss)}
+.sw[aria-checked="true"] .knob::after{left:17px}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:700px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+.view{height:260px}
+@media (max-width:700px){.view{height:230px}}
+#cShooter{cursor:crosshair}
+#cTime{height:92px}
+.marks{margin:6px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2px 16px;font-size:.84rem;font-variant-numeric:tabular-nums}
+.marks li{display:flex;gap:8px;align-items:baseline}
+.marks i{font-style:normal;font-weight:700;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;color:var(--paper);font-size:.72rem;flex:0 0 18px}
+.marks b{margin-left:auto}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+button{font:600 .9rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:42px;touch-action:manipulation}
+button.primary{background:var(--ink);color:var(--paper)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.stat b.hit{color:var(--moss)}.stat b.miss{color:var(--blood)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 20px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=range]:disabled{opacity:.4}
+.hint{font-size:.85rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%;min-width:0}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.hit{color:var(--moss)}td.miss{color:var(--blood)}
+@media (max-width:560px){th,td{padding:5px 3px;font-size:.78rem;white-space:nowrap}th{white-space:normal}.hide-sm{display:none}}
+h3{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:18px 0 2px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 11 · Worked example</p>
+  <h1>You hit what you saw. Did the server?</h1>
+  <p class="lede">Left, your screen: the target where interpolation drew it, RTT/2 + D in the past. Right, the server when your shot arrives, another RTT/2 later. Rewind moves the target back by R = RTT + D before testing the ray.</p>
+</header>
+
+<section class="panel" aria-label="Lag compensation simulator">
+  <p class="caption" id="caption" aria-live="polite"></p>
+  <div class="top">
+    <div class="seg" role="radiogroup" aria-label="Scenario">
+      <button role="radio" id="scStrafe" aria-checked="true">Strafe</button>
+      <button role="radio" id="scCover" aria-checked="false" tabindex="-1">Cover</button>
+    </div>
+    <button class="sw" role="switch" id="swRewind" aria-checked="false"><span class="knob"></span>Rewind</button>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Shooter's screen<small id="leftSub">target drawn at t − RTT/2 − D</small></figcaption>
+      <canvas id="cShooter" class="view" tabindex="0" role="img" aria-label="Shooter's screen. Click or press Space to fire."></canvas>
+    </figure>
+    <figure>
+      <figcaption>Server when the shot arrives<small id="rightSub">solid: target now · dashed: rewound · faint: what you saw</small></figcaption>
+      <canvas id="cServer" class="view" role="img" aria-label="Server view"></canvas>
+    </figure>
+  </div>
+
+  <div class="actions">
+    <button id="fireCenter" class="primary">Fire at center</button>
+    <button id="fireSliver" class="primary" hidden>Fire at last sliver</button>
+    <button id="pause">Pause</button>
+    <button id="stepT" disabled>Step 1 tick</button>
+    <p class="hint" id="fireHint">Click or tap the shooter's screen to fire at that point. Space fires at the target's center.</p>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="rR">—</b><span>R = RTT + D</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rRused">—</b><span>R used = min(R, R<sub>max</sub>)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rLead">—</b><span>lead needed without rewind, v × R</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rResid">—</b><span>residual lead with the cap</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rHit">—</b><span>last shot</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rPerp">—</b><span>ray to target center (perpendicular)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rW">—</b><span>W, victim behind cover when hit</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rWm">—</b><span>victim past the wall edge, v × W</span></div>
+  </div>
+
+  <figure style="margin-top:10px">
+    <figcaption>Cover timeline<small>ms after the victim's own screen shows them hidden</small></figcaption>
+    <canvas id="cTime" role="img" aria-label="Timeline of the cover shot"></canvas>
+    <ol class="marks" id="marks"></ol>
+  </figure>
+
+  <div class="controls">
+    <div>
+      <label for="rtt">Shooter round trip <output id="oRtt">150 ms</output></label>
+      <input id="rtt" type="range" min="0" max="400" step="10" value="150">
+      <label for="rttv" style="margin-top:8px">Victim round trip <output id="oRttv">40 ms</output></label>
+      <input id="rttv" type="range" min="0" max="200" step="10" value="40">
+    </div>
+    <div>
+      <label for="dly">Interpolation delay D <output id="oD">100 ms</output></label>
+      <input id="dly" type="range" min="0" max="200" step="5" value="100">
+      <label for="spd" style="margin-top:8px">Target speed v <output id="oV">6 m/s</output></label>
+      <input id="spd" type="range" min="2" max="10" step="0.5" value="6">
+    </div>
+    <div>
+      <label for="cap"><span>Rewind cap R<sub>max</sub></span> <output id="oCap">1000 ms</output></label>
+      <input id="cap" type="range" min="50" max="1000" step="10" value="1000">
+      <p class="hint">Source's <code>sv_maxunlag</code> default is 1.0 s. Riot caps VALORANT's rewind but does not publish the value.</p>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <h3>Every round trip at once <small class="hint">center shot in Strafe, last-sliver shot in Cover, current D, v, victim RTT and cap</small></h3>
+  <div class="table-wrap">
+    <table aria-label="Lead and cover window by shooter round trip">
+      <thead><tr><th>Shooter RTT</th><th class="hide-sm">R</th><th>Lead v × R</th><th>No rewind</th><th>Rewind</th><th>Residual lead</th><th>Cover W</th></tr></thead>
+      <tbody id="sweep"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <p>Model: the server ticks at 60 Hz, records the target each tick and interpolates linearly between records. The shot's ray starts at (0, 0) and passes through the aim point. Hit if <code>along = c · d̂ ≥ 0</code> and <code>|c|² − along² ≤ 0.3²</code>. Rewind tests the target at <code>t_arrival − min(RTT + D, R_max)</code>. W = arrival + RTT<sub>v</sub>/2 − (t<sub>hidden</sub> − RTT<sub>v</sub>/2). The cover shot fires when 6 mm of the victim still shows past the wall edge (1 ms before fully hidden at 6 m/s), aimed 5 mm left of the edge. Rules after Bernier (2001) and the Source SDK 2013 lag compensation code.</p>
+  <p id="selftest"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const RADIUS=0.3,LANE=10,TICK_MS=1000/60,SLIVER=0.006,AIM_SLIVER=[-0.005,10];
+
+const P={scenario:'strafe',rtt:150,rttv:40,D:100,v:6,rewind:false,cap:1000};
+
+/* ---------- model ---------- */
+function rawPos(t,o){ // server-time position of the target's center (x); y is the lane
+  if(o.scenario==='cover')return -2+o.v*t/1000;
+  const span=4.2,per=2*span/o.v*1000,u=((t%per)+per)%per,d=o.v*u/1000;
+  return d<=span?-2.1+d:2.1-(d-span);
+}
+function histPos(t,o){ // the server's per-tick history, lerped between ticks
+  const k=Math.floor(t/TICK_MS),ta=k*TICK_MS,tb=(k+1)*TICK_MS,a=rawPos(ta,o),b=rawPos(tb,o);
+  return a+(b-a)*(t-ta)/(tb-ta);
+}
+function vel(t,o){return Math.sign(rawPos(t+1,o)-rawPos(t-1,o))||1;}
+function rayHit(origin,dir,center,r){
+  const n=Math.hypot(dir[0],dir[1]),dx=dir[0]/n,dy=dir[1]/n;
+  const cx=center[0]-origin[0],cy=center[1]-origin[1];
+  const along=cx*dx+cy*dy;
+  const perpSq=cx*cx+cy*cy-along*along,perp=Math.sqrt(Math.max(0,perpSq));
+  return {hit:along>=0&&perpSq<=r*r,perp,along};
+}
+const R_of=o=>o.rtt+o.D;
+const Rused=o=>Math.min(R_of(o),o.cap);
+// A shot fired at shooter time tFire (server clock), aimed at `aim`.
+function shoot(o,tFire,aim){
+  const tSeen=tFire-o.rtt/2-o.D,arrival=tFire+o.rtt/2;
+  const seen=histPos(tSeen,o),now=histPos(arrival,o),tView=arrival-Rused(o),rew=histPos(tView,o);
+  const test=o.rewind?rew:now,res=rayHit([0,0],aim,[test,LANE],RADIUS);
+  return {o:Object.assign({},o),tFire,tSeen,arrival,tView,seen,now,rew,aim,hit:res.hit,perp:res.perp};
+}
+// Cover: the shot that fires when SLIVER of the victim still shows past the wall edge.
+function coverShot(o){
+  const tHidden=(0.3+2)/o.v*1000;                  // server time the center passes x = 0.3
+  const tSeen=tHidden-SLIVER/o.v*1000;             // shooter's screen shows this server moment
+  const tFire=tSeen+o.rtt/2+o.D;
+  const s=shoot(o,tFire,AIM_SLIVER);
+  s.tHidden=tHidden;
+  s.hiddenOwn=tHidden-o.rttv/2;
+  s.death=s.arrival+o.rttv/2;
+  s.W=s.hit?s.death-s.hiddenOwn:null;
+  return s;
+}
+
+/* ---------- live state ---------- */
+let tick=0,paused=false,shot=null,showRay=false,acc=0,lastT=null;
+const tNow=()=>tick*TICK_MS;
+
+/* ---------- drawing ---------- */
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const X0=-4.2,X1=4.2,Y0=-0.6,Y1=11.6;
+function mapper(w,h){const sx=w/(X1-X0),sy=h/(Y1-Y0);return {X:x=>(x-X0)*sx,Y:y=>h-(y-Y0)*sy,sx,sy,inv:(px,py)=>[px/sx+X0,(h-py)/sy+Y0]};}
+function scene(g,w,h,m,serverView){
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),sans=css('--sans');
+  g.clearRect(0,0,w,h);
+  // lane band
+  g.fillStyle=css('--paper');g.globalAlpha=.6;g.fillRect(0,m.Y(10.6),w,m.Y(9.4)-m.Y(10.6));g.globalAlpha=1;
+  g.font='11px '+sans;g.fillStyle=soft;g.strokeStyle=grid;g.lineWidth=1;
+  for(let x=-4;x<=4;x++){const px=m.X(x);g.beginPath();g.moveTo(px,m.Y(0));g.lineTo(px,m.Y(11.3));g.stroke();if(x%2===0){g.textAlign='center';g.textBaseline='top';g.fillText(x+' m',px,m.Y(-0.1));}}
+  g.textAlign='left';g.textBaseline='bottom';g.fillText('lane y = 10',m.X(-4.1),m.Y(10.65));
+  // shooter
+  g.fillStyle=steel;g.beginPath();g.moveTo(m.X(0),m.Y(0.45));g.lineTo(m.X(0)-8,m.Y(0)+6);g.lineTo(m.X(0)+8,m.Y(0)+6);g.closePath();g.fill();
+  g.fillStyle=soft;g.textAlign='left';g.textBaseline='middle';g.fillText('shooter (0, 0)',m.X(0)+12,m.Y(0.1));
+}
+function wall(g,m,alpha){
+  if(P.scenario!=='cover')return;
+  g.globalAlpha=alpha;g.fillStyle=css('--ink-soft');g.fillRect(m.X(0),m.Y(11),m.X(4)-m.X(0),m.Y(9)-m.Y(11));g.globalAlpha=1;
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(m.X(0),m.Y(11),m.X(4)-m.X(0),m.Y(9)-m.Y(11));
+}
+function circle(g,m,x,col,style){
+  const r=RADIUS*m.sx;g.beginPath();g.ellipse(m.X(x),m.Y(LANE),r,Math.max(r*0.9,6),0,0,Math.PI*2);
+  if(style==='solid'){g.fillStyle=col;g.fill();}
+  else if(style==='dash'){g.setLineDash([4,3]);g.strokeStyle=col;g.lineWidth=2.2;g.stroke();g.setLineDash([]);}
+  else {g.globalAlpha=.3;g.fillStyle=col;g.fill();g.globalAlpha=1;}
+}
+function ray(g,m,aim,col){
+  const n=Math.hypot(aim[0],aim[1]),k=11.4/(aim[1]/n||1e-9)/n*n;
+  const t=11.4/aim[1];
+  g.strokeStyle=col;g.lineWidth=2;g.beginPath();g.moveTo(m.X(0),m.Y(0));g.lineTo(m.X(aim[0]*t),m.Y(11.4));g.stroke();
+}
+function drawShooter(){
+  const c=$('cShooter'),{g,w,h}=setup(c),m=mapper(w,h),ochre=css('--ochre'),blood=css('--blood'),moss=css('--moss'),ink=css('--ink'),sans=css('--sans');
+  scene(g,w,h,m,false);
+  const o=P,tSeen=tNow()-o.rtt/2-o.D,x=(showRay&&shot)?shot.seen:histPos(tSeen,o);
+  circle(g,m,x,ochre,'solid');
+  wall(g,m,1);
+  // lead marker: where you would have to aim
+  const lead=o.v*(o.rewind?Math.max(0,R_of(o)-o.cap):R_of(o))/1000;
+  if(P.scenario==='strafe'&&lead>0.005){
+    const dir=vel(showRay&&shot?shot.tSeen:tSeen,o),lx=x+dir*lead,y=m.Y(LANE)+Math.max(RADIUS*m.sx,6)+16;
+    g.strokeStyle=blood;g.fillStyle=blood;g.lineWidth=1.5;g.setLineDash([3,3]);g.beginPath();g.moveTo(m.X(x),y);g.lineTo(m.X(lx),y);g.stroke();g.setLineDash([]);
+    g.beginPath();g.moveTo(m.X(lx),m.Y(LANE)-10);g.lineTo(m.X(lx),m.Y(LANE)+10);g.stroke();
+    g.font='600 11px '+sans;g.textAlign='center';g.textBaseline='top';
+    const lxPx=Math.min(Math.max(m.X(lx),40),w-40);g.fillText(`aim here: lead ${lead.toFixed(2)} m`,lxPx,y+3);
+  }
+  if(showRay&&shot){ray(g,m,shot.aim,shot.hit?moss:blood);
+    g.fillStyle=ink;g.beginPath();g.arc(m.X(shot.aim[0]*10/shot.aim[1]),m.Y(10),3,0,Math.PI*2);g.fill();}
+}
+function drawServer(){
+  const c=$('cServer'),{g,w,h}=setup(c),m=mapper(w,h),ochre=css('--ochre'),blood=css('--blood'),moss=css('--moss'),ink=css('--ink'),soft=css('--ink-soft'),sans=css('--sans');
+  scene(g,w,h,m,true);
+  wall(g,m,.25);
+  if(!shot){
+    circle(g,m,histPos(tNow(),P),ochre,'solid');
+    g.fillStyle=soft;g.font='13px '+sans;g.textAlign='center';g.textBaseline='middle';g.fillText('Fire to see the server\'s view of your shot',w/2,m.Y(5));
+    return;
+  }
+  circle(g,m,shot.seen,ochre,'faint');
+  circle(g,m,shot.rew,ink,'dash');
+  circle(g,m,shot.now,ochre,'solid');
+  ray(g,m,shot.aim,shot.hit?moss:blood);
+  g.font='600 11px '+sans;g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';
+  const lab=(x,txt,dy)=>{g.fillText(txt,Math.min(Math.max(m.X(x),30),w-30),m.Y(LANE)+RADIUS*m.sy+6+dy);};
+  lab(shot.now,'now',0);lab(shot.rew,shot.o.rewind?'rewound':'rewind (off)',14);
+  g.font='700 30px '+sans;g.textAlign='center';g.textBaseline='middle';g.fillStyle=shot.hit?moss:blood;
+  g.fillText(shot.hit?'HIT':'MISS',w/2,m.Y(6.2));
+  g.font='600 14px '+sans;g.fillText(`${shot.perp.toFixed(2)} m from the ${shot.o.rewind?'rewound':'current'} center`,w/2,m.Y(6.2)+26);
+}
+function drawTimeline(){
+  const c=$('cTime'),{g,w,h}=setup(c),ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),steel=css('--steel'),ochre=css('--ochre'),paper=css('--paper'),sans=css('--sans');
+  g.clearRect(0,0,w,h);
+  const pl=14,pr=14,T0=-100,T1=700,X=t=>pl+(w-pl-pr)*(Math.min(T1,Math.max(T0,t))-T0)/(T1-T0),ay=h-24;
+  g.strokeStyle=soft;g.lineWidth=1.2;g.beginPath();g.moveTo(pl,ay);g.lineTo(w-pr,ay);g.stroke();
+  g.font='11px '+sans;g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';
+  const stepMs=w<500?200:100;
+  for(let t=T0;t<=T1;t+=100){g.strokeStyle=grid;g.beginPath();g.moveTo(X(t),ay-4);g.lineTo(X(t),ay+4);g.stroke();if(t%stepMs===0||t===-100)g.fillText(t+'',X(t),ay+6);}
+  const list=$('marks');
+  if(P.scenario!=='cover'||!shot||shot.tHidden===undefined){
+    list.innerHTML='';
+    g.fillStyle=soft;g.font='13px '+sans;g.textAlign='center';g.textBaseline='middle';
+    g.fillText(P.scenario==='cover'?'Press "Fire at last sliver"':'Switch to Cover for the victim\'s side',w/2,(ay)/2);return;
+  }
+  const s=shot,rel=t=>t-s.hiddenOwn;
+  const marks=[[0,'victim hidden on own screen',ink],[rel(s.tHidden),'victim hidden on server',soft],[rel(s.tFire),'shooter\'s screen shows last sliver',steel],[rel(s.arrival),'shot arrives at server',ochre]];
+  if(s.hit)marks.push([rel(s.death),'death reaches victim',blood]);
+  g.font='700 13px '+sans;g.textAlign='center';g.textBaseline='top';g.fillStyle=blood;
+  if(s.hit){const a=X(0),b=X(rel(s.death));g.globalAlpha=.15;g.fillRect(a,6,b-a,ay-6);g.globalAlpha=1;g.fillText(`W = ${Math.round(s.W)} ms`,Math.min(Math.max((a+b)/2,50),w-50),8);}
+  else g.fillText('MISS: no death',w/2,8);
+  marks.forEach(([t,l,col],i)=>{const x=X(t),y=ay-14-(i%2)*18;g.strokeStyle=col;g.lineWidth=2;g.beginPath();g.moveTo(x,ay);g.lineTo(x,y);g.stroke();
+    g.fillStyle=col;g.beginPath();g.arc(x,y,8,0,Math.PI*2);g.fill();g.fillStyle=paper;g.font='700 10px '+sans;g.textAlign='center';g.textBaseline='middle';g.fillText(i+1+'',x,y+.5);});
+  list.innerHTML=marks.map(([t,l,col],i)=>`<li><i style="background:${col}">${i+1}</i>${l}<b>${t>=0?'+':''}${Math.round(t)} ms</b></li>`).join('')+(s.hit?'':'<li><i style="background:'+blood+'">✕</i>no hit, no death message<b></b></li>');
+}
+function fmtM(v){return v.toFixed(2)+' m';}
+function readouts(){
+  const R=R_of(P),Ru=Rused(P);
+  $('rR').textContent=R+' ms';$('rRused').textContent=(P.rewind?Ru:0)+' ms'+(P.rewind?'':' (off)');
+  $('rLead').textContent=fmtM(P.v*R/1000);$('rResid').textContent=fmtM(P.v*Math.max(0,R-P.cap)/1000);
+  if(shot){$('rHit').textContent=shot.hit?'HIT':'MISS';$('rHit').className=shot.hit?'hit':'miss';$('rPerp').textContent=fmtM(shot.perp);}
+  else{$('rHit').textContent='—';$('rHit').className='';$('rPerp').textContent='—';}
+  if(shot&&shot.tHidden!==undefined){$('rW').textContent=shot.hit?Math.round(shot.W)+' ms':'no hit';$('rWm').textContent=shot.hit?fmtM(shot.o.v*shot.W/1000):'—';}
+  else{$('rW').textContent='—';$('rWm').textContent='—';}
+}
+function texts(){
+  let c;
+  if(P.scenario==='strafe'){
+    if(shot&&!shot.o.rewind&&!shot.hit)c=`You hit what you saw. The server disagreed by ${shot.perp.toFixed(1)} m. Turn on rewind.`;
+    else if(shot&&shot.o.rewind&&shot.hit)c='With rewind the server moves the target back R = RTT + D and your center shot lands. Now try the Cover scenario.';
+    else if(shot&&shot.o.rewind&&!shot.hit)c=`Rewind is capped at ${shot.o.cap} ms, so the server rewinds ${Rused(shot.o)} of the ${R_of(shot.o)} ms. Lead the target by the red marker, or lower your round trip.`;
+    else c='Fire at the target on your screen. Click it, or press "Fire at center".';
+  }else{
+    if(!shot||shot.tHidden===undefined)c='The victim runs behind the wall. Press "Fire at last sliver" to shoot the last frame your screen shows them.';
+    else if(shot.hit)c=`The victim had been behind cover on their own screen for ${Math.round(shot.W)} ms (${(shot.o.v*shot.W/1000).toFixed(2)} m past the edge) when the death message arrived. Drag the shooter's round trip, then set a cap.`;
+    else if(!shot.o.rewind)c=`Rewind is off. The server tests the shot against where the victim is when it arrives, ${shot.perp.toFixed(2)} m from your ray and behind the wall. Turn rewind on.`;
+    else c=`With the cap at ${shot.o.cap} ms the server only rewinds ${Rused(shot.o)} ms. The victim is already behind the wall there, so the shot misses. The shooter pays for the latency now.`;
+  }
+  $('caption').textContent=c;
+  const R=R_of(P);
+  $('insight').innerHTML=`Your screen is ${P.rtt/2 + P.D} ms old (RTT/2 + D), and your shot takes another ${P.rtt/2} ms to arrive. Without rewind you must lead a ${P.v} m/s target by <b>${(P.v*R/1000).toFixed(2)} m</b>, ${(P.v*R/1000/RADIUS).toFixed(1)} hitbox radii. With rewind the victim can die up to RTT<sub>s</sub> + D + RTT<sub>v</sub> = <b>${R+P.rttv} ms</b> after reaching cover${P.cap<R?`, but your cap limits that to ${P.cap+P.rttv} ms and hands you ${(P.v*(R-P.cap)/1000).toFixed(2)} m of lead instead`:''}.`;
+  const subL=$('leftSub');subL.textContent=`target drawn at t − RTT/2 − D = t − ${P.rtt/2+P.D} ms`;
+}
+function sweep(){
+  let h='';
+  for(const rtt of [0,50,100,150,250,400]){
+    const o=Object.assign({},P,{rtt}),R=R_of(o);
+    const tf=strafeTestFire(o),off=shoot(Object.assign({},o,{rewind:false}),tf,[histPos(tf-o.rtt/2-o.D,o),LANE]),on=shoot(Object.assign({},o,{rewind:true}),tf,[histPos(tf-o.rtt/2-o.D,o),LANE]);
+    const cs=coverShot(Object.assign({},o,{rewind:true,scenario:'cover'}));
+    h+=`<tr class="${rtt===P.rtt?'here':''}"><td>${rtt} ms</td><td class="hide-sm">${R} ms</td><td>${(o.v*R/1000).toFixed(2)} m</td><td class="${off.hit?'hit':'miss'}">${off.hit?'hit':'miss'}</td><td class="${on.hit?'hit':'miss'}">${on.hit?'hit':'miss'}</td><td>${(o.v*Math.max(0,R-o.cap)/1000).toFixed(2)} m</td><td class="${cs.hit?'':'miss'}">${cs.hit?Math.round(cs.W)+' ms':'miss'}</td></tr>`;
+  }
+  $('sweep').innerHTML=h;
+}
+// a strafe fire time whose view-to-arrival window lies on one straight leg
+function strafeTestFire(o){const tSeen=0.3/o.v*1000;return tSeen+o.rtt/2+o.D;}
+function drawAll(){drawShooter();drawServer();drawTimeline();readouts();texts();}
+
+/* ---------- actions ---------- */
+function fireAt(aim){
+  if(P.scenario!=='strafe')return;
+  shot=shoot(P,tNow(),aim);showRay=true;setPaused(true);drawAll();
+}
+function fireCenter(){fireAt([histPos(tNow()-P.rtt/2-P.D,P),LANE]);}
+function fireSliver(){
+  shot=coverShot(P);showRay=true;tick=Math.round(shot.tFire/TICK_MS);setPaused(true);
+  shot.tFireTick=tick;drawAll();
+}
+function setPaused(v){paused=v;$('pause').textContent=v?'Play':'Pause';$('stepT').disabled=!v;acc=0;lastT=null;}
+function frame(ts){
+  if(!paused){
+    if(lastT===null)lastT=ts;acc+=Math.min(100,ts-lastT);lastT=ts;
+    let n=0;while(acc>=TICK_MS&&n<6){advance();acc-=TICK_MS;n++;}
+    if(n){drawShooter();if(!shot)drawServer();}
+  }else lastT=null;
+  requestAnimationFrame(frame);
+}
+function advance(){
+  tick++;showRay=false;
+  if(P.scenario==='cover'&&histPos(tNow()-P.rtt/2-P.D,P)>4.6)tick=0;
+}
+
+$('cShooter').addEventListener('click',e=>{
+  if(P.scenario!=='strafe')return;
+  const r=e.currentTarget.getBoundingClientRect(),m=mapper(r.width,r.height),p=m.inv(e.clientX-r.left,e.clientY-r.top);
+  if(p[1]<=0.2)return;fireAt([p[0],p[1]]);
+});
+function onSpace(e){if(e.key===' '||e.code==='Space'){e.preventDefault();P.scenario==='strafe'?fireCenter():fireSliver();}}
+$('cShooter').addEventListener('keydown',onSpace);
+document.addEventListener('keydown',e=>{if(e.target===document.body)onSpace(e);});
+$('fireCenter').addEventListener('click',fireCenter);
+$('fireSliver').addEventListener('click',fireSliver);
+$('pause').addEventListener('click',()=>{if(paused){shot&&P.scenario==='strafe'&&(showRay=false);}setPaused(!paused);drawAll();});
+$('stepT').addEventListener('click',()=>{advance();drawAll();});
+function setScenario(s){
+  P.scenario=s;$('scStrafe').setAttribute('aria-checked',s==='strafe');$('scCover').setAttribute('aria-checked',s==='cover');
+  $('scStrafe').tabIndex=s==='strafe'?0:-1;$('scCover').tabIndex=s==='cover'?0:-1;
+  $('fireCenter').hidden=s!=='strafe';$('fireSliver').hidden=s!=='cover';
+  $('fireHint').textContent=s==='strafe'?'Click or tap the shooter\'s screen to fire at that point. Space fires at the target\'s center.':'The shot fires on the last frame your screen shows a sliver of the victim, aimed 5 mm left of the wall edge.';
+  shot=null;showRay=false;tick=0;
+  if(s==='cover')fireSliver();else drawAll();
+}
+$('scStrafe').addEventListener('click',()=>setScenario('strafe'));
+$('scCover').addEventListener('click',()=>setScenario('cover'));
+for(const b of [$('scStrafe'),$('scCover')])b.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const s=P.scenario==='strafe'?'cover':'strafe';setScenario(s);$(s==='strafe'?'scStrafe':'scCover').focus();}});
+$('swRewind').addEventListener('click',()=>{P.rewind=!P.rewind;$('swRewind').setAttribute('aria-checked',P.rewind);refire();});
+function refire(){ // re-judge the last shot under the new settings, so the change is visible at once
+  if(shot){if(shot.tHidden!==undefined)shot=coverShot(P);else{const aim=shot.aim;const tf=shot.tFire;shot=shoot(P,tf,aim);}}
+  sweep();drawAll();
+}
+const bind=(id,out,key,fmt)=>$(id).addEventListener('input',e=>{P[key]=+e.target.value;$(out).textContent=fmt(+e.target.value);refire();});
+bind('rtt','oRtt','rtt',v=>v+' ms');bind('rttv','oRttv','rttv',v=>v+' ms');bind('dly','oD','D',v=>v+' ms');
+bind('spd','oV','v',v=>v+' m/s');bind('cap','oCap','cap',v=>v+' ms');
+window.addEventListener('resize',drawAll);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+
+/* ---------- self-test (spec test values) ---------- */
+function selftest(){
+  const fails=[];let n=0;
+  const eq=(name,got,want,tol)=>{n++;if(!(Math.abs(got-want)<=(tol===undefined?0.005:tol)))fails.push(`${name}: got ${got}, want ${want}`);};
+  const ok=(name,c)=>{n++;if(!c)fails.push(name);};
+  const base={scenario:'strafe',rtt:150,rttv:40,D:100,v:6,rewind:false,cap:1000};
+  const leads={0:0.60,50:0.90,100:1.20,150:1.50,250:2.10,400:3.00},W={0:139,50:189,100:239,150:289,250:389,400:539};
+  for(const rtt of [0,50,100,150,250,400]){
+    const o=Object.assign({},base,{rtt});
+    eq(`lead ${rtt}`,o.v*R_of(o)/1000,leads[rtt]);
+    const tf=strafeTestFire(o),aim=[histPos(tf-o.rtt/2-o.D,o),LANE];
+    ok(`center shot ${rtt} misses without rewind`,!shoot(o,tf,aim).hit);
+    ok(`center shot ${rtt} hits with rewind`,shoot(Object.assign({},o,{rewind:true}),tf,aim).hit);
+    const cs=coverShot(Object.assign({},o,{rewind:true,scenario:'cover'}));
+    ok(`cover ${rtt} hits (no cap)`,cs.hit);eq(`cover W ${rtt}`,cs.W,W[rtt],0.01);
+    const cc=coverShot(Object.assign({},o,{rewind:true,scenario:'cover',cap:200}));
+    if(rtt<=100){ok(`cap 200 ${rtt} hits`,cc.hit);eq(`cap 200 W ${rtt}`,cc.W,W[rtt],0.01);}else ok(`cap 200 ${rtt} misses`,!cc.hit);
+  }
+  for(const [rtt,want] of [[150,0.30],[250,0.90],[400,1.80]])eq(`residual lead ${rtt}`,6*Math.max(0,rtt+100-200)/1000,want);
+  const rt=rayHit([0,0],[0,1],[0.25,12],0.3);ok('ray test hit',rt.hit);eq('ray test perp',rt.perp,0.25,1e-9);
+  // first screen shot
+  const fs=shoot(base,400,[histPos(225,base),LANE]);ok('first screen miss',!fs.hit);eq('first screen perp',fs.perp,1.50);
+  $('selftest').textContent=fails.length?`Self-test: ${fails.length} of ${n} checks differ from the spec.`:`Self-test on load: all ${n} spec values match.`;
+  if(fails.length)console.error('w11 self-test failed',fails);
+}
+
+/* ---------- first screen: strafe, RTT 150, rewind off, one center shot already fired ---------- */
+selftest();sweep();
+tick=24;                                   // t = 400 ms: the screen shows x = -0.75 m moving right
+shot=shoot(P,tNow(),[histPos(tNow()-P.rtt/2-P.D,P),LANE]);showRay=true;
+setPaused(true);drawAll();
+requestAnimationFrame(frame);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+})();
+</script>
+</body>
+</html>

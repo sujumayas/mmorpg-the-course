@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jitter buffer — CS202 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
+@media (max-width:700px){.layout{grid-template-columns:minmax(0,1fr)}}
+.views{display:grid;gap:14px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.caption{font-family:var(--serif);font-size:1.12rem;margin:0 0 12px}
+.scroller{overflow-x:auto;overflow-y:hidden}
+svg{display:block}
+svg text{font-family:var(--sans)}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;align-content:start}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px}
+.stat b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.stat.wide{grid-column:1/-1}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+select,input[type=number]{font:inherit;padding:5px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+select{width:100%}
+input[type=number]{width:6.5em}
+.check{display:flex;gap:8px;align-items:center;font-weight:400;justify-content:flex-start;margin-top:10px}
+.check input{width:18px;height:18px;accent-color:var(--moss);margin:0}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.85rem;color:var(--ink-soft);margin:6px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.data{font-size:.85rem;color:var(--ink-soft);margin:10px 0 0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 2 · Worked example</p>
+  <h1>Buy smoothness with latency</h1>
+  <p class="lede">A jitter buffer holds every packet until <i>base + B</i>, then plays it. Arrivals are uneven. Playout is not. Packets that miss the deadline are late.</p>
+</header>
+
+<section class="panel" aria-label="Jitter buffer explorer">
+  <p class="caption" id="caption"></p>
+  <div class="layout">
+    <div class="views">
+      <figure>
+        <figcaption>Timeline<small>Sent every 50 ms. Arrived at send + base + e. Played at send + base + B.</small></figcaption>
+        <div class="scroller" id="tlScroll"><svg id="tl" role="img" aria-label="Timeline of sent, arrived and played packets"></svg></div>
+      </figure>
+      <figure>
+        <figcaption>Extra delay, sorted<small>One bar per packet. Bars above the B line arrive too late to play.</small></figcaption>
+        <div class="scroller"><svg id="bars" role="img" aria-label="Sorted extra delays with the buffer line"></svg></div>
+      </figure>
+    </div>
+    <div class="nums" aria-live="polite">
+      <div class="stat" style="--c:var(--ink-soft)"><b id="nN">—</b><span>packets n</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="nBase">—</b><span>base (one way)</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nMean">—</b><span>mean of e</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nMed">—</b><span>median</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nSd">—</b><span>sample SD</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nJ">—</b><span>RFC 3550 jitter</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nP90">—</b><span>P90</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nP95">—</b><span>P95</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nP99">—</b><span>P99</span></div>
+      <div class="stat" style="--c:var(--ink)"><b id="nB">—</b><span>buffer B</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="nLate">—</b><span>late packets</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="nFrac">—</b><span>late fraction</span></div>
+      <div class="stat wide" style="--c:var(--ochre)"><b id="nFelt">—</b><span>felt one-way latency, base + B</span></div>
+      <div class="stat wide" style="--c:var(--ochre)"><b id="nCost">—</b><span>cost of the last packet: B for 0% late minus B for one late</span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="b">Buffer B <output id="oB">18 ms</output></label>
+      <input id="b" type="range" min="0" max="120" step="1" value="18" aria-describedby="bHint">
+      <p class="hint" id="bHint">Arrows move 1 ms. Page Up and Page Down move 10.</p>
+    </div>
+    <div>
+      <span class="lbl">Snap to late target</span>
+      <div class="chips" role="group" aria-label="Snap B to a late target" id="snaps">
+        <button class="chip" type="button" data-t="0.20">20%</button>
+        <button class="chip" type="button" data-t="0.10">10%</button>
+        <button class="chip" type="button" data-t="0.05">5%</button>
+        <button class="chip" type="button" data-t="0.01">1%</button>
+        <button class="chip" type="button" data-t="0">0%</button>
+      </div>
+      <p class="hint">Sets B to the smallest observed e whose late fraction is at or below the target.</p>
+    </div>
+    <div>
+      <label for="ds">Dataset</label>
+      <select id="ds">
+        <option value="home" selected>Home connection (lecture, 20 values)</option>
+        <option value="bursty">Bursty evening (20 values)</option>
+        <option value="random">Random (200 values, seeded)</option>
+      </select>
+      <label for="seed" id="seedWrap" hidden style="margin-top:8px;justify-content:flex-start;align-items:center;font-weight:400">Seed <input id="seed" type="number" min="1" max="999999" step="1" value="202"></label>
+      <label class="check"><input type="checkbox" id="sd2"> Show mean + 2 SD</label>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+  <p class="data" id="data"></p>
+</section>
+
+<footer>Model: week 2 lecture, sections 2 and 3, and <code>labs/lab02-starter/analyze.py</code>. Percentiles are inclusive with linear interpolation, h = (n − 1)p. SD uses n − 1. RFC 3550 jitter: J += (|e<sub>i</sub> − e<sub>i−1</sub>| − J) / 16, in send order. Late means e<sub>i</sub> &gt; B. Random data: e = U(0, 5), plus U(20, 80) with probability 0.06, from a seeded generator.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2=x=>x.toFixed(2);
+const f1=x=>(Math.round(x*10)/10).toString();
+const DELTA=50,BASE=20;
+const SETS={
+  home:[0,2,1,3,0,5,1,18,2,0,1,4,2,55,1,0,3,16,2,1],
+  bursty:[3,4,2,30,34,28,3,2,4,3,2,41,38,3,2,3,4,2,3,2]
+};
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function randomSet(seed){const r=mulberry32(seed),v=[];for(let i=0;i<200;i++){let e=r()*5;if(r()<0.06)e+=20+r()*60;v.push(Math.round(e*10)/10);}return v;}
+
+// ---- stats ----
+function pctl(v,p){const s=[...v].sort((a,b)=>a-b),h=(s.length-1)*p,lo=Math.floor(h),hi=Math.ceil(h);return s[lo]+(s[hi]-s[lo])*(h-lo);}
+function mean(v){return v.reduce((a,b)=>a+b,0)/v.length;}
+function sd(v){const m=mean(v);return Math.sqrt(v.reduce((a,b)=>a+(b-m)*(b-m),0)/(v.length-1));}
+function rfc(v){let J=0;for(let i=1;i<v.length;i++)J+=(Math.abs(v[i]-v[i-1])-J)/16;return J;}
+function lateCount(v,B){return v.filter(x=>x>B+1e-9).length;}
+function bufferFor(v,t){const s=[...new Set(v)].sort((a,b)=>a-b);for(const b of s)if(lateCount(v,b)/v.length<=t+1e-12)return b;return s[s.length-1];}
+function stats(v){
+  const m=mean(v),S=sd(v);
+  const b0=bufferFor(v,0),b1=[...new Set(v)].sort((a,b)=>a-b).find(b=>lateCount(v,b)<=1);
+  return {n:v.length,mean:m,median:pctl(v,.5),sd:S,p90:pctl(v,.9),p95:pctl(v,.95),p99:pctl(v,.99),J:rfc(v),m2sd:m+2*S,b0,b1,cost:b0-b1};
+}
+window.__jb={stats:(name)=>stats(SETS[name]),lateCount:(name,B)=>lateCount(SETS[name],B),bufferFor:(name,t)=>bufferFor(SETS[name],t),sets:SETS};
+(function selfTest(){const T=[],eq=(n,g,w)=>T.push({n,g:String(g),w:String(w),ok:String(g)===String(w)}),f1=v=>(Math.round(v*10)/10).toFixed(1);
+  const h=stats(SETS.home),e=stats(SETS.bursty),f2=v=>v.toFixed(2);
+  eq('mean',f2(h.mean),'5.85');eq('median',f2(h.median),'2.00');eq('sd',f2(h.sd),'12.57');eq('p90',f2(h.p90),'16.20');eq('p95',f2(h.p95),'19.85');eq('J',f2(h.J),'8.18');eq('m2sd',f2(h.m2sd),'30.98');
+  [[0,16],[3,5],[5,3],[16,2],[18,1],[55,0]].forEach(([B,n])=>eq('late '+B,lateCount(SETS.home,B),n));
+  eq('bursty median',f2(e.median),'3.00');eq('bursty p90',f2(e.p90),'34.40');eq('bursty p95',f2(e.p95),'38.15');eq('bursty late 4',lateCount(SETS.bursty,4),5);
+  const bad=T.filter(x=>!x.ok);window.CS202_W02_SELFTEST={total:T.length,pass:T.length-bad.length,failures:bad};if(bad.length)console.error('Self-test failures',bad);})();
+
+let data=SETS.home,dsName='home',B=18,showSd=false;
+
+// ---- drawing ----
+function timeline(st){
+  const n=data.length,sc=$('tlScroll'),avail=Math.max(280,sc.clientWidth);
+  const tEnd=Math.ceil(((n-1)*DELTA+BASE+Math.max(Math.max(...data),B)+30)/100)*100;
+  const L=56,R=14;let scale=(avail-L-R)/tEnd;const minPx=16;if(DELTA*scale<minPx)scale=minPx/DELTA;
+  const W=Math.max(avail,Math.round(L+R+tEnd*scale)),X=t=>L+t*scale;
+  const ySent=24,yArr=92,yPlay=150,H=182;
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),blood=css('--blood'),moss=css('--moss');
+  const o=[];
+  const step=[100,200,250,500,1000,2000].find(s=>s*scale>=48)||2000;
+  for(let t=0;t<=tEnd;t+=step){const x=X(t);o.push(`<line x1="${x}" y1="12" x2="${x}" y2="${H-22}" stroke="${grid}"/>`);
+    o.push(`<text x="${x}" y="${H-8}" font-size="11" text-anchor="middle" fill="${soft}">${t.toLocaleString('en-US')}</text>`);}
+  [[ySent,'sent'],[yArr,'arrived'],[yPlay,'played']].forEach(([y,l])=>{o.push(`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="${soft}"/>`);o.push(`<text x="6" y="${y+4}" font-size="12" font-weight="700" fill="${ink}">${l}</text>`);});
+  const r=n>50?2.5:4;
+  data.forEach((e,i)=>{
+    const s=i*DELTA,a=s+BASE+e,dl=s+BASE+B,late=e>B+1e-9;
+    o.push(`<line x1="${X(s)}" y1="${ySent}" x2="${X(a)}" y2="${yArr}" stroke="${late?blood:steel}" stroke-opacity=".45" stroke-width="1"/>`);
+    o.push(`<line x1="${X(dl)}" y1="${yArr-7}" x2="${X(dl)}" y2="${yArr+7}" stroke="${ink}" stroke-width="1.2" stroke-dasharray="2 2"/>`);
+    o.push(`<circle cx="${X(s)}" cy="${ySent}" r="${r}" fill="${ink}"/>`);
+    o.push(`<circle cx="${X(a)}" cy="${yArr}" r="${r+(late?1:0)}" fill="${late?blood:steel}"/>`);
+    if(late&&n<=50)o.push(`<text x="${X(a)}" y="${yArr+20}" font-size="10.5" font-weight="700" text-anchor="middle" fill="${blood}">late</text>`);
+    if(!late){o.push(`<line x1="${X(a)}" y1="${yArr}" x2="${X(dl)}" y2="${yPlay}" stroke="${moss}" stroke-opacity=".35"/>`);o.push(`<circle cx="${X(dl)}" cy="${yPlay}" r="${r}" fill="${moss}"/>`);}
+    else o.push(`<text x="${X(dl)}" y="${yPlay+4}" font-size="${r*3.4}" text-anchor="middle" fill="${blood}">×</text>`);
+  });
+  o.push(`<text x="${W-R}" y="${H-22}" font-size="10" text-anchor="end" fill="${soft}">ms</text>`);
+  const svg=$('tl');svg.setAttribute('width',W);svg.setAttribute('height',H);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.innerHTML=o.join('');
+}
+function bars(st){
+  const n=data.length,svgEl=$('bars'),avail=Math.max(280,svgEl.parentElement.clientWidth);
+  const W=avail,H=240,L=44,R=Math.min(150,Math.max(96,W*0.22)),T=26,Bm=18;
+  const sorted=[...data].sort((a,b)=>a-b);
+  const yMax=Math.max(sorted[n-1]*1.08,B*1.08,showSd?st.m2sd*1.08:0,10);
+  const Y=v=>T+(H-T-Bm)*(1-v/yMax),bw=(W-L-R)/n;
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),blood=css('--blood'),moss=css('--moss'),ochre=css('--ochre'),paper=css('--paper-2');
+  const o=[];
+  const tick=yMax>100?20:yMax>40?10:5;
+  for(let v=0;v<=yMax;v+=tick){o.push(`<line x1="${L}" y1="${Y(v)}" x2="${W-R}" y2="${Y(v)}" stroke="${grid}"/>`);o.push(`<text x="${L-6}" y="${Y(v)+4}" font-size="11" text-anchor="end" fill="${soft}">${v}</text>`);}
+  sorted.forEach((e,i)=>{const late=e>B+1e-9,h=Math.max(1,Y(0)-Y(e));o.push(`<rect x="${L+i*bw+bw*0.12}" y="${Y(0)-h}" width="${Math.max(1,bw*0.76)}" height="${h}" fill="${late?blood:steel}"/>`);});
+  // stat ticks on right margin
+  const marks=[['median',st.median,ink],['P95',st.p95,ink],['mean',st.mean,ink]];
+  const placed=[];
+  marks.sort((a,b)=>b[1]-a[1]).forEach(([l,v,c])=>{let y=Y(v);placed.forEach(p=>{if(Math.abs(p-y)<13)y=p+13;});placed.push(y);
+    o.push(`<line x1="${W-R}" y1="${Y(v)}" x2="${W-R+8}" y2="${Y(v)}" stroke="${c}" stroke-width="2"/>`);
+    o.push(`<text x="${W-R+11}" y="${y+4}" font-size="11" fill="${c}">${l} ${f2(v)}</text>`);});
+  if(showSd){o.push(`<line x1="${L}" y1="${Y(st.m2sd)}" x2="${W-R}" y2="${Y(st.m2sd)}" stroke="${moss}" stroke-width="2" stroke-dasharray="7 4"/>`);
+    o.push(`<text x="${L+4}" y="${Y(st.m2sd)-5}" font-size="11" font-weight="700" fill="${moss}">mean + 2 SD = ${f2(st.m2sd)}</text>`);}
+  const late=lateCount(data,B);
+  const lbl=`B = ${f1(B)} ms, ${late} of ${n} late (${fmtPct(late/n)})`;
+  o.push(`<line x1="${L}" y1="${Y(B)}" x2="${W-R}" y2="${Y(B)}" stroke="${ochre}" stroke-width="2.5"/>`);
+  const tw=lbl.length*6.3+12,fits=L+4+tw<=W-R-4,lx=fits?L+4:W-tw-4,ly=fits?Math.max(2,Y(B)-22):2;
+  o.push(`<rect x="${lx}" y="${ly}" width="${tw}" height="18" rx="4" fill="${ochre}"/>`);
+  o.push(`<text x="${lx+tw/2}" y="${ly+13}" font-size="11.5" font-weight="700" text-anchor="middle" fill="${paper}">${lbl}</text>`);
+  o.push(`<text x="${L}" y="${14}" font-size="11" fill="${soft}">e (ms)</text>`);
+  svgEl.setAttribute('width',W);svgEl.setAttribute('height',H);svgEl.setAttribute('viewBox',`0 0 ${W} ${H}`);svgEl.innerHTML=o.join('');
+}
+function fmtPct(x){const p=x*100;return (Math.abs(p-Math.round(p))<1e-9?Math.round(p):p.toFixed(1))+'%';}
+
+function update(){
+  const st=stats(data),n=data.length,late=lateCount(data,B);
+  $('oB').textContent=f1(B)+' ms';
+  $('nN').textContent=n;$('nBase').textContent=BASE+' ms';
+  $('nMean').textContent=f2(st.mean);$('nMed').textContent=f2(st.median);$('nSd').textContent=f2(st.sd);$('nJ').textContent=f2(st.J);
+  $('nP90').textContent=f2(st.p90);$('nP95').textContent=f2(st.p95);$('nP99').textContent=f2(st.p99);
+  $('nB').textContent=f1(B)+' ms';$('nLate').textContent=late+' of '+n;$('nFrac').textContent=fmtPct(late/n);
+  $('nFelt').textContent=f1(BASE+B)+' ms';
+  $('nCost').textContent=f1(st.cost)+' ms ('+f1(st.b1)+' → '+f1(st.b0)+')';
+  document.querySelectorAll('#snaps .chip').forEach(c=>c.setAttribute('aria-pressed',String(Math.abs(bufferFor(data,+c.dataset.t)-B)<1e-9)));
+  $('caption').textContent=`One packet in ${n} needs ${f1(st.cost)} ms more buffer. Is it worth it?`;
+  let s;
+  if(late===0)s=`Nothing is late, and every packet now waits ${f1(B)} ms. The last ${f1(st.cost)} ms of that buffer exist for one packet.`;
+  else s=`${late} of ${n} packets are late (${fmtPct(late/n)}). Felt latency is ${f1(BASE+B)} ms one way. `+
+    (showSd?`Mean + 2 SD = ${f2(st.m2sd)} ms, and ${lateCount(data,st.m2sd)} packet${lateCount(data,st.m2sd)===1?'':'s'} still land above it: the data are not normal, so read B off the percentiles.`
+           :`Try the 5% and 0% buttons: the step from ${f1(bufferFor(data,0.05))} to ${f1(bufferFor(data,0))} ms buys ${lateCount(data,bufferFor(data,0.05))} packet${lateCount(data,bufferFor(data,0.05))===1?'':'s'}.`);
+  $('insight').textContent=s;
+  $('data').textContent=dsName==='random'?`200 generated values, seed ${$('seed').value}. Max ${f1(Math.max(...data))} ms.`:`e in send order (ms): ${data.join(' ')}`;
+  timeline(st);bars(st);
+}
+function setB(v){B=Math.max(0,Math.min(120,v));$('b').value=B;update();}
+$('b').addEventListener('input',e=>{B=+e.target.value;update();});
+$('b').addEventListener('keydown',e=>{if(e.key==='PageUp'){e.preventDefault();setB(Math.round(B)+10);}else if(e.key==='PageDown'){e.preventDefault();setB(Math.round(B)-10);}});
+document.querySelectorAll('#snaps .chip').forEach(c=>c.addEventListener('click',()=>{const v=bufferFor(data,+c.dataset.t);B=v;$('b').value=Math.round(v);update();}));
+function loadSet(){
+  dsName=$('ds').value;$('seedWrap').hidden=dsName!=='random';
+  data=dsName==='random'?randomSet(Math.max(1,+$('seed').value||202)):SETS[dsName];
+  update();
+}
+$('ds').addEventListener('change',loadSet);
+$('seed').addEventListener('input',()=>{if(dsName==='random')loadSet();});
+$('sd2').addEventListener('change',e=>{showSd=e.target.checked;update();});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

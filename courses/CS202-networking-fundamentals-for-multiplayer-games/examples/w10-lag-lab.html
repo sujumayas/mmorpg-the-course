@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The lag lab — CS202 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;min-width:0}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:0 0 12px;padding:10px 14px;border-left:4px solid var(--ochre);background:var(--paper-2);border-radius:0 10px 10px 0}
+.switches{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.sw{display:inline-flex;align-items:center;gap:10px;font:600 .95rem var(--sans);padding:8px 14px 8px 10px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:42px}
+.sw .knob{width:34px;height:20px;border-radius:999px;background:var(--grid);position:relative;flex:0 0 34px;transition:background .15s}
+.sw .knob::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--paper);box-shadow:0 0 0 1.5px var(--ink-soft);transition:left .15s}
+.sw[aria-checked="true"] .knob{background:var(--moss)}
+.sw[aria-checked="true"] .knob::after{left:17px}
+.sw:disabled{opacity:.45;cursor:default}
+.views{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{font-family:var(--sans);color:var(--ink-soft);font-size:.82rem;margin-left:6px}
+canvas{display:block;width:100%}
+#cCorr{height:196px}
+#cPlot{height:260px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+.legend i{display:inline-block;width:20px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.legend i.dash{border-top-style:dashed}
+.legend i.dot{border-top-style:dotted}
+.legend b{font-weight:700;margin-right:4px}
+.drive{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+button{font:600 .9rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:42px;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button.primary{background:var(--ink);color:var(--paper)}
+button.walk{min-width:74px}
+button.walk[aria-pressed="true"]{background:var(--steel);color:var(--paper);border-color:var(--steel)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.drive .hint{flex:1 1 200px}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 20px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=range]:disabled{opacity:.4}
+input[type=number]{font:inherit;width:6em;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+.hint{font-size:.85rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+details{margin-top:16px;border-top:1px solid var(--grid);padding-top:10px}
+summary{font-family:var(--serif);font-weight:600;font-size:1.05rem;cursor:pointer}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;min-width:340px;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);vertical-align:top}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600}
+td small{display:block;color:var(--ink-soft);font-size:.76rem}
+td.pop{color:var(--blood);font-weight:700}
+@media (max-width:560px){table{min-width:0;table-layout:fixed}th:first-child,td:first-child{width:17%}th,td{padding:5px 3px;font-size:.8rem;overflow-wrap:anywhere}td small{font-size:.7rem}.stat b{font-size:1.08rem}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 10 · Worked example</p>
+  <h1>The lag lab: three switches, one gap</h1>
+  <p class="lede">You walk on the top lane. Player B strafes on the bottom lane. Each switch hides one delay by moving the error somewhere else. Hollow squares are the server. The dashed circle is B's own screen.</p>
+</header>
+
+<section class="panel" aria-label="Lag lab">
+  <p class="caption" id="caption" aria-live="polite"></p>
+  <div class="switches" role="group" aria-label="Netcode techniques">
+    <button class="sw" role="switch" id="swPred" aria-checked="true"><span class="knob"></span>Prediction</button>
+    <button class="sw" role="switch" id="swRec" aria-checked="true"><span class="knob"></span>Reconciliation</button>
+    <button class="sw" role="switch" id="swInterp" aria-checked="true"><span class="knob"></span>Interpolation</button>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Corridor<small>0 to 12 m, what your screen shows now</small></figcaption>
+      <canvas id="cCorr" role="img" aria-label="Corridor with your character and player B"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Position over the last 2 seconds<small>the vertical gaps are the errors, in metres</small></figcaption>
+      <canvas id="cPlot" role="img" aria-label="Position against time for you and player B"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><b>You</b></span>
+        <span><i style="border-color:var(--steel)"></i>drawn</span>
+        <span><i class="dot" style="border-color:var(--steel)"></i>server</span>
+        <span><b>B</b></span>
+        <span><i style="border-color:var(--ochre)"></i>drawn</span>
+        <span><i class="dot" style="border-color:var(--ochre)"></i>server</span>
+        <span><i class="dash" style="border-color:var(--ink-soft)"></i>B's own screen</span>
+        <span>● snapshot arrives</span>
+        <span style="color:var(--blood)">✕ snapshot lost</span>
+        <span style="color:var(--blood)">▼ you jump back &gt; 1 cm</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="drive">
+    <button class="walk" id="left" aria-pressed="false" aria-label="Walk left (hold)">◀ Left</button>
+    <button class="walk" id="right" aria-pressed="false" aria-label="Walk right (hold)">Right ▶</button>
+    <button id="demo" class="primary">Demo walk</button>
+    <button id="pause">Pause</button>
+    <button id="stepT" disabled>Step 1 tick</button>
+    <button id="reset">Reset</button>
+    <p class="hint">Hold the arrow keys or the buttons to walk. The demo holds right for 2 s, then lets go.</p>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rKey">—</b><span id="rKeyL">key to screen</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rJumps">0</b><span>your backward jumps (&gt; 1 cm)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rBSrv">—</b><span>B drawn behind the server</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rBOwn">—</b><span>B drawn behind B's own screen</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rMode">—</b><span>how B is drawn this frame</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rExtrap">—</b><span>frames extrapolated, last 10 s</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="rtt">Round trip <output id="oRtt">150 ms</output></label>
+      <input id="rtt" type="range" min="0" max="300" step="10" value="150">
+      <label for="dly" style="margin-top:8px">Interpolation delay D <output id="oD">100 ms</output></label>
+      <input id="dly" type="range" min="0" max="200" step="5" value="100">
+    </div>
+    <div>
+      <label for="loss">Snapshot loss <output id="oLoss">0%</output></label>
+      <input id="loss" type="range" min="0" max="20" step="1" value="0">
+      <label for="jit" style="margin-top:8px">Jitter, extra one-way delay U(0, J) <output id="oJit">0 ms</output></label>
+      <input id="jit" type="range" min="0" max="40" step="5" value="0">
+    </div>
+    <div>
+      <label for="seed">Loss and jitter seed</label>
+      <input id="seed" type="number" min="0" max="999999" step="1" value="10">
+      <p class="hint">Same seed, same losses. Changing it resets the run.</p>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <details id="bufDetails">
+    <summary>Show the buffer: one lost snapshot (Table 2)</summary>
+    <p class="hint">B's snapshots at server times 1000, 1050, 1150, 1200, 1250 ms with x = 4.00, 4.30, 4.30, 4.00, 3.70. The 1100 snapshot, which holds the 4.60 m peak, is lost. Each arrives 75 ms after its time. Client time is written on the server's clock. Red cells jump by more than 0.2 m from the row above.</p>
+    <div class="table-wrap">
+      <table aria-label="Interpolation buffer with one lost snapshot">
+        <thead><tr><th>Client time</th><th>Snap to newest</th><th>D = 50 ms</th><th>D = 100 ms</th></tr></thead>
+        <tbody id="bufBody"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<footer>
+  <p>Your character uses the model of <code>labs/lab09-starter/netsim.py</code> without the snare: 60 Hz ticks, 6 m/s (0.1 m per tick), snapshots every third tick (20 Hz), inputs sent every tick, each direction half the round trip. B holds right for 700 ms, then left for 700 ms, repeating. Interpolation draws B at <i>t</i> − RTT/2 − D and extrapolates for at most 250 ms before holding, as Source does with <code>cl_extrapolate_amount</code> 0.25 (Valve Developer Community, "Source Multiplayer Networking").</p>
+  <p id="selftest"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+/* ---------- model (netsim.py, no snare) ---------- */
+const TICK=1/60,SPEED=6.0,SNAPSHOT_EVERY=3,MAX_EXTRAP=250,WORLD=12;
+const r9=v=>Math.round(v*1e9)/1e9;
+function step(s,seq,move){return {x:Math.min(WORLD,Math.max(0,r9(s.x+move*SPEED*TICK)))};}
+const script=t=>t<120?1:0;
+const bInput=t=>Math.floor(t/42)%2===0?1:-1;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// Interpolation buffer sample: buf sorted by server time t (ms). Returns x, mode, n (input count, for ages).
+function sample(buf,tr){
+  if(!buf.length)return {x:0,mode:'hold',n:0};
+  const last=buf[buf.length-1];
+  if(tr>=last.t){
+    if(buf.length<2)return {x:last.x,mode:'hold',n:last.n};
+    const a=buf[buf.length-2],dt=tr-last.t,u=Math.min(dt,MAX_EXTRAP);
+    return {x:last.x+(last.x-a.x)/(last.t-a.t)*u,n:last.n+(last.n-a.n)/(last.t-a.t)*u,mode:dt>MAX_EXTRAP?'hold':'extrap',from:last.t};
+  }
+  if(tr<buf[0].t)return {x:buf[0].x,mode:'hold',n:buf[0].n};
+  for(let i=0;i<buf.length-1;i++){
+    const a=buf[i],b=buf[i+1];
+    if(a.t<=tr&&tr<b.t){const al=(tr-a.t)/(b.t-a.t);return {x:a.x+al*(b.x-a.x),n:a.n+al*(b.n-a.n),mode:'interp',alpha:al,ta:a.t,tb:b.t};}
+  }
+  return {x:last.x,mode:'hold',n:last.n};
+}
+
+function makeSim(cfg){
+  const S={tick:0,srv:{x:0},ack:0,cs:{x:0},pending:[],toS:[],bSrv:{x:0},bAck:0,bToS:[],bOwn:0,toC:[],buf:[],newest:null,lastAck:-1,
+    rng:mulberry32(cfg.seed),hist:[],arrivals:[],lost:[],jumps:[],modes:[],lastDir:1,prevMove:0,changeTick:0,changeMove:0,latency:null,stopMs:0,prevDrawn:0,jumpCount:0,last:null};
+  S.advance=function(move){
+    const T=S.tick,now=T*TICK+1e-9,ow=cfg.rtt/2000,tms=T*1000/60;
+    // server: my inputs, then B's
+    let arr=S.toS.filter(m=>m.t<=now).sort((a,b)=>a.t-b.t||a.seq-b.seq);
+    for(const m of arr){S.srv=step(S.srv,m.seq,m.move);S.ack=m.seq;}
+    S.toS=S.toS.filter(m=>m.t>now);
+    arr=S.bToS.filter(m=>m.t<=now).sort((a,b)=>a.t-b.t||a.seq-b.seq);
+    for(const m of arr){S.bSrv={x:r9(S.bSrv.x+m.move*SPEED*TICK)};S.bAck=m.seq;}
+    S.bToS=S.bToS.filter(m=>m.t>now);
+    if(T%SNAPSHOT_EVERY===0){
+      const lost=S.rng()<cfg.loss,jit=S.rng()*cfg.jitter;
+      const snap={t:tms,x:S.srv.x,ack:S.ack,bx:S.bSrv.x,bn:S.bAck};
+      if(lost)S.lost.push(tms);else S.toC.push({t:now+ow+jit/1000,snap});
+    }
+    // client: snapshots that have arrived
+    let jump=0;const beforeAll=S.cs.x;
+    const got=S.toC.filter(m=>m.t<=now).sort((a,b)=>a.t-b.t);
+    S.toC=S.toC.filter(m=>m.t>now);
+    for(const {snap} of got){
+      S.arrivals.push(tms);
+      if(!S.buf.some(b=>b.t===snap.t)){S.buf.push({t:snap.t,x:snap.bx,n:snap.bn});S.buf.sort((a,b)=>a.t-b.t);}
+      if(!S.newest||snap.t>S.newest.t)S.newest=snap;
+      if(snap.ack<S.lastAck)continue;           // a late, older snapshot: the buffer keeps it, your state ignores it
+      S.lastAck=snap.ack;
+      S.pending=S.pending.filter(p=>p.seq>snap.ack);
+      let s={x:snap.x};
+      if(cfg.pred&&cfg.rec)for(const p of S.pending)s=step(s,p.seq,p.move);
+      S.cs=s;
+    }
+    jump=S.cs.x-beforeAll;
+    if(got.length&&Math.abs(jump)>0.01&&Math.sign(jump)===-S.lastDir){S.jumps.push({ms:tms,x:S.cs.x,size:Math.abs(jump)});S.jumpCount++;}
+    // client: sample, send, predict
+    const seq=T+1;
+    S.toS.push({t:now+ow,seq,move});S.pending.push({seq,move});
+    if(cfg.pred)S.cs=step(S.cs,seq,move);
+    if(move!==0)S.lastDir=move;
+    if(move!==S.prevMove){S.changeTick=T;S.changeMove=move;S.latency=null;S.stopMs=0;S.prevMove=move;}
+    const drawn=S.cs.x,d=drawn-S.prevDrawn;
+    if(S.changeMove!==0&&S.latency===null&&Math.abs(d)>1e-9&&Math.sign(d)===S.changeMove)S.latency=(T-S.changeTick)*1000/60;
+    if(S.changeMove===0&&Math.abs(d)>1e-9)S.stopMs=(T-S.changeTick)*1000/60;
+    S.prevDrawn=drawn;
+    // player B: own screen is the sum of B's inputs so far; B sends this tick's input
+    const bOwnNow=S.bOwn,bm=bInput(T);
+    S.bToS.push({t:now+ow,seq,move:bm});S.bOwn=r9(S.bOwn+bm*SPEED*TICK);
+    // B as drawn
+    let B;
+    if(cfg.interp)B=sample(S.buf,tms-cfg.rtt/2-cfg.D);
+    else if(S.newest)B={x:S.newest.bx,n:S.newest.bn,mode:'newest'};
+    else B={x:0,n:0,mode:'hold'};
+    // prune the buffer: keep the newest snapshot at or before t_r - 1 s and everything after
+    const cut=tms-cfg.rtt/2-200-1000;
+    while(S.buf.length>2&&S.buf[1].t<cut)S.buf.shift();
+    const row={tick:T,ms:tms,meSrv:S.srv.x,meDrawn:drawn,bOwn:bOwnNow,bSrv:S.bSrv.x,bDrawn:B.x,mode:B.mode,
+      bSrvAge:(S.bAck-B.n)*1000/60,bOwnAge:(T-B.n)*1000/60};
+    S.last=row;S.hist.push(row);
+    S.modes.push(B.mode);if(S.modes.length>600)S.modes.shift();
+    const old=tms-2300;
+    while(S.hist.length&&S.hist[0].ms<old)S.hist.shift();
+    S.arrivals=S.arrivals.filter(a=>a>=old);S.lost=S.lost.filter(a=>a>=old);S.jumps=S.jumps.filter(a=>a.ms>=old);
+    S.tick++;
+    return row;
+  };
+  return S;
+}
+
+/* ---------- live state ---------- */
+const cfg={rtt:150,D:100,loss:0,jitter:0,seed:10,pred:true,rec:true,interp:true};
+let sim=makeSim(cfg),held=0,demoFrom=null,paused=false,acc=0,lastT=null;
+function currentMove(){
+  if(held!==0){demoFrom=null;return held;}
+  if(demoFrom!==null){const k=sim.tick-demoFrom;if(k>=120){demoFrom=null;return 0;}return script(k);}
+  return 0;
+}
+function tickOnce(){sim.advance(currentMove());}
+
+/* ---------- drawing ---------- */
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const f2=v=>(Math.round(v*100)/100).toFixed(2);
+function drawCorridor(){
+  const {g,w,h}=setup($('cCorr')),row=sim.last;if(!row)return;
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),ochre=css('--ochre'),paper=css('--paper'),sans=css('--sans');
+  const pl=16,pr=16,X=v=>pl+(w-pl-pr)*Math.min(WORLD,Math.max(0,v))/WORLD;
+  g.clearRect(0,0,w,h);g.font='12px '+sans;
+  const yMe=52,yB=124,yAx=h-18;
+  // lanes
+  for(const [y,label] of [[yMe,'You'],[yB,'Player B']]){
+    g.fillStyle=paper;g.globalAlpha=.55;g.fillRect(pl-8,y-18,w-pl-pr+16,36);g.globalAlpha=1;
+    g.fillStyle=soft;g.textAlign='left';g.textBaseline='bottom';g.font='600 12px '+sans;g.fillText(label,pl-6,y-20);g.font='12px '+sans;
+  }
+  // ticks every metre
+  const every=w<480?2:1;
+  for(let m=0;m<=WORLD;m++){
+    const x=X(m);g.strokeStyle=grid;g.lineWidth=1;g.beginPath();g.moveTo(x,yMe-18);g.lineTo(x,yAx-8);g.stroke();
+    if(m%every===0){g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText(m+'',x,yAx-6);}
+  }
+  g.textAlign='right';g.textBaseline='top';g.fillStyle=soft;
+  const sq=(x,y,col)=>{g.strokeStyle=col;g.lineWidth=2.5;g.fillStyle=paper;g.fillRect(x-7,y-7,14,14);g.strokeRect(x-7,y-7,14,14);};
+  const dot=(x,y,col)=>{g.fillStyle=col;g.beginPath();g.arc(x,y,8,0,Math.PI*2);g.fill();g.strokeStyle=paper;g.lineWidth=2;g.stroke();};
+  // you
+  sq(X(row.meSrv),yMe,steel);dot(X(row.meDrawn),yMe,steel);
+  // B
+  sq(X(row.bSrv),yB,ochre);
+  g.setLineDash([4,3]);g.strokeStyle=ink;g.lineWidth=2;g.beginPath();g.arc(X(row.bOwn),yB,11,0,Math.PI*2);g.stroke();g.setLineDash([]);
+  dot(X(row.bDrawn),yB,ochre);
+  // bracket B drawn to B own screen
+  const a=X(row.bDrawn),b=X(row.bOwn),yb=yB+24,dist=Math.abs(row.bOwn-row.bDrawn);
+  g.strokeStyle=ink;g.lineWidth=1.5;g.beginPath();g.moveTo(Math.min(a,b),yb-5);g.lineTo(Math.min(a,b),yb);g.lineTo(Math.max(a,b),yb);g.lineTo(Math.max(a,b),yb-5);g.stroke();
+  g.fillStyle=ink;g.font='700 13px '+sans;g.textAlign='center';g.textBaseline='top';
+  const mid=Math.min(Math.max((a+b)/2,36),w-36);g.fillText(f2(dist)+' m',mid,yb+3);
+  // mini labels
+  g.font='11px '+sans;g.fillStyle=soft;g.textAlign='right';g.textBaseline='bottom';
+  g.fillText('■ server  ● drawn  ◌ own screen',w-pr,yMe-20);
+  $('cCorr').setAttribute('aria-label',`You drawn at ${f2(row.meDrawn)} m, server ${f2(row.meSrv)} m. B drawn at ${f2(row.bDrawn)} m, server ${f2(row.bSrv)} m, B's own screen ${f2(row.bOwn)} m.`);
+}
+function drawPlot(){
+  const {g,w,h}=setup($('cPlot')),H=sim.hist;if(!H.length)return;
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),ochre=css('--ochre'),blood=css('--blood'),sans=css('--sans');
+  const pad={l:34,r:10,t:10,b:30},t1=H[H.length-1].ms,t0=t1-2000;
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t-t0)/2000,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/WORLD);
+  g.clearRect(0,0,w,h);g.font='11px '+sans;
+  for(let m=0;m<=WORLD;m+=3){const y=Y(m);g.strokeStyle=grid;g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText(m+' m',pad.l-4,y);}
+  const s0=Math.ceil(t0/500)*500;
+  for(let t=s0;t<=t1;t+=500){const x=X(t);g.strokeStyle=grid;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText((t/1000).toFixed(1)+' s',x,h-pad.b+12);}
+  g.save();g.beginPath();g.rect(pad.l,0,w-pad.l-pad.r,h);g.clip();
+  const line=(key,col,dash,wid)=>{g.strokeStyle=col;g.lineWidth=wid;g.setLineDash(dash);g.beginPath();let first=true;for(const r of H){if(r.ms<t0-20)continue;const x=X(r.ms),y=Y(r[key]);first?g.moveTo(x,y):g.lineTo(x,y);first=false;}g.stroke();g.setLineDash([]);};
+  line('bOwn',soft,[6,4],1.6);
+  line('meSrv',steel,[2,3],2);line('bSrv',ochre,[2,3],2);
+  line('meDrawn',steel,[],2.6);line('bDrawn',ochre,[],2.6);
+  // arrivals and losses on the time axis
+  const ya=h-pad.b+4;
+  g.fillStyle=ink;for(const a of sim.arrivals){if(a<t0)continue;g.beginPath();g.arc(X(a),ya,2.2,0,Math.PI*2);g.fill();}
+  g.strokeStyle=blood;g.lineWidth=2;for(const a of sim.lost){if(a<t0)continue;const x=X(a);g.beginPath();g.moveTo(x-4,ya-4);g.lineTo(x+4,ya+4);g.moveTo(x+4,ya-4);g.lineTo(x-4,ya+4);g.stroke();}
+  g.fillStyle=blood;for(const j of sim.jumps){if(j.ms<t0)continue;const x=X(j.ms),y=Y(j.x)-9;g.beginPath();g.moveTo(x-5,y-6);g.lineTo(x+5,y-6);g.lineTo(x,y+1);g.closePath();g.fill();}
+  g.restore();
+}
+const MODE={interp:'interpolate',extrap:'extrapolate',hold:'hold',newest:'newest snapshot'};
+function readouts(){
+  const r=sim.last;if(!r)return;
+  if(sim.changeMove!==0){$('rKeyL').textContent='first visible move after the last key press';$('rKey').textContent=sim.latency===null?'waiting…':sim.latency.toFixed(1)+' ms';}
+  else if(sim.tick>0){$('rKeyL').textContent='still moving on screen after the release';$('rKey').textContent=sim.stopMs.toFixed(1)+' ms';}
+  $('rJumps').textContent=sim.jumpCount;
+  const ds=r.bSrv-r.bDrawn,dO=r.bOwn-r.bDrawn;
+  $('rBSrv').textContent=`${f2(Math.abs(ds))} m · ${Math.round(r.bSrvAge)} ms`;
+  $('rBOwn').textContent=`${f2(Math.abs(dO))} m · ${Math.round(r.bOwnAge)} ms`;
+  $('rMode').textContent=MODE[r.mode];
+  const n=sim.modes.length,e=sim.modes.filter(m=>m==='extrap').length;
+  $('rExtrap').textContent=n?(100*e/n).toFixed(1)+'%':'—';
+}
+function captionText(){
+  const p=cfg.pred,rc=cfg.pred&&cfg.rec,i=cfg.interp;
+  let c;
+  if(p&&rc&&i)c=`You are instant. B is smooth. B is also ${f2(Math.abs(sim.last.bOwn-sim.last.bDrawn))} m from where B really is. Turn the switches off one at a time.`;
+  else if(!p)c='No prediction: your character waits for the server, a round trip plus the snapshot wait, before it moves. Press an arrow and read the key-to-screen delay.';
+  else if(!rc)c='Prediction without reconciliation: each snapshot is a round trip old, so accepting it drags you back. Watch the red markers on the plot.';
+  else c='Without interpolation B is drawn at the newest snapshot: fresher, but it jumps 0.3 m every 50 ms and freezes when a snapshot is lost.';
+  $('caption').textContent=c;
+  const L=cfg.rtt/2;
+  let s=`At ${cfg.rtt} ms, B's data is ${L} ms old when it arrives`;
+  if(i)s+=`, and interpolation holds it another ${cfg.D} ms. B is drawn ${L+cfg.D} ms behind the server, <b>${f2(6*(L+cfg.D)/1000)} m</b> at 6 m/s, and B's own screen is a further uplink and a tick or two ahead. `;
+  else s+='. Without interpolation B is as fresh as the data allows, and it stutters. ';
+  if(i){const k=Math.floor(cfg.D/50);s+=cfg.D<50?'D is below one snapshot interval (50 ms), so B is extrapolated most of the time.':`D = ${cfg.D} ms covers ${k} snapshot interval${k>1?'s':''}, so it survives ${k-1} lost snapshot${k-1===1?'':'s'} in a row before it must extrapolate.`;}
+  $('insight').innerHTML=s;
+}
+function drawAll(){drawCorridor();drawPlot();readouts();captionText();}
+
+/* ---------- loop ---------- */
+function frame(ts){
+  if(!paused){
+    if(lastT===null)lastT=ts;
+    acc+=Math.min(100,ts-lastT);lastT=ts;
+    let n=0;while(acc>=1000/60&&n<6){tickOnce();acc-=1000/60;n++;}
+    if(n)drawAll();
+  }else lastT=null;
+  requestAnimationFrame(frame);
+}
+function setPaused(v){paused=v;$('pause').textContent=v?'Play':'Pause';$('stepT').disabled=!v;acc=0;lastT=null;}
+function reset(){sim=makeSim(cfg);demoFrom=null;acc=0;drawAll();}
+
+/* ---------- controls ---------- */
+function setSwitch(el,on){el.setAttribute('aria-checked',on);}
+$('swPred').addEventListener('click',()=>{cfg.pred=!cfg.pred;setSwitch($('swPred'),cfg.pred);$('swRec').disabled=!cfg.pred;drawAll();});
+$('swRec').addEventListener('click',()=>{cfg.rec=!cfg.rec;setSwitch($('swRec'),cfg.rec);drawAll();});
+$('swInterp').addEventListener('click',()=>{cfg.interp=!cfg.interp;setSwitch($('swInterp'),cfg.interp);$('dly').disabled=!cfg.interp;drawAll();});
+const bind=(id,out,fn,fmt)=>$(id).addEventListener('input',e=>{fn(+e.target.value);$(out).textContent=fmt(+e.target.value);captionText();});
+bind('rtt','oRtt',v=>cfg.rtt=v,v=>v+' ms');
+bind('dly','oD',v=>cfg.D=v,v=>v+' ms');
+bind('loss','oLoss',v=>cfg.loss=v/100,v=>v+'%');
+bind('jit','oJit',v=>cfg.jitter=v,v=>v+' ms');
+$('seed').addEventListener('change',e=>{cfg.seed=Math.max(0,Math.floor(+e.target.value||0));reset();});
+$('demo').addEventListener('click',()=>{held=0;demoFrom=sim.tick;if(paused)setPaused(false);});
+$('pause').addEventListener('click',()=>setPaused(!paused));
+$('stepT').addEventListener('click',()=>{tickOnce();drawAll();});
+$('reset').addEventListener('click',reset);
+function hold(dir,on){
+  if(on)held=dir;else if(held===dir)held=0;
+  $('left').setAttribute('aria-pressed',held===-1);$('right').setAttribute('aria-pressed',held===1);
+}
+for(const [id,dir] of [['left',-1],['right',1]]){
+  const b=$(id);
+  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture&&b.setPointerCapture(e.pointerId);hold(dir,true);});
+  for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>hold(dir,false));
+  b.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();hold(dir,true);}});
+  b.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')hold(dir,false);});
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+}
+document.addEventListener('keydown',e=>{
+  const t=e.target;if(t&&t.tagName==='INPUT')return;
+  if(e.key==='ArrowLeft'){e.preventDefault();hold(-1,true);}else if(e.key==='ArrowRight'){e.preventDefault();hold(1,true);}
+});
+document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')hold(-1,false);else if(e.key==='ArrowRight')hold(1,false);});
+window.addEventListener('blur',()=>{held=0;hold(0,false);});
+window.addEventListener('resize',drawAll);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+
+/* ---------- Table 2 buffer panel ---------- */
+const T2=[[1000,4.00],[1050,4.30],[1150,4.30],[1200,4.00],[1250,3.70]];
+function bufferAt(client,D){
+  const have=T2.filter(([t])=>t+75<=client).map(([t,x])=>({t,x,n:0}));
+  if(D===null){const s=have[have.length-1];return {x:s.x,how:`newest ${s.t}`};}
+  const tr=client-75-D,s=sample(have,tr);
+  const how=s.mode==='interp'?`lerp ${s.ta} to ${s.tb}, α = ${+s.alpha.toFixed(2)}`:s.mode==='extrap'?`extrapolate from ${s.from}`:'hold';
+  return {x:s.x,how,tr};
+}
+const CLIENT=[1175,1200,1220,1225,1250,1275,1300,1325];
+function buildBuffer(){
+  let h='',prev={};
+  for(const c of CLIENT){
+    let tds='';
+    for(const D of [null,50,100]){
+      const r=bufferAt(c,D),k=String(D),pop=prev[k]!==undefined&&Math.abs(r.x-prev[k])>0.2;
+      tds+=`<td class="${pop?'pop':''}">${r.x.toFixed(2)}<small>${D===null?r.how:`t<sub>r</sub> ${r.tr}, ${r.how}`}</small></td>`;
+      prev[k]=r.x;
+    }
+    h+=`<tr><td>${c}</td>${tds}</tr>`;
+  }
+  $('bufBody').innerHTML=h;
+}
+
+/* ---------- self-test against the spec ---------- */
+function selftest(){
+  const fails=[];let n=0;
+  const eq=(name,got,want,tol)=>{n++;if(!(Math.abs(got-want)<=(tol===undefined?0.0005:tol)))fails.push(`${name}: got ${got}, want ${want}`);};
+  const runDemo=(o,ticks)=>{const c=Object.assign({rtt:150,D:100,loss:0,jitter:0,seed:10},o),s=makeSim(c),rows=[],jumps=[];
+    for(let t=0;t<=ticks;t++){const before=s.jumps.length;rows.push(s.advance(script(t)));if(s.jumps.length>before)jumps.push(s.jumps[s.jumps.length-1]);if(t===119)s.pressLatency=s.latency;}
+    s.rows=rows;s.allJumps=jumps;return s;};
+  const dumb=runDemo({pred:false,rec:false,interp:true},200);
+  eq('dumb first move ms',dumb.pressLatency,183.3,0.05);eq('dumb stops after release ms',dumb.stopMs,183.3,0.05);
+  const naive=runDemo({pred:true,rec:false,interp:true},200);
+  eq('prediction only: jump count',naive.allJumps.length,3,0);
+  [[0.5,83.3],[0.3,133.3],[0.1,183.3]].forEach(([sz,ms],i)=>{const j=naive.allJumps[i]||{size:NaN,ms:NaN};eq(`jump ${i+1} size`,j.size,sz,0.001);eq(`jump ${i+1} ms`,j.ms,ms,0.05);});
+  eq('prediction only: first move ms',naive.pressLatency,0,0);
+  const rec=runDemo({pred:true,rec:true,interp:true},200);
+  eq('reconcile: jump count',rec.allJumps.length,0,0);
+  const r30=rec.rows[30],r60=rec.rows[60];
+  eq('t=500 own',r30.bOwn,3.0);eq('t=500 server',r30.bSrv,2.6);eq('t=500 drawn',r30.bDrawn,1.55);
+  eq('t=1000 own',r60.bOwn,2.4);eq('t=1000 server',r60.bSrv,2.8);eq('t=1000 drawn',r60.bDrawn,3.85);
+  eq('behind server m',r30.bSrv-r30.bDrawn,1.05);eq('behind own m',r30.bOwn-r30.bDrawn,1.45);
+  eq('behind server ms',r30.bSrvAge,175,0.05);eq('behind own ms',r30.bOwnAge,241.7,0.05);
+  const off=runDemo({pred:true,rec:true,interp:false},40);
+  eq('no interp t=500',off.rows[30].bDrawn,2.0);eq('no interp t=533.3',off.rows[32].bDrawn,2.3);eq('no interp t=583.3',off.rows[35].bDrawn,2.6);
+  const want50=[4.30,4.45,4.57,4.30,4.30,4.30,4.15,4.00],want100=[4.00,4.15,4.27,4.30,4.30,4.30,4.30,4.30],want0=[4.30,4.30,4.30,4.30,4.30,4.00,4.00,3.70];
+  CLIENT.forEach((c,i)=>{eq(`T2 ${c} D50`,bufferAt(c,50).x,want50[i],0.0051);eq(`T2 ${c} D100`,bufferAt(c,100).x,want100[i],0.0051);eq(`T2 ${c} newest`,bufferAt(c,null).x,want0[i],0.0051);});
+  $('selftest').textContent=fails.length?`Self-test: ${fails.length} of ${n} checks differ from the spec.`:`Self-test on load: all ${n} spec values match (netsim.py model, B's strafe, Table 2).`;
+  if(fails.length)console.error('w10 self-test failed',fails);
+}
+
+/* ---------- start: all three on, the demo walk already played ---------- */
+selftest();buildBuffer();
+demoFrom=0;
+for(let t=0;t<240;t++)tickOnce();
+drawAll();
+if(reduce.matches)setPaused(true);
+requestAnimationFrame(frame);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+window.__lagLab={get sim(){return sim;},cfg};
+})();
+</script>
+</body>
+</html>

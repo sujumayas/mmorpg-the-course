@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reconcile and replay — CS202 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--snare-fill:#ecd3a4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--snare-fill:#5a4520}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--snare-fill:#5a4520}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;min-width:0}
+.stack{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.box{background:var(--paper-2);border-radius:10px;padding:10px 12px;min-width:0}
+.box h2{font-family:var(--serif);font-weight:600;font-size:1rem;margin:0 0 6px}
+.box h2 small{font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem;margin-left:6px}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:0 0 12px;padding:10px 14px;border-left:4px solid var(--steel);background:var(--paper-2);border-radius:0 10px 10px 0}
+/* input strip */
+.strip{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:4px 2px 8px}
+.cells{display:flex;gap:4px;width:max-content}
+.cell{position:relative;width:48px;flex:0 0 48px;border:2px solid var(--steel);border-radius:6px;padding:3px 0 2px;text-align:center;background:var(--paper);transition:opacity .35s,background .25s,transform .2s}
+.cell b{display:block;font-size:.95rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.cell span{display:block;font-size:.74rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.cell.acked{border-color:var(--ink-soft);border-style:dashed}
+.cell.acked.gone{opacity:.32}
+.cell.snare{background:var(--snare-fill)}
+.cell.wrong::after{content:"";position:absolute;top:-2px;right:-2px;border-style:solid;border-width:0 12px 12px 0;border-color:transparent var(--ochre) transparent transparent;border-top-right-radius:5px}
+.cell.cur{outline:3px solid var(--ink);outline-offset:1px;transform:translateY(-2px)}
+.cell.done span{color:var(--ink)}
+.keyrow{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.8rem;color:var(--ink-soft);margin-top:4px}
+.keyrow i{display:inline-block;width:14px;height:12px;border:2px solid var(--steel);border-radius:3px;vertical-align:-1px;margin-right:5px;position:relative}
+.keyrow i.k-ack{border-color:var(--ink-soft);border-style:dashed;opacity:.5}
+.keyrow i.k-snare{background:var(--snare-fill)}
+.keyrow i.k-wrong::after{content:"";position:absolute;top:-2px;right:-2px;border-style:solid;border-width:0 7px 7px 0;border-color:transparent var(--ochre) transparent transparent}
+/* ruler */
+#ruler{display:block;width:100%;height:172px}
+#ruler text{font-family:var(--sans);fill:var(--ink)}
+/* algorithm */
+.algo{margin:0;padding:0;list-style:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86rem;counter-reset:ln}
+.algo li{padding:5px 8px 5px 30px;border-radius:6px;border-left:4px solid transparent;counter-increment:ln;position:relative}
+.algo li::before{content:counter(ln) ".";color:var(--ink-soft);position:absolute;left:10px}
+.algo .ctr{margin-left:8px}
+@media (max-width:560px){.algo .ctr{display:block;margin-left:0}}
+.algo li.on{background:var(--paper);border-left-color:var(--steel);font-weight:700}
+.algo li.off{opacity:.45;text-decoration:line-through}
+.algo .ctr{font-family:var(--sans);font-weight:600;color:var(--steel)}
+/* readouts */
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.stat.big b{font-size:1.6rem}
+/* controls */
+.stepper{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.stepper .grow{flex:1 1 180px;min-width:150px}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.opts{display:flex;flex-wrap:wrap;gap:4px 14px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:4px 0}
+.chk input{accent-color:var(--steel);width:18px;height:18px;margin:2px 0 0;flex:0 0 18px}
+button{font:600 .9rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+button.primary{background:var(--ink);color:var(--paper)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,.strip:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:340px;width:100%}
+@media (max-width:560px){th,td{padding:5px 5px!important;font-size:.84rem}}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.back{color:var(--blood);font-weight:700}
+h3{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:18px 0 2px}
+.hint{font-size:.85rem;color:var(--ink-soft);margin:4px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 9 · Worked example</p>
+  <h1>Reconcile: start from the server, re-walk the rest</h1>
+  <p class="lede">Each snapshot says where the server had you after input <i>a</i>. The client drops the inputs up to <i>a</i>, accepts the server's state and replays the inputs the server has not seen. The run is the lab's simulator, <code>netsim.py</code>, at a 150 ms round trip.</p>
+</header>
+
+<section class="panel" aria-label="Reconciliation step-through">
+  <p class="caption" id="caption" aria-live="polite"></p>
+  <div class="stack">
+    <div class="box">
+      <h2>Input queue <small id="stripNote"></small></h2>
+      <div class="strip" id="strip" tabindex="0" aria-label="Input queue, one cell per input sequence number"><div class="cells" id="cells"></div></div>
+      <div class="keyrow" aria-hidden="true">
+        <span><i class="k-ack"></i>acknowledged (seq ≤ ack), dropped</span>
+        <span><i></i>pending, replayed</span>
+        <span><i class="k-snare"></i>inside the snare the client knows about</span>
+        <span><i class="k-wrong"></i>predicted at full speed, now known snared</span>
+      </div>
+    </div>
+    <div class="box">
+      <h2>Position on the x axis <small>metres</small></h2>
+      <svg id="ruler" role="img" aria-label="Ruler with server position, old prediction and replay marker"></svg>
+    </div>
+    <div class="box">
+      <h2>The loop <small>section 2 model</small></h2>
+      <ol class="algo" id="algo">
+        <li>drop every pending input with seq ≤ a <span class="ctr" id="c1"></span></li>
+        <li>state = S (the server's state) <span class="ctr" id="c2"></span></li>
+        <li>for each remaining input: state = step(state, seq, move) <span class="ctr" id="c3"></span></li>
+        <li>correction = state − predicted state before the snapshot <span class="ctr" id="c4"></span></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rAt">—</b><span>handled at (ms)</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rAck">—</b><span>ack a</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rSrv">—</b><span>server x (m)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rBefore">—</b><span>prediction before (m)</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rDrop">—</b><span>inputs dropped</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rRep">—</b><span>inputs replayed</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rAfter">—</b><span>x after replay (m)</span></div>
+    <div class="stat big" style="--c:var(--blood)"><b id="rCorr">—</b><span id="rWrong">correction (m)</span></div>
+  </div>
+
+  <div class="stepper">
+    <button id="prev" aria-label="Previous snapshot">◀ Previous</button>
+    <div class="grow">
+      <label for="snapSel" class="lbl">Snapshot <output id="oSnap"></output></label>
+      <input id="snapSel" type="range" min="0" max="10" step="1" value="0">
+    </div>
+    <button id="next" aria-label="Next snapshot">Next ▶</button>
+    <button id="play" class="primary">Play</button>
+    <button id="stepBtn">Step through</button>
+    <button id="jump">Jump to the snare</button>
+  </div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Round trip</legend>
+      <div class="opts" id="rttGroup">
+        <label class="chk"><input type="radio" name="rtt" value="50">50 ms</label>
+        <label class="chk"><input type="radio" name="rtt" value="100">100 ms</label>
+        <label class="chk"><input type="radio" name="rtt" value="150" checked>150 ms</label>
+        <label class="chk"><input type="radio" name="rtt" value="250">250 ms</label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>What the server knows</legend>
+      <label class="chk"><input type="checkbox" id="snare" checked><span>Snare (60 inputs at half speed from 1.0 s)</span></label>
+      <label class="chk"><input type="checkbox" id="lose"><span>Lose the snapshot that announces the snare</span></label>
+    </fieldset>
+    <fieldset>
+      <legend>What the client does</legend>
+      <label class="chk"><input type="checkbox" id="skip"><span>Skip the replay (naive snap)</span></label>
+      <span class="lbl" style="display:block;margin-top:6px">Smoothing time (frame strip)</span>
+      <div class="opts">
+        <label class="chk"><input type="radio" name="smooth" value="0" checked>0 s</label>
+        <label class="chk"><input type="radio" name="smooth" value="0.1">0.1 s</label>
+        <label class="chk"><input type="radio" name="smooth" value="0.2">0.2 s</label>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <h3>Frame strip <small class="hint" id="frameNote"></small></h3>
+  <div class="table-wrap">
+    <table aria-label="Drawn position frame by frame around the correction">
+      <thead><tr><th>Frame time (ms)</th><th>Predicted x</th><th>Drawn, snap</th><th id="thSmooth">Drawn, smooth</th><th>Drawn step</th></tr></thead>
+      <tbody id="frames"></tbody>
+    </table>
+  </div>
+  <p class="hint" id="backNote"></p>
+</section>
+
+<footer>
+  <p>Model: a line-for-line port of <code>labs/lab09-starter/netsim.py</code> with a correct client. 60 Hz inputs, 20 Hz snapshots, 6 m/s (0.1 m per input), one-way delay half the round trip, a scripted walk right for 2 s. The snare is server-side: 60 inputs at half speed from 1.0 s of server time. Smoothing fades the display offset linearly, as Source's <code>cl_smoothtime</code> does (Source SDK 2013).</p>
+  <p id="selftest"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+/* ---------- netsim.py port ---------- */
+const TICK=1/60,SPEED=6.0,SNARE_FACTOR=0.5,SNARE_INPUTS=60,SNAPSHOT_EVERY=3;
+const r9=v=>Math.round(v*1e9)/1e9;
+const speedFor=(s,seq)=>SPEED*((s.sf<=seq&&seq<s.st)?SNARE_FACTOR:1);
+function step(s,seq,move){return {x:r9(s.x+move*speedFor(s,seq)*TICK),sf:s.sf,st:s.st};}
+const script=t=>t<120?1:0;
+
+function run(rtt,snare,lose,smooth){
+  const oneWay=rtt/2000;
+  let cs={x:0,sf:0,st:0},pending=[];
+  let srv={x:0,sf:0,st:0},ack=0,lostOne=false;
+  let toS=[],toC=[];
+  let err0=0,errT=0;
+  const used={},moves={};
+  const off=()=>(smooth<=0||errT>=smooth)?0:err0*(1-errT/smooth);
+  const snaps=[],rows=[];
+  for(let tick=0;tick<=180;tick++){
+    const now=tick*TICK+1e-9;
+    const arr=toS.filter(m=>m.t<=now).sort((a,b)=>a.t-b.t||a.seq-b.seq);
+    for(const m of arr){
+      if(snare&&now>=1.0&&srv.st===0){srv.sf=m.seq;srv.st=m.seq+SNARE_INPUTS;}
+      srv=step(srv,m.seq,m.move);ack=m.seq;
+    }
+    toS=toS.filter(m=>m.t>now);
+    if(tick%SNAPSHOT_EVERY===0){
+      const snap={x:srv.x,sf:srv.sf,st:srv.st,ack:ack,sent:tick};
+      if(lose&&!lostOne&&srv.st!==0){lostOne=true;}
+      else toC.push({t:now+oneWay,snap});
+    }
+    errT+=TICK;
+    const got=toC.filter(m=>m.t<=now).sort((a,b)=>a.t-b.t);
+    for(const {snap} of got){
+      const before=cs.x,newest=pending.length?pending[pending.length-1].seq:snap.ack;
+      const dropped=pending.filter(p=>p.seq<=snap.ack).map(p=>p.seq);
+      const usedBefore=Object.assign({},used);
+      pending=pending.filter(p=>p.seq>snap.ack);
+      let s={x:snap.x,sf:snap.sf,st:snap.st};
+      const path=[s.x],replayed=[];
+      for(const p of pending){
+        const d=p.move*speedFor(s,p.seq)*TICK;
+        used[p.seq]=r9(d);s=step(s,p.seq,p.move);path.push(s.x);replayed.push(p.seq);
+      }
+      cs=s;
+      const jump=s.x-before;
+      if(smooth>0&&jump!==0){err0=off()-jump;errT=0;}
+      const nowStep=q=>r9(moves[q]*SPEED*((snap.sf<=q&&q<snap.st)?SNARE_FACTOR:1)*TICK);
+      const wrong=[];
+      for(const q in usedBefore){const n=+q;if(n<=newest&&Math.abs(usedBefore[q]-nowStep(n))>1e-9)wrong.push(n);}
+      wrong.sort((a,b)=>a-b);
+      snaps.push({tick,ms:tick*1000/60,ack:snap.ack,sx:snap.x,sf:snap.sf,st:snap.st,before,after:s.x,corr:jump,
+        dropped,replayed,path,newest,usedBefore,nowStep,wrong});
+    }
+    toC=toC.filter(m=>m.t>now);
+    const seq=tick+1,move=script(tick);
+    toS.push({t:now+oneWay,seq,move});
+    pending.push({seq,move});
+    moves[seq]=move;used[seq]=r9(move*speedFor(cs,seq)*TICK);
+    cs=step(cs,seq,move);
+    rows.push({tick,ms:tick*1000/60,pred:Math.round(cs.x*1000)/1000,shown:Math.round((cs.x+off())*1000)/1000,pending:pending.length});
+  }
+  return {snaps,rows};
+}
+const cache={};
+function getRun(rtt,snare,lose,smooth){
+  const k=[rtt,snare,lose,smooth].join('|');
+  return cache[k]||(cache[k]=run(rtt,snare,lose,smooth));
+}
+
+/* ---------- formatting ---------- */
+const MINUS='−';
+function f2(v){const r=Math.round(v*100)/100;return (r<0?MINUS:'')+Math.abs(r).toFixed(2);}
+function f3(v){const r=Math.round(v*1000)/1000;return (r<0?MINUS:'')+Math.abs(r).toFixed(3);}
+const fms=ms=>(Math.round(ms*10)/10).toFixed(1);
+const range=a=>a.length?(a.length===1?''+a[0]:a[0]+'-'+a[a.length-1]):'none';
+
+/* ---------- state ---------- */
+let RTT=150,SNARE=true,LOSE=false,SKIP=false,SMOOTH=0;
+let R=getRun(150,true,false,0),idx=0,phase=0,timer=null;
+// phases: 0 start, 1 dropped, 2 accepted, 3..3+n-1 replaying input k (k=phase-2 done), END = 3+n
+const nRep=s=>SKIP?0:s.replayed.length;
+const END=s=>3+nRep(s);
+function corrIndex(run){return run.snaps.findIndex(s=>Math.abs(s.corr)>1e-6);}
+
+/* ---------- drawing ---------- */
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function drawStrip(s){
+  const lo=Math.max(1,s.ack-3),hi=Math.max(s.newest,s.ack);
+  const accepted=phase>=2;
+  const done=Math.max(0,Math.min(nRep(s),phase-2));
+  const cur=(!SKIP&&phase>=3&&phase<END(s))?s.replayed[phase-3]:null;
+  let h='';
+  for(let q=lo;q<=hi;q++){
+    const acked=q<=s.ack;
+    const knownStep=accepted?s.nowStep(q):(s.usedBefore[q]!==undefined?s.usedBefore[q]:s.nowStep(q));
+    const sn=accepted?(s.sf<=q&&q<s.st):(s.usedBefore[q]!==undefined&&s.usedBefore[q]>0&&s.usedBefore[q]<0.1-1e-9);
+    const wrong=accepted&&s.wrong.includes(q);
+    const idxRep=s.replayed.indexOf(q);
+    const cls=['cell'];
+    if(acked){cls.push('acked');if(phase>=1)cls.push('gone');}
+    if(sn)cls.push('snare');
+    if(wrong)cls.push('wrong');
+    if(q===cur)cls.push('cur');
+    if(idxRep>=0&&idxRep<done&&!SKIP)cls.push('done');
+    const lab=`input ${q}, step ${knownStep.toFixed(2)} m${acked?', acknowledged':', pending'}${sn?', snared':''}${wrong?', predicted wrong':''}`;
+    h+=`<div class="${cls.join(' ')}" title="${lab}"><b>${q}</b><span>${knownStep.toFixed(2)}</span></div>`;
+  }
+  $('cells').innerHTML=h;
+  $('stripNote').textContent=`inputs ${lo} to ${hi}, step size the client ${accepted?'now uses':'used'} (m)`;
+  const c=$('cells').querySelector('.cur');
+  if(c){const st=$('strip'),l=c.offsetLeft-st.offsetLeft;if(l<st.scrollLeft||l+60>st.scrollLeft+st.clientWidth)st.scrollLeft=l-st.clientWidth/2;}
+}
+
+function drawRuler(s){
+  const svg=$('ruler'),W=Math.max(280,svg.clientWidth||600),H=172;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const final=SKIP?s.sx:s.after;
+  let lo=Math.min(s.sx,s.before,final)-0.3,hi=Math.max(s.sx,s.before,final)+0.3;
+  const padL=22,padR=22,X=v=>padL+(W-padL-padR)*(v-lo)/(hi-lo);
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),blood=css('--blood'),moss=css('--moss'),ochre=css('--ochre'),paper=css('--paper');
+  const AY=86;
+  let g='';
+  // axis + ticks
+  g+=`<line x1="${padL}" x2="${W-padR}" y1="${AY}" y2="${AY}" stroke="${soft}" stroke-width="1.5"/>`;
+  const pxPer=(W-padL-padR)/((hi-lo)*10);
+  const labStep=[1,2,5,10].find(k=>pxPer*k>=34)||10;
+  const t0=Math.ceil(lo*10-1e-9),t1=Math.floor(hi*10+1e-9);
+  for(let t=t0;t<=t1;t++){
+    const x=X(t/10),major=t%labStep===0;
+    g+=`<line x1="${x}" x2="${x}" y1="${AY-(major?7:4)}" y2="${AY+(major?7:4)}" stroke="${major?soft:grid}" stroke-width="1.2"/>`;
+    if(major)g+=`<text x="${x}" y="${AY+22}" font-size="11.5" text-anchor="middle" fill="${soft}" style="fill:${soft}">${(t/10).toFixed(1)}</text>`;
+  }
+  // position of the replay marker for this phase
+  const nd=SKIP?0:Math.max(0,Math.min(nRep(s),phase-2));
+  const mx=phase>=2?(SKIP?s.sx:s.path[nd]):null;
+  // hops
+  if(!SKIP&&phase>=2){
+    for(let k=0;k<nd;k++){
+      const a=X(s.path[k]),b=X(s.path[k+1]);if(Math.abs(b-a)<0.5)continue;
+      const snared=s.nowStep(s.replayed[k])<0.1-1e-9;
+      g+=`<path d="M${a} ${AY-9} Q ${(a+b)/2} ${AY-24} ${b} ${AY-9}" fill="none" stroke="${snared?ochre:moss}" stroke-width="2"/>`;
+    }
+  }
+  // prediction before: dashed circle
+  const px=X(s.before),sx=X(s.sx);
+  g+=`<circle cx="${px}" cy="${AY}" r="11" fill="none" stroke="${ink}" stroke-width="2" stroke-dasharray="4 3"/>`;
+  // server: hollow square
+  g+=`<rect x="${sx-7}" y="${AY-7}" width="14" height="14" fill="${paper}" stroke="${steel}" stroke-width="2.5"/>`;
+  // labels (two rows so they never collide)
+  const lab=(x,y,txt,col,anchor)=>`<line x1="${x}" x2="${x}" y1="${y+4}" y2="${AY-13}" stroke="${col}" stroke-width="1" opacity=".6"/><text x="${clampX(x,txt,anchor)}" y="${y}" font-size="12.5" font-weight="600" text-anchor="${anchor}" style="fill:${col}">${txt}</text>`;
+  function clampX(x,txt,anchor){const w=txt.length*6.6;if(anchor==='start')return Math.min(x-4,W-4-w);if(anchor==='end')return Math.max(x+4,w+4);return x;}
+  g+=lab(sx,16,`server, after input ${s.ack}: ${s.sx.toFixed(2)}`,steel,sx<W/2?'start':'end');
+  g+=lab(px,38,`prediction before: ${s.before.toFixed(2)}`,ink,px<W/2?'start':'end');
+  // replay marker
+  if(mx!==null){
+    g+=`<circle cx="${X(mx)}" cy="${AY}" r="7" fill="${moss}" stroke="${paper}" stroke-width="2"/>`;
+  }
+  // bracket
+  if(phase>=END(s)){
+    const fx=X(final),corr=final-s.before,big=Math.abs(corr)>0.01,col=big?blood:soft;
+    const y=AY+40,a=Math.min(fx,px),b=Math.max(fx,px);
+    g+=`<path d="M${a} ${y-6} V ${y} H ${b} V ${y-6}" fill="none" stroke="${col}" stroke-width="2"/>`;
+    const txt=(big?'correction ':'correction ')+f2(corr)+' m';
+    const cx=Math.min(Math.max((a+b)/2,70),W-70);
+    g+=`<text x="${cx}" y="${y+22}" font-size="14" font-weight="700" text-anchor="middle" style="fill:${col}">${txt}</text>`;
+  }
+  g+=`<text x="${W-padR}" y="${H-4}" font-size="11" text-anchor="end" style="fill:${soft}">x (m)</text>`;
+  svg.innerHTML=g;
+  svg.setAttribute('aria-label',`Server x ${s.sx.toFixed(2)}, prediction before ${s.before.toFixed(2)}, result ${final.toFixed(2)}`);
+}
+
+function drawAlgo(s){
+  const lis=$('algo').children,n=nRep(s),end=END(s);
+  const on=phase===0?-1:phase===1?0:phase===2?1:(phase<end?2:3);
+  for(let i=0;i<4;i++){lis[i].classList.toggle('on',i===on);lis[i].classList.toggle('off',SKIP&&i===2);}
+  $('c1').textContent=phase>=1?`dropped ${s.dropped.length?range(s.dropped):'nothing'}`:'';
+  $('c2').textContent=phase>=2?`x = ${s.sx.toFixed(2)}`:'';
+  if(SKIP)$('c3').textContent='skipped';
+  else if(phase>=3){const k=Math.min(n,phase-2);$('c3').textContent=n?`input ${s.replayed[Math.max(0,k-1)]} of ${range(s.replayed)} (${k}/${n})`:'nothing pending';}
+  else $('c3').textContent='';
+  $('c4').textContent=phase>=end?`${f2((SKIP?s.sx:s.after)-s.before)} m`:'';
+}
+
+function readouts(s){
+  const final=SKIP?s.sx:s.after,corr=final-s.before,end=phase>=END(s);
+  $('rAt').textContent=fms(s.ms);$('rAck').textContent=s.ack;
+  $('rSrv').textContent=s.sx.toFixed(2);$('rBefore').textContent=s.before.toFixed(2);
+  $('rDrop').textContent=s.dropped.length?`${s.dropped.length} (${range(s.dropped)})`:'0';
+  $('rRep').textContent=SKIP?'0 (skipped)':(s.replayed.length?`${s.replayed.length} (${range(s.replayed)})`:'0');
+  $('rAfter').textContent=end?final.toFixed(2):'…';
+  $('rCorr').textContent=end?f2(corr):'…';
+  const w=s.wrong.length;
+  $('rWrong').textContent=SKIP?'jump (m), naive snap':(w?`correction (m) = 0.05 × ${w} wrong (${range(s.wrong)})`:'correction (m), 0 predicted wrong');
+}
+
+function caption(){
+  const s=R.snaps[idx],ci=corrIndex(R),c=ci>=0?R.snaps[ci]:null;
+  let t;
+  if(SKIP) t=`No replay: the client jumps to the server's x, ${f2(s.sx-s.before)} m, on every snapshot, snare or no snare. The server was right. It was just a round trip old.`;
+  else if(RTT===150&&SNARE&&!LOSE&&s.ack===47) t='Start from the server, re-walk the inputs it has not seen. Correction 0.00. Press Next until something changes.';
+  else if(Math.abs(s.corr)>1e-6) t=`This snapshot reveals the snare. The same re-walk lands ${f2(-s.corr).replace(MINUS,'')} m short: ${s.wrong.length} inputs (${range(s.wrong)}) were predicted at 0.10 m and really moved 0.05 m.`;
+  else if(s.wrong.length===0&&c&&s.ms>c.ms) t='The client already knows the snare, so its prediction was right and the re-walk lands on the ghost again.';
+  else t=`The re-walk lands exactly on the old prediction. Correction 0.00, although the server's x is ${f2(s.before-s.sx).replace(MINUS,'')} m behind.`;
+  $('caption').textContent=t;
+  let ins;
+  if(!SNARE) ins='Snare off: the client knew everything the server knew, so every correction in this run is 0.00.';
+  else if(c) ins=`This run at ${RTT} ms${LOSE?', with the snare snapshot lost':''}: one non-zero correction, <b>${f2(c.corr)} m</b> at ${fms(c.ms)} ms (ack ${c.ack}), from ${c.wrong.length} inputs predicted wrong × 0.05 m. Every other snapshot corrects by 0.00.`;
+  else ins='No correction in this run.';
+  const mv=R.rows.filter(r=>r.tick>=30&&r.tick<120).map(r=>r.pending);
+  ins+=` Pending inputs after each input while walking: ${Math.min(...mv)} to ${Math.max(...mv)}.`;
+  $('insight').innerHTML=ins;
+}
+
+function frames(){
+  const run=getRun(RTT,SNARE,LOSE,SMOOTH),snap=getRun(RTT,SNARE,LOSE,0);
+  const ci=corrIndex(run);
+  const centerTick=ci>=0?run.snaps[ci].tick:R.snaps[idx].tick;
+  const t0=Math.max(1,centerTick-1),t1=Math.min(180,t0+7);
+  $('thSmooth').textContent=SMOOTH?`Drawn, smooth ${SMOOTH} s`:'Drawn, smooth (off)';
+  let h='';
+  for(let t=t0;t<=t1;t++){
+    const a=snap.rows[t],b=run.rows[t],prev=run.rows[t-1],d=b.shown-prev.shown;
+    h+=`<tr class="${t===centerTick?'here':''}"><td>${fms(a.ms)}${t===centerTick?(ci>=0?' (snapshot)':' (selected)'):''}</td><td>${a.pred.toFixed(2)}</td><td>${a.shown.toFixed(2)}</td><td>${b.shown.toFixed(3)}</td><td class="${d<-1e-6?'back':''}">${f3(d)}</td></tr>`;
+  }
+  $('frames').innerHTML=h;
+  $('frameNote').textContent=ci>=0?' eight frames around the correction, 60 per second':' no correction in this run; frames around the selected snapshot';
+  const back=rows=>Math.max(0,...rows.slice(1).map((r,i)=>rows[i].shown-r.shown));
+  $('backNote').textContent=`Largest backward step of the drawn position in this run: snap ${f3(back(snap.rows))} m${SMOOTH?`, smooth ${SMOOTH} s ${f3(back(run.rows))} m`:''}.`;
+}
+
+function render(){
+  const s=R.snaps[idx];
+  $('oSnap').textContent=`${idx+1} of ${R.snaps.length}, ack ${s.ack}`;
+  $('snapSel').value=idx;$('snapSel').setAttribute('aria-valuetext',`snapshot ${idx+1}, ack ${s.ack}, handled at ${fms(s.ms)} ms`);
+  $('prev').disabled=idx===0;$('next').disabled=idx===R.snaps.length-1;
+  $('jump').disabled=corrIndex(R)<0;
+  drawStrip(s);drawRuler(s);drawAlgo(s);readouts(s);caption();
+  $('play').textContent=timer?'Pause':(phase>=END(s)?'Replay':'Play');
+}
+
+/* ---------- animation ---------- */
+function stop(){if(timer){clearTimeout(timer);timer=null;}}
+function play(){
+  stop();const s=R.snaps[idx];
+  if(reduce.matches){phase=END(s);render();return;}
+  if(phase>=END(s))phase=0;
+  const tickFn=()=>{
+    phase++;const end=END(s);
+    if(phase>=end){phase=end;timer=null;render();return;}
+    timer=setTimeout(tickFn,phase>=2?150:420);render();
+  };
+  timer=setTimeout(tickFn,phase===0?350:150);render();
+}
+function select(i,animate){
+  stop();idx=Math.max(0,Math.min(R.snaps.length-1,i));
+  if(animate){phase=0;play();}else{phase=END(R.snaps[idx]);render();}
+}
+function rebuild(keepMs){
+  stop();R=getRun(RTT,SNARE,LOSE,0);
+  let best=0,bd=Infinity;R.snaps.forEach((s,i)=>{const d=Math.abs(s.ms-keepMs);if(d<bd){bd=d;best=i;}});
+  $('snapSel').max=R.snaps.length-1;idx=best;phase=END(R.snaps[idx]);render();frames();
+}
+
+$('prev').addEventListener('click',()=>select(idx-1,true));
+$('next').addEventListener('click',()=>select(idx+1,true));
+$('snapSel').addEventListener('input',e=>select(+e.target.value,false));
+$('play').addEventListener('click',()=>{if(timer){stop();render();}else play();});
+$('stepBtn').addEventListener('click',()=>{stop();const s=R.snaps[idx];phase=phase>=END(s)?0:phase+1;render();});
+$('jump').addEventListener('click',()=>{const c=corrIndex(R);if(c>=0)select(c,true);});
+document.querySelectorAll('input[name=rtt]').forEach(r=>r.addEventListener('change',()=>{RTT=+r.value;rebuild(R.snaps[idx].ms);}));
+document.querySelectorAll('input[name=smooth]').forEach(r=>r.addEventListener('change',()=>{SMOOTH=+r.value;frames();}));
+$('snare').addEventListener('change',e=>{SNARE=e.target.checked;$('lose').disabled=!SNARE;rebuild(R.snaps[idx].ms);});
+$('lose').addEventListener('change',e=>{LOSE=e.target.checked;rebuild(R.snaps[idx].ms);});
+$('skip').addEventListener('change',e=>{SKIP=e.target.checked;stop();phase=END(R.snaps[idx]);render();});
+document.addEventListener('keydown',e=>{
+  const t=e.target;if(t&&t.tagName==='INPUT'&&(t.type==='range'||t.type==='radio'))return;
+  if(e.key==='ArrowRight'){e.preventDefault();select(idx+1,true);}
+  else if(e.key==='ArrowLeft'){e.preventDefault();select(idx-1,true);}
+});
+window.addEventListener('resize',()=>drawRuler(R.snaps[idx]));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>drawRuler(R.snaps[idx]));
+
+/* ---------- self-test against netsim.py (spec test values) ---------- */
+function selftest(){
+  const fails=[];let n=0;
+  const eq=(name,got,want,tol)=>{n++;if(!(Math.abs(got-want)<=(tol||0.0051)))fails.push(`${name}: got ${got}, want ${want}`);};
+  const eqs=(name,got,want)=>{n++;if(got!==want)fails.push(`${name}: got ${got}, want ${want}`);};
+  const r150=getRun(150,true,false,0);
+  const table=[[933.3,47,4.70,5.60,'48-56',5.60,0,-0.90],[983.3,50,5.00,5.90,'51-59',5.90,0,-0.90],[1033.3,53,5.30,6.20,'54-62',6.20,0,-0.90],[1083.3,56,5.55,6.50,'57-65',6.00,-0.50,-0.95],[1133.3,59,5.70,6.15,'60-68',6.15,0,-0.45]];
+  for(const [ms,ack,sx,bef,rep,aft,corr,skip] of table){
+    const s=r150.snaps.find(q=>q.ack===ack);
+    if(!s){fails.push('missing ack '+ack);continue;}
+    eq(`ack ${ack} handled`,+fms(s.ms),ms,0.05);eq(`ack ${ack} server`,s.sx,sx);eq(`ack ${ack} before`,s.before,bef);
+    eqs(`ack ${ack} replayed`,range(s.replayed),rep);eq(`ack ${ack} after`,s.after,aft);eq(`ack ${ack} corr`,s.corr,corr);eq(`ack ${ack} skip`,s.sx-s.before,skip);
+  }
+  const s56=r150.snaps.find(q=>q.ack===56);
+  eq('snare_from',s56.sf,56,0);eq('snare_to',s56.st,116,0);eqs('wrong at 56',range(s56.wrong),'56-65');
+  const sweep=[[50,'3',59,6.20,6.00,-0.20,1033.3,'4-6'],[100,'5-6',58,6.30,5.95,-0.35,1050.0,'6-10'],[150,'9',56,6.50,6.00,-0.50,1083.3,'10-12'],[250,'15',53,6.80,6.00,-0.80,1133.3,'16-18']];
+  for(const [rtt,repw,ack,bef,aft,corr,ms,pend] of sweep){
+    const run=getRun(rtt,true,false,0),c=run.snaps.filter(q=>Math.abs(q.corr)>1e-6);
+    eq(`${rtt} one correction`,c.length,1,0);const s=c[0];
+    eq(`${rtt} ack`,s.ack,ack,0);eq(`${rtt} before`,s.before,bef);eq(`${rtt} after`,s.after,aft);eq(`${rtt} corr`,s.corr,corr);eq(`${rtt} at`,+fms(s.ms),ms,0.05);
+    const walk=run.snaps.filter(q=>q.tick>=30&&q.tick<120).map(q=>q.replayed.length);
+    const lo=Math.min(...walk),hi=Math.max(...walk);eqs(`${rtt} replayed/snap`,lo===hi?''+lo:lo+'-'+hi,repw);
+    const mv=run.rows.filter(r=>r.tick>=30&&r.tick<120).map(r=>r.pending);eqs(`${rtt} pending`,Math.min(...mv)+'-'+Math.max(...mv),pend);
+  }
+  for(const rtt of [50,100,150,250]){eq(`no snare ${rtt}`,Math.max(...getRun(rtt,false,false,0).snaps.map(q=>Math.abs(q.corr))),0,1e-9);}
+  const lr=getRun(150,true,true,0),lc=lr.snaps.filter(q=>Math.abs(q.corr)>1e-6)[0];
+  eq('lose at',+fms(lc.ms),1133.3,0.05);eq('lose ack',lc.ack,59,0);eq('lose server',lc.sx,5.70);eq('lose before',lc.before,6.80);
+  eqs('lose replay',range(lc.replayed),'60-68');eq('lose after',lc.after,6.15);eq('lose corr',lc.corr,-0.65);eqs('lose wrong',range(lc.wrong),'56-68');
+  const want1=[6.500,6.550,6.517,6.483,6.450,6.417,6.383,6.350],pred=[6.50,6.05,6.10,6.15,6.20,6.25,6.30,6.35],want2=[6.500,6.550,6.558,6.567,6.575,6.583,6.592,6.600];
+  const s1=getRun(150,true,false,0.1),s2=getRun(150,true,false,0.2);
+  for(let i=0;i<8;i++){eq(`smooth .1 f${i}`,s1.rows[64+i].shown,want1[i],0.0006);eq(`pred f${i}`,s1.rows[64+i].pred,pred[i]);eq(`smooth .2 f${i}`,s2.rows[64+i].shown,want2[i],0.0006);}
+  const back=rows=>Math.max(0,...rows.slice(1).map((r,i)=>rows[i].shown-r.shown));
+  eq('backstep .1',back(s1.rows),0.034,0.0006);eq('backstep .2',back(s2.rows),0,1e-9);eq('backstep snap',back(r150.rows),0.45,0.0006);
+  $('selftest').textContent=fails.length?`Self-test: ${fails.length} of ${n} checks differ from netsim.py.`:`Self-test on load: all ${n} spec values match netsim.py.`;
+  if(fails.length)console.error('w09 self-test failed',fails);
+}
+
+selftest();
+const i47=R.snaps.findIndex(s=>s.ack===47);
+$('snapSel').max=R.snaps.length-1;
+idx=i47;phase=END(R.snaps[idx]);
+render();frames();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>drawRuler(R.snaps[idx]));
+})();
+</script>
+</body>
+</html>

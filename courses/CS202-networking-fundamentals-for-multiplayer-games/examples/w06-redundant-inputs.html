@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Redundant inputs — CS202 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.scroller{overflow-x:auto;overscroll-behavior-x:contain;border-radius:6px}
+.scroller:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+#cLane{display:block;height:200px}
+#cChart{display:block;width:100%;height:280px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin-top:6px}
+.sw{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
+.row2{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:700px){.row2{grid-template-columns:1fr}}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.caption{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl+.ctl{margin-top:12px}
+.ctl>label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 1rem var(--sans);width:6.5em;padding:6px 8px;border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink)}
+.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.stepper{display:flex;align-items:center;gap:8px;margin-top:4px}
+.stepper output{min-width:2ch;text-align:center;font-size:1.2rem}
+.seg{display:flex;flex-wrap:wrap;gap:6px;border:0;padding:0;margin:0}
+.seg legend{font-weight:600;font-size:.92rem;margin-bottom:6px;padding:0}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg span{display:inline-block;font:600 .92rem var(--sans);padding:7px 13px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer}
+.seg input:checked+span{background:var(--ink);color:var(--paper)}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nums{background:var(--paper-2);border-radius:10px;padding:10px 12px}
+.nums h2{font-family:var(--serif);font-size:1rem;font-weight:600;margin:0 0 6px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0;font-size:.92rem}
+dt{color:var(--ink-soft)}
+dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:4px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td.here{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 6 · Worked example</p>
+  <h1>Three copies, or wait for the ack?</h1>
+  <p class="lede" id="lede">Same 5% loss. Independent: 27 inputs lost an hour. In bursts: 2,700.</p>
+</header>
+
+<div class="panel">
+  <figure>
+    <figcaption>Three seconds of input packets at 60 Hz<small>Top: 180 packets, lost ones hollow with an X. Below: each input's copies, one column per input, copy +0 on top. Scroll sideways inside the strip.</small></figcaption>
+    <div class="scroller" id="scroller" tabindex="0" role="region" aria-label="Packet lane and input grid, scrolls sideways">
+      <canvas id="cLane" role="img" aria-label="Packet lane and input grid"></canvas>
+    </div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--steel)"></i>packet arrived</span>
+      <span><i class="sw" style="border:1.5px solid var(--ink-soft)"></i>packet lost</span>
+      <span><i class="sw" style="background:var(--moss)"></i>first copy that got through</span>
+      <span><i class="sw" style="background:var(--moss);opacity:.3"></i>later copies (not needed)</span>
+      <span><i class="sw" style="background:var(--blood)"></i>input lost for good</span>
+      <span id="lgResend"><i class="sw" style="background:var(--ochre)"></i>resent copy</span>
+    </div>
+  </figure>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rLost">—</b><span>inputs lost on screen</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rInd">—</b><span>lost per hour, independent</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rBur">—</b><span>lost per hour, bursty</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rDel">—</b><span>mean extra delay, rescued inputs</span></div>
+  </div>
+
+  <div class="caption" id="insight"></div>
+
+  <div class="row2">
+    <figure>
+      <figcaption>Lost inputs per hour against copies<small>216,000 inputs an hour. Log scale: each gridline is ten times more.</small></figcaption>
+      <canvas id="cChart" role="img" aria-label="Lost inputs per hour against number of copies"></canvas>
+      <div class="legend"><span><i class="sw" style="background:var(--steel)"></i>independent, p^k</span><span><i class="sw" style="background:var(--blood)"></i>bursty, p × q^(k−1)</span></div>
+    </figure>
+    <div class="nums">
+      <h2>Numbers</h2>
+      <dl id="dlNums"></dl>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <div class="ctl">
+        <label for="p">Loss p <output id="oP">5%</output></label>
+        <input id="p" type="range" min="0" max="30" step="1" value="5">
+      </div>
+      <div class="ctl">
+        <label for="q">Burstiness q, P(lost | previous lost) <output id="oQ">0.50</output></label>
+        <input id="q" type="range" min="0.05" max="0.9" step="0.01" value="0.5">
+        <button class="btn" id="indep" type="button" style="margin-top:4px">Independent (q = p)</button>
+      </div>
+      <div class="ctl">
+        <span class="lbl" id="kLbl">Copies k</span>
+        <div class="stepper" role="group" aria-labelledby="kLbl">
+          <button class="btn" id="kDown" type="button" aria-label="One copy fewer">−</button>
+          <output id="oK" aria-live="polite">3</output>
+          <button class="btn" id="kUp" type="button" aria-label="One copy more">+</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <fieldset class="seg ctl">
+        <legend>Mode</legend>
+        <label><input type="radio" name="mode" value="red" checked><span>Redundancy</span></label>
+        <label><input type="radio" name="mode" value="ack"><span>Ack and resend</span></label>
+        <label><input type="radio" name="mode" value="both"><span>Both</span></label>
+      </fieldset>
+      <div class="ctl">
+        <label for="rtt">Round trip (used by resend) <output id="oRtt">100 ms</output></label>
+        <input id="rtt" type="range" min="20" max="300" step="10" value="100">
+      </div>
+      <div class="ctl">
+        <label for="seed">Seed</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          <input id="seed" type="number" min="1" max="999999" step="1" value="16" inputmode="numeric">
+          <button class="btn" id="newPat" type="button">New pattern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tCap">Lost inputs per hour</caption>
+      <thead><tr><th>Loss pattern</th><th>k = 1</th><th>k = 2</th><th>k = 3</th><th>k = 4</th><th>k = 5</th><th>k = 6</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <p>Model from the week 6 lecture, section 2, and <code>labs/lab06-starter/reliability.py</code>. After an arrival a packet is lost with r = p(1 − q)/(1 − p), after a loss with q. The pattern here comes from a seeded mulberry32 generator, so it differs from Python's, but the formulas are the same. Δ = 1000/60 ms. Packet bytes = 28 + 8 + 4k.</p>
+  <p id="selftest"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+function nice(v){ // per-hour counts: 10,800 · 540 · 27 · 1.35 · 0.216
+  if(v>=100)return fmt(v,0);
+  if(v>=10){const r=+v.toPrecision(3);return fmt(r,Number.isInteger(r)?0:1);}
+  return String(+v.toPrecision(3));
+}
+
+// ---------- model (matches reliability.py) ----------
+const HOUR=216000,DELTA=1000/60,N=180;
+const perHourInd=(p,k)=>HOUR*Math.pow(p,k);
+const perHourBur=(p,q,k)=>HOUR*p*Math.pow(q,k-1);
+const packetBytes=k=>28+8+4*k;
+const uploadKbit=k=>packetBytes(k)*60*8/1000;
+const resendDelay=rtt=>DELTA+rtt;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function lossPattern(n,p,q,seed){
+  const rng=mulberry32(seed),r=(q===p||p===0)?p:p*(1-q)/(1-p);const out=[];let prev=false;
+  for(let i=0;i<n;i++){prev=rng()<(prev?q:r);out.push(prev);}return out;
+}
+
+let p=0.05,q=0.5,k=3,mode='red',rtt=100,seed=16,indep=false;
+
+function simulate(){
+  const L=lossPattern(N+900,p,q,seed);
+  const gap=Math.ceil(1+rtt/DELTA-1e-9); // packets between a send and the resend it triggers
+  const inputs=[];
+  for(let i=0;i<N;i++){
+    const inp={i,copies:[],resends:[],first:null,delay:null,lost:false};
+    const nc=mode==='ack'?1:k;
+    for(let j=0;j<nc;j++){const lost=L[i+j];inp.copies.push({pk:i+j,lost});if(!lost&&inp.first===null){inp.first=j;inp.delay=j*DELTA;}}
+    if(inp.first===null&&mode!=='red'){
+      let pk=i+nc-1,base=(nc-1)*DELTA,a=0;
+      while(a<50){a++;pk+=gap;const lost=L[pk];inp.resends.push({pk,lost,delay:base+a*resendDelay(rtt)});if(!lost){inp.delay=base+a*resendDelay(rtt);break;}}
+    }
+    inp.lost=inp.delay===null;
+    inputs.push(inp);
+  }
+  return {L,inputs};
+}
+
+// ---------- drawing ----------
+const PITCH=11,CELL=9,LX=48;
+function drawLane(sim){
+  const cv=$('cLane'),dpr=window.devicePixelRatio||1;
+  const nCopyRows=mode==='ack'?1:k,maxRes=mode==='red'?0:Math.min(4,Math.max(1,...sim.inputs.map(x=>x.resends.length)));
+  const laneY=22,gridY=laneY+CELL+22,rows=nCopyRows+maxRes;
+  const W=LX+N*PITCH+60,H=gridY+rows*(CELL+4)+36;
+  cv.style.width=W+'px';cv.style.height=H+'px';cv.width=W*dpr;cv.height=H*dpr;
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),moss=css('--moss'),blood=css('--blood'),ochre=css('--ochre');
+  g.font='11px '+css('--sans');g.textBaseline='middle';
+  const X=pk=>LX+pk*PITCH;
+  // time axis
+  g.fillStyle=soft;g.textAlign='center';
+  for(let s=0;s<=N;s+=30){g.strokeStyle=grid;g.beginPath();g.moveTo(X(s),6);g.lineTo(X(s),H-18);g.stroke();g.fillText((s/60).toFixed(1)+' s',X(s),H-9);}
+  g.textAlign='right';g.fillText('packet',LX-6,laneY+CELL/2);
+  // lane
+  for(let pk=0;pk<N;pk++){const x=X(pk);
+    if(sim.L[pk]){g.strokeStyle=soft;g.lineWidth=1;g.strokeRect(x+.5,laneY+.5,CELL-1,CELL-1);g.beginPath();g.moveTo(x+1,laneY+1);g.lineTo(x+CELL-1,laneY+CELL-1);g.moveTo(x+CELL-1,laneY+1);g.lineTo(x+1,laneY+CELL-1);g.stroke();}
+    else{g.fillStyle=steel;g.fillRect(x,laneY,CELL,CELL);}}
+  // grid rows
+  g.fillStyle=soft;g.textAlign='right';
+  for(let j=0;j<nCopyRows;j++)g.fillText(mode==='ack'?'send':'+'+j,LX-6,gridY+j*(CELL+4)+CELL/2);
+  for(let a=0;a<maxRes;a++)g.fillText('resend',LX-6,gridY+(nCopyRows+a)*(CELL+4)+CELL/2);
+  const labEnd=[];
+  sim.inputs.forEach(inp=>{
+    const x=X(inp.i);
+    if(inp.lost&&!inp.resends.length){g.fillStyle=blood;g.fillRect(x-1,gridY-2,CELL+2,nCopyRows*(CELL+4)+1);}
+    inp.copies.forEach((c,j)=>{const y=gridY+j*(CELL+4);
+      if(inp.lost&&!inp.resends.length){g.strokeStyle=css('--paper');g.lineWidth=1;g.beginPath();g.moveTo(x+1,y+1);g.lineTo(x+CELL-1,y+CELL-1);g.moveTo(x+CELL-1,y+1);g.lineTo(x+1,y+CELL-1);g.stroke();return;}
+      if(c.lost){g.strokeStyle=soft;g.lineWidth=1;g.strokeRect(x+.5,y+.5,CELL-1,CELL-1);return;}
+      g.fillStyle=moss;g.globalAlpha=j===inp.first?1:.28;g.fillRect(x,y,CELL,CELL);g.globalAlpha=1;});
+    inp.resends.forEach((r,a)=>{if(a>=maxRes)return;const y=gridY+(nCopyRows+a)*(CELL+4),rx=X(r.pk);
+      const py=a===0?gridY+(nCopyRows-1)*(CELL+4)+CELL:gridY+(nCopyRows+a-1)*(CELL+4)+CELL;const px=a===0?x+CELL/2:X(inp.resends[a-1].pk)+CELL/2;
+      g.strokeStyle=soft;g.lineWidth=1;g.beginPath();g.moveTo(px,py);g.lineTo(rx+CELL/2,y);g.stroke();
+      if(r.lost){g.strokeStyle=ochre;g.strokeRect(rx+.5,y+.5,CELL-1,CELL-1);}
+      else{g.fillStyle=ochre;g.fillRect(rx,y,CELL,CELL);labEnd.push({rx,y,a,t:'+'+Math.round(r.delay)+' ms'});}});
+  });
+  // one label per run of adjacent resent copies in a row, placed after the run
+  labEnd.sort((u,v)=>u.a-v.a||u.rx-v.rx);let lastEnd={};
+  labEnd.forEach((L,i)=>{const nx=labEnd[i+1];if(nx&&nx.a===L.a&&nx.rx-L.rx<=PITCH*2)return;
+    const x0=L.rx+CELL+3;if(x0<(lastEnd[L.a]||0))return;g.fillStyle=ink;g.textAlign='left';g.fillText(L.t,x0,L.y+CELL/2);lastEnd[L.a]=x0+g.measureText(L.t).width+4;});
+  const nl=sim.inputs.filter(x=>x.lost).length;
+  cv.setAttribute('aria-label',`180 packets, ${sim.L.slice(0,N).filter(Boolean).length} lost. ${nl} of 180 inputs lost for good.`);
+}
+
+function drawChart(){
+  const c=$('cChart'),dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=r.width*dpr;c.height=r.height*dpr;
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);const w=r.width,h=r.height;g.clearRect(0,0,w,h);
+  const pad={l:62,r:16,t:14,b:34},ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid');
+  const X=kk=>pad.l+(kk-1)/5*(w-pad.l-pad.r),Y=v=>{const lv=Math.log10(Math.max(v,0.01));return pad.t+(1-(lv+2)/7)*(h-pad.t-pad.b);};
+  g.font='12px '+css('--sans');
+  for(let e=-2;e<=5;e++){const y=Y(Math.pow(10,e));g.strokeStyle=grid;g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText(e<0?String(Math.pow(10,e)):fmt(Math.pow(10,e)),pad.l-6,y);}
+  for(let kk=1;kk<=6;kk++){g.textAlign='center';g.textBaseline='top';g.fillStyle=soft;g.fillText('k = '+kk,X(kk),h-pad.b+8);}
+  const line=(f,col)=>{g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();for(let kk=1;kk<=6;kk++){const y=Y(f(kk));kk===1?g.moveTo(X(kk),y):g.lineTo(X(kk),y);}g.stroke();
+    for(let kk=1;kk<=6;kk++){g.fillStyle=col;g.beginPath();g.arc(X(kk),Y(f(kk)),3.5,0,7);g.fill();}};
+  if(p>0){line(kk=>perHourBur(p,q,kk),css('--blood'));line(kk=>perHourInd(p,kk),css('--steel'));}
+  const x=X(k);g.strokeStyle=ink;g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  if(p>0){
+    const a=perHourInd(p,k),b=perHourBur(p,q,k);
+    const lab=Math.abs(a-b)<1e-9?nice(a)+' per hour':nice(a)+' vs '+nice(b)+' per hour';
+    g.font='600 13px '+css('--sans');const tw=g.measureText(lab).width;let lx=Math.max(pad.l+4,Math.min(x+8,w-pad.r-tw));
+    const ly=pad.t+2;
+    g.fillStyle=css('--paper-2');g.fillRect(lx-3,ly-2,tw+6,18);g.fillStyle=ink;g.textAlign='left';g.textBaseline='top';g.fillText(lab,lx,ly);
+    c.setAttribute('aria-label','Lost inputs per hour. At k = '+k+': '+lab+'.');
+  }
+}
+
+// ---------- update ----------
+function update(){
+  if(indep)q=p;
+  const qs=$('q');qs.min=Math.max(0.01,p).toFixed(2);if(q<p)q=p;qs.value=q;
+  $('oP').textContent=Math.round(p*100)+'%';$('oQ').textContent=q.toFixed(2)+(Math.abs(q-p)<1e-9?' (independent)':'');
+  $('oK').textContent=k;$('oRtt').textContent=rtt+' ms';
+  $('kDown').disabled=k<=1;$('kUp').disabled=k>=6;
+  $('lgResend').hidden=mode==='red';
+  const sim=simulate();
+  drawLane(sim);drawChart();
+  const lost=sim.inputs.filter(x=>x.lost).length;
+  const rescued=sim.inputs.filter(x=>!x.lost&&x.delay>0);
+  const meanDel=rescued.length?rescued.reduce((s,x)=>s+x.delay,0)/rescued.length:0;
+  const kk=mode==='ack'?1:k;
+  const ind=perHourInd(p,kk),bur=perHourBur(p,q,kk);
+  $('rLost').textContent=lost+' of '+N;
+  $('rInd').textContent=mode==='red'?nice(ind):'0';
+  $('rBur').textContent=mode==='red'?nice(bur):'0';
+  $('rDel').textContent=rescued.length?fmt(meanDel,1)+' ms':'—';
+  const mb=q<1?1/(1-q):Infinity;
+  const rows=[
+    ['Loss p',Math.round(p*100)+'%'],['Burstiness q',q.toFixed(2)],['Mean burst 1/(1 − q)',fmt(mb,2)+' packets'],
+    ['Copies k',kk+(mode==='ack'?' (resend mode sends once)':'')],
+    ['Packets lost on screen',sim.L.slice(0,N).filter(Boolean).length+' of '+N],
+    ['Inputs lost on screen',lost],
+    ['Rescued inputs on screen',rescued.length],
+    ['Per hour, independent p^k',nice(ind)+(mode==='red'?'':' before resend')],
+    ['Per hour, bursty p q^(k−1)',nice(bur)+(mode==='red'?'':' before resend')],
+    ['Mean extra delay, rescued',rescued.length?fmt(meanDel,1)+' ms':'—'],
+    ['One resend costs Δ + RTT',fmt(resendDelay(rtt),1)+' ms'],
+    ['Packet bytes 28 + 8 + 4k',packetBytes(kk)+' B'],
+    ['Upload at 60 Hz',fmt(uploadKbit(kk),2).replace(/\.?0+$/,'')+' kbit/s'],
+  ];
+  $('dlNums').innerHTML=rows.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('');
+  // table
+  $('tCap').textContent=`Lost inputs per hour at p = ${Math.round(p*100)}%, formula`;
+  const tr=(name,f)=>`<tr><td>${name}</td>${[1,2,3,4,5,6].map(j=>`<td class="${j===kk?'here':''}">${nice(f(j))}</td>`).join('')}</tr>`;
+  $('tbody').innerHTML=tr('Independent',j=>perHourInd(p,j))+tr(`Bursty, q = ${q.toFixed(2)}`,j=>perHourBur(p,q,j))+
+    `<tr><td>Packet bytes</td>${[1,2,3,4,5,6].map(j=>`<td class="${j===kk?'here':''}">${packetBytes(j)}</td>`).join('')}</tr>`;
+  // caption
+  let s;
+  if(p===0)s='No loss, nothing to rescue. Raise p.';
+  else if(mode==='red'){
+    s=Math.abs(q-p)<1e-9?`Independent ${Math.round(p*100)}% loss: each extra copy divides losses by ${fmt(1/p,1).replace(/\.0$/,'')}. At k = ${k}, ${nice(ind)} inputs lost an hour. Now drag q up with the same p.`
+      :`Same ${Math.round(p*100)}% loss. Independent: ${nice(ind)} inputs lost an hour. In bursts (q = ${q.toFixed(2)}): ${nice(bur)}. Each copy only divides by ${fmt(1/q,2).replace(/\.?0+$/,'')} because copies in neighbouring packets share the burst.`;
+    s+=` Rescued inputs arrive ${fmt(DELTA,1)} ms per copy late.`;
+  } else if(mode==='ack'){
+    s=`Ack and resend: every input arrives, but a lost one waits at least Δ + RTT = ${fmt(resendDelay(rtt),1)} ms, about ${Math.round(resendDelay(rtt)/DELTA)} server ticks at 60 Hz. Redundancy rescues it one packet (${fmt(DELTA,1)} ms) later.`;
+  } else {
+    s=`Both: copies rescue most losses one packet later, and resend catches the few whole-burst losses a round trip later. Packet size stays fixed at ${packetBytes(k)} B.`;
+  }
+  $('insight').textContent=s;
+}
+
+// ---------- events ----------
+$('p').addEventListener('input',e=>{p=+e.target.value/100;update();});
+$('q').addEventListener('input',e=>{q=+e.target.value;indep=false;update();});
+$('indep').addEventListener('click',()=>{indep=true;update();});
+$('kDown').addEventListener('click',()=>{if(k>1){k--;update();}});
+$('kUp').addEventListener('click',()=>{if(k<6){k++;update();}});
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',()=>{if(r.checked){mode=r.value;update();}}));
+$('rtt').addEventListener('input',e=>{rtt=+e.target.value;update();});
+$('seed').addEventListener('change',e=>{seed=Math.max(1,Math.round(+e.target.value)||1);e.target.value=seed;update();});
+$('newPat').addEventListener('click',()=>{seed=seed%999999+1;$('seed').value=seed;update();});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+
+// ---------- spec test values, checked on load (formula only) ----------
+function selfTest(){
+  const T=[],eq=(name,got,want)=>T.push({name,got:String(got),want:String(want),ok:String(got)===String(want)});
+  [[1,'10,800'],[2,'540'],[3,'27'],[4,'1.35']].forEach(([kk,v])=>eq('ind k='+kk,nice(perHourInd(0.05,kk)),v));
+  [[1,'10,800'],[2,'5,400'],[3,'2,700'],[4,'1,350']].forEach(([kk,v])=>eq('bur k='+kk,nice(perHourBur(0.05,0.5,kk)),v));
+  eq('p=.01 k=3',nice(perHourInd(0.01,3)),'0.216');
+  eq('bytes k=1',packetBytes(1),40);eq('kbit k=1',uploadKbit(1).toFixed(1),'19.2');
+  eq('bytes k=3',packetBytes(3),48);eq('kbit k=3',uploadKbit(3).toFixed(2),'23.04');
+  eq('resend delay',resendDelay(100).toFixed(1),'116.7');
+  const bad=T.filter(x=>!x.ok);
+  window.CS202_W06_SELFTEST={total:T.length,pass:T.length-bad.length,failures:bad};
+  $('selftest').textContent=`Spec test values checked on load: ${T.length-bad.length} of ${T.length} match the lecture.`;
+  if(bad.length)console.error('Self-test failures',bad);
+}
+selfTest();
+update();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+})();
+</script>
+</body>
+</html>

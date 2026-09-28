@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quantization and bits — CS202 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;border:0;padding:0}
+.seg legend{font-weight:600;font-size:.92rem;margin-bottom:6px;padding:0}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg span{display:inline-block;font:600 .95rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer}
+.seg input:checked+span{background:var(--ink);color:var(--paper)}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px}
+.figfoot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-size:.86rem;margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:5px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.caption{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl label,.ctl .lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+.ctl+.ctl{margin-top:12px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 1rem var(--sans);width:8em;padding:6px 8px;border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink)}
+.check{display:flex!important;justify-content:flex-start!important;align-items:center;gap:8px;font-weight:600}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip,.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+@media (max-width:860px){.numbers{grid-template-columns:1fr}}
+.numbers section{background:var(--paper-2);border-radius:10px;padding:10px 12px}
+.numbers h2{font-family:var(--serif);font-size:1rem;font-weight:600;margin:0 0 6px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0;font-size:.92rem}
+dt{color:var(--ink-soft)}
+dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:4px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 5 · Worked example</p>
+  <h1>One bit halves the error</h1>
+  <p class="lede" id="lede">At 1 cm you cannot see the difference. At 10 cm it hops. It is only 3 bits between them.</p>
+</header>
+
+<div class="panel">
+  <fieldset class="seg" id="fieldSel">
+    <legend>Field</legend>
+    <label><input type="radio" name="field" value="pos" checked><span>Position (x)</span></label>
+    <label><input type="radio" name="field" value="yaw"><span>Yaw</span></label>
+    <label><input type="radio" name="field" value="vel"><span>Velocity</span></label>
+  </fieldset>
+
+  <div class="charts">
+    <figure>
+      <figcaption id="leftCap">What the receiver sees<small id="leftSub">A 2 m × 2 m patch of the arena. Grid = every position the receiver can rebuild.</small></figcaption>
+      <canvas id="cView" role="img" aria-label="True and received positions"></canvas>
+      <div class="figfoot">
+        <div class="legend"><span><i style="border:2px solid var(--ink)"></i>true</span><span><i style="background:var(--blood)"></i>received</span></div>
+        <div><button class="btn" id="play" type="button">Pause</button> <button class="btn" id="step" type="button">Step 0.1 s</button></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Bits per axis<small id="rightSub">⌈log2(count)⌉ against precision, log scale. Each halving of the step adds one bit.</small></figcaption>
+      <canvas id="cBits" role="img" aria-label="Bits needed against precision, a staircase"></canvas>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rBits">16</b><span>bits for this field</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rErr">5 mm</b><span id="rErrL">largest error (p / 2)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rBytes">44 → 14 B</b><span>one player state</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rUp">29.1 → 9.5</b><span id="rUpL">Mbit/s server upload, 64 players</span></div>
+  </div>
+
+  <div class="caption" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <div class="ctl" id="precWrap">
+        <label for="prec">Precision p <output id="oPrec">1 cm</output></label>
+        <input id="prec" type="range" min="0" max="1000" step="1" value="600">
+        <div class="presets" role="group" aria-label="Precision presets from the lecture table" id="precChips"></div>
+      </div>
+      <div class="ctl" id="bitsWrap" hidden>
+        <label for="ybits">Yaw bits <output id="oYbits">10</output></label>
+        <input id="ybits" type="range" min="6" max="16" step="1" value="10">
+      </div>
+      <div class="ctl" id="hiWrap">
+        <label for="hi">Range hi (lo = 0 m)</label>
+        <input id="hi" type="number" min="64" max="8192" step="1" value="512" inputmode="numeric"> <span style="font-size:.9rem">m</span>
+      </div>
+    </div>
+    <div>
+      <div class="ctl">
+        <label class="check"><input type="checkbox" id="wrap"> Treat as wrapping (hi is the same place as lo)</label>
+      </div>
+      <div class="ctl">
+        <label for="n">Players n <output id="oN">64</output></label>
+        <input id="n" type="range" min="2" max="128" step="1" value="64">
+      </div>
+    </div>
+  </div>
+
+  <div class="numbers">
+    <section aria-labelledby="h1f"><h2 id="h1f">This field</h2><dl id="dlField"></dl></section>
+    <section aria-labelledby="h2p"><h2 id="h2p">Whole player (section 2 table)</h2><dl id="dlPlayer"></dl></section>
+    <section aria-labelledby="h3s"><h2 id="h3s">Server upload, 20 Hz, 28 B header</h2><dl id="dlServer"></dl></section>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tCap">One axis, 0 to 512 m</caption>
+      <thead><tr id="thead"></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <p>Formulas from the week 5 lecture, section 2, and <code>labs/lab05-starter/bitpack.py</code>. count = round((hi − lo)/p) + 1, or round((hi − lo)/p) when the value wraps. bits = ⌈log2 count⌉. Server upload = n × 20 × (n × s + 28) bytes per second.</p>
+  <p id="selftest"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+// ---------- model (matches bitpack.py) ----------
+function steps(lo,hi,p,wraps){const c=Math.round((hi-lo)/p);return wraps?c:c+1;}
+function bitsForCount(c){if(c<=1)return 0;let b=0;while(Math.pow(2,b)<c)b++;return b;}
+function fbits(lo,hi,p,w){return bitsForCount(steps(lo,hi,p,w));}
+function quant(x,lo,hi,p,w){
+  if(w){const r=hi-lo,c=steps(lo,hi,p,true);let m=((x-lo)%r+r)%r;return lo+(Math.round(m/p)%c)*p;}
+  const xc=Math.min(hi,Math.max(lo,x));return lo+Math.round((xc-lo)/p)*p;
+}
+const BASE={xy:16,z:13,yaw:10,pitch:9,v:10,health:7,state:3,flags:4};
+function playerBits(o){o=Object.assign({},BASE,o||{});return 2*o.xy+o.z+o.yaw+o.pitch+3*o.v+o.health+o.state+o.flags;}
+const NAIVE=44;
+function uploadKbit(n,s){return n*20*(n*s+28)*8/1000;}
+function aimErr(bits){const p=360/Math.pow(2,bits);return 30*(p/2)*Math.PI/180;}
+
+// ---------- formatting ----------
+const fmt=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+function trim(n,sig){return String(+n.toPrecision(sig));}
+function len(m){ // meters to a readable length
+  if(m>=1)return trim(m,3)+' m';
+  if(m>=0.01)return trim(m*100,3)+' cm';
+  return trim(m*1000,3)+' mm';
+}
+function mm(m){return trim(m*1000,3)+' mm';}
+
+// ---------- state ----------
+const FIELDS={
+  pos:{lo:0,hi:512,unit:'m',pMin:1e-5,pMax:1,defP:0.01,wrap:false},
+  yaw:{lo:0,hi:360,unit:'°',pMin:1e-3,pMax:10,defBits:10,wrap:true},
+  vel:{lo:-20,hi:20,unit:'m/s',pMin:1e-5,pMax:1,defP:0.05,wrap:false}
+};
+const ROWS=[1,0.5,0.1,0.05,0.01,0.005,0.001,0.0001];
+let field='pos',p=0.01,ybits=10,hi=512,wrap=false,n=64,t=0,playing=!reduce.matches,last=null;
+
+function cur(){
+  const F=FIELDS[field];
+  if(field==='yaw'){const pp=360/Math.pow(2,ybits);return {lo:0,hi:360,p:pp,w:wrap};}
+  return {lo:F.lo,hi:field==='pos'?hi:F.hi,p:p,w:wrap};
+}
+function curBits(){const c=cur();return fbits(c.lo,c.hi,c.p,c.w);}
+function curPlayer(){
+  const b=curBits();
+  if(field==='pos')return playerBits({xy:b});
+  if(field==='yaw')return playerBits({yaw:b});
+  return playerBits({v:b});
+}
+
+// ---------- precision slider (log) ----------
+function sToP(s){const F=FIELDS[field],a=Math.log10(F.pMin),b=Math.log10(F.pMax);let lp=a+(b-a)*s/1000,v=Math.pow(10,lp);
+  for(const r of ROWS){if(Math.abs(Math.log10(r)-lp)<0.04)return r;}
+  return +v.toPrecision(3);}
+function pToS(v){const F=FIELDS[field],a=Math.log10(F.pMin),b=Math.log10(F.pMax);return Math.round((Math.log10(v)-a)/(b-a)*1000);}
+function pLabel(v){return field==='vel'?(v>=1?trim(v,3)+' m/s':trim(v*100,3)+' cm/s'):len(v);}
+
+function buildChips(){
+  const box=$('precChips');box.innerHTML='';
+  const rows=field==='vel'?[1,0.5,0.1,0.05,0.01,0.001]:ROWS;
+  rows.forEach(r=>{const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.p=r;b.textContent=pLabel(r);
+    b.addEventListener('click',()=>{p=r;$('prec').value=pToS(p);update();});box.appendChild(b);});
+}
+
+// ---------- canvas helpers ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function dot(g,x,y,r,fill,stroke,lw){g.beginPath();g.arc(x,y,r,0,Math.PI*2);if(fill){g.fillStyle=fill;g.fill();}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw||2;g.stroke();}}
+
+// ---------- left view ----------
+const CX=32,CY=32,R=0.7,LAP=6;
+function truePos(tt){const a=2*Math.PI*tt/LAP;return [CX+R*Math.cos(a),CY+R*Math.sin(a)];}
+function trueYaw(tt){return 90+1.8*Math.sin(2*Math.PI*tt/LAP);}
+function trueVel(tt){return 7.3+9*Math.sin(2*Math.PI*tt/LAP);}
+
+let lastErrText='';
+function drawView(){
+  const {g,w,h}=setup($('cView'));g.clearRect(0,0,w,h);
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),steel=css('--steel');
+  g.font='12px '+css('--sans');
+  const c=cur();
+  if(field==='pos'){
+    const S=Math.min(w,h)-16,ox=(w-S)/2,oy=(h-S)/2;
+    const X=x=>ox+(x-(CX-1))/2*S,Y=y=>oy+(1-(y-(CY-1))/2)*S;
+    g.strokeStyle=soft;g.lineWidth=1;g.strokeRect(ox,oy,S,S);
+    if(c.p>=0.01-1e-12){
+      g.strokeStyle=grid;g.lineWidth=1;g.globalAlpha=c.p<0.03?0.55:1;
+      const k0=Math.ceil((CX-1)/c.p),k1=Math.floor((CX+1)/c.p);
+      g.beginPath();
+      for(let k=k0;k<=k1;k++){const v=k*c.p;g.moveTo(X(v),oy);g.lineTo(X(v),oy+S);g.moveTo(ox,Y(v));g.lineTo(ox+S,Y(v));}
+      g.stroke();g.globalAlpha=1;
+    }
+    // true path
+    g.strokeStyle=soft;g.globalAlpha=.45;g.setLineDash([3,4]);g.beginPath();g.arc(X(CX),Y(CY),R/2*S,0,Math.PI*2);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    // received trail, last 1 s
+    g.strokeStyle=blood;g.lineWidth=2;g.globalAlpha=.55;g.beginPath();
+    for(let i=0;i<=120;i++){const tt=t-1+i/120,[x,y]=truePos(tt),qx=quant(x,c.lo,c.hi,c.p,c.w),qy=quant(y,c.lo,c.hi,c.p,c.w);i?g.lineTo(X(qx),Y(qy)):g.moveTo(X(qx),Y(qy));}
+    g.stroke();g.globalAlpha=1;
+    const [x,y]=truePos(t),qx=quant(x,c.lo,c.hi,c.p,c.w),qy=quant(y,c.lo,c.hi,c.p,c.w);
+    dot(g,X(qx),Y(qy),6,blood);
+    dot(g,X(x),Y(y),9,null,ink,2);
+    const e=Math.hypot(qx-x,qy-y);
+    lastErrText='error now '+mm(e);
+    g.fillStyle=ink;g.textAlign='left';g.textBaseline='top';g.fillText(lastErrText,ox+6,oy+6);
+    g.fillStyle=soft;g.textBaseline='bottom';g.fillText(c.p>=0.01-1e-12?'grid spacing '+len(c.p):'grid hidden below 1 cm',ox+6,oy+S-6);
+    $('cView').setAttribute('aria-label','True position and received position. Current error '+mm(e)+'.');
+  } else if(field==='yaw'){
+    const L=36,Rt=w-40,cy=h/2,span=1.2,sc=(h/2-24)/span; // lateral metres to px (exaggerated)
+    const lat=deg=>30*Math.tan((deg-90)*Math.PI/180);
+    // legal aim directions
+    const stepLat=30*Math.tan(c.p*Math.PI/180);
+    if(stepLat*sc>=4){g.strokeStyle=grid;g.lineWidth=1;g.beginPath();
+      for(let k=-Math.ceil(span/stepLat);k<=Math.ceil(span/stepLat);k++){const yy=cy-lat(90+k*c.p)*sc;if(yy<8||yy>h-8)continue;g.moveTo(L,cy);g.lineTo(Rt,yy);}g.stroke();}
+    // target: 20 cm wide head
+    g.fillStyle=css('--ochre');g.globalAlpha=.35;g.fillRect(Rt-6,cy-0.1*sc,12,0.2*sc);g.globalAlpha=1;
+    g.strokeStyle=css('--ochre');g.lineWidth=2;g.strokeRect(Rt-6,cy-0.1*sc,12,0.2*sc);
+    const yawT=trueYaw(t),yawQ=quant(yawT,0,360,c.p,true);
+    const lt=lat(yawT),lq=lat(yawQ);
+    g.strokeStyle=ink;g.lineWidth=1.5;g.setLineDash([5,4]);g.beginPath();g.moveTo(L,cy);g.lineTo(Rt,cy-lt*sc);g.stroke();g.setLineDash([]);
+    g.strokeStyle=blood;g.lineWidth=2.5;g.beginPath();g.moveTo(L,cy);g.lineTo(Rt,cy-lq*sc);g.stroke();
+    dot(g,Rt,cy-lq*sc,6,blood);dot(g,Rt,cy-lt*sc,8,null,ink,2);
+    dot(g,L,cy,7,steel);
+    g.fillStyle=soft;g.textAlign='left';g.textBaseline='top';g.fillText('shooter',L-10,cy+12);
+    g.textAlign='right';g.textBaseline='top';g.fillText('target 30 m away',Rt+34,cy+0.1*sc+8);g.fillText('(20 cm head)',Rt+34,cy+0.1*sc+24);
+    g.textBaseline='bottom';g.fillText('sideways scale exaggerated',Rt+34,h-6);
+    const e=Math.abs(lq-lt);lastErrText='aim error at target '+trim(e*100,3)+' cm';
+    g.fillStyle=ink;g.textAlign='left';g.textBaseline='top';g.fillText(lastErrText,8,8);
+    $('cView').setAttribute('aria-label','Aim line from a shooter to a target 30 m away. Current error '+trim(e*100,3)+' cm.');
+  } else {
+    // speedometer, -20..20 m/s on a half circle, plus a 1 m/s zoom strip
+    const cx=w/2,rad=Math.min(w/2-24,h*0.55),cy=rad+22;
+    const ang=v=>Math.PI*(1+(v+20)/40); // -20 at left, +20 at right
+    g.strokeStyle=soft;g.lineWidth=2;g.beginPath();g.arc(cx,cy,rad,Math.PI,2*Math.PI);g.stroke();
+    g.fillStyle=soft;g.textAlign='center';g.textBaseline='middle';
+    for(let v=-20;v<=20;v+=5){const a=ang(v);g.beginPath();g.moveTo(cx+Math.cos(a)*(rad-8),cy+Math.sin(a)*(rad-8));g.lineTo(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad);g.stroke();
+      g.fillText(v,cx+Math.cos(a)*(rad-22),cy+Math.sin(a)*(rad-22));}
+    const vt=trueVel(t),vq=quant(vt,c.lo,c.hi,c.p,c.w);
+    const needle=(v,col,lw,dash)=>{const a=ang(v);g.strokeStyle=col;g.lineWidth=lw;g.setLineDash(dash||[]);g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(a)*(rad-30),cy+Math.sin(a)*(rad-30));g.stroke();g.setLineDash([]);};
+    needle(vq,blood,4);needle(vt,ink,2,[5,4]);dot(g,cx,cy,5,ink);
+    // zoom strip
+    const sy=cy+34,sx0=16,sx1=w-16,win=1; // +-0.5 m/s around the true value
+    if(sy+44<h){
+      const SX=v=>sx0+(v-(vt-win/2))/win*(sx1-sx0);
+      g.strokeStyle=soft;g.lineWidth=1;g.beginPath();g.moveTo(sx0,sy);g.lineTo(sx1,sy);g.stroke();
+      if(c.p*(sx1-sx0)/win>=3){g.strokeStyle=grid;g.lineWidth=2;g.beginPath();
+        const k0=Math.ceil((vt-win/2-c.lo)/c.p),k1=Math.floor((vt+win/2-c.lo)/c.p);for(let k=k0;k<=k1;k++){const x=SX(c.lo+k*c.p);g.moveTo(x,sy-8);g.lineTo(x,sy+8);}g.stroke();}
+      dot(g,SX(vq),sy,6,blood);dot(g,SX(vt),sy,8,null,ink,2);
+      g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText('zoom, 1 m/s wide',w/2,sy+12);g.fillText('ticks = values the receiver can rebuild',w/2,sy+28);
+    }
+    lastErrText='true '+vt.toFixed(3)+' m/s, received '+vq.toFixed(Math.max(2,Math.min(5,Math.ceil(-Math.log10(c.p))+0)))+' m/s';
+    g.fillStyle=ink;g.textAlign='left';g.textBaseline='top';g.fillText(lastErrText,8,4);
+    $('cView').setAttribute('aria-label','Speedometer with true and received velocity. '+lastErrText+'.');
+  }
+}
+
+// ---------- right view: staircase ----------
+function drawBits(){
+  const {g,w,h}=setup($('cBits'));g.clearRect(0,0,w,h);
+  const pad={l:40,r:14,t:14,b:40},F=FIELDS[field],c=cur();
+  const a=Math.log10(F.pMin),b=Math.log10(F.pMax);
+  const X=pp=>pad.l+(Math.log10(pp)-a)/(b-a)*(w-pad.l-pad.r),Y=bb=>pad.t+(1-bb/32)*(h-pad.t-pad.b);
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid');
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let bb=0;bb<=32;bb+=8){g.strokeStyle=grid;g.beginPath();g.moveTo(pad.l,Y(bb));g.lineTo(w-pad.r,Y(bb));g.stroke();g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText(bb,pad.l-6,Y(bb));}
+  g.textAlign='center';g.textBaseline='top';
+  for(let e=Math.ceil(a);e<=Math.floor(b);e++){const pp=Math.pow(10,e),x=X(pp);g.strokeStyle=grid;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    let lab=field==='yaw'?trim(pp,1)+'°':(field==='vel'?(pp>=1?'1 m/s':trim(pp*100,1)+' cm/s'):len(pp));
+    if(w<420&&e%2!==0&&field!=='yaw')lab='';g.fillStyle=soft;g.fillText(lab,x,h-pad.b+6);}
+  g.textAlign='right';g.fillText('precision p (finer to the left)',w-pad.r,h-16);
+  // float32
+  g.strokeStyle=css('--ink-soft');g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,Y(32));g.lineTo(w-pad.r,Y(32));g.stroke();g.setLineDash([]);
+  g.fillStyle=soft;g.textAlign='left';g.textBaseline='top';g.fillText('float32 = 32 bits',pad.l+6,Y(32)+3);
+  // staircase
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  const N=400;let prevY=null;
+  for(let i=0;i<=N;i++){const pp=Math.pow(10,a+(b-a)*i/N),bb=Math.min(32,fbits(c.lo,c.hi,pp,c.w)),x=X(pp),y=Y(bb);
+    if(i===0)g.moveTo(x,y);else{g.lineTo(x,prevY);g.lineTo(x,y);}prevY=y;}
+  g.stroke();
+  // marker
+  const bb=fbits(c.lo,c.hi,c.p,c.w),mx=X(Math.min(F.pMax,Math.max(F.pMin,c.p))),my=Y(bb);
+  g.strokeStyle=ink;g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(mx,pad.t);g.lineTo(mx,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  dot(g,mx,my,6,css('--blood'),css('--paper'),2);
+  const errTxt=field==='yaw'?trim(c.p/2,3)+'°':(field==='vel'?trim(c.p/2*100,3)+' cm/s':mm(c.p/2));
+  const lab=bb+' bits · max error '+errTxt;
+  g.font='600 13px '+css('--sans');g.fillStyle=ink;g.textBaseline='bottom';
+  const tw=g.measureText(lab).width;let lx=mx+10;if(lx+tw>w-pad.r)lx=mx-10-tw;if(lx<pad.l+2)lx=pad.l+2;
+  const ly=Y(29)+4;lx=mx+8;if(lx+tw>w-pad.r)lx=mx-8-tw;if(lx<pad.l+2)lx=pad.l+2;
+  g.fillStyle=ink;g.textBaseline='top';g.fillText(lab,lx,ly);
+  $('cBits').setAttribute('aria-label','Staircase of bits against precision. Current: '+lab+'.');
+}
+
+// ---------- numbers ----------
+function dl(el,rows){el.innerHTML=rows.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('');}
+function update(){
+  const c=cur(),cnt=steps(c.lo,c.hi,c.p,c.w),bb=bitsForCount(cnt),pb=curPlayer(),bytes=Math.ceil(pb/8);
+  const upN=uploadKbit(n,NAIVE),upP=uploadKbit(n,bytes);
+  // controls
+  $('oPrec').textContent=pLabel(p);$('oYbits').textContent=ybits;$('oN').textContent=n;
+  document.querySelectorAll('#precChips .chip').forEach(b=>b.setAttribute('aria-pressed',String(Math.abs(+b.dataset.p-p)<1e-12)));
+  // readouts
+  $('rBits').textContent=bb;
+  let errStr;
+  if(field==='yaw'){errStr=trim(c.p/2,3)+'°';$('rErrL').textContent='largest aim error (p / 2), '+trim(aimErr(ybits)*100,3)+' cm at 30 m';}
+  else if(field==='vel'){errStr=trim(c.p/2*100,3)+' cm/s';$('rErrL').textContent='largest error (p / 2)';}
+  else {errStr=mm(c.p/2);$('rErrL').textContent='largest error (p / 2)';}
+  $('rErr').textContent=errStr;
+  $('rBytes').textContent=NAIVE+' → '+bytes+' B';
+  $('rUp').textContent=fmt(upN/1000,1)+' → '+fmt(upP/1000,1);
+  $('rUpL').textContent='Mbit/s server upload, '+n+' players';
+  // field panel
+  const unit=field==='pos'?'m':(field==='yaw'?'°':'m/s');
+  const pShow=field==='yaw'?c.p.toFixed(4)+'°':pLabel(p);
+  dl($('dlField'),[
+    ['Range',`${fmt(c.lo)} to ${fmt(c.hi)}${unit==='°'?'':' '}${unit}${c.w?' (wraps)':''}`],
+    ['Precision p',pShow],
+    ['Values (count)',fmt(cnt)],
+    ['Bits',bb+(field==='yaw'?` (${c.w?'closed range: '+fbits(0,360,c.p,false):'wrapping: '+fbits(0,360,c.p,true)})`:'')],
+    ['Largest error',errStr],
+  ].concat(field==='yaw'?[['Aim error at 30 m',trim(aimErr(ybits),3)+' m']]:[]));
+  const who=field==='pos'?'x, y':(field==='yaw'?'yaw':'vx, vy, vz');
+  dl($('dlPlayer'),[
+    ['Swapped in',`${who} at ${bb} bits${field==='yaw'?'':' each'}`],
+    ['Total bits',fmt(pb)],
+    ['Bytes ⌈bits / 8⌉',fmt(bytes)],
+    ['Naive struct',NAIVE+' bytes'],
+    ['Ratio',(NAIVE/bytes).toFixed(1)+' ×'],
+  ]);
+  dl($('dlServer'),[
+    ['Players n',n],
+    ['Naive (44 B)',fmt(upN,1)+' kbit/s'],
+    ['Packed ('+bytes+' B)',fmt(upP,1)+' kbit/s'],
+    ['Saved',fmt((1-upP/upN)*100,0)+'%'],
+  ]);
+  // table
+  if(field==='yaw'){
+    $('tCap').textContent='Yaw, 0 to 360°, by bits';
+    $('thead').innerHTML='<th>Bits</th><th>Step</th><th>Values (wrapping)</th><th>Closed range needs</th><th>Aim error at 30 m</th>';
+    let r='';for(let b2=6;b2<=16;b2++){const pp=360/Math.pow(2,b2);r+=`<tr class="${b2===ybits?'here':''}"><td>${b2}</td><td>${pp.toFixed(4)}°</td><td>${fmt(Math.pow(2,b2))}</td><td>${fbits(0,360,pp,false)} bits</td><td>${trim(aimErr(b2),3)} m</td></tr>`;}
+    $('tbody').innerHTML=r;
+  } else {
+    const rows=field==='vel'?[1,0.5,0.1,0.05,0.01,0.001]:ROWS;
+    $('tCap').textContent=field==='vel'?'One axis, -20 to 20 m/s':`One axis, 0 to ${fmt(c.hi)} m${c.w?' (wrapping)':''}`;
+    $('thead').innerHTML='<th>Precision p</th><th>Values (count)</th><th>Bits</th><th>Largest error</th>';
+    let r='';rows.forEach(pp=>{const cn=steps(c.lo,c.hi,pp,c.w);r+=`<tr class="${Math.abs(pp-p)<1e-12?'here':''}"><td>${pLabel(pp)}</td><td>${fmt(cn)}</td><td>${bitsForCount(cn)}</td><td>${field==='vel'?trim(pp/2*100,3)+' cm/s':mm(pp/2)}</td></tr>`;});
+    r+=`<tr><td>float32</td><td>—</td><td>32</td><td>—</td></tr>`;
+    $('tbody').innerHTML=r;
+  }
+  // caption
+  let s;
+  if(field==='pos'){
+    const b1=fbits(0,c.hi,0.01,c.w),b10=fbits(0,c.hi,0.1,c.w);
+    if(p<=0.01+1e-12)s=`At ${pLabel(p)} the received dot sits on the true one. Try 10 cm: it hops from grid point to grid point, and that costs only ${b1-b10} bits less than 1 cm (${b1} → ${b10}).`;
+    else s=`At ${pLabel(p)} the received dot hops, with errors up to ${mm(p/2)} per axis. Going back to 1 cm costs ${b1-bb>0?b1-bb:0} more bits per axis. The whole player is still ${bytes} bytes against the naive 44.`;
+  } else if(field==='yaw'){
+    s=`${ybits} bits of yaw is a step of ${c.p.toFixed(4)}°. At 30 m the aim can be off by ${trim(aimErr(ybits)*100,3)} cm sideways, ${aimErr(ybits)>0.1?'wider than the 20 cm head, so it jumps off the target':'inside the 20 cm head'}. Untick "wrapping" and the same step needs ${fbits(0,360,c.p,false)} bits, because 360° would get its own value.`;
+  } else {
+    s=`Velocity at ${pLabel(p)} needs ${bb} bits per axis, ${3*bb} for all three. The needle difference is invisible on the gauge; the zoom strip shows the steps.`;
+  }
+  $('insight').textContent=s;
+  drawAll();
+}
+function drawAll(){drawView();drawBits();}
+
+// ---------- field switch ----------
+function setField(f){
+  field=f;const F=FIELDS[f];
+  wrap=F.wrap;$('wrap').checked=wrap;
+  $('hiWrap').hidden=f!=='pos';$('precWrap').hidden=f==='yaw';$('bitsWrap').hidden=f!=='yaw';
+  if(f!=='yaw'){p=F.defP;buildChips();$('prec').value=pToS(p);}
+  else {ybits=F.defBits;$('ybits').value=ybits;}
+  $('leftSub').textContent=f==='pos'?'A 2 m × 2 m patch of the arena. Grid = every position the receiver can rebuild.':(f==='yaw'?'Top view. Dashed = true aim, red = aim after quantization. Faint lines = legal aim directions.':'True speed (dashed) and received speed (red), plus a zoomed strip.');
+  $('rightSub').textContent=f==='yaw'?'⌈log2(count)⌉ against step size in degrees, log scale.':'⌈log2(count)⌉ against precision, log scale. Each halving of the step adds one bit.';
+  update();
+}
+
+// ---------- events ----------
+document.querySelectorAll('input[name=field]').forEach(r=>r.addEventListener('change',()=>{if(r.checked)setField(r.value);}));
+$('prec').addEventListener('input',e=>{p=sToP(+e.target.value);update();});
+$('ybits').addEventListener('input',e=>{ybits=+e.target.value;update();});
+$('hi').addEventListener('change',e=>{let v=Math.round(+e.target.value)||512;v=Math.min(8192,Math.max(64,v));hi=v;e.target.value=v;update();});
+$('wrap').addEventListener('change',e=>{wrap=e.target.checked;update();});
+$('n').addEventListener('input',e=>{n=+e.target.value;update();});
+$('play').addEventListener('click',()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play';last=null;if(playing)requestAnimationFrame(frame);});
+$('step').addEventListener('click',()=>{t+=0.1;drawView();});
+function frame(ts){if(!playing)return;if(last!==null)t+=Math.min(0.1,(ts-last)/1000);last=ts;drawView();requestAnimationFrame(frame);}
+reduce.addEventListener&&reduce.addEventListener('change',()=>{if(reduce.matches&&playing){playing=false;$('play').textContent='Play';}});
+window.addEventListener('resize',drawAll);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+
+// ---------- spec test values, checked on load ----------
+function selfTest(){
+  const T=[];const eq=(name,got,want)=>T.push({name,got:String(got),want:String(want),ok:String(got)===String(want)});
+  [[0.1,13],[0.05,14],[0.01,16],[0.005,17],[0.001,19],[0.0001,23]].forEach(([pp,b])=>eq('pos 0-512 at '+pp,fbits(0,512,pp,false),b));
+  const yp=360/1024;eq('yaw 10b step',yp.toFixed(4),'0.3516');eq('yaw 10b values',steps(0,360,yp,true),1024);eq('yaw closed bits',fbits(0,360,yp,false),11);
+  eq('aim 8b',aimErr(8).toFixed(3),'0.368');eq('aim 10b',aimErr(10).toFixed(3),'0.092');
+  const pb=playerBits();eq('player bits',pb,108);eq('player bytes',Math.ceil(pb/8),14);eq('ratio',(44/Math.ceil(pb/8)).toFixed(1),'3.1');
+  eq('naive n64',uploadKbit(64,44).toFixed(1),'29122.6');eq('packed n64',uploadKbit(64,14).toFixed(1),'9461.8');
+  eq('0-32 @1/512 closed',fbits(0,32,1/512,false),15);eq('0-32 @1/512 wrap',fbits(0,32,1/512,true),14);
+  const bad=T.filter(x=>!x.ok);
+  window.CS202_W05_SELFTEST={total:T.length,pass:T.length-bad.length,failures:bad};
+  $('selftest').textContent=`Spec test values checked on load: ${T.length-bad.length} of ${T.length} match the lecture.`;
+  if(bad.length)console.error('Self-test failures',bad);
+}
+
+buildChips();
+$('play').textContent=playing?'Pause':'Play';
+selfTest();
+update();
+if(playing)requestAnimationFrame(frame);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+})();
+</script>
+</body>
+</html>

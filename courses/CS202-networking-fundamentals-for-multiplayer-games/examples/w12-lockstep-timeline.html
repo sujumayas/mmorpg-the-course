@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lockstep timeline — CS202 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.1rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:14px}
+@media (max-width:700px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 10px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 2px 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.svgbox{width:100%;cursor:crosshair}
+svg{display:block;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink);paint-order:stroke;stroke:var(--paper-2);stroke-width:3px;stroke-linejoin:round}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 2px 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend i.box{height:10px;width:12px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 12px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+fieldset{border:1px solid var(--grid);border-radius:10px;margin:0;padding:10px 12px 12px;min-width:0}
+legend{font-family:var(--serif);font-weight:600;font-size:1rem;padding:0 4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,.svgbox:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.83rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:520px;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:78ch}
+#selftest{font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 12 · Worked example</p>
+  <h1>Lockstep's bandwidth ignores the army. Its turns don't ignore the slowest link.</h1>
+  <p class="lede" id="lede">Four peers, 200 ms turns, commands run two turns later. One link, A to D, takes 250 ms, and every row pays for it in red.</p>
+</header>
+
+<section class="panel" aria-label="Lockstep timing and bandwidth">
+  <div class="views">
+    <figure>
+      <figcaption>Turn timeline, 0 to 3,000 ms<small>Boxes are turns. Lines are "turn done" messages. Red gaps are stalls. Click or tap to issue a command.</small></figcaption>
+      <div class="svgbox" id="tlBox" tabindex="0" aria-label="Timeline. Click to set the command issue time, or use the left and right arrow keys."><svg id="tl" role="img"></svg></div>
+      <div class="legend">
+        <span><i class="box" style="background:var(--steel);opacity:.55"></i>turn</span>
+        <span><i class="box" style="background:var(--blood);opacity:.45"></i>stall</span>
+        <span><i style="background:var(--blood)"></i>message on the worst link</span>
+        <span><i style="background:var(--ink-soft)"></i>40 ms links</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Upload per peer vs unit count<small>Bytes per second each peer sends, full mesh</small></figcaption>
+      <div class="svgbox" style="cursor:default"><svg id="bw" role="img"></svg></div>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>state sync</span>
+        <span><i style="background:var(--steel)"></i>lockstep</span>
+        <span><i style="background:var(--ochre)"></i>budget</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rTeff">—</b><span>effective turn T<sub>eff</sub></span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rSlow">—</b><span>slowdown T<sub>eff</sub> / T</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rAvg">—</b><span>average command delay (k − ½)T<sub>eff</sub></span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rWorst">—</b><span>worst command delay k·T<sub>eff</sub></span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rStall">—</b><span>total stall, 0 to 3,000 ms</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rCmd">—</b><span id="rCmdL">this command's delay</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rSS">—</b><span id="rSSL">state sync upload</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rLS">—</b><span>lockstep upload</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rBE">—</b><span>break-even units</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rMaxN">—</b><span id="rMaxNL">largest N under budget</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Turn timing</legend>
+      <div class="grid2">
+        <div><label for="T">Turn length T <output id="oT"></output></label><input id="T" type="range" min="50" max="400" step="10" value="200"></div>
+        <div><label for="k">Depth k <output id="ok"></output></label><input id="k" type="range" min="1" max="5" step="1" value="2"></div>
+        <div><label for="P">Peers on the timeline <output id="oP"></output></label><input id="P" type="range" min="2" max="8" step="1" value="4"></div>
+        <div><label for="L">Worst link latency <output id="oL"></output></label><input id="L" type="range" min="0" max="600" step="10" value="250"></div>
+        <div><label for="J">Jitter per message <output id="oJ"></output></label><input id="J" type="range" min="0" max="100" step="10" value="0"></div>
+        <div><label for="t0">Command issued at <output id="ot0"></output></label><input id="t0" type="range" min="0" max="2999" step="1" value="1150"></div>
+      </div>
+      <p class="hint" id="linkHint">Every other link is 40 ms one way. Jitter adds U(0, J) ms to each message, seed 12.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Bandwidth</legend>
+      <div class="grid2">
+        <div><label for="N">Units N <output id="oN"></output></label><input id="N" type="range" min="0" max="2000" step="10" value="1500"></div>
+        <div><label for="Pb">Players P <output id="oPb"></output></label><input id="Pb" type="range" min="2" max="8" step="1" value="8"></div>
+        <div><label for="s">Bytes per unit s <output id="os"></output></label><input id="s" type="range" min="2" max="32" step="1" value="8"></div>
+        <div><label for="r">State updates per second r <output id="or"></output></label><input id="r" type="range" min="1" max="20" step="1" value="2"></div>
+        <div><label for="b">Bytes per command b <output id="ob"></output></label><input id="b" type="range" min="4" max="32" step="1" value="8"></div>
+        <div><label for="c">Commands per player per s c <output id="oc"></output></label><input id="c" type="range" min="0" max="10" step="1" value="2"></div>
+      </div>
+      <span class="lbl" style="margin-top:10px">Budget per peer</span>
+      <div class="presets" role="group" aria-label="Budget presets">
+        <button class="chip" type="button" data-budget="3600" aria-pressed="true">28.8 modem (3,600 B/s)</button>
+        <button class="chip" type="button" data-budget="125000" aria-pressed="false">1 Mbit/s (125,000 B/s)</button>
+      </div>
+      <p class="hint">Headers are 28 bytes of IPv4 and UDP plus a 4-byte turn field, 32 bytes per packet. Lockstep sends one packet per turn to each peer and uses the turn length T from the left.</p>
+    </fieldset>
+  </div>
+
+  <p class="insight" style="background:none;padding:0 2px;margin:16px 0 0">Lecture Table 2 at your T and k: two peers, fixed latency and 60 ms jitter (seed 12)</p>
+  <div class="table-wrap" style="margin-top:6px">
+    <table aria-label="Two-peer timing sweep">
+      <thead><tr><th>Worst one-way L<sub>max</sub></th><th>T<sub>eff</sub>, fixed</th><th>Avg delay</th><th>T<sub>eff</sub>, 60 ms jitter</th><th>Avg delay</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <p>Model: week 12 lecture, section 2, and <code>simulate_turns</code> in <code>labs/lab12-starter/lockstep.py</code>. <code>start[n] = max(start[n−1] + T, start[n−k] + T + latency + jitter)</code> over every ordered pair of peers. T<sub>eff</sub> is the average of the last 120 turns of a 241-turn run. The jitter uses the same Mersenne Twister as Python's <code>random.Random(12)</code>, drawn in the same order, so the table matches the lab's output. Bandwidth assumptions (8 bytes per unit, 2 updates per second, 8-byte commands) are the lecture's illustrative values, not Ensemble's. Context: Bettner and Terrano, "1500 Archers on a 28.8" (Gamasutra, 2001).</p>
+  <p id="selftest" aria-live="polite"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f0=x=>Math.round(x).toLocaleString('en-US');
+const f1=x=>(Math.round(x*10)/10).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const f2=x=>x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const NS='http://www.w3.org/2000/svg';
+const WIN=3000,TURNS=241,HDR=32,OTHER=40,SEED=12;
+const S={T:200,k:2,P:4,L:250,J:0,t0:1150,N:1500,Pb:8,s:8,r:2,b:8,c:2,budget:3600};
+
+// ---- Python-compatible Mersenne Twister (random.Random(seed).random()) ----
+function pyRandom(seed){
+  const mt=new Uint32Array(624);let mti;
+  function init(s){mt[0]=s>>>0;for(mti=1;mti<624;mti++){const p=mt[mti-1]^(mt[mti-1]>>>30);mt[mti]=(Math.imul(1812433253,p)+mti)>>>0;}}
+  function initByArray(key){
+    init(19650218);let i=1,j=0,k=Math.max(624,key.length);
+    for(;k;k--){const p=mt[i-1]^(mt[i-1]>>>30);mt[i]=(((mt[i]^Math.imul(p,1664525))>>>0)+key[j]+j)>>>0;i++;j++;if(i>=624){mt[0]=mt[623];i=1;}if(j>=key.length)j=0;}
+    for(k=623;k;k--){const p=mt[i-1]^(mt[i-1]>>>30);mt[i]=(((mt[i]^Math.imul(p,1566083941))>>>0)-i)>>>0;i++;if(i>=624){mt[0]=mt[623];i=1;}}
+    mt[0]=0x80000000;
+  }
+  function gen(){
+    let y;
+    if(mti>=624){
+      let kk;
+      for(kk=0;kk<227;kk++){y=(mt[kk]&0x80000000)|(mt[kk+1]&0x7fffffff);mt[kk]=mt[kk+397]^(y>>>1)^((y&1)?0x9908b0df:0);}
+      for(;kk<623;kk++){y=(mt[kk]&0x80000000)|(mt[kk+1]&0x7fffffff);mt[kk]=mt[kk-227]^(y>>>1)^((y&1)?0x9908b0df:0);}
+      y=(mt[623]&0x80000000)|(mt[0]&0x7fffffff);mt[623]=mt[396]^(y>>>1)^((y&1)?0x9908b0df:0);mti=0;
+    }
+    y=mt[mti++];y^=y>>>11;y^=(y<<7)&0x9d2c5680;y^=(y<<15)&0xefc60000;y^=y>>>18;return y>>>0;
+  }
+  initByArray([seed>>>0]);
+  return ()=>{const a=gen()>>>5,b=gen()>>>6;return (a*67108864+b)/9007199254740992;};
+}
+
+// ---- timing model (simulate_turns) ----
+function latencyMatrix(P,L){
+  const m=[];for(let i=0;i<P;i++){m.push([]);for(let j=0;j<P;j++)m[i].push(i===j?0:OTHER);}
+  m[0][P-1]=L;m[P-1][0]=L;return m;
+}
+function simulate(T,k,lat,J,turns,seed){
+  turns=turns||TURNS;const rnd=pyRandom(seed==null?SEED:seed),P=lat.length,start=[0],jit={};
+  for(let n=1;n<turns;n++){
+    let t=start[n-1]+T;
+    if(n>=k){
+      for(let i=0;i<P;i++)for(let j=0;j<P;j++){if(i===j)continue;
+        const x=J?rnd()*J:0;jit[n+','+i+','+j]=x;
+        t=Math.max(t,start[n-k]+T+lat[i][j]+x);}
+    }
+    start.push(t);
+  }
+  return {start,jit};
+}
+function effTurn(start){const h=start.length-121;return (start[start.length-1]-start[h])/(start.length-1-h);}
+function nominalDelay(t,T,k){return (Math.floor(t/T)+k)*T-t;}
+
+// ---- bandwidth model ----
+const stateSync=(N,P,r,s)=>(P-1)*r*(HDR+s*N/P);
+const lockstep=(P,T,b,c)=>(P-1)*((1000/T)*HDR+b*c);
+function breakEven(P,T,b,c,r,s){return (lockstep(P,T,b,c)/((P-1)*r)-HDR)*P/s;}
+function maxUnits(B,P,r,s){return Math.floor((B/((P-1)*r)-HDR)*P/s+1e-9);}
+
+// ---- self-test against the lecture ----
+function selfTest(){
+  const out=[];const ok=(name,got,want,tol)=>{const g=Math.abs(got-want)<=(tol||1e-6);out.push([name,g,got,want]);};
+  ok('lockstep B/s',lockstep(8,200,8,2),1232);
+  [[50,1148],[56,1232],[225,3598],[250,3948],[1500,21448]].forEach(([n,w])=>ok('state sync N='+n,stateSync(n,8,2,8),w));
+  ok('break-even N',breakEven(8,200,8,2,2,8),56);
+  ok('largest N under 3,600',maxUnits(3600,8,2,8),225);
+  const two=L=>[[0,L],[L,0]];
+  [[50,200],[150,200],[200,200],[250,225],[400,300]].forEach(([L,w])=>ok('T_eff L='+L,effTurn(simulate(200,2,two(L),0).start),w));
+  ok('T_eff k=3 L=400',effTurn(simulate(200,3,two(400),0).start),200);
+  [[50,200.0],[150,201.2],[200,220.6],[250,244.9],[400,319.3]].forEach(([L,w])=>ok('T_eff jitter L='+L,effTurn(simulate(200,2,two(L),60).start),w,0.05));
+  [[1000,400],[1150,250],[1199,201]].forEach(([t,w])=>ok('delay t='+t,nominalDelay(t,200,2),w));
+  const bad=out.filter(x=>!x[1]);
+  bad.forEach(x=>console.error('self-test failed:',x[0],'got',x[2],'want',x[3]));
+  $('selftest').textContent=bad.length?`Self-test: ${bad.length} of ${out.length} checks against the lecture failed.`:`Self-test: all ${out.length} checks against the lecture's Tables 1 and 2 pass.`;
+  return out;
+}
+
+// ---- svg helpers ----
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const a in attrs)e.setAttribute(a,attrs[a]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+const peerName=i=>String.fromCharCode(65+i);
+
+// ---- state ----
+let sim,Teff;
+function recompute(){
+  sim=simulate(S.T,S.k,latencyMatrix(S.P,S.L),S.J);
+  Teff=effTurn(sim.start);
+}
+function turnAt(t){
+  const st=sim.start;let n=0;while(n+1<st.length&&st[n+1]<=t)n++;
+  if(t>=st[n]+S.T)n++;           // issued during a stall: goes into the next turn
+  return n;
+}
+
+function drawTimeline(){
+  const svg=$('tl'),W=Math.max(280,$('tlBox').clientWidth);
+  const rowH=S.P<=4?42:S.P<=6?34:28;
+  const pad={l:22,r:10,t:30,b:62};
+  const H=pad.t+rowH*S.P+pad.b;
+  svg.setAttribute('width',W);svg.setAttribute('height',H);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  clear(svg);
+  const x=t=>pad.l+(W-pad.l-pad.r)*t/WIN,yc=i=>pad.t+rowH*(i+.5);
+  const ink=css('--ink'),soft=css('--ink-soft'),steel=css('--steel'),blood=css('--blood'),ochre=css('--ochre'),grid=css('--grid');
+  const gGrid=el('g',{},svg),gStall=el('g',{},svg),gArrow=el('g',{},svg),gTurn=el('g',{},svg),gMark=el('g',{},svg);
+  // time axis
+  for(let t=0;t<=WIN;t+=500){
+    el('line',{x1:x(t),x2:x(t),y1:pad.t-4,y2:H-pad.b+4,stroke:grid,'stroke-width':1},gGrid);
+    const lbl=W<420&&t%1000?'':(t?f0(t):'0');
+    el('text',{x:x(t),y:pad.t+rowH*S.P+16,'text-anchor':t===WIN?'end':'middle','font-size':11,fill:soft},gGrid,lbl);
+  }
+  el('text',{x:W-pad.r,y:pad.t+rowH*S.P+28,'text-anchor':'end','font-size':11,fill:soft},gGrid,'ms');
+  for(let i=0;i<S.P;i++){
+    const worst=(i===0||i===S.P-1);
+    el('text',{x:4,y:yc(i)+4,'font-size':12,'font-weight':700,fill:worst?blood:ink},gGrid,peerName(i));
+  }
+  const st=sim.start,bh=Math.min(20,rowH*.5);
+  // stalls
+  let lastLbl=-1e9,first=true,stallSum=0;
+  for(let n=1;n<st.length&&st[n-1]+S.T<WIN;n++){
+    const gap=st[n]-(st[n-1]+S.T);
+    if(gap>0.01){
+      const a=st[n-1]+S.T,b=Math.min(st[n],WIN);
+      stallSum+=Math.min(st[n],WIN)-a;
+      el('rect',{x:x(a),y:pad.t,width:Math.max(1,x(b)-x(a)),height:rowH*S.P,fill:blood,opacity:.28},gStall);
+      const full='stall '+f0(gap)+' ms',short=f0(gap),cx=(x(a)+x(b))/2;
+      const txt=first?full:short,wEst=txt.length*6.2;
+      if(cx-wEst/2>lastLbl+3&&cx+wEst/2<W){
+        el('text',{x:cx,y:pad.t-8,'text-anchor':'middle','font-size':11,'font-weight':700,fill:blood},gStall,txt);
+        lastLbl=cx+wEst/2;first=false;
+      }
+    }
+  }
+  // arrows: message sent at the end of turn m arrives for turn m+k
+  const lat=latencyMatrix(S.P,S.L);
+  for(let m=0;m+S.k<st.length&&st[m]+S.T<WIN;m++){
+    const n=m+S.k,send=st[m]+S.T;
+    for(let i=0;i<S.P;i++)for(let j=0;j<S.P;j++){if(i===j)continue;
+      const arr=send+lat[i][j]+(sim.jit[n+','+i+','+j]||0);
+      const worst=(i===0&&j===S.P-1)||(j===0&&i===S.P-1);
+      const x2=x(Math.min(arr,WIN)),y1=yc(i)+(j>i?bh/2:-bh/2),y2=yc(j)+(j>i?-bh/2:bh/2);
+      el('line',{x1:x(send),y1,x2,y2,stroke:worst?blood:soft,'stroke-width':worst?1.6:.8,opacity:worst?.9:.45},gArrow);
+      if(arr<=WIN)el('circle',{cx:x2,cy:y2,r:worst?2.4:1.5,fill:worst?blood:soft},gArrow);
+    }
+  }
+  // turns
+  const bw=(W-pad.l-pad.r)*S.T/WIN;
+  for(let n=0;n<st.length&&st[n]<WIN;n++){
+    for(let i=0;i<S.P;i++){
+      el('rect',{x:x(st[n]),y:yc(i)-bh/2,width:Math.max(1,Math.min(x(st[n]+S.T),x(WIN))-x(st[n])-1),height:bh,rx:3,fill:steel,opacity:.55},gTurn);
+      if(bw>=16&&st[n]+S.T/2<WIN)el('text',{x:x(st[n]+S.T/2),y:yc(i)+4,'text-anchor':'middle','font-size':bw>=24?11:9,fill:ink,style:'stroke:none'},gTurn,n);
+    }
+  }
+  // command markers
+  const n=turnAt(S.t0),exec=st[n+S.k],delay=exec-S.t0;
+  const yTop=pad.t-2,yBot=pad.t+rowH*S.P+2;
+  el('line',{x1:x(S.t0),x2:x(S.t0),y1:yTop,y2:yBot+30,stroke:ink,'stroke-width':2,'stroke-dasharray':'4 3'},gMark);
+  const ex=x(Math.min(exec,WIN));
+  el('line',{x1:ex,x2:ex,y1:yTop,y2:yBot+30,stroke:ochre,'stroke-width':2.5},gMark);
+  const yb=yBot+30;
+  el('line',{x1:x(S.t0),x2:ex,y1:yb,y2:yb,stroke:ochre,'stroke-width':2},gMark);
+  const label=(exec>WIN?'runs off chart, ':'')+'delay '+f0(delay)+' ms';
+  const mid=(x(S.t0)+ex)/2,lw=label.length*6.3;
+  const lx=Math.max(pad.l+lw/2,Math.min(W-pad.r-lw/2,mid));
+  el('rect',{x:lx-lw/2-3,y:yb+4,width:lw+6,height:16,rx:3,fill:css('--paper')},gMark);
+  el('text',{x:lx,y:yb+16,'text-anchor':'middle','font-size':11,'font-weight':700,fill:ochre},gMark,label);
+  svg.setAttribute('aria-label',`${S.P} peers, ${S.T} ms turns, k ${S.k}, worst link ${S.L} ms. Effective turn ${f1(Teff)} ms. Stall in view ${f0(stallSum)} ms. Command issued at ${f0(S.t0)} ms runs ${f0(delay)} ms later.`);
+  return {stallSum,delay,n};
+}
+
+function drawBandwidth(){
+  const svg=$('bw'),box=svg.parentNode,W=Math.max(260,box.clientWidth),H=Math.round(Math.min(320,Math.max(240,W*.62)));
+  svg.setAttribute('width',W);svg.setAttribute('height',H);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);clear(svg);
+  const pad={l:50,r:12,t:14,b:36},XM=2000;
+  const yMax=S.budget>25000?Math.ceil(S.budget*1.2/25000)*25000:25000;
+  const x=n=>pad.l+(W-pad.l-pad.r)*n/XM,y=v=>pad.t+(H-pad.t-pad.b)*(1-Math.min(v,yMax*1.02)/yMax);
+  const soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),steel=css('--steel'),ochre=css('--ochre'),moss=css('--moss'),ink=css('--ink'),paper=css('--paper');
+  for(let i=0;i<=5;i++){const v=yMax*i/5;el('line',{x1:pad.l,x2:W-pad.r,y1:y(v),y2:y(v),stroke:grid},svg);
+    el('text',{x:pad.l-6,y:y(v)+4,'text-anchor':'end','font-size':11,fill:soft},svg,v>=1000?f0(v/1000)+'k':f0(v));}
+  for(let n=0;n<=XM;n+=500)el('text',{x:x(n),y:H-pad.b+16,'text-anchor':n===XM?'end':'middle','font-size':11,fill:soft},svg,f0(n));
+  el('text',{x:W-pad.r,y:H-4,'text-anchor':'end','font-size':11,fill:soft},svg,'units N');
+  el('text',{x:4,y:10,'font-size':11,fill:soft},svg,'B/s');
+  // budget
+  el('line',{x1:pad.l,x2:W-pad.r,y1:y(S.budget),y2:y(S.budget),stroke:ochre,'stroke-width':2,'stroke-dasharray':'7 5'},svg);
+  el('text',{x:W-pad.r,y:y(S.budget)-5,'text-anchor':'end','font-size':11,'font-weight':700,fill:ochre},svg,S.budget===3600?'28.8 modem, 3,600':'1 Mbit/s, 125,000');
+  // lines (state sync clipped at the top edge)
+  const ss=n=>stateSync(n,S.Pb,S.r,S.s),ls=lockstep(S.Pb,S.T,S.b,S.c);
+  let d='';for(let i=0;i<=200;i++){const n=XM*i/200,v=ss(n);if(v>yMax){const n2=(yMax/((S.Pb-1)*S.r)-HDR)*S.Pb/S.s;d+=(d?'L':'M')+x(n2)+' '+y(yMax);break;}d+=(d?'L':'M')+x(n)+' '+y(v);}
+  el('path',{d,fill:'none',stroke:blood,'stroke-width':2.5},svg);
+  el('line',{x1:x(0),x2:x(XM),y1:y(ls),y2:y(ls),stroke:steel,'stroke-width':2.5},svg);
+  // break-even and budget limit
+  const be=breakEven(S.Pb,S.T,S.b,S.c,S.r,S.s);
+  if(be>=0&&be<=XM&&ls<=yMax){el('circle',{cx:x(be),cy:y(ls),r:5,fill:moss,stroke:paper,'stroke-width':2},svg);
+    el('text',{x:x(be)+8,y:y(ls)-8,'font-size':11,'font-weight':700,fill:moss},svg,'break-even '+f0(Math.ceil(be-1e-9)));}
+  const mx=maxUnits(S.budget,S.Pb,S.r,S.s);
+  if(mx>=0&&mx<=XM&&S.budget<=yMax){el('circle',{cx:x(mx),cy:y(ss(mx)),r:5,fill:ochre,stroke:paper,'stroke-width':2},svg);
+    el('text',{x:x(mx)+8,y:y(ss(mx))-16,'font-size':11,'font-weight':700,fill:ochre},svg,'limit '+f0(mx));}
+  // cursor
+  el('line',{x1:x(S.N),x2:x(S.N),y1:pad.t,y2:H-pad.b,stroke:ink,'stroke-dasharray':'4 4',opacity:.4},svg);
+  const vS=ss(S.N);
+  if(vS<=yMax)el('circle',{cx:x(S.N),cy:y(vS),r:6,fill:blood,stroke:paper,'stroke-width':2},svg);
+  else{el('path',{d:`M${x(S.N)-6} ${pad.t+8}L${x(S.N)} ${pad.t}L${x(S.N)+6} ${pad.t+8}`,fill:blood},svg);}
+  const tx=x(S.N)>W*.6?x(S.N)-8:x(S.N)+8,anc=x(S.N)>W*.6?'end':'start';
+  el('text',{x:tx,y:Math.max(pad.t+12,y(vS)+(vS>yMax?14:-10)),'text-anchor':anc,'font-size':12,'font-weight':700,fill:blood},svg,f0(vS));
+  el('circle',{cx:x(S.N),cy:y(ls),r:6,fill:steel,stroke:paper,'stroke-width':2},svg);
+  svg.setAttribute('aria-label',`At ${f0(S.N)} units, state sync ${f0(vS)} bytes per second, lockstep ${f0(ls)}. Budget ${f0(S.budget)}.`);
+}
+
+function readouts(tl){
+  const ls=lockstep(S.Pb,S.T,S.b,S.c),ss=stateSync(S.N,S.Pb,S.r,S.s),be=breakEven(S.Pb,S.T,S.b,S.c,S.r,S.s),mx=maxUnits(S.budget,S.Pb,S.r,S.s);
+  $('rTeff').textContent=f1(Teff)+' ms';
+  const slow=Teff/S.T;
+  $('rSlow').textContent=slow.toFixed(3).replace(/0+$/,'').replace(/\.$/,'')+'×';
+  $('rAvg').textContent=f0((S.k-.5)*Teff)+' ms';
+  $('rWorst').textContent=f0(S.k*Teff)+' ms';
+  $('rStall').textContent=f0(tl.stallSum)+' ms';
+  const nom=nominalDelay(S.t0,S.T,S.k);
+  $('rCmd').textContent=f0(tl.delay)+' ms';
+  $('rCmdL').textContent=`command at ${f0(S.t0)} ms (grid (n + k)T − t = ${f0(nom)} ms)`;
+  $('rSS').textContent=f0(ss)+' B/s';$('rSSL').textContent=`state sync upload at N = ${f0(S.N)}`;
+  $('rLS').textContent=f0(ls)+' B/s';
+  $('rBE').textContent=be<=0?'0':f0(Math.ceil(be-1e-9));
+  $('rMaxN').textContent=mx<0?'none':f0(mx);$('rMaxNL').textContent=`largest N under ${f0(S.budget)} B/s`;
+  const Lmax=S.P>2?Math.max(S.L,OTHER):S.L,room=(S.k-1)*S.T;
+  let s;
+  if(Teff>S.T+0.05){
+    s=`The worst link, ${peerName(0)} to ${peerName(S.P-1)}, takes ${f0(Lmax)} ms. Turn n + ${S.k} can't start until turn n's orders cross it, and ${S.k} turns of ${S.T} ms leave only ${f0(room)} ms of room. So <b>every</b> peer runs ${f1(Teff)} ms turns, ${f1((slow-1)*100)}% slower than planned, not only ${peerName(0)} and ${peerName(S.P-1)}. `;
+    s+=S.J?`Jitter makes the stalls uneven. `:`Formula check: max(T, (T + L<sub>max</sub>) / k) = ${f1(Math.max(S.T,(S.T+Lmax)/S.k))} ms. `;
+    s+=`Raise k to ${Math.ceil((S.T+Lmax)/S.T)} to remove the stalls and pay ${f0((Math.ceil((S.T+Lmax)/S.T)-.5)*S.T)} ms of average command delay instead.`;
+  } else {
+    s=`(k − 1)T = ${f0(room)} ms covers the ${f0(Lmax)} ms worst link${S.J?' plus most of the jitter':''}, so no peer waits. The price is fixed: each command waits ${f0((S.k-.5)*Teff)} ms on average. `;
+  }
+  s+=` At ${f0(S.N)} units, state sync needs ${f0(ss)} B/s per peer, ${(ss/S.budget).toFixed(1)}× the budget. Lockstep needs ${f0(ls)} B/s at any army size.`;
+  $('insight').innerHTML=s;
+}
+
+function table(){
+  const two=L=>[[0,L],[L,0]],rows=[];
+  for(const L of [50,150,200,250,400]){
+    const a=effTurn(simulate(S.T,S.k,two(L),0).start),b=effTurn(simulate(S.T,S.k,two(L),60).start);
+    rows.push(`<tr class="${S.P===2&&S.L===L?'here':''}"><td>${L} ms</td><td>${f0(a)} ms</td><td>${f0((S.k-.5)*a)} ms</td><td>${f1(b)} ms</td><td>${f0((S.k-.5)*b)} ms</td></tr>`);
+  }
+  $('tbody').innerHTML=rows.join('');
+}
+
+function outputs(){
+  $('oT').textContent=S.T+' ms';$('ok').textContent=S.k;$('oP').textContent=S.P+' ('+peerName(0)+'–'+peerName(S.P-1)+')';
+  $('oL').textContent=S.L+' ms';$('oJ').textContent=S.J+' ms';$('ot0').textContent=f0(S.t0)+' ms';
+  $('oN').textContent=f0(S.N);$('oPb').textContent=S.Pb;$('os').textContent=S.s+' B';$('or').textContent=S.r+' /s';$('ob').textContent=S.b+' B';$('oc').textContent=S.c;
+  $('linkHint').textContent=S.P>2?`The worst link is ${peerName(0)} to ${peerName(S.P-1)}, both directions. Every other link is 40 ms one way. Jitter adds U(0, J) ms to each message, seed 12.`:`Two peers: the one link is the worst link. Jitter adds U(0, J) ms to each message, seed 12.`;
+}
+let lastTiming='';
+function update(){
+  const key=[S.T,S.k,S.P,S.L,S.J].join();
+  if(key!==lastTiming){recompute();table();lastTiming=key;}
+  outputs();const tl=drawTimeline();drawBandwidth();readouts(tl);
+}
+
+// ---- events ----
+['T','k','P','L','J','t0','N','Pb','s','r','b','c'].forEach(id=>$(id).addEventListener('input',e=>{S[id]=+e.target.value;update();}));
+document.querySelectorAll('.chip[data-budget]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.chip[data-budget]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  S.budget=+b.dataset.budget;update();}));
+function setIssue(t){S.t0=Math.max(0,Math.min(2999,Math.round(t)));$('t0').value=S.t0;update();}
+$('tlBox').addEventListener('click',e=>{const r=$('tlBox').getBoundingClientRect(),W=r.width;const t=(e.clientX-r.left-22)/(W-32)*WIN;setIssue(t);});
+$('tlBox').addEventListener('keydown',e=>{const step=e.shiftKey?100:10;
+  if(e.key==='ArrowRight'){setIssue(S.t0+step);e.preventDefault();}
+  else if(e.key==='ArrowLeft'){setIssue(S.t0-step);e.preventDefault();}});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+window.lockstepModel={simulate,effTurn,nominalDelay,stateSync,lockstep,breakEven,maxUnits,latencyMatrix,selfTest};
+selfTest();
+update();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+})();
+</script>
+</body>
+</html>

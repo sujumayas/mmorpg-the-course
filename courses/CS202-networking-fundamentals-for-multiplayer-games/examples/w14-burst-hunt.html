@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Burst hunt — CS202 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--cell-on:#c9d4c4;--cell-off:#1f2a44;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--cell-on:#3a4a66;--cell-off:#0b1120}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--cell-on:#3a4a66;--cell-off:#0b1120}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.1rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px}
+@media (max-width:700px){.layout{grid-template-columns:minmax(0,1fr)}}
+.left{display:grid;gap:14px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 10px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 2px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block}
+#stripBox{width:100%}
+svg{display:block;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink);paint-order:stroke;stroke:var(--paper-2);stroke-width:3px;stroke-linejoin:round}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px 14px;font-size:.82rem;margin:6px 2px 0;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.nums{display:grid;grid-template-columns:1fr;gap:8px;align-content:start}
+@media (max-width:700px) and (min-width:420px){.nums{grid-template-columns:1fr 1fr}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.25}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.netem{grid-column:1/-1;background:var(--paper-2);border-radius:8px;padding:8px 10px;font-size:.82rem}
+.netem code{display:block;font-size:.88rem;overflow-wrap:anywhere;color:var(--ink);margin-top:2px}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+input[type=number]{font:inherit;width:6.5em;padding:3px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+.check{justify-content:flex-start}
+.check input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip,.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink);font-size:.9rem}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.83rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.tcap{font-family:var(--serif);margin:16px 2px 0}
+.table-wrap{overflow-x:auto;margin-top:6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:720px;width:100%}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:78ch}
+#selftest{font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 14 · Worked example</p>
+  <h1>Hunting a bug that needs three lost packets in a row</h1>
+  <p class="lede" id="lede">Same 1% loss. Bursty finds the bug in about a minute. Independent needs more than a day.</p>
+</header>
+
+<section class="panel" aria-label="Burst loss and bug detection">
+  <div class="layout">
+    <div class="left">
+      <figure>
+        <figcaption><span id="stripCap">This minute</span>
+          <button class="btn" type="button" id="newMin">New minute</button></figcaption>
+        <div id="stripBox"><canvas id="strip" role="img"></canvas></div>
+        <p class="hint" id="stripHint" style="margin:6px 2px 0"></p>
+      </figure>
+      <figure>
+        <figcaption><span>Chance the bug has fired, by test time<small>P(t) = 1 − e<sup>−λt</sup>, test minutes on a log scale</small></span></figcaption>
+        <div id="curveBox"><svg id="curves" role="img"></svg></div>
+        <div class="legend" id="legend"></div>
+      </figure>
+    </div>
+    <div class="nums" aria-live="polite">
+      <div class="stat" style="--c:var(--blood)"><b id="vPQ">—</b><span>loss rate p, and q = P(loss | previous lost)</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="vBurst">—</b><span>mean burst 1 / (1 − q)</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="vA">—</b><span>a = p(1 − q) / (1 − p), P(loss | previous delivered)</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="vBeta">—</b><span id="vBetaL">β = p(1 − q)q<sup>k−1</sup>, bursts ≥ k per packet</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="vLam">—</b><span>λ = 60·r·β, bursts per minute</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="vMean">—</b><span>mean wait 1 / λ</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="vT95">—</b><span>95% found by, ln 20 / λ</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="vP10">—</b><span>P(found in a 10-minute playtest)</span></div>
+      <div class="netem">Same profile in netem<code id="vNetem">—</code></div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <span class="lbl">Profile</span>
+      <div class="presets" role="group" aria-label="Loss profiles" id="presets"></div>
+    </div>
+    <div>
+      <label for="p">Loss rate p <output id="op"></output></label>
+      <input id="p" type="range" min="0" max="1000" step="1" value="0" aria-describedby="pHint">
+      <p class="hint" id="pHint">Log scale, 0.1% to 20%.</p>
+      <label class="check" for="ind" style="margin-top:8px"><input id="ind" type="checkbox"> Independent (q = p)</label>
+      <label for="q">Burstiness q <output id="oq"></output></label>
+      <input id="q" type="range" min="0" max="0.95" step="0.01" value="0.5">
+    </div>
+    <div>
+      <label for="k">Burst the bug needs, k <output id="ok"></output></label>
+      <input id="k" type="range" min="1" max="6" step="1" value="3">
+      <label for="r">Send rate r <output id="or"></output></label>
+      <input id="r" type="range" min="10" max="128" step="1" value="30">
+      <label for="seed">Seed <input id="seed" type="number" min="0" max="999999" step="1" value="14"></label>
+    </div>
+  </div>
+
+  <p class="tcap" id="tcap">Lecture table at r = 30, k = 3</p>
+  <div class="table-wrap">
+    <table aria-label="Detection by profile">
+      <thead><tr><th>Profile</th><th>p</th><th>q</th><th>Mean burst</th><th>β per packet</th><th>Bursts ≥ k per min</th><th>Mean wait</th><th>95% found by</th><th>In 10 min</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <p>Model: week 14 lecture, section 2. Two-state (Gilbert) loss: the first packet follows a delivered one, and each packet is lost with probability q after a loss and a otherwise. The strip uses the lecture's <code>GilbertLoss</code> dropper with the same Mersenne Twister as Python's <code>random.Random(seed)</code>, so seed 14 here gives the same packets as the lab. Minute m is packets 60·r·(m − 1) to 60·r·m − 1 of one stream. Detection treats burst starts as a Poisson process with rate λ, which is close when bursts are rare per minute.</p>
+  <p id="selftest" aria-live="polite"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS='http://www.w3.org/2000/svg';
+const fx=(x,d)=>x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+// ---- Python-compatible Mersenne Twister (random.Random(seed).random()) ----
+function pyRandom(seed){
+  const mt=new Uint32Array(624);let mti;
+  function init(s){mt[0]=s>>>0;for(mti=1;mti<624;mti++){const p=mt[mti-1]^(mt[mti-1]>>>30);mt[mti]=(Math.imul(1812433253,p)+mti)>>>0;}}
+  function initByArray(key){
+    init(19650218);let i=1,j=0,k=Math.max(624,key.length);
+    for(;k;k--){const p=mt[i-1]^(mt[i-1]>>>30);mt[i]=(((mt[i]^Math.imul(p,1664525))>>>0)+key[j]+j)>>>0;i++;j++;if(i>=624){mt[0]=mt[623];i=1;}if(j>=key.length)j=0;}
+    for(k=623;k;k--){const p=mt[i-1]^(mt[i-1]>>>30);mt[i]=(((mt[i]^Math.imul(p,1566083941))>>>0)-i)>>>0;i++;if(i>=624){mt[0]=mt[623];i=1;}}
+    mt[0]=0x80000000;
+  }
+  function gen(){
+    let y;
+    if(mti>=624){
+      let kk;
+      for(kk=0;kk<227;kk++){y=(mt[kk]&0x80000000)|(mt[kk+1]&0x7fffffff);mt[kk]=mt[kk+397]^(y>>>1)^((y&1)?0x9908b0df:0);}
+      for(;kk<623;kk++){y=(mt[kk]&0x80000000)|(mt[kk+1]&0x7fffffff);mt[kk]=mt[kk-227]^(y>>>1)^((y&1)?0x9908b0df:0);}
+      y=(mt[623]&0x80000000)|(mt[0]&0x7fffffff);mt[623]=mt[396]^(y>>>1)^((y&1)?0x9908b0df:0);mti=0;
+    }
+    y=mt[mti++];y^=y>>>11;y^=(y<<7)&0x9d2c5680;y^=(y<<15)&0xefc60000;y^=y>>>18;return y>>>0;
+  }
+  initByArray([seed>>>0]);
+  return ()=>{const a=gen()>>>5,b=gen()>>>6;return (a*67108864+b)/9007199254740992;};
+}
+
+// ---- model ----
+const PRESETS=[
+  {id:'i1',name:'Independent 1%',p:.01,q:null},
+  {id:'i3',name:'Independent 3%',p:.03,q:null},
+  {id:'i10',name:'Independent 10%',p:.10,q:null},
+  {id:'b1',name:'Bursty 1%',p:.01,q:.5},
+  {id:'b1m',name:'Bursty 1%, milder',p:.01,q:.3}];
+function stats(p,q,k,r){
+  const a=p*(1-q)/(1-p),beta=p*(1-q)*Math.pow(q,k-1),lam=60*r*beta;
+  return {a,beta,lam,mean:1/lam,t95:Math.log(20)/lam,p10:1-Math.exp(-10*lam),burst:1/(1-q)};
+}
+function sig(x,n){if(x===0)return '0';const d=Math.max(0,n-1-Math.floor(Math.log10(Math.abs(x))));return x.toLocaleString('en-US',{minimumFractionDigits:Math.min(d,12),maximumFractionDigits:Math.min(d,12)});}
+function sci(x,n){if(!isFinite(x)||x===0)return '0';const e=Math.floor(Math.log10(x)),m=x/Math.pow(10,e);
+  if(e>=-2)return sig(x,n);
+  const sup={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  return m.toFixed(n-1)+' × 10'+String(e).split('').map(c=>sup[c]).join('');}
+function human(min){
+  if(!isFinite(min))return 'never';
+  if(min<1)return fx(min*60,0)+' s';
+  if(min<120)return sig(min,3)+' min';
+  if(min<60*48)return fx(min/60,1)+' h';
+  if(min<60*24*730)return fx(min/1440,1)+' days';
+  return fx(min/525960,1)+' years';
+}
+const pct=(x,n)=>sig(x*100,n||3)+'%';
+const trim=s=>s.indexOf('.')<0?s:s.replace(/0+$/,'').replace(/\.$/,'');
+const pctT=x=>trim(sig(x*100,3))+'%';
+function netem(p,q,ind){
+  if(ind)return `loss random ${pctT(p)}`;
+  const a=p*(1-q)/(1-p);
+  return `loss gemodel ${pctT(a)} ${pctT(1-q)} 100% 0%`;
+}
+// generator: one stream per (seed, p, q)
+function* gilbert(p,q,seed){
+  const rnd=pyRandom(seed),a=p*(1-q)/(1-p);let lost=false;
+  for(;;){lost=rnd()<(lost?q:a);yield lost;}
+}
+function minute(p,q,seed,r,m){
+  const g=gilbert(p,q,seed),n=60*r,skip=n*(m-1),out=new Uint8Array(n);
+  for(let i=0;i<skip;i++)g.next();
+  for(let i=0;i<n;i++)out[i]=g.next().value?1:0;
+  return out;
+}
+function runs(arr,k){const res=[];let i=0;while(i<arr.length){if(arr[i]){let j=i;while(j<arr.length&&arr[j])j++;if(j-i>=k)res.push([i,j-i]);i=j;}else i++;}return res;}
+
+function selfTest(){
+  const out=[],ok=(name,got,want,tol)=>out.push([name,Math.abs(got-want)<=tol,got,want]);
+  let s=stats(.01,.01,3,30);ok('ind1 beta',s.beta,9.9e-7,5e-10);ok('ind1 lambda',s.lam,.001782,5e-7);ok('ind1 mean',s.mean,561.2,.05);ok('ind1 t95',s.t95,1681,.5);ok('ind1 t95 h',s.t95/60,28.0,.05);ok('ind1 P10',s.p10,.0177,5e-5);
+  s=stats(.03,.03,3,30);ok('ind3 beta',s.beta,2.619e-5,5e-9);ok('ind3 lambda',s.lam,.04714,5e-6);ok('ind3 t95',s.t95,63.55,.005);ok('ind3 P10',s.p10,.376,5e-4);
+  s=stats(.1,.1,3,30);ok('ind10 lambda',s.lam,1.62,5e-3);ok('ind10 t95',s.t95,1.85,5e-3);
+  s=stats(.01,.5,3,30);ok('b1 a',s.a,.005051,5e-7);ok('b1 beta',s.beta,.00125,1e-9);ok('b1 lambda',s.lam,2.25,1e-9);ok('b1 mean',s.mean,.444,5e-4);ok('b1 t95',s.t95,1.33,5e-3);
+  out.push(['b1 netem',netem(.01,.5,false)==='loss gemodel 0.505% 50% 100% 0%',netem(.01,.5,false),'loss gemodel 0.505% 50% 100% 0%']);
+  s=stats(.01,.3,3,30);ok('b1m beta',s.beta,6.3e-4,1e-9);ok('b1m lambda',s.lam,1.134,5e-4);ok('b1m t95',s.t95,2.64,5e-3);
+  s=stats(.01,.01,2,30);ok('k2 ind lambda',s.lam,.178,5e-4);ok('k2 ind t95',s.t95,16.8,.05);
+  s=stats(.01,.5,2,30);ok('k2 b1 lambda',s.lam,4.5,1e-9);ok('k2 b1 t95',s.t95,.67,5e-3);
+  // generator check, 1,000,000 packets, seed 14, bursty 1%
+  const g=gilbert(.01,.5,14);let lostN=0,bursts=0,prev=false;
+  for(let i=0;i<1e6;i++){const l=g.next().value;if(l){lostN++;if(!prev)bursts++;}prev=l;}
+  const rate=lostN/1e6,mb=lostN/bursts;ok('generator loss rate',rate,.01,.001);ok('generator mean burst',mb,2.0,.1);
+  const bad=out.filter(x=>!x[1]);bad.forEach(x=>console.error('self-test failed:',x[0],'got',x[2],'want',x[3]));
+  $('selftest').textContent=(bad.length?`Self-test: ${bad.length} of ${out.length} checks against the lecture failed.`:`Self-test: all ${out.length} checks against the lecture's numbers pass.`)+` Generator, 1,000,000 packets at seed 14, bursty 1%: loss ${fx(rate*100,3)}%, mean burst ${fx(mb,3)}.`;
+}
+
+// ---- state ----
+const S={p:.01,q:.5,ind:false,k:3,r:30,seed:14,m:1,preset:'b1'};
+const pToSlider=p=>Math.round(1000*Math.log(p/.001)/Math.log(200));
+const sliderToP=v=>.001*Math.pow(200,v/1000);
+const effQ=()=>S.ind?S.p:S.q;
+
+// ---- strip ----
+let anim=null;
+function drawStrip(progress){
+  const box=$('stripBox'),cv=$('strip'),Wbox=Math.max(200,box.clientWidth);
+  const r=S.r,cell=Math.max(1,Math.min(9,Math.floor(Wbox/r))),gap=14;
+  const colW=r*cell,cols=Math.max(1,Math.min(4,Math.floor((Wbox+gap)/(colW+gap)))),rowsPer=Math.ceil(60/cols);
+  const W=cols*colW+(cols-1)*gap,H=rowsPer*cell+14,dpr=window.devicePixelRatio||1;
+  cv.style.width=W+'px';cv.style.height=H+'px';cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const data=minute(S.p,effQ(),S.seed,r,S.m),on=css('--cell-on'),off=css('--cell-off'),blood=css('--blood'),soft=css('--ink-soft');
+  const pos=i=>{const sec=Math.floor(i/r),c=Math.floor(sec/rowsPer),row=sec%rowsPer;return [c*(colW+gap)+(i%r)*cell,14+row*cell];};
+  const shown=progress==null?60:Math.ceil(60*progress);
+  const gp=cell>=4?1:0;
+  for(let i=0;i<data.length;i++){if(Math.floor(i/r)>=shown)break;const [x,y]=pos(i);g.fillStyle=data[i]?off:on;g.fillRect(x,y,cell-gp,cell-gp);}
+  g.font='10px '+css('--sans');g.fillStyle=soft;g.textBaseline='alphabetic';
+  for(let c=0;c<cols;c++){g.textAlign='left';g.fillText(`s ${c*rowsPer+1}–${Math.min(60,(c+1)*rowsPer)}`,c*(colW+gap),10);}
+  const rs=runs(data,S.k);
+  if(progress==null||progress>=1){
+    g.strokeStyle=blood;g.lineWidth=2;
+    rs.forEach(([st,len])=>{
+      let i=st;
+      while(i<st+len){const rowEnd=(Math.floor(i/r)+1)*r,e=Math.min(st+len,rowEnd);const [x,y]=pos(i);g.strokeRect(x-1,y-1,(e-i)*cell+1-gp+1,cell+1-gp+1);i=e;}
+      const [xe,ye]=pos(st+len-1);g.font='700 10px '+css('--sans');g.fillStyle=blood;g.textAlign='left';
+      const tx=xe+cell+2;if(cell>=5)g.fillText(String(len),Math.min(tx,W-8),ye+cell-1);
+    });
+  }
+  const lost=data.reduce((a,b)=>a+b,0);
+  $('stripCap').textContent=`This minute: ${lost} lost, ${rs.length} burst${rs.length===1?'':'s'} of ≥ ${S.k}`;
+  $('stripHint').textContent=`Minute ${S.m}, seed ${S.seed}. ${fx(60*r,0)} packets, ${r} per row, one row per second. Dark cells are lost; red boxes are bursts of ${S.k} or more.`;
+  cv.setAttribute('aria-label',`One minute of ${60*r} packets: ${lost} lost, ${rs.length} bursts of at least ${S.k}.`);
+}
+function newMinute(){
+  S.m++;if(anim)cancelAnimationFrame(anim);
+  if(reduce.matches){drawStrip();return;}
+  const t0=performance.now();
+  const step=t=>{const pr=Math.min(1,(t-t0)/350);drawStrip(pr);if(pr<1)anim=requestAnimationFrame(step);else anim=null;};
+  anim=requestAnimationFrame(step);
+}
+
+// ---- curves ----
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const a in attrs)e.setAttribute(a,attrs[a]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function presetColors(){return {i1:css('--steel'),i3:css('--steel'),i10:css('--steel'),b1:css('--ochre'),b1m:css('--ochre')};}
+const DASH={i1:'',i3:'6 4',i10:'2 3',b1:'',b1m:'6 4'};
+function drawCurves(){
+  const svg=$('curves'),W=Math.max(260,$('curveBox').clientWidth),H=Math.round(Math.min(360,Math.max(330,W*.5)));
+  svg.setAttribute('width',W);svg.setAttribute('height',H);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const pad={l:40,r:14,t:14,b:44},x0=Math.log10(.1),x1=Math.log10(10000);
+  const x=t=>pad.l+(W-pad.l-pad.r)*(Math.log10(t)-x0)/(x1-x0),y=v=>pad.t+(H-pad.t-pad.b)*(1-v);
+  const soft=css('--ink-soft'),grid=css('--grid'),ink=css('--ink'),blood=css('--blood'),paper=css('--paper'),col=presetColors();
+  [0,.25,.5,.75,1].forEach(v=>{el('line',{x1:pad.l,x2:W-pad.r,y1:y(v),y2:y(v),stroke:grid},svg);el('text',{x:pad.l-6,y:y(v)+4,'text-anchor':'end','font-size':11,fill:soft},svg,v===0?'0':v===1?'1':fx(v,2));});
+  [[.1,'6 s'],[1,'1 min'],[10,'10 min'],[100,'100 min'],[1000,'17 h'],[10000,'7 days']].forEach(([t,l],i,a)=>{
+    el('line',{x1:x(t),x2:x(t),y1:pad.t,y2:y(0),stroke:grid},svg);
+    if(W>=480||i%2===0||i===a.length-1)el('text',{x:x(t),y:y(0)+16,'text-anchor':i===0?'start':i===a.length-1?'end':'middle','font-size':11,fill:soft},svg,l);});
+  el('text',{x:W-pad.r,y:y(0)+30,'text-anchor':'end','font-size':11,fill:soft},svg,'test time (log)');
+  el('line',{x1:pad.l,x2:W-pad.r,y1:y(.95),y2:y(.95),stroke:ink,'stroke-dasharray':'6 4',opacity:.6},svg);
+  el('text',{x:pad.l+4,y:y(.95)-5,'font-size':11,fill:soft},svg,'95%');
+  el('line',{x1:x(10),x2:x(10),y1:pad.t,y2:y(0),stroke:css('--moss'),'stroke-width':2},svg);
+  el('text',{x:x(10)+4,y:y(.02)-4,'font-size':11,'font-weight':700,fill:css('--moss')},svg,'10-minute playtest');
+  const curve=(lam,color,w,dash,op)=>{let d='';for(let i=0;i<=240;i++){const t=Math.pow(10,x0+(x1-x0)*i/240),v=1-Math.exp(-lam*t);d+=(i?'L':'M')+x(t).toFixed(1)+' '+y(v).toFixed(1);}
+    el('path',{d,fill:'none',stroke:color,'stroke-width':w,'stroke-dasharray':dash||'',opacity:op},svg);};
+  const items=PRESETS.map(pr=>{const q=pr.q==null?pr.p:pr.q;return {pr,st:stats(pr.p,q,S.k,S.r)};});
+  items.forEach(it=>curve(it.st.lam,col[it.pr.id],2,DASH[it.pr.id],.55));
+  const cur=stats(S.p,effQ(),S.k,S.r);
+  curve(cur.lam,blood,3.2,'',1);
+  // t95 dots with staggered labels below the 95% line
+  const marks=items.map(it=>{const me=it.pr.id===S.preset;return {t:it.st.t95,color:me?blood:col[it.pr.id],label:short(it.pr.name)+' '+human(it.st.t95),cur:me};});
+  if(!S.preset)marks.push({t:cur.t95,color:blood,label:'you '+human(cur.t95),cur:true});
+  marks.sort((a,b)=>a.t-b.t);
+  const levels=[];const lh=13;
+  marks.forEach(mk=>{
+    const off=mk.t>10000,px=off?W-pad.r:x(Math.max(mk.t,.1));
+    const w=mk.label.length*5.6+(off?10:0);
+    let anc='middle',lx=px;
+    if(lx-w/2<pad.l){anc='start';lx=pad.l+2;} else if(lx+w/2>W-pad.r){anc='end';lx=W-pad.r;}
+    const left=anc==='start'?lx:anc==='end'?lx-w:lx-w/2,right=left+w;
+    let lv=0;while(levels[lv]!=null&&levels[lv]>left-6)lv++;levels[lv]=right;
+    const ly=y(.95)+16+lv*lh;
+    if(!off){el('circle',{cx:px,cy:y(.95),r:mk.cur?5.5:4,fill:mk.color,stroke:paper,'stroke-width':1.5},svg);
+      el('line',{x1:px,x2:px,y1:y(.95)+4,y2:ly-9,stroke:mk.color,'stroke-width':1,opacity:.6},svg);}
+    el('text',{x:lx,y:ly,'text-anchor':anc,'font-size':10.5,'font-weight':mk.cur?700:600,fill:mk.color},svg,mk.label+(off?' →':''));
+  });
+  svg.setAttribute('aria-label',`Detection probability versus test minutes. Your settings: 95% by ${human(cur.t95)}; ${fx(cur.p10*100,1)}% within a 10-minute playtest.`);
+  // legend
+  $('legend').innerHTML=items.map(it=>`<span><i style="background:${col[it.pr.id]};opacity:.7"></i>${it.pr.name}: ${human(it.st.t95)}</span>`).join('')+`<span style="color:var(--ink);font-weight:600"><i style="background:var(--blood);height:4px"></i>Your settings: ${human(cur.t95)}</span>`;
+}
+function short(n){return n.replace('Independent ','Ind ').replace('Bursty 1%, milder','Bursty mild').replace('Bursty ','Bursty ');}
+
+// ---- numbers ----
+function numbers(){
+  const q=effQ(),s=stats(S.p,q,S.k,S.r);
+  $('vPQ').textContent=`p ${pct(S.p)}, q ${sig(q,S.ind?3:2)}`;
+  $('vBurst').textContent=fx(s.burst,2)+' packets';
+  $('vA').textContent=sig(s.a,4)+' ('+pct(s.a)+')';
+  $('vBeta').textContent=sci(s.beta,4);$('vBetaL').innerHTML=`β = p(1 − q)q<sup>k−1</sup>, bursts ≥ ${S.k} per packet`;
+  $('vLam').textContent=sig(s.lam,4)+' / min';
+  const inMin=t=>t<1?fx(t,3):t<100?fx(t,2):fx(t,1);
+  const extra=t=>t<1?' ('+fx(t*60,0)+' s)':t>=120?' ('+human(t)+')':'';
+  $('vMean').textContent=inMin(s.mean)+' min'+extra(s.mean);
+  $('vT95').textContent=(s.t95<100?fx(s.t95,2):fx(s.t95,0))+' min'+extra(s.t95);
+  $('vP10').textContent=s.p10>0.9995?'≈ 1 (100%)':sig(s.p10,3)+' ('+fx(s.p10*100,1)+'%)';
+  $('vNetem').textContent=netem(S.p,q,S.ind);
+  const ind=stats(S.p,S.p,S.k,S.r),bur=stats(S.p,.5,S.k,S.r);
+  $('insight').innerHTML=`At ${pct(S.p)} loss and ${S.r} Hz, a bug that needs ${S.k} lost in a row fires ${sig(s.lam,3)} times per minute, so a 10-minute playtest catches it ${fx(s.p10*100,1)}% of the time. `+
+    (S.ind?`Make the same loss bursty (q = 0.5) and it fires ${sig(bur.lam/ind.lam,3)}× as often, with the same number of lost packets. `
+          :`The same ${pct(S.p)} spread out independently fires ${sig(ind.lam,3)} times per minute, ${sig(s.lam/ind.lam,3)}× less often, and needs ${human(ind.t95)} for a 95% chance. `)+
+    `Each extra packet of k multiplies the wait by about 1 / q.`;
+  $('tcap').textContent=`Lecture table at r = ${S.r}, k = ${S.k}`;
+  $('tbody').innerHTML=PRESETS.map(pr=>{const qq=pr.q==null?pr.p:pr.q,st=stats(pr.p,qq,S.k,S.r);
+    return `<tr class="${S.preset===pr.id?'here':''}"><td>${pr.name}</td><td>${fx(pr.p,2)}</td><td>${fx(qq,2)}</td><td>${fx(st.burst,2)}</td><td>${sci(st.beta,3)}</td><td>${sig(st.lam,3)}</td><td>${human(st.mean)}</td><td>${human(st.t95)}</td><td>${fx(st.p10*100,1)}%</td></tr>`;}).join('');
+}
+
+function outputs(){
+  $('op').textContent=pct(S.p);$('oq').textContent=fx(effQ(),2);$('ok').textContent=S.k;$('or').textContent=S.r+' Hz';
+  $('p').value=pToSlider(S.p);$('ind').checked=S.ind;$('q').disabled=S.ind;if(!S.ind)$('q').value=S.q;$('k').value=S.k;$('r').value=S.r;
+  document.querySelectorAll('#presets .chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.id===S.preset)));
+}
+function update(){outputs();drawStrip();drawCurves();numbers();}
+
+// ---- events ----
+$('presets').innerHTML=PRESETS.map(pr=>`<button class="chip" type="button" data-id="${pr.id}" aria-pressed="false">${pr.name}</button>`).join('');
+document.querySelectorAll('#presets .chip').forEach(c=>c.addEventListener('click',()=>{
+  const pr=PRESETS.find(x=>x.id===c.dataset.id);S.p=pr.p;S.ind=pr.q==null;if(!S.ind)S.q=pr.q;S.preset=pr.id;S.m=1;update();}));
+$('p').addEventListener('input',e=>{S.p=+sliderToP(+e.target.value).toPrecision(3);S.preset=null;update();});
+$('q').addEventListener('input',e=>{S.q=+e.target.value;S.preset=null;update();});
+$('ind').addEventListener('change',e=>{S.ind=e.target.checked;S.preset=null;update();});
+$('k').addEventListener('input',e=>{S.k=+e.target.value;update();});
+$('r').addEventListener('input',e=>{S.r=+e.target.value;update();});
+$('seed').addEventListener('input',e=>{const v=Math.floor(+e.target.value);if(Number.isFinite(v)&&v>=0){S.seed=v;S.m=1;update();}});
+$('newMin').addEventListener('click',newMinute);
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+window.burstModel={stats,netem,minute,runs,pyRandom};
+selfTest();update();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bandwidth budget — CS202 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.1rem;margin:0;min-height:3.3em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px}
+@media (max-width:700px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 10px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 2px 6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.svgbox{width:100%}
+svg{display:block;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink);paint-order:stroke;stroke:var(--paper-2);stroke-width:3px;stroke-linejoin:round}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 2px 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.nums{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 12px;margin:16px 0 4px}
+@media (max-width:900px){.nums{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.nums{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+input[type=number]{font:inherit;width:6.5em;padding:3px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.check{justify-content:flex-start;font-weight:600}
+.check input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip,.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink);font-size:.92rem;padding:8px 14px}
+.chip.small{padding:4px 8px;font-size:.8rem}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.83rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:6px}
+.tcap{font-family:var(--serif);margin:16px 2px 0}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:560px;width:100%}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:78ch}
+#selftest{font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 13 · Worked example</p>
+  <h1>Compression moves the curve. An interest cap bends it.</h1>
+  <p class="lede" id="lede" aria-live="polite">100 players at 20 Hz: 65.8 Mbit/s. Double the players and it quadruples. Turn on the interest cap to see the curve straighten.</p>
+</header>
+
+<section class="panel" aria-label="Snapshot bandwidth budget">
+  <div class="views">
+    <figure>
+      <figcaption><span>Server upload vs players<small id="srvSub">U = n × r × (k·b + h·p), in Mbit/s</small></span>
+        <span class="presets" role="group" aria-label="Axis scale" style="margin:0">
+          <button class="chip small" type="button" id="linBtn" aria-pressed="true">linear</button>
+          <button class="chip small" type="button" id="logBtn" aria-pressed="false">log-log</button>
+        </span></figcaption>
+      <div class="svgbox"><svg id="srv" role="img"></svg></div>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>no cap, k = n</span>
+        <span><i style="background:var(--steel)" id="capKey"></i><span id="capKeyT">cap K (preview)</span></span>
+        <span><i style="background:var(--ochre)"></i>server link</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption><span>One client's download<small>At the current n, log scale, kbit/s</small></span></figcaption>
+      <div class="svgbox"><svg id="cli" role="img"></svg></div>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>under your ceiling</span>
+        <span><i style="background:var(--blood)"></i>over it</span>
+        <span><i style="background:var(--ink-soft)"></i>other mode (ghost)</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="nums" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="vK">—</b><span>entities per client k</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="vP">—</b><span>packets per snapshot p</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="vS">—</b><span>snapshot bytes S</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="vD">—</b><span id="vDk">client download D</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="vU">—</b><span id="vUB">server upload U</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="vGB">—</b><span>GB per match-hour</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="vRec">—</b><span>entity records per second, n·k·r</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="vLat">—</b><span id="vLatL">latency from the rate, 500/r + 2000/r</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="vWall">—</b><span id="vWallL">server wall</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="vSaved">—</b><span>saved vs baseline A (r 20, b 40, no cap)</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="n">Players n <output id="on"></output></label>
+      <input id="n" type="range" min="2" max="1000" step="1" value="100">
+      <label for="r">Snapshot rate r <output id="or"></output></label>
+      <input id="r" type="range" min="1" max="128" step="1" value="20">
+      <div class="presets" role="group" aria-label="Rate presets">
+        <button class="chip" type="button" data-r="10">10</button><button class="chip" type="button" data-r="20">20</button><button class="chip" type="button" data-r="30">30</button><button class="chip" type="button" data-r="60">60</button><button class="chip" type="button" data-r="128">128</button>
+      </div>
+    </div>
+    <div>
+      <label for="b">Bytes per entity b <output id="ob"></output></label>
+      <input id="b" type="range" min="1" max="64" step="1" value="40">
+      <label class="check" for="cap" style="margin-top:10px"><input id="cap" type="checkbox"> Interest cap</label>
+      <label for="K">Cap K <output id="oK"></output></label>
+      <input id="K" type="range" min="4" max="128" step="1" value="32">
+    </div>
+    <div>
+      <label for="h">Header h (bytes) <input id="h" type="number" min="0" max="200" step="1" value="28"></label>
+      <label for="M">MTU M (bytes) <input id="M" type="number" min="300" max="9000" step="1" value="1280"></label>
+      <label for="ceil">Client ceiling (kbit/s) <input id="ceil" type="number" min="16" max="100000" step="16" value="256"></label>
+      <span class="lbl" style="margin-top:8px">Server link</span>
+      <div class="presets" role="group" aria-label="Server link">
+        <button class="chip" type="button" data-link="100">100 Mbit/s</button><button class="chip" type="button" data-link="1000">1 Gbit/s</button><button class="chip" type="button" data-link="10000">10 Gbit/s</button>
+      </div>
+      <button class="btn" type="button" id="lever" style="margin-top:12px">Apply levers A to D</button>
+      <p class="hint" id="leverHint">Steps through the lecture's lever table. Next: A, the baseline.</p>
+    </div>
+  </div>
+
+  <p class="tcap">Lecture's growth table at your r, b, h and M (cap uses your K)</p>
+  <div class="table-wrap">
+    <table aria-label="Bandwidth by player count">
+      <thead><tr><th>Players n</th><th>Packets</th><th>Client, no cap</th><th>Server, no cap</th><th>Client, cap K</th><th>Server, cap K</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <p>Model: week 13 lecture, section 2, and the <code>budget()</code> function there. <code>k = cap ? min(n, K) : n</code>, <code>p = max(1, ceil(k·b / (M − h)))</code>, <code>S = k·b + h·p</code>, <code>D = r·S</code>, <code>U = n·D</code>. kbit/s and Mbit/s use 1,000 and 1,000,000. The wall is the last n whose upload fits the link. Snapshots only: no command traffic, no acknowledgements, no delta compression.</p>
+  <p id="selftest" aria-live="polite"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS='http://www.w3.org/2000/svg';
+const fx=(x,d)=>x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const f0=x=>Math.round(x).toLocaleString('en-US');
+const S={n:100,r:20,b:40,cap:false,K:32,h:28,M:1280,link:1000,ceil:256,log:false,lever:-1};
+
+// ---- model ----
+function budget(n,r,b,K,h,M){
+  const k=K==null?n:Math.min(n,K),p=Math.max(1,Math.ceil(k*b/(M-h))),snap=k*b+h*p,D=r*snap;
+  return {k,p,S:snap,D,U:n*D};
+}
+const kbit=x=>8*x/1000,mbit=x=>8*x/1e6;
+function wall(r,b,K,h,M,linkMbit,nMax){for(let n=2;n<=(nMax||100000);n++)if(mbit(budget(n,r,b,K,h,M).U)>linkMbit)return n-1;return null;}
+function clientOver(r,b,K,h,M,kb,nMax){for(let n=2;n<=(nMax||100000);n++)if(kbit(budget(n,r,b,K,h,M).D)>kb)return n;return null;}
+const LEVERS=[{name:'A. Baseline',r:20,b:40,cap:false},{name:'B. Quantize fields',r:20,b:16,cap:false},{name:'C. Interest cap K = 32',r:20,b:16,cap:true,K:32},{name:'D. Halve the rate',r:10,b:16,cap:true,K:32}];
+
+function selfTest(){
+  const out=[],ok=(name,got,want,tol)=>out.push([name,Math.abs(got-want)<=(tol||1e-9),got,want]);
+  let x=budget(100,20,40,null,28,1280);
+  ok('n100 p',x.p,4);ok('n100 S',x.S,4112);ok('n100 D',x.D,82240);ok('n100 D kbit',kbit(x.D),657.9,0.05);
+  ok('n100 U',x.U,8224000);ok('n100 U Mbit',mbit(x.U),65.79,0.005);ok('n100 GB/h',x.U*3600/1e9,29.61,0.005);ok('n100 records',100*x.k*20,200000);
+  x=budget(50,20,40,32,28,1280);ok('n50 K32 S',x.S,1336);ok('n50 K32 D kbit',kbit(x.D),213.8,0.05);ok('n50 K32 U',mbit(x.U),10.69,0.005);
+  x=budget(1000,20,40,null,28,1280);ok('n1000 p',x.p,32);ok('n1000 U',mbit(x.U),6543.4,0.05);
+  ok('n1000 K32 U',mbit(budget(1000,20,40,32,28,1280).U),213.76,0.005);
+  ok('wall 1 Gbit',wall(20,40,null,28,1280,1000),390);
+  ok('client > 1 Mbit from',clientOver(20,40,null,28,1280,1000),153);
+  [[0,65.79],[1,26.50],[2,8.64],[3,4.32]].forEach(([i,w])=>{const L=LEVERS[i];ok('lever '+L.name,mbit(budget(100,L.r,L.b,L.cap?L.K:null,28,1280).U),w,0.005);});
+  ok('r60 b40',mbit(budget(100,60,40,null,28,1280).U),197.38,0.005);
+  const bad=out.filter(x=>!x[1]);bad.forEach(x=>console.error('self-test failed:',x[0],'got',x[2],'want',x[3]));
+  $('selftest').textContent=bad.length?`Self-test: ${bad.length} of ${out.length} checks against the lecture failed.`:`Self-test: all ${out.length} checks against the lecture's numbers pass.`;
+  return out;
+}
+
+// ---- svg ----
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const a in attrs)e.setAttribute(a,attrs[a]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function sizeSvg(svg,H){const W=Math.max(260,svg.parentNode.clientWidth);svg.setAttribute('width',W);svg.setAttribute('height',H);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);while(svg.firstChild)svg.removeChild(svg.firstChild);return W;}
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v)||v;}
+const shortM=v=>v===0?'0':v>=1000?fx(v/1000,v%1000?1:0)+'k':(v<1?fx(v,v<.1?2:1):f0(v));
+
+function drawServer(){
+  const svg=$('srv'),W0=Math.max(260,svg.parentNode.clientWidth),H=Math.round(Math.min(360,Math.max(260,W0*.58)));
+  const W=sizeSvg(svg,H),pad={l:50,r:14,t:16,b:38};
+  const Kc=S.K,capOn=S.cap;
+  const noCap=[],capd=[];
+  for(let n=2;n<=1000;n++){noCap.push([n,mbit(budget(n,S.r,S.b,null,S.h,S.M).U)]);capd.push([n,mbit(budget(n,S.r,S.b,Kc,S.h,S.M).U)]);}
+  const soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),steel=css('--steel'),ochre=css('--ochre'),ink=css('--ink'),paper=css('--paper');
+  let x,y,xTicks,yTicks,yMax,yMin;
+  if(S.log){
+    yMin=Math.pow(10,Math.floor(Math.log10(Math.max(1e-3,noCap[0][1]))));
+    yMax=Math.pow(10,Math.ceil(Math.log10(Math.max(noCap[noCap.length-1][1],S.link)*1.05)));
+    x=n=>pad.l+(W-pad.l-pad.r)*Math.log(n/2)/Math.log(500);
+    y=v=>pad.t+(H-pad.t-pad.b)*(1-Math.log(Math.max(v,yMin)/yMin)/Math.log(yMax/yMin));
+    xTicks=[2,10,100,1000];yTicks=[];for(let v=yMin;v<=yMax*1.001;v*=10)yTicks.push(v);
+  } else {
+    yMax=niceMax(Math.max(noCap[noCap.length-1][1],S.link)*1.02);yMin=0;
+    x=n=>pad.l+(W-pad.l-pad.r)*(n-2)/998;
+    y=v=>pad.t+(H-pad.t-pad.b)*(1-Math.min(v,yMax)/yMax);
+    xTicks=[2,250,500,750,1000];yTicks=[0,1,2,3,4,5].map(i=>yMax*i/5);
+  }
+  yTicks.forEach(v=>{el('line',{x1:pad.l,x2:W-pad.r,y1:y(v),y2:y(v),stroke:grid},svg);el('text',{x:pad.l-6,y:y(v)+4,'text-anchor':'end','font-size':11,fill:soft},svg,shortM(v));});
+  xTicks.forEach(n=>el('text',{x:x(n),y:H-pad.b+16,'text-anchor':n===1000?'end':n===2?'start':'middle','font-size':11,fill:soft},svg,f0(n)));
+  el('text',{x:W-pad.r,y:H-4,'text-anchor':'end','font-size':11,fill:soft},svg,'players n'+(S.log?' (log)':''));
+  el('text',{x:4,y:10,'font-size':11,fill:soft},svg,'Mbit/s'+(S.log?' (log)':''));
+  // link
+  el('line',{x1:pad.l,x2:W-pad.r,y1:y(S.link),y2:y(S.link),stroke:ochre,'stroke-width':2,'stroke-dasharray':'7 5'},svg);
+  el('text',{x:pad.l+6,y:y(S.link)-6,'font-size':11,'font-weight':700,fill:ochre},svg,(S.link>=1000?S.link/1000+' Gbit/s':S.link+' Mbit/s')+' link');
+  const path=pts=>pts.map((p,i)=>(i?'L':'M')+x(p[0]).toFixed(1)+' '+y(p[1]).toFixed(1)).join('');
+  el('path',{d:path(capd),fill:'none',stroke:steel,'stroke-width':capOn?2.8:2,opacity:capOn?1:.4,'stroke-dasharray':capOn?'':'5 4'},svg);
+  el('path',{d:path(noCap),fill:'none',stroke:blood,'stroke-width':capOn?2:2.8,opacity:capOn?.55:1},svg);
+  // wall markers
+  const w=wall(S.r,S.b,null,S.h,S.M,S.link,1000);
+  if(w!=null){const v=mbit(budget(w,S.r,S.b,null,S.h,S.M).U);
+    el('circle',{cx:x(w),cy:y(v),r:5,fill:blood,stroke:paper,'stroke-width':2},svg);
+    const right=x(w)<W*.7;
+    el('text',{x:x(w)+(right?8:-8),y:y(S.link)-8,'text-anchor':right?'start':'end','font-size':12,'font-weight':700,fill:blood},svg,'wall at n = '+f0(w));}
+  if(capOn){const wc=wall(S.r,S.b,Kc,S.h,S.M,S.link,1000);
+    if(wc!=null){const v=mbit(budget(wc,S.r,S.b,Kc,S.h,S.M).U);el('circle',{cx:x(wc),cy:y(v),r:5,fill:steel,stroke:paper,'stroke-width':2},svg);
+      el('text',{x:x(wc)-8,y:y(S.link)+30,'text-anchor':'end','font-size':12,'font-weight':700,fill:steel},svg,'capped wall at n = '+f0(wc));}}
+  // slope labels on log-log
+  if(S.log){
+    const n1=S.n<300?600:Math.round(Math.max(Kc*2,40)),n2=n1;
+    const a=mbit(budget(n1,S.r,S.b,null,S.h,S.M).U);
+    el('text',{x:x(n1)-6,y:y(a)-8,'text-anchor':'end','font-size':12,'font-weight':700,fill:blood},svg,'slope 2');
+    const c=mbit(budget(n2,S.r,S.b,Kc,S.h,S.M).U);
+    const endA=x(n2)>W*.7;el('text',{x:x(n2)+(endA?-4:6),y:y(c)+18,'text-anchor':endA?'end':'start','font-size':12,'font-weight':700,fill:steel},svg,'slope 1');
+  }
+  // cursor
+  el('line',{x1:x(S.n),x2:x(S.n),y1:pad.t,y2:H-pad.b,stroke:ink,'stroke-dasharray':'4 4',opacity:.45},svg);
+  const vN=mbit(budget(S.n,S.r,S.b,null,S.h,S.M).U),vC=mbit(budget(S.n,S.r,S.b,Kc,S.h,S.M).U);
+  el('circle',{cx:x(S.n),cy:y(vC),r:capOn?6:4.5,fill:steel,stroke:paper,'stroke-width':2,opacity:capOn?1:.6},svg);
+  el('circle',{cx:x(S.n),cy:y(vN),r:6,fill:blood,stroke:paper,'stroke-width':2,opacity:capOn?.6:1},svg);
+  const cur=capOn?vC:vN,left=x(S.n)>W*.6;
+  el('text',{x:x(S.n)+(left?-9:9),y:Math.max(pad.t+12,y(cur)-9),'text-anchor':left?'end':'start','font-size':12,'font-weight':700,fill:capOn?steel:blood},svg,fx(cur,2)+' Mbit/s');
+  svg.setAttribute('aria-label',`Server upload versus players. At ${S.n} players: ${fx(vN,2)} Mbit/s with no cap, ${fx(vC,2)} with cap ${Kc}. Link ${S.link} Mbit/s.`);
+}
+
+function drawClient(){
+  const svg=$('cli'),H=300,W=sizeSvg(svg,H),pad={l:58,r:10,t:16,b:30};
+  const lo=10,hi=100000,y=v=>pad.t+(H-pad.t-pad.b)*(1-Math.log10(Math.min(Math.max(v,lo),hi)/lo)/Math.log10(hi/lo));
+  const soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),steel=css('--steel'),ochre=css('--ochre'),ink=css('--ink');
+  [10,100,1000,10000,100000].forEach(v=>{el('line',{x1:pad.l,x2:W-pad.r,y1:y(v),y2:y(v),stroke:grid},svg);
+    el('text',{x:pad.l-6,y:y(v)+4,'text-anchor':'end','font-size':11,fill:soft},svg,v>=1000?f0(v/1000)+' Mbit/s':v+' kbit/s');});
+  const cur=kbit(budget(S.n,S.r,S.b,S.cap?S.K:null,S.h,S.M).D),oth=kbit(budget(S.n,S.r,S.b,S.cap?null:S.K,S.h,S.M).D);
+  const cw=W-pad.l-pad.r,bw=Math.min(60,cw*.22),x1=pad.l+cw*.06,x2=pad.l+cw*.34;
+  el('rect',{x:x2,y:y(oth),width:bw,height:y(lo)-y(oth),fill:'none',stroke:soft,'stroke-width':1.5,'stroke-dasharray':'5 4'},svg);
+  const over=cur>S.ceil;
+  el('rect',{x:x1,y:y(cur),width:bw,height:y(lo)-y(cur),fill:over?blood:steel,rx:3},svg);
+  el('text',{x:x1+bw/2,y:H-pad.b+16,'text-anchor':'middle','font-size':11,fill:ink,'font-weight':700},svg,S.cap?'cap '+S.K:'no cap');
+  el('text',{x:x2+bw/2,y:H-pad.b+16,'text-anchor':'middle','font-size':11,fill:soft},svg,S.cap?'no cap':'cap '+S.K);
+  el('text',{x:x1+bw/2,y:y(cur)-6,'text-anchor':'middle','font-size':12,'font-weight':700,fill:over?blood:steel},svg,fx(cur,1));
+  el('text',{x:x2+bw/2,y:y(oth)+15,'text-anchor':'middle','font-size':11,fill:soft},svg,fx(oth,1));
+  const line=(v,label,color,dash)=>{el('line',{x1:pad.l,x2:W-pad.r,y1:y(v),y2:y(v),stroke:color,'stroke-width':1.6,'stroke-dasharray':dash},svg);
+    el('text',{x:W-pad.r,y:y(v)-4,'text-anchor':'end','font-size':11,'font-weight':700,fill:color},svg,label);};
+  line(1000,'mobile 1 Mbit/s',ink,'2 3');line(10000,'home 10 Mbit/s',ink,'2 3');line(S.ceil,'your ceiling '+f0(S.ceil),ochre,'7 5');
+  svg.setAttribute('aria-label',`Client download ${fx(cur,1)} kbit/s ${S.cap?'with':'without'} the cap, ${fx(oth,1)} in the other mode. Ceiling ${S.ceil} kbit/s${over?', exceeded':''}.`);
+}
+
+function numbers(){
+  const K=S.cap?S.K:null,x=budget(S.n,S.r,S.b,K,S.h,S.M);
+  $('vK').textContent=f0(x.k);$('vP').textContent=x.p;$('vS').textContent=f0(x.S)+' B';
+  $('vD').textContent=fx(kbit(x.D),1)+' kbit/s';$('vDk').textContent=`client download D = ${f0(x.D)} B/s`;
+  $('vU').textContent=fx(mbit(x.U),2)+' Mbit/s';$('vUB').textContent=`server upload U = ${f0(x.U)} B/s`;
+  $('vGB').textContent=fx(x.U*3600/1e9,2);$('vRec').textContent=f0(S.n*x.k*S.r);
+  $('vLat').textContent=fx(500/S.r+2000/S.r,1)+' ms';$('vLatL').textContent=`latency from the rate: ${fx(500/S.r,1)} wait + ${fx(2000/S.r,1)} interpolation`;
+  const w=wall(S.r,S.b,K,S.h,S.M,S.link,100000);
+  $('vWall').textContent=w==null?'none':'n = '+f0(w);$('vWallL').textContent=`server wall, ${S.link>=1000?S.link/1000+' Gbit/s':S.link+' Mbit/s'} link${S.cap?', capped':', no cap'}`;
+  const base=budget(S.n,20,40,null,S.h,S.M).U,saved=1-x.U/base;
+  $('vSaved').textContent=(saved>=0?'':'−')+f0(Math.abs(saved)*100)+'%';
+  const cm=clientOver(S.r,S.b,K,S.h,S.M,1000,100000);
+  // caption and insight
+  const u=mbit(x.U),u2=mbit(budget(S.n*2,S.r,S.b,K,S.h,S.M).U);
+  let lede;
+  if(!S.cap)lede=`${f0(S.n)} players at ${S.r} Hz: ${fx(u,1)} Mbit/s. Double the players and it ${u2/u>3.5?'quadruples':'grows '+fx(u2/u,1)+'×'} (${fx(u2,1)}). Turn on the interest cap to see the curve straighten.`;
+  else lede=`${f0(S.n)} players at ${S.r} Hz with a cap of ${S.K}: ${fx(u,1)} Mbit/s. Double the players and it ${S.n>=S.K?'only doubles':'grows '+fx(u2/u,1)+'×'} (${fx(u2,1)}). The curve is a straight line past n = ${S.K}.`;
+  $('lede').textContent=lede;
+  let s=`Each client hears ${f0(x.k)} entities, ${f0(x.k*S.b)} bytes, in ${x.p} packet${x.p>1?'s':''} of at most ${f0(S.M)} bytes. `;
+  s+=S.cap?`With the cap, each client costs ${fx(kbit(x.D),1)} kbit/s no matter how many more players join, so U grows as n. `:`Without a cap, the client download grows as n and the server upload as n². ${cm!=null?`Every client passes 1 Mbit/s at n = ${f0(cm)}. `:''}`;
+  s+=`Try dragging b from 40 to 10: both curves drop by the same factor and keep their shape. Only the cap changes the exponent.`;
+  if(S.lever>=0)s=`<b>${LEVERS[S.lever].name}</b>: ${fx(u,2)} Mbit/s, ${f0(saved*100)}% below the baseline. `+s;
+  $('insight').innerHTML=s;
+  // table
+  const rows=[];
+  for(const n of [10,25,50,100,200,500,1000]){
+    const a=budget(n,S.r,S.b,null,S.h,S.M),c=budget(n,S.r,S.b,S.K,S.h,S.M);
+    const fk=v=>v>=1000?f0(v):fx(v,1),fm=v=>v>=1000?f0(v):v>=100?fx(v,1):fx(v,2);
+    rows.push(`<tr class="${n===S.n?'here':''}"><td>${f0(n)}</td><td>${a.p}</td><td>${fk(kbit(a.D))} kbit/s</td><td>${fm(mbit(a.U))} Mbit/s</td><td>${fk(kbit(c.D))} kbit/s</td><td>${fm(mbit(c.U))} Mbit/s</td></tr>`);
+  }
+  $('tbody').innerHTML=rows.join('');
+}
+
+function outputs(){
+  $('on').textContent=f0(S.n);$('or').textContent=S.r+' Hz';$('ob').textContent=S.b+' B';$('oK').textContent=S.K;
+  $('n').value=S.n;$('r').value=S.r;$('b').value=S.b;$('K').value=S.K;$('cap').checked=S.cap;
+  $('K').disabled=!S.cap;$('K').setAttribute('aria-disabled',String(!S.cap));
+  document.querySelectorAll('[data-r]').forEach(c=>c.setAttribute('aria-pressed',String(+c.dataset.r===S.r)));
+  document.querySelectorAll('[data-link]').forEach(c=>c.setAttribute('aria-pressed',String(+c.dataset.link===S.link)));
+  $('linBtn').setAttribute('aria-pressed',String(!S.log));$('logBtn').setAttribute('aria-pressed',String(S.log));
+  $('capKeyT').textContent=S.cap?`cap K = ${S.K}`:`cap K = ${S.K} (preview)`;
+  $('leverHint').textContent=`Steps through the lecture's lever table. Next: ${LEVERS[(S.lever+1)%4].name}.`;
+}
+function update(){outputs();drawServer();drawClient();numbers();}
+
+// ---- events ----
+function bindRange(id,key){
+  const inp=$(id);
+  inp.addEventListener('input',()=>{S[key]=+inp.value;S.lever=-1;update();});
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='PageUp'||e.key==='PageDown'){e.preventDefault();
+      const v=Math.max(+inp.min,Math.min(+inp.max,+inp.value+(e.key==='PageUp'?10:-10)));inp.value=v;S[key]=v;S.lever=-1;update();}
+  });
+}
+bindRange('n','n');bindRange('r','r');bindRange('b','b');bindRange('K','K');
+$('cap').addEventListener('change',e=>{S.cap=e.target.checked;S.lever=-1;update();});
+function bindNum(id,key,min,max){$(id).addEventListener('input',e=>{const v=+e.target.value;if(Number.isFinite(v)&&v>=min&&v<=max){S[key]=v;update();}});}
+bindNum('h','h',0,200);bindNum('ceil','ceil',1,100000);
+$('M').addEventListener('input',e=>{const v=+e.target.value;if(Number.isFinite(v)&&v>S.h+64&&v<=9000){S.M=v;update();}});
+document.querySelectorAll('[data-r]').forEach(c=>c.addEventListener('click',()=>{S.r=+c.dataset.r;S.lever=-1;update();}));
+document.querySelectorAll('[data-link]').forEach(c=>c.addEventListener('click',()=>{S.link=+c.dataset.link;update();}));
+$('linBtn').addEventListener('click',()=>{S.log=false;update();});
+$('logBtn').addEventListener('click',()=>{S.log=true;update();});
+$('lever').addEventListener('click',()=>{S.lever=(S.lever+1)%4;const L=LEVERS[S.lever];S.r=L.r;S.b=L.b;S.cap=L.cap;if(L.K)S.K=L.K;update();});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+window.budgetModel={budget,wall,clientOver,selfTest};
+selfTest();update();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+})();
+</script>
+</body>
+</html>

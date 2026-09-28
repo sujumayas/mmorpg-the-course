@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Delta baselines — CS202 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.layout{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.layout{grid-template-columns:minmax(0,1fr) 300px}}
+.stack{display:grid;gap:12px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cTime{height:120px}
+#cBytes{height:150px}
+.grids{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grids canvas{aspect-ratio:1/1;height:auto;max-width:300px;margin:0 auto}
+.gridname{font-weight:700;font-size:.9rem;text-align:center;margin:0 0 4px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin-top:6px}
+.sw{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
+.side{display:grid;gap:12px;align-content:start;min-width:0}
+.caption{padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.nums{background:var(--paper-2);border-radius:10px;padding:10px 12px}
+.nums h2{font-family:var(--serif);font-size:1rem;font-weight:600;margin:0 0 6px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0;font-size:.9rem}
+dt{color:var(--ink-soft)}
+dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.tcap{font-family:var(--serif);font-size:1rem;margin:16px 0 4px}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:16px}
+@media (max-width:860px){.controls{grid-template-columns:1fr}}
+.ctl+.ctl{margin-top:12px}
+.ctl>label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 1rem var(--sans);width:6em;padding:6px 8px;border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink)}
+.btn{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:flex;flex-direction:column;gap:6px;border:0;padding:0;margin:0}
+.seg legend{font-weight:600;font-size:.92rem;margin-bottom:6px;padding:0}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg span{display:inline-block;font:600 .92rem var(--sans);padding:7px 13px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer}
+.seg input:checked+span{background:var(--ink);color:var(--paper)}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:4px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td:not(:first-child){white-space:nowrap}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS202 Networking Fundamentals for Multiplayer Games · Week 7 · Worked example</p>
+  <h1>Delta against what the client has</h1>
+  <p class="lede">Each snapshot lists only what changed since a baseline. Pick the baseline the client acknowledged and loss costs a few bytes. Pick the one you last sent and the client quietly goes wrong.</p>
+</header>
+
+<div class="panel">
+  <div class="caption" id="insight" aria-live="polite" style="margin-bottom:14px"></div>
+  <div class="layout">
+    <div class="stack">
+      <figure>
+        <figcaption>Snapshots leaving the server, last 40 ticks<small>Arc = the baseline each delta was encoded against. Filled = full snapshot. Crossed = lost. Bottom row: acks reaching the server.</small></figcaption>
+        <canvas id="cTime" role="img" aria-label="Timeline of snapshots, baselines and acks"></canvas>
+      </figure>
+      <figure>
+        <figcaption>64 entities<small>Rows 1-2 are players, rows 3-8 props. Red outline and dot = the client's copy differs from the server's world at the tick the client last decoded.</small></figcaption>
+        <div class="grids">
+          <div><p class="gridname">Server</p><canvas id="cSrv" role="img" aria-label="Server entity grid"></canvas></div>
+          <div><p class="gridname">Client</p><canvas id="cCli" role="img" aria-label="Client entity grid"></canvas></div>
+        </div>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--steel)"></i>player</span>
+          <span><i class="sw" style="background:var(--ochre)"></i>prop</span>
+          <span><i class="sw" style="border:3px solid var(--blood)"></i>stale on the client</span>
+        </div>
+      </figure>
+      <figure>
+        <figcaption>Payload bytes per snapshot<small>One bar per tick. Dashed line = a full snapshot.</small></figcaption>
+        <canvas id="cBytes" role="img" aria-label="Payload bytes per snapshot"></canvas>
+      </figure>
+    </div>
+
+    <div class="side">
+      <div class="readout">
+        <div class="stat" style="--c:var(--blood)"><b id="rWrong">—</b><span>client wrong after this share of snapshots</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rStale">—</b><span>stale entities now</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rMean">—</b><span>mean payload per snapshot</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rK">—</b><span>baseline age k now</span></div>
+      </div>
+      <div class="nums"><h2>This run</h2><dl id="dlRun"></dl></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <fieldset class="seg ctl">
+        <legend>Baseline policy</legend>
+        <label><input type="radio" name="pol" value="acked"><span>Baseline = last acked</span></label>
+        <label><input type="radio" name="pol" value="sent" checked><span>Baseline = last sent</span></label>
+        <label><input type="radio" name="pol" value="full"><span>Always full</span></label>
+      </fieldset>
+    </div>
+    <div>
+      <div class="ctl"><label for="loss">Snapshot loss <output id="oLoss">5%</output></label><input id="loss" type="range" min="0" max="30" step="1" value="5"></div>
+      <div class="ctl"><label for="rtt">Round trip <output id="oRtt">2 ticks = 100 ms</output></label><input id="rtt" type="range" min="1" max="10" step="1" value="2"></div>
+      <div class="ctl"><label for="P">Moving players P <output id="oP">16 (48 props)</output></label><input id="P" type="range" min="0" max="64" step="1" value="16"></div>
+      <div class="ctl"><label for="pp">Prop change chance p per tick <output id="oPp">0.02</output></label><input id="pp" type="range" min="0" max="0.2" step="0.01" value="0.02"></div>
+    </div>
+    <div>
+      <div class="ctl btnrow">
+        <button class="btn" id="play" type="button">Pause</button>
+        <button class="btn" id="step" type="button">Step</button>
+        <button class="btn" id="reset" type="button">Reset</button>
+      </div>
+      <div class="ctl"><label for="seed">Seed</label><input id="seed" type="number" min="1" max="99999" step="1" value="2" inputmode="numeric"></div>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin:10px 0 0">Changing a setting restarts the run and fast-forwards 60 ticks. Reset starts from tick 0. Seed 1 is the lab's default; seed 2 shows more stale props early.</p>
+    </div>
+  </div>
+
+  <p class="tcap" id="cmpCap">Same settings, 30 seconds (600 ticks), each policy</p>
+  <div class="table-wrap" style="margin-top:0">
+    <table aria-labelledby="cmpCap">
+      <thead><tr><th>Policy</th><th>B / snapshot (+28 header)</th><th>kbit/s, 20 Hz</th><th>Fulls</th><th>Wrong</th></tr></thead>
+      <tbody id="cmpBody"></tbody>
+    </table>
+  </div>
+  <p class="tcap" id="kCap">Expected delta against a baseline k ticks old, 10 + 13P + 5(64 − P)(1 − (1 − p)^k)</p>
+  <div class="table-wrap" style="margin-top:0">
+    <table aria-labelledby="kCap">
+      <thead><tr id="kHead"></tr></thead>
+      <tbody><tr id="kRow"></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <p>Model from the week 7 lecture, section 2, and <code>labs/lab07-starter/snapcodec.py</code>: entity 12 bytes, id 2, mask 1, header 10. Full = 10 + 64 × 14 = 906. The encoder sends a full snapshot instead of a delta when the full one is smaller or the acked baseline is 29 or more ticks old. Acks are never lost. Random numbers come from a seeded mulberry32 generator, so measured means differ from the lecture's Python table by a few bytes; the pattern is the same.</p>
+  <p id="selftest"></p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+// ---------- codec model (matches snapcodec.py) ----------
+const NE=64,FB=[4,4,2,1,1],HDR=10,UDP=28,FULL=HDR+NE*(2+12); // 906
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeWorld(){const w=[];for(let i=0;i<NE;i++)w.push([i,0,0,100,0]);return w;}
+function copyW(w){return w.map(e=>e.slice());}
+function stepWorld(w,rng,P,pp){const n=copyW(w),ch=new Array(NE).fill(false);
+  for(let i=0;i<NE;i++){const e=n[i];if(i<P){e[0]+=0.25;e[1]+=0.125;e[2]=(e[2]+91)%65536;ch[i]=true;}
+    else if(rng()<pp){e[3]=(e[3]+1)%256;e[4]=(e[4]+1)%256;ch[i]=true;}}
+  return {w:n,ch};}
+function deltaBytes(base,w){let b=HDR;for(let i=0;i<NE;i++){let f=0;for(let j=0;j<5;j++)if(w[i][j]!==base[i][j])f+=FB[j];if(f)b+=3+f;}return b;}
+function applyDelta(base,from,to){const n=copyW(base);for(let i=0;i<NE;i++)for(let j=0;j<5;j++)if(to[i][j]!==from[i][j])n[i][j]=to[i][j];return n;}
+function sameEnt(a,b){for(let j=0;j<5;j++)if(a[j]!==b[j])return false;return true;}
+const expected=(k,P,pp)=>HDR+13*P+5*(NE-P)*(1-Math.pow(1-pp,k));
+
+function Sim(o){
+  this.o=o;this.rw=mulberry32(o.seed);this.rn=mulberry32(o.seed+1000);
+  this.tick=0;this.world=makeWorld();this.hist={};this.acked=0;this.pend=[];
+  this.client=null;this.chist={};this.clientTick=0;
+  this.total=0;this.payload=0;this.fulls=0;this.decoded=0;this.wrong=0;this.undec=0;
+  this.log=[];this.changedAt=new Array(NE).fill(-1e9);this.cliChangedAt=new Array(NE).fill(-1e9);
+}
+Sim.prototype.step=function(now){
+  const o=this.o,t=++this.tick;
+  const r=stepWorld(this.world,this.rw,o.P,o.pp);this.world=r.w;this.hist[t]=r.w;
+  r.ch.forEach((c,i)=>{if(c)this.changedAt[i]=now;});
+  delete this.hist[t-64];delete this.chist[t-64];
+  this.pend=this.pend.filter(a=>{if(a[0]<=t){this.acked=Math.max(this.acked,a[1]);return false;}return true;});
+  let base=0;
+  if(o.policy==='acked')base=(this.acked&&t-this.acked<29)?this.acked:0;
+  else if(o.policy==='sent')base=t>1?t-1:0;
+  let size=FULL;
+  if(base){size=deltaBytes(this.hist[base],r.w);if(FULL<size){base=0;size=FULL;}}
+  if(!base)this.fulls++;
+  this.payload+=size;this.total+=size+UDP;
+  const lost=this.rn()<o.loss;
+  const entry={t,base,size,lost,ackAt:null};this.log.push(entry);if(this.log.length>80)this.log.shift();
+  if(lost)return entry;
+  let next=null;
+  if(!base)next=copyW(r.w);
+  else if(this.chist[base])next=applyDelta(this.chist[base],this.hist[base],r.w);
+  else if(o.policy==='sent'&&this.client)next=applyDelta(this.client,this.hist[base],r.w); // careless client
+  if(!next){this.undec++;return entry;}
+  if(this.client)for(let i=0;i<NE;i++)if(!sameEnt(next[i],this.client[i]))this.cliChangedAt[i]=now;
+  this.client=next;this.chist[t]=next;this.clientTick=t;
+  this.decoded++;let bad=false;for(let i=0;i<NE;i++)if(!sameEnt(next[i],r.w[i])){bad=true;break;}
+  if(bad)this.wrong++;
+  entry.ackAt=t+o.rtt;this.pend.push([t+o.rtt,t]);
+  return entry;
+};
+Sim.prototype.stale=function(){
+  if(!this.client)return [];const ref=this.hist[this.clientTick]||this.world;const s=[];
+  for(let i=0;i<NE;i++)if(!sameEnt(this.client[i],ref[i]))s.push(i);return s;};
+Sim.prototype.k=function(){const L=this.log[this.log.length-1];return L&&L.base?L.t-L.base:0;};
+
+// ---------- state ----------
+const opts={policy:'sent',loss:0.05,rtt:2,P:16,pp:0.02,seed:2};
+let sim,playing=true,acc=0,lastTs=null;
+function tps(){return reduce.matches?5:20;}
+function restart(ff){sim=new Sim(Object.assign({},opts));for(let i=0;i<ff;i++)sim.step(-1e9);compare();render();}
+
+// ---------- drawing ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function drawTime(){
+  const {g,w,h}=setup($('cTime'));g.clearRect(0,0,w,h);
+  const soft=css('--ink-soft'),ink=css('--ink'),steel=css('--steel'),ochre=css('--ochre'),grid=css('--grid'),moss=css('--moss');
+  const n=40,cw=(w-44)/n,sz=Math.max(5,Math.min(12,cw-2)),rowY=58,ackY=96,T=sim.tick;
+  const X=t=>44+(t-(T-n+1))*cw+cw/2;
+  g.font='11px '+css('--sans');g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';
+  g.fillText('sent',38,rowY);g.fillText('acks',38,ackY);
+  g.strokeStyle=grid;g.beginPath();g.moveTo(44,ackY);g.lineTo(w,ackY);g.stroke();
+  const vis=sim.log.filter(e=>e.t>T-n);
+  // arcs
+  g.lineWidth=1.2;
+  vis.forEach(e=>{if(!e.base)return;const x1=X(e.t),x0=X(e.base),mid=(x0+x1)/2,hgt=Math.min(46,10+(x1-x0)*0.35);
+    g.strokeStyle=e.lost?grid:soft;g.globalAlpha=e.lost?.8:.7;g.beginPath();g.moveTo(x1,rowY-sz/2);g.quadraticCurveTo(mid,rowY-sz/2-hgt,Math.max(40,x0),rowY-sz/2);g.stroke();g.globalAlpha=1;});
+  vis.forEach(e=>{const x=X(e.t),y=rowY-sz/2;
+    if(!e.base){g.fillStyle=ochre;g.fillRect(x-sz/2,y,sz,sz);}
+    else{g.fillStyle=steel;g.globalAlpha=.35;g.fillRect(x-sz/2,y,sz,sz);g.globalAlpha=1;g.strokeStyle=steel;g.lineWidth=1.2;g.strokeRect(x-sz/2+.5,y+.5,sz-1,sz-1);}
+    if(e.lost){g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(x-sz/2-1,y-1);g.lineTo(x+sz/2+1,y+sz+1);g.moveTo(x+sz/2+1,y-1);g.lineTo(x-sz/2-1,y+sz+1);g.stroke();}
+    if(e.t%5===0){g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText(e.t,x,rowY+sz/2+4);}
+  });
+  sim.log.forEach(e=>{if(e.ackAt===null||e.ackAt>T||e.ackAt<=T-n)return;const x=X(e.ackAt);g.strokeStyle=moss;g.lineWidth=2;g.beginPath();g.moveTo(x,ackY-6);g.lineTo(x,ackY+6);g.stroke();});
+  const lostN=vis.filter(e=>e.lost).length;
+  $('cTime').setAttribute('aria-label',`Last ${vis.length} snapshots, ${lostN} lost. Current baseline age ${sim.k()} ticks.`);
+}
+function drawGrid(id,w8,isClient,stale){
+  const {g,w,h}=setup($(id));g.clearRect(0,0,w,h);
+  const now=performance.now(),s=Math.min(w,h)/8,pad=2,steel=css('--steel'),ochre=css('--ochre'),blood=css('--blood'),paper=css('--paper');
+  const st=new Set(stale);
+  for(let i=0;i<NE;i++){const cx=(i%8)*s,cy=Math.floor(i/8)*s,isP=i<sim.o.P;
+    const ch=isClient?sim.cliChangedAt[i]:sim.changedAt[i];const flash=!reduce.matches&&now-ch<150;
+    g.fillStyle=isP?steel:ochre;g.globalAlpha=flash?1:(isP?.55:.4);
+    if(!w8)g.globalAlpha=.12;
+    g.fillRect(cx+pad,cy+pad,s-2*pad,s-2*pad);g.globalAlpha=1;
+    if(isClient&&st.has(i)){g.strokeStyle=blood;g.lineWidth=3;g.strokeRect(cx+pad+1.5,cy+pad+1.5,s-2*pad-3,s-2*pad-3);
+      g.fillStyle=blood;g.beginPath();g.arc(cx+s-pad-6,cy+pad+6,3.2,0,7);g.fill();}
+  }
+  if(isClient&&!w8){g.fillStyle=css('--ink');g.font='600 13px '+css('--sans');g.textAlign='center';g.textBaseline='middle';g.fillText('nothing decoded yet',w/2,h/2);}
+  $(id).setAttribute('aria-label',isClient?`Client grid, ${stale.length} stale entities`:'Server grid, 64 entities');
+}
+function drawBytes(){
+  const {g,w,h}=setup($('cBytes'));g.clearRect(0,0,w,h);
+  const n=40,T=sim.tick,pad={l:40,r:8,t:10,b:18},vis=sim.log.filter(e=>e.t>T-n);
+  const yMax=Math.max(FULL*1.15,...vis.map(e=>e.size)),Y=v=>pad.t+(1-v/yMax)*(h-pad.t-pad.b),cw=(w-pad.l-pad.r)/n;
+  g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';
+  [0,500,1000].forEach(v=>{if(v<=yMax){g.fillText(v,pad.l-6,Y(v));g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();}});
+  vis.forEach(e=>{const x=pad.l+(e.t-(T-n+1))*cw;g.fillStyle=e.base?css('--steel'):css('--ochre');g.globalAlpha=e.lost?.35:1;g.fillRect(x+1,Y(e.size),Math.max(1,cw-2),Y(0)-Y(e.size));g.globalAlpha=1;});
+  g.strokeStyle=css('--ink');g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,Y(FULL));g.lineTo(w-pad.r,Y(FULL));g.stroke();g.setLineDash([]);
+  const lab='full snapshot 906 B';g.font='600 12px '+css('--sans');const tw=g.measureText(lab).width;
+  g.fillStyle=css('--paper-2');g.fillRect(w-pad.r-tw-8,Y(FULL)-18,tw+6,15);g.fillStyle=css('--ink');g.textAlign='right';g.textBaseline='bottom';g.fillText(lab,w-pad.r-4,Y(FULL)-4);
+  const last=sim.log[sim.log.length-1];
+  $('cBytes').setAttribute('aria-label',`Bytes per snapshot. Latest ${last?last.size:0} bytes; full snapshot 906 bytes.`);
+}
+
+function render(){
+  const stale=sim.stale(),k=sim.k(),mean=sim.tick?sim.payload/sim.tick:0;
+  drawTime();drawGrid('cSrv',true,false,[]);drawGrid('cCli',!!sim.client,true,stale);drawBytes();
+  const wrongPct=sim.decoded?sim.wrong/sim.decoded*100:0;
+  $('rWrong').textContent=fmt(wrongPct,1)+'%';$('rStale').textContent=stale.length;
+  $('rMean').textContent=fmt(mean,1)+' B';$('rK').textContent=k?k+' tick'+(k>1?'s':''):'full';
+  const exp=k?expected(k,sim.o.P,sim.o.pp):FULL;
+  const rows=[['Tick',sim.tick+' ('+fmt(sim.tick/20,1)+' s)'],['Mean payload, measured',fmt(mean,1)+' B'],
+    ['Expected delta at k = '+(k||'—'),k?fmt(exp,1)+' B':'—'],
+    ['Upload at 20 Hz, +28 B header',fmt(sim.tick?sim.total/sim.tick*20*8/1000:0,1)+' kbit/s'],
+    ['Full snapshots sent',sim.fulls],['Snapshots decoded',sim.decoded],['Undecodable (baseline missing)',sim.undec],
+    ['Client wrong after',sim.wrong+' of '+sim.decoded]];
+  $('dlRun').innerHTML=rows.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('');
+}
+function caption(res){
+  const a=res.acked,s=res.sent,save=(1-s.bytes/a.bytes)*100;let t;
+  if(opts.policy==='sent')t=`Last sent: ${fmt(save,1)}% fewer bytes than last acked. Client wrong after ${fmt(s.wrong,0)}% of snapshots. Switch to last acked.`;
+  else if(opts.policy==='acked')t=`Last acked: client wrong after ${fmt(a.wrong,0)}% of snapshots, for ${fmt(save/(1-save/100),1)}% more bytes than last sent. The arcs stretch over lost snapshots; the grids stay identical.`;
+  else t=`Always full: never wrong, but ${fmt(res.full.bytes,0)} B per snapshot against ${fmt(a.bytes,0)} B for last acked, ${fmt(res.full.bytes/a.bytes,1)} times more.`;
+  if(opts.loss===0)t+=' With no loss the two delta policies agree; raise loss to see them split.';
+  $('insight').textContent=t;
+}
+function runStats(policy){const s=new Sim(Object.assign({},opts,{policy}));for(let i=0;i<600;i++)s.step(0);
+  return {bytes:s.total/600,kbit:s.total/600*20*8/1000,fulls:s.fulls,wrong:s.decoded?s.wrong/s.decoded*100:0};}
+function compare(){
+  const res={acked:runStats('acked'),sent:runStats('sent'),full:runStats('full')};
+  const name={acked:'Baseline = last acked',sent:'Baseline = last sent',full:'Always full'};
+  $('cmpCap').textContent=`Same settings, 30 seconds (600 ticks), each policy. Loss ${Math.round(opts.loss*100)}%, round trip ${opts.rtt} ticks, seed ${opts.seed}.`;
+  $('cmpBody').innerHTML=['acked','sent','full'].map(p=>`<tr class="${p===opts.policy?'here':''}"><td>${name[p].replace('Baseline = ','')}</td><td>${fmt(res[p].bytes,1)}</td><td>${fmt(res[p].kbit,1)}</td><td>${res[p].fulls}</td><td>${fmt(res[p].wrong,1)}%</td></tr>`).join('');
+  const ks=[1,2,5,10,20,28];
+  $('kHead').innerHTML='<th>k</th>'+ks.map(k=>`<th>${k}</th>`).join('');
+  $('kRow').innerHTML=`<td>Bytes (P = ${opts.P}, p = ${opts.pp.toFixed(2)})</td>`+ks.map(k=>`<td>${fmt(expected(k,opts.P,opts.pp),1)} B</td>`).join('');
+  caption(res);
+}
+
+// ---------- loop ----------
+function frame(ts){
+  if(!playing){lastTs=null;return;}
+  if(lastTs!==null){acc+=Math.min(0.5,(ts-lastTs)/1000)*tps();}
+  lastTs=ts;let stepped=false;
+  while(acc>=1){sim.step(performance.now());acc-=1;stepped=true;}
+  if(stepped||!reduce.matches)render();
+  requestAnimationFrame(frame);
+}
+function setPlaying(v){playing=v;$('play').textContent=v?'Pause':'Play';if(v){lastTs=null;requestAnimationFrame(frame);}}
+
+// ---------- events ----------
+function labels(){$('oLoss').textContent=Math.round(opts.loss*100)+'%';$('oRtt').textContent=opts.rtt+' tick'+(opts.rtt>1?'s':'')+' = '+opts.rtt*50+' ms';
+  $('oP').textContent=opts.P+' ('+(NE-opts.P)+' props)';$('oPp').textContent=opts.pp.toFixed(2);}
+document.querySelectorAll('input[name=pol]').forEach(r=>r.addEventListener('change',()=>{if(r.checked){opts.policy=r.value;restart(60);}}));
+$('loss').addEventListener('input',e=>{opts.loss=+e.target.value/100;labels();restart(60);});
+$('rtt').addEventListener('input',e=>{opts.rtt=+e.target.value;labels();restart(60);});
+$('P').addEventListener('input',e=>{opts.P=+e.target.value;labels();restart(60);});
+$('pp').addEventListener('input',e=>{opts.pp=+e.target.value;labels();restart(60);});
+$('seed').addEventListener('change',e=>{opts.seed=Math.max(1,Math.round(+e.target.value)||1);e.target.value=opts.seed;restart(60);});
+$('play').addEventListener('click',()=>setPlaying(!playing));
+$('step').addEventListener('click',()=>{sim.step(performance.now());render();});
+$('reset').addEventListener('click',()=>restart(0));
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(render,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+
+// ---------- spec test values, checked on load ----------
+function selfTest(){
+  const T=[],eq=(name,got,want)=>T.push({name,got:String(got),want:String(want),ok:String(got)===String(want)});
+  const w0=makeWorld();const w1=stepWorld(w0,()=>1,16,0).w;w1[19][3]=50;w1[19][4]=3;
+  eq('full bytes',FULL,906);eq('delta 16 + 1 prop',deltaBytes(w0,w1),223);eq('no change',deltaBytes(w1,w1),10);
+  const all=copyW(w0).map(e=>[e[0]+1,e[1]+1,e[2]+1,e[3]+1,e[4]+1]);const d=deltaBytes(w0,all);eq('all change',d,970);eq('encoder picks',Math.min(d,FULL),906);
+  [[1,'222.8'],[2,'227.5'],[5,'241.1'],[10,'261.9'],[20,'297.8'],[28,'321.7']].forEach(([k,v])=>eq('expected k='+k,expected(k,16,0.02).toFixed(1),v));
+  // pattern: acked never wrong, sent wrong most of the time at 5% loss
+  const save=Object.assign({},opts);Object.assign(opts,{loss:0.05,rtt:2,P:16,pp:0.02,seed:1});
+  const a=runStats('acked'),s=runStats('sent');Object.assign(opts,save);
+  eq('acked wrong 0%',a.wrong.toFixed(1),'0.0');eq('sent wrong > 50%',s.wrong>50,true);eq('sent saves bytes',s.bytes<a.bytes,true);
+  const bad=T.filter(x=>!x.ok);
+  window.CS202_W07_SELFTEST={total:T.length,pass:T.length-bad.length,failures:bad,acked:a,sent:s};
+  $('selftest').textContent=`Spec test values checked on load: ${T.length-bad.length} of ${T.length} match the lecture.`;
+  if(bad.length)console.error('Self-test failures',bad);
+}
+selfTest();labels();restart(60);
+setPlaying(true);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>
