@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ledger drift · MMO302 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1160px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.designs{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 12px;border:0;padding:0}
+.designs label{position:relative}
+.designs input{position:absolute;opacity:0;width:1px;height:1px}
+.designs span{display:inline-block;font:600 .88rem var(--sans);padding:8px 12px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer}
+.designs input:checked+span{background:var(--ink);color:var(--paper)}
+.designs input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1fr 1.45fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cWallet{height:260px}#cAudit{height:260px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.box{height:12px;width:14px;opacity:.35;vertical-align:-1px}
+.transport{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.btn{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.btn[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;margin-left:auto}
+.transport select{width:auto}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.tcap{font-family:var(--serif);font-weight:400;font-size:1rem;margin:16px 0 6px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+@media (max-width:520px){table{font-size:.8rem}th,td{padding:5px 5px}}
+th,td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td.hi{font-weight:700}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+fieldset.box{border:1px solid var(--grid);border-radius:10px;padding:10px 12px 12px;margin:0;min-width:0}
+fieldset.box legend{font-weight:700;font-size:.9rem;padding:0 4px}
+.lab{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+.lab output{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.nums label{display:flex;flex-direction:column;gap:2px;font-weight:600;font-size:.82rem}
+input[type=number],select{font:inherit;font-size:.95rem;width:100%;padding:5px 6px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.row{display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:600;font-size:.9rem}
+.row input{width:20px;height:20px;accent-color:var(--steel)}
+.small{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO302 MMO Server Architecture · Week 8 · Worked example</p>
+  <h1>A dupe hides in every wallet and shows in the sum</h1>
+  <p class="lede">Every wallet on the left looks normal. The audit on the right does not.</p>
+</header>
+
+<fieldset class="designs" role="radiogroup" aria-label="Design">
+  <label><input type="radio" name="dz" value="1" checked><span>1. Separate writes, give first</span></label>
+  <label><input type="radio" name="dz" value="2"><span>2. Separate writes, take first</span></label>
+  <label><input type="radio" name="dz" value="3"><span>3. One transaction</span></label>
+  <label><input type="radio" name="dz" value="4"><span>4. Transaction + idempotency key</span></label>
+</fieldset>
+
+<section class="panel" aria-label="Ledger drift simulation">
+  <div class="views">
+    <figure>
+      <figcaption>What players see<small>Three wallets and the mail and escrow container. Red arrows are half-done operations; a doubled arrow was applied twice.</small></figcaption>
+      <canvas id="cWallet" role="img" aria-label="Wallet bars for players A, B and C and the mail and escrow container"></canvas>
+    </figure>
+    <figure>
+      <figcaption>What the audit sees<small>Expected supply from the ledger against the sum of every container, over one simulated day</small></figcaption>
+      <canvas id="cAudit" role="img" aria-label="Expected and actual gold supply over one day"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ink)"></i>expected (ledger)</span>
+        <span><i style="background:var(--blood)"></i>actual (sum of containers)</span>
+        <span><i class="box" style="background:var(--blood)"></i>created from nothing</span>
+        <span><i class="box" style="background:var(--steel)"></i>vanished</span>
+      </div>
+    </figure>
+  </div>
+  <div class="transport" role="group" aria-label="Simulation controls">
+    <button class="btn" id="bPlay" type="button" aria-pressed="false">Play</button>
+    <button class="btn" id="bStep" type="button">Step one audit</button>
+    <button class="btn" id="bReset" type="button">Back to 0:00</button>
+    <label for="selSpeed" style="font-weight:600;font-size:.9rem">Speed</label>
+    <select id="selSpeed"><option value="1">1 h per second</option><option value="3" selected>3 h per second</option><option value="8">8 h per second</option></select>
+    <button class="btn" id="bSeed" type="button">New random run</button>
+    <span class="clock" id="clock" aria-live="polite">1:00</span>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <h2 class="tcap" id="tblCap">Incidents: expected per day (formula) and this run so far</h2>
+  <div class="table-wrap" aria-live="polite">
+    <table aria-labelledby="tblCap">
+      <thead><tr><th>Quantity</th><th>Expected per day</th><th id="thRun">This run, 0:00 to 1:00</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <fieldset class="box">
+      <legend>Traffic and failures</legend>
+      <label class="lab" for="sM">Operations per day M <output id="oM"></output></label>
+      <input id="sM" type="range" min="0" max="6" step="1" value="4">
+      <label class="lab" for="sF">Failure between writes f <output id="oF"></output></label>
+      <input id="sF" type="range" min="0" max="10" step="1" value="7">
+      <label class="lab" for="sA">Lost reply a <output id="oA"></output></label>
+      <input id="sA" type="range" min="0" max="10" step="1" value="8">
+      <label class="lab" for="sShare">Retries from one-time sources <output id="oShare">50%</output></label>
+      <input id="sShare" type="range" min="0" max="100" step="5" value="50">
+      <p class="small">Mail, rewards and escrow are one-time sources. Applying one twice creates gold; applying a player-to-player move twice only charges the sender twice.</p>
+    </fieldset>
+    <fieldset class="box">
+      <legend>Economy and audit</legend>
+      <label class="lab" for="sV">Average value per operation <output id="oV"></output></label>
+      <input id="sV" type="range" min="0" max="12" step="1" value="4">
+      <label class="lab" for="sSup">Starting supply <output id="oSup"></output></label>
+      <input id="sSup" type="range" min="0" max="9" step="1" value="5">
+      <div class="nums">
+        <label for="nNet">Net faucet per day (gold)<input id="nNet" type="number" step="1000000" value="0"></label>
+        <label for="selAudit">Audit interval<select id="selAudit"><option value="5">5 min</option><option value="15">15 min</option><option value="60" selected>1 h</option><option value="360">6 h</option><option value="1440">24 h</option></select></label>
+        <label for="selTol">Alarm threshold<select id="selTol"><option value="0" selected>0 (any drift)</option><option value="0.00001">0.001% of supply</option><option value="0.0001">0.01% of supply</option><option value="0.001">0.1% of supply</option><option value="0.01">1% of supply</option></select></label>
+      </div>
+    </fieldset>
+    <fieldset class="box">
+      <legend>Exploiters</legend>
+      <div class="row"><input id="cExp" type="checkbox" checked><label for="cExp">Exploiters active</label></div>
+      <div class="nums">
+        <label for="nEx">Exploiters<input id="nEx" type="number" min="1" max="1000" step="1" value="10"></label>
+        <label for="nEi">Seconds between dupes<input id="nEi" type="number" min="1" max="3600" step="1" value="30"></label>
+        <label for="nEg">Gold per dupe<input id="nEg" type="number" min="1" max="10000000" step="1000" value="10000"></label>
+      </div>
+      <p class="small">Exploits work only in designs 1 and 3 (a half-done give-first operation or an unguarded retry). In design 2 an exploiter can only destroy gold; design 4 blocks both.</p>
+    </fieldset>
+  </div>
+</section>
+
+<footer>Model, rates and default values are the invented teaching values from the week 8 lecture. The simulation draws random incident counts per minute from a fixed seed, so it approaches the expected values but does not equal them; exploit dupes are deterministic. Generic shapes only.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const trim=s=>s.replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');
+const MS=[100000,200000,500000,1000000,2000000,5000000,10000000];
+const RATES=[0,1e6,5e5,2e5,1e5,5e4,2e4,1e4,5e3,2e3,1e3]; // denominators, 0 = never
+const VALS=[10,25,50,100,250,500,1000,2500,5000,10000,25000,50000,100000];
+const SUPS=[1e7,2e7,5e7,1e8,2e8,4e8,1e9,2e9,5e9,1e10];
+const P={design:1,M:2e6,f:1/1e4,a:1/5e3,share:0.5,value:250,supply:4e8,net:0,audit:60,tol:0,exp:true,ex:10,ei:30,eg:10000,seed:11};
+let cursor=60,playing=false,sim=null;
+
+// ---------- expected values ----------
+function expected(p){
+  const half=p.M*p.f,retried=p.M*p.a;
+  let dupes=0,losses=0,dbl=0;
+  if(p.design===1){dupes=half+retried*p.share;}
+  if(p.design===2){dupes=retried*p.share;losses=half;}
+  if(p.design===3){dupes=retried*p.share;}
+  if(p.design<=3)dbl=retried*(1-p.share);
+  const exploitPerHour=(p.exp&&(p.design===1||p.design===3))?p.ex*3600/p.ei*p.eg:0;
+  const exploitDay=exploitPerHour*24;
+  const drift=(dupes-losses)*p.value+exploitDay;
+  return {half,retried,dupes,losses,dbl,exploitPerHour,drift,driftPct:drift/p.supply};
+}
+
+// ---------- simulation (per minute, seeded) ----------
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function poisson(r,l){if(l<=0)return 0;if(l>40){let u=r(),v=r();return Math.max(0,Math.round(l+Math.sqrt(l)*Math.sqrt(-2*Math.log(u||1e-12))*Math.cos(2*Math.PI*v)));}let L=Math.exp(-l),k=0,q=1;do{k++;q*=r();}while(q>L);return k-1;}
+function binom(r,n,p){let k=0;for(let i=0;i<n;i++)if(r()<p)k++;return k;}
+function simulate(p){
+  const r=mulberry(p.seed),N=1440;
+  const cum={half:new Float64Array(N+1),retried:new Float64Array(N+1),dupes:new Float64Array(N+1),losses:new Float64Array(N+1),dbl:new Float64Array(N+1),drift:new Float64Array(N+1)};
+  const perMin=[];const E=expected(p);const exploitPerMin=E.exploitPerHour/60;
+  for(let m=1;m<=N;m++){
+    const h=poisson(r,p.M*p.f/N),rt=poisson(r,p.M*p.a/N),one=binom(r,rt,p.share);
+    let d=0,l=0,db=0;
+    if(p.design===1)d=h+one;if(p.design===2){d=one;l=h;}if(p.design===3)d=one;if(p.design<=3)db=rt-one;
+    cum.half[m]=cum.half[m-1]+h;cum.retried[m]=cum.retried[m-1]+rt;cum.dupes[m]=cum.dupes[m-1]+d;cum.losses[m]=cum.losses[m-1]+l;cum.dbl[m]=cum.dbl[m-1]+db;
+    cum.drift[m]=cum.drift[m-1]+(d-l)*p.value+exploitPerMin;
+    perMin.push({h,rt,one});
+  }
+  // alarms
+  let alarm=null;
+  for(let m=p.audit;m<=N;m+=p.audit){const exp=p.supply+p.net*m/N;if(Math.abs(cum.drift[m])>p.tol*exp+1e-6){alarm={m,drift:cum.drift[m]};break;}}
+  // expected-value alarm
+  let alarmE=null;const rate=E.drift/N;
+  for(let m=p.audit;m<=N;m+=p.audit){const exp=p.supply+p.net*m/N;if(Math.abs(rate*m)>p.tol*exp+1e-6){alarmE={m,drift:rate*m};break;}}
+  // wallet random walks (illustrative)
+  const wr=mulberry(p.seed*7+1),W=[[42000],[18500],[27300],[6000]];
+  const ops=[];
+  for(let m=1;m<=N;m++){
+    const list=[];const n=2+Math.floor(wr()*2);
+    for(let k=0;k<n;k++){let s=Math.floor(wr()*4),d=Math.floor(wr()*3);if(d>=s)d++;list.push({s,d,amt:Math.round(p.value*(0.4+wr()*1.2)),kind:'ok'});}
+    const pm=perMin[m-1];
+    if(pm.h>0&&(p.design===1||p.design===2))list[0].kind=p.design===1?'halfgive':'halftake';
+    if(pm.rt>0&&p.design<=3)list[list.length-1].kind='double';
+    ops.push(list);
+    for(let i=0;i<4;i++){const prev=W[i][m-1];const mean=[42000,18500,27300,6000][i];W[i].push(Math.max(500,prev+(mean-prev)*0.02+(wr()-0.5)*p.value*4));}
+  }
+  return {cum,alarm,alarmE,W,ops,E};
+}
+
+// ---------- tests ----------
+function runTests(){
+  const near=(a,b,t)=>Math.abs(a-b)<=(t||1e-6);const d={...P,exp:false,share:0};
+  const e1=expected({...d,design:1}),e2=expected({...d,design:2}),e3=expected({...d,design:3}),e4=expected({...d,design:4});
+  const h1=expected({...P,exp:false,design:1}),x1=expected({...P,design:1}),x4=expected({...P,design:4});
+  const t5=expected({...P,exp:false,share:0,design:3,M:5e6,f:1/5e4,a:1/2e4});
+  const c=[
+    ['d1 share0',near(e1.dupes,200)&&e1.losses===0&&near(e1.dbl,400)],['d2 share0',e2.dupes===0&&near(e2.losses,200)],
+    ['d3 share0',e3.dupes===0&&e3.losses===0&&near(e3.dbl,400)],['d4 zero',e4.dupes===0&&e4.losses===0&&e4.dbl===0],
+    ['d1 50%',near(h1.dupes,400)&&near(h1.drift,100000)&&(h1.driftPct*100).toFixed(3)==='0.025'],
+    ['exploit/h',x1.exploitPerHour===12000000],['alarm drift',fmt(x1.exploitPerHour+h1.drift/24)==='12,004,167'],
+    ['d4 exploit',x4.drift===0],['M5e6 case',t5.dupes===0&&near(t5.dbl,250)]
+  ];
+  const s=simulate({...P,design:1});c.push(['sim alarm at 1:00',s.alarmE&&s.alarmE.m===60&&fmt(s.alarmE.drift)==='12,004,167'&&s.alarm&&s.alarm.m===60]);
+  const s4=simulate({...P,design:4});c.push(['sim d4 no alarm',!s4.alarm&&!s4.alarmE]);
+  const bad=c.filter(x=>!x[1]).map(x=>x[0]);document.body.dataset.tests=bad.length?'fail':'pass';
+  if(bad.length)console.error('Lecture test values failed: '+bad.join(', '));
+}
+
+// ---------- drawing ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const hm=m=>Math.floor(m/60)+':'+String(Math.round(m%60)).padStart(2,'0');
+const fGold=v=>{const a=Math.abs(v);return a>=1e9?trim((v/1e9).toFixed(4))+'B':a>=1e6?trim((v/1e6).toFixed(3))+'M':fmt(v);};
+
+function drawWallets(){
+  const {g,w,h}=setup($('cWallet'));g.clearRect(0,0,w,h);const sans=css('--sans');
+  const m=Math.max(1,Math.min(1440,Math.round(cursor)));
+  const names=['Player A','Player B','Player C','Mail & escrow'];
+  const vals=sim.W.map(a=>a[m]);const vmax=60000;
+  const L=10,R=10,base=h-40,top=90,slot=(w-L-R)/4,bw=Math.min(54,slot*0.5);
+  const cx=i=>L+slot*i+slot/2;
+  g.font='12px '+sans;g.textAlign='center';
+  vals.forEach((v,i)=>{const bh=(base-top)*Math.min(1,v/vmax);g.fillStyle=i===3?css('--steel'):css('--ochre');g.fillRect(cx(i)-bw/2,base-bh,bw,bh);
+    g.fillStyle=css('--ink');g.font='600 12px '+sans;g.textBaseline='bottom';g.fillText(fmt(v),cx(i),base-bh-4);
+    g.font='12px '+sans;g.fillStyle=css('--ink-soft');g.textBaseline='top';const nm=names[i];
+    if(g.measureText(nm).width>slot-4){const parts=nm.split(' ');g.fillText(parts.slice(0,-1).join(' '),cx(i),base+6);g.fillText(parts[parts.length-1],cx(i),base+20);}else g.fillText(nm,cx(i),base+6);});
+  g.strokeStyle=css('--ink');g.lineWidth=1;g.beginPath();g.moveTo(L,base);g.lineTo(w-R,base);g.stroke();
+  // arrows for this minute's operations
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  sim.ops[m-1].forEach((op,k)=>{
+    const x0=cx(op.s),x1=cx(op.d),lift=22+k*14+Math.abs(op.s-op.d)*6,y=top-10;
+    const col=op.kind==='ok'?css('--ink-soft'):css('--blood');
+    const arc=(off)=>{g.strokeStyle=col;g.lineWidth=op.kind==='ok'?1.5:2.5;g.setLineDash(op.kind.startsWith('half')?[5,4]:[]);
+      g.beginPath();g.moveTo(x0,y+off);g.quadraticCurveTo((x0+x1)/2,y-lift+off,x1,y+off);g.stroke();g.setLineDash([]);
+      const ang=Math.atan2((y+off)-(y-lift/2+off),x1-(x0+x1)/2);g.fillStyle=col;g.beginPath();g.moveTo(x1,y+off);g.lineTo(x1-9*Math.cos(ang-0.4),y+off-9*Math.sin(ang-0.4));g.lineTo(x1-9*Math.cos(ang+0.4),y+off-9*Math.sin(ang+0.4));g.closePath();g.fill();};
+    arc(0);if(op.kind==='double')arc(-7);
+  });
+  const inc=sim.ops[m-1].find(o=>o.kind!=='ok');
+  g.font='600 12px '+sans;g.textAlign='left';g.textBaseline='top';g.fillStyle=inc?css('--blood'):css('--ink-soft');
+  g.fillText(`${hm(m)} · `+(inc?(inc.kind==='double'?'an operation applied twice':inc.kind==='halfgive'?'a half-done give-first operation':'a half-done take-first operation'):'ordinary trades'),L,4);
+  $('cWallet').setAttribute('aria-label',`Wallets at ${hm(m)}: A ${fmt(vals[0])}, B ${fmt(vals[1])}, C ${fmt(vals[2])}, mail and escrow ${fmt(vals[3])}. All look normal.`);
+}
+
+function drawAudit(){
+  const {g,w,h}=setup($('cAudit'));g.clearRect(0,0,w,h);const sans=css('--sans');
+  const N=1440,m=Math.max(0,Math.min(N,Math.round(cursor)));
+  const expAt=t=>P.supply+P.net*t/N,actAt=t=>expAt(t)+sim.cum.drift[t];
+  let lo=Infinity,hi=-Infinity;for(let t=0;t<=Math.max(m,1);t++){lo=Math.min(lo,expAt(t),actAt(t));hi=Math.max(hi,expAt(t),actAt(t));}
+  if(hi-lo<P.supply*2e-5){const mid=(hi+lo)/2;lo=mid-P.supply*1e-5;hi=mid+P.supply*1e-5;}
+  {const raw=(hi-lo)*1.25/4,mag=Math.pow(10,Math.floor(Math.log10(raw)));const st=[1,2,2.5,5,10].map(k=>k*mag).find(v=>v>=raw);lo=Math.floor((lo-(hi-lo)*0.08)/st)*st;hi=lo+4*st;while(hi<Math.max(...[expAt(m),actAt(m)])){hi+=st;}}
+  const pad={l:64,r:14,t:30,b:30};const X=t=>pad.l+(w-pad.l-pad.r)*t/N,Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-lo)/(hi-lo));
+  g.font='12px '+sans;g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fGold(v),pad.l-6,y);}
+  for(let hr=0;hr<=24;hr+=6){g.textAlign='center';g.textBaseline='top';g.fillText(hr+' h',X(hr*60),h-pad.b+10);}
+  // audit ticks
+  g.strokeStyle=css('--ink-soft');for(let t=P.audit;t<=N;t+=P.audit){if(P.audit<15&&t%60)continue;g.beginPath();g.moveTo(X(t),h-pad.b);g.lineTo(X(t),h-pad.b+(t<=m?6:3));g.stroke();}
+  // gap shading
+  for(let t=1;t<=m;t++){const e0=expAt(t-1),e1=expAt(t),a0=actAt(t-1),a1=actAt(t);
+    g.fillStyle=(a1>=e1)?css('--blood'):css('--steel');g.globalAlpha=.28;g.beginPath();g.moveTo(X(t-1),Y(e0));g.lineTo(X(t),Y(e1));g.lineTo(X(t),Y(a1));g.lineTo(X(t-1),Y(a0));g.closePath();g.fill();}
+  g.globalAlpha=1;
+  const line=(f,col,wd,dash)=>{g.strokeStyle=col;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();for(let t=0;t<=m;t++){t?g.lineTo(X(t),Y(f(t))):g.moveTo(X(t),Y(f(t)));}g.stroke();g.setLineDash([]);};
+  line(expAt,css('--ink'),2);line(actAt,css('--blood'),2.5);
+  // cursor
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(m),pad.t);g.lineTo(X(m),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  const drift=sim.cum.drift[m];
+  g.font='600 12px '+sans;g.fillStyle=drift?css('--blood'):css('--ink-soft');g.textAlign='right';g.textBaseline='top';
+  g.fillText(`drift ${drift>0?'+':''}${fmt(drift)} gold`,w-pad.r,4);
+  if(sim.alarm&&sim.alarm.m<=m){const ax=X(sim.alarm.m),ay=Y(actAt(sim.alarm.m));
+    g.fillStyle=css('--blood');g.beginPath();g.arc(ax,ay,5,0,Math.PI*2);g.fill();
+    const lab=`alarm at ${hm(sim.alarm.m)}, drift ${fmt(sim.alarm.drift)}`;g.font='600 12px '+sans;const tw=g.measureText(lab).width;
+    let lx=ax+8;if(lx+tw>w-pad.r)lx=Math.max(pad.l,ax-8-tw);g.textAlign='left';g.textBaseline='bottom';g.fillStyle=css('--ink');
+    g.fillText(lab,lx,Math.max(pad.t+14,Math.min(ay-8,h-pad.b-4)));}
+  $('cAudit').setAttribute('aria-label',`At ${hm(m)} the ledger expects ${fmt(expAt(m))} gold and the containers hold ${fmt(actAt(m))}; drift ${fmt(drift)}`+(sim.alarm&&sim.alarm.m<=m?`; alarm at ${hm(sim.alarm.m)}`:''));
+}
+
+function readout(){
+  const E=sim.E,m=Math.max(0,Math.min(1440,Math.round(cursor))),c=sim.cum;
+  $('thRun').textContent=`This run, 0:00 to ${hm(m)}`;
+  const pct=v=>trim((v*100).toFixed(4))+'%';
+  const rows=[
+    ['Half-done operations (M × f)',fmt(E.half),fmt(c.half[m])],
+    ['Retried operations (M × a)',fmt(E.retried),fmt(c.retried[m])],
+    ['Dupes',fmt(E.dupes),fmt(c.dupes[m])],
+    ['Losses',fmt(E.losses),fmt(c.losses[m])],
+    ['Double charges',fmt(E.dbl),fmt(c.dbl[m])],
+    ['Exploit gold',fmt(E.exploitPerHour*24),fmt(E.exploitPerHour*m/60)],
+    ['Drift (gold)',fmt(E.drift),fmt(c.drift[m])],
+    ['Drift (% of supply)',pct(E.driftPct),pct(c.drift[m]/P.supply)],
+    ['First alarm',sim.alarmE?`${hm(sim.alarmE.m)}, drift ${fmt(sim.alarmE.drift)}`:'none',sim.alarm?(sim.alarm.m<=m?`${hm(sim.alarm.m)}, drift ${fmt(sim.alarm.drift)}`:`at ${hm(sim.alarm.m)} (ahead)`):'none']
+  ];
+  $('tbody').innerHTML=rows.map((r,i)=>`<tr><td>${r[0]}</td><td class="${i>=6?'hi':''}">${r[1]}</td><td class="${i>=6?'hi':''}">${r[2]}</td></tr>`).join('');
+  $('clock').textContent=hm(m);
+  const d=P.design;let s;
+  if(d===4)s=`Design 4: the transaction removes half-done operations and the idempotency key turns every retry into a replayed answer. The two lines stay welded together${P.exp?', exploiters included':''}. No alarm.`;
+  else if(sim.alarm&&sim.alarm.m<=m)s=`The ${hm(sim.alarm.m)} audit finds ${fmt(sim.alarm.drift)} gold ${sim.alarm.drift>0?'that no faucet minted':'missing without a sink'}. No wallet on the left shows it: `+(E.exploitPerHour?`${fmt(E.exploitPerHour)} gold an hour is spread across the exploiters, and `:'')+`${fmt(E.dupes)} accidental dupes a day are scattered across millions of trades.`;
+  else if(sim.alarm)s=`Drift is building but the next audit has not run yet. The alarm fires at ${hm(sim.alarm.m)}.`;
+  else if(sim.alarmE)s=`Drift is inside the alarm tolerance, so no alarm fires. A tolerance is where a slow dupe hides.`;
+  else s=`Expected drift is zero with these settings.${d<=3&&E.dbl?` ${fmt(E.dbl)} double charges a day still reach support, because gold moves between wallets without changing the total.`:''}`;
+  $('insight').innerHTML=s;
+}
+function render(){drawWallets();drawAudit();readout();}
+function rebuild(){sim=simulate(P);syncOutputs();render();}
+function syncOutputs(){
+  const rate=d=>d===0?'0 (never)':'1 in '+fmt(d);
+  $('oM').textContent=fmt(P.M);$('oF').textContent=rate(RATES[+$('sF').value]);$('oA').textContent=rate(RATES[+$('sA').value]);
+  $('oShare').textContent=Math.round(P.share*100)+'%';$('oV').textContent=fmt(P.value)+' gold';$('oSup').textContent=fGold(P.supply)+' gold';
+}
+
+// ---------- events ----------
+document.querySelectorAll('input[name=dz]').forEach(r=>r.addEventListener('change',e=>{P.design=+e.target.value;rebuild();}));
+$('sM').addEventListener('input',e=>{P.M=MS[+e.target.value];rebuild();});
+$('sF').addEventListener('input',e=>{const d=RATES[+e.target.value];P.f=d?1/d:0;rebuild();});
+$('sA').addEventListener('input',e=>{const d=RATES[+e.target.value];P.a=d?1/d:0;rebuild();});
+$('sShare').addEventListener('input',e=>{P.share=+e.target.value/100;rebuild();});
+$('sV').addEventListener('input',e=>{P.value=VALS[+e.target.value];rebuild();});
+$('sSup').addEventListener('input',e=>{P.supply=SUPS[+e.target.value];rebuild();});
+$('nNet').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isFinite(v)){P.net=v;rebuild();}});
+$('selAudit').addEventListener('change',e=>{P.audit=+e.target.value;rebuild();});
+$('selTol').addEventListener('change',e=>{P.tol=+e.target.value;rebuild();});
+$('cExp').addEventListener('change',e=>{P.exp=e.target.checked;rebuild();});
+[['nEx','ex',1],['nEi','ei',1],['nEg','eg',1]].forEach(([id,k,min])=>$(id).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isFinite(v)&&v>=min){P[k]=v;rebuild();}}));
+let last=0;
+function frame(ts){if(!playing)return;const dt=last?Math.min(0.1,(ts-last)/1000):0;last=ts;cursor=Math.min(1440,cursor+dt*60*(+$('selSpeed').value));render();if(cursor>=1440){setPlay(false);return;}requestAnimationFrame(frame);}
+function setPlay(on){playing=on;$('bPlay').setAttribute('aria-pressed',on);$('bPlay').textContent=on?'Pause':'Play';if(on){if(cursor>=1440)cursor=0;last=0;requestAnimationFrame(frame);}}
+$('bPlay').addEventListener('click',()=>setPlay(!playing));
+$('bStep').addEventListener('click',()=>{setPlay(false);cursor=Math.min(1440,(Math.floor(cursor/P.audit+1e-9)+1)*P.audit);render();});
+$('bReset').addEventListener('click',()=>{setPlay(false);cursor=0;render();});
+$('bSeed').addEventListener('click',()=>{P.seed=(P.seed*48271+5)%2147483647;rebuild();});
+let rz;window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(render);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+window.__ledger={P,rebuild,setCursor:m=>{cursor=m;render();}};
+runTests();
+sim=simulate(P);syncOutputs();
+// first screen: paused at the first audit alarm
+if(sim.alarm)cursor=sim.alarm.m;
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+render();
+})();
+</script>
+</body>
+</html>

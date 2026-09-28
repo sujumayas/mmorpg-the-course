@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grid AOI vs broadcast · MMO302 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.04rem;margin:0}
+.tabs{display:flex;gap:6px;margin:14px 0 12px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.two{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:700px){.two{grid-template-columns:minmax(0,1fr)}.two>.lead{order:-1}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#map{aspect-ratio:1/1;height:auto;cursor:crosshair;border-radius:6px}
+#chart{height:280px}
+.hero{display:flex;align-items:baseline;gap:10px 16px;flex-wrap:wrap;margin:0 0 10px}
+.hero b{font-family:var(--serif);font-size:clamp(2.4rem,6vw,3.6rem);line-height:1;font-variant-numeric:tabular-nums;color:var(--blood)}
+.hero span{font-size:.95rem;color:var(--ink-soft);max-width:28ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.legend i.dash{border-top-style:dashed;border-top-width:2px}
+.legend i.dot{width:9px;height:9px;border:0;border-radius:50%;vertical-align:middle}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 22px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+select{font:600 .9rem var(--sans);padding:6px 8px;border-radius:8px;border:1.5px solid var(--steel);background:var(--paper);color:var(--ink);width:100%;margin-top:4px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font:600 .85rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.check{display:flex;gap:8px;align-items:center;justify-content:flex-start;font-weight:600;font-size:.9rem;margin-top:12px}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.hint{font-weight:600;font-size:.82rem;color:var(--blood);white-space:nowrap}
+.hint::after{content:" \2192";display:inline-block}
+@media (prefers-reduced-motion:no-preference){.hint{animation:nudge 1.4s ease-in-out infinite}}
+@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+.big-slider{background:var(--paper-2);border-radius:10px;padding:8px 12px 10px;margin-bottom:10px}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.small{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0}
+#bmap{height:220px}
+#strip{height:190px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO302 MMO Server Architecture · Week 3 · Worked example</p>
+  <h1>Grid interest vs broadcast</h1>
+  <p class="lede">A thousand players spread over a 1 km square. Sending each one only what its 3 &times; 3 block of cells holds is about 48 times cheaper than sending everyone everything. Drag the crowd slider and watch that saving disappear.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Crowd</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Boundary (hysteresis)</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="two">
+    <figure>
+      <figcaption>World, 1,000 m &times; 1,000 m<small>Click a dot, or focus the map and use arrow keys, to pick the highlighted player.</small></figcaption>
+      <canvas id="map" tabindex="0" role="img" aria-label="Map of players"></canvas>
+      <p class="legend"><span><i class="dot" style="background:var(--blood)"></i>highlighted</span><span><i class="dot" style="background:var(--steel)"></i>in its block (grid sends)</span><span><i class="dot" style="background:var(--ochre)"></i>within r (radius sends)</span></p>
+      <div class="seg" style="margin-top:8px">
+        <button class="chip" id="pickCrowd">Pick a crowd player</button>
+        <button class="chip" id="pickScatter">Pick a scattered player</button>
+      </div>
+    </figure>
+    <div class="lead">
+      <div class="big-slider">
+        <label for="f">Crowd share f <span class="hint" id="hint">drag to crowd them</span> <output id="of">0%</output></label>
+        <input id="f" type="range" min="0" max="100" step="1" value="0">
+      </div>
+      <div class="hero" aria-live="polite"><b id="hRatio">—</b><span>broadcast &divide; grid. How many times cheaper the grid is than sending everyone everything.</span></div>
+      <figure>
+        <figcaption>Deliveries per tick against crowd share<small>Log scale. One update per player per tick.</small></figcaption>
+        <canvas id="chart" role="img" aria-label="Deliveries per tick versus crowd share"></canvas>
+        <p class="legend"><span><i class="dash" style="border-color:var(--ink-soft)"></i>Broadcast N(N&minus;1)</span><span><i style="border-color:var(--steel)"></i><span id="lgGrid">Grid block</span></span><span><i style="border-color:var(--ochre)"></i><span id="lgRad">Exact radius</span></span></p>
+      </figure>
+    </div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rGR">—</b><span>grid &divide; radius (wasted sends)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rSelG">—</b><span>highlighted player's set, grid</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSelR">—</b><span>highlighted player's set, radius</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rK">—</b><span>players in the crowd disc</span></div>
+  </div>
+  <div class="table-wrap">
+    <table aria-live="polite">
+      <thead><tr><th>Scheme</th><th>Deliveries per tick</th><th>Deliveries per second</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <p class="small" id="npNote" hidden></p>
+
+  <div class="controls">
+    <div>
+      <span class="lbl" id="nL">Players N</span>
+      <div class="seg" role="group" aria-labelledby="nL" id="nSeg"></div>
+      <span class="lbl" id="hzL">Tick rate</span>
+      <div class="seg" role="group" aria-labelledby="hzL" id="hzSeg"></div>
+    </div>
+    <div>
+      <label for="r">View radius r (m) <output id="or">50</output></label>
+      <input id="r" type="range" min="25" max="100" step="5" value="50">
+      <label for="cell">Cell size c</label>
+      <select id="cell">
+        <option value="1">= r (3 &times; 3 block)</option>
+        <option value="2">= r/2 (5 &times; 5 block)</option>
+        <option value="3">= r/3 (7 &times; 7 block)</option>
+      </select>
+    </div>
+    <div>
+      <label class="check" for="np"><input type="checkbox" id="np"> Narrow phase (exact distance check after the grid)</label>
+      <p class="small">With narrow phase on, the grid only finds candidates. The server then sends to those within r, so deliveries equal the radius count and the grid count becomes the candidates scanned.</p>
+    </div>
+  </div>
+  <p class="insight" id="insight"></p>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <div class="two">
+    <figure>
+      <figcaption>A player pacing on the edge of view<small>Observer on the left. d(t) = 50 &minus; A cos(2&pi;t / P). Solid circle: enter radius. Dashed: leave radius.</small></figcaption>
+      <canvas id="bmap" role="img" aria-label="Observer, enter and leave circles, and the pacing player"></canvas>
+      <div class="seg" style="margin-top:8px">
+        <button class="chip" id="play" aria-pressed="false">Play</button>
+      </div>
+      <label for="tt">Time t (s) <output id="ott">0.0</output></label>
+      <input id="tt" type="range" min="0" max="599" step="1" value="0" aria-label="Time in ticks">
+    </figure>
+    <div class="lead">
+      <div class="hero" aria-live="polite"><b id="hBytes">—</b><span id="hBytesL">bytes over 60 s for this pair</span></div>
+      <figure>
+        <figcaption>60 s timeline, 600 ticks at 10 Hz<small>Line: distance. Shaded: ticks the player is visible. Marks: enters (up) and leaves (down).</small></figcaption>
+        <canvas id="strip" role="img" aria-label="Distance over 60 seconds with enter and leave marks"></canvas>
+      </figure>
+    </div>
+  </div>
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--moss)"><b id="bE">—</b><span>enters</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="bL">—</b><span>leaves</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="bV">—</b><span>visible ticks</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="bS">—</b><span>break-even enter size vs no hysteresis</span></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Setting</th><th>Enters</th><th>Leaves</th><th>Visible ticks</th><th>Total bytes</th></tr></thead>
+      <tbody id="btbody"></tbody>
+    </table>
+  </div>
+  <div class="controls">
+    <div>
+      <label for="rin"><span>Enter radius r<sub>in</sub> (m)</span> <output id="orin">50</output></label>
+      <input id="rin" type="range" min="40" max="60" step="1" value="50">
+      <label for="rout"><span>Leave radius r<sub>out</sub> (m)</span> <output id="orout">50</output></label>
+      <input id="rout" type="range" min="50" max="65" step="1" value="50">
+      <div class="seg" role="group" aria-label="Leave radius presets" id="routSeg">
+        <button class="chip" data-m="0">r<sub>out</sub> = r<sub>in</sub></button><button class="chip" data-m="2">+2</button><button class="chip" data-m="4">+4</button><button class="chip" data-m="10">+10</button>
+      </div>
+    </div>
+    <div>
+      <label for="amp">Pacing amplitude A (m) <output id="oamp">4</output></label>
+      <input id="amp" type="range" min="0" max="10" step="0.5" value="4">
+      <label for="per">Pacing period P (s) <output id="oper">4</output></label>
+      <input id="per" type="range" min="1" max="10" step="0.5" value="4">
+    </div>
+    <div>
+      <label for="esz">Enter message size (B) <output id="oesz">120</output></label>
+      <input id="esz" type="range" min="50" max="1000" step="10" value="120">
+      <p class="small">Leave message 4 B, update 16 B per visible tick. Total = enters &times; enter size + 4 &times; leaves + 16 &times; visible ticks.</p>
+    </div>
+  </div>
+  <p class="insight" id="binsight"></p>
+</section>
+
+<footer>World generator: mulberry32, seed 302, the same generator and draw order as lab 03's <code>aoi.py</code>, so every count here matches the lab exactly. Crowd disc radius 20 m at the world centre. All shapes are generic.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---- model (must match labs/lab03-starter/aoi.py) ----
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;
+  let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;
+  return((t^t>>>14)>>>0)/4294967296}}
+function makeWorld(N,f){const rnd=mulberry32(302),k=Math.round(f*N),xs=new Float64Array(N),ys=new Float64Array(N);
+  for(let i=0;i<N;i++){if(i<k){const rr=20*Math.sqrt(rnd()),th=2*Math.PI*rnd();xs[i]=500+rr*Math.cos(th);ys[i]=500+rr*Math.sin(th);}else{xs[i]=1000*rnd();ys[i]=1000*rnd();}}
+  return {xs,ys,N,k};}
+const KEY=(x,y)=>x*100000+y;
+function buildGrid(w,c){const m=new Map(),cx=new Int32Array(w.N),cy=new Int32Array(w.N);
+  for(let i=0;i<w.N;i++){cx[i]=Math.floor(w.xs[i]/c);cy[i]=Math.floor(w.ys[i]/c);const key=KEY(cx[i],cy[i]);let a=m.get(key);if(!a)m.set(key,a=[]);a.push(i);}return {m,cx,cy};}
+function counts(w,r,c,K){const g=buildGrid(w,c),r2=r*r;let grid=0,rad=0;const gi=new Int32Array(w.N),ri=new Int32Array(w.N);
+  for(let i=0;i<w.N;i++){let n=0,m=0;for(let dx=-K;dx<=K;dx++)for(let dy=-K;dy<=K;dy++){const a=g.m.get(KEY(g.cx[i]+dx,g.cy[i]+dy));if(!a)continue;n+=a.length;
+    for(const j of a){if(j===i)continue;const ex=w.xs[i]-w.xs[j],ey=w.ys[i]-w.ys[j];if(ex*ex+ey*ey<=r2)m++;}}
+    gi[i]=n-1;ri[i]=m;grid+=n-1;rad+=m;}
+  return {broadcast:w.N*(w.N-1),grid,rad,gi,ri,g};}
+function boundary(rin,rout,A,P){let inside=false,e=0,l=0,v=0;const ev=[],vis=new Uint8Array(600);
+  for(let k=0;k<600;k++){const t=k/10,d=50-A*Math.cos(2*Math.PI*t/P);
+    if(!inside&&d<=rin){inside=true;e++;ev.push([k,1]);}else if(inside&&d>rout){inside=false;l++;ev.push([k,0]);}
+    if(inside){v++;vis[k]=1;}}return {e,l,v,ev,vis};}
+window.__aoi={mulberry32,makeWorld,counts,boundary}; // exposed for automated checks
+
+// ---- state ----
+const S={N:1000,f:0,r:50,div:1,hz:10,np:false,sel:999};
+let world,cur,series;
+const cellSize=()=>S.r/S.div;
+
+function setup(c,h){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();const H=h||r.height;c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,H*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:H};}
+
+function computeSeries(){series=[];for(let p=0;p<=100;p+=5){const c=counts(makeWorld(S.N,p/100),S.r,cellSize(),S.div);series.push({p,b:c.broadcast,g:c.grid,r:c.rad});}}
+function regen(){world=makeWorld(S.N,S.f/100);cur=counts(world,S.r,cellSize(),S.div);if(S.sel>=S.N)S.sel=S.N-1;}
+
+function drawMap(){
+  const cv=$('map'),{g,w}=setup(cv,cv.getBoundingClientRect().width),sc=w/1000,c=cellSize(),K=S.div;
+  g.clearRect(0,0,w,w);g.fillStyle=css('--paper');g.fillRect(0,0,w,w);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.globalAlpha=c<30?.5:1;g.beginPath();
+  for(let x=0;x<=1000+1e-9;x+=c){const p=Math.round(x*sc)+.5;g.moveTo(p,0);g.lineTo(p,w);g.moveTo(0,p);g.lineTo(w,p);}g.stroke();g.globalAlpha=1;
+  const i=S.sel,cx=cur.g.cx[i],cy=cur.g.cy[i];
+  g.fillStyle=css('--steel');g.globalAlpha=.16;g.fillRect((cx-K)*c*sc,(cy-K)*c*sc,(2*K+1)*c*sc,(2*K+1)*c*sc);g.globalAlpha=1;
+  g.strokeStyle=css('--steel');g.lineWidth=1.5;g.strokeRect((cx-K)*c*sc,(cy-K)*c*sc,(2*K+1)*c*sc,(2*K+1)*c*sc);
+  const x0=world.xs[i],y0=world.ys[i],r2=S.r*S.r,dr=Math.max(1.3,Math.min(2.4,w/320));
+  const inBlock=j=>Math.abs(cur.g.cx[j]-cx)<=K&&Math.abs(cur.g.cy[j]-cy)<=K;
+  for(let pass=0;pass<3;pass++)for(let j=0;j<world.N;j++){if(j===i)continue;const b=inBlock(j),dx=world.xs[j]-x0,dy=world.ys[j]-y0,inR=dx*dx+dy*dy<=r2;
+    const kind=inR?2:b?1:0;if(kind!==pass)continue;g.fillStyle=kind===2?css('--ochre'):kind===1?css('--steel'):css('--ink-soft');g.globalAlpha=kind?1:.55;
+    g.beginPath();g.arc(world.xs[j]*sc,world.ys[j]*sc,dr,0,Math.PI*2);g.fill();}
+  g.globalAlpha=1;g.strokeStyle=css('--ochre');g.lineWidth=2;g.beginPath();g.arc(x0*sc,y0*sc,S.r*sc,0,Math.PI*2);g.stroke();
+  g.fillStyle=css('--blood');g.beginPath();g.arc(x0*sc,y0*sc,dr+3,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  cv.setAttribute('aria-label',`Map of ${fmt(S.N)} players, ${fmt(world.k)} in the crowd. Highlighted player ${i}: ${fmt(cur.gi[i])} in its grid block, ${fmt(cur.ri[i])} within ${S.r} m. World totals per tick: broadcast ${fmt(cur.broadcast)}, grid ${fmt(cur.grid)}, radius ${fmt(cur.rad)}.`);
+}
+function drawChart(){
+  const {g,w,h}=setup($('chart')),pad={l:52,r:14,t:10,b:30};
+  const all=series.flatMap(s=>[s.b,s.g,s.r]).concat([cur.broadcast,cur.grid,cur.rad]).filter(v=>v>0);
+  const lo=Math.min(1000,Math.pow(10,Math.floor(Math.log10(Math.min(...all))))),hi=Math.max(1e6,Math.pow(10,Math.ceil(Math.log10(Math.max(...all)))));
+  const X=p=>pad.l+(w-pad.l-pad.r)*p/100,Y=v=>pad.t+(h-pad.t-pad.b)*(1-(Math.log10(Math.max(v,lo))-Math.log10(lo))/(Math.log10(hi)-Math.log10(lo)));
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let t=lo;t<=hi*1.001;t*=10){g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,Y(t));g.lineTo(w-pad.r,Y(t));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(t>=1e6?t/1e6+'M':t>=1e3?t/1e3+'k':t,pad.l-6,Y(t));}
+  [0,25,50,75,100].forEach(p=>{g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.fillText(p+'%',X(p),h-pad.b+6);});
+  const line=(key,col,wd,dash)=>{g.strokeStyle=col;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();series.forEach((s,k)=>{k?g.lineTo(X(s.p),Y(s[key])):g.moveTo(X(s.p),Y(s[key]));});g.stroke();g.setLineDash([]);};
+  line('b',css('--ink-soft'),2,[7,5]);line('g',css('--steel'),2.5);line('r',css('--ochre'),2.5);
+  const x=X(S.f);g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  [[cur.broadcast,'--ink-soft'],[cur.grid,'--steel'],[cur.rad,'--ochre']].forEach(([v,cn])=>{g.fillStyle=css(cn);g.beginPath();g.arc(x,Y(v),5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+  $('chart').setAttribute('aria-label',`At ${S.f}% crowd: broadcast ${fmt(cur.broadcast)}, grid ${fmt(cur.grid)}, radius ${fmt(cur.rad)} deliveries per tick. Grid rises to meet broadcast at 100%.`);
+}
+const r1=v=>(Math.round(v*10)/10).toFixed(1),r2=v=>(Math.round(v*100)/100).toFixed(2);
+function readouts(){
+  const c=cur,bg=c.broadcast/c.grid,gr=c.rad?c.grid/c.rad:NaN;
+  $('hRatio').textContent=r1(bg)+'×';
+  $('rGR').textContent=isFinite(gr)?r2(gr)+'×':'—';
+  $('rSelG').textContent=fmt(c.gi[S.sel]);$('rSelR').textContent=fmt(c.ri[S.sel]);$('rK').textContent=fmt(world.k);
+  const blk=(2*S.div+1)+' × '+(2*S.div+1);
+  const rows=[['Broadcast',c.broadcast],[S.np?`Grid ${blk}, candidates scanned`:`Grid ${blk} block`,c.grid],[S.np?'Grid + narrow phase (sent)':'Exact radius',c.rad]];
+  $('tbody').innerHTML=rows.map(([n,v])=>`<tr><td>${n}</td><td>${fmt(v)}</td><td>${fmt(v*S.hz)}</td></tr>`).join('');
+  $('lgGrid').textContent=S.np?'Grid candidates scanned':'Grid block';$('lgRad').textContent=S.np?'Grid + narrow phase sent':'Exact radius';
+  $('npNote').hidden=!S.np;$('npNote').textContent=`Narrow phase: the server scans ${fmt(c.grid)} candidates and sends ${fmt(c.rad)} updates per tick. The scan is CPU work; only the sends cost bandwidth.`;
+  $('of').textContent=S.f+'%';$('or').textContent=S.r;
+  let s;
+  if(S.f===0)s=`Spread out, each player's block holds about ${r1(c.grid/S.N)} others, against ${fmt(S.N-1)} under broadcast. The grid still sends ${r2(gr)} times what the exact radius needs, because a block is bigger than a circle.`;
+  else if(bg>5)s=`${fmt(world.k)} players now stand in a disc 40 m across. Each of them sees every other one, so the grid saving has fallen from ${r1(series[0].b/series[0].g)}× to ${r1(bg)}×.`;
+  else s=`With ${S.f}% of players in one spot, the grid is only ${r1(bg)}× cheaper than broadcast. No spatial index helps when everyone really is within view of everyone. This is the crowd problem from week 1 again.`;
+  $('insight').textContent=s;
+}
+function renderCrowd(){readouts();drawMap();drawChart();}
+function full(){computeSeries();regen();renderCrowd();}
+function soft(){regen();renderCrowd();}
+
+// crowd controls
+function seg(host,vals,cur,lab,set){vals.forEach(v=>{const b=document.createElement('button');b.className='chip';b.textContent=lab(v);b.setAttribute('aria-pressed',String(v===cur));host.appendChild(b);
+  b.addEventListener('click',()=>{host.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');set(v);});});}
+seg($('nSeg'),[250,500,1000,2000],S.N,v=>fmt(v),v=>{S.N=v;S.sel=v-1;full();});
+seg($('hzSeg'),[1,10,20],S.hz,v=>v+' Hz',v=>{S.hz=v;readouts();});
+$('f').addEventListener('input',e=>{S.f=+e.target.value;$('hint').hidden=true;soft();});
+$('r').addEventListener('input',e=>{S.r=+e.target.value;full();});
+$('cell').addEventListener('change',e=>{S.div=+e.target.value;full();});
+$('np').addEventListener('change',e=>{S.np=e.target.checked;readouts();});
+$('pickCrowd').addEventListener('click',()=>{if(world.k>0){S.sel=0;renderCrowd();}});
+$('pickScatter').addEventListener('click',()=>{if(world.k<S.N){S.sel=S.N-1;renderCrowd();}});
+$('map').addEventListener('click',e=>{const r=$('map').getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1000,y=(e.clientY-r.top)/r.height*1000;
+  let best=0,bd=Infinity;for(let j=0;j<world.N;j++){const d=(world.xs[j]-x)**2+(world.ys[j]-y)**2;if(d<bd){bd=d;best=j;}}S.sel=best;renderCrowd();});
+$('map').addEventListener('keydown',e=>{const k=e.key;let d=0;if(k==='ArrowRight'||k==='ArrowUp')d=1;else if(k==='ArrowLeft'||k==='ArrowDown')d=-1;else if(k==='PageUp')d=10;else if(k==='PageDown')d=-10;
+  else if(k==='Home'){S.sel=0;}else if(k==='End'){S.sel=S.N-1;}else return;e.preventDefault();S.sel=((S.sel+d)%S.N+S.N)%S.N;renderCrowd();});
+
+// ---- boundary tab ----
+const B={rin:50,rout:50,A:4,P:4,s:120,k:0,playing:false};
+let bres,bbase,raf=null,last=0;
+const bytes=(r,s)=>r.e*s+4*r.l+16*r.v;
+function bCompute(){bres=boundary(B.rin,B.rout,B.A,B.P);bbase=boundary(B.rin,B.rin,B.A,B.P);}
+function dist(k){return 50-B.A*Math.cos(2*Math.PI*(k/10)/B.P);}
+function drawB(){
+  let {g,w,h}=setup($('bmap'));g.clearRect(0,0,w,h);
+  const lo=Math.min(35,B.rin-8),hi=Math.max(70,B.rout+8),ox=16,sc=(w-ox-16)/hi,oy=h/2;
+  // circles centred on observer (only the right-hand arcs are visible)
+  const circ=(r,col,dash)=>{g.strokeStyle=col;g.lineWidth=2;g.setLineDash(dash||[]);g.beginPath();g.arc(ox,oy,r*sc,-Math.PI/2,Math.PI/2);g.stroke();g.setLineDash([]);};
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(ox,oy);g.lineTo(w-8,oy);g.stroke();
+  circ(B.rout,css('--blood'),[6,5]);circ(B.rin,css('--moss'));
+  g.fillStyle=css('--ink');g.beginPath();g.arc(ox,oy,6,0,Math.PI*2);g.fill();
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.textAlign='left';g.fillText('observer',ox+8,oy-10);
+  g.fillStyle=css('--moss');g.fillText('enter '+B.rin+' m',ox+B.rin*sc*0.72,oy-B.rin*sc*0.72>12?oy-B.rin*sc*0.72:14);
+  g.fillStyle=css('--blood');g.textAlign='left';g.fillText('leave '+B.rout+' m',Math.min(w-80,ox+B.rout*sc*0.72+6),Math.min(h-6,oy+B.rout*sc*0.72));
+  const d=dist(B.k),vis=bres.vis[B.k];
+  g.fillStyle=vis?css('--ochre'):css('--paper');g.strokeStyle=css('--ochre');g.lineWidth=2.5;g.beginPath();g.arc(ox+d*sc,oy,8,0,Math.PI*2);g.fill();g.stroke();
+  g.fillStyle=css('--ink');g.textAlign='center';g.fillText(d.toFixed(1)+' m, '+(vis?'visible':'hidden'),ox+d*sc,oy+24);
+  // strip
+  ({g,w,h}=setup($('strip')));const pd={l:40,r:8,t:10,b:26},X=k=>pd.l+(w-pd.l-pd.r)*k/600;
+  const dmin=Math.min(50-B.A,B.rin)-2,dmax=Math.max(50+B.A,B.rout)+2,Y=v=>pd.t+(h-pd.t-pd.b-14)*(1-(v-dmin)/(dmax-dmin));
+  g.clearRect(0,0,w,h);g.font='11px '+css('--sans');
+  g.fillStyle=css('--ochre');g.globalAlpha=.2;for(let k=0;k<600;k++)if(bres.vis[k])g.fillRect(X(k),pd.t,X(k+1)-X(k)+.5,h-pd.t-pd.b-14);g.globalAlpha=1;
+  const hl=(v,col,dash,lab)=>{g.strokeStyle=col;g.lineWidth=1.5;g.setLineDash(dash);g.beginPath();g.moveTo(pd.l,Y(v));g.lineTo(w-pd.r,Y(v));g.stroke();g.setLineDash([]);g.fillStyle=col;g.textAlign='right';g.textBaseline='middle';g.fillText(lab,pd.l-4,Y(v));};
+  hl(B.rin,css('--moss'),[],'in');if(B.rout!==B.rin)hl(B.rout,css('--blood'),[5,4],'out');
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();for(let k=0;k<600;k++){const y=Y(dist(k));k?g.lineTo(X(k),y):g.moveTo(X(k),y);}g.stroke();
+  const my=h-pd.b-8;bres.ev.forEach(([k,e])=>{g.fillStyle=e?css('--moss'):css('--blood');g.beginPath();if(e){g.moveTo(X(k)-4,my+4);g.lineTo(X(k)+4,my+4);g.lineTo(X(k),my-4);}else{g.moveTo(X(k)-4,my-4);g.lineTo(X(k)+4,my-4);g.lineTo(X(k),my+4);}g.fill();});
+  g.fillStyle=css('--ink-soft');g.textBaseline='top';[0,15,30,45,60].forEach(s=>{g.textAlign=s===0?'left':s===60?'right':'center';g.fillText(s+' s',X(s*10),h-pd.b+8);});
+  g.strokeStyle=css('--ink');g.globalAlpha=.5;g.beginPath();g.moveTo(X(B.k),pd.t);g.lineTo(X(B.k),h-pd.b);g.stroke();g.globalAlpha=1;
+  $('strip').setAttribute('aria-label',`${bres.e} enters, ${bres.l} leaves, ${bres.v} visible ticks over 60 seconds`);
+}
+function bReadouts(){
+  $('orin').textContent=B.rin;$('orout').textContent=B.rout;$('oamp').textContent=B.A;$('oper').textContent=B.P;$('oesz').textContent=B.s;$('ott').textContent=(B.k/10).toFixed(1);
+  $('bE').textContent=bres.e;$('bL').textContent=bres.l;$('bV').textContent=bres.v;
+  const e1=bbase.e,l1=bbase.l,v1=bbase.v,e2=bres.e,l2=bres.l,v2=bres.v;
+  const sStar=e1!==e2?(4*(l2-l1)+16*(v2-v1))/(e1-e2):null;
+  $('bS').textContent=sStar===null?'—':fmt(sStar)+' B';
+  $('hBytes').textContent=fmt(bytes(bres,B.s))+' B';$('hBytesL').textContent=`sent over 60 s with ${B.s} B enter messages`;
+  const rows=[[`No hysteresis (r_out = ${B.rin})`,bbase],[`Current (r_out = ${B.rout})`,bres]];
+  $('btbody').innerHTML=rows.map(([n,r])=>`<tr><td>${n}</td><td>${r.e}</td><td>${r.l}</td><td>${r.v}</td><td>${fmt(bytes(r,B.s))}</td></tr>`).join('');
+  document.querySelectorAll('#routSeg .chip').forEach(b=>b.setAttribute('aria-pressed',String(B.rout-B.rin===+b.dataset.m)));
+  let s;
+  if(sStar===null)s=B.rout===B.rin?`No hysteresis: the player crosses ${B.rin} m on every pace, so the observer gets ${bres.e} enter messages in a minute. Widen the leave radius.`:`This margin does not stop the flicker: the pacing reaches past ${B.rout} m, so enters and leaves are unchanged and you pay for ${bres.v-bbase.v} extra visible ticks.`;
+  else s=`Hysteresis cut enters from ${e1} to ${e2} but added ${v2-v1} visible ticks. It saves bytes when an enter message is bigger than ${fmt(sStar)} B. At ${B.s} B it ${B.s>sStar?'saves':'costs'} ${fmt(Math.abs(bytes(bbase,B.s)-bytes(bres,B.s)))} B a minute for this one pair.`;
+  $('binsight').textContent=s;
+}
+function renderB(){bReadouts();drawB();}
+function bAll(){bCompute();renderB();}
+$('rin').addEventListener('input',e=>{B.rin=+e.target.value;const ro=$('rout');ro.min=B.rin;ro.max=B.rin+15;B.rout=Math.min(Math.max(B.rout,B.rin),B.rin+15);ro.value=B.rout;bAll();});
+$('rout').addEventListener('input',e=>{B.rout=+e.target.value;bAll();});
+$('amp').addEventListener('input',e=>{B.A=+e.target.value;bAll();});
+$('per').addEventListener('input',e=>{B.P=+e.target.value;bAll();});
+$('esz').addEventListener('input',e=>{B.s=+e.target.value;renderB();});
+$('tt').addEventListener('input',e=>{B.k=+e.target.value;renderB();});
+document.querySelectorAll('#routSeg .chip').forEach(b=>b.addEventListener('click',()=>{B.rout=B.rin+ +b.dataset.m;$('rout').value=B.rout;bAll();}));
+function tick(ts){if(!B.playing)return;if(ts-last>=100){last=ts;B.k=(B.k+1)%600;$('tt').value=B.k;renderB();}raf=requestAnimationFrame(tick);}
+$('play').addEventListener('click',()=>{B.playing=!B.playing;$('play').textContent=B.playing?'Pause':'Play';$('play').setAttribute('aria-pressed',String(B.playing));if(B.playing)raf=requestAnimationFrame(tick);});
+
+// ---- tabs ----
+const tabs=[$('t1'),$('t2')];
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',String(on));x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();
+  if(t.id==='t2'){renderB();if(!reduce&&!B.playing)$('play').click();}else{if(B.playing)$('play').click();renderCrowd();}}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft')sel(tabs[(i+1)%2]);});});
+// Page Up/Down on sliders move 10 steps
+document.querySelectorAll('input[type=range]').forEach(s=>s.addEventListener('keydown',e=>{if(e.key!=='PageUp'&&e.key!=='PageDown')return;e.preventDefault();const st=+s.step||1;
+  s.value=Math.max(+s.min,Math.min(+s.max,+s.value+(e.key==='PageUp'?10:-10)*st));s.dispatchEvent(new Event('input'));}));
+const redraw=()=>{$('p1').hidden?renderB():renderCrowd();};
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redraw,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+bCompute();full();
+})();
+</script>
+</body>
+</html>

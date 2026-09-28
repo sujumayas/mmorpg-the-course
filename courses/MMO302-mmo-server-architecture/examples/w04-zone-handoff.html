@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zone servers and handoff · MMO302 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.04rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.caption{font-family:var(--serif);font-size:clamp(1.1rem,2.4vw,1.35rem);line-height:1.35;margin:0 0 14px;max-width:60ch}
+.caption b{color:var(--blood);font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:700px){.two{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figure+figure{margin-top:12px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#map{aspect-ratio:1/1;height:auto;border-radius:6px}
+#hist{height:110px}
+#bars{height:250px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-right:5px}
+.legend i.ring{background:transparent;border:1.5px solid var(--ink)}
+.legend i.line{width:18px;height:0;border-radius:0;border-top:2px dashed var(--ink)}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.nums{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat b small{font-size:.8rem;font-weight:600;color:var(--ink-soft)}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 0}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 22px;margin-top:10px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+input[type=range]:disabled{opacity:.45}
+.check{justify-content:flex-start;margin-top:12px}
+.check input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.small{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+.table-wrap{overflow-x:auto;margin-top:6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.tcap{font-family:var(--serif);margin:16px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO302 MMO Server Architecture · Week 4 · Worked example</p>
+  <h1>More zone servers, same crowd</h1>
+  <p class="lede">A 6 km square world cut into a g &times; g grid of zones, one server each. Players walk at random, and 40% of them stand in a capital city. Adding servers moves some numbers and leaves one alone.</p>
+</header>
+
+<section class="panel" aria-label="Zone handoff simulation">
+  <p class="caption" id="caption" aria-live="polite"></p>
+  <div class="two">
+    <figure>
+      <figcaption>World, 6,000 m &times; 6,000 m<small>Dot colour: owning zone. Ringed dots are within R of a border, so a neighbour holds a ghost of them.</small></figcaption>
+      <canvas id="map" role="img" aria-label="Map of players coloured by zone"></canvas>
+      <p class="legend"><span><i class="ring"></i>ghost somewhere</span><span><i style="background:var(--blood)"></i>idle crowd on a border</span><span id="bandNote"></span></p>
+    </figure>
+    <div>
+      <figure>
+        <figcaption>Handoffs per second, last 60 s<small>Solid: measured each simulated second. Dashed: predicted H.</small></figcaption>
+        <canvas id="hist" role="img" aria-label="Handoffs per second history"></canvas>
+      </figure>
+      <figure>
+        <figcaption>Players owned per zone, busiest first<small>Dashed line: capacity C. Red bars are over capacity.</small></figcaption>
+        <canvas id="bars" role="img" aria-label="Players per zone"></canvas>
+      </figure>
+    </div>
+  </div>
+
+  <div class="nums" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="nZ">—</b><span>zone servers g&sup2;</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="nL">—</b><span>border length L</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="nH">—</b><span>handoffs/s, predicted <small>(measured, 60 s avg)</small></span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="nG">—</b><span>ghost share, predicted <small>(measured)</small></span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="nB">—</b><span>busiest zone, predicted <small>(measured)</small></span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="nPP">—</b><span>ping-pong handoffs, last second</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="nIdle">off</b><span>idle crowd handoffs/s (60 s avg)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="nT">0 s</b><span>simulated time</span></div>
+  </div>
+
+  <div class="bar">
+    <button class="chip" id="play" aria-pressed="false">Play</button>
+    <span class="bar" role="group" aria-label="Simulation speed" id="speed" style="margin:0">
+      <button class="chip" data-s="1" aria-pressed="true">1&times;</button><button class="chip" data-s="10" aria-pressed="false">10&times;</button><button class="chip" data-s="60" aria-pressed="false">60&times;</button>
+    </span>
+    <button class="chip" id="idle" aria-pressed="false">Idle crowd on a border</button>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="g">Grid g (zones = g&sup2;) <output id="og"></output></label><input id="g" type="range" min="1" max="8" step="1" value="4">
+      <label for="N">Players N <output id="oN"></output></label><input id="N" type="range" min="500" max="6000" step="100" value="3000">
+      <label for="C">Zone capacity C <output id="oC"></output></label><input id="C" type="range" min="200" max="2000" step="50" value="1000">
+    </div>
+    <div>
+      <label for="v">Walking speed v (m/s) <output id="ov"></output></label><input id="v" type="range" min="0.5" max="6" step="0.5" value="2">
+      <label for="R">AOI radius R (m) <output id="oR"></output></label><input id="R" type="range" min="25" max="200" step="5" value="100">
+      <label for="h">Hysteresis band h (m) <output id="oh"></output></label><input id="h" type="range" min="0" max="20" step="1" value="2">
+    </div>
+    <div>
+      <label class="check" for="city"><input type="checkbox" id="city" checked> Capital city (radius 300 m, walkers at 1 m/s)</label>
+      <label for="f">City share f <output id="of"></output></label><input id="f" type="range" min="0" max="0.6" step="0.05" value="0.4">
+      <label class="check" for="thru"><input type="checkbox" id="thru"> Border through the city</label>
+      <p class="small">The grid stays put and the city moves onto the vertical border nearest the map centre. Relative to the city this is the same as shifting the grid. With the toggle off, the city sits at the centre of a zone.</p>
+    </div>
+  </div>
+  <p class="insight" id="insight"></p>
+
+  <p class="tcap">Predicted values for the current N, v, R and city share, g = 1 to 8</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Grid g</th><th>Zones</th><th>Border L (m)</th><th>Handoffs/s</th><th>Ghost share</th><th>Busiest zone</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 4 lecture: H = (2/&pi;) &rho; v L, G = 2RL / W&sup2;, L = 2W(g &minus; 1). Countryside walkers wrap at the world edge (a torus) and wrap moves are not counted. Seeded random walk (mulberry32), so every reload runs the same world. All shapes are generic.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(n,d)=>(+n).toLocaleString('en-US',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const W=6000,RC=300,VC=1,DT=0.1,TURN=0.02*DT,IDLE_N=40,IDLE_BAND=5,IDLE_SD=0.5*Math.sqrt(DT);
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// ---- predictions (the lecture's formulas) ----
+function cityCentre(g,thru){const c=W/g,zc=(Math.floor(3000/c)+0.5)*c;
+  if(thru&&g>1)return {x:Math.min(W-c,Math.max(c,Math.round(3000/c)*c)),y:zc};return {x:zc,y:zc};}
+function predict(p){
+  const L=2*W*(p.g-1),Ncity=p.city?Math.round(p.f*p.N):0,Nc=p.N-Ncity,rho=Nc/(W*W);
+  const rhoCity=p.city?Ncity/(Math.PI*RC*RC):0,Lcity=p.city&&p.thru&&p.g>1?2*RC:0;
+  const Hcity=2/Math.PI*rhoCity*VC*Lcity,H=2/Math.PI*rho*p.v*L+Hcity;
+  const Gc=Math.min(1,2*p.R*L/(W*W)),ghostsCity=rhoCity*2*p.R*Lcity,G=(Gc*Nc+ghostsCity)/p.N;
+  const busiest=p.city?(Lcity?Ncity/2:Ncity)+Nc/(p.g*p.g):p.N/(p.g*p.g);
+  return {L,H,Hcity,G,Gc,ghostsCity,busiest,rhoCity,Ncity,Nc};
+}
+
+// ---- simulation ----
+function Sim(p,seed){
+  const rnd=mulberry32(seed||404);
+  const gauss=()=>{let u=0;while(u===0)u=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rnd());};
+  const s={p,t:0,rnd};
+  const Ncity=p.city?Math.round(p.f*p.N):0,n=p.N+(p.idle?IDLE_N:0);
+  const x=new Float64Array(n),y=new Float64Array(n),hd=new Float64Array(n),type=new Uint8Array(n),own=new Int32Array(n),prev=new Int32Array(n).fill(-1),lastT=new Float64Array(n).fill(-1e9);
+  let cc=cityCentre(p.g,p.thru),bx=0;
+  for(let i=0;i<n;i++){
+    hd[i]=2*Math.PI*rnd();
+    if(i<p.N-Ncity){type[i]=0;x[i]=W*rnd();y[i]=W*rnd();}
+    else if(i<p.N){type[i]=1;const r=RC*Math.sqrt(rnd()),a=2*Math.PI*rnd();x[i]=r*Math.cos(a);y[i]=r*Math.sin(a);} // offsets from city centre
+    else{type[i]=2;x[i]=(rnd()*2-1)*IDLE_BAND;y[i]=W*(0.2+0.6*rnd());} // x offset from border
+  }
+  Object.assign(s,{n,x,y,hd,type,own,prev,lastT,hist:[],idleHist:[],ppHist:[],acc:{h:0,i:0,pp:0},steps:0});
+  s.cfg=function(){ // grid-dependent placement; resets owners silently
+    const c=W/p.g;cc=cityCentre(p.g,p.thru);bx=p.g>1?Math.min(W-c,Math.max(c,Math.round(3000/c)*c)):3000;
+    for(let i=0;i<n;i++){const P=pos(i);own[i]=zoneOf(P[0],P[1]);prev[i]=-1;lastT[i]=-1e9;}
+    s.hist=[];s.idleHist=[];s.ppHist=[];s.acc={h:0,i:0,pp:0};s.steps=0;
+  };
+  function pos(i){return type[i]===0?[x[i],y[i]]:type[i]===1?[cc.x+x[i],cc.y+y[i]]:[bx+x[i],y[i]];}
+  function zoneOf(X,Y){const c=W/p.g,zx=Math.min(p.g-1,Math.max(0,Math.floor(X/c))),zy=Math.min(p.g-1,Math.max(0,Math.floor(Y/c)));return zy*p.g+zx;}
+  function outside(z,X,Y){const c=W/p.g,zx=z%p.g,zy=Math.floor(z/p.g),dx=Math.max(zx*c-X,0,X-(zx+1)*c),dy=Math.max(zy*c-Y,0,Y-(zy+1)*c);return Math.hypot(dx,dy);}
+  s.pos=pos;s.zoneOf=zoneOf;
+  s.borderDist=function(X,Y){const c=W/p.g;let d=Infinity;if(p.g<2)return d;
+    const zx=Math.min(p.g-1,Math.floor(X/c)),zy=Math.min(p.g-1,Math.floor(Y/c));
+    if(zx>0)d=Math.min(d,X-zx*c);if(zx<p.g-1)d=Math.min(d,(zx+1)*c-X);if(zy>0)d=Math.min(d,Y-zy*c);if(zy<p.g-1)d=Math.min(d,(zy+1)*c-Y);return d;};
+  s.step=function(){
+    s.t+=DT;const h2=p.h/2;
+    for(let i=0;i<n;i++){
+      const ty=type[i];let wrapped=false;
+      if(ty===0){if(rnd()<TURN)hd[i]=2*Math.PI*rnd();x[i]+=p.v*DT*Math.cos(hd[i]);y[i]+=p.v*DT*Math.sin(hd[i]);
+        if(x[i]<0){x[i]+=W;wrapped=true;}else if(x[i]>=W){x[i]-=W;wrapped=true;}if(y[i]<0){y[i]+=W;wrapped=true;}else if(y[i]>=W){y[i]-=W;wrapped=true;}}
+      else if(ty===1){if(rnd()<TURN)hd[i]=2*Math.PI*rnd();let nx=x[i]+VC*DT*Math.cos(hd[i]),ny=y[i]+VC*DT*Math.sin(hd[i]);const r=Math.hypot(nx,ny);
+        if(r>RC){const ux=nx/r,uy=ny/r,vx=Math.cos(hd[i]),vy=Math.sin(hd[i]),dot=vx*ux+vy*uy;hd[i]=Math.atan2(vy-2*dot*uy,vx-2*dot*ux);const back=2*RC-r;nx=ux*back;ny=uy*back;}
+        x[i]=nx;y[i]=ny;}
+      else{let u=x[i]+IDLE_SD*gauss();if(u>IDLE_BAND)u=2*IDLE_BAND-u;if(u<-IDLE_BAND)u=-2*IDLE_BAND-u;x[i]=u;}
+      const P=pos(i),z=zoneOf(P[0],P[1]);
+      if(z===own[i])continue;
+      if(wrapped){own[i]=z;prev[i]=-1;continue;} // wrap move: not a crossing
+      if(outside(own[i],P[0],P[1])<h2)continue;
+      if(z===prev[i]&&s.t-lastT[i]<=5+1e-9)s.acc.pp++;
+      if(ty===2)s.acc.i++;else s.acc.h++;
+      prev[i]=own[i];own[i]=z;lastT[i]=s.t;
+    }
+    if(++s.steps%10===0){s.hist.push(s.acc.h);s.idleHist.push(s.acc.i);s.ppHist.push(s.acc.pp);s.acc={h:0,i:0,pp:0};
+      if(s.hist.length>60){s.hist.shift();s.idleHist.shift();s.ppHist.shift();}}
+  };
+  s.cfg();
+  return s;
+}
+function idleRate(h,seconds,seed){const s=Sim({g:4,N:0,v:2,R:100,city:false,f:0,thru:false,h,idle:true},seed||7);let tot=0;
+  for(let k=0;k<seconds*10;k++){s.step();if(s.steps%10===0)tot+=s.idleHist[s.idleHist.length-1];}return tot/seconds;}
+window.__zone={predict,Sim,idleRate,cityCentre}; // exposed for automated checks
+
+// ---- state and UI ----
+const P={g:4,N:3000,v:2,R:100,city:true,f:0.4,thru:false,h:2,C:1000,idle:false};
+let sim,playing=false,speed=1,raf=null,lastTs=0,due=0,lastPaint=0;
+function rebuild(){sim=Sim(P);}
+
+function setup(c,sq){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect(),H=sq?r.width:r.height;c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,H*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:H};}
+function measure(){
+  const counts=new Array(P.g*P.g).fill(0);let ghosts=0;
+  for(let i=0;i<sim.n;i++){if(sim.type[i]===2)continue;counts[sim.own[i]]++;const q=sim.pos(i);if(sim.borderDist(q[0],q[1])<P.R)ghosts++;}
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  return {counts,ghosts,H:avg(sim.hist),idle:avg(sim.idleHist),pp:sim.ppHist.length?sim.ppHist[sim.ppHist.length-1]:0};
+}
+function drawMap(m){
+  const {g,w}=setup($('map'),true),sc=w/W,c=W/P.g;
+  g.fillStyle=css('--paper');g.fillRect(0,0,w,w);
+  const cols=[css('--steel'),css('--ochre'),css('--moss'),css('--ink-soft')];
+  // hysteresis band and border lines
+  const bandPx=P.h*sc;
+  for(let k=1;k<P.g;k++){const q=k*c*sc;
+    if(bandPx>=1){g.fillStyle=css('--ink');g.globalAlpha=.12;g.fillRect(q-bandPx/2,0,bandPx,w);g.fillRect(0,q-bandPx/2,w,bandPx);g.globalAlpha=1;}
+    g.strokeStyle=css('--ink');g.globalAlpha=.55;g.lineWidth=1;g.beginPath();g.moveTo(q,0);g.lineTo(q,w);g.moveTo(0,q);g.lineTo(w,q);g.stroke();g.globalAlpha=1;}
+  if(P.city){const cc=cityCentre(P.g,P.thru);g.fillStyle=css('--blood');g.globalAlpha=.08;g.beginPath();g.arc(cc.x*sc,cc.y*sc,RC*sc,0,Math.PI*2);g.fill();g.globalAlpha=.5;g.strokeStyle=css('--blood');g.lineWidth=1;g.stroke();g.globalAlpha=1;}
+  const dr=w<360?1:1.3;
+  for(let i=0;i<sim.n;i++){const q=sim.pos(i),X=q[0]*sc,Y=q[1]*sc,z=sim.own[i],zx=z%P.g,zy=Math.floor(z/P.g);
+    if(sim.type[i]===2){g.fillStyle=css('--blood');g.fillRect(X-1.5,Y-1.5,3,3);continue;}
+    g.fillStyle=cols[(zx%2)+2*(zy%2)];g.fillRect(X-dr,Y-dr,2*dr,2*dr);
+    if(sim.borderDist(q[0],q[1])<P.R){g.strokeStyle=css('--ink');g.globalAlpha=.45;g.lineWidth=.8;g.strokeRect(X-dr-1.5,Y-dr-1.5,2*dr+3,2*dr+3);g.globalAlpha=1;}}
+  $('bandNote').textContent=P.h===0?'no hysteresis band':bandPx>=1?`shaded band: h = ${P.h} m`:`band h = ${P.h} m (thinner than a pixel here)`;
+  $('map').setAttribute('aria-label',`${P.g*P.g} zones. ${fmt(m.ghosts)} of ${fmt(P.N)} players are ghosts somewhere. Busiest zone owns ${fmt(Math.max(...m.counts))}.`);
+}
+function drawHist(pr,m){
+  const {g,w,h}=setup($('hist')),pad={l:36,r:8,t:8,b:18},vals=sim.hist,top=Math.max(1,pr.H*2,...vals)*1.1;
+  const X=k=>pad.l+(w-pad.l-pad.r)*k/59,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/top);
+  g.clearRect(0,0,w,h);g.font='11px '+css('--sans');
+  [0,top/2].forEach(t=>{g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,Y(t));g.lineTo(w-pad.r,Y(t));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(t,t<10&&t>0?1:0),pad.l-5,Y(t));});
+  g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='top';g.fillText('−60 s',pad.l,h-pad.b+4);g.textAlign='right';g.fillText('now',w-pad.r,h-pad.b+4);
+  g.strokeStyle=css('--moss');g.setLineDash([6,4]);g.lineWidth=2;g.beginPath();g.moveTo(pad.l,Y(pr.H));g.lineTo(w-pad.r,Y(pr.H));g.stroke();g.setLineDash([]);
+  if(vals.length){g.strokeStyle=css('--ink');g.lineWidth=1.8;g.beginPath();const off=60-vals.length;vals.forEach((v,k)=>{k?g.lineTo(X(off+k),Y(v)):g.moveTo(X(off+k),Y(v));});g.stroke();}
+  else{g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='middle';g.fillText(playing?'measuring…':'press Play to measure',w/2,Y(pr.H)>h/2?pad.t+10:h-pad.b-12);}
+}
+function drawBars(m){
+  const {g,w,h}=setup($('bars')),pad={l:40,r:8,t:18,b:10},sorted=m.counts.slice().sort((a,b)=>b-a),top=Math.max(P.C*1.25,sorted[0]*1.1);
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/top),bw=(w-pad.l-pad.r)/sorted.length;
+  g.clearRect(0,0,w,h);g.font='11px '+css('--sans');
+  [0,P.C/2,P.C].forEach(t=>{g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,Y(t));g.lineTo(w-pad.r,Y(t));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(t),pad.l-5,Y(t));});
+  sorted.forEach((v,k)=>{g.fillStyle=v>P.C?css('--blood'):css('--steel');g.globalAlpha=v>P.C?1:.7;g.fillRect(pad.l+k*bw+bw*.12,Y(v),Math.max(1,bw*.76),Y(0)-Y(v));g.globalAlpha=1;});
+  g.strokeStyle=css('--ink');g.setLineDash([6,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(P.C));g.lineTo(w-pad.r,Y(P.C));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink');g.font='700 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText(fmt(sorted[0]),pad.l+bw*.12,Y(sorted[0])-3);
+  g.font='11px '+css('--sans');g.textAlign='right';g.fillText('capacity '+fmt(P.C),w-pad.r,Y(P.C)-3);
+  const over=sorted.filter(v=>v>P.C).length;
+  $('bars').setAttribute('aria-label',`${sorted.length} zones. Busiest owns ${fmt(sorted[0])}, quietest ${fmt(sorted[sorted.length-1])}. ${over} over the capacity of ${fmt(P.C)}.`);
+}
+const f2=v=>fmt(v,2),pct=v=>fmt(v*100,1)+'%';
+function numbers(pr,m){
+  $('nZ').textContent=fmt(P.g*P.g);$('nL').textContent=fmt(pr.L)+' m';
+  $('nH').innerHTML=`${f2(pr.H)} <small>(${m.H===null?'—':f2(m.H)})</small>`;
+  $('nG').innerHTML=`${pct(pr.G)} <small>(${pct(m.ghosts/P.N)})</small>`;
+  $('nB').innerHTML=`${fmt(pr.busiest)} <small>(${fmt(Math.max(...m.counts))})</small>`;
+  $('nPP').textContent=fmt(m.pp);$('nIdle').textContent=P.idle?(m.idle===null?'—':f2(m.idle)):'off';$('nT').textContent=fmt(sim.t,0)+' s';
+}
+function texts(pr){
+  $('caption').innerHTML=`<b>${P.g*P.g}</b> zone server${P.g>1?'s':''}, <b>${fmt(pr.H,1)}</b> handoffs a second, and one zone still holds <b>${fmt(pr.busiest)}</b> players. Drag the grid to 8 and watch which number moves.`;
+  let s;
+  const floor=P.city?Math.round(P.f*P.N)*(P.thru&&P.g>1?.5:1):0;
+  if(P.city&&floor>P.C)s=`The city alone puts ${fmt(floor)} players in one zone, above the capacity of ${fmt(P.C)}. No grid fixes that: at g = 8 the busiest zone is still ${fmt(predict({...P,g:8}).busiest)}, while handoffs climb to ${fmt(predict({...P,g:8}).H,2)} a second and ${pct(predict({...P,g:8}).G)} of players become ghosts.`;
+  else if(P.city&&P.thru&&P.g>1)s=`The border through the city adds ${f2(pr.Hcity)} handoffs a second and about ${fmt(pr.ghostsCity)} ghosts on its own: 600 m of border in the crowd against ${fmt(pr.L)} m in open land.`;
+  else s=`With the crowd under capacity, more zones do shrink the busiest one (now ${fmt(pr.busiest)}). Every extra border still costs handoffs (${f2(pr.H)}/s) and ghosts (${pct(pr.G)}).`;
+  if(P.thru&&P.g>1&&P.city&&floor>P.C)s+=` The border through the city also adds ${f2(pr.Hcity)} handoffs a second and about ${fmt(pr.ghostsCity)} ghosts.`;
+  $('insight').textContent=s;
+  $('tbody').innerHTML=[1,2,3,4,5,6,7,8].map(g=>{const q=predict({...P,g});return `<tr class="${g===P.g?'here':''}"><td>${g}</td><td>${g*g}</td><td>${fmt(q.L)}</td><td>${f2(q.H)}</td><td>${pct(q.G)}</td><td>${fmt(q.busiest)}</td></tr>`;}).join('');
+}
+function outputs(){$('og').textContent=P.g;$('oN').textContent=fmt(P.N);$('oC').textContent=fmt(P.C);$('ov').textContent=P.v;$('oR').textContent=P.R;$('oh').textContent=P.h;$('of').textContent=P.f.toFixed(2);
+  $('f').disabled=!P.city;$('thru').disabled=!P.city||P.g<2;}
+function render(){const pr=predict(P),m=measure();outputs();numbers(pr,m);texts(pr);drawMap(m);drawHist(pr,m);drawBars(m);}
+function paintLight(){const pr=predict(P),m=measure();numbers(pr,m);drawMap(m);drawHist(pr,m);drawBars(m);}
+
+function loop(ts){if(!playing)return;const dtr=Math.min(0.25,(ts-(lastTs||ts))/1000);lastTs=ts;due+=dtr*10*speed;let k=0;while(due>=1&&k<80){sim.step();due-=1;k++;}if(k>=80)due=0;
+  if(ts-lastPaint>=(speed>1?50:90)){lastPaint=ts;paintLight();}raf=requestAnimationFrame(loop);}
+function setPlaying(on){playing=on;$('play').textContent=on?'Pause':'Play';$('play').setAttribute('aria-pressed',String(on));if(on){lastTs=0;raf=requestAnimationFrame(loop);}}
+$('play').addEventListener('click',()=>setPlaying(!playing));
+document.querySelectorAll('#speed .chip').forEach(b=>b.addEventListener('click',()=>{speed=+b.dataset.s;document.querySelectorAll('#speed .chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));}));
+$('idle').addEventListener('click',()=>{P.idle=!P.idle;$('idle').setAttribute('aria-pressed',String(P.idle));rebuild();render();});
+// grid or placement changes keep the walkers and reset ownership; population changes rebuild
+const regrid=()=>{sim.cfg();render();};
+[['g',regrid],['h',regrid],['v',regrid],['R',render],['C',render],['N',()=>{rebuild();render();}],['f',()=>{rebuild();render();}]].forEach(([id,fn])=>
+  $(id).addEventListener('input',e=>{P[id]=+e.target.value;fn();}));
+$('city').addEventListener('change',e=>{P.city=e.target.checked;rebuild();render();});
+$('thru').addEventListener('change',e=>{P.thru=e.target.checked;regrid();});
+document.querySelectorAll('input[type=range]').forEach(s=>s.addEventListener('keydown',e=>{if(e.key!=='PageUp'&&e.key!=='PageDown')return;e.preventDefault();const st=+s.step||1;
+  s.value=Math.max(+s.min,Math.min(+s.max,+s.value+(e.key==='PageUp'?10:-10)*st));s.dispatchEvent(new Event('input'));}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+rebuild();render();
+if(!reduce)setPlaying(true);
+})();
+</script>
+</body>
+</html>

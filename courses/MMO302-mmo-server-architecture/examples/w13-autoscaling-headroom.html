@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Autoscaling headroom · MMO302 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.12rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:860px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg.chart{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink-soft);font-size:11px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 0}
+.legend i{display:inline-block;width:16px;height:10px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.ln{height:3px}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block;line-height:1.3}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 22px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:minmax(0,1fr)}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;align-items:center}
+.presets .lbl{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.fixed{font-size:.86rem;color:var(--ink-soft);margin-top:10px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{white-space:normal;vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:480px){th,td{padding:4px 5px;font-size:.84rem}.cap{display:none}}
+td.q{color:var(--blood);font-weight:700}
+.pt{cursor:pointer}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO302 MMO Server Architecture · Week 13 · Worked example</p>
+  <h1>Headroom must cover the lag</h1>
+  <p class="lede" id="lede">Servers you ask for arrive 8 minutes late. At 90% utilization, 21,500 players end up in the queue.</p>
+</header>
+
+<section class="panel">
+  <div class="views">
+    <figure>
+      <figcaption>Launch night, minute by minute<small>Players who want in, against the capacity that is ready to take them</small></figcaption>
+      <div id="boxT"><svg class="chart" id="chartT" role="img" aria-label="Demand, ready capacity, booting capacity and queue over 60 minutes"></svg></div>
+      <div class="legend">
+        <span><i class="ln" style="background:var(--ink)"></i>Demand</span>
+        <span><i class="ln" style="background:var(--steel)"></i>Ready capacity</span>
+        <span><i style="background:var(--steel);opacity:.3"></i>Booting</span>
+        <span><i style="background:var(--blood);opacity:.45"></i>Queue</span>
+      </div>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--blood)"><b id="rPeak">21,500</b><span>peak queue, players</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rMin">8</b><span>minute of peak</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rHours">154.8</b><span>server-hours, 60 min</span></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>What each utilization target costs<small>One point per target u from 30% to 95%. Right is more expensive, up is a longer queue. Click a point to select it.</small></figcaption>
+      <div id="boxB"><svg class="chart" id="chartB" role="img" aria-label="Peak queue against server-hours for each utilization target"></svg></div>
+      <div class="legend">
+        <span><i style="background:var(--moss);border-radius:50%;width:10px"></i>No queue</span>
+        <span><i style="background:var(--blood);border-radius:50%;width:10px"></i>Queue</span>
+        <span><i class="ln" style="border-top:2px dashed var(--ochre);height:0;background:none"></i>u_max = D0 / (D0 + r &times; L)</span>
+      </div>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--ochre)"><b id="rUmax">45.5%</b><span>u_max, highest safe target</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rArr">24,000</b><span>arrivals during the lag, r &times; L</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rHead">2,222</b><span>headroom at start, D0 (1/u &minus; 1)</span></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="u">Target utilization u <output id="oU">90%</output></label>
+      <input id="u" type="range" min="30" max="95" step="5" value="90">
+      <label for="L">Provisioning lag L, minutes <output id="oL">8</output></label>
+      <input id="L" type="range" min="1" max="15" step="1" value="8">
+    </div>
+    <div class="ctl">
+      <label for="r">Ramp r, players per minute <output id="oR">3,000</output></label>
+      <input id="r" type="range" min="0" max="10000" step="100" value="3000">
+      <label for="d0">Starting demand D0 <output id="oD0">20,000</output></label>
+      <input id="d0" type="range" min="5000" max="50000" step="1000" value="20000">
+    </div>
+    <div class="ctl">
+      <label for="dur">Ramp duration, minutes <output id="oDur">20</output></label>
+      <input id="dur" type="range" min="5" max="40" step="1" value="20">
+      <label for="wp">Warm pool W, servers <output id="oW">0</output></label>
+      <input id="wp" type="range" min="0" max="40" step="1" value="0">
+    </div>
+  </div>
+  <div class="presets" role="group" aria-label="Ramp presets">
+    <span class="lbl">Ramp presets</span>
+    <button class="chip" data-r="100">Quiet evening (100)</button>
+    <button class="chip" data-r="1000">Patch day (1,000)</button>
+    <button class="chip" data-r="3000" aria-pressed="true">Launch (3,000)</button>
+    <button class="chip" data-r="10000">Surprise hit (10,000)</button>
+  </div>
+  <p class="fixed">Fixed: c = 500 players per server. Warm-pool servers are booted and empty, so they count as ready from minute 0 and are kept on top of the target.</p>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Every 5 minutes (current settings)</caption>
+      <thead><tr><th>Minute</th><th>Demand</th><th>Ready servers</th><th>Booting servers</th><th class="cap">Ready capacity</th><th>Queue</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model, one step per minute for t = 0 to 59: D(t) = D0 + r &times; min(t, ramp duration). Start with &lceil;D0 / (u &times; c)&rceil; + W ready servers. Each minute, servers due at t join; want = &lceil;D(t) / (u &times; c)&rceil; + W; launch want &minus; ready &minus; booting if positive, ready at t + L; queue = max(0, D(t) &minus; ready &times; c); pay for ready + booting. The lag and capacity figures are planning numbers from the lecture, not measurements of any game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmt=(x,d=0)=>x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const c=500;
+const S={u:90,L:8,r:3000,D0:20000,dur:20,W:0};
+
+// u is an integer percent so the ceilings stay exact: ceil(D*100/(u*c)).
+function sim(uP,p){
+  p=p||S;
+  const need=D=>Math.ceil(D*100/(uP*c)-1e-9);
+  let ready=need(p.D0)+p.W;const boots=new Map();let paid=0,peak=0,peakMin=0;const rows=[];
+  for(let t=0;t<60;t++){
+    if(boots.has(t)){ready+=boots.get(t);boots.delete(t);}
+    const D=p.D0+p.r*Math.min(t,p.dur);
+    const want=need(D)+p.W;
+    let booting=0;boots.forEach(v=>booting+=v);
+    const short=want-ready-booting;
+    if(short>0){boots.set(t+p.L,(boots.get(t+p.L)||0)+short);booting+=short;}
+    const q=Math.max(0,D-ready*c);
+    if(q>peak){peak=q;peakMin=t;}
+    paid+=ready+booting;
+    rows.push({t,D,ready,booting,q});
+  }
+  return {rows,peak,peakMin,hours:paid/60};
+}
+const uMax=()=>S.D0/(S.D0+S.r*S.L);
+
+const NS='http://www.w3.org/2000/svg';
+function el(tag,a,parent,text){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(text!=null)e.textContent=text;parent&&parent.appendChild(e);return e;}
+function nice(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v/4)));const st=[1,2,2.5,5,10].map(k=>k*m).find(x=>x*4>=v);return st*4;}
+function kfmt(v){return v>=1000?fmt(v/1000,v%1000?1:0)+'k':fmt(v);}
+function frame(svg,box){const w=Math.max(260,box.clientWidth),h=w<460?240:280;svg.setAttribute('width',w);svg.setAttribute('height',h);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.innerHTML='';return {w,h};}
+
+function drawTop(res){
+  const svg=$('chartT'),{w,h}=frame(svg,$('boxT'));
+  const pad={l:44,r:10,t:10,b:34},iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  const ymax=nice(Math.max(...res.rows.map(r=>Math.max(r.D,(r.ready+r.booting)*c))));
+  const X=t=>pad.l+iw*t/60,Y=v=>pad.t+ih*(1-v/ymax);
+  for(let i=0;i<=4;i++){const v=ymax*i/4,y=Y(v);el('line',{x1:pad.l,x2:w-pad.r,y1:y,y2:y,style:'stroke:var(--grid)'},svg);el('text',{x:pad.l-6,y:y+4,'text-anchor':'end'},svg,kfmt(v));}
+  (w<460?[0,20,40,60]:[0,10,20,30,40,50,60]).forEach(t=>{el('text',{x:X(t),y:h-pad.b+16,'text-anchor':t===60?'end':t===0?'start':'middle'},svg,t+'');});
+  el('text',{x:w-pad.r,y:h-3,'text-anchor':'end'},svg,'minute');
+  // booting band and queue rectangles, one per minute
+  res.rows.forEach(r=>{
+    if(r.booting>0){const y1=Y((r.ready+r.booting)*c),y0=Y(r.ready*c);el('rect',{x:X(r.t),y:y1,width:X(r.t+1)-X(r.t)+.5,height:Math.max(0,y0-y1),style:'fill:var(--steel);opacity:.35'},svg);}
+    if(r.q>0){const y1=Y(r.D),y0=Y(r.ready*c);el('rect',{x:X(r.t),y:y1,width:X(r.t+1)-X(r.t)+.5,height:Math.max(0,y0-y1),style:'fill:var(--blood);opacity:.45'},svg);}
+  });
+  const step=f=>res.rows.map((r,i)=>(i?'L':'M')+X(r.t).toFixed(1)+' '+Y(f(r)).toFixed(1)+'L'+X(r.t+1).toFixed(1)+' '+Y(f(r)).toFixed(1)).join('');
+  el('path',{d:step(r=>r.ready*c),fill:'none',style:'stroke:var(--steel);stroke-width:2.5'},svg);
+  el('path',{d:step(r=>r.D),fill:'none',style:'stroke:var(--ink);stroke-width:2'},svg);
+  if(res.peak>0){const r=res.rows[res.peakMin],x=X(r.t+.5),y=Y(r.D);
+    el('circle',{cx:x,cy:y,r:4,style:'fill:var(--blood);stroke:var(--paper-2);stroke-width:2'},svg);const lbl=(w<460?'':'peak queue ')+fmt(res.peak),left=x-8>pad.l+lbl.length*7;el('text',{x:left?x-8:pad.l+4,y:Math.max(y-(left?8:14),pad.t+10),'text-anchor':left?'end':'start',style:'fill:var(--blood);font-weight:700;font-size:12px;stroke:var(--paper-2);stroke-width:4px;paint-order:stroke;stroke-linejoin:round'},svg,lbl);}
+}
+
+function drawBottom(res){
+  const svg=$('chartB'),{w,h}=frame(svg,$('boxB'));
+  const pad={l:48,r:14,t:18,b:34},iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  const pts=[];for(let u=30;u<=95;u+=5){const s=sim(u);pts.push({u,x:s.hours,y:s.peak});}
+  const um=uMax(),umP=um*100;
+  const umS=umP>=1?sim(umP):null;
+  const xs=pts.map(p=>p.x).concat(umS?[umS.hours]:[]);
+  let x0=Math.min(...xs),x1=Math.max(...xs);const span=x1-x0||1;x0=Math.max(0,x0-span*.06);x1=x1+span*.06;
+  const ymax=nice(Math.max(1,...pts.map(p=>p.y)));
+  const X=v=>pad.l+iw*(v-x0)/(x1-x0),Y=v=>pad.t+ih*(1-v/ymax);
+  for(let i=0;i<=4;i++){const v=ymax*i/4,y=Y(v);el('line',{x1:pad.l,x2:w-pad.r,y1:y,y2:y,style:'stroke:var(--grid)'},svg);el('text',{x:pad.l-6,y:y+4,'text-anchor':'end'},svg,kfmt(v));}
+  const nx=w<460?3:5;for(let i=0;i<=nx;i++){const v=x0+(x1-x0)*i/nx;el('text',{x:X(v),y:h-pad.b+16,'text-anchor':i===0?'start':i===nx?'end':'middle'},svg,fmt(v));}
+  el('text',{x:w-pad.r,y:h-3,'text-anchor':'end'},svg,'server-hours for the hour');
+  el('text',{x:pad.l-6,y:pad.t-6,'text-anchor':'start'},svg,'peak queue');
+  if(umS&&umP<=100){const x=X(umS.hours);
+    el('line',{x1:x,x2:x,y1:pad.t,y2:pad.t+ih,style:'stroke:var(--ochre);stroke-width:1.5','stroke-dasharray':'6 5'},svg);
+    const right=x<pad.l+iw*.6;
+    el('text',{x:right?x+5:x-5,y:pad.t+12,'text-anchor':right?'start':'end',style:'fill:var(--ochre);font-weight:700'},svg,'u_max '+(um*100).toFixed(1)+'%');}
+  el('path',{d:pts.map((p,i)=>(i?'L':'M')+X(p.x).toFixed(1)+' '+Y(p.y).toFixed(1)).join(''),fill:'none',style:'stroke:var(--ink-soft);stroke-width:1.5'},svg);
+  pts.forEach(p=>{
+    const cur=p.u===S.u,col=p.y>0?'--blood':'--moss';
+    const g=el('g',{class:'pt'},svg);
+    el('circle',{cx:X(p.x),cy:Y(p.y),r:12,style:'fill:transparent'},g);
+    el('circle',{cx:X(p.x),cy:Y(p.y),r:cur?8:4,style:`fill:var(${col});stroke:${cur?'var(--ink)':'var(--paper-2)'};stroke-width:${cur?2.5:1.5}`},g);
+    el('title',{},g,`u = ${p.u}%: ${fmt(p.x,1)} server-hours, peak queue ${fmt(p.y)}`);
+    g.addEventListener('click',()=>{S.u=p.u;$('u').value=p.u;update();});
+    if(cur){const right=X(p.x)<pad.l+iw*.7;el('text',{x:X(p.x)+(right?12:-12),y:Y(p.y)+(Y(p.y)<pad.t+30?16:-10),'text-anchor':right?'start':'end',style:'fill:var(--ink);font-weight:700;font-size:12px'},svg,`u = ${p.u}%`);}
+  });
+}
+
+function update(){
+  const res=sim(S.u),um=uMax();
+  $('oU').textContent=S.u+'%';$('oL').textContent=S.L;$('oR').textContent=fmt(S.r);$('oD0').textContent=fmt(S.D0);$('oDur').textContent=S.dur;$('oW').textContent=S.W;
+  $('rPeak').textContent=fmt(res.peak);$('rMin').textContent=res.peak>0?res.peakMin:'none';$('rHours').textContent=fmt(res.hours,1);
+  $('rUmax').textContent=(um*100).toFixed(1)+'%';$('rArr').textContent=fmt(S.r*S.L);
+  const head=S.D0*(100/S.u-1)+S.W*c;$('rHead').textContent=fmt(Math.round(head));
+  const safe=S.u/100<=um+1e-12;
+  $('lede').textContent=res.peak>0
+    ?`Servers you ask for arrive ${S.L} minute${S.L>1?'s':''} late. At ${S.u}% utilization, ${fmt(res.peak)} players end up in the queue.`
+    :`Servers you ask for arrive ${S.L} minute${S.L>1?'s':''} late. At ${S.u}% utilization the headroom covers the wait, and nobody queues.`;
+  // insight
+  const lag1=sim(S.u,Object.assign({},S,{L:1}));
+  let s=`During the ${S.L}-minute lag, <b>${fmt(S.r*S.L)}</b> players arrive before any new server can help. At u = ${S.u}% the fleet starts with ${fmt(Math.round(head))} spare slots${S.W?` (${S.W} warm servers included)`:''}. `;
+  if(res.peak>0) s+=`That is short, so the queue peaks at <b>${fmt(res.peak)}</b> at minute ${res.peakMin}. `;
+  else s+=`That is enough: no queue, for <b>${fmt(res.hours,1)}</b> server-hours. `;
+  s+=`The rule u &le; D0 / (D0 + r &times; L) allows at most <b>${(um*100).toFixed(1)}%</b>. `;
+  if(S.L>1) s+=`Cut the lag to 1 minute at the same u and the queue ${lag1.peak>0?'drops to '+fmt(lag1.peak):'vanishes'} for ${fmt(lag1.hours,1)} server-hours${Math.abs(lag1.hours-res.hours)<0.05?', the same bill':''}.`;
+  $('insight').innerHTML=s;
+  // table
+  const mins=[0,5,10,15,20,25,30,35,40,45,50,55,59];if(res.peak>0&&!mins.includes(res.peakMin)){mins.push(res.peakMin);mins.sort((a,b)=>a-b);}
+  $('tb').innerHTML=mins.map(m=>{const r=res.rows[m];return `<tr class="${res.peak>0&&m===res.peakMin?'here':''}"><td>${m}${res.peak>0&&m===res.peakMin?' (peak)':''}</td><td>${fmt(r.D)}</td><td>${r.ready}</td><td>${r.booting}</td><td class="cap">${fmt(r.ready*c)}</td><td class="${r.q>0?'q':''}">${fmt(r.q)}</td></tr>`;}).join('');
+  drawTop(res);drawBottom(res);
+  document.querySelectorAll('.presets .chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.r===S.r));
+}
+[['u','u'],['L','L'],['r','r'],['d0','D0'],['dur','dur'],['wp','W']].forEach(([id,k])=>$(id).addEventListener('input',e=>{S[k]=+e.target.value;update();}));
+document.querySelectorAll('.presets .chip').forEach(b=>b.addEventListener('click',()=>{S.r=+b.dataset.r;$('r').value=S.r;update();}));
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(update,80);});
+update();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+window.__w13={S,sim,update};
+})();
+</script>
+</body>
+</html>

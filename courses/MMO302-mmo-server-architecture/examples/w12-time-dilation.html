@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Time dilation · MMO302 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.12rem;margin:0}
+.lede b{font-variant-numeric:tabular-nums}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.panel+.panel{margin-top:14px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+/* clocks */
+.clock{display:grid;grid-template-columns:7.5em minmax(0,1fr) 6.5em;gap:10px;align-items:center}
+.clock .name{font-weight:700;font-size:.92rem}
+.clock .val{font-variant-numeric:tabular-nums;font-weight:700;text-align:right;font-size:.95rem}
+.bar{position:relative;height:22px;border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;display:block}
+#barReal i{background:var(--ink-soft)}
+#barGame i{background:var(--steel)}
+.bar svg{position:absolute;inset:0;width:100%;height:100%}
+.bar line{stroke:var(--ink);stroke-width:1.5}
+.fbadge{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 8px 7.5em;padding-left:10px;font-size:.9rem;color:var(--ink-soft)}
+.fbadge b{font-family:var(--serif);font-size:1.25rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.clockfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:.86rem;color:var(--ink-soft)}
+@media (max-width:560px){
+  .clock{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n v" "b b";row-gap:4px}
+  .clock .name{grid-area:n}.clock .val{grid-area:v}.clock .bar{grid-area:b}
+  .fbadge{margin-left:0;padding-left:0}
+}
+/* chart + numbers */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:14px;align-items:start}
+@media (max-width:700px){.split{grid-template-columns:minmax(0,1fr)}}
+svg.chart{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink-soft);font-size:11px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.nums{display:grid;grid-template-columns:1fr;gap:8px}
+@media (max-width:700px){.nums{grid-template-columns:1fr 1fr}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.22rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block;line-height:1.3}
+.nums h3{grid-column:1/-1;margin:6px 0 0;font:700 .78rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+/* controls */
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 20px;margin-top:4px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:minmax(0,1fr)}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.invented{border:1.5px dashed var(--ochre);border-radius:10px;padding:4px 10px 8px}
+.tag{display:inline-block;font:700 .72rem var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--ochre);margin-top:6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.ghost{border-color:var(--ink-soft)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.ctl label.toggle{display:flex;justify-content:flex-start;align-items:center;gap:10px;margin-top:14px;font-weight:600}
+.toggle input{width:18px;height:18px;accent-color:var(--steel)}
+.ctrlbox{margin-top:6px}
+.note{font-family:var(--serif);font-size:.96rem;margin:10px 0 0;max-width:72ch}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:860px){.tables{grid-template-columns:minmax(0,1fr)}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{white-space:normal;vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+footer p{margin:0 0 8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO302 MMO Server Architecture · Week 12 · Worked example</p>
+  <h1>Time dilation trades speed for order</h1>
+  <p class="lede" id="caption">3,000 pilots at 10% speed: every command waits 9.9 s. Without time dilation, after one minute it waits 9 minutes.</p>
+</header>
+
+<section class="panel" aria-labelledby="clkTitle">
+  <figure>
+    <figcaption><span id="clkTitle">Two clocks on one node</span><small id="clkSub">Real time fills over a 60-second loop. Game time fills at speed f. Marks on the real bar are server ticks: a command waits for the next one.</small></figcaption>
+    <div class="clock">
+      <span class="name">Real time</span>
+      <div class="bar" id="barReal"><i></i><svg aria-hidden="true" id="tickMarks"></svg></div>
+      <span class="val" id="vReal">0.0 s</span>
+    </div>
+    <div class="fbadge" aria-live="polite"><span>speed</span> <b id="fBig">f = 10.1%</b> <span id="fRatio">1 game-second = 9.9 real seconds</span></div>
+    <div class="clock">
+      <span class="name">Game time</span>
+      <div class="bar" id="barGame"><i></i></div>
+      <span class="val" id="vGame">0.0 s</span>
+    </div>
+    <div class="clockfoot">
+      <span id="clkText">In 60 real seconds, 6.1 game seconds pass.</span>
+      <button class="chip ghost" id="play" aria-pressed="false">Pause clocks</button>
+    </div>
+  </figure>
+</section>
+
+<section class="panel" aria-labelledby="chTitle">
+  <div class="split">
+    <figure>
+      <figcaption><span id="chTitle">Command delay during the fight</span><small id="chSub">Real seconds before a new command takes effect, log scale</small></figcaption>
+      <div id="chartBox"><svg class="chart" id="chart" role="img" aria-label="Command delay against real time, with and without time dilation"></svg></div>
+      <div class="legend" id="legend"></div>
+    </figure>
+    <div class="nums" aria-live="polite" id="nums">
+      <h3>Steady state</h3>
+      <div class="stat" style="--c:var(--ink)"><b id="nW">9.90</b><span>W(n), CPU-s per game-second</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nF">10.1%</b><span>f, game speed</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nR">9.90</b><span>real s per game s</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="nFight">99.0 min</b><span>real time for a 10-minute game-time fight</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="nG">0.00</b><span>backlog growth, CPU-s per real s</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="nNo60">535 s</b><span>delay without dilation at t = 60 s</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="n1">861</b><span>dilation starts, n&#8321; = pilots_at(C)</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="n2">3,016</b><span>floor reached, n&#8322; = pilots_at(C / f_min)</span></div>
+      <h3 class="ctrlOnly" hidden>Controller run</h3>
+      <div class="stat ctrlOnly" hidden style="--c:var(--steel)"><b id="cWorst">24.0</b><span>worst backlog, this aim (CPU-s)</span></div>
+      <div class="stat ctrlOnly" hidden style="--c:var(--steel)"><b id="cEnd">24.0</b><span>backlog at 600 s, this aim</span></div>
+      <div class="stat ctrlOnly" hidden style="--c:var(--ink-soft)"><b id="cWorst100">24.0</b><span>worst backlog, aim 100%</span></div>
+      <div class="stat ctrlOnly" hidden style="--c:var(--ink-soft)"><b id="cEnd100">24.0</b><span>backlog at 600 s, aim 100%</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-label="Controls">
+  <div class="controls">
+    <div class="ctl">
+      <label for="n">Pilots in the system, n <output id="oN">3,000</output></label>
+      <input id="n" type="range" min="100" max="5000" step="10" value="3000">
+      <label for="cap">Node capacity C, CPU-s per real s <output id="oC">1 (1 core)</output></label>
+      <input id="cap" type="range" min="0.5" max="8" step="0.5" value="1">
+      <label for="floor">Floor f_min <output id="oFl">10%</output></label>
+      <input id="floor" type="range" min="0.02" max="1" step="0.01" value="0.1">
+    </div>
+    <div class="ctl">
+      <div class="invented">
+        <span class="tag">Invented teaching constants</span>
+        <label for="a">Per-pilot cost a (ms) <output id="oA">0.3</output></label>
+        <input id="a" type="range" min="0.1" max="2" step="0.1" value="0.3">
+        <label for="b">Per-pair cost b (&micro;s) <output id="oB">1.0</output></label>
+        <input id="b" type="range" min="0.2" max="5" step="0.1" value="1">
+        <p class="note" style="font-size:.84rem;margin-top:4px">Chosen so the numbers are easy to check. They are not CCP's measured costs, which CCP has not published in this form.</p>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lbl" style="font-weight:600;font-size:.92rem">Presets</span>
+      <div class="presets" role="group" aria-label="Presets">
+        <button class="chip" data-n="4070">6VDT-H scale (4,070)</button>
+        <button class="chip" data-n="2670">B-R5RB peak (2,670)</button>
+        <button class="chip" data-c="2">Everest node (C = 2)</button>
+        <button class="chip ghost" id="reset">Lecture defaults</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="ctrl"> Show controller (section 3)</label>
+      <div class="ctrlbox" id="ctrlBox" hidden>
+        <label for="alpha">Smoothing &alpha; <output id="oAl">0.20</output></label>
+        <input id="alpha" type="range" min="0.05" max="1" step="0.05" value="0.2">
+        <label for="aim">Aim, share of C <output id="oAim">100%</output></label>
+        <input id="aim" type="range" min="70" max="100" step="1" value="100">
+      </div>
+    </div>
+  </div>
+  <p class="note" id="presetNote"></p>
+  <div class="insight" id="insight"></div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <table>
+        <caption>Steady state by crowd size (current constants)</caption>
+        <thead><tr><th>Pilots</th><th>Work</th><th>Speed</th><th>Real s per game s</th><th>Backlog growth</th></tr></thead>
+        <tbody id="tbN"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption id="tbTCap">Without dilation at 3,000 pilots</caption>
+        <thead><tr><th>Real time</th><th>Backlog, no dilation</th><th>Delay, no dilation</th><th>Delay, dilation</th></tr></thead>
+        <tbody id="tbT"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Model: W = a&middot;n + b&middot;n&sup2;, f = clamp(C / W, f_min, 1), backlog growth = max(0, f&middot;W &minus; C), command delay = backlog / C + 1 / f. Controller, one step per real second: f &larr; f + &alpha;(clamp(aim&middot;C / W, f_min, 1) &minus; f), then backlog &larr; max(0, backlog + f&middot;W &minus; C), with 500 pilots rising to n at t = 10 s.</p>
+  <p>The cost constants a and b are invented for teaching. The real-game facts are from CCP Veritas, "Introducing Time Dilation (TiDi)" (EVE Online dev blog, April 2011); CCP Logibro, "Battle for 6VDT-H: summary and numbers" (July 2013, 4,070 pilots, one-tenth speed); Wikipedia, "Battle of B-R5RB" (January 2014, peak 2,670 in system); CCP Gun Show, "Tranquility Tech III" (October 2015, Everest nodes); EVE University Wiki, "Time dilation" (10% floor). Nothing on this page measures CCP's servers.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmt=(x,d=0)=>x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=x=>(x*100).toFixed(1)+'%';
+const S={n:3000,C:1,fl:0.1,a:0.3,b:1,ctrl:false,alpha:0.2,aim:100};
+const DEF=Object.assign({},S);
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+
+// ---- model ----
+const A=()=>S.a/1000, B=()=>S.b/1e6;
+const W=n=>A()*n+B()*n*n;
+const speed=n=>Math.max(S.fl,Math.min(1,S.C/W(n)));
+const growth=n=>Math.max(0,speed(n)*W(n)-S.C);
+const pilotsAt=w=>(-A()+Math.sqrt(A()*A()+4*B()*w))/(2*B());
+const delayWith=t=>growth(S.n)*t/S.C+1/speed(S.n);
+const delayWithout=t=>Math.max(1,(W(S.n)-S.C)*t/S.C+1);
+function runCtrl(aimPct){
+  const aim=aimPct/100;let f=1,bl=0,worst=0;const pts=[[0,0]],fs=[];
+  for(let t=0;t<600;t++){
+    const nn=t<10?500:S.n,w=W(nn);
+    const target=Math.max(S.fl,Math.min(1,aim*S.C/w));
+    f=f+S.alpha*(target-f);
+    bl=Math.max(0,bl+f*w-S.C);worst=Math.max(worst,bl);
+    pts.push([t+1,bl]);fs.push(f);
+  }
+  return {pts,worst,end:bl,fEnd:fs[fs.length-1]};
+}
+const cleanZero=x=>Math.abs(x)<5e-10?0:x;
+
+// ---- chart ----
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;parent&&parent.appendChild(e);return e;}
+function niceMax(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*m).find(x=>x>=v*1.02);}
+function drawChart(){
+  const svg=$('chart'),box=$('chartBox');
+  const w=Math.max(260,box.clientWidth),h=w<500?250:300;
+  svg.setAttribute('width',w);svg.setAttribute('height',h);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  svg.innerHTML='';
+  const pad={l:w<500?46:56,r:12,t:12,b:36};
+  const iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  const X=t=>pad.l+iw*t/600;
+  let Y,yTicks,yFmt;
+  const legend=[];
+  if(!S.ctrl){
+    const lo=0,hi=4;Y=v=>pad.t+ih*(1-(Math.log10(Math.min(Math.max(v,1),1e4))-lo)/(hi-lo));
+    yTicks=[1,10,100,1000,10000];yFmt=v=>fmt(v)+' s';
+  }else{
+    var r=runCtrl(S.aim),r100=runCtrl(100);
+    const vmax=Math.max(r.worst,r100.worst,1)*1.05,mg=Math.pow(10,Math.floor(Math.log10(vmax/4))),st=[1,2,2.5,5,10].map(k=>k*mg).find(x=>x*4>=vmax),ym=st*4;
+    Y=v=>pad.t+ih*(1-Math.min(v,ym)/ym);
+    yTicks=[0,1,2,3,4].map(i=>ym*i/4);yFmt=v=>fmt(v,v%1?1:0);
+  }
+  const clipId='clip12';const defs=el('defs',{},svg);const cp=el('clipPath',{id:clipId},defs);el('rect',{x:pad.l,y:pad.t-2,width:iw,height:ih+4},cp);
+  yTicks.forEach(v=>{const y=Y(v);el('line',{x1:pad.l,x2:w-pad.r,y1:y,y2:y,style:'stroke:var(--grid)'},svg);el('text',{x:pad.l-6,y:y+4,'text-anchor':'end'},svg,yFmt(v));});
+  (w<500?[0,200,400,600]:[0,120,240,360,480,600]).forEach(t=>{const x=X(t);el('line',{x1:x,x2:x,y1:pad.t,y2:pad.t+ih,style:'stroke:var(--grid)'},svg);el('text',{x:x,y:h-pad.b+16,'text-anchor':t===600?'end':t===0?'start':'middle'},svg,t+' s');});
+  el('text',{x:w-pad.r,y:h-4,'text-anchor':'end'},svg,'real time into the fight');
+    const g=el('g',{'clip-path':`url(#${clipId})`},svg);
+  const path=(pts,style)=>el('path',{d:pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join(''),fill:'none',style},g);
+  if(!S.ctrl){
+    const y60=Y(60);
+    el('line',{x1:pad.l,x2:w-pad.r,y1:y60,y2:y60,style:'stroke:var(--ochre);stroke-width:1.5','stroke-dasharray':'6 5'},svg);
+    el('text',{x:w-pad.r-4,y:y60-5,'text-anchor':'end',style:'fill:var(--ochre);font-weight:700'},svg,'one minute');
+    const pw=[],pn=[];for(let t=0;t<=600;t+=2){pw.push([t,delayWith(t)]);pn.push([t,delayWithout(t)]);}
+    path(pn,'stroke:var(--blood);stroke-width:3');
+    path(pw,'stroke:var(--steel);stroke-width:3');
+    // markers at t=60
+    [[delayWithout(60),'--blood'],[delayWith(60),'--steel']].forEach(([v,c],i)=>{
+      const x=X(60),y=Y(v);
+      el('circle',{cx:x,cy:y,r:5,style:`fill:var(${c});stroke:var(--paper-2);stroke-width:2`},svg);
+      const lbl=v>=1e4?'> 10,000 s':(v<100?fmt(v,1):fmt(v))+' s';
+      el('text',{x:x+8,y:y+17,style:`fill:var(${c});font-weight:700;font-size:12px`},svg,lbl);
+    });
+    $('legend').innerHTML='<span><i style="background:var(--steel)"></i>With dilation</span><span><i style="background:var(--blood)"></i>Without dilation</span><span><i style="background:var(--ochre)"></i>One minute</span>';
+    $('chSub').textContent='Real seconds before a new command takes effect, log scale 1 to 10,000 s';
+    $('chTitle').textContent='Command delay during the fight';
+  }else{
+    const r=runCtrl(S.aim),r100=runCtrl(100);
+    el('line',{x1:X(10),x2:X(10),y1:pad.t,y2:pad.t+ih,style:'stroke:var(--ink-soft)','stroke-dasharray':'3 4'},svg);
+    el('text',{x:X(10)+5,y:pad.t+ih-6,'text-anchor':'start'},svg,'warp-in, t = 10 s');
+    if(S.aim!==100)path(r100.pts,'stroke:var(--ink-soft);stroke-width:2;stroke-dasharray:7 5');
+    path(r.pts,'stroke:var(--steel);stroke-width:3');
+    $('legend').innerHTML='<span><i style="background:var(--steel)"></i>Backlog, aim '+S.aim+'%</span>'+(S.aim!==100?'<span><i style="border-top:3px dashed var(--ink-soft);height:0"></i>Same &alpha;, aim 100%</span>':'');
+    $('chSub').textContent='500 pilots, then '+fmt(S.n)+' warp in at t = 10 s. Backlog in CPU-s, one controller step per real second.';
+    $('chTitle').textContent='Controller backlog during the fight';
+  }
+}
+
+// ---- clocks ----
+let t0=performance.now(),paused=false,pausedAt=0;
+function drawTicks(){
+  const svg=$('tickMarks');svg.innerHTML='';
+  const f=speed(S.n),step=1/f;
+  svg.setAttribute('viewBox','0 0 600 10');svg.setAttribute('preserveAspectRatio','none');
+  for(let s=step;s<60-1e-9;s+=step){const x=(s/60*600).toFixed(2);el('line',{x1:x,x2:x,y1:0,y2:10,'vector-effect':'non-scaling-stroke'},svg);}
+}
+function setClock(real){
+  const f=speed(S.n),game=real*f;
+  $('barReal').firstElementChild.style.width=(real/60*100)+'%';
+  $('barGame').firstElementChild.style.width=(game/60*100)+'%';
+  $('vReal').textContent=real.toFixed(1)+' s';$('vGame').textContent=game.toFixed(1)+' s';
+}
+function frame(now){
+  if(!paused&&!reduced.matches){const real=((now-t0)/1000)%60;setClock(real);}
+  requestAnimationFrame(frame);
+}
+function staticClock(){setClock(60);}
+function syncMotion(){
+  if(reduced.matches){staticClock();$('play').hidden=true;}
+  else{$('play').hidden=false;if(paused)staticClock();}
+}
+$('play').addEventListener('click',()=>{
+  paused=!paused;$('play').setAttribute('aria-pressed',paused);$('play').textContent=paused?'Play clocks':'Pause clocks';
+  if(paused){pausedAt=performance.now();staticClock();}else{t0=performance.now();}
+});
+reduced.addEventListener&&reduced.addEventListener('change',syncMotion);
+
+// ---- readouts ----
+function update(){
+  const n=S.n,w=W(n),f=speed(n),gr=growth(n),n1=pilotsAt(S.C),n2=pilotsAt(S.C/S.fl);
+  $('oN').textContent=fmt(n);
+  $('oC').textContent=fmt(S.C,S.C%1?1:0)+(S.C===1?' (1 core)':' ('+fmt(S.C,S.C%1?1:0)+' × one core)');
+  $('oFl').textContent=Math.round(S.fl*100)+'%';
+  $('oA').textContent=S.a.toFixed(1);$('oB').textContent=S.b.toFixed(1);
+  $('oAl').textContent=S.alpha.toFixed(2);$('oAim').textContent=S.aim+'%';
+  $('nW').textContent=w.toFixed(2);$('nF').textContent=pct(f);$('nR').textContent=(1/f).toFixed(2);
+  $('nFight').textContent=(10/f).toFixed(1)+' min';$('nG').textContent=gr.toFixed(2);
+  const d60=delayWithout(60);$('nNo60').textContent=(d60<100?fmt(d60,1):fmt(d60))+' s';
+  $('n1').textContent=fmt(n1);$('n2').textContent=fmt(n2);
+  $('fBig').textContent='f = '+pct(f);
+  $('fRatio').textContent='1 game-second = '+(1/f).toFixed(2).replace(/\.?0+$/,'')+' real second'+(f===1?'':'s');
+  $('clkText').textContent=`In 60 real seconds, ${(60*f).toFixed(1)} game seconds pass (1 : ${(1/f).toFixed(2).replace(/\.?0+$/,'')}).`;
+  drawTicks();if(reduced.matches||paused)staticClock();
+
+  // caption (first-screen insight)
+  const dw=delayWith(60),mins=d60/60;
+  const fShow=Math.round(f*100)+'%';
+  let cap;
+  if(W(n)<=S.C) cap=`${fmt(n)} pilots fit at full speed: every command waits one tick, 1 s. No dilation needed yet.`;
+  else cap=`${fmt(n)} pilots at ${fShow} speed: every command waits ${gr>0?'at least ':''}${(1/f).toFixed(1)} s${gr>0?' and the wait grows':''}. Without time dilation, after one minute it waits ${mins>=1.5?fmt(Math.round(mins))+' minutes':fmt(d60,0)+' s'}.`;
+  $('caption').textContent=cap;
+
+  // insight
+  let s;
+  if(S.ctrl){
+    const r=runCtrl(S.aim),r100=runCtrl(100);
+    [['cWorst',r.worst],['cEnd',r.end],['cWorst100',r100.worst],['cEnd100',r100.end]].forEach(([id,v])=>$(id).textContent=cleanZero(v).toFixed(1));
+    s=`&alpha; = ${S.alpha.toFixed(2)}, aim ${S.aim}%: the backlog peaks at <b>${cleanZero(r.worst).toFixed(1)} CPU-s</b> while the controller catches up with the warp-in, and is <b>${cleanZero(r.end).toFixed(1)}</b> at 600 s. `;
+    if(S.aim===100) s+= r.end>0.05?`Aimed at 100%, the node never has spare capacity, so the debt stays. Lower the aim to 90% and watch it get repaid.`:`No debt built up: the controller followed the load closely enough.`;
+    else s+=`At aim 100% the same controller ends at ${cleanZero(r100.end).toFixed(1)}. The price of the lower aim is a fight that runs ${100-S.aim}% slower than it had to.`;
+    if(speed(n)*W(n)>S.C) s+=` Past the floor (${fmt(n2)} pilots) no aim can help: the backlog grows ${gr.toFixed(2)} CPU-s every second.`;
+  }else if(W(n)<=S.C){
+    s=`Below ${fmt(n1)} pilots the node keeps up at full speed. Both lines sit at 1 s. Drag the pilot slider past ${fmt(n1)} to start dilation.`;
+  }else if(gr<=0){
+    s=`Between ${fmt(n1)} and ${fmt(n2)} pilots the node slows the clock so that f &times; W = C exactly. The blue line stays flat at 1 / f = <b>${(1/f).toFixed(2)} s</b> for everyone, forever. The red line is the same node trying to run at full speed: it falls ${(W(n)-S.C).toFixed(2)} CPU-s further behind every second, and whose command gets served is close to arbitrary.`;
+  }else{
+    s=`Past ${fmt(n2)} pilots the floor binds. Even at ${Math.round(S.fl*100)}% speed the node is asked for ${(f*w).toFixed(2)} CPU-s per real second and has ${fmt(S.C,S.C%1?1:0)}. The backlog grows ${gr.toFixed(2)} CPU-s every second, so the blue line climbs too, only later and slower than the red one. This is the edge of what one node can do.`;
+  }
+  if(S.C!==1&&!S.ctrl){const k=S.C;s+=` With C = ${fmt(k,k%1?1:0)} the floor bites at ${fmt(n2)} pilots, ${(n2/pilotsAt(1/S.fl)).toFixed(2)}&times; the one-core figure, not ${fmt(k,k%1?1:0)}&times;, because work grows with the square of the crowd.`;}
+  $('insight').innerHTML=s;
+
+  document.querySelectorAll('.ctrlOnly').forEach(e=>e.hidden=!S.ctrl);
+  $('ctrlBox').hidden=!S.ctrl;
+
+  // tables
+  const rows=[500,1000,1500,2000,2670,3000,3500];if(!rows.includes(n)){rows.push(n);rows.sort((x,y)=>x-y);}
+  $('tbN').innerHTML=rows.map(k=>{const wk=W(k),fk=speed(k);return `<tr class="${k===n?'here':''}"><td>${fmt(k)}</td><td>${wk.toFixed(2)}</td><td>${pct(fk)}</td><td>${(1/fk).toFixed(2)}</td><td>${growth(k).toFixed(2)} s</td></tr>`;}).join('');
+  $('tbTCap').textContent=`Falling behind at ${fmt(n)} pilots`;
+  $('tbT').innerHTML=[[1,'1 s'],[10,'10 s'],[60,'60 s'],[600,'10 min']].map(([t,l])=>{
+    const bl=Math.max(0,(w-S.C)*t),dn=delayWithout(t),dd=delayWith(t);
+    const dnS=dn>=600?`${fmt(dn)} s (${fmt(dn/60)} min)`:(dn<10?fmt(dn,1):fmt(dn))+' s';
+    return `<tr class="${t===60?'here':''}"><td>${l}</td><td>${bl<10?fmt(bl,1):fmt(bl)} CPU-s</td><td>${dnS}</td><td>${dd<100?fmt(dd,1):fmt(dd)} s</td></tr>`;}).join('');
+  drawChart();
+}
+
+// ---- controls ----
+const bind=(id,key,parse)=>$(id).addEventListener('input',e=>{S[key]=parse(e.target.value);clearPresets();update();});
+bind('n','n',v=>+v);bind('cap','C',v=>+v);bind('floor','fl',v=>+v);bind('a','a',v=>+v);bind('b','b',v=>+v);bind('alpha','alpha',v=>+v);bind('aim','aim',v=>+v);
+$('ctrl').addEventListener('change',e=>{S.ctrl=e.target.checked;update();});
+function clearPresets(){document.querySelectorAll('.presets .chip').forEach(c=>c.setAttribute('aria-pressed','false'));}
+function syncInputs(){$('n').value=S.n;$('cap').value=S.C;$('floor').value=S.fl;$('a').value=S.a;$('b').value=S.b;$('alpha').value=S.alpha;$('aim').value=S.aim;$('ctrl').checked=S.ctrl;}
+const notes={
+  4070:()=>`6VDT-H (July 2013): CCP reported 4,070 pilots and one-tenth speed for most of the battle, with the node staying up. With our invented constants, 4,070 pilots is past the floor and the backlog grows ${growth(4070).toFixed(2)} CPU-s per second. The constants are ours, so treat this as an illustration, not a measurement of CCP's servers.`,
+  2670:()=>`B-R5RB (January 2014): a 21-hour fight with a peak of 2,670 pilots in the system. With the invented constants it runs at ${pct(speed(2670))} speed, inside the dilation range and above the floor.`,
+  C2:()=>`CCP's 2015 hardware post described one high-end "Everest" node for the biggest fights, with six planned. Doubling C moves the floor from ${fmt(pilotsAt(1/S.fl*1))} to ${fmt(pilotsAt(2/S.fl))} pilots at the current constants. The square takes most of the gain.`
+};
+document.querySelectorAll('.presets .chip[data-n],.presets .chip[data-c]').forEach(b=>b.addEventListener('click',()=>{
+  clearPresets();b.setAttribute('aria-pressed','true');
+  if(b.dataset.n){S.n=+b.dataset.n;}else{S.C=+b.dataset.c;}
+  syncInputs();update();
+  $('presetNote').textContent=b.dataset.n?notes[b.dataset.n]():notes.C2();
+}));
+$('reset').addEventListener('click',()=>{Object.assign(S,DEF);clearPresets();syncInputs();$('presetNote').textContent='';update();});
+
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,80);});
+syncMotion();update();requestAnimationFrame(frame);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawChart);
+// test hook
+window.__w12={S,update,syncInputs,W,speed,growth,pilotsAt,runCtrl,delayWithout,delayWith};
+})();
+</script>
+</body>
+</html>

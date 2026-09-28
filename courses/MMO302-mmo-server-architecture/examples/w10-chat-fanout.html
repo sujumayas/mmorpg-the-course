@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chat fan-out cost · MMO302 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1100px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+@media (max-width:600px){.panel{padding:12px}}
+.caption{font-family:var(--serif);font-size:1.12rem;margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:4px solid var(--blood)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:699px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px;touch-action:pan-y;cursor:ew-resize}
+.readout{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.budget{margin:10px 0 0;padding:9px 12px;border-radius:8px;font-weight:600;border:1.5px solid var(--moss)}
+.budget.over{border-color:var(--blood);color:var(--blood)}
+.budget small{display:block;font-weight:400;color:var(--ink-soft)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 0}
+.chip{font:600 .86rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{background:var(--paper-2)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 22px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.step label{font-weight:600;font-size:.86rem;display:block;margin-bottom:3px}
+.step div{display:flex;align-items:stretch}
+.step button{font:700 1rem var(--sans);width:34px;border:1.5px solid var(--ink);background:var(--paper-2);color:var(--ink);cursor:pointer}
+.step button:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+.step button:last-child{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.step input,.num{font:600 .95rem var(--sans);width:100%;min-width:0;padding:5px 6px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);text-align:center;font-variant-numeric:tabular-nums}
+.step input{border-left:0;border-right:0;border-radius:0}
+.num{border-radius:var(--radius-sm);width:7.5em;text-align:right}
+.row{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.86rem;color:var(--ink-soft)}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:2px 0 0}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:600px){table{font-size:.78rem}th,td{padding:5px 4px}th{white-space:normal;vertical-align:bottom}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO302 MMO Server Architecture · Week 10 · Worked example</p>
+  <h1>Readers pay for L. The server pays for L².</h1>
+  <p class="lede">Every post in a channel of <b>L</b> members is copied to the other <b>L − 1</b>. Posts grow with L, so copies grow with L². Splitting the channel cuts both. Parallel workers only shorten the wait for one post.</p>
+</header>
+
+<section class="panel">
+  <p class="caption" id="caption"></p>
+  <div class="charts">
+    <figure>
+      <figcaption>What a reader sees<small>Messages per second in one member's window, m<sub>c</sub> = q × L / k. Linear in L; the log x axis bends it.</small></figcaption>
+      <canvas id="cRead" tabindex="0" role="img" aria-label="Messages per second a reader sees against channel members. Arrow keys change members."></canvas>
+    </figure>
+    <figure>
+      <figcaption>What the server sends<small>Copies per second, D = q × L × (L / k − 1). Log-log, so the slope of 2 is the square.</small></figcaption>
+      <canvas id="cSend" tabindex="0" role="img" aria-label="Copies per second the server sends against channel members, log scale, with the core budget line. Arrow keys change members."></canvas>
+    </figure>
+  </div>
+
+  <div aria-live="polite">
+    <div class="readout">
+      <div class="stat" style="--c:var(--steel)"><b id="rPosts">—</b><span>posts in per second, q × L</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rD">—</b><span>copies per second, D</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rCores">—</b><span>cores, D × t<sub>send</sub></span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rMbit">—</b><span>outbound Mbit/s</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rDelay">—</b><span>one-post delay</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="rMc">—</b><span>messages/s one reader sees</span></div>
+    </div>
+    <p class="budget" id="budget"></p>
+  </div>
+
+  <div class="presets" role="group" aria-label="Presets">
+    <button class="chip" type="button" id="pr1">MMO305 channel (L = 3,000)</button>
+    <button class="chip" type="button" id="pr2">Discord 2017 (L = 30,000, q = 0.000833, t<sub>send</sub> = 50 µs)</button>
+    <button class="chip" type="button" id="pr3">Split 100 ways</button>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="lIn">Channel members L <output id="oL">3,000</output></label>
+      <input id="lIn" type="range" min="0" max="1000" step="1" value="0">
+      <div class="row"><label for="lNum" style="font-weight:600;color:var(--ink)">Exact L</label><input class="num" id="lNum" type="number" min="100" max="50000" step="1" value="3000"></div>
+    </div>
+    <div class="ctl">
+      <label for="qIn"><span>Posts per member q</span> <output id="oQ">—</output></label>
+      <input id="qIn" type="range" min="0" max="1000" step="1" value="0">
+      <p class="hint" id="qHint"></p>
+      <label for="tIn" style="margin-top:10px"><span>Cost per copy t<sub>send</sub></span> <output id="oT">50 µs</output></label>
+      <input id="tIn" type="range" min="10" max="100" step="1" value="50">
+    </div>
+    <div class="steps">
+      <div class="step"><label for="kIn">Split k</label><div><button type="button" data-for="kIn" data-d="-1" aria-label="Decrease k">−</button><input id="kIn" type="number" min="1" max="100" step="1" value="1"><button type="button" data-for="kIn" data-d="1" aria-label="Increase k">+</button></div></div>
+      <div class="step"><label for="bIn">Core budget</label><div><button type="button" data-for="bIn" data-d="-1" aria-label="Decrease core budget">−</button><input id="bIn" type="number" min="1" max="64" step="1" value="4"><button type="button" data-for="bIn" data-d="1" aria-label="Increase core budget">+</button></div></div>
+      <div class="step"><label for="pIn">Fan-out workers P</label><div><button type="button" data-for="pIn" data-d="-1" aria-label="Decrease workers">−</button><input id="pIn" type="number" min="1" max="64" step="1" value="1"><button type="button" data-for="pIn" data-d="1" aria-label="Increase workers">+</button></div></div>
+      <div class="step"><label for="sIn">Bytes per copy S</label><div><button type="button" data-for="sIn" data-d="-50" aria-label="Decrease bytes">−</button><input id="sIn" type="number" min="50" max="1000" step="50" value="200"><button type="button" data-for="sIn" data-d="50" aria-label="Increase bytes">+</button></div></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Fan-out cost at five channel sizes, current settings">
+      <thead><tr><th>L</th><th>posts/s</th><th>copies/s</th><th>cores</th><th>Mbit/s</th><th>one post, ms</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model and numbers from the lecture. Default q = 0.05 posts per member per minute (MMO305 week 10: one member in ten posts, one message per two minutes). t<sub>send</sub> = 50 µs is the middle of the 30 to 70 µs per send that Discord Engineering reported in "How Discord Scaled Elixir to 5,000,000 Concurrent Users" (July 2017), for guilds of up to 30,000 connected members. Reading budget R = 20 messages per minute, from MMO305. Generic shapes only.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const nf=(v,d)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const Q0=0.05/60, R=20, LMIN=100, LMAX=50000, QMIN=1e-4, QMAX=1e-2;
+const S={L:3000,q:Q0,k:1,t:50,b:4,P:1,S:200};
+
+function calc(L,s){
+  s=s||S;const posts=s.q*L,n=L/s.k,D=Math.max(0,posts*(n-1)),ts=s.t*1e-6;
+  return {posts,n,D,cores:D*ts,mbit:D*s.S*8/1e6,delay:Math.max(0,n-1)*ts/s.P*1000,mc:s.q*L/s.k};
+}
+const lToS=L=>1000*Math.log(L/LMIN)/Math.log(LMAX/LMIN), sToL=s=>Math.round(LMIN*Math.pow(LMAX/LMIN,s/1000));
+const qToS=q=>1000*Math.log(q/QMIN)/Math.log(QMAX/QMIN), sToQ=s=>QMIN*Math.pow(QMAX/QMIN,s/1000);
+// Round half to even, as Python's format() does, so the table matches the lecture's printout.
+const rEven=v=>{const f=Math.floor(v);return v-f===0.5?(f%2===0?f:f+1):Math.round(v);};
+const fmtPosts=v=>nf(v,2), fmtD=v=>nf(rEven(v),0), fmtCores=v=>nf(v,2), fmtMbit=v=>nf(v,1), fmtMs=v=>nf(rEven(v),0)+' ms';
+function trim(v){return (Math.round(v*100)/100).toLocaleString('en-US');}
+
+// canvas helpers
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:54,r:14,t:26,b:34};
+const xOf=(L,w)=>pad.l+(w-pad.l-pad.r)*Math.log(L/LMIN)/Math.log(LMAX/LMIN);
+const LofX=(x,w)=>LMIN*Math.pow(LMAX/LMIN,(x-pad.l)/(w-pad.l-pad.r));
+function nice(v){const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(x=>x>=v*1.02)||v;}
+function xAxis(g,w,h){
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  [[100,'100'],[1000,'1k'],[10000,'10k'],[50000,'50k']].forEach(([L,t])=>{const x=xOf(L,w);g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.fillText(t,Math.min(x,w-pad.r-10),h-pad.b+6);});
+  g.textAlign='right';g.fillText('members L',w-pad.r,h-14);
+}
+function curve(g,w,f,Y,color,width,dash){
+  g.strokeStyle=color;g.lineWidth=width||2.5;g.setLineDash(dash||[]);g.beginPath();let started=false;
+  for(let i=0;i<=240;i++){const L=LMIN*Math.pow(LMAX/LMIN,i/240),y=Y(f(L));if(y===null){started=false;continue;}const x=xOf(L,w);started?g.lineTo(x,y):g.moveTo(x,y);started=true;}
+  g.stroke();g.setLineDash([]);
+}
+function dot(g,x,y,color){g.fillStyle=color;g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+function vline(g,x,h){g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+
+function drawRead(){
+  const c=setupCanvas($('cRead')),g=c.g,w=c.w,h=c.h;g.clearRect(0,0,w,h);
+  const yMax=Math.max(5,nice(S.q*LMAX/S.k));
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-Math.min(v,yMax*1.02)/yMax);
+  g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const v=yMax*i/4,y=Y(v);g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(trim(v),pad.l-6,y);}
+  xAxis(g,w,h);
+  curve(g,w,L=>S.q*L/S.k,Y,css('--steel'));
+  const rb=R/60,yb=Y(rb);
+  g.strokeStyle=css('--moss');g.lineWidth=2;g.setLineDash([7,5]);g.beginPath();g.moveTo(pad.l,yb);g.lineTo(w-pad.r,yb);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--moss');g.textAlign='left';g.textBaseline='bottom';g.font='600 12px '+css('--sans');const bt='reading budget, '+R+' per min',bw=g.measureText(bt).width;g.fillStyle=css('--paper-2');g.fillRect(pad.l+3,yb-26,bw+6,17);g.fillStyle=css('--moss');g.fillText(bt,pad.l+6,yb-10);
+  const x=xOf(S.L,w);vline(g,x,h);dot(g,x,Y(S.q*S.L/S.k),css('--steel'));
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('msg/s',pad.l-6-g.measureText('msg/s').width,4);
+}
+function drawSend(){
+  const c=setupCanvas($('cSend')),g=c.g,w=c.w,h=c.h;g.clearRect(0,0,w,h);
+  const lo=1,hi=7,Y=v=>{if(v<=0)return null;const e=Math.log10(v);return pad.t+(h-pad.t-pad.b)*(1-(Math.min(Math.max(e,lo-.05),hi+.05)-lo)/(hi-lo));};
+  const cap=S.b/(S.t*1e-6),yc=Y(cap);
+  if(cap<1e7){g.fillStyle=css('--blood');g.globalAlpha=.1;g.fillRect(pad.l,pad.t,w-pad.l-pad.r,Math.max(0,yc-pad.t));g.globalAlpha=1;}
+  g.font='12px '+css('--sans');
+  for(let e=lo;e<=hi;e++){const y=Y(Math.pow(10,e));g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(e<3?String(Math.pow(10,e)):e<6?Math.pow(10,e-3)+'k':Math.pow(10,e-6)+'M',pad.l-6,y);}
+  xAxis(g,w,h);
+  g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(pad.l,yc);g.lineTo(w-pad.r,yc);g.stroke();
+  g.fillStyle=css('--blood');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';
+  g.fillText(S.b+(S.b===1?' core':' cores')+' ('+fmtD(cap)+' copies/s)',pad.l+6,Math.max(pad.t+14,yc-3));
+  curve(g,w,L=>calc(L).D,Y,css('--ochre'));
+  const x=xOf(S.L,w),d=calc(S.L).D;vline(g,x,h);
+  const y=Y(Math.max(d,10));dot(g,x,y,css('--ochre'));
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('copies/s',Math.max(2,pad.l-6-g.measureText('copies/s').width),4);
+}
+
+function update(){
+  const r=calc(S.L);
+  $('rPosts').textContent=fmtPosts(r.posts);$('rD').textContent=fmtD(r.D);$('rCores').textContent=fmtCores(r.cores);
+  $('rMbit').textContent=fmtMbit(r.mbit);$('rDelay').textContent=fmtMs(r.delay);$('rMc').textContent=fmtPosts(r.mc);
+  const over=r.cores-S.b,bud=$('budget');
+  const busy=(r.posts/S.k)*r.delay/1000;
+  const behind=busy>1?` One channel's sender is busy ${nf(busy,1)} s every second, so it falls behind by ${nf(busy-1,1)} s of work each second.`:` One channel's sender is busy ${nf(busy*100,0)}% of each second.`;
+  if(over>0){bud.className='budget over';bud.innerHTML=`Warning: over budget by ${fmtCores(over)} cores. D needs ${fmtCores(r.cores)} of your ${S.b}.<small>${behind.trim()}</small>`;}
+  else{bud.className='budget';bud.innerHTML=`Within budget: ${fmtCores(r.cores)} of ${S.b} cores (${nf(100*r.cores/S.b,0)}%).<small>${behind.trim()}</small>`;}
+  // caption
+  const ch=S.k>1?` split into ${S.k} channels of ${nf(Math.round(r.n),0)}`:'';
+  let cap=`${nf(S.L,0)} members${ch}: ${trim(r.posts)} posts a second in, ${fmtD(r.D)} copies a second out.`;
+  if(S.k===1&&S.L*10<=LMAX) cap+=` Drag to ${nf(S.L*10,0)}: ten times the posts, a hundred times the copies.`;
+  else if(S.k===1) cap+=` Every tenfold jump in members costs about a hundredfold in copies.`;
+  else cap+=` Splitting ${S.k} ways divides both the reader's stream and the server's copies by ${S.k}.`;
+  $('caption').textContent=cap;
+  // outputs
+  $('oL').textContent=nf(S.L,0);$('lNum').value=S.L;$('lIn').value=lToS(S.L);
+  $('oQ').textContent=S.q.toFixed(6)+' /s';$('qHint').textContent=trim(S.q*60)+' per minute, '+trim(S.q*3600)+' per hour';$('qIn').value=qToS(S.q);
+  $('oT').textContent=S.t+' µs';$('tIn').value=S.t;
+  $('kIn').value=S.k;$('bIn').value=S.b;$('pIn').value=S.P;$('sIn').value=S.S;
+  // table
+  const rows=[400,1000,3000,10000,30000].map(L=>{const x=calc(L);return `<tr class="${L===S.L?'here':''}"><td>${nf(L,0)}</td><td>${fmtPosts(x.posts)}</td><td>${fmtD(x.D)}</td><td>${fmtCores(x.cores)}</td><td>${fmtMbit(x.mbit)}</td><td>${nf(rEven(x.delay),0)}</td></tr>`;});
+  $('tbody').innerHTML=rows.join('');
+  drawRead();drawSend();
+}
+
+// controls
+$('lIn').addEventListener('input',e=>{S.L=Math.min(LMAX,Math.max(LMIN,sToL(+e.target.value)));update();});
+$('lNum').addEventListener('change',e=>{const v=Math.round(+e.target.value);if(Number.isFinite(v)){S.L=Math.min(LMAX,Math.max(LMIN,v));}update();});
+$('qIn').addEventListener('input',e=>{S.q=sToQ(+e.target.value);update();});
+$('tIn').addEventListener('input',e=>{S.t=+e.target.value;update();});
+const keyMap={kIn:'k',bIn:'b',pIn:'P',sIn:'S'};
+function setStep(id,v){const el=$(id),mn=+el.min,mx=+el.max;if(!Number.isFinite(v))return;S[keyMap[id]]=Math.min(mx,Math.max(mn,Math.round(v)));update();}
+Object.keys(keyMap).forEach(id=>$(id).addEventListener('change',e=>setStep(id,+e.target.value)));
+document.querySelectorAll('.step button').forEach(b=>b.addEventListener('click',()=>setStep(b.dataset.for,S[keyMap[b.dataset.for]]+(+b.dataset.d))));
+$('pr1').addEventListener('click',()=>{S.L=3000;S.k=1;update();});
+$('pr2').addEventListener('click',()=>{S.L=30000;S.q=Q0;S.t=50;S.k=1;S.P=1;update();});
+$('pr3').addEventListener('click',()=>{S.k=100;update();});
+['cRead','cSend'].forEach(id=>{
+  const c=$(id);let drag=false;
+  const set=e=>{const r=c.getBoundingClientRect();S.L=Math.min(LMAX,Math.max(LMIN,Math.round(LofX(e.clientX-r.left,r.width))));update();};
+  c.addEventListener('pointerdown',e=>{drag=true;c.setPointerCapture(e.pointerId);set(e);});
+  c.addEventListener('pointermove',e=>{if(drag)set(e);});
+  c.addEventListener('pointerup',()=>{drag=false;});
+  c.addEventListener('keydown',e=>{const f=e.shiftKey?1.25:1.05;let L=S.L;
+    if(e.key==='ArrowRight'||e.key==='ArrowUp')L=Math.round(L*f);else if(e.key==='ArrowLeft'||e.key==='ArrowDown')L=Math.round(L/f);else return;
+    e.preventDefault();S.L=Math.min(LMAX,Math.max(LMIN,L));update();});
+});
+
+// self-check against the lecture's table (logs to the console on load)
+(function selfTest(){
+  const base={q:Q0,k:1,t:50,P:1,S:200},want=[[400,'0.33','133','0.01','0.2','20 ms'],[1000,'0.83','832','0.04','1.3','50 ms'],[10000,'8.33','83,325','4.17','133.3','500 ms'],[3000,'2.50','7,498','0.37','12.0','150 ms'],[30000,'25.00','749,975','37.50','1,200.0','1,500 ms']];
+  let ok=true;
+  want.forEach(([L,...exp])=>{const x=calc(L,base),got=[fmtPosts(x.posts),fmtD(x.D),fmtCores(x.cores),fmtMbit(x.mbit),fmtMs(x.delay)];if(got.join('|')!==exp.join('|')){ok=false;console.error('w10 self-test failed at L='+L,got,exp);}});
+  const s1=calc(30000,Object.assign({},base,{k:100}));if(fmtD(s1.D)!=='7,475'||fmtCores(s1.cores)!=='0.37'){ok=false;console.error('w10 self-test failed for k=100',s1);}
+  const s2=calc(30000,Object.assign({},base,{P:30}));if(fmtMs(s2.delay)!=='50 ms'||fmtCores(s2.cores)!=='37.50'){ok=false;console.error('w10 self-test failed for P=30',s2);}
+  if(ok)console.info('w10 self-test: all lecture values match');
+})();
+
+window.addEventListener('resize',()=>{drawRead();drawSend();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawRead();drawSend();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawRead();drawSend();});
+update();
+})();
+</script>
+</body>
+</html>

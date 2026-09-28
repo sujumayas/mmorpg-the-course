@@ -99,16 +99,16 @@ flowchart LR
 | PR101 | stub | 0/14 | 0 (1) | 0 | 0 |
 | CS201 | stub | 0/14 | 0 (2) | 0 | 0 |
 | MA201 | stub | 0/14 | 0 (2) | 0 | 0 |
-| GD201 | stub | 14/14 | 6 (2) | 14 | 0 |
-| GD202 | stub | 13/14 | 0 (1) | 12 | 0 |
+| GD201 | stub | 14/14 | 13 (2) | 14 | 0 |
+| GD202 | stub | 14/14 | 4 (1) | 13 | 0 |
 | UX201 | finished | 14/14 | 14 (2) | 14 | 4 |
 | CS202 | finished | 14/14 | 14 (2) | 13 | 3 |
-| CS203 | stub | 2/14 | 0 (2) | 1 | 0 |
+| CS203 | stub | 5/14 | 0 (2) | 3 | 0 |
 | GD203 | finished | 14/14 | 14 (3) | 15 | 4 |
 | DB201 | finished | 14/14 | 14 (1) | 14 | 3 |
 | PR201 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO301 | finished | 14/14 | 14 (2) | 13 | 4 |
-| MMO302 | stub | 14/14 | 14 (2) | 14 | 4 |
+| MMO302 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO303 | finished | 14/14 | 15 (3) | 14 | 4 |
 | MMO304 | finished | 14/14 | 14 (3) | 12 | 4 |
 | MMO305 | finished | 14/14 | 14 (2) | 14 | 4 |
@@ -120,7 +120,7 @@ flowchart LR
 | MMO401 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO402 | finished | 14/14 | 14 (1) | 13 | 4 |
 | MMO403 | stub | 0/14 | 0 (2) | 0 | 0 |
-| MMO404 | stub | 14/14 | 11 (1) | 14 | 0 |
+| MMO404 | stub | 14/14 | 14 (1) | 14 | 1 |
 | PR401 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO405 | stub | 0/14 | 0 (1) | 0 | 0 |
 | MMO406 | stub | 0/14 | 0 (0) | 0 | 0 |
@@ -1033,7 +1033,7 @@ How thousands of players share one world: zoning, sharding, interest management,
 **Signature worked examples**
 
 - Interest management: broadcast-to-all vs grid AOI, messages per tick as players cluster (interactive)
-- EVE Online time dilation: slowing the clock to keep a 3,000-player battle consistent (verify figures)
+- EVE Online time dilation: slowing the clock to keep a 3,000-player battle consistent (verified: CCP dev blog 22 Apr 2011, 10% floor, Crucible 29 Nov 2011)
 
 **Core readings**
 

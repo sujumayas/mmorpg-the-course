@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The latency knee — MMO302 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1100px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+@media (max-width:600px){.panel{padding:12px}}
+.caption{font-family:var(--serif);font-size:1.12rem;margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:4px solid var(--blood)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:699px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px;touch-action:pan-y;cursor:ew-resize}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin:16px 0 4px}
+@media (max-width:960px){.readout{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.closed{margin:10px 0 0;padding:9px 12px;border-radius:8px;border:1.5px solid var(--ochre);font-weight:600}
+.closed small{display:block;font-weight:400;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.check{display:flex!important;align-items:center;gap:8px;justify-content:flex-start!important}
+.check input{width:18px;height:18px;accent-color:var(--ochre)}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:2px 0 0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .84rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:600px){table{font-size:.8rem}th,td{padding:5px 4px}th{white-space:normal;vertical-align:bottom}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO302 MMO Server Architecture · Week 11 · Worked example</p>
+  <h1>Utilization is a line. Latency is a wall.</h1>
+  <p class="lede">Response time follows 1 / (μ − λ), the server's spare capacity. Busy-ness grows evenly with players, but the p99 turns a corner and goes vertical near 100%.</p>
+</header>
+
+<section class="panel">
+  <p class="caption" id="caption"></p>
+  <div class="charts">
+    <figure>
+      <figcaption>How busy the server is<small>Utilization ρ = n × r / μ</small></figcaption>
+      <canvas id="cU" tabindex="0" role="img" aria-label="Utilization against bot count, a straight line. Arrow keys change the bot count."></canvas>
+    </figure>
+    <figure>
+      <figcaption>What players wait<small>Mean W = 1 / (μ − n r) and p99 = ln(100) × W, in ms</small></figcaption>
+      <canvas id="cW" tabindex="0" role="img" aria-label="Mean and p99 response time against bot count, with the SLO line and knee. Arrow keys change the bot count."></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>mean</span>
+        <span><i style="background:var(--blood)"></i>p99</span>
+        <span><i style="background:var(--moss)"></i>SLO</span>
+        <span id="lgClosed" hidden><i style="background:var(--ochre)"></i>closed-loop bot report (mean)</span>
+      </div>
+    </figure>
+  </div>
+
+  <div aria-live="polite">
+    <div class="readout">
+      <div class="stat" style="--c:var(--steel)"><b id="rLoad">—</b><span>offered load n × r, req/s</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rUtil">—</b><span>utilization ρ</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="rSpare">—</b><span>spare μ − n r, req/s</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rMean">—</b><span>mean response</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rP99">—</b><span>p99 response</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rN">—</b><span>in system, λ × W</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="rKnee">—</b><span>knee n*, most bots within SLO</span></div>
+    </div>
+    <p class="closed" id="closedTxt" hidden></p>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="nIn">Bots n <output id="oN">900</output></label>
+      <input id="nIn" type="range" min="0" max="1200" step="1" value="900">
+      <div class="presets" role="group" aria-label="Bot presets">
+        <button class="chip" type="button" data-n="200">200</button>
+        <button class="chip" type="button" data-n="800">800</button>
+        <button class="chip" type="button" data-n="900">900</button>
+        <button class="chip" type="button" data-n="980">980</button>
+      </div>
+      <p class="hint">Shift + arrow on a chart moves 10 bots.</p>
+    </div>
+    <div class="ctl">
+      <label for="sIn">Mean service time <output id="oS">2 ms</output></label>
+      <input id="sIn" type="range" min="0.5" max="10" step="0.1" value="2">
+      <p class="hint" id="muHint"></p>
+      <label for="rIn" style="margin-top:10px">Rate per bot r <output id="oR">0.5 / s</output></label>
+      <input id="rIn" type="range" min="0.1" max="2" step="0.1" value="0.5">
+      <label for="sloIn" style="margin-top:10px">SLO, p99 under <output id="oSlo">100 ms</output></label>
+      <input id="sloIn" type="range" min="20" max="500" step="5" value="100">
+    </div>
+    <div class="ctl">
+      <label class="check" for="clOn"><input type="checkbox" id="clOn"> Closed-loop bots</label>
+      <p class="hint">Each bot waits for its reply, then thinks for Z seconds before sending again.</p>
+      <label for="zIn" style="margin-top:10px">Think time Z <output id="oZ">2.0 s</output></label>
+      <input id="zIn" type="range" min="0.5" max="5" step="0.1" value="2" disabled>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Open-loop M/M/1 values at the lecture's bot counts, current settings">
+      <thead><tr><th>Bots</th><th>Load</th><th>Mean, ms</th><th>p99, ms</th><th>In system</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>M/M/1 queue: random arrivals, random service times, one worker. The closed-loop line uses exact mean-value analysis for one M/M/1 station plus a think-time delay. Coordinated omission after Gil Tene; the wrk2 load generator measures from the intended send time to avoid it. Generic shapes only.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const nf=(v,d)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+// One decimal, rounding half to even like Python's format(), so the table matches the lecture's printout.
+const nf1=v=>{const x=v*10,f=Math.floor(x),r=(x-f===0.5)?(f%2===0?f:f+1):Math.round(x);return nf(r/10,1);};
+const LN100=Math.log(100),YMAX=500;
+const S={n:900,svc:2,r:0.5,slo:100,closed:false,Z:2,zTouched:false};
+
+const mu=()=>1000/S.svc;
+const nMax=()=>Math.floor(1.2*mu()/S.r+1e-9);
+function open(n,s){s=s||S;const m=1000/s.svc,lam=n*s.r,spare=m-lam,rho=lam/m;
+  if(spare<=0)return {lam,rho,spare,W:Infinity,W99:Infinity,N:Infinity};
+  const W=1000/spare;return {lam,rho,spare,W,W99:W*LN100,N:lam*W/1000};}
+function knee(s){s=s||S;return (1000/s.svc-LN100*1000/s.slo)/s.r;}
+// exact MVA, closed network: one M/M/1 station (service Sv) + think delay Z
+function mva(N){const Sv=S.svc/1000,R=new Float64Array(N+1),X=new Float64Array(N+1);let Q=0;
+  for(let k=1;k<=N;k++){const Rk=Sv*(1+Q),Xk=k/(Rk+S.Z);Q=Xk*Rk;R[k]=Rk*1000;X[k]=Xk;}return {R,X};}
+
+// canvas
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:48,r:14,t:24,b:34};
+function niceStep(v){const raw=v/4,mag=Math.pow(10,Math.floor(Math.log10(raw)));return [1,2,2.5,5,10].map(m=>m*mag).find(x=>x>=raw)||raw;}
+function frame(g,w,h,xMax,yMax,yTicks,yFmt,unit){
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  yTicks.forEach(v=>{const y=pad.t+(h-pad.t-pad.b)*(1-v/yMax);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(v),pad.l-6,y);});
+  const st=niceStep(xMax);g.textAlign='center';g.textBaseline='top';
+  for(let v=0;v<=xMax+1e-9;v+=st){const x=pad.l+(w-pad.l-pad.r)*v/xMax;if(x>w-pad.r-14&&v!==0)continue;g.fillText(nf(v,0),x,h-pad.b+6);}
+  g.textAlign='right';g.fillText('bots',w-pad.r,h-14);
+  g.textAlign='left';g.textBaseline='top';g.fillText(unit,4,4);
+}
+function vdash(g,x,h,color,alpha){g.strokeStyle=color;g.globalAlpha=alpha;g.setLineDash([4,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+function dot(g,x,y,color){g.fillStyle=color;g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+function upArrow(g,x,color,label){const y=pad.t+2;g.fillStyle=color;g.beginPath();g.moveTo(x,y);g.lineTo(x-7,y+11);g.lineTo(x+7,y+11);g.closePath();g.fill();
+  if(label){g.font='600 12px '+css('--sans');g.textBaseline='top';const tw=g.measureText(label).width;const right=x+10+tw<g.canvas.getBoundingClientRect().width-pad.r;g.textAlign=right?'left':'right';g.fillText(label,right?x+10:x-10,y);}}
+
+function draw(){
+  const xMax=1.2*mu()/S.r;
+  // utilization
+  let c=setupCanvas($('cU')),g=c.g,w=c.w,h=c.h;
+  const X=n=>pad.l+(w-pad.l-pad.r)*n/xMax;
+  let Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/1.2);
+  frame(g,w,h,xMax,1.2,[0,.2,.4,.6,.8,1,1.2],v=>Math.round(v*100)+'%','utilization');
+  g.fillStyle=css('--blood');g.globalAlpha=.12;g.fillRect(pad.l,pad.t,w-pad.l-pad.r,Y(1)-pad.t);g.globalAlpha=1;
+  g.strokeStyle=css('--blood');g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(1));g.lineTo(w-pad.r,Y(1));g.stroke();
+  g.fillStyle=css('--blood');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('no stable queue',pad.l+6,pad.t+4);
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(xMax),Y(1.2));g.stroke();
+  const rho=S.n*S.r/mu();vdash(g,X(S.n),h,css('--ink'),.35);dot(g,X(S.n),Y(rho),css('--steel'));
+  // wait
+  c=setupCanvas($('cW'));g=c.g;w=c.w;h=c.h;
+  const Xw=n=>pad.l+(w-pad.l-pad.r)*n/xMax, Yw=v=>pad.t+(h-pad.t-pad.b)*(1-Math.min(v,YMAX)/YMAX);
+  frame(g,w,h,xMax,YMAX,[0,100,200,300,400,500],v=>String(v),'ms');
+  // SLO
+  const ys=Yw(S.slo);g.strokeStyle=css('--moss');g.lineWidth=2;g.setLineDash([7,5]);g.beginPath();g.moveTo(pad.l,ys);g.lineTo(w-pad.r,ys);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--moss');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText('SLO p99 '+S.slo+' ms',pad.l+6,ys-3);
+  // knee
+  const kn=knee();
+  if(kn>0&&kn<xMax){const xk=Xw(kn);vdash(g,xk,h,css('--moss'),.9);g.fillStyle=css('--moss');g.textBaseline='top';g.textAlign=xk>w*0.6?'right':'left';g.fillText('SLO limit',xk+(xk>w*0.6?-5:5),pad.t+18);}
+  // open-loop lines
+  const fade=S.closed?.3:1,nStop=0.995*mu()/S.r;
+  [['W',css('--steel')],['W99',css('--blood')]].forEach(([k,col])=>{
+    g.strokeStyle=col;g.lineWidth=2.5;g.globalAlpha=fade;g.beginPath();let st=false;
+    const steps=300;for(let i=0;i<=steps;i++){const n=Math.min(nStop,nStop*i/steps),v=open(n)[k];const x=Xw(n),y=Yw(v);st?g.lineTo(x,y):g.moveTo(x,y);st=true;if(v>YMAX)break;}
+    g.stroke();g.globalAlpha=1;
+  });
+  // closed-loop line
+  let mv=null;
+  if(S.closed){
+    const N=Math.ceil(xMax);mv=mva(Math.max(N,S.n));
+    g.strokeStyle=css('--ochre');g.lineWidth=3;g.beginPath();const stride=Math.max(1,Math.floor(N/400));
+    for(let k=0;k<=N;k+=stride){const x=Xw(k),y=Yw(k?mv.R[k]:S.svc);k?g.lineTo(x,y):g.moveTo(x,y);}
+    g.stroke();
+  }
+  // markers
+  const o=open(S.n),xn=Xw(S.n);vdash(g,xn,h,css('--ink'),.35);
+  if(S.closed){const rv=mv.R[S.n]||0;if(rv>YMAX)upArrow(g,xn,css('--ochre'),nf(rv,0)+' ms');else dot(g,xn,Yw(rv),css('--ochre'));}
+  else{
+    if(o.W99>YMAX)upArrow(g,xn,css('--blood'),isFinite(o.W99)?'p99 '+nf(o.W99,0)+' ms':'unbounded');
+    else{dot(g,xn,Yw(o.W),css('--steel'));dot(g,xn,Yw(o.W99),css('--blood'));}
+  }
+  return mv;
+}
+
+function msTxt(v){return isFinite(v)?nf1(v)+' ms':'unbounded';}
+function update(){
+  const mv=draw(),o=open(S.n);
+  $('rLoad').textContent=nf(o.lam,0);$('rUtil').textContent=nf(o.rho*100,0)+'%';$('rSpare').textContent=nf(o.spare,0);
+  $('rMean').textContent=msTxt(o.W);$('rP99').textContent=msTxt(o.W99);$('rN').textContent=isFinite(o.N)?nf1(o.N):'unbounded';
+  const kn=knee();$('rKnee').textContent=kn>0?nf(Math.floor(kn+1e-9),0):'none';
+  // caption
+  let cap;
+  if(!isFinite(o.W99)) cap=`${nf(o.rho*100,0)}% busy: no stable queue. Response time grows for as long as the load lasts.`;
+  else{
+    cap=`${nf(o.rho*100,0)}% busy: p99 is ${nf(Math.floor(o.W99),0)} ms.`;
+    const o2=open(S.n+80);
+    cap+=isFinite(o2.W99)?` Add 80 bots and it is ${nf(Math.floor(o2.W99),0)} ms.`:` Add 80 bots and no stable queue exists.`;
+  }
+  if(S.closed&&mv){const R=mv.R[S.n]||0;cap+=` Closed-loop bots would report a mean of ${nf(R,1)} ms.`;}
+  $('caption').textContent=cap;
+  // closed-loop panel
+  const ct=$('closedTxt');ct.hidden=!S.closed;
+  if(S.closed&&mv){
+    const X=S.n?mv.X[S.n]:0,planned=S.n/S.Z,less=planned>0?(1-X/planned)*100:0;
+    ct.innerHTML=`Achieved ${nf(X,1)} req/s against ${nf(planned,1)} offered (n / Z). The bots sent ${nf(less,1)}% less than planned.<small>Closed-loop mean response R<sub>n</sub> = ${nf(mv.R[S.n]||0,1)} ms. The server got less load exactly when it slowed down, so the bots under-sample the bad moments.</small>`;
+  }
+  // outputs
+  const nm=nMax();$('nIn').max=nm;$('nIn').value=S.n;$('oN').textContent=nf(S.n,0);
+  $('oS').textContent=(Number.isInteger(S.svc)?S.svc:S.svc.toFixed(1))+' ms';$('muHint').textContent='μ = '+nf(mu(),0)+' requests per second';
+  $('oR').textContent=S.r.toFixed(1)+' / s';$('oSlo').textContent=S.slo+' ms';$('oZ').textContent=S.Z.toFixed(1)+' s';$('zIn').value=S.Z;
+  // table
+  $('tbody').innerHTML=[200,500,800,900,950,980].map(n=>{const x=open(n);return `<tr class="${n===S.n?'here':''}"><td>${n}</td><td>${nf(x.rho*100,0)}%</td><td>${isFinite(x.W)?nf1(x.W):'∞'}</td><td>${isFinite(x.W99)?nf1(x.W99):'∞'}</td><td>${isFinite(x.N)?nf1(x.N):'∞'}</td></tr>`;}).join('');
+}
+function clampN(){S.n=Math.max(0,Math.min(nMax(),S.n));}
+$('nIn').addEventListener('input',e=>{S.n=+e.target.value;update();});
+$('sIn').addEventListener('input',e=>{S.svc=Math.round(+e.target.value*10)/10;clampN();update();});
+$('rIn').addEventListener('input',e=>{S.r=Math.round(+e.target.value*10)/10;if(!S.zTouched)S.Z=Math.min(5,Math.max(0.5,Math.round(10/S.r)/10));clampN();update();});
+$('sloIn').addEventListener('input',e=>{S.slo=+e.target.value;update();});
+$('clOn').addEventListener('change',e=>{S.closed=e.target.checked;$('zIn').disabled=!S.closed;$('lgClosed').hidden=!S.closed;update();});
+$('zIn').addEventListener('input',e=>{S.Z=Math.round(+e.target.value*10)/10;S.zTouched=true;update();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{S.n=+b.dataset.n;clampN();update();}));
+['cU','cW'].forEach(id=>{
+  const c=$(id);let drag=false;
+  const set=e=>{const r=c.getBoundingClientRect(),xMax=1.2*mu()/S.r;S.n=Math.round((e.clientX-r.left-pad.l)/(r.width-pad.l-pad.r)*xMax);clampN();update();};
+  c.addEventListener('pointerdown',e=>{drag=true;c.setPointerCapture(e.pointerId);set(e);});
+  c.addEventListener('pointermove',e=>{if(drag)set(e);});
+  c.addEventListener('pointerup',()=>{drag=false;});
+  c.addEventListener('keydown',e=>{const d=e.shiftKey?10:1;if(e.key==='ArrowRight'||e.key==='ArrowUp')S.n+=d;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')S.n-=d;else return;e.preventDefault();clampN();update();});
+});
+
+// self-check against the lecture's numbers (logs to the console on load)
+(function selfTest(){
+  const base={svc:2,r:0.5,slo:100};let ok=true;
+  const t=(n,s,util,mean,p99,ins)=>{const o=open(n,s),got=[nf(o.rho*100,0)+'%',nf1(o.W),nf1(o.W99)].concat(ins?[nf1(o.N)]:[]),exp=[util,mean,p99].concat(ins?[ins]:[]);if(got.join('|')!==exp.join('|')){ok=false;console.error('w11 self-test failed at n='+n,got,exp);}};
+  t(200,base,'20%','2.5','11.5','0.2');t(500,base,'50%','4.0','18.4','1.0');t(800,base,'80%','10.0','46.1','4.0');t(950,base,'95%','40.0','184.2','19.0');t(900,base,'90%','20.0','92.1','9.0');t(980,base,'98%','100.0','460.5');
+  t(1800,{svc:1,r:0.5,slo:100},'90%','10.0','46.1');
+  if(nf(knee(base),1)!=='907.9'||Math.floor(knee(base))!==907){ok=false;console.error('w11 self-test: knee',knee(base));}
+  if(ok)console.info('w11 self-test: all lecture values match');
+})();
+
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+})();
+</script>
+</body>
+</html>
