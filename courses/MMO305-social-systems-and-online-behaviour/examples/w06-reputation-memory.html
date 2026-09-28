@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reputation memory · MMO305 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0 0 12px;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px}
+.sum{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0}
+.strip{display:flex;flex-wrap:wrap;gap:3px}
+.cell{width:16px;height:22px;padding:0;border-radius:3px;cursor:pointer;border:1.5px solid var(--moss);background:var(--moss);position:relative}
+.cell[aria-pressed="false"]{background:transparent;border-color:var(--blood)}
+.cell[aria-pressed="false"]::before,.cell[aria-pressed="false"]::after{content:"";position:absolute;left:50%;top:50%;width:11px;height:2px;background:var(--blood);transform:translate(-50%,-50%) rotate(45deg)}
+.cell[aria-pressed="false"]::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.cell:focus-visible{outline:3px solid var(--focus);outline-offset:1px;z-index:1}
+.stripmeta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:.84rem;color:var(--ink-soft);margin-top:8px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:6px 0}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.side{display:flex;flex-direction:column;gap:14px}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+.ctl+.ctl{margin-top:8px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.lbl{font-weight:600;font-size:.92rem;margin:0 0 6px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{background:var(--paper-2)}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.ww[aria-pressed="true"]{background:var(--ochre);border-color:var(--ochre);color:var(--paper)}
+.chip.ww{border-color:var(--ochre)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:14px;max-width:100%}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{white-space:nowrap;font-weight:600;color:var(--ink-soft);font-size:.82rem}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO305 Social Systems · Week 6 · Worked example</p>
+  <h1>How much should last month count?</h1>
+  <p class="lede">Score = (r + a) / (r + s + a + b), where good and bad counts r and s shrink by &lambda; before every match. Same history, two memories. The grey dashed line never forgets. The blue one keeps about 1/(1 &minus; &lambda;) matches. Each one gets a different player wrong.</p>
+</header>
+
+<div class="layout">
+<section class="panel" aria-label="History and scores">
+  <figure>
+    <figcaption>Match history<small>Filled = good match, outlined with a cross = bad match. Click a match, or focus it and press Enter or Space, to flip it. Arrow keys move between matches.</small></figcaption>
+    <div class="strip" id="strip" role="group" aria-label="Match history"></div>
+    <div class="stripmeta"><span id="stripCount"></span><span id="stripTail"></span></div>
+  </figure>
+  <figure>
+    <figcaption>Reputation score after each match<small>x-axis is the match number; y-axis is the score from 0 to 1.</small></figcaption>
+    <canvas id="chart" role="img" aria-label="Score after each match for lambda 1 and the chosen lambda"></canvas>
+    <div class="legend" aria-hidden="true">
+      <span><i style="border-color:var(--ink-soft);border-top-style:dashed"></i>&lambda; = 1, never forgets</span>
+      <span><i style="border-color:var(--steel)"></i>&lambda; = <span id="lgL">0.90</span></span>
+      <span><i style="border-color:var(--ochre);border-top-style:dashed"></i>Newcomer score</span>
+      <span><i style="border-color:var(--moss);border-top-style:dotted"></i>Ceiling for a perfect player</span>
+    </div>
+    <p class="sum" id="sum"></p>
+  </figure>
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rS1">&mdash;</b><span>score, &lambda; = 1</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rSL">&mdash;</b><span id="rSLl">score, chosen &lambda;</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rMem">&mdash;</b><span>memory 1/(1&minus;&lambda;), matches</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rHalf">&mdash;</b><span>half-life ln 0.5 / ln &lambda;, matches</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rNew">&mdash;</b><span>newcomer score a/(a+b)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rCeil">&mdash;</b><span>ceiling for a perfect player</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rWw">&mdash;</b><span id="rWwL">whitewash gain (new account)</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rR">&mdash;</b><span>r and s, chosen &lambda;</span></div>
+  </div>
+  <div class="insight" id="insight"></div>
+  <div class="table-wrap">
+    <table aria-label="Every preset scored at lambda 1 and the chosen lambda">
+      <thead><tr><th>History</th><th>&lambda; = 1</th><th id="thL">&lambda; = 0.90</th><th>Change</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<aside class="panel side" aria-label="Controls">
+  <div>
+    <div class="ctl"><label for="lam"><span>Forgetting factor &lambda;</span> <output id="oLam">0.90</output></label><input id="lam" type="range" min="0.5" max="1" step="0.01" value="0.9"></div>
+    <div class="ctl"><label for="a"><span>Prior good <i>a</i></span> <output id="oA">1</output></label><input id="a" type="range" min="0.5" max="5" step="0.5" value="1"></div>
+    <div class="ctl"><label for="b"><span>Prior bad <i>b</i></span> <output id="oB">1</output></label><input id="b" type="range" min="0.5" max="5" step="0.5" value="1"></div>
+    <p class="hint">a = b = 1 is Laplace&rsquo;s rule: a new player scores 0.5. Raise b to make newcomers pay their dues.</p>
+  </div>
+  <div>
+    <p class="lbl">Histories</p>
+    <div class="presets" role="group" aria-label="History presets" id="presets"></div>
+    <div class="presets" style="margin-top:6px"><button class="chip" type="button" id="reroll" hidden>Reroll random</button></div>
+  </div>
+  <div>
+    <p class="lbl">Edit</p>
+    <div class="presets">
+      <button class="chip" type="button" id="addG">Add good</button>
+      <button class="chip" type="button" id="addB">Add bad</button>
+      <button class="chip" type="button" id="clear">Clear</button>
+    </div>
+    <p class="hint">Up to 150 matches.</p>
+  </div>
+  <div>
+    <button class="chip ww" type="button" id="ww" aria-pressed="false">Whitewash</button>
+    <p class="hint">Shows what this player would score by abandoning the account and starting fresh.</p>
+  </div>
+</aside>
+</div>
+
+<footer>Model: beta reputation with forgetting (Jøsang &amp; Ismail 2002), as stated in the MMO305 week 6 lecture. Newcomer dues: Friedman &amp; Resnick (2001). Presets are behaviour patterns, not data from any game. Random histories use a seeded generator.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f3=v=>v.toFixed(3);
+const MAX=150;
+let lam=0.9,A=1,Bp=1,hist=[],preset='turn',seed=1,ww=false,focusIdx=0;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rep=(v,n)=>Array(n).fill(v);
+const PRESETS=[
+  ['vet','Veteran',()=>rep(1,100),'100 good'],
+  ['turn','Turncoat',()=>rep(1,100).concat(rep(0,10)),'100 good, 10 bad'],
+  ['badweek','Bad week',()=>rep(1,100).concat(rep(0,3)),'100 good, 3 bad'],
+  ['ref','Reformed',()=>rep(0,20).concat(rep(1,20)),'20 bad, 20 good'],
+  ['bad','Always bad',()=>rep(0,100),'100 bad'],
+  ['rand','Random 90%',()=>{const r=mulberry32(seed*2654435761);return Array.from({length:100},()=>r()<0.9?1:0);},'100 matches, each good with p = 0.9']
+];
+function scores(h,l){const out=[A/(A+Bp)];let r=0,s=0;for(const g of h){r=l*r+g;s=l*s+(1-g);out.push((r+A)/(r+s+A+Bp));}return {out,r,s};}
+const mem=l=>l>=1?Infinity:1/(1-l);
+const half=l=>l>=1?Infinity:Math.log(0.5)/Math.log(l);
+const ceil=l=>l>=1?1:(mem(l)+A)/(mem(l)+A+Bp);
+
+/* strip */
+function buildStrip(){
+  const el=$('strip');el.innerHTML='';
+  hist.forEach((g,i)=>{
+    const b=document.createElement('button');b.type='button';b.className='cell';
+    b.setAttribute('aria-pressed',g?'true':'false');b.setAttribute('aria-label',`Match ${i+1}: ${g?'good':'bad'}`);
+    b.tabIndex=i===focusIdx?0:-1;b.dataset.i=i;el.appendChild(b);
+  });
+}
+$('strip').addEventListener('click',e=>{const b=e.target.closest('.cell');if(!b)return;const i=+b.dataset.i;hist[i]=1-hist[i];preset=null;focusIdx=i;
+  b.setAttribute('aria-pressed',hist[i]?'true':'false');b.setAttribute('aria-label',`Match ${i+1}: ${hist[i]?'good':'bad'}`);update();});
+$('strip').addEventListener('keydown',e=>{
+  const b=e.target.closest('.cell');if(!b)return;let i=+b.dataset.i,j=i;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')j=Math.min(hist.length-1,i+1);
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp')j=Math.max(0,i-1);
+  else if(e.key==='Home')j=0;else if(e.key==='End')j=hist.length-1;else return;
+  e.preventDefault();const cells=$('strip').children;cells[i].tabIndex=-1;cells[j].tabIndex=0;cells[j].focus();focusIdx=j;
+});
+
+/* chart */
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:44,r:14,t:12,b:30};
+function draw(s1,sL){
+  const {g,w,h}=setupCanvas($('chart')),n=Math.max(1,hist.length);
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/n,Y=y=>pad.t+(h-pad.t-pad.b)*(1-y);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=i/4;g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,Y(y));g.lineTo(w-pad.r,Y(y));g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(y.toFixed(2),pad.l-6,Y(y));}
+  const step=[1,2,5,10,20,25,50].find(s=>n/s<=(w<420?5:8))||50;
+  g.textAlign='center';g.textBaseline='top';for(let x=0;x<=n;x+=step)g.fillText(String(x),X(x),h-pad.b+6);
+  
+  const hl=(y,color,dash)=>{g.save();g.strokeStyle=color;g.setLineDash(dash);g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(y));g.lineTo(w-pad.r,Y(y));g.stroke();g.restore();};
+  hl(A/(A+Bp),css('--ochre'),[6,4]);
+  if(lam<1) hl(ceil(lam),css('--moss'),[2,4]);
+  const line=(arr,color,width,dash)=>{g.save();g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash||[]);g.lineJoin='round';g.beginPath();arr.forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v)));g.stroke();g.restore();};
+  line(s1,css('--ink-soft'),2.2,[7,4]);line(sL,css('--steel'),3);
+  const dot=(x,y,color,r)=>{g.fillStyle=color;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();};
+  const last=hist.length;dot(X(last),Y(s1[last]),css('--ink-soft'),5);dot(X(last),Y(sL[last]),css('--steel'),6);
+  if(ww&&last>0){
+    const x=X(last)-14,y0=Y(sL[last]),y1=Y(A/(A+Bp));
+    g.save();g.strokeStyle=css('--ochre');g.lineWidth=2;g.setLineDash([3,3]);g.beginPath();g.moveTo(x,y0);g.lineTo(x,y1);g.stroke();g.restore();
+    dot(x,y1,css('--ochre'),6);
+    const gain=A/(A+Bp)-sL[last];
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='middle';
+    const lbl=`new account: ${gain>=0?'+':'−'}${f3(Math.abs(gain))}`,tw=g.measureText(lbl).width,ly=y1+(y1<pad.t+20?14:-14);
+    g.fillStyle=css('--paper-2');g.fillRect(x-10-tw-3,ly-9,tw+6,18);g.fillStyle=css('--ink');g.fillText(lbl,x-10,ly);
+  }
+}
+
+/* text */
+function trailing(){if(!hist.length)return {v:null,n:0};const v=hist[hist.length-1];let n=0;for(let i=hist.length-1;i>=0&&hist[i]===v;i--)n++;return {v,n};}
+function update(){
+  const S1=scores(hist,1),SL=scores(hist,lam),n=hist.length;
+  const s1=S1.out[n],sl=SL.out[n],L=lam.toFixed(2);
+  $('oLam').textContent=L;$('oA').textContent=A;$('oB').textContent=Bp;$('lgL').textContent=L;$('thL').textContent='λ = '+L;$('rSLl').textContent='score, λ = '+L;
+  $('rS1').textContent=f3(s1);$('rSL').textContent=f3(sl);
+  $('rMem').textContent=lam>=1?'unlimited':(+mem(lam).toFixed(1)).toString();
+  $('rHalf').textContent=lam>=1?'unlimited':half(lam).toFixed(1);
+  $('rNew').textContent=f3(A/(A+Bp));$('rCeil').textContent=f3(ceil(lam));
+  const gain=A/(A+Bp)-sl;
+  $('rWw').textContent=ww?(gain>0?'+'+f3(gain):'none'):'—';
+  $('rWwL').textContent=ww?(gain>0?'whitewash gain, a/(a+b) − score':'whitewash gain: a new account would score '+f3(Math.abs(gain))+' less'):'whitewash gain (press Whitewash)';
+  $('rR').textContent=`${+SL.r.toFixed(2)} / ${+SL.s.toFixed(2)}`;
+  const good=hist.reduce((x,y)=>x+y,0);
+  $('stripCount').textContent=`${n} matches: ${good} good, ${n-good} bad`;
+  const t=trailing();$('stripTail').textContent=t.v===null?'':`last ${t.n} ${t.v?'good':'bad'}`;
+  $('sum').textContent=n?`After ${n} matches the score is ${f3(s1)} with λ = 1 and ${f3(sl)} with λ = ${L}.`:'No matches yet. Both scores equal the newcomer score.';
+  // insight
+  let msg;const older=n-t.n;
+  if(!n) msg=`A brand-new player scores a/(a + b) = <b>${f3(A/(A+Bp))}</b> under any λ. Add matches to see the two memories split.`;
+  else if(t.v===0&&older>0&&hist.slice(0,older).reduce((x,y)=>x+y,0)>older/2)
+    msg=`The last ${t.n} match${t.n>1?'es were':' was'} bad. With λ = 1 the score holds at <b>${f3(s1)}</b> because ${older} older matches still count fully: a long record shields this player. With λ = ${L} only about ${lam>=1?'all':Math.round(mem(lam))} recent matches count, so it drops to <b>${f3(sl)}</b>. Good if this is a turncoat, harsh if it was a bad week.`;
+  else if(t.v===1&&older>0&&hist.slice(0,older).reduce((x,y)=>x+y,0)<older/2)
+    msg=`The last ${t.n} match${t.n>1?'es were':' was'} good after a bad start. With λ = 1 the old record traps this player at <b>${f3(s1)}</b>. With λ = ${L} the old matches fade and the score recovers to <b>${f3(sl)}</b>.`;
+  else if(good===n)
+    msg=`A perfect record. With λ = 1 the score keeps creeping toward 1 (<b>${f3(s1)}</b>). With λ = ${L} it can never pass the ceiling of <b>${f3(ceil(lam))}</b>, because only about ${lam>=1?'all':Math.round(mem(lam))} matches count.`;
+  else if(good===0)
+    msg=`Always bad: <b>${f3(sl)}</b> with λ = ${L}. A new account would score ${f3(A/(A+Bp))}, so abandoning this one gains <b>${f3(gain)}</b>. That is the whitewashing problem, and λ cannot fix it; only the prior can.`;
+  else msg=`With λ = 1 this history scores <b>${f3(s1)}</b>; with λ = ${L} it scores <b>${f3(sl)}</b>. The difference, ${f3(sl-s1)}, is how much the order of the matches matters.`;
+  $('insight').innerHTML=msg;
+  // table
+  const rows=PRESETS.map(([id,name,fn,desc])=>{const h=id==='rand'?fn():fn();const a=scores(h,1).out[h.length],b=scores(h,lam).out[h.length];
+    return `<tr class="${id===preset?'here':''}"><td>${name} <span style="color:var(--ink-soft);font-weight:400">(${desc})</span></td><td>${f3(a)}</td><td>${f3(b)}</td><td>${b-a>=0?'+':'−'}${f3(Math.abs(b-a))}</td></tr>`;});
+  if(preset===null) rows.push(`<tr class="here"><td>Your edited history</td><td>${f3(s1)}</td><td>${f3(sl)}</td><td>${sl-s1>=0?'+':'−'}${f3(Math.abs(sl-s1))}</td></tr>`);
+  $('tbody').innerHTML=rows.join('');
+  draw(S1.out,SL.out);
+}
+function loadPreset(id){
+  preset=id;const p=PRESETS.find(x=>x[0]===id);hist=p[2]();focusIdx=0;
+  document.querySelectorAll('#presets .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.id===id?'true':'false'));
+  $('reroll').hidden=id!=='rand';buildStrip();update();
+}
+PRESETS.forEach(([id,name])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.id=id;b.textContent=name;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>loadPreset(id));$('presets').appendChild(b);});
+function edited(){preset=null;document.querySelectorAll('#presets .chip').forEach(b=>b.setAttribute('aria-pressed','false'));$('reroll').hidden=true;}
+$('reroll').addEventListener('click',()=>{seed++;loadPreset('rand');});
+$('addG').addEventListener('click',()=>{if(hist.length<MAX){hist.push(1);edited();buildStrip();update();}});
+$('addB').addEventListener('click',()=>{if(hist.length<MAX){hist.push(0);edited();buildStrip();update();}});
+$('clear').addEventListener('click',()=>{hist=[];focusIdx=0;edited();buildStrip();update();});
+$('strip').addEventListener('click',()=>{if(preset===null)edited();});
+$('ww').addEventListener('click',()=>{ww=!ww;$('ww').setAttribute('aria-pressed',ww);update();});
+$('lam').addEventListener('input',e=>{lam=+e.target.value;update();});
+$('a').addEventListener('input',e=>{A=+e.target.value;update();});
+$('b').addEventListener('input',e=>{Bp=+e.target.value;update();});
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+loadPreset('turn');
+window.__rep={loadPreset,setHist(h){hist=h;edited();buildStrip();update();}};
+})();
+</script>
+</body>
+</html>

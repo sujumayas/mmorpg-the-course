@@ -24,6 +24,11 @@
 - The header block has four bold lines in this order: `**Why this matters:**`, `**You will be able to:**`, `**Before class:**`, `**Prerequisites from earlier courses:**`. Add `**Interactive:**` with the example link when there is one.
 - Put each interactive spec under `## Interactive spec: examples/wNN-<name>.html` at the end of the lecture, after Sources. Word counts exclude the spec.
 
+## Code
+
+- Code blocks in lectures must run as shown and print what the lecture says. Run every Python block with `.venv/bin/python` before you finish. Watch float comparisons: use integer ticks or an explicit tolerance.
+- Lab starters must run; their tests must fail on the starter and pass on a correct solution.
+
 ## Links
 
 - Relative links only. From a lecture, another course's lecture is `../../<CODE>-<dir-slug>/lectures/wNN-<slug>.md`. Course directory names are the folders under `courses/`.

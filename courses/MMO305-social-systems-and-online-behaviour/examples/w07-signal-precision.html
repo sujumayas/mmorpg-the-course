@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signal precision · MMO305 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px;display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:start}
+header .shield{grid-row:1/4;width:52px;height:62px;margin-top:22px}
+@media (max-width:520px){header{grid-template-columns:1fr}header .shield{display:none}}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 8px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin:0 0 4px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:250px;cursor:crosshair;touch-action:pan-y}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:8px 0 0}
+.big b{font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1}
+.big span{font-size:.86rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:18px;align-items:start}
+@media (max-width:860px){.lower{grid-template-columns:minmax(0,1fr)}}
+.owners svg{display:block;width:100%;max-width:420px;height:auto;margin:8px auto 0}
+.owners .ic{transition:fill .25s,stroke .25s}
+.key{display:flex;flex-wrap:wrap;gap:14px;font-size:.86rem;margin-top:10px;justify-content:center}
+.key svg{width:14px;height:14px;vertical-align:-2px;margin-right:6px;display:inline}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+.ctl+.ctl{margin-top:8px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.lbl{font-weight:600;font-size:.92rem;margin:14px 0 6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{background:var(--paper-2)}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;margin-top:14px}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink-soft);font-size:.82rem}
+.table-wrap{overflow-x:auto;max-width:100%}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <svg class="shield" viewBox="0 0 52 62" aria-hidden="true"><path d="M26 3 L48 11 V29 C48 44 38 54 26 59 C14 54 4 44 4 29 V11 Z" fill="var(--paper-2)" stroke="var(--ink)" stroke-width="2.5"/><path d="M26 16 l4 9 9 1 -7 6 2 9 -8 -5 -8 5 2 -9 -7 -6 9 -1 z" fill="var(--ochre)"/></svg>
+  <p class="course">MMO305 Social Systems · Week 7 · Worked example</p>
+  <h1>Rare is not the same as meaningful</h1>
+  <p class="lede">Rarity depends on how many players own a badge. Meaning depends on who they are. Drag the carry rate: the left chart sags a little, the right one falls off a cliff.</p>
+</header>
+
+<section class="panel" aria-label="Rarity and precision">
+  <div class="charts">
+    <figure>
+      <figcaption>How rare it looks<small>Rarity in bits, log2(1 / f), against carry rate b</small></figcaption>
+      <canvas id="cBits" role="img" aria-label="Rarity in bits against carry rate"></canvas>
+      <div class="big"><b id="bBits">&mdash;</b><span id="bBitsL"></span></div>
+    </figure>
+    <figure>
+      <figcaption>What it means<small>Precision, the share of owners who are skilled, against carry rate b</small></figcaption>
+      <canvas id="cPrec" role="img" aria-label="Precision against carry rate"></canvas>
+      <div class="big"><b id="bPrec">&mdash;</b><span id="bPrecL"></span></div>
+    </figure>
+  </div>
+  <div class="ctl" style="margin-top:14px">
+    <label for="b"><span>Carry rate <i>b</i>, chance an unskilled player buys the badge</span> <output id="ob">0%</output></label>
+    <input id="b" type="range" min="0" max="20" step="0.1" value="6">
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+</section>
+
+<div class="lower">
+  <section class="panel owners" aria-label="Who owns the badge">
+    <h2>100 badge owners</h2>
+    <p class="hint" id="ownersTxt" style="margin-top:0"></p>
+    <svg id="grid" viewBox="0 0 400 400" role="img" aria-label="Grid of 100 badge owners"></svg>
+    <div class="key">
+      <span><svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="6" fill="var(--steel)"/></svg>Skilled <b id="kS"></b></span>
+      <span><svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" fill="none" stroke="var(--ochre)" stroke-width="2.5"/></svg>Lucky <b id="kL"></b></span>
+      <span><svg viewBox="0 0 14 14"><rect x="1.5" y="1.5" width="11" height="11" fill="var(--blood)"/></svg>Carried <b id="kC"></b></span>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Controls and readouts">
+    <h2>The population</h2>
+    <div class="ctl"><label for="s"><span>Base rate <i>s</i>, share of players who are skilled</span> <output id="os"></output></label><input id="s" type="range" min="1" max="30" step="1" value="5"></div>
+    <div class="ctl"><label for="e"><span><i>e</i>, chance a skilled player earns it</span> <output id="oe"></output></label><input id="e" type="range" min="1" max="100" step="1" value="60"></div>
+    <div class="ctl"><label for="u"><span><i>u</i>, chance an unskilled player earns it anyway</span> <output id="ou"></output></label><input id="u" type="range" min="0" max="5" step="0.1" value="0.5"></div>
+    <p class="lbl">Presets</p>
+    <div class="presets" id="presets">
+      <button class="chip" type="button" data-p="5,60,0.5,0">Skill badge</button>
+      <button class="chip" type="button" data-p="5,60,0.5,6">Carry market</button>
+      <button class="chip" type="button" data-p="5,1,1,0">Lottery mount</button>
+      <button class="chip" type="button" data-p="3,40,0.1,0">Untradeable cape</button>
+    </div>
+    <p class="hint">Invented teaching numbers, not data from any game.</p>
+    <div class="table-wrap">
+      <table aria-label="Readouts">
+        <tbody>
+          <tr><td>Owners <i>f</i> = s&middot;e + (1&minus;s)(u+b)</td><td id="tF"></td></tr>
+          <tr><td>Rarity, log2(1/f)</td><td id="tBits"></td></tr>
+          <tr><td>About 1 in N players</td><td id="tN"></td></tr>
+          <tr><td>Precision, s&middot;e / f</td><td id="tPrec"></td></tr>
+          <tr><td>Lift, precision / s</td><td id="tLift"></td></tr>
+          <tr><td>Carry rate where precision hits 50%, b50 = s&middot;e/(1&minus;s) &minus; u</td><td id="tB50"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<footer>Model from the MMO305 week 7 lecture: precision is P(skilled | owns) by Bayes&rsquo; rule; rarity in bits as in MMO304 week 2. The badge is a generic shield; no game art is used.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let s=.05,e=.6,u=.005,b=.06;
+const B_MAX=.2;
+const pc=(v,d)=>(v*100).toFixed(d)+'%';
+const trim=v=>String(+v.toFixed(1));
+function model(bb){const f=s*e+(1-s)*(u+bb);const prec=f>0?s*e/f:0;return {f,prec,lift:prec/s,bits:f>0?Math.log2(1/f):Infinity,n:f>0?Math.round(1/f):Infinity};}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:46,r:14,t:14,b:30};
+function chart(id,yMax,yTicks,yFmt,fn,color,refY,refLbl,markLbl){
+  const {g,w,h}=setupCanvas($(id));
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/B_MAX,Y=y=>pad.t+(h-pad.t-pad.b)*(1-Math.min(y,yMax)/yMax);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  for(let i=0;i<=yTicks;i++){const y=yMax*i/yTicks;g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,Y(y));g.lineTo(w-pad.r,Y(y));g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(y),pad.l-6,Y(y));}
+  g.textAlign='center';g.textBaseline='top';for(let x=0;x<=B_MAX+1e-9;x+=.05)g.fillText(Math.round(x*100)+'%',X(x),h-pad.b+6);
+  if(refY!==null){g.save();g.strokeStyle=css('--ink-soft');g.setLineDash([6,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(refY));g.lineTo(w-pad.r,Y(refY));g.stroke();g.restore();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='bottom';g.fillText(refLbl,w-pad.r,Y(refY)-3);}
+  g.save();g.strokeStyle=color;g.lineWidth=3;g.lineJoin='round';g.beginPath();
+  for(let i=0;i<=200;i++){const x=B_MAX*i/200;const px=X(x),py=Y(fn(x));i?g.lineTo(px,py):g.moveTo(px,py);}g.stroke();g.restore();
+  // marker
+  const mx=X(b),my=Y(fn(b));
+  g.save();g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.beginPath();g.moveTo(mx,pad.t);g.lineTo(mx,h-pad.b);g.stroke();g.restore();
+  g.fillStyle=color;g.beginPath();g.arc(mx,my,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.font='600 12px '+css('--sans');const tw=g.measureText(markLbl).width;const right=mx+10+tw<w-pad.r;
+  const lx=right?mx+10:mx-10-tw,ly=Math.max(pad.t+10,Math.min(h-pad.b-10,my-14));
+  g.fillStyle=css('--paper-2');g.fillRect(lx-3,ly-9,tw+6,18);g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='middle';g.fillText(markLbl,lx,ly);
+}
+function draw(){
+  const m=model(b);
+  chart('cBits',8,4,y=>String(y),x=>model(x).bits,css('--ochre'),null,'',`${m.bits.toFixed(2)} bits, 1 in ${m.n}`);
+  chart('cPrec',1,4,y=>Math.round(y*100)+'%',x=>model(x).prec,css('--steel'),s,'base rate: badge tells you nothing',pc(m.prec,1));
+}
+function grid(m){
+  const skilled=Math.round(100*m.prec);
+  const lucky=Math.min(100-skilled,Math.round(100*(1-s)*u/m.f));
+  const carried=100-skilled-lucky;
+  const out=[];
+  for(let i=0;i<100;i++){
+    const cx=20+40*(i%10),cy=20+40*Math.floor(i/10);
+    if(i<skilled) out.push(`<circle class="ic" cx="${cx}" cy="${cy}" r="14" fill="var(--steel)"/>`);
+    else if(i<skilled+lucky) out.push(`<circle class="ic" cx="${cx}" cy="${cy}" r="12" fill="none" stroke="var(--ochre)" stroke-width="4"/>`);
+    else out.push(`<rect class="ic" x="${cx-13}" y="${cy-13}" width="26" height="26" rx="2" fill="var(--blood)"/>`);
+  }
+  $('grid').innerHTML=out.join('');
+  $('kS').textContent=skilled;$('kL').textContent=lucky;$('kC').textContent=carried;
+  $('grid').setAttribute('aria-label',`100 badge owners: ${skilled} skilled, ${lucky} lucky, ${carried} carried`);
+  $('ownersTxt').textContent=`If you invite 100 players who show the badge, ${skilled} can do the fight.`;
+}
+function update(){
+  const m=model(b),m0=model(0);
+  $('ob').textContent=trim(b*100)+'%';$('os').textContent=Math.round(s*100)+'%';$('oe').textContent=Math.round(e*100)+'%';$('ou').textContent=trim(u*100)+'%';
+  $('b').setAttribute('aria-valuetext','carry rate '+trim(b*100)+' percent');
+  $('s').setAttribute('aria-valuetext','base rate '+Math.round(s*100)+' percent');
+  $('e').setAttribute('aria-valuetext','skilled earn rate '+Math.round(e*100)+' percent');
+  $('u').setAttribute('aria-valuetext','unskilled earn rate '+trim(u*100)+' percent');
+  $('bBits').textContent=m.bits.toFixed(2)+' bits';$('bBitsL').textContent=`about 1 in ${m.n} players own it`;
+  $('bPrec').textContent=pc(m.prec,1);$('bPrecL').textContent=`of owners are skilled, lift ${m.lift.toFixed(2)}×`;
+  $('tF').textContent=pc(m.f,3);$('tBits').textContent=m.bits.toFixed(2);$('tN').textContent='1 in '+m.n;
+  $('tPrec').textContent=pc(m.prec,1);$('tLift').textContent=m.lift.toFixed(2)+'×';
+  const b50=s*e/(1-s)-u;
+  $('tB50').textContent=b50<0?'already below':(b50>B_MAX?'never (above 20%)':pc(b50,2));
+  let msg;
+  if(Math.abs(m.lift-1)<0.005&&b===0) msg=`<b>Precision equals the base rate (${pc(s,1)}), lift 1.00×.</b> The badge is ${m.bits.toFixed(2)} bits rare, 1 in ${m.n}, and says nothing about skill. Everyone gets it at the same rate, so owning it is luck or persistence.`;
+  else if(b===0) msg=`<b>No carries.</b> The badge is ${m.bits.toFixed(2)} bits rare (1 in ${m.n}) and ${pc(m.prec,1)} of owners are skilled. Drag the carry rate${b50>=0&&b50<=B_MAX?`: at ${pc(b50,2)} half of all owners will be unable to do the fight`:''}.`;
+  else msg=`<b>Rarity fell ${(m0.bits-m.bits).toFixed(2)} bits; precision fell ${((m0.prec-m.prec)*100).toFixed(1)} points.</b> At a ${trim(b*100)}% carry rate the badge still looks rare, 1 in ${m.n} instead of 1 in ${m0.n}. But only ${pc(m.prec,1)} of owners are skilled, down from ${pc(m0.prec,1)}. The skilled players did not change; they are outnumbered.`;
+  $('insight').innerHTML=msg;
+  grid(m);draw();
+}
+function bind(id,set){$(id).addEventListener('input',ev=>{set(+ev.target.value/100);clearPreset();update();});}
+bind('b',v=>b=v);bind('s',v=>s=v);bind('e',v=>e=v);bind('u',v=>u=v);
+function clearPreset(){document.querySelectorAll('#presets .chip').forEach(x=>x.setAttribute('aria-pressed','false'));}
+document.querySelectorAll('#presets .chip').forEach(btn=>{btn.setAttribute('aria-pressed','false');btn.addEventListener('click',()=>{
+  const [ss,ee,uu,bb]=btn.dataset.p.split(',').map(Number);s=ss/100;e=ee/100;u=uu/100;b=bb/100;
+  $('s').value=ss;$('e').value=ee;$('u').value=uu;$('b').value=bb;clearPreset();btn.setAttribute('aria-pressed','true');update();});});
+['cBits','cPrec'].forEach(id=>{const c=$(id);const setB=ev=>{const r=c.getBoundingClientRect();let x=(ev.clientX-r.left-pad.l)/(r.width-pad.l-pad.r)*B_MAX;x=Math.max(0,Math.min(B_MAX,Math.round(x*1000)/1000));b=x;$('b').value=trim(b*100);clearPreset();update();};
+  c.addEventListener('pointerdown',ev=>{setB(ev);c.setPointerCapture(ev.pointerId);});c.addEventListener('pointermove',ev=>{if(ev.buttons)setB(ev);});});
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+document.querySelector('[data-p="5,60,0.5,6"]').click();
+})();
+</script>
+</body>
+</html>

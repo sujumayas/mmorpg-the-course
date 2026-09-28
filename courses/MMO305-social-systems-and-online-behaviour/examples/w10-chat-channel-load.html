@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chat channel load — MMO305 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin:0 0 6px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:260px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;margin:8px 0 0;align-items:center}
+.ln{display:inline-block;width:20px;height:0;border-top:3px solid var(--ink);vertical-align:middle;margin-right:6px}
+.figfoot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;align-items:center}
+.check{font-size:.86rem;font-weight:600;display:inline-flex;justify-content:flex-start;gap:6px;align-items:center;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.chat{margin-top:14px;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden}
+.chat-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--paper-2);font-size:.86rem}
+.chat-head b{font-variant-numeric:tabular-nums}
+.chat ol{list-style:none;margin:0;padding:6px 12px;font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;min-height:4em}
+.chat li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat li .who{color:var(--steel);font-weight:700}
+.chat li.spam{font-style:italic}
+.chat li.spam .who{color:var(--blood)}
+.tag{display:inline-block;font:700 .7rem var(--sans);letter-spacing:.04em;border:1.5px solid var(--blood);color:var(--blood);border-radius:4px;padding:0 4px;margin-right:6px;font-style:normal;vertical-align:1px}
+.btn,.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px}
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 24px;margin-top:12px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+legend{font-family:var(--serif);font-weight:600;font-size:1rem;padding:0;margin:6px 0 4px}
+.ctl{margin:6px 0}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:0}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+input[type=range]:disabled{opacity:.4}
+input[type=number],select{font:600 1rem var(--sans);padding:6px 8px;border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink)}
+input[type=number]{width:6em}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO305 Social Systems and Online Behaviour · Week 10 · Worked example</p>
+  <h1>A louder channel, the same audience</h1>
+  <p class="lede">Past saturation, every new listener adds messages and no readers. The left chart keeps climbing. The right chart goes flat at R / (s × r), so each message reaches the same 400 people whether the channel has 400 listeners or 5,000.</p>
+</header>
+
+<section class="panel" aria-label="Model">
+  <div class="charts">
+    <figure>
+      <figcaption>Channel rate<small>Messages per minute, M, against listeners L</small></figcaption>
+      <canvas id="cM" role="img" aria-label="Channel rate versus listeners"></canvas>
+      <div class="legend"><span><i class="ln" style="border-color:var(--blood)"></i>Messages per minute<span id="lgM1"></span></span><span id="lgM2" hidden><i class="ln" style="border-color:var(--blood);opacity:.35"></i>One channel</span><span><i class="ln" style="border-top-style:dashed;border-color:var(--ochre)"></i>Reading budget R</span></div>
+    </figure>
+    <figure>
+      <figcaption>Audience per message<small>Readers who see one message, A, against listeners L</small></figcaption>
+      <canvas id="cA" role="img" aria-label="Audience per message versus listeners"></canvas>
+      <div class="figfoot">
+        <div class="legend"><span><i class="ln" style="border-color:var(--steel)"></i>Readers per message<span id="lgA1"></span></span><span id="lgA2" hidden><i class="ln" style="border-color:var(--steel);opacity:.35"></i>One channel</span><span><i class="ln" style="border-top-style:dashed;border-color:var(--ink)"></i>Saturation L*</span></div>
+        <label class="check" for="auto"><input type="checkbox" id="auto"> Auto y-axis</label>
+      </div>
+    </figure>
+  </div>
+
+  <p class="sr" id="live" aria-live="polite"></p>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--ink)"><b id="rN">—</b><span id="lN">posters N</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rM">—</b><span>messages per minute M</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rT">—</b><span>seconds on screen T</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rC">—</b><span>coverage c</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rA">—</b><span>readers per message A</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rLs">—</b><span>saturation L* (listeners)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rVp">—</b><span>views per min, polite poster</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rVs">—</b><span>views per min, spammer</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rRatio">—</b><span>spammer to polite</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rReff">—</b><span>average rate per poster</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="chat" aria-label="Chat preview">
+    <div class="chat-head">
+      <span id="chatInfo">—</span>
+      <button class="btn" id="pause" aria-pressed="false">Pause</button>
+    </div>
+    <ol id="chat" aria-hidden="true"></ol>
+  </div>
+  <p class="hint" style="margin-top:6px"><span class="tag">SPAM</span>marks a spammer's line. Chat lines are generic placeholders.</p>
+
+  <div class="presets" role="group" aria-label="Presets">
+    <button class="chip" data-set='{"L":50}'>L = 50</button>
+    <button class="chip" data-set='{"L":400}'>L = 400</button>
+    <button class="chip" data-set='{"L":1000}'>L = 1,000</button>
+    <button class="chip" data-set='{"L":3000}'>L = 3,000</button>
+    <button class="chip" data-set='{"L":1000,"sp":10,"sr":4}'>10 spammers at 4/min</button>
+    <button class="chip" data-set='{"L":1000,"sp":10,"sr":4,"capOn":true,"cap":0.5}'>Same spam, cap 0.5</button>
+    <button class="chip" data-set='{"L":300,"s":0.2,"r":1,"R":15,"k":3}'>Split into 3</button>
+    <button class="chip" id="reset">Lecture defaults</button>
+  </div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Channel</legend>
+      <div class="ctl"><label for="L">Listeners L <output id="oL"></output></label><input id="L" type="range" min="10" max="5000" step="10" value="1000"></div>
+      <div class="ctl"><label for="s">Share who post s <output id="os"></output></label><input id="s" type="range" min="0.01" max="0.5" step="0.01" value="0.1"></div>
+      <div class="ctl"><label for="r">Posts per poster per minute r <output id="or"></output></label><input id="r" type="range" min="0.1" max="4" step="0.1" value="0.5"></div>
+      <div class="ctl"><label for="R">Reading budget R, lines per minute <output id="oR"></output></label><input id="R" type="range" min="2" max="60" step="1" value="20"></div>
+      <div class="ctl row"><label for="W" style="flex:1">Window lines W</label><select id="W"><option>5</option><option>8</option><option selected>10</option><option>15</option><option>20</option></select></div>
+    </fieldset>
+    <fieldset>
+      <legend>Design levers</legend>
+      <div class="ctl row"><label for="sp" style="flex:1">Spammers (part of the posters)</label><input id="sp" type="number" min="0" max="50" step="1" value="0"></div>
+      <div class="ctl"><label for="sr">Spam rate per minute <output id="osr"></output></label><input id="sr" type="range" min="0.5" max="6" step="0.5" value="2"></div>
+      <div class="ctl row"><label for="k" style="flex:1">Split into channels</label><select id="k"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+      <p class="hint">Listeners and posters divide evenly. Each reader follows one channel.</p>
+      <div class="ctl"><label class="check" for="capOn"><input type="checkbox" id="capOn"> Rate cap on every poster</label></div>
+      <div class="ctl"><label for="cap">Cap, posts per minute <output id="ocap"></output></label><input id="cap" type="range" min="0.1" max="4" step="0.1" value="0.5" disabled></div>
+    </fieldset>
+  </div>
+</section>
+
+<footer>Model from the lecture: N = s × L, M = N × r, T = 60 × W / M, c = min(1, R / M), A = L × c. Past saturation A = R / (s × r). Split channels use L / k listeners and spammers / k each. Teaching numbers, not measurements from any game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const d1=n=>{const v=(Math.round(n*10)/10);return v.toLocaleString('en-US',{maximumFractionDigits:1});};
+const DEF={L:1000,s:0.1,r:0.5,R:20,W:10,sp:0,sr:2,k:1,capOn:false,cap:0.5};
+const S={};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+function read(){S.L=+$('L').value;S.s=+$('s').value;S.r=+$('r').value;S.R=+$('R').value;S.W=+$('W').value;
+  let sp=Math.round(+$('sp').value);if(!isFinite(sp))sp=0;S.sp=Math.max(0,Math.min(50,sp));
+  S.sr=+$('sr').value;S.k=+$('k').value;S.capOn=$('capOn').checked;S.cap=+$('cap').value;}
+// per-channel state for total listeners L split into k
+function chan(L,k,sp){
+  if(k===undefined)k=S.k; if(sp===undefined)sp=S.sp;
+  const Lc=L/k,N=S.s*Lc;let sc=sp/k;
+  const rs=S.capOn?Math.min(S.sr,S.cap):S.sr, rn=S.capOn?Math.min(S.r,S.cap):S.r;
+  if(N<sc)sc=N;
+  const M=(N-sc)*rn+sc*rs, T=M>0?60*S.W/M:Infinity, c=M>0?Math.min(1,S.R/M):1, A=Lc*c;
+  return {Lc,N,sc,M,T,c,A,rn,rs,vp:rn*A,vs:rs*A};
+}
+function Lstar(k){ // total listeners at which per-channel M reaches R
+  let lo=0,hi=10;while(chan(hi,k).M<S.R&&hi<1e9)hi*=2;
+  for(let i=0;i<80;i++){const mid=(lo+hi)/2;chan(mid,k).M<S.R?lo=mid:hi=mid;}
+  return (lo+hi)/2;}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function nice(v){const raw=v/4,mag=Math.pow(10,Math.floor(Math.log10(raw)));const st=[1,2,2.5,5,10].map(m=>m*mag).find(x=>x>=raw);return {step:st,max:Math.ceil(v/st-1e-9)*st};}
+const XMAX=5000,pad={l:50,r:14,t:14,b:34};
+function frame(c,yM,step){const g=c.g,w=c.w,h=c.h;g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  const X=v=>pad.l+(w-pad.l-pad.r)*v/XMAX,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yM);
+  const n=Math.round(yM/step);
+  for(let i=0;i<=n;i++){const y=Y(step*i);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';const v=step*i;g.fillText(v>=10000?fmt(v/1000)+'k':(+v.toFixed(2)).toLocaleString('en-US'),pad.l-6,y);}
+  for(let i=0;i<=5;i++){g.textAlign=i===5?'right':i===0?'left':'center';g.textBaseline='top';g.fillText(i===0?'0':(w<460?i+'k':fmt(i*1000)),X(i*1000),h-pad.b+6);}
+  g.textAlign='center';g.fillText('listeners L',pad.l+(w-pad.l-pad.r)/2,h-15);
+  return {X,Y};}
+function curve(c,ax,f,yM,col,wd,alpha,dash){const g=c.g;g.globalAlpha=alpha||1;g.strokeStyle=col;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();
+  for(let i=0;i<=250;i++){const L=Math.max(1e-6,XMAX*i/250),v=Math.min(f(L),yM*1.02);i?g.lineTo(ax.X(L),ax.Y(v)):g.moveTo(ax.X(L),ax.Y(v));}
+  g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+function vline(c,ax,x,col,label,top){const g=c.g;if(x>XMAX)return;g.strokeStyle=col;g.setLineDash([5,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(ax.X(x),pad.t);g.lineTo(ax.X(x),c.h-pad.b);g.stroke();g.setLineDash([]);
+  if(label){g.fillStyle=col;g.font='600 12px '+css('--sans');g.textBaseline='bottom';const px=ax.X(x);const right=px>c.w-110;g.textAlign=right?'right':'left';g.fillText(label,px+(right?-5:5),c.h-pad.b-5);g.font='12px '+css('--sans');}}
+function dot(c,ax,x,y,col){const g=c.g;g.fillStyle=col;g.beginPath();g.arc(ax.X(x),ax.Y(y),6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+
+function draw(cur,ls){
+  const split=S.k>1;
+  // left
+  let c=setupCanvas($('cM'));
+  let mMax=Math.max(chan(XMAX).M,split?chan(XMAX,1).M:0,S.R);
+  let ns=nice(Math.max(100,mMax*1.02));
+  let ax=frame(c,ns.max,ns.step);
+  if(split)curve(c,ax,L=>chan(L,1).M,ns.max,css('--blood'),2.2,.3);
+  const g=c.g;g.strokeStyle=css('--ochre');g.setLineDash([7,5]);g.lineWidth=2;g.beginPath();g.moveTo(pad.l,ax.Y(S.R));g.lineTo(c.w-pad.r,ax.Y(S.R));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ochre');g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('reading budget '+S.R,c.w-pad.r-4,ax.Y(S.R)-3);
+  curve(c,ax,L=>chan(L).M,ns.max,css('--blood'),2.8);
+  vline(c,ax,S.L,css('--ink-soft'));dot(c,ax,S.L,cur.M,css('--blood'));
+  // right
+  c=setupCanvas($('cA'));
+  const auto=$('auto').checked;
+  let aMax=auto?Math.max(chan(XMAX).A,split?chan(XMAX,1).A:0,1)*1.02:1000;
+  ns=nice(aMax);ax=frame(c,ns.max,ns.step);
+  if(split)curve(c,ax,L=>chan(L,1).A,ns.max,css('--steel'),2.2,.3);
+  vline(c,ax,ls,css('--ink'),'saturation '+fmt(ls));
+  curve(c,ax,L=>chan(L).A,ns.max,css('--steel'),2.8);
+  vline(c,ax,S.L,css('--ink-soft'));
+  if(cur.A<=ns.max*1.02)dot(c,ax,S.L,cur.A,css('--steel'));
+  $('lgM2').hidden=$('lgA2').hidden=!split;
+  $('lgM1').textContent=$('lgA1').textContent=split?', per channel':'';
+  $('cM').setAttribute('aria-label',`Channel rate ${d1(cur.M)} messages per minute at ${fmt(S.L)} listeners; reading budget ${S.R}.`);
+  $('cA').setAttribute('aria-label',`Audience per message ${fmt(cur.A)} at ${fmt(S.L)} listeners; saturation at ${fmt(ls)} listeners.`);
+}
+
+function update(){
+  read();
+  const cur=chan(S.L),ls=Lstar(S.k),split=S.k>1,sat=cur.M>S.R;
+  $('oL').textContent=fmt(S.L);$('os').textContent=S.s.toFixed(2);$('or').textContent=S.r.toFixed(1);$('oR').textContent=S.R;
+  $('osr').textContent=S.sr.toFixed(1);$('ocap').textContent=S.cap.toFixed(1);$('cap').disabled=!S.capOn;
+  [['L',fmt(S.L)+' listeners'],['s',S.s.toFixed(2)],['r',S.r.toFixed(1)+' per minute'],['R',S.R+' lines per minute'],['sr',S.sr.toFixed(1)+' per minute'],['cap',S.cap.toFixed(1)+' per minute']].forEach(([id,t])=>$(id).setAttribute('aria-valuetext',t));
+  $('lN').textContent=split?'posters N per channel':'posters N';
+  $('rN').textContent=d1(cur.N);$('rM').textContent=d1(cur.M);$('rT').textContent=d1(cur.T);
+  $('rC').textContent=(cur.c*100).toFixed(1)+'%';$('rA').textContent=fmt(cur.A);$('rLs').textContent=fmt(ls);
+  const hasSpam=cur.sc>0;
+  $('rVp').textContent=cur.N-cur.sc>0?fmt(cur.vp):'—';$('rVs').textContent=hasSpam?fmt(cur.vs):'—';
+  $('rRatio').textContent=hasSpam?d1(cur.rs/cur.rn)+'×':'—';
+  $('rReff').textContent=cur.N>0?(cur.M/cur.N).toFixed(2):'—';
+  const per=split?' per channel':'';
+  let s='';
+  if(!sat) s=`Below saturation: ${d1(cur.M)} messages a minute fit inside the reading budget of ${S.R}, so every one of the ${fmt(cur.Lc)} listeners${per} sees every line. Drag L past ${fmt(ls)} and watch the right chart stop rising.`;
+  else s=`Saturated: ${d1(cur.M)} messages a minute against a budget of ${S.R}, so readers see ${(cur.c*100).toFixed(1)}% of lines and each message reaches <b>${fmt(cur.A)}</b> readers${per}. Adding listeners now only shortens each line's life, currently ${d1(cur.T)} s.`;
+  if(hasSpam) s+=` Spammers collect ${fmt(cur.vs)} views a minute each against ${fmt(cur.vp)} for a polite poster, ${d1(cur.rs/cur.rn)} times as many.`;
+  if(S.capOn&&S.sp>0) s+=` The cap holds every poster to ${S.cap.toFixed(1)} a minute, so spamming no longer pays.`;
+  if(split) s+=` Splitting into ${S.k} channels moves saturation to ${fmt(ls)} total listeners.`;
+  $('insight').innerHTML=s;
+  $('live').textContent=`Audience per message ${fmt(cur.A)}, ${sat?'saturated':'not saturated'}. Channel rate ${d1(cur.M)} per minute.`;
+  const every=60/cur.M;
+  $('chatInfo').innerHTML=`${split?'One channel: ':''}<b>${d1(cur.M)}</b> lines a minute, a line every <b>${every<1?every.toFixed(2):d1(every)} s</b>, each visible for <b>${d1(cur.T)} s</b>`;
+  chatState.rate=cur.M;chatState.spamShare=cur.M>0?cur.sc*cur.rs/cur.M:0;
+  trimChat();
+  draw(cur,ls);
+}
+
+// chat preview
+const words=['LFG dungeon, need healer','anyone selling ore?','WTB leather, paying well','guild recruiting casual players','where is the flight master','gg everyone','LF2M for the bridge quest','trading potions, whisper me','who is doing the world event','lost in the caves again','need one more for arena','selling spare cloth','is the bank open late','thanks for the help earlier','crafting swords, bring mats','any tanks around?','nice mount','meeting at the fountain'];
+const spamWords=['SELLING RARE MOUNT CHEAP CHEAP whisper now','BEST PRICES best prices best prices','BUY BUY BUY carries every hour','WHISPER ME NOW huge stock'];
+const chatState={rate:50,spamShare:0,acc:0,paused:false,lines:[]};
+function rand(a){return a[Math.floor(Math.random()*a.length)];}
+function newLine(){const spam=Math.random()<chatState.spamShare;const id=String(Math.floor(Math.random()*9000)+1000);
+  return spam?`<li class="spam"><span class="tag">SPAM</span><span class="who">Player${id}</span>: ${rand(spamWords)}</li>`:`<li><span class="who">Player${id}</span>: ${rand(words)}</li>`;}
+function trimChat(){const W=S.W||10;while(chatState.lines.length<W)chatState.lines.unshift(newLine());while(chatState.lines.length>W)chatState.lines.shift();
+  if(reduce.matches||chatState.paused)chatState.lines=chatState.lines.map(x=>x);render();}
+function render(){$('chat').innerHTML=chatState.lines.join('');}
+function staticFrame(){chatState.lines=[];for(let i=0;i<(S.W||10);i++)chatState.lines.push(newLine());render();}
+setInterval(()=>{
+  if(chatState.paused||reduce.matches||document.hidden)return;
+  chatState.acc+=chatState.rate/600;let added=0;
+  while(chatState.acc>=1&&added<(S.W||10)){chatState.lines.push(newLine());chatState.acc-=1;added++;}
+  if(chatState.acc>=1)chatState.acc%=1;
+  if(added){while(chatState.lines.length>S.W)chatState.lines.shift();render();}
+},100);
+$('pause').addEventListener('click',()=>{chatState.paused=!chatState.paused;$('pause').textContent=chatState.paused?'Play':'Pause';$('pause').setAttribute('aria-pressed',chatState.paused);});
+function motionMode(){$('pause').hidden=reduce.matches;if(reduce.matches)staticFrame();}
+reduce.addEventListener('change',motionMode);
+
+// controls
+function setVals(o){for(const key in o){const el=$(key);if(el.type==='checkbox')el.checked=o[key];else el.value=o[key];}}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  if(b.id==='reset')setVals(DEF);else{const o=JSON.parse(b.dataset.set);if(Object.keys(o).length>1)setVals(DEF);setVals(o);}
+  update();}));
+['L','s','r','R','sr','cap','sp'].forEach(id=>$(id).addEventListener('input',update));
+['W','k','capOn','auto'].forEach(id=>$(id).addEventListener('change',update));
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();motionMode();
+})();
+</script>
+</body>
+</html>
