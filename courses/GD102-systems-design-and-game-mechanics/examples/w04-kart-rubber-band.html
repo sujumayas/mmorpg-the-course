@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kart rubber banding — GD102 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:4px solid var(--blood);font-family:var(--serif);font-size:1.02rem;max-width:90ch}
+.bar{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.bar .slider{flex:1 1 260px;min-width:0}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--blood);height:28px;margin:4px 0 0}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;margin-top:6px}
+.seg button{font:600 .92rem var(--sans);padding:8px 14px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-checked="true"]{background:var(--ink);color:var(--paper)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:600 .92rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.btn:disabled{opacity:.5;cursor:progress}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.prog{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--ink-soft)}
+.prog progress{width:120px;accent-color:var(--steel)}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1024px){.views{grid-template-columns:1fr 1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 4px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,currentColor 0 5px,transparent 5px 9px)!important;height:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 2px}
+@media (max-width:620px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.race-text{font-size:.92rem;margin:12px 0 0;font-variant-numeric:tabular-nums}
+.race-text b{font-weight:700}
+.note{font-family:var(--serif);font-size:.96rem;margin:10px 0 0}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:460px;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:620px){table{min-width:0;font-size:.84rem}th,td{padding:5px 5px}}
+details{margin-top:14px;background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:12px 16px}
+summary{font-family:var(--serif);font-size:1.05rem;cursor:pointer}
+.hc{display:flex;flex-wrap:wrap;gap:12px 18px;margin-top:10px}
+.hc label{flex-direction:column;gap:4px;font-size:.88rem}
+.hc input{font:600 1rem var(--sans);width:7em;padding:6px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper-2);color:var(--ink)}
+.seq{font-variant-numeric:tabular-nums;font-size:1rem;margin:12px 0 4px;word-break:break-word}
+.chipbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD102 Systems Design and Game Mechanics · Week 4 · Worked example</p>
+  <h1>Rubber banding: closer races, emptier leads</h1>
+  <p class="lede">Eight karts, one clearly better driver. Turn up the catch-up bonus. The single race gets tighter. The 2,000-race chart shows what that costs the kart that got ahead early.</p>
+</header>
+
+<p class="insight" id="insight" aria-live="polite">Simulating 2,000 races…</p>
+
+<div class="bar" role="group" aria-label="Controls">
+  <div class="slider">
+    <label for="strength">Catch-up strength <output id="oStr">50%</output></label>
+    <input id="strength" type="range" min="0" max="100" step="5" value="50" aria-describedby="strHelp">
+    <span id="strHelp" class="sr">Arrow keys change strength by 5 percent.</span>
+  </div>
+  <div>
+    <span class="lbl" id="modeLbl">Catch-up rule</span>
+    <div class="seg" role="radiogroup" aria-labelledby="modeLbl">
+      <button role="radio" id="mDist" data-mode="0" aria-checked="true">By distance</button>
+      <button role="radio" id="mPos" data-mode="1" aria-checked="false" tabindex="-1">By position</button>
+    </div>
+  </div>
+  <div class="btns">
+    <button class="btn" id="newRace">New race</button>
+    <button class="btn" id="runBtn">Run 2,000 races</button>
+    <span class="prog" id="prog" hidden><progress id="progBar" max="1" value="0"></progress><span id="progTxt">0%</span></span>
+  </div>
+</div>
+
+<div class="views">
+  <section class="panel" aria-labelledby="capRace">
+    <figure>
+      <figcaption id="capRace">One race<small>Metres behind the leader, second by second. Top of the chart is first place.</small></figcaption>
+      <canvas id="cRace" role="img" aria-label="Gap to the leader for eight karts over 120 seconds"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ochre);height:4px"></i>Best driver (+0.35 m/s)</span>
+        <span><i style="background:var(--steel);opacity:.55"></i>Other seven karts</span>
+      </div>
+    </figure>
+    <p class="race-text" id="raceText" aria-live="polite"></p>
+    <p class="note" id="modeNote"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="capMany">
+    <figure>
+      <figcaption id="capMany">2,000 races per strength<small>Win rates on the left axis, final spread (first to last) on the right axis.</small></figcaption>
+      <canvas id="cMany" role="img" aria-label="Win rates and final spread versus catch-up strength"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>Halfway leader wins</span>
+        <span><i style="background:var(--ochre)"></i>Best driver wins</span>
+        <span><i style="background:var(--moss);opacity:.55;height:6px"></i>Final spread (m, right)</span>
+        <span style="color:var(--blood)"><i class="dash" style="opacity:.6"></i><span style="color:var(--ink)" id="otherLbl">Halfway leader wins, by position</span></span>
+        <span style="color:var(--ink-soft)"><i class="dash"></i><span style="color:var(--ink)">Random winner, 12.5%</span></span>
+      </div>
+    </figure>
+    <div class="readout" aria-live="polite">
+      <div class="stat" style="--c:var(--moss)"><b id="rSpread">—</b><span>final spread</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rHalf">—</b><span>halfway leader wins</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rBest">—</b><span>best driver wins</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rLc">—</b><span>lead changes per race</span></div>
+    </div>
+    <p class="note" id="batchNote"></p>
+  </section>
+</div>
+
+<div class="table-wrap panel" style="margin-top:14px">
+  <table>
+    <caption id="tblCap">Every strength, 2,000 races each</caption>
+    <thead><tr><th scope="col">Strength</th><th scope="col">Spread (m)</th><th scope="col">Halfway leader wins</th><th scope="col">Best driver wins</th><th scope="col">Lead changes</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<details id="hand">
+  <summary>Hand check: the two-racer recurrence</summary>
+  <p class="note">Gap next second = gap now + skill difference <i>d</i> − catch-up <i>k</i> × gap now. The gap settles at <i>d</i> / <i>k</i>.</p>
+  <div class="hc">
+    <label for="hd">d (m per second)<input id="hd" type="number" step="0.1" value="2"></label>
+    <label for="hk">k (share of the gap removed)<input id="hk" type="number" step="0.05" value="0.25"></label>
+    <label for="h0">Starting gap (m)<input id="h0" type="number" step="1" value="0"></label>
+  </div>
+  <div class="chipbar" role="group" aria-label="Hand-check presets">
+    <button class="btn" data-hc="2,0.25,0">d 2, k 0.25</button>
+    <button class="btn" data-hc="2,0.5,0">d 2, k 0.5</button>
+    <button class="btn" data-hc="0,1.5,10">Overshoot: d 0, k 1.5, start 10</button>
+  </div>
+  <p class="seq" id="hSeq" aria-live="polite"></p>
+  <p class="note" id="hSteady"></p>
+</details>
+
+<footer>Model: 8 karts, 120 one-second steps, 10 m/s base speed, skill from +0.35 to −0.35 m/s, noise with standard deviation 1.5 m/s. Distance rule: bonus = 0.1 × strength × gap to leader, gap capped at 60 m. Position rule: bonus = 2.0 × strength × rank / 7. Bonuses use positions before each move. Distance mode resembles the rule Mario Kart 8 Deluxe uses for item odds (Super Mario Wiki, "Spiny Shell (Mario Kart)"). All karts here are plain coloured lines. Seeded random numbers (mulberry32, Box-Muller), so batch 1 always gives the same table.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MODES=['by distance','by position'];
+
+/* ---------- model ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeGauss(rng){let spare=0,has=false;return function(){if(has){has=false;return spare;}let u=rng();while(u===0)u=rng();const v=rng();const r=Math.sqrt(-2*Math.log(u));spare=r*Math.sin(2*Math.PI*v);has=true;return r*Math.cos(2*Math.PI*v);};}
+const N=8,T=120,HALF=60,SKILL=new Float64Array(N);for(let i=0;i<N;i++)SKILL[i]=0.35-0.1*i;
+const X=new Float64Array(N),B=new Float64Array(N),ORD=new Int32Array(N);
+function race(gauss,f,byPos,trace){
+  X.fill(0);let prev=0,lc=0,half=0;
+  if(trace)trace.push(Array.from(X));
+  for(let t=1;t<=T;t++){
+    if(byPos){ // rank 0 = first; ties broken by index
+      for(let i=0;i<N;i++){let j=i;while(j>0){const o=ORD[j-1];if(X[o]<X[i]){ORD[j]=o;j--;}else break;}ORD[j]=i;}
+      for(let r=0;r<N;r++)B[ORD[r]]=2*f*r/7;
+    }else{
+      let lead=X[0];for(let i=1;i<N;i++)if(X[i]>lead)lead=X[i];
+      for(let i=0;i<N;i++){const g=lead-X[i];B[i]=0.1*f*(g<60?g:60);}
+    }
+    for(let i=0;i<N;i++)X[i]+=10+SKILL[i]+1.5*gauss()+B[i];
+    let L=0;for(let i=1;i<N;i++)if(X[i]>X[L])L=i;
+    if(L!==prev)lc++;prev=L;if(t===HALF)half=L;
+    if(trace)trace.push(Array.from(X));
+  }
+  let mx=X[0],mn=X[0];for(let i=1;i<N;i++){if(X[i]>mx)mx=X[i];if(X[i]<mn)mn=X[i];}
+  return{winner:prev,half:half,lc:lc,spread:mx-mn};
+}
+
+/* ---------- state ---------- */
+const STR=[];for(let s=0;s<=100;s+=5)STR.push(s);
+const RACES=2000;
+let strength=50,mode=0,raceSeed=7,batchSeed=1;
+let results={}; // key `${seed}|${mode}` -> array indexed by STR idx of {spread,half,best,lc}
+let job=null;
+
+/* ---------- batch runner, chunked ---------- */
+function runBatch(){
+  if(job)job.cancel=true;
+  const seed=batchSeed,order=[mode,1-mode];
+  const tasks=[];order.forEach(m=>{if(!results[seed+'|'+m])results[seed+'|'+m]=[];STR.forEach((s,i)=>{if(!results[seed+'|'+m][i])tasks.push({m,i,s});});});
+  if(!tasks.length){renderAll();return;}
+  const my={cancel:false};job=my;
+  const t0=performance.now(),total=tasks.length*RACES;let done=0,ti=0,acc=null,r=0,gauss=null;
+  $('runBtn').disabled=true;
+  const showTimer=setTimeout(()=>{if(!my.cancel)$('prog').hidden=false;},200);
+  function step(){
+    if(my.cancel)return;
+    const end=performance.now()+24;
+    while(ti<tasks.length&&performance.now()<end){
+      const tk=tasks[ti];
+      if(!acc){acc={sp:0,h:0,b:0,l:0};r=0;gauss=makeGauss(mulberry32(seed));}
+      const lim=Math.min(RACES,r+200);
+      for(;r<lim;r++){const o=race(gauss,tk.s/100,tk.m===1);acc.sp+=o.spread;acc.h+=(o.winner===o.half);acc.b+=(o.winner===0);acc.l+=o.lc;}
+      done+=200;
+      if(r>=RACES){results[seed+'|'+tk.m][tk.i]={spread:acc.sp/RACES,half:acc.h/RACES,best:acc.b/RACES,lc:acc.l/RACES};acc=null;ti++;
+        if(tk.m===mode)renderAll();}
+    }
+    const p=done/total;$('progBar').value=p;$('progTxt').textContent=Math.round(p*100)+'%';
+    if(ti<tasks.length){setTimeout(step,0);}
+    else{clearTimeout(showTimer);$('prog').hidden=true;$('runBtn').disabled=false;job=null;renderAll();
+      $('batchNote').dataset.ms=Math.round(performance.now()-t0);}
+  }
+  setTimeout(step,0);
+}
+
+/* ---------- drawing ---------- */
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return{g,w:r.width,h:r.height};
+}
+function fontS(g,px,w){g.font=(w||'')+' '+px+'px '+(css('--sans')||'sans-serif');}
+
+let raceTrace=null,raceRes=null;
+function simRace(){
+  const tr=[];raceRes=race(makeGauss(mulberry32(raceSeed*7919+13)),strength/100,mode===1,tr);raceTrace=tr;
+}
+function drawRace(){
+  const {g,w,h}=setupCanvas($('cRace'));
+  const pad={l:46,r:12,t:14,b:34},W=w-pad.l-pad.r,H=h-pad.t-pad.b,YM=120;
+  const px=t=>pad.l+W*t/T,py=m=>pad.t+H*Math.min(m,YM)/YM;
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');fontS(g,12);
+  for(let m=0;m<=YM;m+=30){const y=py(m);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(m+(m===YM?'+':''),pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';for(let t=0;t<=T;t+=30)g.fillText(t+'s',px(t),h-pad.b+6);
+  g.save();g.translate(12,pad.t+H/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillText('m behind leader',0,0);g.restore();
+  // halfway
+  g.strokeStyle=css('--ink');g.globalAlpha=.45;g.setLineDash([5,4]);g.beginPath();g.moveTo(px(HALF),pad.t);g.lineTo(px(HALF),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--ink');fontS(g,12,'600');g.textAlign='left';g.textBaseline='bottom';g.fillText('halfway',px(HALF)+5,h-pad.b-4);
+  if(!raceTrace)return;
+  const steel=css('--steel');
+  const drawKart=(i,color,width,alpha)=>{g.strokeStyle=color;g.lineWidth=width;g.globalAlpha=alpha;g.beginPath();
+    for(let t=0;t<=T;t++){const row=raceTrace[t];let lead=row[0];for(let k=1;k<N;k++)if(row[k]>lead)lead=row[k];const x=px(t),y=py(lead-row[i]);t?g.lineTo(x,y):g.moveTo(x,y);}
+    g.stroke();g.globalAlpha=1;};
+  for(let i=N-1;i>=1;i--)drawKart(i,steel,1.6,0.3+0.06*(N-i));
+  drawKart(0,css('--ochre'),4,1);
+  // label best driver at its end
+  const last=raceTrace[T];let lead=Math.max.apply(null,last);const gy=py(lead-last[0]);
+  fontS(g,12,'700');g.fillStyle=css('--ochre');g.textAlign='right';g.textBaseline=gy<pad.t+18?'top':'bottom';
+  g.fillText('best driver',w-pad.r-2,gy+(gy<pad.t+18?6:-6));
+}
+
+function drawMany(){
+  const {g,w,h}=setupCanvas($('cMany'));
+  const pad={l:44,r:44,t:14,b:34},W=w-pad.l-pad.r,H=h-pad.t-pad.b;
+  const px=s=>pad.l+W*s/100,py=p=>pad.t+H*(1-p),pyS=m=>pad.t+H*(1-Math.min(m,100)/100);
+  g.strokeStyle=css('--grid');g.lineWidth=1;fontS(g,12);
+  for(let i=0;i<=4;i++){const y=py(i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(i*25+'%',pad.l-6,y);
+    g.fillStyle=css('--moss');g.textAlign='left';g.fillText(i*25+' m',w-pad.r+6,y);}
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';for(let s=0;s<=100;s+=25)g.fillText(s+'%',px(s),h-pad.b+6);
+  g.textAlign='right';g.fillText('strength',w-pad.r,h-14);
+  // random reference
+  g.strokeStyle=css('--ink-soft');g.setLineDash([6,5]);g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,py(.125));g.lineTo(w-pad.r,py(.125));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='bottom';fontS(g,11);g.fillText('random winner 12.5%',pad.l+4,py(.125)-3);
+  const cur=results[batchSeed+'|'+mode]||[],oth=results[batchSeed+'|'+(1-mode)]||[];
+  const line=(arr,key,yf,color,width,alpha,dash)=>{g.strokeStyle=color;g.lineWidth=width;g.globalAlpha=alpha;g.setLineDash(dash||[]);g.beginPath();let started=false;
+    STR.forEach((s,i)=>{const v=arr[i];if(!v){started=false;return;}const x=px(s),y=yf(v[key]);started?g.lineTo(x,y):g.moveTo(x,y);started=true;});g.stroke();g.setLineDash([]);g.globalAlpha=1;};
+  line(cur,'spread',pyS,css('--moss'),6,.35);
+  line(oth,'half',py,css('--blood'),2,.6,[6,4]);
+  line(cur,'best',py,css('--ochre'),2.75,1);
+  line(cur,'half',py,css('--blood'),2.75,1);
+  // marker
+  const x=px(strength);
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  const v=cur[STR.indexOf(strength)];
+  if(v){[[py(v.half),'--blood'],[py(v.best),'--ochre'],[pyS(v.spread),'--moss']].forEach(([y,c])=>{g.fillStyle=css(c);g.beginPath();g.arc(x,y,5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});}
+}
+
+/* ---------- text ---------- */
+const pc=p=>Math.round(p*100)+'%';
+const kart=i=>'Kart '+(i+1)+(i===0?' (best driver)':'');
+function renderRaceText(){
+  if(!raceRes)return;
+  $('raceText').innerHTML=`Winner: <b>${kart(raceRes.winner)}</b>. Halfway leader: <b>${kart(raceRes.half)}</b>. Lead changes: <b>${raceRes.lc}</b>. Final spread: <b>${raceRes.spread.toFixed(1)} m</b>.`;
+}
+function renderReadout(){
+  const cur=results[batchSeed+'|'+mode]||[],oth=results[batchSeed+'|'+(1-mode)]||[],i=STR.indexOf(strength),v=cur[i];
+  $('rSpread').textContent=v?Math.round(v.spread)+' m':'…';
+  $('rHalf').textContent=v?pc(v.half):'…';
+  $('rBest').textContent=v?pc(v.best):'…';
+  $('rLc').textContent=v?Math.round(v.lc):'…';
+  $('otherLbl').textContent='Halfway leader wins, '+MODES[1-mode];
+  $('tblCap').textContent=`Every strength, ${MODES[mode]}, 2,000 races each (batch ${batchSeed})`;
+  const rows=STR.map((s,j)=>{const r=cur[j];return `<tr class="${s===strength?'here':''}"><td>${s}%</td><td>${r?Math.round(r.spread):'…'}</td><td>${r?pc(r.half):'…'}</td><td>${r?pc(r.best):'…'}</td><td>${r?Math.round(r.lc):'…'}</td></tr>`;});
+  $('tbody').innerHTML=rows.join('');
+  const b0=cur[0],o=oth[i];
+  if(v&&b0){
+    let s=strength===0
+      ? `With no catch-up, the field ends ${Math.round(v.spread)} m apart and the halfway leader wins ${pc(v.half)} of races. Leading early means something. Drag the slider up.`
+      : `At ${strength}% catch-up ${MODES[mode]}, the final spread shrinks from ${Math.round(b0.spread)} m to <b>${Math.round(v.spread)} m</b>, so races look closer. The halfway leader now wins <b>${pc(v.half)}</b>, down from ${pc(b0.half)}, heading toward the 12.5% of a random draw.`;
+    if(strength>0&&o){const on=mode===1?'position':'distance',other=mode===1?'distance':'position',dd=Math.round(o.half*100)-Math.round(v.half*100);
+      s+=` The ${other} rule at the same strength gives the halfway leader ${pc(o.half)}`+(Math.abs(dd)<=2?', about the same.':dd<0?`, so it drains the lead faster than the ${on} rule here.`:`, so the ${on} rule drains the lead faster here.`);
+      if(strength<=50)s+=' Push past 60% and the position rule drains the lead faster.';}
+    $('insight').innerHTML=s;
+  }
+  $('batchNote').textContent=`Batch ${batchSeed}: the same 2,000 random seeds at every strength, so the curves compare like with like. "Run 2,000 races" draws a new batch; expect each number to move by a point or two.`;
+  $('modeNote').textContent=mode===0
+    ? 'By distance: each kart gets 0.1 × strength m/s for every metre behind the leader, capped at 60 m. The pull fades as the gap closes.'
+    : 'By position: last place gets 2.0 × strength m/s, first gets nothing, whatever the gaps. A kart one metre behind gets a rank bonus as if it were far back.';
+}
+function renderAll(){renderReadout();drawMany();}
+function refreshRace(){simRace();drawRace();renderRaceText();}
+
+/* ---------- hand check ---------- */
+const f3=v=>{if(!isFinite(v))return '∞';const r=Number(v.toFixed(3));return (Object.is(r,-0)?0:r).toLocaleString('en-US',{maximumFractionDigits:3});};
+function hand(){
+  const d=parseFloat($('hd').value)||0,k=parseFloat($('hk').value)||0,g0=parseFloat($('h0').value)||0;
+  const seq=[g0];for(let t=1;t<7;t++){const g=seq[t-1];seq.push(g+d-k*g);}
+  $('hSeq').innerHTML='g<sub>0</sub> to g<sub>6</sub>: '+seq.map(f3).join(', ');
+  let s;
+  if(k===0)s=d===0?'k = 0 and d = 0: the gap never changes.':`k = 0: no correction, the gap grows by ${f3(d)} m every second without limit.`;
+  else{s=`Steady state d / k = <b>${f3(d/k)} m</b>.`;
+    if(k>=2||k<0)s+=' With this k the gap does not settle. Each step overshoots by more than the last.';
+    else if(k>1)s+=' k is above 1, so each step overshoots. The gap flips sign and shrinks toward the steady state.';
+    else if(k===1)s+=' k = 1 lands on the steady state in one step.';}
+  $('hSteady').innerHTML=s;
+}
+['hd','hk','h0'].forEach(id=>$(id).addEventListener('input',hand));
+document.querySelectorAll('[data-hc]').forEach(b=>b.addEventListener('click',()=>{const [d,k,g]=b.dataset.hc.split(',');$('hd').value=d;$('hk').value=k;$('h0').value=g;hand();}));
+
+/* ---------- events ---------- */
+$('strength').addEventListener('input',e=>{strength=+e.target.value;$('oStr').textContent=strength+'%';refreshRace();renderAll();});
+const radios=[$('mDist'),$('mPos')];
+function setMode(m,focus){if(m===mode)return;mode=m;radios.forEach((r,i)=>{r.setAttribute('aria-checked',i===m);r.tabIndex=i===m?0:-1;});if(focus)radios[m].focus();refreshRace();renderAll();runBatch();}
+radios.forEach((r,i)=>{r.addEventListener('click',()=>setMode(i,false));r.addEventListener('keydown',e=>{if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();setMode(1-i,true);}});});
+$('newRace').addEventListener('click',()=>{raceSeed++;refreshRace();});
+$('runBtn').addEventListener('click',()=>{batchSeed++;renderAll();runBatch();});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{drawRace();drawMany();},60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawRace();drawMany();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawRace();drawMany();});
+
+window.__kart={results:()=>results,get batchSeed(){return batchSeed;},busy:()=>!!job};
+hand();refreshRace();renderAll();runBatch();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Refill timer knee · GD102 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);border-left:4px solid var(--blood)}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1000px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:260px}
+#cCurve{cursor:ew-resize;touch-action:pan-y}
+@media (max-width:760px){canvas{height:230px}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dot{width:9px;height:9px;border-radius:50%}
+.legend i.hollow{width:9px;height:9px;border-radius:50%;background:transparent;border:2px solid var(--blood)}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--ink-soft) 0 4px,transparent 4px 7px)}
+.readout{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:1000px){.readout{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block;line-height:1.3}
+.summary{font-family:var(--serif);font-size:1.02rem;margin:12px 0 0}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px;margin:0 0 16px}
+@media (max-width:860px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+.ctl small{display:block;color:var(--ink-soft);font-size:.78rem}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.row2{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-start;margin:0 0 16px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;flex-wrap:wrap}
+.seg input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.seg label{font:600 .88rem var(--sans);padding:8px 13px;cursor:pointer;color:var(--ink)}
+.seg input:checked+label{background:var(--ink);color:var(--paper)}
+@media (max-width:520px){.seg{display:grid;grid-template-columns:repeat(3,1fr);border-radius:12px;width:100%}.seg label{text-align:center;padding:8px 6px;line-height:1.25}}
+.seg input:focus-visible+label{outline:3px solid var(--focus);outline-offset:-3px}
+.grp-title{display:block;font-weight:600;font-size:.92rem;margin:0 0 6px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend.grp-title{padding:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;max-width:640px}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:4px}
+caption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left;white-space:nowrap}
+@media (max-width:520px){th,td{padding:5px 6px}}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.dip{color:var(--blood)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD102 Systems Design and Game Mechanics · Week 13 · Worked example</p>
+  <h1>&ldquo;A life every 30 minutes, up to 5&rdquo;</h1>
+  <p class="lede">A capped refill timer has a knee at cap &times; regeneration time. Check in more often than the knee and you gain nothing. Check in less often and lives are thrown away without a word. The timer rule the sentence never states decides who else loses.</p>
+</header>
+
+<section class="panel" aria-label="Refill timer model">
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="cap"><span id="capLbl">Cap C (lives)</span> <output id="oCap" for="cap">5</output></label>
+      <input id="cap" type="range" min="1" max="20" step="1" value="5">
+    </div>
+    <div class="ctl">
+      <label for="regen">Regeneration time R <output id="oR" for="regen">30 min</output></label>
+      <input id="regen" type="range" min="5" max="120" step="5" value="30">
+    </div>
+    <div class="ctl">
+      <label for="tin">Check-in interval T <output id="oT" for="tin">3 h</output></label>
+      <input id="tin" type="range" min="0" max="1000" step="1" value="500">
+      <small id="tHint">Log scale. Arrow keys step 5 min below 3 h, 15 min above. Or drag on the lower chart.</small>
+    </div>
+  </div>
+
+  <div class="row2">
+    <fieldset>
+      <legend class="grp-title">Timer rule</legend>
+      <div class="seg">
+        <input type="radio" name="rule" id="rPause" value="pause" checked><label for="rPause">Pause at full</label>
+        <input type="radio" name="rule" id="rWall" value="wall"><label for="rWall">Wall clock</label>
+        <input type="radio" name="rule" id="rRestart" value="restart"><label for="rRestart">Restart on spend</label>
+      </div>
+    </fieldset>
+    <div>
+      <span class="grp-title" id="presetLbl">Presets</span>
+      <div class="presets" role="group" aria-labelledby="presetLbl">
+        <button class="chip" id="pCandy" aria-pressed="true">Candy Crush lives (5, 30 min)</button>
+        <button class="chip" id="pWow" aria-pressed="false">WoW rested XP (15 bubbles, 16 h)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption><span id="topTitle">One day of lives</span><small id="topSub">Day 8 of a 21-day run, so the start-up transient is gone. The player spends every life at each visit.</small></figcaption>
+      <canvas id="cDay" role="img" aria-label="Step chart of the lives stock over one day"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ochre)"></i><span class="unitCap">Lives</span> in stock</span>
+        <span><i class="dot" style="background:var(--ochre)"></i>Regenerated</span>
+        <span><i class="hollow"></i>Lost to the cap</span>
+        <span><i style="background:var(--ink);width:3px;height:12px"></i>Visit</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption><span id="botTitle">Lives per day vs check-in interval</span><small id="botSub">Log scale. Simulated points: every minute of T from 15 to 180 min, then every 15 min.</small></figcaption>
+      <canvas id="cCurve" role="img" aria-label="Lives per day against check-in interval, formula and simulation"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ink)"></i>Formula (24/T) &times; min(C, T/R)</span>
+        <span><i style="background:var(--steel)"></i>Simulated, <span id="legRule">pause at full</span></span>
+        <span><i class="dash"></i>Knee</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="sKnee">—</b><span>knee C &times; R (h:mm)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="sMax">—</b><span id="sMaxL">daily maximum 24 h / R</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="sVisit">—</b><span id="sVisitL">lives per visit</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="sForm">—</b><span id="sFormL">lives per day, formula</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="sSim">—</b><span id="sSimL">lives per day, simulated</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="sShare">—</b><span>share of maximum (simulated)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="sLost">—</b><span id="sLostL">lives lost per day</span></div>
+  </div>
+  <p class="summary" id="summary" aria-live="polite"></p>
+
+  <div class="table-wrap">
+    <table>
+      <caption><span id="tabTitle">Simulated lives per day for the current C and R</span><small id="tabSub">Averaged over days 8 to 21. Red cells fall below the formula.</small></caption>
+      <thead><tr><th>T</th><th>Formula</th><th>Pause at full</th><th>Wall clock</th><th>Restart on spend</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model and test values: GD102 week 13 lecture, section 2. Candy Crush Saga numbers (5 lives, one every half hour) from Wikipedia, accessed September 2026. How King implements the timer is not claimed here; the three rules are hypothetical implementations. World of Warcraft rested experience (one bubble per 16 h in a rest area, cap 15 bubbles, retail Dragonflight era) from Warcraft Wiki, "Rest". All drawing is generic.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+// ---------- modes ----------
+const MODES={
+  lives:{unit:'lives',Unit:'Lives',rMin:5,rMax:120,rStep:5,tMin:15,tMax:1440,split:180,stepLo:5,stepHi:15,
+    days:21,startDay:7,viewDays:1,
+    ticks:[30,60,120,240,480,720,1440],
+    rows:[30,45,60,100,180,240,480,1440]},
+  bubbles:{unit:'bubbles',Unit:'Bubbles',rMin:1,rMax:48,rStep:1,tMin:60,tMax:43200,split:4320,stepLo:60,stepHi:360,
+    days:480,startDay:60,viewDays:30,
+    ticks:[60,240,1440,2880,7200,14400,43200],
+    rows:[1440,2880,5760,10080,14400,21600,43200]}
+};
+let mode='lives',M=MODES.lives;
+let C=5,R=30,T=180,rule='pause';   // R and T in minutes
+let curve=null,anim=1,animId=0;
+
+// ---------- formatting ----------
+function num(x,d){const p=Math.pow(10,d);const r=Math.round(x*p)/p;return r.toLocaleString('en-US',{maximumFractionDigits:d});}
+const dec=()=>mode==='lives'?1:2;
+function fmtDur(m){
+  if(m<60)return m+' min';
+  if(m>=2880&&mode==='bubbles'){const d=Math.floor(m/1440),h=Math.round((m-d*1440)/60);return d+' d'+(h?' '+h+' h':'');}
+  const h=Math.floor(m/60),mm=m%60;return h+' h'+(mm?' '+mm+' min':'');
+}
+function hmm(m){const h=Math.floor(m/60),mm=m%60;return h+':'+String(mm).padStart(2,'0');}
+function hoursTxt(m){return num(m/60,2)+' h';}
+function kneeTxt(){const k=C*R;let s=hoursTxt(k);if(k>=2880)s+=' ('+num(k/1440,2)+' days)';return s;}
+
+// ---------- simulation (exact, event-driven version of the per-minute rules) ----------
+// Integer minutes. Visit at t=0 and every multiple of T: spend all lives.
+// wall: at t mod R == 0, +1 if lives<C else 1 lost.
+// pause/restart: timer runs while lives<C; at timer>=R +1 and timer=0; timer=0 while full.
+// restart: a visit also sets timer=0.
+function simulate(C,R,T,rule,N,start,win){
+  let lives=0,timer=0,t=0,spent=0,lost=0,fullSince=-1;
+  const tr=win?{pts:[],regen:[],lost:[],visits:[]}:null;
+  const inW=x=>tr&&x>=win[0]&&x<=win[1];
+  const mark=(x,before)=>{if(tr&&x>=win[0]&&!tr.pts.length)tr.pts.push([win[0],before]);};
+  while(true){
+    const v=(Math.floor(t/T)+1)*T;let next;
+    if(rule==='wall'){const r=(Math.floor(t/R)+1)*R;next=Math.min(r,v);}
+    else if(lives<C){next=Math.min(t+(R-timer),v);}
+    else next=v;
+    if(next>N)break;
+    if(rule!=='wall'&&lives<C)timer+=next-t;
+    t=next;
+    mark(t,lives);
+    if(rule==='wall'){
+      if(t%R===0){
+        if(lives<C){lives++;if(inW(t)){tr.regen.push([t,lives]);tr.pts.push([t,lives]);}}
+        else{if(t>=start)lost++;if(inW(t))tr.lost.push(t);}
+      }
+    }else{
+      if(lives<C&&timer>=R){lives++;timer=0;if(inW(t)){tr.regen.push([t,lives]);tr.pts.push([t,lives]);}if(lives===C)fullSince=t;}
+      if(lives===C)timer=0;
+    }
+    if(t%T===0){
+      if(tr&&rule!=='wall'&&fullSince>=0){for(let x=fullSince+R;x<=t;x+=R)if(inW(x))tr.lost.push(x);}
+      if(t>=start)spent+=lives;
+      if(inW(t)){tr.visits.push(t);tr.pts.push([t,lives]);tr.pts.push([t,0]);}
+      lives=0;fullSince=-1;
+      if(rule==='restart')timer=0;
+    }
+  }
+  if(tr){
+    if(!tr.pts.length)tr.pts.push([win[0],lives]);
+    if(rule!=='wall'&&fullSince>=0){for(let x=fullSince+R;x<=win[1];x+=R)if(inW(x))tr.lost.push(x);}
+    tr.pts.push([win[1],lives]);
+  }
+  const days=(N+1-start)/1440;
+  return {perDay:spent/days,lostPerDay:lost/days,trace:tr};
+}
+function runLen(){return [M.days*1440-1,M.startDay*1440];}
+function simAt(Tm,r){const [N,s]=runLen();return simulate(C,R,Tm,r||rule,N,s,null);}
+const formula=Tm=>(1440/Tm)*Math.min(C,Tm/R);
+const dailyMax=()=>1440/R;
+
+// ---------- T slider (log) ----------
+function snapT(x){
+  const st=x<M.split?M.stepLo:M.stepHi;
+  let v=Math.round(x/st)*st;
+  if(x<M.split&&v>M.split)v=M.split;
+  return Math.max(M.tMin,Math.min(M.tMax,v));
+}
+const tToPos=v=>1000*Math.log(v/M.tMin)/Math.log(M.tMax/M.tMin);
+const posToT=p=>M.tMin*Math.pow(M.tMax/M.tMin,p/1000);
+function stepT(dir,b){
+  if(b===undefined)b=T;
+  if(dir>0)return Math.min(M.tMax,b<M.split?b+M.stepLo:b+M.stepHi);
+  return Math.max(M.tMin,b<=M.split?b-M.stepLo:b-M.stepHi);
+}
+const tin=$('tin');
+tin.addEventListener('input',()=>setT(snapT(posToT(+tin.value))));
+tin.addEventListener('keydown',e=>{
+  let v=null;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp')v=stepT(1);
+  else if(e.key==='ArrowLeft'||e.key==='ArrowDown')v=stepT(-1);
+  else if(e.key==='PageUp'){v=T;for(let i=0;i<6;i++)v=stepT(1,v);}
+  else if(e.key==='PageDown'){v=T;for(let i=0;i<6;i++)v=stepT(-1,v);}
+  else if(e.key==='Home')v=M.tMin;else if(e.key==='End')v=M.tMax;
+  if(v!==null){e.preventDefault();setT(v,true);}
+});
+function setT(v){T=v;tin.value=Math.round(tToPos(T));updateT();}
+
+// ---------- canvas helpers ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);
+  return {g,w:r.width,h:r.height};
+}
+function font(g,s,w){g.font=(w||'')+' '+(s||12)+'px '+css('--sans');}
+
+// ---------- top view: one day ----------
+function drawDay(){
+  const c=setup($('cDay')),g=c.g,w=c.w,h=c.h;
+  const pad={l:34,r:10,t:14,b:40};
+  const ws=M.startDay*1440,we=ws+M.viewDays*1440;
+  const [N,s]=runLen();
+  const tr=simulate(C,R,T,rule,Math.min(N,we),s,[ws,we]).trace;
+  const yMax=C+1,pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const X=t=>pad.l+pw*(t-ws)/(we-ws),Y=v=>pad.t+ph*(1-v/yMax);
+  // grid
+  g.strokeStyle=css('--grid');g.lineWidth=1;font(g,11);g.fillStyle=css('--ink-soft');
+  const yStep=C<=10?1:(C<=20?2:5);
+  for(let v=0;v<=C;v++){g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();
+    if((v%yStep===0&&C-v>=yStep)||v===C){g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,Y(v));}}
+  const xGrid=mode==='lives'?120:2880,xLab=mode==='lives'?(w<520?240:120):(w<520?8640:5760);
+  for(let t=0;t<=we-ws;t+=xGrid){g.beginPath();g.moveTo(X(ws+t),pad.t);g.lineTo(X(ws+t),h-pad.b);g.stroke();
+    if(t%xLab===0){g.textAlign='center';g.textBaseline='top';g.fillText(mode==='lives'?(t/60)+(t===0?' h':''):(t/1440)+(t===0?' d':''),X(ws+t),h-pad.b+14);}}
+  // cap line
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,Y(C));g.lineTo(w-pad.r,Y(C));g.stroke();g.setLineDash([]);
+  // visits
+  const vSpace=tr.visits.length>1?(X(tr.visits[1])-X(tr.visits[0])):999;
+  g.strokeStyle=css('--ink');g.lineWidth=2;
+  tr.visits.forEach(t=>{g.beginPath();g.moveTo(X(t),h-pad.b);g.lineTo(X(t),h-pad.b+9);g.stroke();});
+  if(vSpace>40){font(g,10);g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+    tr.visits.forEach(t=>{if(X(t)>pad.l+12&&X(t)<w-pad.r-12)g.fillText('visit',X(t),h-pad.b+26);});}
+  // step line
+  g.strokeStyle=css('--ochre');g.lineWidth=2.5;g.lineJoin='round';g.beginPath();
+  tr.pts.forEach((p,i)=>{const x=X(p[0]),y=Y(p[1]);if(!i)g.moveTo(x,y);else{g.lineTo(x,Y(tr.pts[i-1][1]));g.lineTo(x,y);}});
+  g.stroke();
+  // regen dots (skip if too dense)
+  const dense=tr.regen.length>pw/3;
+  if(!dense){g.fillStyle=css('--ochre');tr.regen.forEach(p=>{g.beginPath();g.arc(X(p[0]),Y(p[1]),3,0,7);g.fill();});}
+  // lost dots
+  const ly=Y(C+0.5);g.strokeStyle=css('--blood');g.lineWidth=2;
+  tr.lost.forEach(t=>{g.beginPath();g.arc(X(t),ly,4,0,7);g.stroke();});
+  font(g,11,'600');g.fillStyle=css('--blood');g.textBaseline='bottom';
+  if(tr.lost.length){const x0=X(tr.lost[0]);g.textAlign=x0>w-140?'right':'left';g.fillText('lost to the cap ('+tr.lost.length+')',x0+(x0>w-140?-8:8),ly-7);}
+  $('cDay').setAttribute('aria-label',`Stock of ${M.unit} over ${M.viewDays===1?'one day':M.viewDays+' days'}: ${tr.visits.length} visits, ${tr.regen.length} regenerated, ${tr.lost.length} lost to the cap.`);
+}
+
+// ---------- bottom view: lives per day vs T ----------
+function samples(){
+  const a=[];
+  if(mode==='lives'){for(let t=15;t<=180;t++)a.push(t);for(let t=195;t<=1440;t+=15)a.push(t);}
+  else{for(let t=60;t<=4320;t+=60)a.push(t);for(let t=4680;t<=43200;t+=360)a.push(t);}
+  return a;
+}
+function buildCurve(){const [N,s]=runLen();curve=samples().map(t=>[t,simulate(C,R,t,rule,N,s,null).perDay]);}
+let geo=null;
+function drawCurve(){
+  const c=setup($('cCurve')),g=c.g,w=c.w,h=c.h;
+  const pad={l:40,r:12,t:14,b:30},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const yMax=dailyMax()*1.1,lmin=Math.log(M.tMin),lmax=Math.log(M.tMax);
+  const X=t=>pad.l+pw*(Math.log(t)-lmin)/(lmax-lmin),Y=v=>pad.t+ph*(1-v/yMax);
+  geo={X,pad,pw,lmin,lmax};
+  g.strokeStyle=css('--grid');g.lineWidth=1;font(g,11);g.fillStyle=css('--ink-soft');
+  const yt=niceStep(yMax/5);
+  for(let v=0;v<=yMax+1e-9;v+=yt){g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(num(v,2),pad.l-6,Y(v));}
+  M.ticks.forEach((t,i)=>{if(t<M.tMin||t>M.tMax)return;const x=X(t);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    if(w<460&&mode==='lives'&&t===720)return;
+    g.textAlign='center';g.textBaseline='top';g.fillText(tickLbl(t),Math.min(x,w-pad.r-14),h-pad.b+6);});
+  // max line
+  g.strokeStyle=css('--moss');g.globalAlpha=.6;g.setLineDash([2,4]);g.beginPath();g.moveTo(pad.l,Y(dailyMax()));g.lineTo(w-pad.r,Y(dailyMax()));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // knee
+  const k=C*R;
+  if(k>=M.tMin&&k<=M.tMax){const x=X(k);g.strokeStyle=css('--ink-soft');g.lineWidth=1.5;g.setLineDash([5,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+    font(g,11,'600');g.fillStyle=css('--ink');g.textBaseline='top';const lbl='knee = C × R = '+kneeTxt();const tw=g.measureText(lbl).width;
+    const right=x+6+tw<w-pad.r;g.textAlign=right?'left':'right';const ty=pad.t+ph*0.8,tx=right?x+6:x-6-tw;g.fillStyle=css('--paper-2');g.fillRect(tx-2,ty-2,tw+4,16);g.fillStyle=css('--ink');g.fillText(lbl,right?x+6:x-6,ty);}
+  // formula
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();
+  for(let i=0;i<=300;i++){const t=Math.exp(lmin+(lmax-lmin)*i/300),x=X(t),y=Y(formula(t));i?g.lineTo(x,y):g.moveTo(x,y);}
+  g.stroke();
+  // simulated
+  if(curve){const n=Math.max(2,Math.round(curve.length*anim));g.strokeStyle=css('--steel');g.lineWidth=2.5;g.lineJoin='round';g.beginPath();
+    for(let i=0;i<n;i++){const p=curve[i],x=X(p[0]),y=Y(Math.min(p[1],yMax));i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();}
+  // marker
+  const x=X(T),sv=simAt(T).perDay;
+  g.strokeStyle=css('--ochre');g.lineWidth=2;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+  g.fillStyle=css('--ink');g.beginPath();g.arc(x,Y(formula(T)),4.5,0,7);g.fill();
+  g.fillStyle=css('--ochre');g.beginPath();g.arc(x,Y(sv),6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  // handle
+  g.fillStyle=css('--ochre');g.beginPath();g.moveTo(x-6,pad.t-2);g.lineTo(x+6,pad.t-2);g.lineTo(x,pad.t+7);g.closePath();g.fill();
+}
+function niceStep(x){const m=Math.pow(10,Math.floor(Math.log10(x)));return [1,2,2.5,5,10].map(f=>f*m).find(s=>s>=x);}
+function tickLbl(t){if(t<60)return t+'m';if(t<1440||mode==='lives'&&t<=1440)return (t/60)+'h';return (t/1440)+'d';}
+// dragging on the curve
+(function(){const cv=$('cCurve');let down=false;
+  function at(e){if(!geo)return;const r=cv.getBoundingClientRect();const px=Math.max(geo.pad.l,Math.min(geo.pad.l+geo.pw,e.clientX-r.left));
+    const t=Math.exp(geo.lmin+(px-geo.pad.l)/geo.pw*(geo.lmax-geo.lmin));setT(snapT(t));}
+  cv.addEventListener('pointerdown',e=>{down=true;cv.setPointerCapture(e.pointerId);at(e);});
+  cv.addEventListener('pointermove',e=>{if(down)at(e);});
+  cv.addEventListener('pointerup',()=>{down=false;});cv.addEventListener('pointercancel',()=>{down=false;});
+})();
+
+// ---------- readouts ----------
+const RULE_NAME={pause:'pause at full',wall:'wall clock',restart:'restart on spend'};
+function readouts(){
+  const d=dec(),u=M.unit,mx=dailyMax(),f=formula(T),s=simAt(T),sv=s.perDay;
+  $('oCap').textContent=C;$('oR').textContent=fmtDur(R);$('oT').textContent=fmtDur(T);
+  tin.setAttribute('aria-valuetext',fmtDur(T));
+  $('sKnee').textContent=hmm(C*R);
+  $('sMax').textContent=num(mx,d);
+  $('sVisit').textContent=num(Math.min(C,T/R),2);
+  $('sForm').textContent=num(f,d);
+  $('sSim').textContent=num(sv,d);
+  $('sShare').textContent=Math.round(100*sv/mx)+'%';
+  const lost=rule==='wall'?s.lostPerDay:Math.max(0,mx-sv);
+  $('sLost').textContent=num(lost,d);
+  $('sLostL').textContent=u+' lost per day'+(rule==='wall'?' (counted)':' (max − simulated)');
+  $('sVisitL').textContent=u+' per visit, min(C, T/R)';
+  $('sFormL').textContent=u+' per day, formula';
+  $('sSimL').textContent=u+' per day, simulated ('+RULE_NAME[rule]+')';
+  $('sMaxL').textContent='daily maximum 24 h / R';
+  // summary
+  const capLoss=Math.max(0,mx-f),resetLoss=Math.max(0,f-sv);
+  let why='';
+  if(lost<0.05)why='none are lost.';
+  else{const parts=[];if(capLoss>=0.05)parts.push(num(capLoss,d)+' to the cap');if(resetLoss>=0.05)parts.push(num(resetLoss,d)+' to timer resets');
+    why=num(lost,d)+' are lost'+(parts.length?' ('+parts.join(', ')+').':'.');}
+  $('summary').textContent=`Checking in every ${fmtDur(T)}, you get ${num(sv,d)} of ${num(mx,d)} possible ${u} a day; ${why}`;
+  // insight
+  const k=C*R;let ins;
+  if(resetLoss>=0.05)ins=`<b>Restart on spend</b> costs this player ${num(resetLoss,d)} ${u} a day. Every visit wipes the partial progress toward the next life, and ${fmtDur(T)} is not a whole multiple of R = ${fmtDur(R)}. Frequent players take this hit; nobody chose it.`;
+  else if(T>k)ins=`The knee is <b>${kneeTxt()}</b>. You check in every ${fmtDur(T)}, past the knee, so the stock sits full and ${num(capLoss,d)} ${u} a day are regenerated into it and thrown away. The player sees scarcity, never the loss.`;
+  else ins=`The knee is <b>${kneeTxt()}</b>. Checking in every ${fmtDur(T)} already collects the full ${num(mx,d)} ${u} a day. Checking in more often gains nothing. Drag T past the knee, or pick restart on spend at 45 min.`;
+  $('insight').innerHTML=ins;
+  $('legRule').textContent=RULE_NAME[rule];
+}
+function table(){
+  const d=dec(),[N,s]=runLen();
+  const rows=M.rows.map(t=>{
+    const f=formula(t),vals=['pause','wall','restart'].map(r=>simulate(C,R,t,r,N,s,null).perDay);
+    return `<tr data-t="${t}"><td>${fmtDur(t)}</td><td>${num(f,d)}</td>`+vals.map(v=>`<td class="${v<f-0.05?'dip':''}">${num(v,d)}</td>`).join('')+'</tr>';
+  });
+  $('tbody').innerHTML=rows.join('');
+  $('tabTitle').textContent=`Simulated ${M.unit} per day for C = ${C}, R = ${fmtDur(R)}`;
+  $('tabSub').textContent=`Averaged over days ${M.startDay+1} to ${M.days} of a ${M.days}-day run. Red cells fall below the formula.`;
+  markRow();
+}
+function markRow(){document.querySelectorAll('#tbody tr').forEach(r=>r.classList.toggle('here',+r.dataset.t===T));}
+
+// ---------- update cycle ----------
+function updateT(){readouts();drawDay();drawCurve();markRow();}
+function updateAll(animate){
+  buildCurve();table();
+  cancelAnimationFrame(animId);
+  if(animate&&!reduce.matches){const t0=performance.now();anim=0;
+    const step=now=>{anim=Math.min(1,(now-t0)/450);drawCurve();if(anim<1)animId=requestAnimationFrame(step);};animId=requestAnimationFrame(step);}
+  else anim=1;
+  updateT();
+}
+$('cap').addEventListener('input',e=>{C=+e.target.value;updateAll(false);});
+$('regen').addEventListener('input',e=>{R=+e.target.value*(mode==='lives'?1:60);updateAll(false);});
+document.querySelectorAll('input[name=rule]').forEach(r=>r.addEventListener('change',e=>{rule=e.target.value;updateAll(true);}));
+
+function setMode(m,c,r,t){
+  mode=m;M=MODES[m];C=c;R=r;
+  const cap=$('cap'),rg=$('regen');
+  cap.value=C;
+  rg.min=M.rMin;rg.max=M.rMax;rg.step=M.rStep;rg.value=m==='lives'?R:R/60;
+  $('capLbl').textContent='Cap C ('+M.unit+')';
+  document.querySelectorAll('.unitCap').forEach(e=>e.textContent=M.Unit);
+  $('topTitle').textContent=m==='lives'?'One day of lives':'Thirty days of rested XP bubbles';
+  $('topSub').textContent=m==='lives'?'Day 8 of a 21-day run, so the start-up transient is gone. The player spends every life at each visit.':'Days 61 to 90 of a 480-day run. Each visit spends every bubble, a simplification of rested XP draining as you play.';
+  $('botTitle').textContent=M.Unit+' per day vs check-in interval';
+  $('botSub').textContent=m==='lives'?'Log scale. Simulated points: every minute of T from 15 to 180 min, then every 15 min.':'Log scale, 1 h to 30 days. Simulated points: every hour to 3 days, then every 6 h.';
+  $('tHint').textContent=m==='lives'?'Log scale. Arrow keys step 5 min below 3 h, 15 min above. Or drag on the lower chart.':'Log scale. Arrow keys step 1 h below 3 days, 6 h above. Or drag on the lower chart.';
+  $('pCandy').setAttribute('aria-pressed',m==='lives');$('pWow').setAttribute('aria-pressed',m==='bubbles');
+  T=t;tin.value=Math.round(tToPos(T));
+  updateAll(true);
+}
+$('pCandy').addEventListener('click',()=>setMode('lives',5,30,180));
+$('pWow').addEventListener('click',()=>setMode('bubbles',15,960,20160));
+
+let rz=0;window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(()=>{drawDay();drawCurve();});});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawDay();drawCurve();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawDay();drawCurve();});
+
+// expose the model for automated checks
+window.refillModel={simulate,formula:(c,r,t)=>(1440/t)*Math.min(c,t/r)};
+tin.value=Math.round(tToPos(T));
+updateAll(false);
+})();
+</script>
+</body>
+</html>

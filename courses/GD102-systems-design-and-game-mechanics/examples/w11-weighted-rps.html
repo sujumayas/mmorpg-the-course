@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Weighted rock-paper-scissors — GD102 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--cR:var(--steel);--cP:var(--ochre);--cS:var(--blood);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:0 0 4px}
+h3{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:0}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:4px solid var(--ochre);font-family:var(--serif);font-size:1.08rem;max-width:90ch}
+.layout{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.layout{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}.season{grid-column:1/-1}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+.sub{font-size:.86rem;color:var(--ink-soft);margin:0 0 10px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.shape{display:inline-block;width:.85em;height:.85em;vertical-align:-.08em;margin-right:.3em;flex:none}
+/* matrix */
+.mx{border-collapse:separate;border-spacing:4px;width:100%;font-variant-numeric:tabular-nums;table-layout:fixed}
+.mx th{font-size:.82rem;font-weight:600;color:var(--ink);padding:2px 4px;text-align:center;overflow-wrap:anywhere}
+.mx th.corner{font-weight:400;color:var(--ink-soft);text-align:left;font-size:.76rem;line-height:1.2}
+.mx th[scope=row]{text-align:left}
+.mx td{text-align:center;border-radius:8px;padding:8px 2px;background:var(--paper-2);border:1.5px solid transparent}
+.mx td b{display:block;font-size:1.2rem;line-height:1.1}
+.mx td small{display:block;font-size:.74rem;color:var(--ink-soft)}
+.mx td.pos{background:color-mix(in srgb,var(--moss) 26%,var(--paper));border-color:color-mix(in srgb,var(--moss) 60%,transparent)}
+.mx td.neg{background:color-mix(in srgb,var(--blood) 20%,var(--paper));border-color:color-mix(in srgb,var(--blood) 55%,transparent)}
+.loop{display:block;width:100%;max-width:340px;height:auto;margin:6px auto 0}
+.controls{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+@media (min-width:520px){.controls.three{grid-template-columns:repeat(3,1fr)}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:center}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip,.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-family:var(--serif);font-size:.95rem;margin:10px 0 0}
+/* expected payoff bars */
+.ebox{display:grid;grid-template-columns:44px 1fr;gap:6px}
+.eaxis{position:relative;height:190px;font-size:.74rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.eaxis span{position:absolute;right:0;transform:translateY(-50%)}
+.ebars{position:relative;height:190px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px);background-size:100% 25%;border-top:1px solid var(--grid);border-bottom:1px solid var(--grid)}
+.ebars::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px solid var(--ink)}
+.ecol{position:relative}
+.ebar{position:absolute;left:18%;right:18%;border-radius:3px;background:var(--c)}
+.eval{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.enames{display:grid;grid-template-columns:44px repeat(3,1fr);gap:0 10px;font-size:.84rem;font-weight:600;text-align:center;margin-top:4px}
+.enames span:first-child{visibility:hidden}
+/* stacked bar */
+.stack-wrap{position:relative;margin:26px 0 6px}
+.ghostlbl{position:absolute;top:-20px;left:0;right:0;height:18px;font-size:.72rem;color:var(--ink-soft)}
+.ghostlbl span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.stack{display:flex;height:46px;border-radius:8px;overflow:hidden;border:1.5px solid var(--ink)}
+.seg{display:flex;align-items:center;justify-content:center;background:var(--c);color:var(--paper);font-weight:700;font-size:.92rem;font-variant-numeric:tabular-nums;min-width:0;overflow:hidden;white-space:nowrap;transition:flex-basis .25s}
+.ghost{position:absolute;inset:0;display:flex;pointer-events:none}
+.ghost i{flex:1;border:2px dashed var(--ink);border-left-width:0;opacity:.7}
+.ghost i:first-child{border-left-width:2px;border-radius:8px 0 0 8px}
+.ghost i:last-child{border-radius:0 8px 8px 0}
+.shares{display:grid;grid-template-columns:1fr;gap:4px;margin-top:10px;font-variant-numeric:tabular-nums;font-size:.9rem}
+.shares div{display:grid;grid-template-columns:minmax(0,1.3fr) 4.2em 5.6em minmax(0,1.6fr);gap:8px;align-items:baseline;padding:3px 0;border-bottom:1px solid var(--grid)}
+.shares b{font-size:1.02rem}
+.shares .why{color:var(--ink-soft);font-size:.8rem}
+.up{color:var(--moss);font-weight:700}.down{color:var(--blood);font-weight:700}.flat{color:var(--ink-soft);font-weight:700}
+.warn{color:var(--blood);font-weight:700;font-size:.9rem;margin:6px 0 0}
+.views{display:grid;grid-template-columns:1fr;gap:12px}
+/* season */
+.sgrid{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:900px){.sgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}}
+canvas{display:block;width:100%;height:300px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.srow{display:grid;grid-template-columns:1fr;gap:12px;align-items:end;margin-bottom:12px}
+@media (min-width:700px){.srow{grid-template-columns:minmax(0,1fr) auto}}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:8px 0 2px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--ink) 0 5px,transparent 5px 9px)!important;height:2px}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table.st{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+table.st th,table.st td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+table.st th:first-child,table.st td:first-child{text-align:left}
+table.st caption{text-align:left;font-family:var(--serif);font-size:.98rem;padding-bottom:4px}
+.status{font-size:.9rem;margin:8px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:80ch}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD102 Systems Design and Game Mechanics · Week 11 · Worked example</p>
+  <h1>Raise one prize, and its counter takes over</h1>
+  <p class="lede">Three options, each beating one other. Change what a win is worth and compare two views. The top view is what players see on patch day. The bottom view is where the population ends up.</p>
+</header>
+
+<p class="insight" id="insight" aria-live="polite"></p>
+
+<div class="layout">
+<section class="panel" aria-labelledby="h-mx">
+  <h2 id="h-mx">Payoff matrix</h2>
+  <p class="sub">What the row player scores for each pair of choices. The opponent scores the negative.</p>
+  <table class="mx" id="mx">
+    <caption class="vh">Payoff to the row player</caption>
+    <thead><tr><th class="corner" scope="col">You play ↓<br>Opponent →</th><th scope="col" data-o="0"></th><th scope="col" data-o="1"></th><th scope="col" data-o="2"></th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <svg class="loop" id="loop" viewBox="0 0 300 250" role="img" aria-label="Counter loop"></svg>
+
+  <div class="controls three">
+    <div><label for="wR"><span id="lwR">Rock win w_R</span><output id="owR">2</output></label><input id="wR" type="range" min="0.5" max="5" step="0.5" value="2"></div>
+    <div><label for="wP"><span id="lwP">Paper win w_P</span><output id="owP">1</output></label><input id="wP" type="range" min="0.5" max="5" step="0.5" value="1"></div>
+    <div><label for="wS"><span id="lwS">Scissors win w_S</span><output id="owS">1</output></label><input id="wS" type="range" min="0.5" max="5" step="0.5" value="1"></div>
+  </div>
+  <div class="controls">
+    <div><label for="tie">Tie value t (both players get this on a mirror match)<output id="otie">0</output></label><input id="tie" type="range" min="-1" max="0" step="0.1" value="0"></div>
+    <div>
+      <span style="font-weight:600;font-size:.92rem">Presets (each sets t back to 0)</span>
+      <div class="presets" role="group" aria-label="Prize presets">
+        <button class="chip" data-w="1,1,1" aria-pressed="false">Even (1,1,1)</button>
+        <button class="chip" data-w="2,1,1" aria-pressed="true">Schreiber (2,1,1)</button>
+        <button class="chip" data-w="3,1,2" data-yomi="1" aria-pressed="false">Block pays least (Yomi-shaped)</button>
+      </div>
+      <p class="note" id="presetNote"></p>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="h-two">
+  <h2 id="h-two">Two views of the same change</h2>
+  <div class="views">
+    <figure>
+      <figcaption>This week (players still at 1/3 each)<small>Expected payoff of each option against an even mix. Higher looks stronger.</small></figcaption>
+      <div class="ebox">
+        <div class="eaxis" id="eaxis" aria-hidden="true"></div>
+        <div class="ebars" id="ebars" role="img"></div>
+      </div>
+      <div class="enames" id="enames" aria-hidden="true"></div>
+    </figure>
+    <figure>
+      <figcaption>Stable mix<small>The shares where no option beats any other. Dashed outline is the 1/3 split.</small></figcaption>
+      <div class="stack-wrap">
+        <div class="ghostlbl" aria-hidden="true"><span style="left:33.333%">33.3%</span><span style="left:66.667%">66.7%</span></div>
+        <div class="stack" id="stack" role="img"></div>
+        <div class="ghost" aria-hidden="true"><i></i><i></i><i></i></div>
+      </div>
+      <div class="shares" id="shares"></div>
+      <p class="warn" id="nomix" hidden>No fully mixed solution: at least one option drops out. The bar shows the negative share clamped to 0.</p>
+      <p class="note" id="rule"></p>
+    </figure>
+  </div>
+</section>
+
+<section class="panel season" aria-labelledby="h-season">
+  <h2 id="h-season">Run a season</h2>
+  <p class="sub">Each round, every option's share grows in proportion to how much it beats the average: x ← x × (1 + η(E − Ē)), then renormalize. A season is 400 rounds, played at 20 rounds per second.</p>
+  <div class="srow">
+    <div><label for="eta">Adjustment speed η<output id="oeta">0.05</output></label><input id="eta" type="range" min="0.01" max="0.2" step="0.01" value="0.05"></div>
+    <div class="btns">
+      <button class="btn primary" id="run">Run</button>
+      <button class="btn" id="pause" disabled>Pause</button>
+      <button class="btn" id="step">Step +1</button>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+  </div>
+  <div class="sgrid">
+    <figure>
+      <figcaption>Population path<small>Each corner is everyone playing that option.</small></figcaption>
+      <canvas id="tern" role="img" aria-label="Ternary plot of the population path; values are in the table below"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:var(--ink-soft)"></i>Path</span>
+        <span>● Now</span>
+        <span><i class="dash"></i>○ Running average</span>
+        <span>★ Stable mix</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Shares over the season<small>Solid lines: shares each round. Dashed lines: the stable mix.</small></figcaption>
+      <canvas id="lines" role="img" aria-label="Line chart of the three shares over rounds; values are in the table below"></canvas>
+      <div class="legend" id="lineLegend" aria-hidden="true"></div>
+    </figure>
+  </div>
+  <div class="table-wrap">
+    <table class="st">
+      <caption id="stCap">Round 0 of 400</caption>
+      <thead><tr><th scope="col">Shares</th><th scope="col" data-o="0"></th><th scope="col" data-o="1"></th><th scope="col" data-o="2"></th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Now</th><td id="n0"></td><td id="n1"></td><td id="n2"></td></tr>
+        <tr><th scope="row">Running average</th><td id="a0"></td><td id="a1"></td><td id="a2"></td></tr>
+        <tr><th scope="row">Stable mix</th><td id="s0"></td><td id="s1"></td><td id="s2"></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="status" id="status" aria-live="polite"></p>
+</section>
+</div>
+
+<footer>Model after Ian Schreiber, <i>Game Balance Concepts</i> (2010), Level 9 "Intransitive Mechanics", the weighted rock-paper-scissors example. The Yomi-shaped preset only borrows the attack, throw, block loop; its prizes are illustrative, not card values. The season update is a discrete replicator rule, a simple model of players drifting toward what wins.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MINUS='−';
+const sgn=(v,d)=>{const s=Math.abs(v).toFixed(d);return (+s===0)?Number(0).toFixed(d):(v>0?'+':MINUS)+s;};
+const num=v=>(v<0?MINUS:'')+String(+Math.abs(v).toFixed(2));
+const RPS=['Rock','Paper','Scissors'], YOMI=['Attack','Block','Throw'];
+const COLORS=['--cR','--cP','--cS'];
+const SHAPES=['circle','square','triangle'];
+const SEASON=400;
+let w=[2,1,1], t=0, eta=0.05, names=RPS.slice();
+// beats[i] = option that i beats. Rock beats Scissors, Paper beats Rock, Scissors beats Paper.
+const beats=[2,0,1], beatenBy=[1,2,0];
+
+function icon(i,size){
+  const c=`var(${COLORS[i]})`;
+  const s=SHAPES[i];
+  const inner=s==='circle'?`<circle cx="8" cy="8" r="7" fill="${c}"/>`:s==='square'?`<rect x="1.5" y="1.5" width="13" height="13" rx="1.5" fill="${c}"/>`:`<polygon points="8,1 15.5,14.5 0.5,14.5" fill="${c}"/>`;
+  return `<svg class="shape" viewBox="0 0 16 16" aria-hidden="true"${size?` style="width:${size};height:${size}"`:''}>${inner}</svg>`;
+}
+// payoff to row i vs column j
+function pay(i,j){
+  if(i===j) return t;
+  if(beats[i]===j) return w[i];
+  return -w[j];
+}
+function expected(x){return [0,1,2].map(i=>x[0]*pay(i,0)+x[1]*pay(i,1)+x[2]*pay(i,2));}
+function det3(m){return m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]);}
+function stable(){
+  const [wR,wP,wS]=w;
+  if(t===0){const T=wR+wP+wS;return {x:[wS/T,wR/T,wP/T],ok:true};}
+  // E_R - E_P = 0, E_P - E_S = 0, r+p+s = 1  (Cramer's rule)
+  const A=[[t-wP,-wP-t,wR+wS],[wP+wR,t-wS,-wS-t],[1,1,1]], b=[0,0,1];
+  const D=det3(A);
+  const x=[0,1,2].map(k=>det3(A.map((row,i)=>row.map((v,j)=>j===k?b[i]:v)))/D);
+  const ok=x.every(v=>v>=-1e-12);
+  if(!ok){const c=x.map(v=>Math.max(0,v)),S=c[0]+c[1]+c[2];return {x:c.map(v=>v/S),ok:false};}
+  return {x,ok:true};
+}
+
+// ---------- panel 1 ----------
+function drawMatrix(){
+  const sym=[['0','−w_P','+w_R'],['+w_P','0','−w_S'],['−w_R','+w_S','0']];
+  document.querySelectorAll('[data-o]').forEach(th=>{const i=+th.dataset.o;th.innerHTML=icon(i)+names[i];});
+  let h='';
+  for(let i=0;i<3;i++){
+    h+=`<tr><th scope="row">${icon(i)}${names[i]}</th>`;
+    for(let j=0;j<3;j++){
+      const v=pay(i,j),cls=v>0?'pos':v<0?'neg':'';
+      const f=i===j?(t===0?'tie':'tie t'):sym[i][j];
+      const shown=v===0?'0':(v>0?'+':MINUS)+String(+Math.abs(v).toFixed(2));
+      h+=`<td class="${cls}"><b>${shown}</b><small>${f}</small></td>`;
+    }
+    h+='</tr>';
+  }
+  document.querySelector('#mx tbody').innerHTML=h;
+}
+function drawLoop(){
+  const P=[[150,48],[258,210],[42,210]], R=24;
+  const svg=$('loop');let s='';
+  const ink=css('--ink');
+  for(let i=0;i<3;i++){
+    const j=beats[i],a=P[i],b=P[j];
+    const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
+    const sw=1.2+w[i]*1.5, head=8+w[i]*2.2;
+    const x1=a[0]+ux*(R+6),y1=a[1]+uy*(R+6),x2=b[0]-ux*(R+8),y2=b[1]-uy*(R+8);
+    const bx=x2-ux*head,by=y2-uy*head,nx=-uy,ny=ux,hw=head*.62;
+    s+=`<line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" stroke="var(${COLORS[i]})" stroke-width="${sw}" stroke-linecap="round"/>`;
+    s+=`<polygon points="${x2},${y2} ${bx+nx*hw},${by+ny*hw} ${bx-nx*hw},${by-ny*hw}" fill="var(${COLORS[i]})"/>`;
+    // label, offset outward from triangle center
+    const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,cx=150,cy=156;
+    let ox=mx-cx,oy=my-cy;const ol=Math.hypot(ox,oy)||1;ox/=ol;oy/=ol;
+    const lx=mx+ox*20,ly=my+oy*20;
+    s+=`<g><rect x="${lx-24}" y="${ly-11}" width="48" height="22" rx="11" fill="var(--paper)" stroke="var(${COLORS[i]})" stroke-width="1.5"/><text x="${lx}" y="${ly+4.5}" text-anchor="middle" font-size="13" font-weight="700" fill="${ink}" font-family="${css('--sans')}">+${num(w[i])}</text></g>`;
+  }
+  for(let i=0;i<3;i++){
+    const [x,y]=P[i],c=`var(${COLORS[i]})`;
+    if(i===0) s+=`<circle cx="${x}" cy="${y}" r="${R-4}" fill="${c}"/>`;
+    else if(i===1) s+=`<rect x="${x-R+5}" y="${y-R+5}" width="${2*R-10}" height="${2*R-10}" rx="3" fill="${c}"/>`;
+    else s+=`<polygon points="${x},${y-R+2} ${x+R-1},${y+R-6} ${x-R+1},${y+R-6}" fill="${c}"/>`;
+    const ty=i===0?y+R+12:y+R+14;
+    s+=`<text x="${x}" y="${i===0?y-R-4:ty}" text-anchor="middle" font-size="12.5" font-weight="600" fill="${ink}" font-family="${css('--sans')}">${names[i]}</text>`;
+  }
+  svg.innerHTML=s;
+  svg.setAttribute('aria-label','Counter loop. '+[0,1,2].map(i=>`${names[i]} beats ${names[beats[i]]} for ${num(w[i])}`).join('. ')+'.');
+}
+
+// ---------- panel 2 ----------
+function niceScale(m){for(const s of [0.5,1,1.5,2,2.5]) if(m<=s+1e-9) return s;return Math.ceil(m);}
+function drawViews(){
+  const E=expected([1/3,1/3,1/3]);
+  const sc=niceScale(Math.max(...E.map(Math.abs)));
+  $('eaxis').innerHTML=[1,.5,0,-.5,-1].map(k=>`<span style="top:${50-k*50}%">${sgn(k*sc,2).replace('0.00','0')}</span>`).join('');
+  $('ebars').innerHTML=E.map((e,i)=>{
+    const hpct=Math.abs(e)/sc*50, pos=e>=0;
+    const bar=`<div class="ebar" style="--c:var(${COLORS[i]});${pos?`bottom:50%`:`top:50%`};height:${hpct}%"></div>`;
+    const lbl=pos?`<div class="eval" style="bottom:calc(50% + ${hpct}% + 2px)">${sgn(e,3)}</div>`:`<div class="eval" style="top:calc(50% + ${hpct}% + 2px)">${sgn(e,3)}</div>`;
+    return `<div class="ecol">${bar}${lbl}</div>`;
+  }).join('');
+  $('ebars').setAttribute('aria-label','Expected payoff against an even mix: '+E.map((e,i)=>`${names[i]} ${sgn(e,3)}`).join(', '));
+  $('enames').innerHTML='<span></span>'+[0,1,2].map(i=>`<span>${icon(i)}${names[i]}</span>`).join('');
+
+  const st=stable(),x=st.x;
+  $('stack').innerHTML=x.map((v,i)=>`<div class="seg" style="--c:var(${COLORS[i]});flex:0 0 ${v*100}%">${v>=0.12?(v*100).toFixed(1)+'%':''}</div>`).join('');
+  $('stack').setAttribute('aria-label','Stable mix: '+x.map((v,i)=>`${names[i]} ${(v*100).toFixed(1)}%`).join(', '));
+  $('shares').innerHTML=x.map((v,i)=>{
+    const d=v*100-100/3, ds=Math.abs(d)<0.05?'±0.0':sgn(d,1);
+    const cls=Math.abs(d)<0.05?'flat':d>0?'up':'down';
+    const why=t===0?`= ${names[beats[i]]}'s prize ${num(w[beats[i]])} of ${num(w[0]+w[1]+w[2])}`:'solved with tie value';
+    return `<div><span>${icon(i)}${names[i]}</span><b>${(v*100).toFixed(1)}%</b><span class="${cls}">${ds} pts</span><span class="why">${why}</span></div>`;
+  }).join('');
+  $('nomix').hidden=st.ok;
+  $('rule').innerHTML=t===0?`Each option's stable share equals the prize of the option it beats. ${names[0]} beats ${names[2]}, so ${names[0]}'s share is set by ${names[2]}'s prize, not its own.`
+    :`With a tie value of ${num(t)}, mirror matches cost both players, so the stable mix leans toward options that were already rare. With t = 0 each share would equal the prize of the option it beats.`;
+  // insight caption
+  $('insight').textContent=insightText(E,x);
+}
+function listNames(idx){return idx.length===1?names[idx[0]]:idx.length===2?`${names[idx[0]]} and ${names[idx[1]]}`:'All three';}
+function insightText(E,x){
+  const eq=w[0]===w[1]&&w[1]===w[2];
+  if(eq) return t===0?'Every win is worth the same. No option leads this week, and the stable mix is a third each.':'Every win is worth the same, so a costly tie changes nothing between options. The stable mix stays at a third each.';
+  const mw=Math.max(...w), top=[0,1,2].filter(i=>w[i]===mw);
+  const others=[0,1,2].filter(i=>w[i]!==mw);
+  let lead;
+  if(top.length===1&&others.length===2&&w[others[0]]===w[others[1]]){
+    const r=mw/w[others[0]];
+    const word=r===2?'double':r===3?'triple':`${String(+r.toFixed(2))} times`;
+    lead=`${names[top[0]]}'s win is worth ${word} the others.`;
+  } else lead=`${listNames(top)} ${top.length===1?'has':'share'} the biggest prize (${num(mw)}).`;
+  const me=Math.max(...E), bestE=[0,1,2].filter(i=>Math.abs(E[i]-me)<1e-9);
+  const mx=Math.max(...x), bestX=[0,1,2].filter(i=>Math.abs(x[i]-mx)<1e-9);
+  const weekTxt=`${listNames(bestE)} ${bestE.length===1?'looks':'look'} best this week.`;
+  const same=bestE.length===1&&bestX.length===1&&bestE[0]===bestX[0];
+  const seasonTxt=same?`${names[bestX[0]]} also leads the season.`:`${listNames(bestX)} ${bestX.length===1?'wins':'share the lead in'} the season.`;
+  return `${lead} ${weekTxt} ${seasonTxt}`;
+}
+
+// ---------- panel 3: season ----------
+let hist=[],avgHist=[],avgSum=[0,0,0],round=0,running=false,raf=0,lastT=0,acc=0,crashed=false;
+function startMix(){
+  let x=[1/3,1/3,1/3];
+  if(w[0]===w[1]&&w[1]===w[2]){x[0]+=0.001;const S=x[0]+x[1]+x[2];x=x.map(v=>v/S);}
+  return x;
+}
+function resetSeason(){
+  stop();
+  const x=startMix();
+  hist=[x];avgSum=x.slice();avgHist=[x];round=0;crashed=false;
+  drawSeason();setStatus();
+}
+function step(){
+  const x=hist[hist.length-1],E=expected(x);
+  const Eb=x[0]*E[0]+x[1]*E[1]+x[2]*E[2];
+  let y=x.map((v,i)=>Math.max(1e-9,v*(1+eta*(E[i]-Eb))));
+  const S=y[0]+y[1]+y[2];y=y.map(v=>v/S);
+  if(Math.min(...y)<0.001) crashed=true;
+  hist.push(y);round++;
+  for(let i=0;i<3;i++) avgSum[i]+=y[i];
+  avgHist.push(avgSum.map(v=>v/hist.length));
+}
+function reduced(){return matchMedia('(prefers-reduced-motion: reduce)').matches;}
+function run(){
+  if(round>=SEASON) resetSeason();
+  if(reduced()){while(round<SEASON) step();drawSeason();setStatus();return;}
+  running=true;$('run').disabled=true;$('pause').disabled=false;lastT=0;acc=0;
+  raf=requestAnimationFrame(tick);
+}
+function tick(ts){
+  if(!running) return;
+  if(!lastT) lastT=ts;
+  acc+=(ts-lastT)/1000*20;lastT=ts;
+  let n=Math.floor(acc);acc-=n;
+  while(n-->0&&round<SEASON) step();
+  drawSeason();
+  if(round>=SEASON){stop();setStatus();return;}
+  raf=requestAnimationFrame(tick);
+}
+function stop(){running=false;cancelAnimationFrame(raf);$('run').disabled=false;$('pause').disabled=true;$('run').textContent=round>=SEASON?'Run again':(round>0?'Resume':'Run');}
+function setStatus(){
+  const x=hist[hist.length-1],a=avgHist[avgHist.length-1],s=stable().x;
+  const f=v=>(v*100).toFixed(1)+'%';
+  let msg=`Round ${round} of ${SEASON}. Now ${[0,1,2].map(i=>names[i]+' '+f(x[i])).join(', ')}. Running average ${[0,1,2].map(i=>names[i]+' '+f(a[i])).join(', ')}. Stable mix ${[0,1,2].map(i=>names[i]+' '+f(s[i])).join(', ')}.`;
+  if(round>0){const gap=Math.max(...[0,1,2].map(i=>Math.abs(a[i]-s[i])))*100;msg+=` The running average is within ${gap.toFixed(1)} points of the stable mix, while this round's mix is ${(Math.max(...[0,1,2].map(i=>Math.abs(x[i]-s[i])))*100).toFixed(1)} points away.`;}
+  if(crashed) msg+=' At this speed the population overshoots into a corner: one option nearly vanishes. Lower η to see the spiral.';
+  $('status').textContent=msg;
+}
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function drawShape(g,i,x,y,r,color){
+  g.fillStyle=color;g.beginPath();
+  if(i===0) g.arc(x,y,r,0,Math.PI*2);
+  else if(i===1) g.rect(x-r*.88,y-r*.88,r*1.76,r*1.76);
+  else {g.moveTo(x,y-r*1.05);g.lineTo(x+r,y+r*.8);g.lineTo(x-r,y+r*.8);g.closePath();}
+  g.fill();
+}
+function star(g,x,y,R,fill,stroke){
+  g.beginPath();
+  for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,rr=k%2?R*.45:R;g.lineTo(x+rr*Math.cos(a),y+rr*Math.sin(a));}
+  g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=stroke;g.lineWidth=1.5;g.stroke();
+}
+function drawTern(){
+  const {g,w:W,h:H}=setupCanvas($('tern'));
+  g.clearRect(0,0,W,H);
+  const side=Math.min(W-60,(H-58)/0.866), cx=W/2, top=24;
+  const A=[cx,top], B=[cx+side/2,top+side*0.866], C=[cx-side/2,top+side*0.866]; // Rock top, Paper right, Scissors left
+  const pt=x=>[x[0]*A[0]+x[1]*B[0]+x[2]*C[0],x[0]*A[1]+x[1]*B[1]+x[2]*C[1]];
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),paper=css('--paper');
+  // grid lines at 1/3
+  g.strokeStyle=grid;g.lineWidth=1;
+  for(const k of [1/3,2/3]){
+    for(let i=0;i<3;i++){const a=[0,0,0],b=[0,0,0];a[i]=k;b[i]=k;a[(i+1)%3]=1-k;b[(i+2)%3]=1-k;const p=pt(a),q=pt(b);g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);g.stroke();}
+  }
+  g.strokeStyle=ink;g.lineWidth=1.5;g.beginPath();g.moveTo(...A);g.lineTo(...B);g.lineTo(...C);g.closePath();g.stroke();
+  const cols=COLORS.map(css);
+  g.font='600 12px '+css('--sans');g.fillStyle=ink;g.textBaseline='middle';
+  drawShape(g,0,A[0],A[1]-12,6,cols[0]);g.textAlign='left';g.fillStyle=ink;g.fillText(names[0],A[0]+12,A[1]-12);
+  drawShape(g,1,B[0],B[1]+14,6,cols[1]);g.textAlign='right';g.fillStyle=ink;g.fillText(names[1],B[0]-12,B[1]+14);
+  drawShape(g,2,C[0],C[1]+14,6,cols[2]);g.textAlign='left';g.fillStyle=ink;g.fillText(names[2],C[0]+12,C[1]+14);
+  // path
+  g.strokeStyle=soft;g.lineWidth=1.3;g.globalAlpha=.8;g.beginPath();
+  hist.forEach((x,k)=>{const p=pt(x);k?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]);});g.stroke();g.globalAlpha=1;
+  // running average trail
+  g.strokeStyle=ink;g.lineWidth=1.6;g.setLineDash([4,4]);g.beginPath();
+  avgHist.forEach((x,k)=>{const p=pt(x);k?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]);});g.stroke();g.setLineDash([]);
+    const a=pt(avgHist[avgHist.length-1]);g.beginPath();g.arc(a[0],a[1],8,0,Math.PI*2);g.fillStyle=paper;g.fill();g.strokeStyle=ink;g.lineWidth=2.2;g.stroke();
+  const s=pt(stable().x);star(g,s[0],s[1],9,css('--moss'),paper);
+  const n=pt(hist[hist.length-1]);g.beginPath();g.arc(n[0],n[1],5.5,0,Math.PI*2);g.fillStyle=ink;g.fill();g.strokeStyle=paper;g.lineWidth=1.5;g.stroke();
+}
+function drawLines(){
+  const {g,w:W,h:H}=setupCanvas($('lines'));
+  const pad={l:40,r:12,t:10,b:30};
+  g.clearRect(0,0,W,H);
+  const X=r=>pad.l+(W-pad.l-pad.r)*r/SEASON, Y=v=>pad.t+(H-pad.t-pad.b)*(1-v);
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=i/4,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(W-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(v*100)+'%',pad.l-6,y);}
+  for(let i=0;i<=4;i++){const r=SEASON*i/4;g.textAlign='center';g.textBaseline='top';g.fillText(String(r),X(r),H-pad.b+6);}
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('round',W-pad.r,H-pad.b-2);
+  const s=stable().x;
+  for(let i=0;i<3;i++){
+    const c=css(COLORS[i]);
+    g.strokeStyle=c;g.lineWidth=1.5;g.setLineDash([6,5]);g.beginPath();g.moveTo(pad.l,Y(s[i]));g.lineTo(W-pad.r,Y(s[i]));g.stroke();g.setLineDash([]);
+    g.lineWidth=2.2;g.beginPath();hist.forEach((x,k)=>{k?g.lineTo(X(k),Y(x[i])):g.moveTo(X(k),Y(x[i]));});g.stroke();
+  }
+}
+function drawSeason(){
+  drawTern();drawLines();
+  const x=hist[hist.length-1],a=avgHist[avgHist.length-1],s=stable().x;
+  for(let i=0;i<3;i++){$('n'+i).textContent=(x[i]*100).toFixed(2)+'%';$('a'+i).textContent=(a[i]*100).toFixed(2)+'%';$('s'+i).textContent=(s[i]*100).toFixed(1)+'%';}
+  $('stCap').textContent=`Round ${round} of ${SEASON}`;
+  if(!running) $('run').textContent=round>=SEASON?'Run again':(round>0?'Resume':'Run');
+}
+
+// ---------- wiring ----------
+function relabel(){
+  const p=['R','P','S'];
+  for(let i=0;i<3;i++) $('lw'+p[i]).textContent=`${names[i]} win w_${p[i]}`;
+  $('lineLegend').innerHTML=[0,1,2].map(i=>`<span>${icon(i)}${names[i]}</span>`).join('');
+}
+function syncInputs(){
+  ['wR','wP','wS'].forEach((id,i)=>{$(id).value=w[i];$('o'+id).textContent=num(w[i]);});
+  $('tie').value=t;$('otie').textContent=num(t);
+}
+function renderAll(){syncInputs();drawMatrix();drawLoop();drawViews();resetSeason();}
+['wR','wP','wS'].forEach((id,i)=>$(id).addEventListener('input',e=>{
+  w[i]=+e.target.value;
+  document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.w===w.join(',')&&t===0&&(!!c.dataset.yomi)===(names[0]==='Attack'))));
+  renderAll();
+}));
+$('tie').addEventListener('input',e=>{t=Math.round(+e.target.value*10)/10;if(t!==0)document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));renderAll();});
+$('eta').addEventListener('input',e=>{eta=+e.target.value;$('oeta').textContent=eta.toFixed(2);resetSeason();});
+const NOTES={
+  '1,1,1':'Plain rock-paper-scissors. Every win is worth 1.',
+  '2,1,1':'Schreiber\'s example: a rock win counts double. His answer is paper half the time, rock and scissors a quarter each.',
+  '3,1,2':'Relabeled as a fighting-game loop. Attack beats Throw for 3, Throw beats Block for 2, Block beats Attack for 1. Mapped as Rock = Attack, Paper = Block, Scissors = Throw, so w_R = 3, w_P = 1, w_S = 2.'
+};
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c===b)));
+  w=b.dataset.w.split(',').map(Number);t=0;
+  names=b.dataset.yomi?YOMI.slice():RPS.slice();
+  relabel();$('presetNote').textContent=NOTES[b.dataset.w];renderAll();
+}));
+$('run').addEventListener('click',run);
+$('pause').addEventListener('click',()=>{stop();setStatus();$('run').focus();});
+$('step').addEventListener('click',()=>{if(running)stop();if(round>=SEASON)resetSeason();step();drawSeason();setStatus();});
+$('reset').addEventListener('click',resetSeason);
+let rt=0;window.addEventListener('resize',()=>{cancelAnimationFrame(rt);rt=requestAnimationFrame(()=>{drawSeason();});});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawLoop();drawSeason();});
+relabel();$('presetNote').textContent=NOTES['2,1,1'];
+renderAll();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawLoop();drawSeason();});
+})();
+</script>
+</body>
+</html>

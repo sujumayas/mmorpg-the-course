@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The inspector's budget · GS101 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.sw{display:inline-block;width:14px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
+.sw.line{height:3px;vertical-align:3px;width:18px}
+.drops{font-size:.88rem;margin:8px 0 0;padding:0;list-style:none}
+.drops li{padding:3px 0 3px 10px;border-left:3px solid var(--blood);margin-bottom:4px}
+.drops li.ok{border-left-color:var(--moss)}
+.next{font-size:.9rem;margin:8px 0 0;font-weight:600}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:center}
+label output,.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:0}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.stepper{display:inline-flex;align-items:center;gap:8px}
+.stepper button{width:36px;height:36px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);font:700 1.1rem var(--sans);cursor:pointer}
+.stepper button:disabled{opacity:.4;cursor:default}
+.stepper output{min-width:1.5ch;text-align:center;font-size:1.1rem}
+.toggle{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.92rem;justify-content:flex-start}
+.toggle input{width:20px;height:20px;accent-color:var(--steel)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:520px;width:100%}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.neg{color:var(--blood)} td.pos{color:var(--moss)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+footer p{margin:0 0 8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GS101 History and Critical Study of Games · Week 12 · Worked example</p>
+  <h1>The careful inspector loses 5 credits a day</h1>
+  <p class="lede">Ten entrants, zero mistakes, and the savings line still slopes below zero. The rules set honest work just under the cost of keeping a family warm and fed. Each mistake makes the next act of mercy cost more.</p>
+</header>
+
+<section class="panel" aria-label="Budget model">
+  <div class="charts">
+    <figure>
+      <figcaption>The ledger: savings over 10 days<small>Bars show each day's income and the cost of full care. Papers, Please (Lucas Pope, 2013), steady-state model.</small></figcaption>
+      <canvas id="cLedger" role="img" aria-label="Savings over ten days"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw" style="background:var(--ochre)"></i>income</span>
+        <span><i class="sw" id="swCare" style="border:1.5px dashed var(--blood)"></i>full care cost</span>
+        <span><i class="sw line" style="background:var(--ink)"></i>savings</span>
+        <span><i class="sw line" style="background:var(--blood)"></i>0: cannot pay rent below here</span>
+      </div>
+      <ul class="drops" id="drops" aria-label="Bills dropped each day"></ul>
+    </figure>
+    <figure>
+      <figcaption>The citation staircase<small>Cost of the k-th citation of the day: 5 lost pay plus the fine. Line shows the running total.</small></figcaption>
+      <canvas id="cStair" role="img" aria-label="Marginal cost of each citation"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw" style="background:var(--steel)"></i>lost pay (5)</span>
+        <span><i class="sw" style="background:var(--blood)"></i>fine</span>
+        <span><i class="sw line" style="background:var(--ink)"></i>running total 5c + P(c)</span>
+      </div>
+      <p class="next" id="next"></p>
+    </figure>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--ochre)"><b id="rIncome">0</b><span>income per day</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rCare">0</b><span>full care cost</span></div>
+    <div class="stat" style="--c:var(--moss)" id="stSurplus"><b id="rSurplus">0</b><span>surplus per day</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rBreak">0</b><span>break-even n (0 citations)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rSav">0</b><span>savings after day 10</span></div>
+  </div>
+  <p class="sr" id="srSummary" aria-live="polite"></p>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="n">Entrants processed per day, n <output id="oN" for="n">10</output></label>
+      <input id="n" type="range" min="0" max="25" step="1" value="10">
+      <label for="c" style="margin-top:10px">Citations per day, c <output id="oC" for="c">0</output></label>
+      <input id="c" type="range" min="0" max="10" step="1" value="0">
+      <p class="hint" id="cHint">Citations cannot exceed entrants processed.</p>
+      <span class="lbl" style="margin-top:12px">Presets</span>
+      <div class="presets" role="group" aria-label="Presets for entrants and citations">
+        <button class="chip" data-n="10" data-c="0">Careful (10, 0)</button>
+        <button class="chip" data-n="11" data-c="0">Break-even (11, 0)</button>
+        <button class="chip" data-n="16" data-c="4">Rushed (16, 4)</button>
+        <button class="chip" data-n="16" data-c="6">Falling apart (16, 6)</button>
+      </div>
+    </div>
+    <div>
+      <div class="lbl"><span id="fLbl">Family size, F (relatives apart from you)</span>
+        <span class="stepper" role="group" aria-labelledby="fLbl">
+          <button id="fMinus" aria-label="Fewer family members">&minus;</button>
+          <output id="oF" aria-live="polite">4</output>
+          <button id="fPlus" aria-label="More family members">+</button>
+        </span>
+      </div>
+      <p class="hint" id="fHint">4 = wife, son, mother-in-law, uncle. 5 adds the adopted niece.</p>
+      <label for="s0" style="margin-top:12px">Starting savings, S0 <output id="oS0" for="s0">0</output></label>
+      <input id="s0" type="range" min="0" max="200" step="5" value="0">
+      <p class="hint">Set to your save's value; 0 for this lecture.</p>
+      <label class="toggle" style="margin-top:12px"><input id="easy" type="checkbox"> Easy mode (+20 credits a day)</label>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tCap">Lecture table, recomputed with the current family and mode</caption>
+      <thead><tr><th>n</th><th>c</th><th>Pay 5(n − c)</th><th>Fines P(c)</th><th>Income</th><th id="thSur">Surplus after full care</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <caption>Price of mercy, citation by citation</caption>
+      <thead><tr><th>k</th><th>Lost pay</th><th>Fine</th><th>Cost of this citation</th><th>Running total</th><th>Days of food for one</th></tr></thead>
+      <tbody id="tbody2"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <p>Model: fine(k) = 0 for k ≤ 2, 5 for k = 3 or 4, 5(k − 3) from k = 5. Income = 5(n − c) − P(c), plus 20 in Easy mode. Care = rent 25 + heat 10 (Class-8 apartment) + 5 food per relative. Savings(d) = savings(d − 1) + surplus.</p>
+  <p>Steady-state footnote: the model charges rent 25 on every day (the game charges 20 until the end of day 5) and ignores medicine and illness. The line below 0 is the cost of full care you could not cover. The game ends only if rent itself cannot be paid. Heat and food are optional and get dropped first, in this order of protection: rent, son's food, heat, then wife, mother-in-law, uncle, niece.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const sgn=v=>v>0?'+'+v:v<0?'−'+Math.abs(v):'0';
+const R=25,H=10,PAY=5,EASY=20;
+const REL=['son','wife','mother-in-law','uncle','niece'];
+let st={n:10,c:0,F:4,S0:0,easy:false};
+
+function fine(k){return k<=2?0:k<=4?5:5*(k-3);}
+function P(c){let s=0;for(let k=1;k<=c;k++)s+=fine(k);return s;}
+function income(n,c,e){return PAY*(n-c)-P(c)+(e?EASY:0);}
+function care(F){return R+H+5*F;}
+function breakEven(F,e){return Math.ceil(Math.max(0,care(F)-(e?EASY:0))/PAY);}
+function relatives(F){ // son first, then wife, mother-in-law, uncle, niece
+  return REL.slice(0,F);
+}
+function drops(avail,F){
+  if(avail<R)return {txt:'rent unpaid, the game ends',bad:true};
+  let left=avail-R;const order=['son','heat'].concat(relatives(F).slice(1));
+  if(F<1)order.splice(0,1);
+  let noHeat=false;const hungry=[];
+  for(const it of order){const cost=it==='heat'?H:5;if(left>=cost)left-=cost;else if(it==='heat')noHeat=true;else hungry.push(it);}
+  if(!noHeat&&!hungry.length)return null;
+  const parts=[];if(noHeat)parts.push('no heat');if(hungry.length)parts.push('no food for '+hungry.join(', '));
+  let t=parts.join('; ');if(hungry.includes('son'))t+=' (the son cannot go a second day)';
+  return {txt:t,bad:true};
+}
+
+function setup(cv){const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function nice(lo,hi){ // tick step and bounds
+  const span=Math.max(1,hi-lo),raw=span/5,mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const step=[1,2,2.5,5,10].map(m=>m*mag).find(s=>s>=raw);
+  return {lo:Math.floor(lo/step)*step,hi:Math.ceil(hi/step)*step,step};
+}
+
+function drawLedger(sav,inc,cr){
+  const {g,w,h}=setup($('cLedger'));const bw=Math.max(3,(w-60)/10*0.26),pad={l:46,r:bw+8,t:12,b:30};
+  const lo=Math.min(0,...sav),hi=Math.max(0,...sav,inc,cr);
+  const s=nice(lo,hi),Y=v=>pad.t+(h-pad.t-pad.b)*(s.hi-v)/(s.hi-s.lo),X=d=>pad.l+(w-pad.l-pad.r)*d/10;
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  if(lo<0){g.fillStyle=css('--blood');g.globalAlpha=.07;g.fillRect(pad.l,Y(0),w-pad.l-pad.r,Y(s.lo)-Y(0));g.globalAlpha=1;}
+  for(let v=s.lo;v<=s.hi+1e-9;v+=s.step){g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(v),pad.l-6,Y(v));}
+  g.textAlign='center';g.textBaseline='top';for(let d=0;d<=10;d+=(w<420?2:1))g.fillText(d,X(d),h-pad.b+6);
+  g.textAlign='right';g.fillText('day',w-pad.r,h-14);
+  // bars
+  for(let d=1;d<=10;d++){
+    const x=X(d);
+    g.fillStyle=css('--ochre');g.globalAlpha=.8;g.fillRect(x-bw-1,Math.min(Y(inc),Y(0)),bw,Math.abs(Y(inc)-Y(0)));g.globalAlpha=1;
+    g.fillStyle=css('--blood');g.globalAlpha=.14;g.fillRect(x+1,Y(cr),bw,Y(0)-Y(cr));g.globalAlpha=1;
+    g.strokeStyle=css('--blood');g.lineWidth=1.5;g.setLineDash([4,3]);g.strokeRect(x+1,Y(cr),bw,Y(0)-Y(cr));g.setLineDash([]);
+  }
+  // zero line
+  g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(pad.l,Y(0));g.lineTo(w-pad.r,Y(0));g.stroke();
+  g.fillStyle=css('--blood');g.textAlign='left';g.textBaseline='top';g.font='600 11px '+css('--sans');
+  if(Y(s.lo)-Y(0)>40){g.textBaseline='bottom';g.fillText('cannot pay rent below here',pad.l+6,Y(s.lo)-4);}
+  else{g.textBaseline='bottom';g.fillText('cannot pay rent below here',pad.l+6,Y(0)-3);}
+  // savings line
+  g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();sav.forEach((v,d)=>d?g.lineTo(X(d),Y(v)):g.moveTo(X(d),Y(v)));g.stroke();
+  sav.forEach((v,d)=>{g.fillStyle=css('--ink');g.beginPath();g.arc(X(d),Y(v),3.2,0,7);g.fill();});
+  g.font='700 12px '+css('--sans');g.fillStyle=css('--ink');g.textAlign='right';g.textBaseline='bottom';
+  g.fillText(sgn(sav[10]),X(10)-8,Y(sav[10])-6);
+}
+
+function drawStair(c){
+  const {g,w,h}=setup($('cStair')),pad={l:36,r:40,t:22,b:30};
+  const L=40,RT=200,Yl=v=>pad.t+(h-pad.t-pad.b)*(1-v/L),Yr=v=>pad.t+(h-pad.t-pad.b)*(1-v/RT);
+  const cw=(w-pad.l-pad.r)/10,X=k=>pad.l+cw*(k-.5);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const v=L*i/4;g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,Yl(v));g.lineTo(w-pad.r,Yl(v));g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,Yl(v));
+    g.textAlign='left';g.fillText(RT*i/4,w-pad.r+6,Yl(v));}
+  g.textAlign='center';g.textBaseline='top';for(let k=1;k<=10;k++)g.fillText(k,X(k),h-pad.b+6);
+  g.textAlign='right';g.fillText('k',pad.l-6,h-pad.b+6);
+  const bw=cw*.62;
+  for(let k=1;k<=10;k++){
+    const on=k<=c,f=fine(k);g.globalAlpha=on?1:.3;
+    g.fillStyle=css('--steel');g.fillRect(X(k)-bw/2,Yl(5),bw,Yl(0)-Yl(5));
+    if(f){g.fillStyle=css('--blood');g.fillRect(X(k)-bw/2,Yl(5+f),bw,Yl(5)-Yl(5+f)-1);}
+    g.globalAlpha=1;
+    if(k===c+1){g.strokeStyle=css('--focus');g.lineWidth=2.5;g.strokeRect(X(k)-bw/2-2,Yl(5+f)-2,bw+4,Yl(0)-Yl(5+f)+2);
+      g.fillStyle=css('--focus');g.font='700 11px '+css('--sans');g.textBaseline='bottom';g.textAlign='center';g.fillText('next',X(k),Yl(5+f)-5);g.font='12px '+css('--sans');}
+  }
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();
+  for(let k=0;k<=10;k++){const x=k?X(k):pad.l,y=Yr(5*k+P(k));k?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();
+  for(let k=1;k<=10;k++){g.fillStyle=k<=c?css('--ink'):css('--paper-2');g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.arc(X(k),Yr(5*k+P(k)),3.5,0,7);g.fill();g.stroke();}
+  g.fillStyle=css('--ink-soft');g.textBaseline='bottom';g.textAlign='left';g.fillText('cost',pad.l-30,pad.t-6);g.textAlign='right';g.fillText('total',w-2,pad.t-6);
+}
+
+function render(){
+  const {n,F,S0,easy}=st;const c=Math.min(st.c,n);st.c=c;
+  $('c').max=10;$('c').value=c;$('n').value=n;$('s0').value=S0;$('easy').checked=easy;
+  $('oN').textContent=n;$('oC').textContent=c;$('oS0').textContent=S0;$('oF').textContent=F;
+  $('fMinus').disabled=F<=1;$('fPlus').disabled=F>=5;
+  $('cHint').hidden=!(n<10);
+  $('fHint').textContent='Relatives fed in priority order: '+relatives(F).join(', ')+'.';
+  const inc=income(n,c,easy),cr=care(F),sur=inc-cr,be=breakEven(F,easy);
+  const sav=[S0];for(let d=1;d<=10;d++)sav.push(sav[d-1]+sur);
+  $('rIncome').textContent=inc;$('rCare').textContent=cr;$('rSurplus').textContent=sgn(sur);$('rBreak').textContent=be;$('rSav').textContent=sgn(sav[10]);
+  $('stSurplus').style.setProperty('--c',sur<0?'var(--blood)':'var(--moss)');
+  // drops by day
+  const lines=[];let prev=null,start=1;
+  const day=d=>{const avail=Math.max(0,sav[d-1])+inc;return avail>=cr?null:drops(avail,F);};
+  const res=[];for(let d=1;d<=10;d++){const r=day(d);res.push(r?r.txt:null);}
+  for(let d=1;d<=11;d++){const t=d<=10?res[d-1]:'__end';if(d===1){prev=t;start=1;continue;}
+    if(t!==prev){if(prev!==null)lines.push({t:(start===d-1?'day '+start:'days '+start+' to '+(d-1))+': '+prev});prev=t;start=d;}}
+  $('drops').innerHTML=lines.length?lines.map(l=>'<li>'+l.t+'</li>').join(''):'<li class="ok">Every bill is paid on all 10 days.</li>';
+  // staircase text
+  if(c<10){const k=c+1,X=5+fine(k);$('next').textContent='Cost of the next act of mercy (citation '+k+'): '+X+' credits = '+(X/5)+' day'+(X===5?'':'s')+' of food for one person.';}
+  else $('next').textContent='Ten citations already. That is the edge of this chart.';
+  // insight
+  let s;
+  if(inc<R)s=`Income of ${inc} does not cover rent (25). In the game this day ends your run.`;
+  else if(sur<0)s=`<b>${n} entrants, ${c} citation${c===1?'':'s'}:</b> income ${inc} against care ${cr} leaves you <b>${Math.abs(sur)} short every day</b>, ${sgn(sav[10])} after ten days. You need ${be} clean entrants a day just to break even${c?`, and each citation after the first two also costs a fine`:''}.`;
+  else if(sur===0)s=`<b>Exactly break-even.</b> ${n} entrants with ${c} citations pays for rent, heat and food for ${F}, with nothing left for a single mistake or act of mercy.`;
+  else s=`<b>${sgn(sur)} a day.</b> A margin this thin buys ${Math.floor(sur/5)} act${Math.floor(sur/5)===1?'':'s'} of first-citation mercy before the family pays for it.`;
+  if(easy)s+=' Easy mode is on: the 20 extra credits change what the rules argue.';
+  $('insight').innerHTML=s;
+  $('srSummary').textContent=`n ${n}, c ${c}, family ${F}${easy?', easy mode':''}. Income ${inc}, care ${cr}, surplus ${sur}, savings after day 10 ${sav[10]}, break-even n ${be}.`;
+  $('cLedger').setAttribute('aria-label',`Savings from ${S0} on day 0 to ${sav[10]} on day 10; daily income ${inc}, daily care cost ${cr}.`);
+  $('cStair').setAttribute('aria-label',`Citation costs k 1 to 10: ${Array.from({length:10},(_,i)=>5+fine(i+1)).join(', ')}. ${c} citations so far cost ${5*c+P(c)} in total.`);
+  // tables
+  $('thSur').textContent='Surplus after full care ('+cr+')';
+  const rows=[[8,0],[10,0],[11,0],[12,2],[14,2],[14,4],[16,4],[16,6]];
+  let hit=false;
+  $('tbody').innerHTML=rows.map(([rn,rc])=>{const i=income(rn,rc,easy),su=i-cr,here=rn===n&&rc===c;hit=hit||here;
+    return `<tr class="${here?'here':''}"><td>${rn}</td><td>${rc}</td><td>${5*(rn-rc)}</td><td>${P(rc)}</td><td>${i}</td><td class="${su<0?'neg':su>0?'pos':''}">${sgn(su)}</td></tr>`;}).join('')+
+    (hit?'':`<tr class="here"><td>${n}</td><td>${c}</td><td>${5*(n-c)}</td><td>${P(c)}</td><td>${inc}</td><td class="${sur<0?'neg':sur>0?'pos':''}">${sgn(sur)}</td></tr>`);
+  let t2='';for(let k=1;k<=10;k++){const x=5+fine(k);t2+=`<tr class="${k===c+1?'here':''}"><td>${k}${k===c+1?' (next)':''}</td><td>5</td><td>${fine(k)}</td><td>${x}</td><td>${5*k+P(k)}</td><td>${x/5}</td></tr>`;}
+  $('tbody2').innerHTML=t2;
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.n===n&&+b.dataset.c===c)));
+  drawLedger(sav,inc,cr);drawStair(c);
+}
+
+$('n').addEventListener('input',e=>{st.n=+e.target.value;render();});
+$('c').addEventListener('input',e=>{st.c=Math.min(+e.target.value,st.n);render();});
+$('s0').addEventListener('input',e=>{st.S0=+e.target.value;render();});
+$('easy').addEventListener('change',e=>{st.easy=e.target.checked;render();});
+$('fMinus').addEventListener('click',()=>{st.F=Math.max(1,st.F-1);render();});
+$('fPlus').addEventListener('click',()=>{st.F=Math.min(5,st.F+1);render();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{st.n=+b.dataset.n;st.c=+b.dataset.c;render();}));
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+window.__model={fine,P,income,care,breakEven,drops,state:st,render};
+render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The mod pipeline · GS101 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 14px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:860px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 10px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg.chart{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink)}
+svg .tick{font-size:12px;fill:var(--ink-soft)}
+svg .gridl{stroke:var(--grid);stroke-width:1}
+svg .row{cursor:pointer;outline:none}
+svg .row .hit{fill:transparent}
+svg .row .lab{font-size:13px;paint-order:stroke;stroke:var(--paper-2);stroke-width:3px;stroke-linejoin:round}
+svg .row .tool{stroke-width:1.5}
+svg .row .comm{stroke-width:3.5}
+svg .row.hl .tool{stroke-width:3}
+svg .row.hl .comm{stroke-width:7}
+svg .row.hl .lab{font-weight:700}
+svg .row:focus-visible .hit{stroke:var(--focus);stroke-width:2.5;fill:transparent}
+svg.dim .row:not(.hl){opacity:.4}
+svg .row line,svg .row{transition:stroke-width .15s,opacity .15s}
+svg .med{stroke-width:1.75;stroke-dasharray:6 5}
+svg .medlab{font-size:12px;font-weight:700;paint-order:stroke;stroke:var(--paper-2);stroke-width:3px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.86rem;margin:12px 0 0;align-items:center}
+.legend svg{vertical-align:middle;margin-right:5px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;align-items:center}
+.chip{font:600 .9rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.plain{border-color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:22px 0 4px}
+.hint{font-size:.88rem;color:var(--ink-soft);margin:0 0 6px}
+.table-wrap{overflow-x:auto;margin-top:6px;position:relative}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:700px;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-size:.84rem;color:var(--ink-soft);font-weight:600}
+td.lag{font-weight:600}
+tr.hl td{background:var(--paper-2)}
+tr.hl td:first-child{font-weight:700;box-shadow:inset 4px 0 0 var(--ink)}
+input[type=number],input[type=text],select{font:inherit;font-size:.92rem;color:var(--ink);background:var(--paper);border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);padding:4px 6px}
+input[type=number]{width:5.4em;text-align:right;font-variant-numeric:tabular-nums}
+input[aria-invalid="true"]{border-color:var(--blood);box-shadow:0 0 0 1px var(--blood)}
+.status{min-height:1.4em;font-size:.88rem;color:var(--blood);margin:6px 0 0;font-weight:600}
+.summary{margin:10px 0 0;padding:0;list-style:none;font-size:.95rem}
+.summary li{padding:3px 0}
+.summary b{font-variant-numeric:tabular-nums}
+form.add{display:grid;grid-template-columns:2fr repeat(3,1fr) 1.4fr auto;gap:10px;align-items:end;margin-top:8px}
+@media (max-width:760px){form.add{grid-template-columns:1fr 1fr}form.add .name{grid-column:1/-1}}
+form.add label{display:flex;flex-direction:column;font-weight:600;font-size:.85rem;gap:3px}
+form.add input[type=number]{width:100%}
+form.add input,form.add select{width:100%}
+.rm{font:600 .8rem var(--sans);padding:4px 8px;border-radius:6px;border:1.5px solid var(--blood);background:transparent;color:var(--ink);cursor:pointer}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GS101 History and Critical Study of Games · Week 7 · Worked example</p>
+  <h1>The mod pipeline</h1>
+  <p class="lede">On a calendar, six mod stories look unrelated. Slide every row so the host game sits at year zero and two patterns appear. Mods arrive fast, and the standalone game arrives fast only when the host's owner makes it.</p>
+</header>
+
+<section class="panel" aria-label="Mod pipeline timelines">
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="sHost">—</b><span>median L<sub>S</sub>, host-owned</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="sThird">—</b><span>median L<sub>S</sub>, third-party</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="sLM">—</b><span>median L<sub>M</sub>, all rows</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="sL">—</b><span>median L, host-owned / third-party</span></div>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Calendar<small>Release year of host, mod and standalone game</small></figcaption>
+      <div id="wCal"><svg class="chart" id="cal" role="group" aria-label="Calendar timeline, one row per case. Details are in the table below."></svg></div>
+    </figure>
+    <figure>
+      <figcaption>Aligned at host release<small>Years since the host game shipped. Dashed lines are the median total lag L per owner group.</small></figcaption>
+      <div id="wAli"><svg class="chart" id="ali" role="group" aria-label="Timeline aligned at host release, one row per case. Details are in the table below."></svg></div>
+    </figure>
+  </div>
+
+  <div class="legend" aria-label="Legend">
+    <span><svg width="14" height="14" aria-hidden="true"><rect x="2" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"/></svg>host game</span>
+    <span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="currentColor"/></svg>mod</span>
+    <span><svg width="16" height="16" aria-hidden="true"><path d="M8 1 L15 8 L8 15 L1 8Z" fill="currentColor"/></svg>standalone game</span>
+    <span><svg width="26" height="10" aria-hidden="true"><line x1="1" y1="5" x2="25" y2="5" stroke="currentColor" stroke-width="1.5"/></svg>thin line: tool lag L<sub>M</sub></span>
+    <span><svg width="26" height="10" aria-hidden="true"><line x1="1" y1="5" x2="25" y2="5" stroke="currentColor" stroke-width="4"/></svg>thick line: commercial lag L<sub>S</sub></span>
+    <span id="legOwn"><svg width="26" height="10" aria-hidden="true"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--steel)" stroke-width="4"/></svg>host-owned <svg width="26" height="10" aria-hidden="true" style="margin-left:10px"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--ochre)" stroke-width="4"/></svg>third-party</span>
+  </div>
+
+  <div class="controls">
+    <button class="chip" id="bColour" aria-pressed="true">Colour by owner</button>
+    <button class="chip" id="bStrict" aria-pressed="false">Strict Team Fortress (standalone 2000)</button>
+    <button class="chip plain" id="bReset">Reset data</button>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <h2>Readout</h2>
+  <p class="hint">L<sub>M</sub> = t<sub>M</sub> &minus; t<sub>H</sub> (tool lag), L<sub>S</sub> = t<sub>S</sub> &minus; t<sub>M</sub> (commercial lag), L = t<sub>S</sub> &minus; t<sub>H</sub> (total). Edit the mod and standalone years or the owner to test your own coding.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Case</th><th scope="col">Owner</th><th scope="col">t<sub>H</sub></th><th scope="col">t<sub>M</sub></th><th scope="col">t<sub>S</sub></th><th scope="col">L<sub>M</sub></th><th scope="col">L<sub>S</sub></th><th scope="col">L</th><th scope="col"><span class="sr">Remove</span></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <p class="status" id="status" role="status"></p>
+  <ul class="summary" id="summary"></ul>
+
+  <h2>Add a row</h2>
+  <p class="hint">Enter your own case from the in-class activity. Years must satisfy t<sub>H</sub> &le; t<sub>M</sub> &le; t<sub>S</sub>. Up to 12 rows.</p>
+  <form class="add" id="addForm" novalidate>
+    <label class="name"><span>Case name</span><input type="text" id="fName" maxlength="40" autocomplete="off" aria-describedby="fErr"></label>
+    <label><span>t<sub>H</sub> host</span><input type="number" id="fH" min="1970" max="2025" step="1" aria-describedby="fErr"></label>
+    <label><span>t<sub>M</sub> mod</span><input type="number" id="fM" min="1970" max="2025" step="1" aria-describedby="fErr"></label>
+    <label><span>t<sub>S</sub> standalone</span><input type="number" id="fS" min="1970" max="2025" step="1" aria-describedby="fErr"></label>
+    <label><span>Owner</span><select id="fO"><option value="host">host-owned</option><option value="third">third-party</option></select></label>
+    <button class="chip" type="submit" id="fAdd">Add row</button>
+  </form>
+  <p class="status" id="fErr" role="alert"></p>
+</section>
+
+<footer>Dates at year precision, from the lecture's Sources: Wikipedia articles on Team Fortress Classic, Counter-Strike, Half-Life, Defense of the Ancients, Warcraft III, League of Legends, Dota 2, Arma 2, DayZ (mod and standalone) and PUBG: Battlegrounds, accessed September 2026. The PUBG mod year (DayZ: Battle Royale, about 2013) is approximate. Owner means who owned the host game when the standalone shipped. Six cases show a pattern; they do not prove that ownership causes it.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const DEFAULTS=[
+  {id:'tf',name:'Team Fortress',tH:1996,tM:1996,tS:1999,owner:'third'},
+  {id:'cs',name:'Counter-Strike',tH:1998,tM:1999,tS:2000,owner:'host'},
+  {id:'lol',name:'DotA to League of Legends',tH:2002,tM:2003,tS:2009,owner:'third'},
+  {id:'d2',name:'DotA to Dota 2',tH:2002,tM:2003,tS:2013,owner:'third'},
+  {id:'dayz',name:'DayZ',tH:2009,tM:2012,tS:2013,owner:'host'},
+  {id:'pubg',name:'Battle royale to PUBG',tH:2009,tM:2013,tS:2017,owner:'third'}
+];
+const OWN={host:'host-owned',third:'third-party'};
+const MAXROWS=12,MAXY=2025,MINY=1970;
+let rows=[],colour=true,strict=false,hl=null,nextId=1;
+
+const LM=r=>r.tM-r.tH, LS=r=>r.tS-r.tM, LT=r=>r.tS-r.tH;
+function median(a){if(!a.length)return null;const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2;}
+const num=v=>v===null?'—':(Number.isInteger(v)?String(v):v.toFixed(1));
+const yrs=v=>v===null?'—':num(v)+(v===1?' year':' years');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function colourOf(r){return colour?(r.owner==='host'?'var(--steel)':'var(--ochre)'):'var(--ink-soft)';}
+
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+
+function niceStep(span,px){const cands=[1,2,3,5,10];for(const c of cands){if(px/(span/c)>=44)return c;}return 10;}
+
+function draw(svgId,wrapId,mode){
+  const svg=$(svgId),W=Math.max(260,$(wrapId).clientWidth);
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const pad={l:12,r:16,t:colour?40:10,b:30},RH=46;
+  const H=pad.t+rows.length*RH+pad.b;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width',W);svg.setAttribute('height',H);
+  let x0,x1;
+  if(mode==='cal'){
+    x0=Math.min(1993,...rows.map(r=>r.tH));x1=Math.max(2018,...rows.map(r=>r.tS));
+  }else{x0=0;x1=Math.max(15,...rows.map(LT));}
+  const X=v=>pad.l+(W-pad.l-pad.r)*(v-x0)/(x1-x0);
+  const step=niceStep(x1-x0,W-pad.l-pad.r);
+  const gb=pad.t+rows.length*RH;
+  // year grid
+  for(let v=x0;v<=x1;v++){
+    const major=(v%step===0);
+    el('line',{x1:X(v),x2:X(v),y1:pad.t,y2:gb,class:'gridl','stroke-opacity':major?1:.45},svg);
+    if(major){const t=el('text',{x:X(v),y:gb+18,'text-anchor':'middle',class:'tick'},svg);t.textContent=v;}
+  }
+  // median lines (aligned panel only)
+  if(mode==='ali'&&colour){
+    const meds=[['host','host-owned median',14],['third','third-party median',30]];
+    for(const [o,lab,y] of meds){
+      const m=median(rows.filter(r=>r.owner===o).map(LT));if(m===null)continue;
+      const c=o==='host'?'var(--steel)':'var(--ochre)',x=X(m);
+      el('line',{x1:x,x2:x,y1:y+4,y2:gb,class:'med',stroke:c},svg);
+      const anchor=x<W*0.25?'start':(x>W*0.7?'end':'middle');
+      const t=el('text',{x:anchor==='start'?x-2:(anchor==='end'?x+2:x),y:y,'text-anchor':anchor,class:'medlab',fill:c},svg);
+      t.textContent=`${lab} ${num(m)}`;
+    }
+  }
+  rows.forEach((r,i)=>{
+    const y0=pad.t+i*RH,ly=y0+34,c=colourOf(r);
+    const g=el('g',{class:'row'+(hl===r.id?' hl':''),'data-row':r.id,tabindex:'0',role:'img',
+      'aria-label':`${r.name}, ${OWN[r.owner]}. Host ${r.tH}, mod ${r.tM}, standalone ${r.tS}. Tool lag ${LM(r)}, commercial lag ${LS(r)}, total ${LT(r)} years.`},svg);
+    el('title',{},g).textContent=`${r.name} (${OWN[r.owner]}): L_M ${LM(r)}, L_S ${LS(r)}, L ${LT(r)}`;
+    el('rect',{x:pad.l-6,y:y0+2,width:W-pad.l-pad.r+12,height:RH-4,rx:6,class:'hit'},g);
+    const hx=mode==='cal'?X(r.tH):X(0),mx=mode==='cal'?X(r.tM):X(LM(r)),sx=mode==='cal'?X(r.tS):X(LT(r));
+    const lab=el('text',{x:pad.l,y:y0+16,class:'lab'},g);
+    lab.textContent=r.name+'  ·  '+OWN[r.owner];
+    el('line',{x1:hx,x2:mx,y1:ly,y2:ly,stroke:c,class:'tool'},g);
+    el('line',{x1:mx,x2:sx,y1:ly,y2:ly,stroke:c,class:'comm','stroke-linecap':'round'},g);
+    el('rect',{x:hx-5,y:ly-5,width:10,height:10,fill:'var(--paper-2)',stroke:c,'stroke-width':2.2},g);
+    el('circle',{cx:mx,cy:ly,r:5.5,fill:c,stroke:'var(--paper-2)','stroke-width':1.5},g);
+    el('path',{d:`M${sx} ${ly-8} L${sx+8} ${ly} L${sx} ${ly+8} L${sx-8} ${ly}Z`,fill:c,stroke:'var(--paper-2)','stroke-width':1.5},g);
+    g.addEventListener('mouseenter',()=>setHL(r.id));
+    g.addEventListener('mouseleave',()=>setHL(null));
+    g.addEventListener('focus',()=>setHL(r.id));
+    g.addEventListener('blur',()=>setHL(null));
+  });
+}
+
+function setHL(id){
+  hl=id;
+  document.querySelectorAll('svg.chart').forEach(s=>s.classList.toggle('dim',!!id));
+  document.querySelectorAll('[data-row]').forEach(e=>e.classList.toggle('hl',e.dataset.row===id));
+}
+
+function drawAll(){draw('cal','wCal','cal');draw('ali','wAli','ali');setHL(hl);}
+
+function buildTable(){
+  const tb=$('tbody');tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');tr.dataset.row=r.id;
+    const n=esc(r.name);
+    tr.innerHTML=`<td>${n}</td>
+      <td><select aria-label="${n} owner" data-f="owner"><option value="host"${r.owner==='host'?' selected':''}>host-owned</option><option value="third"${r.owner==='third'?' selected':''}>third-party</option></select></td>
+      <td>${r.tH}</td>
+      <td><input type="number" data-f="tM" aria-label="${n} mod year t_M" min="${r.tH}" max="${MAXY}" step="1" value="${r.tM}"></td>
+      <td><input type="number" data-f="tS" aria-label="${n} standalone year t_S" min="${r.tH}" max="${MAXY}" step="1" value="${r.tS}"></td>
+      <td class="lag" data-c="lm"></td><td class="lag" data-c="ls"></td><td class="lag" data-c="lt"></td>
+      <td>${r.custom?`<button class="rm" aria-label="Remove ${n}">Remove</button>`:''}</td>`;
+    tr.addEventListener('mouseenter',()=>setHL(r.id));
+    tr.addEventListener('mouseleave',()=>setHL(null));
+    tr.addEventListener('focusin',()=>setHL(r.id));
+    tr.addEventListener('focusout',()=>setHL(null));
+    tr.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input',()=>tryEdit(r,inp,false));
+      inp.addEventListener('change',()=>tryEdit(r,inp,true));
+    });
+    tr.querySelector('select').addEventListener('change',e=>{r.owner=e.target.value;update();});
+    const rm=tr.querySelector('.rm');
+    if(rm)rm.addEventListener('click',()=>{rows=rows.filter(x=>x!==r);hl=null;buildTable();update();$('status').textContent='';});
+    tb.appendChild(tr);
+  });
+}
+
+function tryEdit(r,inp,commit){
+  const f=inp.dataset.f,v=Number(inp.value);
+  const cand={...r,[f]:v};
+  let err='';
+  if(inp.value===''||!Number.isInteger(v))err='Enter a whole year.';
+  else if(v<r.tH||v>MAXY)err=`Year must be between ${r.tH} (the host year) and ${MAXY}.`;
+  else if(cand.tM>cand.tS)err=`${r.name}: the mod year cannot be after the standalone year.`;
+  if(err){
+    inp.setAttribute('aria-invalid','true');$('status').textContent=err;
+    if(commit){inp.value=r[f];inp.removeAttribute('aria-invalid');}
+    return;
+  }
+  inp.removeAttribute('aria-invalid');$('status').textContent='';
+  if(r[f]!==v){r[f]=v;if(r.id==='tf'&&f==='tS'){strict=(v===2000);$('bStrict').setAttribute('aria-pressed',strict);}update();}
+}
+
+function update(){
+  // table computed cells
+  rows.forEach(r=>{
+    const tr=document.querySelector(`#tbody tr[data-row="${r.id}"]`);if(!tr)return;
+    tr.querySelector('[data-c=lm]').textContent=LM(r);
+    tr.querySelector('[data-c=ls]').textContent=LS(r);
+    tr.querySelector('[data-c=lt]').textContent=LT(r);
+    const s=tr.querySelector('[data-f=tS]');if(document.activeElement!==s&&+s.value!==r.tS)s.value=r.tS;
+    const m=tr.querySelector('[data-f=tM]');if(document.activeElement!==m&&+m.value!==r.tM)m.value=r.tM;
+  });
+  const H=rows.filter(r=>r.owner==='host'),T=rows.filter(r=>r.owner==='third');
+  const mLSh=median(H.map(LS)),mLSt=median(T.map(LS)),mLM=median(rows.map(LM));
+  const mLh=median(H.map(LT)),mLt=median(T.map(LT));
+  $('sHost').textContent=yrs(mLSh);$('sThird').textContent=yrs(mLSt);$('sLM').textContent=yrs(mLM);
+  $('sL').textContent=`${num(mLh)} / ${num(mLt)}`;
+  const list=a=>a.length?a.join(', '):'no rows';
+  $('summary').innerHTML=
+    `<li>Median L<sub>S</sub>, host-owned: <b>${num(mLSh)}</b> (values ${list(H.map(LS))})</li>`+
+    `<li>Median L<sub>S</sub>, third-party: <b>${num(mLSt)}</b> (values ${list(T.map(LS))})</li>`+
+    `<li>Median L<sub>M</sub>, all rows: <b>${num(mLM)}</b> (values ${list(rows.map(LM))})</li>`+
+    `<li>Median L, host-owned: <b>${num(mLh)}</b> (values ${list(H.map(LT))}); third-party: <b>${num(mLt)}</b> (values ${list(T.map(LT))})</li>`;
+  const maxLM=rows.length?Math.max(...rows.map(LM)):0;
+  let s=`Every mod reached players within <b>${yrs(maxLM)}</b> of its host (median tool lag ${yrs(mLM)}). `;
+  if(mLSh!==null&&mLSt!==null){
+    const gap=mLSt-mLSh;
+    if(!colour) s+=`With owner colours off, the standalone diamonds look scattered. Turn colour back on to see them split into two groups.`;
+    else if(gap>0) s+=`After the mod, host-owned standalones took a median <b>${yrs(mLSh)}</b> and third-party ones <b>${yrs(mLSt)}</b>, a gap of <b>${yrs(gap)}</b>. The owner of the host could ship fast; everyone else had to rebuild from scratch.`;
+    else s+=`With your coding, host-owned and third-party medians are ${num(mLSh)} and ${num(mLSt)} years, so the ownership gap has gone. Which change removed it, and is that change defensible?`;
+  } else s+=`One owner group is empty, so there is nothing to compare.`;
+  $('insight').innerHTML=s;
+  $('legOwn').hidden=!colour;
+  drawAll();
+}
+
+function reset(){
+  rows=DEFAULTS.map(r=>({...r}));colour=true;strict=false;hl=null;
+  $('bColour').setAttribute('aria-pressed','true');$('bStrict').setAttribute('aria-pressed','false');
+  $('status').textContent='';$('fErr').textContent='';
+  buildTable();update();
+}
+
+$('bColour').addEventListener('click',()=>{colour=!colour;$('bColour').setAttribute('aria-pressed',colour);update();});
+$('bStrict').addEventListener('click',()=>{
+  strict=!strict;$('bStrict').setAttribute('aria-pressed',strict);
+  const tf=rows.find(r=>r.id==='tf');
+  if(tf){tf.tS=strict?2000:1999;if(tf.tM>tf.tS)tf.tM=tf.tS;}
+  update();
+});
+$('bReset').addEventListener('click',reset);
+
+$('addForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const name=$('fName').value.trim(),h=$('fH').value,m=$('fM').value,s=$('fS').value;
+  const [H,M,S]=[h,m,s].map(Number);
+  ['fName','fH','fM','fS'].forEach(i=>$(i).removeAttribute('aria-invalid'));
+  let err='',bad=[];
+  if(rows.length>=MAXROWS){err=`The chart holds at most ${MAXROWS} rows. Remove one first.`;}
+  else if(!name){err='Give the case a name.';bad=['fName'];}
+  else if([h,m,s].some(v=>v===''||!Number.isInteger(Number(v)))){err='Enter all three years as whole numbers.';bad=['fH','fM','fS'].filter(i=>$(i).value===''||!Number.isInteger(Number($(i).value)));}
+  else if([H,M,S].some(v=>v<MINY||v>MAXY)){err=`Years must be between ${MINY} and ${MAXY}.`;bad=['fH','fM','fS'];}
+  else if(!(H<=M&&M<=S)){err='Years must satisfy t_H ≤ t_M ≤ t_S: host first, then mod, then standalone.';bad=H>M?['fH','fM']:['fM','fS'];}
+  if(err){$('fErr').textContent=err;bad.forEach(i=>$(i).setAttribute('aria-invalid','true'));return;}
+  $('fErr').textContent='';
+  rows.push({id:'u'+(nextId++),name,tH:H,tM:M,tS:S,owner:$('fO').value,custom:true});
+  $('addForm').reset();buildTable();update();
+});
+
+let raf=0;
+window.addEventListener('resize',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(drawAll);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+reset();
+})();
+</script>
+</body>
+</html>

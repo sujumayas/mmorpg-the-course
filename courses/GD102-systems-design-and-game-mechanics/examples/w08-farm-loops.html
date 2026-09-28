@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Farm loops: compounding until the limit binds · GD102 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.4vw,2.7rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--blood)}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.summary{font-family:var(--serif);font-size:1.08rem;margin:0 0 14px;padding:10px 14px;border-radius:10px;background:var(--paper-2);border-left:4px solid var(--blood)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px}
+@media (max-width:760px){canvas{height:240px}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:22px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid var(--c)}
+.legend i.dash{border-top-style:dashed}
+.legend i.box{width:12px;height:12px;border:2px solid var(--ochre);background:transparent;border-radius:2px}
+.legend i.fill{width:12px;height:12px;border:2px solid var(--ochre);background:var(--ochre);border-radius:2px}
+.scale{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.scale button{font:600 .8rem var(--sans);padding:4px 10px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.scale button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px;margin-top:18px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl-title{font-weight:600;font-size:.92rem;display:block;margin-bottom:6px}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend.ctl-title{padding:0}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pills label{font:600 .9rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer;position:relative}
+.pills input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.pills label:has(input:checked){background:var(--ink);color:var(--paper)}
+.pills label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.pills small{font-weight:400;opacity:.8}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .82rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.switch{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.92rem;cursor:pointer;margin:4px 0 8px}
+.switch input{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:999px;background:var(--grid);border:1.5px solid var(--ink-soft);position:relative;flex:none;cursor:pointer;margin:0}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:var(--ink-soft);transition:left .15s}
+.switch input:checked{background:var(--steel);border-color:var(--steel)}
+.switch input:checked::after{left:20px;background:var(--paper)}
+.switch small{display:block;font-weight:400;color:var(--ink-soft);font-size:.8rem}
+input:disabled,input:disabled+span{opacity:.5;cursor:not-allowed}
+.dis{opacity:.5}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-family:var(--serif);font-size:.96rem;margin:10px 0 0;max-width:70ch}
+.table-wrap{overflow-x:auto;margin-top:18px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:560px;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{white-space:nowrap;padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.82rem;color:var(--ink-soft);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+tr.bind td{font-weight:700;background:var(--paper-2)}
+tr.bind td.n{color:var(--blood)}
+.sumline{font-variant-numeric:tabular-nums;font-size:.92rem;margin:10px 0 0;padding:8px 10px;border:1px dashed var(--ink-soft);border-radius:var(--radius-sm)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*,*::after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD102 Systems Design and Game Mechanics · Week 8 · Worked example</p>
+  <h1>The farm compounds until the <em>watering limit</em> binds</h1>
+  <p class="lede">While gold decides how many seeds you plant, gold grows by 1.75× every parsnip cycle. Once energy decides, it grows by a fixed amount. On the log chart the farm peels away from the dashed line on the cycle the limit binds.</p>
+</header>
+
+<section class="panel" aria-label="Farm model">
+  <p class="summary" id="summary" aria-live="polite"></p>
+
+  <div class="charts">
+    <figure>
+      <figcaption><span>Gold<small>Gold at the end of each harvest vs. the "on paper" compounding line</small></span>
+        <span class="scale" role="group" aria-label="Gold axis scale">
+          <button type="button" id="sLog" aria-pressed="true">Log</button><button type="button" id="sLin" aria-pressed="false">Linear</button>
+        </span>
+      </figcaption>
+      <canvas id="cGold" role="img" aria-label="Gold by day"></canvas>
+      <div class="legend">
+        <span><i style="--c:var(--ochre)"></i>Your farm (dot = harvest)</span>
+        <span><i class="dash" style="--c:var(--ink-soft)"></i>On paper: G₀ × (p/c)^k</span>
+        <span><i class="dash" style="--c:var(--blood)"></i>Limit binds</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption><span>Tiles vs limit<small>Tiles planted each cycle and the watering limit W</small></span></figcaption>
+      <canvas id="cTiles" role="img" aria-label="Tiles planted per cycle and watering limit"></canvas>
+      <div class="legend">
+        <span><i class="box"></i>Tiles n (gold binds)</span>
+        <span><i class="fill"></i>Tiles n = W (limit binds)</span>
+        <span><i style="--c:var(--steel)"></i>Watering limit W</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--ochre)"><b id="rGold">—</b><span id="rGoldL">gold at day 28</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rBind">—</b><span>limit first binds</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rRatio">—</b><span id="rRatioL">of the on-paper value</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rLvl">—</b><span>Farming level / XP at the end</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <fieldset>
+        <legend class="ctl-title">Crop</legend>
+        <div class="pills">
+          <label><input type="radio" name="crop" value="parsnip" checked>Parsnip <small>20g → 35g, 4 days, 8 XP</small></label>
+          <label><input type="radio" name="crop" value="cauli">Cauliflower <small>80g → 175g, 12 days, 23 XP</small></label>
+        </div>
+      </fieldset>
+      <label class="row" for="g0" style="margin-top:14px">Starting gold G₀ <output id="oG0" for="g0">300</output></label>
+      <input id="g0" type="range" min="0" max="25" step="1" value="5" aria-valuetext="300 gold">
+      <div class="chips" role="group" aria-label="Starting gold presets">
+        <button type="button" class="chip" data-g="300">300</button>
+        <button type="button" class="chip" data-g="2000">2,000</button>
+        <button type="button" class="chip" data-g="20000">20,000</button>
+      </div>
+      <p class="note" id="cropNote"></p>
+    </div>
+    <div>
+      <label class="switch"><input type="checkbox" id="lim" checked><span>Energy limit<small>Off means you can water any number of tiles</small></span></label>
+      <label class="switch" id="lvlWrap"><input type="checkbox" id="lvl"><span>Farming levels<small>Harvest XP lowers watering cost: W = floor(270 / (2 − 0.1 L))</small></span></label>
+      <div id="sprWrap">
+        <label class="row" for="spr">Quality sprinklers <output id="oSpr" for="spr">0</output></label>
+        <input id="spr" type="range" min="0" max="40" step="1" value="0">
+      </div>
+      <p class="note" id="metaNote"></p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>One row per cycle. Bold rows are cycles where the watering limit binds. Level is the one used for that cycle's limit (0 while levels are off).</caption>
+      <thead><tr><th scope="col">Cycle</th><th scope="col">Harvest day</th><th scope="col">Level</th><th scope="col">Limit W</th><th scope="col">Tiles n</th><th scope="col">Gold at end</th><th scope="col">On paper</th><th scope="col">XP</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <p class="sumline" id="sumline"></p>
+</section>
+
+<footer>Model from the lecture: n = min(floor(G / c), W), G ← G + (p − c) × n, W = floor(270 / (2 − 0.1 L)) + 8 × sprinklers, one 28-day season, cycles that would end after day 28 are not run. Level applies from the cycle after the harvest that earns it. Crop prices, growth times, XP, energy 270, watering cost and the Farming XP table from the Stardew Valley Wiki (1.6 era). The model ignores tilling, refilling the can and crop quality, so it is an upper bound on a real farm.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const CROPS={parsnip:{name:'Parsnip',c:20,p:35,d:4,xp:8},cauli:{name:'Cauliflower',c:80,p:175,d:12,xp:23}};
+const TH=[0,100,380,770,1300,2150,3300,4800,6900,10000,15000];
+const GOLD=[100,120,150,200,250,300,400,500,600,700,800,1000,1200,1500,2000,2500,3000,4000,5000,6000,7000,8000,10000,12000,15000,20000];
+const SEASON=28;
+const st={crop:'parsnip',g0:300,lim:true,lvl:false,spr:0,log:true};
+
+function levelOf(x){let L=0;for(let i=0;i<TH.length;i++)if(x>=TH[i])L=i;return L;}
+function limitW(L){return Math.floor(270/(2-0.1*L))+8*st.spr;}
+
+function simulate(){
+  const cr=CROPS[st.crop];let G=st.g0,X=0,L=0;const rows=[];
+  for(let k=0;(k+1)*cr.d<=SEASON;k++){
+    const Luse=st.lvl?L:0;
+    const W=st.lim?limitW(Luse):Infinity;
+    const n=Math.min(Math.floor(G/cr.c),W);
+    G=G+(cr.p-cr.c)*n;X=X+cr.xp*n;L=levelOf(X);
+    rows.push({k:k+1,day:(k+1)*cr.d,L:Luse,W,n,G,X,Lafter:L,bind:st.lim&&n===W,paper:st.g0*Math.pow(cr.p/cr.c,k+1)});
+  }
+  return rows;
+}
+
+// ---------- canvas helpers ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v*1.02)||v;}
+function short(v){if(v>=1e6)return (v/1e6).toFixed(v%1e6?1:0).replace(/\.0$/,'')+'M';if(v>=1e4)return Math.round(v/1000)+'k';if(v>=1000)return (v/1000).toFixed(1).replace(/\.0$/,'')+'k';return fmt(v);}
+function xAxis(g,w,h,pad,sx){
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  for(let d=0;d<=SEASON;d+=4){g.fillText(d,sx(d),h-pad.b+6);}
+  g.textAlign='right';g.fillText('day',w-pad.r,h-14);
+}
+function hGrid(g,w,pad,ys,sy){
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='middle';
+  ys.forEach(v=>{const y=sy(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(short(v),pad.l-6,y);});
+}
+function labelBox(g,text,x,y,align,color){
+  g.font='600 12px '+css('--sans');const tw=g.measureText(text).width;
+  let bx=align==='right'?x-tw-8:x;bx=Math.max(bx,50);g.fillStyle=css('--paper');g.globalAlpha=.9;g.fillRect(bx,y-9,tw+8,18);g.globalAlpha=1;
+  g.fillStyle=color;g.textAlign='left';g.textBaseline='middle';g.fillText(text,bx+4,y);
+}
+
+function drawGold(rows,bindDay){
+  const c=setup($('cGold')),g=c.g,w=c.w,h=c.h,pad={l:48,r:14,t:14,b:34};
+  g.clearRect(0,0,w,h);
+  const cr=CROPS[st.crop],ratio=cr.p/cr.c;
+  const paperAt=d=>st.g0*Math.pow(ratio,d/cr.d);
+  const pts=[{day:0,G:st.g0}].concat(rows.map(r=>({day:r.day,G:r.G})));
+  const farmMax=Math.max(...pts.map(p=>p.G));
+  const lastDay=rows.length?rows[rows.length-1].day:0;
+  const paperMax=paperAt(lastDay);
+  const sx=d=>pad.l+(w-pad.l-pad.r)*d/SEASON;
+  let sy,ticks,yTop,clip=false;
+  if(st.log){
+    const lo=Math.pow(10,Math.floor(Math.log10(st.g0))),top=Math.max(farmMax,paperMax)*1.05,e10=Math.pow(10,Math.floor(Math.log10(top))),hi=top<=3*e10?3*e10:10*e10;
+    const a=Math.log10(lo),b=Math.log10(hi);
+    sy=v=>pad.t+(h-pad.t-pad.b)*(1-(Math.log10(v)-a)/(b-a));
+    ticks=[];const dense=b-a<=3.6;for(let e=Math.round(a);e<=Math.ceil(b);e++){[1,3].forEach(m=>{const v=m*Math.pow(10,e);if(v>=lo&&v<=hi*1.001&&(dense||m===1||v===hi))ticks.push(v);});}
+    yTop=hi;
+  }else{
+    yTop=niceMax(Math.min(Math.max(farmMax,paperMax),farmMax*2.5));clip=paperMax>yTop;
+    sy=v=>pad.t+(h-pad.t-pad.b)*(1-v/yTop);ticks=[0,1,2,3,4].map(i=>yTop*i/4);
+  }
+  hGrid(g,w,pad,ticks,sy);xAxis(g,w,h,pad,sx);
+  // on-paper dashed
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  g.strokeStyle=css('--ink-soft');g.lineWidth=2;g.setLineDash([7,5]);g.beginPath();
+  for(let i=0;i<=120;i++){const d=lastDay*i/120,v=paperAt(d);const x=sx(d),y=sy(Math.min(v,st.log?v:yTop*1.2));i?g.lineTo(x,y):g.moveTo(x,y);}
+  g.stroke();g.setLineDash([]);g.restore();
+  // bind marker
+  if(bindDay!==null){
+    const x=sx(bindDay);g.strokeStyle=css('--blood');g.lineWidth=1.5;g.setLineDash([4,4]);
+    g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+    const txt=(w<440?'Limit reached':'Watering limit reached')+` (day ${bindDay})`;g.font='600 12px '+css('--sans');
+    const tw=g.measureText(txt).width+8,right=x+6+tw>w-pad.r;
+    labelBox(g,txt,right?x-6:x+6,pad.t+10,right?'right':'left',css('--blood'));
+  }
+  // farm line
+  g.strokeStyle=css('--ochre');g.lineWidth=3;g.lineJoin='round';g.beginPath();
+  pts.forEach((p,i)=>{const x=sx(p.day),y=sy(p.G);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+  pts.forEach((p,i)=>{if(!i)return;const x=sx(p.day),y=sy(p.G);g.beginPath();g.arc(x,y,4.5,0,Math.PI*2);g.fillStyle=css('--ochre');g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();});
+  // start marker (hollow square)
+  g.strokeStyle=css('--ochre');g.lineWidth=2;g.strokeRect(sx(0)-4,sy(st.g0)-4,8,8);
+  // end labels
+  const last=pts[pts.length-1];
+  if(rows.length){
+    labelBox(g,fmt(last.G),sx(last.day)-8,Math.min(sy(last.G)+16,h-pad.b-12),'right',css('--ochre'));
+    const py=clip?pad.t+28:Math.max(sy(paperMax)-2,pad.t+28);
+    labelBox(g,(clip?'on paper ':'')+fmt(paperMax)+(clip?' (off chart)':''),sx(lastDay)-8,py,'right',css('--ink-soft'));
+  }
+}
+
+function drawTiles(rows){
+  const c=setup($('cTiles')),g=c.g,w=c.w,h=c.h,pad={l:48,r:14,t:14,b:34};
+  g.clearRect(0,0,w,h);
+  const cr=CROPS[st.crop];
+  const maxV=Math.max(1,...rows.map(r=>r.n),...rows.map(r=>isFinite(r.W)?r.W:0));
+  const yTop=niceMax(maxV*1.12);
+  const sx=d=>pad.l+(w-pad.l-pad.r)*d/SEASON,sy=v=>pad.t+(h-pad.t-pad.b)*(1-v/yTop);
+  hGrid(g,w,pad,[0,1,2,3,4].map(i=>yTop*i/4),sy);xAxis(g,w,h,pad,sx);
+  const gap=Math.max(2,(sx(cr.d)-sx(0))*0.12);
+  rows.forEach(r=>{
+    const x0=sx(r.day-cr.d)+gap/2,x1=sx(r.day)-gap/2,y=sy(r.n),y0=sy(0);
+    g.lineWidth=2;g.strokeStyle=css('--ochre');
+    if(r.bind){g.fillStyle=css('--ochre');g.fillRect(x0,y,x1-x0,y0-y);}
+    else{g.globalAlpha=.15;g.fillStyle=css('--ochre');g.fillRect(x0,y,x1-x0,y0-y);g.globalAlpha=1;g.strokeRect(x0+1,y+1,x1-x0-2,y0-y-1);}
+    // tile count label
+    g.font='600 11px '+css('--sans');g.textAlign='center';
+    const nearLine=isFinite(r.W)&&(y-sy(r.W))<16,inside=(r.bind||nearLine)&&(y0-y)>20;
+    g.fillStyle=inside&&r.bind?css('--paper'):css('--ink');
+    g.textBaseline=inside?'top':'bottom';
+    if(x1-x0>=18)g.fillText(fmt(r.n),(x0+x1)/2,inside?y+4:y-3);
+  });
+  // limit step line
+  if(st.lim&&rows.length){
+    g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+    rows.forEach((r,i)=>{const xa=sx(r.day-cr.d),xb=sx(r.day),y=sy(r.W);if(i===0)g.moveTo(xa,y);else g.lineTo(xa,y);g.lineTo(xb,y);});
+    g.stroke();
+    const lr=rows[rows.length-1];
+    labelBox(g,'W = '+fmt(lr.W),sx(lr.day)-4,Math.max(sy(lr.W)-12,pad.t+8),'right',css('--steel'));
+  }else if(!st.lim){
+    labelBox(g,'No watering limit',w-pad.r-4,pad.t+10,'right',css('--steel'));
+  }
+}
+
+function update(){
+  const rows=simulate(),cr=CROPS[st.crop];
+  const bindRow=rows.find(r=>r.bind),bindDay=bindRow?bindRow.day:null;
+  const last=rows[rows.length-1],paper=last.paper,ratio=last.G/paper,pct=Math.round(ratio*100);
+  const lastDay=last.day;
+  // summary (aria-live)
+  $('summary').textContent=(bindDay!==null?`Watering limit reached on day ${bindDay}.`:'Watering limit never binds this season.')+
+    ` Final gold ${fmt(last.G)}, ${pct}% of the on-paper value.`;
+  $('rGold').textContent=fmt(last.G);
+  $('rGoldL').textContent=lastDay===SEASON?'gold at day 28':`gold at day 28 (last harvest day ${lastDay})`;
+  $('rBind').textContent=bindDay!==null?'day '+bindDay:'never';
+  $('rRatio').textContent=pct+'%';
+  $('rRatioL').textContent='of on paper ('+fmt(paper)+')';
+  $('rLvl').textContent=`${last.Lafter} / ${fmt(last.X)}`;
+  // table
+  $('tbody').innerHTML=rows.map(r=>`<tr class="${r.bind?'bind':''}"><td>${r.k}</td><td>${r.day}</td><td>${st.lvl?r.L:'0'}</td><td>${isFinite(r.W)?fmt(r.W):'none'}</td><td class="n">${fmt(r.n)}</td><td>${fmt(r.G)}</td><td>${fmt(r.paper)}</td><td>${fmt(r.X)}</td></tr>`).join('');
+  $('sumline').textContent=`${cr.name}, G₀ ${fmt(st.g0)}, limit ${st.lim?'on':'off'}, levels ${st.lvl?'on':'off'}, ${st.spr} sprinklers. Gold at day 28: ${fmt(last.G)}. Limit first binds: ${bindDay!==null?'day '+bindDay:'never'}. Final / on paper: ${fmt(last.G)} / ${fmt(paper)} = ${pct}%.`;
+  // notes
+  $('cropNote').textContent=st.crop==='parsnip'
+    ?`Parsnip multiplies gold by 35/20 = 1.75 per 4-day cycle (+15.0% a day) but earns only 15 per tile per cycle (3.75 per tile per day). Best when gold binds.`
+    :`Cauliflower multiplies gold by 175/80 = 2.19 per 12-day cycle (+6.7% a day) but earns 95 per tile (7.92 per tile per day). Best when the watering limit binds. Only 2 cycles fit in 28 days.`;
+  let m;
+  if(!st.lim)m=`With no energy limit, gold is the only constraint and the farm tracks the dashed line all month. It falls short only because you cannot buy part of a seed.`;
+  else if(bindDay===null)m=`Gold binds every cycle, so the watering limit of ${fmt(rows[0].W)} tiles never matters. Raise the starting gold to find it.`;
+  else{const after=rows.filter(r=>r.bind);const gain=(cr.p-cr.c)*after[after.length-1].W;
+    m=`From day ${bindDay} the farm gains a fixed ${fmt(gain)} gold per cycle (${cr.p-cr.c} × ${fmt(after[after.length-1].W)} tiles) instead of ×${(cr.p/cr.c).toFixed(2).replace(/0$/,'')}. `+
+      (st.spr?`${st.spr} quality sprinklers add ${8*st.spr} tiles to every cycle's limit.`:st.lvl?`Levels lift the limit in small steps. Try the sprinkler slider.`:`Turn on Farming levels or add sprinklers to move the bend.`);}
+  $('metaNote').textContent=m;
+  $('oG0').textContent=fmt(st.g0);$('g0').setAttribute('aria-valuetext',fmt(st.g0)+' gold');
+  $('oSpr').textContent=st.spr+(st.spr?` (+${8*st.spr} tiles)`:'');$('spr').setAttribute('aria-valuetext',`${st.spr} sprinklers, plus ${8*st.spr} tiles`);
+  document.querySelectorAll('.chip[data-g]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.g===st.g0)));
+  $('lvl').disabled=!st.lim;$('spr').disabled=!st.lim;$('lvlWrap').classList.toggle('dis',!st.lim);$('sprWrap').classList.toggle('dis',!st.lim);
+  $('cGold').setAttribute('aria-label',`Gold by day on a ${st.log?'log':'linear'} axis. Farm ends at ${fmt(last.G)}; on paper ${fmt(paper)}.`+(bindDay!==null?` Limit binds on day ${bindDay}.`:''));
+  $('cTiles').setAttribute('aria-label','Tiles per cycle: '+rows.map(r=>`day ${r.day} ${r.n}${isFinite(r.W)?' of '+r.W:''}`).join(', '));
+  drawGold(rows,bindDay);drawTiles(rows);
+}
+
+// ---------- events ----------
+document.querySelectorAll('input[name=crop]').forEach(r=>r.addEventListener('change',e=>{st.crop=e.target.value;update();}));
+$('g0').addEventListener('input',e=>{st.g0=GOLD[+e.target.value];update();});
+document.querySelectorAll('.chip[data-g]').forEach(b=>b.addEventListener('click',()=>{st.g0=+b.dataset.g;$('g0').value=GOLD.indexOf(st.g0);update();}));
+$('lim').addEventListener('change',e=>{st.lim=e.target.checked;update();});
+$('lvl').addEventListener('change',e=>{st.lvl=e.target.checked;update();});
+$('spr').addEventListener('input',e=>{st.spr=+e.target.value;update();});
+function setScale(log){st.log=log;$('sLog').setAttribute('aria-pressed',String(log));$('sLin').setAttribute('aria-pressed',String(!log));update();}
+$('sLog').addEventListener('click',()=>setScale(true));$('sLin').addEventListener('click',()=>setScale(false));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Capped pool · GD102 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+figure{margin:0 0 14px;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#cDia{display:block;width:100%;height:230px}
+#cTime{display:block;width:100%;height:260px;cursor:crosshair;border-radius:6px}
+@media (max-width:760px){#cDia{height:min(210px,40vh)}#cTime{height:230px}}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);border-left:4px solid var(--blood)}
+.readout{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:12px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.stat.check{grid-column:span 3}
+@media (max-width:900px){.stat.check{grid-column:span 3}}
+@media (max-width:480px){.stat.check{grid-column:span 3}}
+.ok{color:var(--moss);font-size:1.2em} .bad{color:var(--blood);font-size:1.2em}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
+button{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+button.primary{background:var(--ink);color:var(--paper)}
+button.fire{border-color:var(--blood);color:var(--blood)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+select{font:600 .9rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);min-height:40px}
+.cursorline{font-size:.86rem;color:var(--ink-soft);margin:0}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px;margin-top:14px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.controls label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.checks{display:flex;flex-direction:column;gap:8px;justify-content:center}
+.checks label{justify-content:flex-start;align-items:center;font-weight:600}
+.checks input{width:20px;height:20px;accent-color:var(--steel);margin:0 8px 0 0}
+.warn{margin:10px 0 0;padding:8px 12px;border-radius:8px;border:1.5px solid var(--blood);color:var(--blood);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:10px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.msg{font-size:.88rem;color:var(--blood);min-height:1.3em;margin:0}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD102 Systems Design and Game Mechanics · Week 5 · Worked example</p>
+  <h1>Waste = rate × time at capacity</h1>
+  <p class="lede">A source fills a pool with a limit, and the player decides when to spend. Move the hold slider. The diagram looks the same at every setting. Only the red bands on the timeline show what waiting at full costs.</p>
+</header>
+
+<section class="panel" aria-label="Capped pool simulation">
+  <p class="insight" id="insight" aria-live="polite"></p>
+
+  <figure>
+    <figcaption>The Machinations diagram<small>Automatic source (star) pushes into a capped pool. An interactive drain (double outline, &amp; for all-or-nothing) removes one card cost per play. Overflow is lost.</small></figcaption>
+    <canvas id="cDia" role="img" aria-label="Machinations diagram of source, capped pool and drain"></canvas>
+  </figure>
+
+  <figure>
+    <figcaption>Pool level over the 180 s match<small>Red bands mark time spent at capacity. Click, drag or use the arrow keys on the chart to read any moment.</small></figcaption>
+    <canvas id="cTime" tabindex="0" role="img" aria-label="Timeline of pool level"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--steel);height:3px"></i>pool level</span>
+      <span><i style="background:var(--blood);opacity:.35"></i>at capacity (waste)</span>
+      <span id="lgDouble" hidden><i style="background:var(--ochre);opacity:.25"></i>double rate</span>
+    </div>
+  </figure>
+
+  <p class="cursorline" id="cursorLine"></p>
+  <div class="readout" id="readout">
+    <div class="stat" style="--c:var(--moss)"><b id="rGen">0</b><span>generated</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rSpent">0</b><span>spent</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rWaste">0</b><span>wasted</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rPool">0</b><span>pool</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rPlays">0</b><span>plays</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rCap">0</b><span>seconds at cap</span></div>
+    <div class="stat check" style="--c:var(--moss)"><b id="rCheck">—</b><span>check: p0 + generated = pool + spent + wasted</span></div>
+  </div>
+
+  <div class="bar">
+    <button class="primary" id="bPlay" type="button">Play</button>
+    <button id="bEnd" type="button">Jump to end</button>
+    <label for="speed" class="sr">Playback speed</label>
+    <select id="speed" aria-label="Playback speed">
+      <option value="3">3× speed</option>
+      <option value="10" selected>10× speed</option>
+      <option value="30">30× speed</option>
+    </select>
+    <button class="fire" id="bFire" type="button" hidden>Play card (Space)</button>
+  </div>
+  <p class="msg" id="msg" aria-live="assertive"></p>
+
+  <div class="controls">
+    <div>
+      <label for="r">rate r <output id="oR"></output></label>
+      <input id="r" type="range" min="0.25" max="2" step="0.25" value="0.5">
+      <label for="C">capacity C <output id="oC"></output></label>
+      <input id="C" type="range" min="4" max="20" step="1" value="10">
+    </div>
+    <div>
+      <label for="p0">start p0 <output id="oP0"></output></label>
+      <input id="p0" type="range" min="0" max="10" step="1" value="5">
+      <label for="c">card cost c <output id="oCc"></output></label>
+      <input id="c" type="range" min="1" max="8" step="1" value="4">
+    </div>
+    <div>
+      <label for="H">hold H at full <output id="oH"></output></label>
+      <input id="H" type="range" min="0" max="10" step="0.5" value="2">
+      <div class="checks">
+        <label for="dbl"><input id="dbl" type="checkbox">double rate in final minute</label>
+        <label for="manual"><input id="manual" type="checkbox">Manual (you fire the drain)</label>
+      </div>
+    </div>
+  </div>
+  <p class="warn" id="warn" hidden></p>
+</section>
+
+<footer>Model: 180 s match in steps of 0.01 s. Each step the source adds rate × 0.01 (rate doubles from 120 s when the box is ticked). Anything above C is lost. The automatic player waits until the pool has been at C for H seconds, then spends c, all-or-nothing. Mana, energy and elixir systems in shipped card games share this structure; the numbers here are the fictional practice game from the lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const T=180,DT=0.01,N=18000,E=1e-9;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const fmt=v=>{const x=Math.round(v*100)/100;return (Object.is(x,-0)?0:x).toLocaleString('en-US',{maximumFractionDigits:2});};
+
+let P={r:.5,C:10,p0:5,c:4,H:2,dbl:false,manual:false};
+let run=null, cursor=N, playing=false, lastTs=0, simClock=0, queued=0;
+let flyIn=[],flyOut=[],spill=[]; // token animations
+
+function newRun(){
+  const R={pool:new Float64Array(N+1),gen:new Float64Array(N+1),spent:new Float64Array(N+1),waste:new Float64Array(N+1),
+    plays:new Uint16Array(N+1),cap:new Uint32Array(N+1),capLate:new Uint32Array(N+1),atcap:new Uint8Array(N),playAt:[],idx:0,p:P.p0,held:0};
+  R.pool[0]=P.p0;return R;
+}
+function rateAt(i){return P.r*(P.dbl&&i*DT>=120-E?2:1);}
+// advance one step; returns true if a play fired
+function step(R,fire){
+  const i=R.idx;if(i>=N)return false;
+  let p=R.p,atcap=p>=P.C-E,played=false;
+  if(!atcap)R.held=0;
+  const holdSteps=Math.round(P.H/DT);
+  const want=P.manual?fire:(atcap&&R.held>=holdSteps);
+  let spent=R.spent[i],plays=R.plays[i];
+  if(want&&p>=P.c-E){p-=P.c;spent+=P.c;plays++;R.held=0;played=true;R.playAt.push(i);atcap=p>=P.C-E;}
+  let cap=R.cap[i],capLate=R.capLate[i];
+  if(atcap){R.held++;cap++;if(i*DT>=120-E)capLate++;R.atcap[i]=1;}
+  const add=rateAt(i)*DT;p+=add;let w=R.waste[i];
+  if(p>P.C){w+=p-P.C;p=P.C;}
+  R.idx=i+1;R.p=p;R.pool[i+1]=p;R.gen[i+1]=R.gen[i]+add;R.spent[i+1]=spent;R.waste[i+1]=w;R.plays[i+1]=plays;R.cap[i+1]=cap;R.capLate[i+1]=capLate;
+  return played;
+}
+function simulateAll(params){const save=P;P=Object.assign({},P,params||{});const R=newRun();while(R.idx<N)step(R,false);P=save;return R;}
+
+/* ---------- canvases ---------- */
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function tri(g,x,y,s,up){g.beginPath();if(up){g.moveTo(x,y-s);g.lineTo(x+s*.95,y+s*.7);g.lineTo(x-s*.95,y+s*.7);}else{g.moveTo(x,y+s);g.lineTo(x+s*.95,y-s*.7);g.lineTo(x-s*.95,y-s*.7);}g.closePath();}
+function star(g,x,y,R){g.beginPath();for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,rr=k%2?R*.45:R;g.lineTo(x+rr*Math.cos(a),y+rr*Math.sin(a));}g.closePath();}
+function arrow(g,x1,y1,x2,y2){g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();const a=Math.atan2(y2-y1,x2-x1);g.beginPath();g.moveTo(x2,y2);g.lineTo(x2-10*Math.cos(a-.4),y2-10*Math.sin(a-.4));g.lineTo(x2-10*Math.cos(a+.4),y2-10*Math.sin(a+.4));g.closePath();g.fill();}
+
+let geo=null;
+function drawDiagram(){
+  const {g,w,h}=setup($('cDia'));g.clearRect(0,0,w,h);
+  const ink=css('--ink'),soft=css('--ink-soft'),steel=css('--steel'),blood=css('--blood'),moss=css('--moss'),paper=css('--paper'),sans=css('--sans');
+  const cy=h*.44,rad=Math.min(h*.3,w*.11,64),s=Math.min(rad*.62,34);
+  const xs=Math.max(s+10,w*.13),xp=w*.5,xd=w-Math.max(s+10,w*.13);
+  geo={cy,rad,s,xs,xp,xd};
+  const i=Math.min(cursor,run.idx),p=run.pool[i],full=p>=P.C-E&&i>0,rt=rateAt(Math.min(i,N-1));
+  g.lineWidth=2;g.strokeStyle=ink;g.fillStyle=ink;
+  // connections
+  arrow(g,xs+s*.9,cy,xp-rad-8,cy);arrow(g,xp+rad+8,cy,xd-s*.95,cy);
+  g.font='600 13px '+sans;g.textAlign='center';g.textBaseline='bottom';
+  g.fillText(fmt(rt)+'/s',(xs+xp)/2,cy-8);g.fillText(String(P.c),(xp+xd)/2,cy-8);
+  // source
+  tri(g,xs,cy,s,true);g.fillStyle=paper;g.fill();g.stroke();
+  g.fillStyle=ink;star(g,xs,cy+s*.15,s*.32);g.fill();
+  // drain, double outline
+  tri(g,xd,cy,s,false);g.fillStyle=paper;g.fill();g.stroke();tri(g,xd,cy,s*.72,false);g.stroke();
+  g.fillStyle=ink;g.font='700 '+Math.round(s*.5)+'px '+sans;g.textBaseline='middle';g.fillText('&',xd,cy-s*.15);
+  // pool: fill level, capacity ring
+  g.save();g.beginPath();g.arc(xp,cy,rad,0,Math.PI*2);g.clip();
+  const lvl=P.C>0?Math.min(1,p/P.C):0;g.fillStyle=steel;g.globalAlpha=.28;g.fillRect(xp-rad,cy+rad-2*rad*lvl,2*rad,2*rad*lvl);g.restore();
+  g.globalAlpha=1;g.beginPath();g.arc(xp,cy,rad,0,Math.PI*2);g.fillStyle='transparent';g.strokeStyle=ink;g.lineWidth=2;g.stroke();
+  g.beginPath();g.arc(xp,cy,rad+5,0,Math.PI*2);g.setLineDash([3,4]);g.strokeStyle=full?blood:soft;g.lineWidth=full?3:1.5;g.stroke();g.setLineDash([]);
+  g.fillStyle=ink;g.font='700 '+Math.round(rad*.5)+'px '+sans;g.textBaseline='middle';g.fillText(fmt(p),xp,cy-rad*.08);
+  g.font='600 12px '+sans;g.fillStyle=soft;g.fillText('/ '+P.C,xp,cy+rad*.38);
+  // labels
+  g.textBaseline='top';g.font='600 12px '+sans;g.fillStyle=soft;
+  const ly=cy+Math.max(rad+10,s+8);
+  g.fillText('source',xs,ly);g.fillText('automatic',xs,ly+15);
+  g.fillText('pool, C = '+P.C,xp,ly);g.fillStyle=full?blood:soft;g.fillText(full?'full: overflow lost':'filling',xp,ly+15);
+  g.fillStyle=soft;g.fillText('drain',xd,ly);g.fillText('interactive',xd,ly+15);
+  g.fillStyle=blood;g.fillText('lost '+fmt(run.waste[i]),xp+rad*1.05,Math.max(6,cy-rad-24));
+  // tokens
+  const tok=(x,y,col)=>{g.fillStyle=col;g.beginPath();g.arc(x,y,4.5,0,Math.PI*2);g.fill();};
+  flyIn.forEach(t=>tok(xs+s+(xp-rad-xs-s)*t.u,cy,moss));
+  flyOut.forEach(t=>tok(xp+rad+(xd-s-xp-rad)*t.u,cy+(t.k-1.5)*3,steel));
+  spill.forEach(t=>tok(xp+rad*.7+t.u*rad*.6,cy-rad-2-t.u*18+t.u*t.u*40,blood));
+}
+
+const pad={l:40,r:12,t:12,b:30};
+function X(t,w){return pad.l+(w-pad.l-pad.r)*t/T;}
+function drawTimeline(){
+  const {g,w,h}=setup($('cTime'));g.clearRect(0,0,w,h);
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),blood=css('--blood'),ochre=css('--ochre'),sans=css('--sans');
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/P.C),upto=Math.min(cursor,run.idx),drawTo=playing||P.manual?upto:run.idx;
+  if(P.dbl){g.fillStyle=ochre;g.globalAlpha=.14;g.fillRect(X(120,w),pad.t,X(180,w)-X(120,w),h-pad.t-pad.b);g.globalAlpha=1;
+    g.fillStyle=ochre;g.font='600 12px '+sans;g.textAlign='center';g.textBaseline='bottom';g.fillText('double rate',X(150,w),h-pad.b-4);}
+  // at-cap bands
+  g.fillStyle=blood;g.globalAlpha=.3;
+  for(let k=0;k<drawTo;){if(run.atcap[k]){let e=k;while(e<drawTo&&run.atcap[e])e++;g.fillRect(X(k*DT,w),pad.t,Math.max(1,X(e*DT,w)-X(k*DT,w)),h-pad.t-pad.b);k=e;}else k++;}
+  g.globalAlpha=1;
+  // axes
+  g.strokeStyle=grid;g.lineWidth=1;g.fillStyle=soft;g.font='12px '+sans;
+  const yt=P.C<=10?[0,P.C/2,P.C]:[0,P.C/4,P.C/2,3*P.C/4,P.C];
+  yt.forEach(v=>{const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(v),pad.l-6,y);});
+  for(let t=0;t<=180;t+=w<500?60:30){g.textAlign='center';g.textBaseline='top';g.fillText(t+'s',X(t,w),h-pad.b+6);}
+  // capacity line
+  g.strokeStyle=blood;g.setLineDash([5,4]);g.beginPath();g.moveTo(pad.l,Y(P.C));g.lineTo(w-pad.r,Y(P.C));g.stroke();g.setLineDash([]);
+  // pool line
+  g.strokeStyle=steel;g.lineWidth=2.2;g.beginPath();
+  const px=Math.max(1,Math.floor(drawTo/((w-pad.l-pad.r)*2)));
+  for(let k=0;k<=drawTo;k+=px){const x=X(k*DT,w),y=Y(run.pool[k]);k?g.lineTo(x,y):g.moveTo(x,y);}
+  // include exact drop points so plays are crisp
+  g.lineTo(X(drawTo*DT,w),Y(run.pool[drawTo]));g.stroke();
+  // cursor
+  const cx=X(upto*DT,w);g.strokeStyle=ink;g.globalAlpha=.55;g.setLineDash([4,4]);g.beginPath();g.moveTo(cx,pad.t);g.lineTo(cx,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=steel;g.beginPath();g.arc(cx,Y(run.pool[upto]),5,0,Math.PI*2);g.fill();
+}
+
+function totalsText(i){
+  const r=P.r,late=run.capLate[i],early=run.cap[i]-late;
+  return {s:run.cap[i]*DT,early:early*DT,late:late*DT};
+}
+function readouts(){
+  const i=Math.min(cursor,run.idx),t=i*DT;
+  $('rGen').textContent=fmt(run.gen[i]);$('rSpent').textContent=fmt(run.spent[i]);$('rWaste').textContent=fmt(run.waste[i]);
+  $('rPool').textContent=fmt(run.pool[i]);$('rPlays').textContent=run.plays[i];$('rCap').textContent=fmt(run.cap[i]*DT);
+  const lhs=P.p0+run.gen[i],rhs=run.pool[i]+run.spent[i]+run.waste[i],ok=Math.abs(lhs-rhs)<0.01;
+  $('rCheck').innerHTML=`${fmt(lhs)} = ${fmt(rhs)} <span class="${ok?'ok':'bad'}" aria-label="${ok?'balanced':'does not balance'}">${ok?'✓':'✗'}</span>`;
+  $('cursorLine').textContent=`Values at t = ${fmt(t)} s`+(i<N&&!playing&&!P.manual?' (scrubbed)':'')+'.';
+  $('cTime').setAttribute('aria-label',`Timeline. At ${fmt(t)} s the pool holds ${fmt(run.pool[i])} of ${P.C}; ${fmt(run.waste[i])} wasted; ${run.plays[i]} plays.`);
+  // insight
+  const expr=k=>{const q=totalsText(k);return P.dbl&&q.late>0?`${fmt(P.r)} × ${fmt(q.early)} + ${fmt(2*P.r)} × ${fmt(q.late)}`:`${fmt(P.r)} × ${fmt(q.s)}`;};
+  let s;
+  if(P.c>P.C){s=`The card costs ${P.c} but the pool holds at most ${P.C}, so nothing can ever be played. Every unit after the pool fills is lost: ${expr(i)} = <b>${fmt(run.waste[i])}</b> by ${fmt(t)} s.`;}
+  else if(P.manual){s=`Manual run, ${fmt(t)} s in. You have spent <b>${fmt(run.cap[i]*DT)} s</b> at capacity, so <b>${expr(i)} = ${fmt(run.waste[i])}</b> was lost, and you made ${run.plays[i]} play${run.plays[i]===1?"":"s"}. Try firing the moment the ring turns red.`;}
+  else{
+    const base=simulateAll({H:0,manual:false}),bp=base.plays[N],d=bp-run.plays[N];
+    s=`Holding ${fmt(P.H)} s at full puts the pool at capacity for <b>${fmt(run.cap[N]*DT)} s</b> of the match, so waste is <b>${expr(N)} = ${fmt(run.waste[N])}</b>. `;
+    s+=d>0?`That is ${run.plays[N]} plays against ${bp} for a player who spends the moment the pool is full: <b>${d} cards lost</b> to hesitation.`:`That matches a player who never holds (${bp} plays).`;
+    if(P.p0<P.C&&P.H>0)s+=` Raise C and the waste barely moves, because this player waits until full whatever the size.`;
+  }
+  $('insight').innerHTML=s;
+}
+function outputs(){$('oR').textContent=fmt(P.r)+'/s';$('oC').textContent=P.C;$('oP0').textContent=P.p0;$('oCc').textContent=P.c;$('oH').textContent=fmt(P.H)+' s';
+  const wn=$('warn');wn.hidden=!(P.c>P.C);wn.textContent=`Card cost ${P.c} is above capacity ${P.C}. No card can ever be played.`;
+  $('lgDouble').hidden=!P.dbl;$('bFire').hidden=!P.manual;$('H').disabled=P.manual;}
+function render(){drawDiagram();drawTimeline();readouts();}
+
+function rebuild(){
+  stop();flyIn=[];flyOut=[];spill=[];outputs();
+  run=newRun();
+  if(P.manual){cursor=0;$('bPlay').textContent='Play';}
+  else{while(run.idx<N)step(run,false);cursor=N;}
+  render();
+}
+
+/* ---------- playback ---------- */
+function stop(){playing=false;$('bPlay').textContent=(!P.manual&&cursor>=N)||(P.manual&&run&&run.idx>=N)?'Replay':'Play';$('bPlay').setAttribute('aria-pressed','false');}
+function start(){
+  if(P.manual){if(run.idx>=N){run=newRun();cursor=0;}}
+  else{if(cursor>=N)cursor=0;if(reduce.matches){cursor=N;stop();render();return;}}
+  playing=true;lastTs=0;$('bPlay').textContent='Pause';$('bPlay').setAttribute('aria-pressed','true');requestAnimationFrame(tick);
+}
+function tick(ts){
+  if(!playing)return;
+  const dtReal=lastTs?Math.min(.1,(ts-lastTs)/1000):0;lastTs=ts;
+  const steps=Math.round(dtReal*(+$('speed').value)/DT);
+  const before=cursor;
+  if(P.manual){for(let k=0;k<steps&&run.idx<N;k++){const f=queued>0;const ok=step(run,f);if(f){queued=0;if(!ok)$('msg').textContent=`Not enough in the pool to pay ${P.c}.`;else $('msg').textContent='';}}cursor=run.idx;}
+  else cursor=Math.min(N,cursor+steps);
+  animateTokens(before,cursor,dtReal);
+  render();
+  if(cursor>=N){stop();render();return;}
+  requestAnimationFrame(tick);
+}
+function animateTokens(a,b,dtReal){
+  if(reduce.matches){flyIn=[];flyOut=[];spill=[];return;}
+  const spd=+$('speed').value, sp=dtReal*1.6;
+  [flyIn,flyOut,spill].forEach(arr=>{arr.forEach(t=>t.u+=sp);});
+  flyIn=flyIn.filter(t=>t.u<1);flyOut=flyOut.filter(t=>t.u<1);spill=spill.filter(t=>t.u<1);
+  // one token per unit generated
+  const gen=run.gen[b]-run.gen[a];if(Math.floor(run.gen[b])>Math.floor(run.gen[a])&&flyIn.length<12)flyIn.push({u:0});
+  for(const pi of run.playAt){if(pi>=a&&pi<b){for(let k=0;k<Math.min(P.c,4);k++)flyOut.push({u:-k*.12,k});}}
+  if(run.waste[b]>run.waste[a]&&Math.floor(run.waste[b]*2)>Math.floor(run.waste[a]*2)&&spill.length<8)spill.push({u:0});
+  void gen;void spd;
+}
+
+/* ---------- events ---------- */
+function bindRange(id,key){$(id).addEventListener('input',e=>{P[key]=+e.target.value;if(key==='C'){const pp=$('p0');pp.max=P.C;if(P.p0>P.C){P.p0=P.C;pp.value=P.C;}}rebuild();});}
+bindRange('r','r');bindRange('C','C');bindRange('p0','p0');bindRange('c','c');bindRange('H','H');
+$('dbl').addEventListener('change',e=>{P.dbl=e.target.checked;rebuild();});
+$('manual').addEventListener('change',e=>{P.manual=e.target.checked;$('msg').textContent=P.manual?'Press Play, then fire the drain with the button or Space.':'';rebuild();});
+$('bPlay').addEventListener('click',()=>{playing?stop():start();render();});
+$('bEnd').addEventListener('click',()=>{
+  stop();flyIn=[];flyOut=[];spill=[];
+  if(P.manual){while(run.idx<N)step(run,false);}
+  cursor=N;stop();render();});
+function fire(){if(!P.manual)return;if(!playing){$('msg').textContent='Press Play first; the clock has to run.';return;}queued=1;}
+$('bFire').addEventListener('click',fire);
+document.addEventListener('keydown',e=>{
+  if(!P.manual||(e.key!==' '&&e.code!=='Space'))return;
+  const t=e.target;if(t&&(t.type==='checkbox'||t.tagName==='SELECT'))return;
+  e.preventDefault();fire();});
+// scrubbing
+const ct=$('cTime');
+function scrubTo(clientX){if(playing||P.manual)return;const r=ct.getBoundingClientRect();const t=(clientX-r.left-pad.l)/(r.width-pad.l-pad.r)*T;cursor=Math.max(0,Math.min(N,Math.round(Math.max(0,Math.min(T,t))/DT)));render();}
+let dragging=false;
+ct.addEventListener('pointerdown',e=>{dragging=true;ct.setPointerCapture(e.pointerId);scrubTo(e.clientX);});
+ct.addEventListener('pointermove',e=>{if(dragging)scrubTo(e.clientX);});
+ct.addEventListener('pointerup',()=>{dragging=false;});
+ct.addEventListener('keydown',e=>{if(playing||P.manual)return;const big=e.shiftKey?1000:100;let c=cursor;
+  if(e.key==='ArrowRight')c+=big;else if(e.key==='ArrowLeft')c-=big;else if(e.key==='Home')c=0;else if(e.key==='End')c=N;else return;
+  e.preventDefault();cursor=Math.max(0,Math.min(N,c));render();});
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+rebuild();
+})();
+</script>
+</body>
+</html>

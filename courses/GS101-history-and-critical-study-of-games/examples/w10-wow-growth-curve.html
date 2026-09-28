@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WoW growth curve · GS101 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--radius-sm:6px;--radius-lg:14px;box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,select:focus-visible,.pt:focus-visible,.bar:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.pt:focus-visible,.bar:focus-visible{outline:none}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.cols{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;position:relative;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink-soft);font-size:11px}
+svg .lbl{fill:var(--ink);font-weight:600}
+.gridl{stroke:var(--grid);stroke-width:1}
+.axis{stroke:var(--ink-soft);stroke-width:1}
+.wow{stroke:var(--steel);stroke-width:2.5;fill:none}
+.wow.post{opacity:.6}
+.gap{stroke:var(--steel);stroke-width:2;stroke-dasharray:2 5;fill:none;opacity:.8}
+.seg.hl{stroke:var(--ochre);stroke-width:6;opacity:1}
+.ref{stroke-width:1.6;stroke-dasharray:7 5}
+.ref.uo{stroke:var(--ink-soft)} .ref.eq{stroke:var(--blood)}
+.stop{stroke:var(--ink);stroke-width:1.2;stroke-dasharray:3 3}
+.pt .vis{fill:var(--steel);stroke:var(--paper-2);stroke-width:2}
+.pt.refpt .vis{fill:var(--paper-2);stroke:var(--ink-soft);stroke-width:2}
+.pt.refpt.eq .vis{stroke:var(--blood)}
+.pt .hit{fill:transparent}
+.pt{cursor:pointer}
+.pt:focus-visible .vis,.pt:hover .vis{stroke:var(--focus);stroke-width:3}
+.pt.sel .vis{stroke:var(--ochre);stroke-width:3.5}
+.measure{stroke:var(--ochre);stroke-width:2;fill:none}
+.measure.h{stroke-dasharray:4 4;stroke-width:1.5}
+text.mlab{fill:var(--ochre);font-weight:700;font-size:12px}
+.scale-toggle{display:inline-flex;border:1.5px solid var(--steel);border-radius:999px;overflow:hidden}
+.scale-toggle button{font:700 .9rem var(--sans);padding:7px 14px;border:0;background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.scale-toggle button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-size:.82rem;line-height:1.35;padding:7px 9px;border-radius:var(--radius-sm);max-width:240px;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.tip b{font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0;color:var(--ink)}
+.legend svg{display:inline-block;width:26px;height:12px;vertical-align:middle;margin-right:5px;overflow:visible}
+.compare{margin-top:12px;border-top:1px solid var(--grid);padding-top:12px}
+.cmp-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select{font:600 .9rem var(--sans);padding:6px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);max-width:100%;min-height:36px}
+.chip{font:600 .84rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:34px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 0}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:8px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:10px;max-width:100%}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:700;color:var(--ink-soft);font-size:.8rem}
+tr.hl td{background:var(--paper);font-weight:700}
+.rate-bar{fill:var(--moss)}
+.add-bar{fill:url(#hatch);stroke:var(--ochre);stroke-width:1.2}
+.bar{cursor:default}
+.bar .bg{fill:transparent}
+.bar.hl .bg,.bar:focus-visible .bg{fill:var(--paper);stroke:var(--focus);stroke-width:2}
+#hatch line,#hatchL line{stroke:var(--ochre);stroke-width:2}
+.seg-asia{fill:var(--steel)}
+.seg-na{fill:url(#hatch2);stroke:var(--ochre);stroke-width:1.5}
+.seg-eu{fill:url(#dots);stroke:var(--moss);stroke-width:1.5}
+#hatch2 line{stroke:var(--ochre);stroke-width:2.5}
+#dots circle{fill:var(--moss)}
+.seg-eq{fill:var(--blood)}
+text.inbar{fill:var(--paper);font-weight:700;font-size:13px}
+text.inbar.dark{fill:var(--ink)}
+.comp-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:start}
+@media (max-width:760px){.comp-grid{grid-template-columns:1fr}}
+.comp-list{list-style:none;padding:0;margin:10px 0 0;font-variant-numeric:tabular-nums}
+.comp-list li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--grid)}
+.comp-list .sw{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:8px;vertical-align:-2px}
+.def h3{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+.def ul{margin:0 0 10px;padding-left:20px}
+.def li{margin-bottom:4px}
+.excl{border-left:4px solid var(--blood);padding:4px 10px;background:var(--paper-2);border-radius:0 8px 8px 0}
+.datatoggle{margin-top:16px}
+.btn{font:600 .92rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:38px}
+@media (max-width:520px){#figRates table .nc{display:none}#figRates table{font-size:.84rem}#figRates th,#figRates td{padding:5px 4px}.panel{padding:10px}figure{padding:10px 8px}}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <defs>
+          <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6"/></pattern>
+          <pattern id="hatch2" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8"/></pattern>
+          <pattern id="dots" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.6"/></pattern>
+        </defs>
+</svg>
+<header>
+  <p class="course">GS101 History and Critical Study of Games · Week 10 · Worked example</p>
+  <h1>Same subscribers, two true stories</h1>
+  <p class="lede">On a linear axis World of Warcraft's line keeps climbing steeply into 2007. The bars beside it show the growth rate falling from the very first period. Flip the axis to log and the curve agrees with the bars.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Curve and rates</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">What 10 million was made of</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="cols">
+    <figure id="figCurve">
+      <figcaption><span>WoW subscribers, as Blizzard reported them<small>Dashed lines: earlier games' all-time peaks</small></span>
+        <span class="scale-toggle" role="group" aria-label="Y-axis scale">
+          <button type="button" id="sLin" aria-pressed="true">Linear</button>
+          <button type="button" id="sLog" aria-pressed="false">Log scale</button>
+        </span>
+      </figcaption>
+      <svg id="curve" role="group" aria-label="World of Warcraft subscriber milestones 2004 to 2015 with Ultima Online and EverQuest peaks as reference lines"></svg>
+      <div class="tip" id="tip" role="tooltip" hidden></div>
+      <div class="legend" aria-hidden="true">
+        <span><svg viewBox="0 0 26 12"><line x1="0" y1="6" x2="26" y2="6" class="wow"/></svg>WoW, reported</span>
+        <span><svg viewBox="0 0 26 12"><line x1="0" y1="6" x2="26" y2="6" class="gap"/></svg>No data in this set</span>
+        <span><svg viewBox="0 0 26 12"><line x1="0" y1="6" x2="26" y2="6" class="ref eq"/></svg>EverQuest peak</span>
+        <span><svg viewBox="0 0 26 12"><line x1="0" y1="6" x2="26" y2="6" class="ref uo"/></svg>Ultima Online peak</span>
+      </div>
+
+      <div class="compare">
+        <div class="cmp-row">
+          <strong style="font-size:.92rem">Compare two points</strong>
+          <label for="selA" style="font-size:.88rem">from</label><select id="selA"></select>
+          <label for="selB" style="font-size:.88rem">to</label><select id="selB"></select>
+          <button type="button" class="chip" id="pickMode" aria-pressed="false">Pick on chart</button>
+        </div>
+        <div class="presets" role="group" aria-label="Comparison presets">
+          <button type="button" class="chip" data-a="uo" data-b="eq">UO to EQ</button>
+          <button type="button" class="chip" data-a="eq" data-b="w8">EQ to WoW peak</button>
+          <button type="button" class="chip" data-a="uo" data-b="w8">UO to WoW peak</button>
+          <button type="button" class="chip" data-a="w1" data-b="w4">WoW's first year</button>
+        </div>
+        <div class="readout" aria-live="polite">
+          <div class="stat" style="--c:var(--ochre)"><b id="rRatio">—</b><span>ratio b / a</span></div>
+          <div class="stat" style="--c:var(--steel)"><b id="rLog">—</b><span>log distance log10(b / a)</span></div>
+          <div class="stat" style="--c:var(--ink-soft)"><b id="rMonths">—</b><span>months between</span></div>
+          <div class="stat" style="--c:var(--moss)"><b id="rMonthly">—</b><span>monthly factor (b / a)<sup>1/n</sup></span></div>
+        </div>
+        <p class="hint" id="pickHint">Choose points in the menus, use a preset, or press "Pick on chart" and click two points.</p>
+      </div>
+    </figure>
+
+    <figure id="figRates">
+      <figcaption><span>Two rates per period, w1 to w8<small>Solid: monthly growth, % (left axis). Hatched: subscribers added per month (right axis).</small></span></figcaption>
+      <svg id="rates" role="group" aria-label="Monthly growth rate and subscribers added per month for each period from December 2004 to October 2010">
+        <g id="ratesBody"></g>
+      </svg>
+      <div class="tip" id="tip2" role="tooltip" hidden></div>
+      <div class="table-wrap">
+        <table aria-label="Growth per period">
+          <thead><tr><th>Period</th><th class="nc"><abbr title="months">n</abbr></th><th>Monthly factor</th><th>Added / month</th></tr></thead>
+          <tbody id="rateBody"></tbody>
+        </table>
+      </div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <div class="comp-grid">
+    <figure>
+      <figcaption><span>January 2008: over 10 million subscribers, by region<small>Blizzard's regional breakdown, rounded as reported</small></span></figcaption>
+      <svg id="comp" role="img" aria-label="Stacked bar: Asia 5.5 million (55%), North America 2.5 million (25%), Europe 2.0 million (20%). EverQuest's all-time peak of 550,000 shown at the same scale."></svg>
+      <ul class="comp-list" id="compList"></ul>
+    </figure>
+    <div class="def">
+      <h3>Who counted as a subscriber</h3>
+      <p style="margin:0 0 6px;font-size:.92rem;color:var(--ink-soft)">Blizzard's definition in this period, paraphrased:</p>
+      <ul>
+        <li>Anyone who had paid a subscription fee or held an active prepaid card.</li>
+        <li>Anyone inside the free month that came with buying the game.</li>
+        <li>Internet Game Room players who had accessed the game in the last 30 days, counted the same way in licensees' territories.</li>
+      </ul>
+      <p class="excl"><strong>Excluded:</strong> free promotions, expired or cancelled accounts.</p>
+      <p class="insight" style="margin-top:12px">More than half of the January 2008 total (5.5 / 10 = 55%) was in Asia, where many players bought time by the hour in internet caf&eacute;s. A caf&eacute; player who logged in once in 30 days counted the same as a monthly payer at home. Asia's share alone was 10 times EverQuest's all-time peak.</p>
+    </div>
+  </div>
+</section>
+
+<div class="datatoggle">
+  <button type="button" class="btn" id="dataBtn" aria-expanded="false" aria-controls="dataWrap">Show data table</button>
+  <div class="table-wrap" id="dataWrap" hidden>
+    <table aria-label="All data points with sources">
+      <thead><tr><th>id</th><th>Series</th><th>Date</th><th>Subscribers</th><th>log10</th><th>Source</th></tr></thead>
+      <tbody id="dataBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Sources: Warcraft Wiki (subscriber milestones); Blizzard press releases (December 2008, October 2010) and Blizzard via Gamasutra (January 2008, with the regional breakdown and subscriber definition); Forbes via Wikipedia (November 2014); Wikipedia (June 2015, Ultima Online and EverQuest peaks). Blizzard stopped regular subscriber reporting in November 2015. Figures are subscribers as Blizzard defined them, not concurrent players or registered accounts.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+
+const DATA=[
+ {id:'w1',s:'WoW',d:'2004-12',v:400000,src:'Warcraft Wiki'},
+ {id:'w2',s:'WoW',d:'2005-03',v:1500000,src:'Warcraft Wiki'},
+ {id:'w3',s:'WoW',d:'2005-06',v:3250000,src:'Warcraft Wiki'},
+ {id:'w4',s:'WoW',d:'2005-12',v:5600000,src:'Warcraft Wiki'},
+ {id:'w5',s:'WoW',d:'2007-01',v:8000000,src:'Warcraft Wiki'},
+ {id:'w6',s:'WoW',d:'2008-01',v:10000000,src:'Blizzard via Gamasutra ("more than")'},
+ {id:'w7',s:'WoW',d:'2008-12',v:11500000,src:'Blizzard press release'},
+ {id:'w8',s:'WoW',d:'2010-10',v:12000000,src:'Blizzard press release ("exceeds")'},
+ {id:'w9',s:'WoW',d:'2014-11',v:10000000,src:'Forbes via Wikipedia ("over")'},
+ {id:'w10',s:'WoW',d:'2015-06',v:5600000,src:'Wikipedia'},
+ {id:'w11',s:'WoW',d:'2015-09',v:5500000,src:'Warcraft Wiki'},
+ {id:'uo',s:'reference',d:'2003-07',v:250000,src:'Wikipedia, Ultima Online (peak, "about")',name:'Ultima Online'},
+ {id:'eq',s:'reference',d:'2004-12',v:550000,src:'Wikipedia, EverQuest (peak)',name:'EverQuest'}
+];
+const byId=Object.fromEntries(DATA.map(p=>[p.id,p]));
+const mIdx=d=>{const [y,m]=d.split('-').map(Number);return (y-2003)*12+(m-1);};
+const dLabel=d=>{const [y,m]=d.split('-').map(Number);return MON[m-1]+' '+y;};
+const dShort=d=>{const [y,m]=d.split('-').map(Number);return MON[m-1]+' '+String(y).slice(2);};
+const dNum=d=>{const [y,m]=d.split('-');return m+'/'+y.slice(2);};
+const pName=p=>p.s==='WoW'?`WoW ${dLabel(p.d)}`:`${p.name} peak`;
+const WOW=DATA.filter(p=>p.s==='WoW');
+const RATES=[];
+for(let i=0;i<7;i++){
+  const a=WOW[i],b=WOW[i+1],n=mIdx(b.d)-mIdx(a.d),f=Math.pow(b.v/a.v,1/n);
+  RATES.push({i,a,b,n,f,add:(b.v-a.v)/n});
+}
+
+let scaleT=0,target=0,A='w1',B='w4',pick=false,pickNext='a',hlSeg=-1;
+
+// ---------- curve ----------
+const X0=0,X1=mIdx('2016-12');
+const LOGMIN=5,LOGMAX=Math.log10(2e7),LINMAX=13e6;
+let geo=null;
+function yOf(v,t){
+  const {top,H}=geo;
+  const lin=1-v/LINMAX, lg=1-(Math.log10(v)-LOGMIN)/(LOGMAX-LOGMIN);
+  return top+H*((1-t)*lin+t*lg);
+}
+function xOf(d){const {left,W}=geo;return left+W*(mIdx(d)-X0)/(X1-X0);}
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+
+function drawCurve(){
+  const svg=$('curve'),w=Math.max(280,svg.parentNode.clientWidth-24),h=w<500?300:340;
+  const keep=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.id:null;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);
+  svg.textContent='';
+  geo={left:46,right:w-10,top:14,bottom:h-30};geo.W=geo.right-geo.left;geo.H=geo.bottom-geo.top;
+  const t=scaleT,g=el('g',{},svg);
+  // linear ticks
+  const lt=el('g',{opacity:1-t},g);
+  for(let v=0;v<=12e6;v+=2e6){const y=geo.top+geo.H*(1-v/LINMAX);el('line',{x1:geo.left,x2:geo.right,y1:y,y2:y,class:'gridl'},lt);el('text',{x:geo.left-6,y:y+4,'text-anchor':'end'},lt,v===0?'0':(v/1e6)+'M');}
+  // log ticks
+  const gt=el('g',{opacity:t},g);
+  [[1e5,'100k'],[1e6,'1M'],[1e7,'10M']].forEach(([v,l])=>{const y=geo.top+geo.H*(1-(Math.log10(v)-LOGMIN)/(LOGMAX-LOGMIN));el('line',{x1:geo.left,x2:geo.right,y1:y,y2:y,class:'gridl'},gt);el('text',{x:geo.left-6,y:y+4,'text-anchor':'end'},gt,l);});
+  // x axis
+  el('line',{x1:geo.left,x2:geo.right,y1:geo.bottom,y2:geo.bottom,class:'axis'},g);
+  const step=w<500?4:2;
+  for(let y=2004;y<=2016;y+=step){const x=xOf(y+'-01');el('line',{x1:x,x2:x,y1:geo.bottom,y2:geo.bottom+4,class:'axis'},g);el('text',{x,y:geo.bottom+17,'text-anchor':'middle'},g,String(y));}
+  // reference lines
+  const uo=byId.uo,eq=byId.eq,yu=yOf(uo.v,t),ye=yOf(eq.v,t);
+  el('line',{x1:geo.left,x2:geo.right,y1:yu,y2:yu,class:'ref uo'},g);
+  el('line',{x1:geo.left,x2:geo.right,y1:ye,y2:ye,class:'ref eq'},g);
+  const lu=t>.5?' · log 5.398':'',le=t>.5?' · log 5.740':'';
+  // Labels sit at the right end, where no WoW point is near the floor. On linear the two lines nearly touch, so stack the labels above both.
+  const yEqL=t>.5?ye-5:ye-19,yUoL=t>.5?yu+14:ye-5;
+  el('text',{x:xOf('2015-11')-5,y:yEqL,'text-anchor':'end',class:'lbl',style:'fill:var(--blood)'},g,'EverQuest 550,000'+le);
+  el('text',{x:xOf('2015-11')-5,y:yUoL,'text-anchor':'end',class:'lbl'},g,'Ultima Online 250,000'+lu);
+  // stop reporting marker
+  const xs=xOf('2015-11');
+  el('line',{x1:xs,x2:xs,y1:geo.top,y2:geo.bottom,class:'stop'},g);
+  el('text',{x:0,y:0,transform:`translate(${xs+12},${geo.top+2}) rotate(90)`,class:'lbl','font-size':'10.5'},g,'Blizzard stops reporting');
+  // segments
+  for(let i=0;i<7;i++){const a=WOW[i],b=WOW[i+1];el('line',{x1:xOf(a.d),y1:yOf(a.v,t),x2:xOf(b.d),y2:yOf(b.v,t),class:'wow seg'+(i===hlSeg?' hl':''),id:'seg'+i,'stroke-linecap':'round'},g);}
+  const w8=byId.w8,w9=byId.w9;
+  el('line',{x1:xOf(w8.d),y1:yOf(w8.v,t),x2:xOf(w9.d),y2:yOf(w9.v,t),class:'gap'},g);
+  const mx=(xOf(w8.d)+xOf(w9.d))/2,my=(yOf(w8.v,t)+yOf(w9.v,t))/2;
+  el('text',{x:mx,y:my+18,'text-anchor':'middle','font-style':'italic'},g,'no data in this set');
+  for(let i=8;i<10;i++){const a=WOW[i],b=WOW[i+1];el('line',{x1:xOf(a.d),y1:yOf(a.v,t),x2:xOf(b.d),y2:yOf(b.v,t),class:'wow post'},g);}
+  // comparison measure
+  const pa=byId[A],pb=byId[B];
+  if(pa&&pb&&A!==B){
+    const xa=xOf(pa.d),ya=yOf(pa.v,t),xb=xOf(pb.d),yb=yOf(pb.v,t);
+    el('line',{x1:xa,y1:ya,x2:xb,y2:ya,class:'measure h'},g);
+    el('line',{x1:xb,y1:ya,x2:xb,y2:yb,class:'measure'},g);
+    const r=pb.v/pa.v,lab='×'+r.toFixed(2);
+    const right=xb+6+lab.length*7<geo.right;
+    el('text',{x:right?xb+6:xb-6,y:(ya+yb)/2+4,'text-anchor':right?'start':'end',class:'mlab'},g,lab);
+  }
+  // points
+  DATA.forEach(p=>{
+    const x=xOf(p.d),y=yOf(p.v,t);
+    const cls='pt'+(p.s==='reference'?' refpt '+p.id:'')+((p.id===A||p.id===B)?' sel':'');
+    const gp=el('g',{class:cls,tabindex:'0',role:'button','data-id':p.id,'aria-label':`${pName(p)}: ${fmt(p.v)} subscribers, log10 ${Math.log10(p.v).toFixed(3)}. Source: ${p.src}`},g);
+    el('circle',{cx:x,cy:y,r:13,class:'hit'},gp);
+    el('circle',{cx:x,cy:y,r:p.s==='reference'?4.5:5,class:'vis'},gp);
+    gp.addEventListener('mouseenter',()=>showTip(p,x,y));
+    gp.addEventListener('mouseleave',hideTip);
+    gp.addEventListener('focus',()=>showTip(p,x,y));
+    gp.addEventListener('blur',hideTip);
+    gp.addEventListener('click',()=>pickPoint(p.id));
+    gp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickPoint(p.id);}});
+  });
+  if(keep){const k=svg.querySelector(`[data-id="${keep}"]`);if(k)k.focus();}
+}
+function placeTip(tip,fig,svg,x,y){
+  tip.hidden=false;
+  const off=svg.getBoundingClientRect(),fo=fig.getBoundingClientRect(),vb=svg.viewBox.baseVal,sc=off.width/vb.width;
+  let left=off.left-fo.left+x*sc+12,top=off.top-fo.top+y*sc-tip.offsetHeight-10;
+  if(left+tip.offsetWidth>fo.width-6)left=off.left-fo.left+x*sc-tip.offsetWidth-12;
+  left=Math.max(6,left);if(top<4)top=off.top-fo.top+y*sc+14;
+  tip.style.left=left+'px';tip.style.top=top+'px';
+}
+function showTip(p,x,y){
+  const tip=$('tip');
+  tip.innerHTML=`<b>${pName(p)}</b><br>${fmt(p.v)} subscribers<br>log10 = <b>${Math.log10(p.v).toFixed(3)}</b><br><span style="opacity:.8">Source: ${p.src}</span>`;
+  placeTip(tip,$('figCurve'),$('curve'),x,y);
+}
+function hideTip(){$('tip').hidden=true;}
+
+// ---------- compare ----------
+function fillSelects(){
+  const opts=DATA.map(p=>`<option value="${p.id}">${p.id} · ${pName(p)}</option>`).join('');
+  $('selA').innerHTML=opts;$('selB').innerHTML=opts;$('selA').value=A;$('selB').value=B;
+}
+function compare(){
+  const a=byId[A],b=byId[B],r=b.v/a.v,n=Math.abs(mIdx(b.d)-mIdx(a.d));
+  $('rRatio').textContent=r.toFixed(2);
+  $('rLog').textContent=Math.log10(r).toFixed(3);
+  $('rMonths').textContent=String(n);
+  $('rMonthly').textContent=n>0?Math.pow(r,1/n).toFixed(3):'—';
+  $('selA').value=A;$('selB').value=B;
+}
+function pickPoint(id){
+  if(!pick)return;
+  if(pickNext==='a'){A=id;pickNext='b';$('pickHint').textContent=`Point a: ${pName(byId[id])}. Now pick point b.`;}
+  else{B=id;pickNext='a';$('pickHint').textContent=`Compared ${pName(byId[A])} with ${pName(byId[B])}. Pick again to start a new pair.`;}
+  compare();drawCurve();
+}
+$('selA').addEventListener('change',e=>{A=e.target.value;compare();drawCurve();});
+$('selB').addEventListener('change',e=>{B=e.target.value;compare();drawCurve();});
+$('pickMode').addEventListener('click',e=>{pick=!pick;pickNext='a';e.currentTarget.setAttribute('aria-pressed',pick);
+  $('pickHint').textContent=pick?'Pick mode on. Click or press Enter on point a, then point b.':'Choose points in the menus, use a preset, or press "Pick on chart" and click two points.';});
+document.querySelectorAll('.presets .chip').forEach(b=>b.addEventListener('click',()=>{A=b.dataset.a;B=b.dataset.b;compare();drawCurve();}));
+
+// ---------- rates ----------
+function drawRates(){
+  const svg=$('rates'),w=Math.max(280,svg.parentNode.clientWidth-24),h=260;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);
+  const g=$('ratesBody');g.textContent='';
+  const L=38,R=w-42,T=12,Bt=h-40,H=Bt-T,gw=(R-L)/7;
+  for(let k=0;k<=3;k++){const y=Bt-H*k/3;el('line',{x1:L,x2:R,y1:y,y2:y,class:'gridl'},g);
+    el('text',{x:L-5,y:y+4,'text-anchor':'end',style:'fill:var(--moss)'},g,(k*20)+'%');
+    el('text',{x:R+5,y:y+4,style:'fill:var(--ochre)'},g,k===0?'0':(k*200)+'k');}
+  el('line',{x1:L,x2:R,y1:Bt,y2:Bt,class:'axis'},g);
+  if(gw<48)el('text',{x:(L+R)/2,y:Bt+30,'text-anchor':'middle','font-style':'italic'},g,'period ending (month/year)');
+  const bw=Math.min(18,gw*0.34);
+  RATES.forEach(r=>{
+    const cx=L+gw*(r.i+.5),pct=(r.f-1)*100;
+    const gb=el('g',{class:'bar'+(r.i===hlSeg?' hl':''),tabindex:'0','data-i':r.i,'aria-label':`${dLabel(r.a.d)} to ${dLabel(r.b.d)}: monthly factor ${r.f.toFixed(3)}, ${pct.toFixed(1)}% a month, ${fmt(r.add)} subscribers added per month`},g);
+    el('rect',{x:cx-gw/2+2,y:T,width:gw-4,height:H,rx:4,class:'bg'},gb);
+    const h1=Math.max(1,H*pct/60),h2=H*r.add/600000;
+    el('rect',{x:cx-bw-1,y:Bt-h1,width:bw,height:h1,class:'rate-bar'},gb);
+    el('rect',{x:cx+1,y:Bt-h2,width:bw,height:h2,class:'add-bar'},gb);
+    if(gw<48){el('text',{x:cx,y:Bt+14,'text-anchor':'middle','font-size':'10.5'},gb,dNum(r.b.d));}
+    else{el('text',{x:cx,y:Bt+14,'text-anchor':'middle','font-size':'10.5'},gb,dShort(r.a.d));
+    el('text',{x:cx,y:Bt+27,'text-anchor':'middle','font-size':'10.5'},gb,'–'+dShort(r.b.d));}
+    const on=()=>{setHl(r.i);const tip=$('tip2');tip.innerHTML=`<b>${dLabel(r.a.d)} to ${dLabel(r.b.d)}</b> (${r.n} months)<br>Monthly factor <b>${r.f.toFixed(3)}</b> (${pct.toFixed(1)}% a month)<br>Added <b>${fmt(r.add)}</b> a month`;placeTip(tip,$('figRates'),svg,cx,T+30);};
+    const off=()=>{setHl(-1);$('tip2').hidden=true;};
+    gb.addEventListener('mouseenter',on);gb.addEventListener('mouseleave',off);gb.addEventListener('focus',on);gb.addEventListener('blur',off);
+  });
+  $('rateBody').innerHTML=RATES.map(r=>`<tr data-i="${r.i}"${r.i===hlSeg?' class="hl"':''}><td>${dShort(r.a.d)}–${dShort(r.b.d)}</td><td class="nc">${r.n}</td><td>${r.f.toFixed(3)} <span style="color:var(--ink-soft)">(${((r.f-1)*100).toFixed(1)}%)</span></td><td>${fmt(r.add)}</td></tr>`).join('');
+}
+function setHl(i){
+  hlSeg=i;
+  document.querySelectorAll('#curve .seg').forEach((s,k)=>s.classList.toggle('hl',k===i));
+  document.querySelectorAll('#ratesBody .bar').forEach(b=>b.classList.toggle('hl',+b.dataset.i===i));
+  document.querySelectorAll('#rateBody tr').forEach(tr=>tr.classList.toggle('hl',+tr.dataset.i===i));
+}
+$('rateBody').addEventListener('mouseover',e=>{const tr=e.target.closest('tr');if(tr)setHl(+tr.dataset.i);});
+$('rateBody').addEventListener('mouseleave',()=>setHl(-1));
+
+// ---------- scale toggle ----------
+function insight(){
+  const s=target===0
+    ?`<b>Linear axis.</b> WoW's line is still climbing steeply from January 2007 to January 2008, adding ${fmt(RATES[4].add)} subscribers a month. Ultima Online and EverQuest lie almost flat on the floor. Meanwhile the solid bars fell in every period, from ${((RATES[0].f-1)*100).toFixed(1)}% a month to ${((RATES[6].f-1)*100).toFixed(1)}%. Press <b>Log scale</b>.`
+    :`<b>Log axis.</b> Equal ratios are equal distances, so a bending line means a falling growth rate. WoW's curve bends flat within its first year, matching the solid bars. The step from UO to EQ (×2.2, log distance 0.342) is short next to EQ to WoW's peak (×21.82, log distance 1.339).`;
+  $('insight').innerHTML=s;
+}
+let raf=0;
+function setScale(v){
+  target=v;$('sLin').setAttribute('aria-pressed',v===0);$('sLog').setAttribute('aria-pressed',v===1);insight();
+  cancelAnimationFrame(raf);
+  if(reduced.matches){scaleT=v;drawCurve();return;}
+  const from=scaleT,t0=performance.now(),dur=450;
+  const tick=now=>{const k=Math.min(1,(now-t0)/dur),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;scaleT=from+(v-from)*e;drawCurve();if(k<1)raf=requestAnimationFrame(tick);};
+  raf=requestAnimationFrame(tick);
+}
+$('sLin').addEventListener('click',()=>setScale(0));
+$('sLog').addEventListener('click',()=>setScale(1));
+
+// ---------- composition ----------
+function drawComp(){
+  const svg=$('comp'),w=Math.max(260,svg.parentNode.clientWidth-24),h=150;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);
+  svg.querySelectorAll('g').forEach(n=>n.remove());
+  const g=el('g',{},svg),L=0,W=w,tot=10e6;
+  const segs=[['Asia',5.5e6,'seg-asia',true],['North America',2.5e6,'seg-na',false],['Europe',2.0e6,'seg-eu',false]];
+  let x=L;
+  el('text',{x:0,y:14,class:'lbl'},g,'WoW, January 2008 (10,000,000)');
+  segs.forEach(([n,v,c,light])=>{const ww=W*v/tot;el('rect',{x:x+1,y:22,width:ww-2,height:54,rx:4,class:c},g);
+    const lbl=Math.round(v/tot*100)+'%';
+    el('rect',{x:x+ww/2-20,y:39,width:40,height:20,rx:4,style:light?'fill:transparent':'fill:var(--paper)',opacity:light?0:.92},g);
+    el('text',{x:x+ww/2,y:54,'text-anchor':'middle',class:'inbar'+(light?'':' dark')},g,lbl);x+=ww;});
+  el('text',{x:0,y:104,class:'lbl'},g,'EverQuest all-time peak, same scale (550,000)');
+  el('rect',{x:1,y:112,width:Math.max(2,W*0.55e6/tot-2),height:24,rx:3,class:'seg-eq'},g);
+  el('text',{x:W*0.055+8,y:129},g,'5.5% of the WoW bar');
+  const sw={Asia:'background:var(--steel)','North America':'background:repeating-linear-gradient(45deg,var(--ochre) 0 2px,transparent 2px 5px);border:1.5px solid var(--ochre)',Europe:'background:radial-gradient(var(--moss) 30%,transparent 35%) 0 0/5px 5px;border:1.5px solid var(--moss)'};
+  $('compList').innerHTML=segs.map(([n,v])=>`<li><span><span class="sw" style="${sw[n]}"></span>${n}</span><span><b>${(v/1e6).toFixed(1)}M</b> · ${(v/tot*100).toFixed(0)}%</span></li>`).join('')+
+    `<li><span>Total</span><span><b>10.0M</b> · 100%</span></li>`;
+}
+
+// ---------- data table ----------
+$('dataBody').innerHTML=DATA.map(p=>`<tr><td>${p.id}</td><td>${p.s==='WoW'?'WoW':p.name}</td><td>${dLabel(p.d)}</td><td>${fmt(p.v)}</td><td>${Math.log10(p.v).toFixed(3)}</td><td style="text-align:left">${p.src}</td></tr>`).join('');
+$('dataBtn').addEventListener('click',e=>{const open=$('dataWrap').hidden;$('dataWrap').hidden=!open;e.currentTarget.setAttribute('aria-expanded',open);e.currentTarget.textContent=open?'Hide data table':'Show data table';});
+
+// ---------- tabs ----------
+const tabs=[$('t1'),$('t2')];
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();redraw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2]);}});});
+
+function redraw(){if(!$('p1').hidden){drawCurve();drawRates();}else drawComp();}
+let rt=0;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redraw,80);});
+fillSelects();compare();insight();redraw();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+})();
+</script>
+</body>
+</html>

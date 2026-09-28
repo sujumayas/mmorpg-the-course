@@ -48,3 +48,11 @@
 - Waves 5-7 not started.
 - Process per course: authors (5 batches) → one builder per Interactive spec → assessment writer → reviewer (fixes + reconciles assessments) → `tools/finish_syllabus.py` → `tools/check_course.py` must print OK → commit "<CODE>: complete".
 - Owner decisions pending: delete orphaned `courses/MMO303-*/examples/w10-counter-triangle.html`; confirm GD203 lab 10 has no late window.
+
+- 2026-09-28 GD102 fact pass 2: all REVIEW.md items closed by WebFetch/curl (no WebSearch). Machinations symbols confirmed in Dormans 2012 thesis ch. 4. Rewrites: w11 Pokemon starters ("usually"), w13 Librande sentence. No numbers or exam items changed.
+
+## Session 2, continued after the usage reset (2026-09-28)
+- GD102 complete: 14 lectures, 14 examples, 14 labs, 4 assessment files (65-question bank). Reviewer fixes: w04 distance vs position claim (crosses between 50 and 60% strength), w06 ore player also trades 4:1 at the bank, w12 two-decimal region means, w13 "96 times" (not 400), Adams & Dormans chapters corrected; Machinations symbols confirmed in Dormans 2012 thesis ch. 4.
+- GS101 complete: 14 lectures, 14 examples, 13 labs, 4 assessment files (61-question bank). Reviewer fixes: US revenue peak about $3B in 1982 with the 1983 figure noted, E.T. copy-count conflict made explicit, MUD1 autumn 1978, D&D 1974 cites Men & Magic, all six w09 plotted figures cited to original reports, lab 09 moved to week 12 so close reading 1 has a clear week.
+  - Still unverified: Donovan (Replay) page ranges; some w07/w08 dates cite Wikipedia (archive.org rate-limited).
+- Wave 2 complete: GD101, GD102, MMO304, MMO401.

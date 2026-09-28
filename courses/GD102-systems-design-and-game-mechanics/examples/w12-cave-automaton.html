@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cave automaton threshold — GD102 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h1 code{font-family:inherit;white-space:nowrap}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px 20px;margin-bottom:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+input[type=number]{font:600 1rem var(--sans);width:6.5em;padding:6px 8px;border:1.5px solid var(--ink);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.btn{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.btn[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn:disabled{opacity:.45;cursor:default}
+.check{display:flex;gap:8px;align-items:flex-start;font-weight:600;font-size:.92rem;justify-content:flex-start;margin-top:4px}
+.check input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--steel);flex:none}
+.check small{display:block;font-weight:400;color:var(--ink-soft)}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:899px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cMap{aspect-ratio:64/40;border-radius:4px}
+#cMap.tiny{aspect-ratio:1/1;max-width:340px;margin:0 auto}
+#cSweep{aspect-ratio:16/11;min-height:240px}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 2px}
+.readout.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:480px){.readout{grid-template-columns:1fr 1fr}.readout.three{grid-template-columns:1fr 1fr 1fr}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0;color:var(--ink)}
+.legend i{display:inline-block;width:16px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:2px}
+.legend i.line{height:3px;vertical-align:middle}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;min-width:340px}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding:0 0 6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.82rem;color:var(--ink-soft);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+@media (max-width:480px){th,td{padding:6px 6px}table{min-width:0}}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD102 Systems Design and Game Mechanics · Week 12 · Worked example</p>
+  <h1>Cave rule: wall if <code>n ≥ 5</code></h1>
+  <p class="lede">Same rule, same map size. Move <i>p</i> by 0.05 and watch the right panel, not the left.</p>
+</header>
+
+<section class="panel" aria-label="Cave automaton">
+  <div class="controls">
+    <div class="ctl">
+      <label for="p"><span>Initial wall chance <i>p</i></span> <output id="oP" for="p">0.45</output></label>
+      <input id="p" type="range" min="0.30" max="0.60" step="0.01" value="0.45">
+      <div class="row" role="group" aria-label="Jump p">
+        <button class="btn" data-p="0.40" type="button">0.40</button>
+        <button class="btn" data-p="0.45" type="button">0.45</button>
+        <button class="btn" data-p="0.50" type="button">0.50</button>
+        <button class="btn" data-p="0.55" type="button">0.55</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label for="steps">Steps of the rule <output id="oSteps" for="steps">5</output></label>
+      <input id="steps" type="range" min="0" max="8" step="1" value="5">
+      <div class="row">
+        <button class="btn" id="stepBtn" type="button">Step +1</button>
+        <button class="btn" id="playBtn" type="button">Play 0 to 5</button>
+        <button class="btn" id="resetBtn" type="button">Reset</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label for="seed">Seed</label>
+      <div class="row">
+        <input id="seed" type="number" min="1" max="9999" step="1" value="1" inputmode="numeric">
+        <button class="btn" id="newSeed" type="button">New seed</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label class="check" for="offWall"><input id="offWall" type="checkbox" checked><span>Count off-grid as wall<small>Off: off-grid cells count as floor. The sweep recomputes.</small></span></label>
+      <label class="check" for="tiny"><input id="tiny" type="checkbox"><span>Tiny 5 × 5 grid<small>The lecture's hand example, with <i>n</i> in each cell.</small></span></label>
+    </div>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption id="mapCap">Map<small>What a player sees. 64 × 40 cells, border always wall.</small></figcaption>
+      <canvas id="cMap" role="img" aria-label="Cave map"></canvas>
+      <div class="legend" id="mapLegend">
+        <span><i style="background:var(--ink)"></i>Wall</span>
+        <span><i style="background:var(--moss);opacity:.6"></i>Largest floor region</span>
+        <span><i style="background:var(--blood);opacity:.35;outline:1.5px solid var(--blood);outline-offset:-1.5px"></i>Cut-off pocket (outlined)</span>
+      </div>
+      <div class="readout" id="mapRead" aria-live="polite">
+        <div class="stat" style="--c:var(--steel)"><b id="rWall">—</b><span>wall share</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rLargest">—</b><span>largest region, share of floor</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rRegions">—</b><span>separate floor regions</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rStep">—</b><span>current step</span></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Sweep<small>Average of seeds 1 to 20 after 5 steps, <i>p</i> from 0.30 to 0.60 in steps of 0.01.</small></figcaption>
+      <canvas id="cSweep" role="img" aria-label="Sweep chart"></canvas>
+      <div class="legend">
+        <span><i class="line" style="background:var(--steel)"></i>Wall share</span>
+        <span><i class="line" style="background:var(--moss)"></i>Largest region, share of floor</span>
+        <span><i style="background:var(--ochre);opacity:.3"></i>Threshold (steepest drop)</span>
+      </div>
+      <div class="readout three" aria-live="polite">
+        <div class="stat" style="--c:var(--steel)"><b id="aWall">—</b><span>avg wall share</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="aLargest">—</b><span>avg largest region</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="aRegions">—</b><span>avg regions</span></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>The dial, 20 seeds, 5 steps (lecture table rows, plus your current <i>p</i>)</caption>
+      <thead><tr><th scope="col"><i>p</i></th><th scope="col">Wall share</th><th scope="col">Largest region</th><th scope="col">Regions</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Generator: mulberry32 seeded with the seed, one draw per cell in row-major order, border cells always wall. Rule: <i>n</i> counts walls in the 3 × 3 block including the cell, next state is wall if <i>n</i> ≥ 5. Regions are 4-connected floor cells. Region averages show two decimals because each is a mean of 20 whole numbers.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const W=64,H=40,SEEDS=20,SWEEP_STEPS=5;
+const PS=[];for(let i=0;i<=30;i++)PS.push(Math.round(30+i)/100);
+const TABLE_P=[0.30,0.35,0.40,0.42,0.44,0.45,0.46,0.48,0.50,0.52,0.55];
+const TINY=['#.#..','..#.#','#....','.#..#','..#..'];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function generate(seed,p){
+  const r=mulberry32(seed),g=new Uint8Array(W*H);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=r();g[y*W+x]=(x===0||y===0||x===W-1||y===H-1||d<p)?1:0;}
+  return g;
+}
+function countN(g,w,h,x,y,off){
+  let n=0;
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    const X=x+dx,Y=y+dy;
+    if(X<0||Y<0||X>=w||Y>=h){if(off)n++;}else n+=g[Y*w+X];
+  }
+  return n;
+}
+function step(g,w,h,off){
+  const o=new Uint8Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)o[y*w+x]=countN(g,w,h,x,y,off)>=5?1:0;
+  return o;
+}
+function regions(g,w,h){
+  const lab=new Int32Array(w*h).fill(-1),sizes=[],st=[];
+  for(let i=0;i<w*h;i++){
+    if(g[i]||lab[i]>=0)continue;
+    const id=sizes.length;let s=0;lab[i]=id;st.push(i);
+    while(st.length){
+      const c=st.pop();s++;const x=c%w,y=(c/w)|0;
+      if(x+1<w){const j=c+1;if(!g[j]&&lab[j]<0){lab[j]=id;st.push(j);}}
+      if(x>0){const j=c-1;if(!g[j]&&lab[j]<0){lab[j]=id;st.push(j);}}
+      if(y+1<h){const j=c+w;if(!g[j]&&lab[j]<0){lab[j]=id;st.push(j);}}
+      if(y>0){const j=c-w;if(!g[j]&&lab[j]<0){lab[j]=id;st.push(j);}}
+    }
+    sizes.push(s);
+  }
+  let big=-1,bs=0;sizes.forEach((s,i)=>{if(s>bs){bs=s;big=i;}});
+  return {lab,sizes,big};
+}
+function stats(g,w,h){
+  let walls=0;for(let i=0;i<g.length;i++)walls+=g[i];
+  const R=regions(g,w,h),floor=w*h-walls;
+  return {walls,wall:walls/(w*h),largest:floor?(R.sizes[R.big]||0)/floor:0,n:R.sizes.length,R};
+}
+
+// sweep cache per toggle state
+const sweepCache={};
+function sweep(off){
+  const k=off?'on':'off';
+  if(sweepCache[k])return sweepCache[k];
+  const out=PS.map(p=>{
+    let a=0,b=0,c=0;
+    for(let s=1;s<=SEEDS;s++){let g=generate(s,p);for(let i=0;i<SWEEP_STEPS;i++)g=step(g,W,H,off);const t=stats(g,W,H);a+=t.wall;b+=t.largest;c+=t.n;}
+    return {p,wall:a/SEEDS,largest:b/SEEDS,regions:c/SEEDS};
+  });
+  let bi=0,bd=-Infinity;
+  for(let i=0;i<out.length-1;i++){const d=out[i].largest-out[i+1].largest;if(d>bd){bd=d;bi=i;}}
+  sweepCache[k]={pts:out,band:[out[bi].p,out[bi+1].p],drop:bd};
+  return sweepCache[k];
+}
+
+// state
+let P=0.45,STEPS=5,SEED=1,OFF=true,TINYMODE=false,shownStep=5,anim=null;
+const pct=v=>(v*100).toFixed(1)+'%';
+const sgn=v=>(v>=0?'+':'\u2212')+Math.abs(v).toFixed(1);
+const f2=v=>v.toFixed(2);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function rgba(hex,a){hex=hex.replace('#','');const n=parseInt(hex,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+function setupCanvas(cv){
+  const dpr=Math.min(window.devicePixelRatio||1,3),r=cv.getBoundingClientRect();
+  const w=Math.max(10,Math.round(r.width)),h=Math.max(10,Math.round(r.height));
+  cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  return {g,w,h};
+}
+
+function mapGrids(){
+  if(TINYMODE){
+    let g=Uint8Array.from(TINY.join('').split('').map(c=>c==='#'?1:0));
+    const list=[g];for(let i=0;i<8;i++){g=step(g,5,5,OFF);list.push(g);}
+    return {list,w:5,h:5};
+  }
+  let g=generate(SEED,P);const list=[g];
+  for(let i=0;i<8;i++){g=step(g,W,H,OFF);list.push(g);}
+  return {list,w:W,h:H};
+}
+let grids=null;
+function rebuild(){grids=mapGrids();}
+
+function drawMap(){
+  const cv=$('cMap');cv.classList.toggle('tiny',TINYMODE);
+  const {g:ctx,w:cw}=setupCanvas(cv);
+  const {w,h}=grids,grid=grids.list[shownStep],cell=cw/w;
+  const S=stats(grid,w,h),{lab,big}=S.R;
+  const ink=css('--ink'),paper=css('--paper'),moss=css('--moss'),blood=css('--blood');
+  ctx.fillStyle=paper;ctx.fillRect(0,0,cw,cell*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=y*w+x,X=x*cell,Y=y*cell;
+    if(grid[i]){ctx.fillStyle=ink;}
+    else if(lab[i]===big){ctx.fillStyle=rgba(moss,.55);}
+    else{ctx.fillStyle=rgba(blood,.32);}
+    const x0=Math.round(X),y0=Math.round(Y);ctx.fillRect(x0,y0,Math.round(X+cell)-x0,Math.round(Y+cell)-y0);
+  }
+  // outlines around non-largest regions
+  ctx.strokeStyle=blood;ctx.lineWidth=TINYMODE?2.5:Math.max(1,Math.min(2,cell/4));ctx.beginPath();
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=y*w+x;if(grid[i]||lab[i]===big)continue;
+    const L=lab[i],X=x*cell,Y=y*cell;
+    const other=(nx,ny)=>nx<0||ny<0||nx>=w||ny>=h||lab[ny*w+nx]!==L;
+    if(other(x,y-1)){ctx.moveTo(X,Y);ctx.lineTo(X+cell,Y);}
+    if(other(x,y+1)){ctx.moveTo(X,Y+cell);ctx.lineTo(X+cell,Y+cell);}
+    if(other(x-1,y)){ctx.moveTo(X,Y);ctx.lineTo(X,Y+cell);}
+    if(other(x+1,y)){ctx.moveTo(X+cell,Y);ctx.lineTo(X+cell,Y+cell);}
+  }
+  ctx.stroke();
+  if(TINYMODE){
+    ctx.strokeStyle=css('--grid');ctx.lineWidth=1;ctx.beginPath();
+    for(let i=0;i<=5;i++){ctx.moveTo(i*cell,0);ctx.lineTo(i*cell,5*cell);ctx.moveTo(0,i*cell);ctx.lineTo(5*cell,i*cell);}
+    ctx.stroke();
+    ctx.font=`700 ${Math.round(cell*.42)}px ${css('--sans')}`;ctx.textAlign='center';ctx.textBaseline='middle';
+    for(let y=0;y<5;y++)for(let x=0;x<5;x++){
+      const n=countN(grid,5,5,x,y,OFF),wall=grid[y*5+x];
+      ctx.fillStyle=wall?paper:ink;ctx.fillText(String(n),x*cell+cell/2,y*cell+cell/2+1);
+    }
+  }
+  // readouts
+  $('rWall').textContent=TINYMODE?`${S.walls} of 25`:pct(S.wall);
+  $('rLargest').textContent=pct(S.largest);
+  $('rRegions').textContent=String(S.n);
+  $('rStep').textContent=String(shownStep);
+  const rowsTxt=[];for(let y=0;y<h;y++){let s='';for(let x=0;x<w;x++)s+=grid[y*w+x]?'#':'.';rowsTxt.push(s);}
+  if(TINYMODE){
+    const counts=[];for(let y=0;y<5;y++){let s='';for(let x=0;x<5;x++)s+=countN(grid,5,5,x,y,OFF);counts.push(s);}
+    cv.setAttribute('aria-label',`Tiny 5 by 5 grid at step ${shownStep}. Rows ${rowsTxt.join(' / ')}. Counts n ${counts.join(' / ')}. ${S.walls} walls.`);
+  }else{
+    cv.setAttribute('aria-label',`Cave map, seed ${SEED}, p ${P.toFixed(2)}, step ${shownStep}: ${pct(S.wall)} wall, largest region ${pct(S.largest)} of floor, ${S.n} separate regions.`);
+  }
+  return S;
+}
+
+function drawSweep(){
+  const sw=sweep(OFF),{g:c,w,h}=setupCanvas($('cSweep'));
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid');
+  const L=44,R=12,T=14,B=38,pw=w-L-R,ph=h-T-B;
+  const X=p=>L+(p-0.30)/0.30*pw,Y=v=>T+(1-v)*ph;
+  // band
+  c.fillStyle=rgba(css('--ochre'),.22);c.fillRect(X(sw.band[0]),T,X(sw.band[1])-X(sw.band[0]),ph);
+  // grid + axes
+  c.strokeStyle=grid;c.lineWidth=1;c.font=`12px ${css('--sans')}`;c.fillStyle=soft;
+  c.textAlign='right';c.textBaseline='middle';
+  for(let v=0;v<=1.001;v+=0.25){c.beginPath();c.moveTo(L,Y(v));c.lineTo(L+pw,Y(v));c.stroke();c.fillText(Math.round(v*100)+'%',L-6,Y(v));}
+  c.textAlign='center';c.textBaseline='top';
+  for(let i=0;i<=6;i++){const p=0.30+i*0.05;c.beginPath();c.moveTo(X(p),T);c.lineTo(X(p),T+ph);c.stroke();c.fillText(p.toFixed(2),X(p),T+ph+5);}
+  c.fillText('initial wall chance p',L+pw/2,T+ph+21);
+  c.strokeStyle=ink;c.lineWidth=1.5;c.beginPath();c.moveTo(L,T);c.lineTo(L,T+ph);c.lineTo(L+pw,T+ph);c.stroke();
+  // band label
+  c.fillStyle=css('--ochre');c.font=`600 12px ${css('--sans')}`;c.textAlign='center';c.textBaseline='top';
+  c.textBaseline='bottom';c.fillText('threshold',X((sw.band[0]+sw.band[1])/2),T+ph-4);
+  // lines
+  const line=(key,col)=>{c.strokeStyle=col;c.lineWidth=2.5;c.lineJoin='round';c.beginPath();sw.pts.forEach((d,i)=>{i?c.lineTo(X(d.p),Y(d[key])):c.moveTo(X(d.p),Y(d[key]));});c.stroke();};
+  line('wall',css('--steel'));line('largest',css('--moss'));
+  // marker
+  const cur=sw.pts.find(d=>Math.abs(d.p-P)<1e-9);
+  c.strokeStyle=ink;c.lineWidth=1.5;c.setLineDash([4,4]);c.beginPath();c.moveTo(X(P),T);c.lineTo(X(P),T+ph);c.stroke();c.setLineDash([]);
+  [['wall','--steel'],['largest','--moss']].forEach(([k,col])=>{c.fillStyle=css(col);c.strokeStyle=css('--paper-2');c.lineWidth=2;c.beginPath();c.arc(X(P),Y(cur[k]),5.5,0,Math.PI*2);c.fill();c.stroke();});
+  $('aWall').textContent=pct(cur.wall);$('aLargest').textContent=pct(cur.largest);$('aRegions').textContent=f2(cur.regions);
+  $('cSweep').setAttribute('aria-label',`Sweep chart. At p ${P.toFixed(2)} the 20-seed average is ${pct(cur.wall)} wall and the largest region holds ${pct(cur.largest)} of floor. Steepest drop between p ${sw.band[0].toFixed(2)} and ${sw.band[1].toFixed(2)}.`);
+  return {sw,cur};
+}
+
+function table(sw){
+  const ps=TABLE_P.slice();if(!ps.some(p=>Math.abs(p-P)<1e-9))ps.push(P);ps.sort((a,b)=>a-b);
+  $('tbody').innerHTML=ps.map(p=>{const d=sw.pts.find(x=>Math.abs(x.p-p)<1e-9);const here=Math.abs(p-P)<1e-9;
+    return `<tr class="${here?'here':''}"><td>${p.toFixed(2)}${here?' (you)':''}</td><td>${pct(d.wall)}</td><td>${pct(d.largest)}</td><td>${f2(d.regions)}</td></tr>`;}).join('');
+}
+
+function insight(S,sw,cur){
+  if(TINYMODE){
+    $('insight').innerHTML=shownStep===0
+      ?`Before: 8 walls out of 25. Each number is <i>n</i>, the walls in that cell's 3 × 3 block${OFF?', with off-grid cells counted as walls':', with off-grid cells counted as floor'}. Press Step +1: every cell with <i>n</i> ≥ 5 becomes wall.`
+      :`After ${shownStep} step${shownStep>1?'s':''}: ${S.walls} walls. ${OFF?'The off-grid walls vote with the edge cells, so the edges fill in and the interior clears. On a grid this small, the edge dominates.':'With off-grid cells counted as floor, the edges lose their extra votes.'}`;
+    return;
+  }
+  const at=p=>sw.pts.find(d=>Math.abs(d.p-p)<1e-9);
+  let s=`Seed ${SEED} at <i>p</i> = ${P.toFixed(2)}: after ${shownStep} step${shownStep===1?'':'s'} the map is ${pct(S.wall)} wall and the largest cave holds ${pct(S.largest)} of the floor, in ${S.n} separate region${S.n===1?'':'s'}. `;
+  const q=Math.round((P+0.05)*100)/100;
+  if(q<=0.60){const a=cur,b=at(q);
+    s+=`Across 20 seeds, moving <i>p</i> from ${P.toFixed(2)} to ${q.toFixed(2)} changes wall share by ${sgn((b.wall-a.wall)*100)} points and the largest region by ${sgn((b.largest-a.largest)*100)} points. `;}
+  s+=`The steepest single drop is between ${sw.band[0].toFixed(2)} and ${sw.band[1].toFixed(2)} (−${(sw.drop*100).toFixed(1)} points).`;
+  if(!OFF)s+=` Off-grid now counts as floor, so edge cells can open up and the curves shift.`;
+  $('insight').innerHTML=s;
+}
+
+function render(){
+  const S=drawMap();
+  const {sw,cur}=drawSweep();
+  table(sw);insight(S,sw,cur);
+  $('oP').textContent=P.toFixed(2);$('oSteps').textContent=STEPS;
+  $('playBtn').textContent=`Play 0 to ${STEPS}`;
+  $('stepBtn').disabled=shownStep>=8;
+  document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',String(Math.abs(+b.dataset.p-P)<1e-9)));
+}
+function stopAnim(){if(anim){clearInterval(anim);anim=null;}}
+
+// events
+$('p').addEventListener('input',e=>{stopAnim();P=Math.round(+e.target.value*100)/100;rebuild();shownStep=STEPS;render();});
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{stopAnim();P=+b.dataset.p;$('p').value=P;rebuild();shownStep=STEPS;render();}));
+$('steps').addEventListener('input',e=>{stopAnim();STEPS=+e.target.value;shownStep=STEPS;render();});
+$('stepBtn').addEventListener('click',()=>{stopAnim();if(shownStep<8){shownStep++;STEPS=shownStep;$('steps').value=STEPS;}render();});
+$('resetBtn').addEventListener('click',()=>{stopAnim();shownStep=0;STEPS=0;$('steps').value=0;render();});
+$('playBtn').addEventListener('click',()=>{
+  stopAnim();const target=STEPS;
+  if(reduce.matches||target===0){shownStep=target;render();return;}
+  shownStep=0;render();
+  anim=setInterval(()=>{shownStep++;render();if(shownStep>=target)stopAnim();},320);
+});
+function setSeed(v){stopAnim();v=Math.max(1,Math.min(9999,Math.round(+v)||1));SEED=v;$('seed').value=v;rebuild();shownStep=STEPS;render();}
+$('seed').addEventListener('change',e=>setSeed(e.target.value));
+$('newSeed').addEventListener('click',()=>setSeed(1+Math.floor(Math.random()*9999)));
+$('offWall').addEventListener('change',e=>{stopAnim();OFF=e.target.checked;rebuild();shownStep=STEPS;render();});
+$('tiny').addEventListener('change',e=>{
+  stopAnim();TINYMODE=e.target.checked;
+  if(TINYMODE){STEPS=0;$('steps').value=0;}else{STEPS=5;$('steps').value=5;}
+  shownStep=STEPS;
+  $('mapCap').innerHTML=TINYMODE?'Map: tiny grid<small>The lecture\'s 5 × 5 hand example. Numbers are <i>n</i> for the next step.</small>':'Map<small>What a player sees. 64 × 40 cells, border always wall.</small>';
+  ['p','seed','newSeed'].forEach(id=>$(id).disabled=TINYMODE);
+  document.querySelectorAll('[data-p]').forEach(b=>b.disabled=TINYMODE);
+  rebuild();render();
+});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,80);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+rebuild();render();
+window.__caveModel={generate,step,stats,sweep,countN};
+})();
+</script>
+</body>
+</html>

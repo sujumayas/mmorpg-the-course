@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>One update loop · GS101 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+code{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:.9em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px}
+.bar{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.6fr) auto;gap:14px 20px;align-items:end}
+@media (max-width:860px){.bar{grid-template-columns:1fr}}
+label,.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{font-weight:600;font-size:.86rem;padding:7px 11px;border-radius:8px;border:1.5px solid var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.seg input{accent-color:var(--ink);margin:0}
+.seg label:has(input:checked){background:var(--ink);color:var(--paper)}
+.btn{font:700 .95rem var(--sans);padding:10px 18px;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;min-width:7.5em}
+.btn:focus-visible,button:focus-visible,input:focus-visible,.seg label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin:14px 0 0;padding:10px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1rem}
+.insight b{font-family:var(--sans);font-variant-numeric:tabular-nums}
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px}
+@media (max-width:860px){.charts{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px;background:var(--paper);border-radius:8px}
+#cStar{height:auto;aspect-ratio:1/1;max-height:420px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--ink-soft) 0 4px,transparent 4px 7px)!important}
+.sub{margin-top:12px;display:grid;gap:8px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .84rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.check{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;justify-content:flex-start}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.small{font-size:.82rem;color:var(--ink-soft);margin:0}
+.warn{font-size:.86rem;color:var(--blood);margin:0;font-weight:600}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+caption{text-align:left;font-weight:700;font-size:.9rem;padding-bottom:4px}
+@media (max-width:520px){th,td{padding:5px 5px!important;font-size:.8rem}.long{display:none}}
+.short{display:none}@media (max-width:520px){.short{display:inline}}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink-soft)}
+th.semi{color:var(--steel)} th.expl{color:var(--blood)}
+td.dim{opacity:.45}
+tr.key td{font-weight:700;background:var(--paper)}
+[hidden]{display:none!important}
+footer{margin-top:20px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GS101 History and Critical Study of Games · Week 2 · Worked example</p>
+  <h1>One update loop, two games</h1>
+  <p class="lede">Both panels run the same four lines: velocity, then position, every <code>dt</code>. Swapping those two lines nudges the tennis arc. It sends the ship spiralling away from the star.</p>
+</header>
+
+<section class="panel" aria-label="Shared controls">
+  <div class="bar">
+    <div>
+      <label for="dt"><span>Step size <code>dt</code></span> <output id="oDt">0.10</output></label>
+      <input id="dt" type="range" min="0.01" max="0.30" step="0.01" value="0.10">
+    </div>
+    <fieldset>
+      <legend>Update order</legend>
+      <div class="seg">
+        <label><input type="radio" name="order" value="semi">Velocity first (semi-implicit)</label>
+        <label><input type="radio" name="order" value="expl">Position first (explicit)</label>
+        <label><input type="radio" name="order" value="both" checked>Show both</label>
+      </div>
+    </fieldset>
+    <div><button class="btn" id="play" type="button">Play</button></div>
+  </div>
+  <p class="insight" id="insight" aria-live="polite"></p>
+</section>
+
+<div class="charts">
+  <figure>
+    <figcaption>Court (uniform gravity)<small>Tennis for Two&rsquo;s rule: <code>accel = (0, &minus;g)</code>. Launch from (0, 0) at <code>vx = 4</code>, <code>vy = 6</code>.</small></figcaption>
+    <canvas id="cCourt" role="img" aria-label="Ball trajectory over a net: exact parabola and stepped paths"></canvas>
+    <div class="legend">
+      <span><i class="dash"></i>Exact parabola</span>
+      <span class="lg-semi"><i style="background:var(--steel)"></i>Velocity first</span>
+      <span class="lg-expl"><i style="background:var(--blood)"></i>Position first</span>
+    </div>
+    <div class="sub">
+      <div>
+        <span class="lab" id="gLab"><span>Gravity <code>g</code></span></span>
+        <div class="presets" role="group" aria-labelledby="gLab">
+          <button class="chip" type="button" data-g="9.8" aria-pressed="true">Earth 9.8</button>
+          <button class="chip" type="button" data-g="1.63" aria-pressed="false">Moon 1.63</button>
+          <button class="chip" type="button" data-g="24.8" aria-pressed="false">Jupiter 24.8</button>
+        </div>
+        <label for="g" style="margin-top:6px"><span>Free setting</span><output id="oG">9.80</output></label>
+        <input id="g" type="range" min="0.5" max="30" step="0.01" value="9.8">
+        <p class="small">Illustrative play settings in the spirit of the 1959 version, which let visitors pick other planets. These are not the values Tennis for Two used.</p>
+      </div>
+      <div>
+        <label class="check" for="bounce"><input id="bounce" type="checkbox">Bounce (up to 5 times, <code>vy = &minus;e &times; vy</code>)</label>
+        <label for="e" style="margin-top:4px"><span>Restitution <code>e</code></span><output id="oE">0.70</output></label>
+        <input id="e" type="range" min="0" max="1" step="0.01" value="0.7" disabled>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Court numbers</caption>
+        <thead><tr><th></th><th>Exact</th><th class="semi"><span class="long">Velocity first</span><span class="short">Vel. first</span></th><th class="expl"><span class="long">Position first</span><span class="short">Pos. first</span></th></tr></thead>
+        <tbody id="courtSum"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Height after each step (first 8, &#9652; marks the top)</caption>
+        <thead><tr><th>Step</th><th><code>t</code></th><th>Exact</th><th class="semi"><span class="long">Velocity first</span><span class="short">Vel. first</span></th><th class="expl"><span class="long">Position first</span><span class="short">Pos. first</span></th></tr></thead>
+        <tbody id="courtSteps"></tbody>
+      </table>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Star (central gravity)<small>Spacewar!&rsquo;s rule: <code>accel = &minus;G (x, y) / d&sup3;</code>. Ship starts at (1, 0) moving (0, 1).</small></figcaption>
+    <canvas id="cStar" role="img" aria-label="Ship paths around a central star compared with the exact circle of radius 1"></canvas>
+    <div class="legend">
+      <span><i class="dash"></i>Exact circle <code>r = 1</code></span>
+      <span class="lg-semi"><i style="background:var(--steel)"></i>Velocity first</span>
+      <span class="lg-expl"><i style="background:var(--blood)"></i>Position first</span>
+    </div>
+    <div class="sub">
+      <div>
+        <label for="G"><span>Star strength <code>G</code></span> <output id="oGs">1.00</output></label>
+        <input id="G" type="range" min="0.5" max="2" step="0.01" value="1">
+        <p class="warn" id="gWarn" hidden>With G &ne; 1 this start no longer gives a circle. The grey circle is only a reference now, not the true path.</p>
+      </div>
+      <div>
+        <span class="lab" id="lapLab">Laps</span>
+        <div class="presets" role="group" aria-labelledby="lapLab">
+          <button class="chip" type="button" data-laps="1" aria-pressed="true">1</button>
+          <button class="chip" type="button" data-laps="3" aria-pressed="false">3</button>
+          <button class="chip" type="button" data-laps="10" aria-pressed="false">10</button>
+        </div>
+        <p class="small" id="lapNote"></p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Distance from the star <code>d</code> and energy <code>E = &frac12;(vx&sup2; + vy&sup2;) &minus; G/d</code></caption>
+        <thead><tr><th></th><th class="semi"><code>d</code> vel.<span class="long"> first</span></th><th class="semi"><code>E</code> vel.<span class="long"> first</span></th><th class="expl"><code>d</code> pos.<span class="long"> first</span></th><th class="expl"><code>E</code> pos.<span class="long"> first</span></th></tr></thead>
+        <tbody id="starTab"></tbody>
+      </table>
+    </div>
+    <p class="small" id="eNote"></p>
+  </figure>
+</div>
+
+<footer>Model and test values from the GS101 week 2 lecture, section 2. The star&rsquo;s acceleration follows Norbert Landsteiner&rsquo;s line-by-line reading of the Spacewar! PDP-1 source (the program cubes the distance and divides each coordinate by it). All shapes here are generic: a dot for the ball, a triangle for the ship.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f3=n=>(Math.abs(n)<5e-4?0:n).toFixed(3).replace('-','−');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const TAU=2*Math.PI;
+let dt=0.10,order='both',g=9.8,bounce=false,e=0.7,G=1,laps=1;
+let progress=1,anim=null;
+
+// ---------- models ----------
+function court(semi){
+  let x=0,y=0,vx=4,vy=6,b=0;const pts=[{x,y}];let land=null;
+  for(let i=0;i<20000;i++){
+    let nx,ny,nvy;
+    if(semi){nvy=vy-g*dt;nx=x+vx*dt;ny=y+nvy*dt;}
+    else{nx=x+vx*dt;ny=y+vy*dt;nvy=vy-g*dt;}
+    if(ny<0){
+      if(land===null)land=x+(nx-x)*y/(y-ny);
+      if(!bounce||b>=5)break;
+      b++;ny=0;nvy=-e*nvy;
+      if(Math.abs(nvy)<1e-6){x=nx;y=0;pts.push({x,y});break;}
+    }
+    x=nx;y=ny;vy=nvy;pts.push({x,y});
+  }
+  let fa=0,fs=0;for(let i=1;i<pts.length;i++){if(pts[i].y===0&&bounce)break;if(pts[i].y>fa){fa=pts[i].y;fs=i;}}
+  return {pts,apex:fa,apexStep:fs,land};
+}
+function courtExact(){
+  const seg=[];let x0=0,vy=6;const vx=4;
+  for(let b=0;b<=(bounce?5:0);b++){
+    const T=2*vy/g;seg.push({x0,vy,T});x0+=vx*T;vy*=e;if(vy<1e-6)break;
+  }
+  return seg;
+}
+function star(semi){
+  const N=Math.round(laps*TAU/dt);
+  let x=1,y=0,vx=0,vy=1;const pts=[{x,y,vx,vy}];let captured=null;
+  for(let i=1;i<=N;i++){
+    const d=Math.hypot(x,y),ax=-G*x/(d*d*d),ay=-G*y/(d*d*d);
+    if(semi){vx+=ax*dt;vy+=ay*dt;x+=vx*dt;y+=vy*dt;}
+    else{x+=vx*dt;y+=vy*dt;vx+=ax*dt;vy+=ay*dt;}
+    pts.push({x,y,vx,vy});
+    if(Math.hypot(x,y)<0.05){captured=i;break;}
+  }
+  return {pts,N,captured};
+}
+const dist=p=>Math.hypot(p.x,p.y);
+const energy=p=>0.5*(p.vx*p.vx+p.vy*p.vy)-G/dist(p);
+
+// ---------- canvas helpers ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const cx=c.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,r.width,r.height);return {cx,w:r.width,h:r.height};
+}
+function niceStep(range){const m=Math.pow(10,Math.floor(Math.log10(range/4)));for(const k of [1,2,2.5,5,10]){if(range/(k*m)<=5)return k*m;}return 10*m;}
+const shown=m=>order==='both'||order===m;
+function visCount(n){return Math.max(1,Math.ceil(n*progress));}
+
+function drawCourt(sim){
+  const {cx,w,h}=setup($('cCourt'));
+  const ex=courtExact();
+  let xMax=4.5,yMax=1;
+  for(const s of ex){xMax=Math.max(xMax,s.x0+4*s.T);yMax=Math.max(yMax,s.vy*s.vy/(2*g));}
+  for(const k of ['semi','expl'])if(shown(k))for(const p of sim[k].pts){xMax=Math.max(xMax,p.x);yMax=Math.max(yMax,p.y);}
+  xMax*=1.04;yMax*=1.12;
+  const pad={l:40,r:10,t:10,b:28};
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/xMax,Y=y=>h-pad.b-(h-pad.t-pad.b)*y/yMax;
+  cx.font='11px '+css('--sans');cx.fillStyle=css('--ink-soft');cx.strokeStyle=css('--grid');cx.lineWidth=1;
+  const sy=niceStep(yMax),sx=niceStep(xMax);
+  cx.textAlign='right';cx.textBaseline='middle';
+  for(let v=0;v<=yMax;v+=sy){cx.beginPath();cx.moveTo(pad.l,Y(v));cx.lineTo(w-pad.r,Y(v));cx.stroke();cx.fillText(+v.toFixed(2),pad.l-5,Y(v));}
+  cx.textAlign='center';cx.textBaseline='top';
+  for(let v=0;v<=xMax;v+=sx){cx.fillText(+v.toFixed(2),X(v),h-pad.b+5);}
+  cx.textAlign='left';cx.fillText('x',w-pad.r-8,h-pad.b+5);
+  // ground and net
+  cx.strokeStyle=css('--ink');cx.lineWidth=2;cx.beginPath();cx.moveTo(pad.l,Y(0));cx.lineTo(w-pad.r,Y(0));cx.stroke();
+  cx.lineWidth=3;cx.beginPath();cx.moveTo(X(3),Y(0));cx.lineTo(X(3),Y(Math.min(0.5,yMax*0.3)));cx.stroke();
+  // exact
+  cx.strokeStyle=css('--ink-soft');cx.lineWidth=1.3;cx.setLineDash([4,3]);cx.beginPath();
+  for(const s of ex){for(let i=0;i<=60;i++){const t=s.T*i/60;const px=X(s.x0+4*t),py=Y(s.vy*t-0.5*g*t*t);i?cx.lineTo(px,py):cx.moveTo(px,py);}}
+  cx.stroke();cx.setLineDash([]);
+  for(const [k,col] of [['expl','--blood'],['semi','--steel']]){
+    if(!shown(k))continue;
+    const pts=sim[k].pts,n=visCount(pts.length),c=css(col);
+    cx.strokeStyle=c;cx.fillStyle=c;cx.lineWidth=1.6;cx.beginPath();
+    for(let i=0;i<n;i++){const p=pts[i];i?cx.lineTo(X(p.x),Y(p.y)):cx.moveTo(X(p.x),Y(p.y));}
+    cx.stroke();
+    const r=pts.length>120?1.6:2.8;
+    for(let i=0;i<n;i++){cx.beginPath();cx.arc(X(pts[i].x),Y(pts[i].y),r,0,TAU);cx.fill();}
+    const last=pts[n-1];cx.beginPath();cx.arc(X(last.x),Y(last.y),5.5,0,TAU);cx.fill();cx.strokeStyle=css('--paper');cx.lineWidth=2;cx.stroke();
+  }
+}
+
+function drawStar(sim){
+  const {cx,w,h}=setup($('cStar'));
+  let R=1.3;
+  for(const k of ['semi','expl'])if(shown(k))for(const p of sim[k].pts)R=Math.max(R,dist(p)*1.08);
+  R=Math.min(R,6);
+  const s=Math.min(w,h)/2/R,ox=w/2,oy=h/2;
+  const X=x=>ox+x*s,Y=y=>oy-y*s;
+  cx.save();cx.beginPath();cx.rect(0,0,w,h);cx.clip();
+  // rings
+  cx.strokeStyle=css('--grid');cx.lineWidth=1;cx.fillStyle=css('--ink-soft');cx.font='11px '+css('--sans');
+  const step=R>3?1:0.5;
+  for(let r=step;r<=R*1.5;r+=step){cx.beginPath();cx.arc(ox,oy,r*s,0,TAU);cx.stroke();if(r<R&&r!==1)cx.fillText('d = '+r,ox+r*s*0.72+4,oy-r*s*0.72);}
+  cx.beginPath();cx.moveTo(0,oy);cx.lineTo(w,oy);cx.moveTo(ox,0);cx.lineTo(ox,h);cx.stroke();
+  // exact circle
+  cx.strokeStyle=css('--ink-soft');cx.globalAlpha=G===1?1:0.35;cx.lineWidth=1.3;cx.setLineDash([4,3]);cx.beginPath();cx.arc(ox,oy,s,0,TAU);cx.stroke();cx.setLineDash([]);cx.globalAlpha=1;
+  // star
+  cx.fillStyle=css('--ochre');cx.beginPath();cx.arc(ox,oy,7,0,TAU);cx.fill();
+  cx.strokeStyle=css('--ochre');cx.lineWidth=1.5;
+  for(let i=0;i<8;i++){const a=i*TAU/8;cx.beginPath();cx.moveTo(ox+Math.cos(a)*9,oy+Math.sin(a)*9);cx.lineTo(ox+Math.cos(a)*13,oy+Math.sin(a)*13);cx.stroke();}
+  for(const [k,col] of [['expl','--blood'],['semi','--steel']]){
+    if(!shown(k))continue;
+    const pts=sim[k].pts,n=visCount(pts.length),c=css(col);
+    cx.strokeStyle=c;cx.fillStyle=c;cx.lineWidth=1.5;cx.beginPath();
+    for(let i=0;i<n;i++){const p=pts[i];i?cx.lineTo(X(p.x),Y(p.y)):cx.moveTo(X(p.x),Y(p.y));}
+    cx.stroke();
+    if(pts.length<=260){for(let i=0;i<n;i++){cx.beginPath();cx.arc(X(pts[i].x),Y(pts[i].y),1.8,0,TAU);cx.fill();}}
+    // ship: generic triangle along velocity
+    const p=pts[n-1],a=Math.atan2(-p.vy,p.vx),px=X(p.x),py=Y(p.y);
+    cx.save();cx.translate(px,py);cx.rotate(a);cx.beginPath();cx.moveTo(10,0);cx.lineTo(-6,6);cx.lineTo(-6,-6);cx.closePath();
+    cx.fill();cx.strokeStyle=css('--paper');cx.lineWidth=1.5;cx.stroke();cx.restore();
+    if(dist(p)*1.0>R){cx.fillStyle=c;cx.font='600 12px '+css('--sans');cx.textAlign='left';cx.fillText('off view: d = '+f3(dist(p)),8,k==='semi'?18:38);}
+  }
+  cx.restore();
+}
+
+// ---------- numbers ----------
+let simC,simS;
+function compute(){simC={semi:court(true),expl:court(false)};simS={semi:star(true),expl:star(false)};}
+function dimCls(k){return shown(k)?'':' class="dim"';}
+function tables(){
+  const exApex=36/(2*g),exLand=2*4*6/g;
+  const cs=simC.semi,ce=simC.expl;
+  $('courtSum').innerHTML=
+    `<tr class="key"><td>Highest point</td><td>${f3(exApex)}</td><td${dimCls('semi')}>${f3(cs.apex)}</td><td${dimCls('expl')}>${f3(ce.apex)}</td></tr>`+
+    `<tr><td>Highest at step</td><td>t = ${f3(6/g)}</td><td${dimCls('semi')}>${cs.apexStep}</td><td${dimCls('expl')}>${ce.apexStep}</td></tr>`+
+    `<tr><td>Landing x<sup>*</sup></td><td>${f3(exLand)}</td><td${dimCls('semi')}>${cs.land===null?'—':f3(cs.land)}</td><td${dimCls('expl')}>${ce.land===null?'—':f3(ce.land)}</td></tr>`+
+    `<tr><td colspan="4" style="text-align:left;white-space:normal;color:var(--ink-soft);font-size:.8rem"><sup>*</sup>First ground contact, read off the straight segment between the last dot above ground and the first one below.</td></tr>`;
+  let rows='';
+  for(let i=1;i<=8;i++){
+    const t=i*dt,ey=6*t-0.5*g*t*t,a=cs.pts[i],b=ce.pts[i];
+    rows+=`<tr${i===cs.apexStep||i===ce.apexStep?' class="key"':''}><td>${i}</td><td>${f3(t)}</td><td>${ey<0?'—':f3(ey)}</td><td${dimCls('semi')}>${a?f3(a.y):'—'}${i===cs.apexStep?' \u25B4':''}</td><td${dimCls('expl')}>${b?f3(b.y):'—'}${i===ce.apexStep?' \u25B4':''}</td></tr>`;
+  }
+  $('courtSteps').innerHTML=rows;
+  // star
+  const ss=simS.semi,se=simS.expl;
+  const cell=(sim,i,k)=>{const p=sim.pts[i];if(!p)return `<td${dimCls(k)}>—</td><td${dimCls(k)}>—</td>`;return `<td${dimCls(k)}>${f3(dist(p))}</td><td${dimCls(k)}>${f3(energy(p))}</td>`;};
+  let st=`<tr><td>Start</td>${cell(ss,0,'semi')}${cell(se,0,'expl')}</tr>`;
+  for(let i=1;i<=3;i++)st+=`<tr><td>Step ${i}</td>${cell(ss,i,'semi')}${cell(se,i,'expl')}</tr>`;
+  for(let k=1;k<=laps;k++){const i=Math.round(k*TAU/dt);st+=`<tr class="${k===laps?'key':''}"><td>Lap ${k} (step ${i})</td>${cell(ss,i,'semi')}${cell(se,i,'expl')}</tr>`;}
+  $('starTab').innerHTML=st;
+  const N=Math.round(laps*TAU/dt);
+  $('lapNote').textContent=`N = round(${laps} × 2π / ${dt.toFixed(2)}) = ${N} steps.`;
+  let en=`Exact energy for this start: ${f3(0.5-G)}. It should stay constant; the drift from it measures the error.`;
+  for(const [k,s] of [['velocity first',ss],['position first',se]])if(s.captured)en+=` The ${k} ship was captured by the star at step ${s.captured}.`;
+  $('eNote').textContent=en;
+  $('gWarn').hidden=G===1;
+  // insight
+  const lapI=Math.round(TAU/dt),ds=ss.pts[lapI]?dist(ss.pts[lapI]):NaN,de=se.pts[lapI]?dist(se.pts[lapI]):NaN;
+  const gapC=ce.apex-cs.apex;
+  $('insight').innerHTML=`At <code>dt</code> = ${dt.toFixed(2)}, swapping the order moves the ball&rsquo;s top from <b>${f3(cs.apex)}</b> to <b>${f3(ce.apex)}</b> (exact ${f3(exApex)}), a gap of ${f3(gapC)}. After one lap the ship sits at <b>d = ${isNaN(ds)?'captured':f3(ds)}</b> velocity first and <b>d = ${isNaN(de)?'captured':f3(de)}</b> position first. `+
+    (de>1.2&&ds<1.05?'Same loop, same slider: one arc shifts, one orbit falls apart.':'Drag <code>dt</code> toward 0.01 and both methods converge on the exact curves.');
+}
+function draw(){drawCourt(simC);drawStar(simS);}
+function update(){compute();tables();stopAnim();progress=1;draw();}
+
+// ---------- animation ----------
+function stopAnim(){if(anim){cancelAnimationFrame(anim);anim=null;}$('play').textContent='Play';}
+$('play').addEventListener('click',()=>{
+  if(anim){stopAnim();return;}
+  if(reduce.matches){progress=1;draw();$('play').textContent='Play';return;}
+  if(progress>=1)progress=0;
+  const dur=5000;let last=performance.now();
+  $('play').textContent='Pause';
+  const tick=now=>{progress=Math.min(1,progress+(now-last)/dur);last=now;draw();
+    if(progress<1)anim=requestAnimationFrame(tick);else{anim=null;$('play').textContent='Play';}};
+  anim=requestAnimationFrame(tick);
+});
+
+// ---------- events ----------
+$('dt').addEventListener('input',ev=>{dt=+ev.target.value;$('oDt').textContent=dt.toFixed(2);update();});
+document.querySelectorAll('input[name=order]').forEach(r=>r.addEventListener('change',ev=>{order=ev.target.value;
+  document.querySelectorAll('.lg-semi').forEach(x=>x.style.opacity=shown('semi')?1:.35);
+  document.querySelectorAll('.lg-expl').forEach(x=>x.style.opacity=shown('expl')?1:.35);
+  tables();draw();}));
+function syncG(){$('oG').textContent=g.toFixed(2);document.querySelectorAll('[data-g]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.g===g)));}
+document.querySelectorAll('[data-g]').forEach(b=>b.addEventListener('click',()=>{g=+b.dataset.g;$('g').value=g;syncG();update();}));
+$('g').addEventListener('input',ev=>{g=+ev.target.value;syncG();update();});
+$('bounce').addEventListener('change',ev=>{bounce=ev.target.checked;$('e').disabled=!bounce;update();});
+$('e').addEventListener('input',ev=>{e=+ev.target.value;$('oE').textContent=e.toFixed(2);update();});
+$('G').addEventListener('input',ev=>{G=+ev.target.value;$('oGs').textContent=G.toFixed(2);update();});
+document.querySelectorAll('[data-laps]').forEach(b=>b.addEventListener('click',()=>{laps=+b.dataset.laps;
+  document.querySelectorAll('[data-laps]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));update();}));
+let rT;window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(draw,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+})();
+</script>
+</body>
+</html>

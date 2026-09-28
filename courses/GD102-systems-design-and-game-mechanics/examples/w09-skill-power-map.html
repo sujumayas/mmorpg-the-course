@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Skill vs power map — GD102 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.4vw,2.7rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--ochre)}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.mapwrap{position:relative;border-radius:var(--radius-sm)}
+.mapwrap:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+#cMap{display:block;width:100%;height:430px;touch-action:none;cursor:crosshair}
+@media (max-width:860px){#cMap{height:340px}}
+#cBars{display:block;width:100%;height:170px}
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:.84rem;margin:8px 0 0;color:var(--ink)}
+.ramp{display:inline-flex;align-items:center;gap:6px}
+.ramp i{display:inline-block;width:110px;height:10px;border-radius:3px;background:linear-gradient(90deg,var(--paper),var(--ochre));border:1px solid var(--grid)}
+.sw{display:inline-block;width:20px;height:0;border-top:3px solid var(--ink);vertical-align:middle;margin-right:6px;box-shadow:0 0 0 1.5px var(--paper)}
+.sw.dash{border-top-style:dashed}
+.box{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.live{font-family:var(--serif);font-size:.98rem;margin:10px 0 0}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 12px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 9px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.stat.big b{font-size:1.9rem}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.insight{padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);margin:0 0 14px}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+@media (max-width:860px){.controls{grid-template-columns:minmax(0,1fr)}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:10px 12px 12px;margin:0;min-width:0}
+legend{font-weight:700;font-size:.9rem;padding:0 4px}
+.row{margin-top:6px}
+label.rng{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.chk{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem;margin-top:8px;cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+.stepper{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:.9rem}
+.stepper button{font:700 1rem var(--sans);width:34px;height:34px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.stepper button:disabled{opacity:.4;cursor:default}
+.stepper output{min-width:2.2ch;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.small{font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:620px;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD102 Systems Design and Game Mechanics · Week 9 · Worked example</p>
+  <h1>Skill and power are two axes of <em>one map</em></h1>
+  <p class="lede">Every cell is a player: a level (power) and a mistake rate (skill). The line marks a 50% chance to beat the boss. Its slope is the exchange rate your design sets. Turn on boss scaling and watch the line go flat, so levels stop buying anything.</p>
+</header>
+
+<section class="panel" aria-label="Skill versus power map">
+  <p class="insight" id="insight"></p>
+  <div class="layout">
+    <figure>
+      <figcaption>Win chance by level and mistake rate<small>Drag the dot, or focus the map and use the arrow keys (Shift for bigger steps).</small></figcaption>
+      <div class="mapwrap" id="mapwrap" tabindex="0" role="slider" aria-roledescription="two-dimensional position" aria-label="Player position: level and mistake rate" aria-valuemin="5" aria-valuemax="25" aria-valuenow="10" aria-describedby="liveText">
+        <canvas id="cMap"></canvas>
+      </div>
+      <div class="legend">
+        <span class="ramp">0% <i aria-hidden="true"></i> 100% win</span>
+        <span><span class="sw" aria-hidden="true"></span>50% win</span>
+        <span id="lg90" hidden><span class="sw dash" aria-hidden="true"></span>90% win</span>
+      </div>
+      <p class="live" id="liveText" aria-live="polite"></p>
+    </figure>
+
+    <div class="side">
+      <div class="readout">
+        <div class="stat big" style="--c:var(--ochre)"><b id="rP">—</b><span>win chance</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rTries">—</b><span>expected attempts to first win</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rIso">—</b><span>mistake rate for 50% at this level</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rH">—</b><span>hits to land, H</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rA">—</b><span>hits you survive, A</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rBud">—</b><span>mistake budget A/H</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rPow">—</b><span>power ratio</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rYou">—</b><span>your health · hit</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rBoss">—</b><span>boss health · hit</span></div>
+      </div>
+      <figure>
+        <figcaption>How many mistakes will you make?<small id="barSub">Mistakes X ~ Binomial(H, m). You win if X ≤ A.</small></figcaption>
+        <canvas id="cBars" role="img" aria-label="Binomial distribution of mistakes"></canvas>
+        <div class="legend">
+          <span><span class="box" style="background:var(--moss)" aria-hidden="true"></span>you survive (k ≤ A)</span>
+          <span><span class="box" style="background:var(--ink-soft);opacity:.4" aria-hidden="true"></span>you die (k &gt; A)</span>
+        </div>
+      </figure>
+    </div>
+  </div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>You</legend>
+      <div class="presets" role="group" aria-label="Presets">
+        <button class="chip" data-preset="default" aria-pressed="true">Default</button>
+        <button class="chip" data-preset="scale" aria-pressed="false">Oblivion-style scaling</button>
+        <button class="chip" data-preset="a1" aria-pressed="false">Assist, 1 loss</button>
+        <button class="chip" data-preset="a10" aria-pressed="false">Assist, 10 losses</button>
+      </div>
+      <div class="row"><label class="rng" for="lvl">Level L <output id="oL"></output></label>
+      <input id="lvl" type="range" min="5" max="25" step="1" value="10"></div>
+      <div class="row"><label class="rng" for="mis">Mistake rate m <output id="oM"></output></label>
+      <input id="mis" type="range" min="0" max="0.8" step="0.01" value="0.2"></div>
+      <label class="chk"><input type="checkbox" id="show90"> Also show the 90% line</label>
+    </fieldset>
+    <fieldset>
+      <legend>Boss and growth</legend>
+      <div class="row"><label class="rng" for="bhp">Boss health <output id="oBhp"></output></label>
+      <input id="bhp" type="range" min="500" max="5000" step="50" value="2000"></div>
+      <div class="row"><label class="rng" for="bhit">Boss hit <output id="oBhit"></output></label>
+      <input id="bhit" type="range" min="50" max="600" step="5" value="250"></div>
+      <div class="row"><label class="rng" for="hpl">Your health per level <output id="oHpl"></output></label>
+      <input id="hpl" type="range" min="50" max="200" step="10" value="100"></div>
+      <div class="row"><label class="rng" for="dpl">Your damage per level <output id="oDpl"></output></label>
+      <input id="dpl" type="range" min="5" max="30" step="1" value="10"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Design choices</legend>
+      <label class="chk"><input type="checkbox" id="scale"> Boss scales with your level (× L / 10)</label>
+      <label class="chk"><input type="checkbox" id="summon"> Summon (your damage × 1.3)</label>
+      <label class="chk"><input type="checkbox" id="assist"> Assist after each loss</label>
+      <div class="stepper" role="group" aria-label="Failed attempts">
+        <button type="button" id="attDn" aria-label="One fewer failed attempt">−</button>
+        <output id="oAtt" aria-live="polite">0</output>
+        <button type="button" id="attUp" aria-label="One more failed attempt">+</button>
+        <span>failed attempts · <span id="oR">r = 0%</span></span>
+      </div>
+      <p class="small">Assist cuts the boss hit by 2% per loss, capped at 80%. These numbers are this example's own, not a shipped game's.</p>
+    </fieldset>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Every level at your current mistake rate and settings</caption>
+      <thead><tr><th>Level</th><th>H</th><th>A</th><th>Budget A/H</th><th>Power ratio</th><th id="thP">Win</th><th>m for 50% win</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the lecture: H = ceil(boss health / your damage), A = ceil(your health / boss hit) − 1, and you win if your mistakes X ~ Binomial(H, m) stay at or below A. "Oblivion-style scaling" names the level-scaling idea discussed in the lecture; the boss here is generic and every number is this example's own.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const pct1=x=>(x*100).toFixed(1)+'%';
+const pctW=p=>p===1?'100%':(p*100).toFixed(1)+'%';
+const ceilG=x=>Math.ceil(x-1e-9);
+const S={L:10,m:0.2,bhp:2000,bhit:250,hpl:100,dpl:10,scale:false,summon:false,assist:false,att:0,show90:false};
+const Lmin=5,Lmax=25,Mmax=0.8;
+
+function model(L){
+  const sc=S.scale?L/10:1, r=S.assist?Math.min(0.02*S.att,0.8):0;
+  const hp=S.hpl*L, dp=S.dpl*L*(S.summon?1.3:1);
+  const bhp=S.bhp*sc, bhit=S.bhit*sc*(1-r);
+  const H=ceilG(bhp/dp), A=ceilG(hp/bhit)-1;
+  return {L,H,A,hp,dp,bhp,bhit,r,pow:(hp*dp)/(bhp*bhit)};
+}
+function pmf(H,m){ // P(X=k), k=0..H
+  const out=new Array(H+1).fill(0);
+  if(m<=0){out[0]=1;return out;}
+  let p=Math.pow(1-m,H); out[0]=p;
+  if(p===0){ // underflow guard: log-space
+    let lc=0;
+    for(let k=0;k<=H;k++){ if(k>0) lc+=Math.log(H-k+1)-Math.log(k); out[k]=Math.exp(lc+k*Math.log(m)+(H-k)*Math.log(1-m)); }
+    return out;
+  }
+  for(let k=0;k<H;k++){p=p*(H-k)/(k+1)*m/(1-m);out[k+1]=p;}
+  return out;
+}
+function win(mo,m){
+  if(mo.A>=mo.H) return 1;
+  if(m<=0) return 1;
+  const f=pmf(mo.H,m);let s=0;for(let k=0;k<=mo.A;k++)s+=f[k];return Math.min(1,s);
+}
+function iso(mo,t){ // m where P(win)=t; null if always win
+  if(mo.A>=mo.H) return null;
+  let lo=0,hi=1;
+  for(let i=0;i<50;i++){const mid=(lo+hi)/2; if(win(mo,mid)>t) lo=mid; else hi=mid;}
+  return (lo+hi)/2;
+}
+
+// color ramp paper -> ochre
+function hexRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));}
+function ramp(t,a,b){return 'rgb('+a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(',')+')';}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:46,r:10,t:10,b:38};
+let geo=null;
+function xOf(L){return pad.l+(L-Lmin+0.5)*geo.cw;}
+function yOf(m){return geo.h-pad.b-(m/Mmax)*geo.ph;}
+
+function drawMap(models){
+  const c=setupCanvas($('cMap')),g=c.g,w=c.w,h=c.h;
+  const cols=Lmax-Lmin+1,pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,cw=pw/cols;
+  geo={w,h,pw,ph,cw};
+  g.clearRect(0,0,w,h);
+  const lo=hexRgb(css('--paper')),hi=hexRgb(css('--ochre'));
+  const rows=80,rh=ph/rows;
+  for(let i=0;i<cols;i++){
+    const mo=models[i];
+    for(let j=0;j<rows;j++){
+      const m=(j+0.5)/100;
+      g.fillStyle=ramp(win(mo,m),lo,hi);
+      g.fillRect(pad.l+i*cw,h-pad.b-(j+1)*rh,cw+0.6,rh+0.6);
+    }
+  }
+  // axes
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.strokeStyle=css('--ink');g.lineWidth=1;
+  g.strokeRect(pad.l,pad.t,pw,ph);
+  g.textAlign='center';g.textBaseline='top';
+  for(let L=Lmin;L<=Lmax;L+=5){g.fillText(L,xOf(L),h-pad.b+5);}
+  g.fillText('level L (power) →',pad.l+pw/2,h-pad.b+20);
+  g.textAlign='right';g.textBaseline='middle';
+  for(let m=0;m<=0.8001;m+=0.2){g.fillText(m.toFixed(1),pad.l-6,yOf(m));}
+  g.save();g.translate(12,pad.t+ph/2);g.rotate(-Math.PI/2);g.textAlign='center';g.fillText('mistake rate m (worse ↑)',0,0);g.restore();
+  // iso lines
+  const line=(t,dash)=>{
+    const pts=models.map(mo=>{const v=iso(mo,t);return [xOf(mo.L),v===null?null:v];});
+    g.save();g.beginPath();g.rect(pad.l,pad.t,pw,ph);g.clip();
+    const path=()=>{g.beginPath();let started=false;
+      for(const [x,v] of pts){const y=v===null?pad.t-40:yOf(Math.min(v,Mmax*1.2));started?g.lineTo(x,y):g.moveTo(x,y);started=true;}};
+    g.setLineDash(dash);g.lineJoin='round';
+    path();g.strokeStyle=css('--paper');g.lineWidth=6;g.stroke();
+    path();g.strokeStyle=css('--ink');g.lineWidth=2.5;g.stroke();
+    g.restore();g.setLineDash([]);
+    return pts;
+  };
+  if(S.show90) line(0.9,[7,5]);
+  const pts=line(0.5,[]);
+  // label the 50% line at the first in-range column from the left
+  let lab=pts.find(([x,v])=>v!==null&&v>0.04&&v<Mmax-0.06);
+  if(lab){
+    const x=Math.max(pad.l+30,lab[0]),y=yOf(lab[1])-12;
+    g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';
+    g.lineWidth=4;g.strokeStyle=css('--paper');g.strokeText('50% win',x+4,y);g.fillStyle=css('--ink');g.fillText('50% win',x+4,y);
+  }
+  // dot
+  const dx=xOf(S.L),dy=yOf(S.m);
+  g.beginPath();g.arc(dx,dy,9,0,Math.PI*2);g.fillStyle=css('--steel');g.fill();
+  g.lineWidth=3;g.strokeStyle=css('--paper');g.stroke();
+  g.beginPath();g.arc(dx,dy,11,0,Math.PI*2);g.lineWidth=1.5;g.strokeStyle=css('--ink');g.stroke();
+}
+
+function drawBars(mo){
+  const c=setupCanvas($('cBars')),g=c.g,w=c.w,h=c.h;
+  const p={l:40,r:8,t:10,b:30};
+  g.clearRect(0,0,w,h);
+  const f=pmf(mo.H,S.m),n=mo.H+1,ymax=Math.max(...f)*1.08||1;
+  const pw=w-p.l-p.r,ph=h-p.t-p.b,bw=pw/n;
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=2;i++){const y=p.t+ph*(1-i/2);g.beginPath();g.moveTo(p.l,y);g.lineTo(w-p.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(ymax*i/2*100)+'%',p.l-5,y);}
+  const moss=css('--moss'),soft=css('--ink-soft');
+  for(let k=0;k<n;k++){
+    const bh=ph*f[k]/ymax,x=p.l+k*bw;
+    g.globalAlpha=k<=mo.A?1:0.4;g.fillStyle=k<=mo.A?moss:soft;
+    g.fillRect(x+Math.min(1,bw*0.15),p.t+ph-bh,Math.max(1,bw-Math.min(2,bw*0.3)),bh);
+  }
+  g.globalAlpha=1;
+  // A marker
+  if(mo.A<mo.H){const x=p.l+(mo.A+1)*bw;g.strokeStyle=css('--ink');g.setLineDash([4,3]);g.beginPath();g.moveTo(x,p.t);g.lineTo(x,p.t+ph);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ink');g.textAlign=x>w-70?'right':'left';g.textBaseline='top';g.font='600 11px '+css('--sans');g.fillText('A = '+mo.A,x+(x>w-70?-4:4),p.t);}
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textBaseline='top';
+  const step=n>60?20:n>30?10:5;
+  for(let k=0;k<n;k+=step){g.textAlign='center';g.fillText(k,p.l+(k+0.5)*bw,p.t+ph+4);}
+  g.textAlign='right';g.fillText('mistakes k',w-p.r,p.t+ph+16);
+}
+
+function isoTxt(v){return v===null?'any':v.toFixed(3);}
+function update(){
+  const models=[];for(let L=Lmin;L<=Lmax;L++)models.push(model(L));
+  const mo=models[S.L-Lmin],P=win(mo,S.m),i50=iso(mo,0.5);
+  $('oL').textContent=S.L;$('oM').textContent=S.m.toFixed(2);
+  $('oBhp').textContent=fmt(S.bhp);$('oBhit').textContent=fmt(S.bhit);$('oHpl').textContent=fmt(S.hpl);$('oDpl').textContent=fmt(S.dpl);
+  $('oAtt').textContent=S.att;$('oR').textContent='r = '+Math.round(mo.r*100)+'%';
+  $('attDn').disabled=S.att<=0;$('attUp').disabled=S.att>=40;
+  $('rP').textContent=pctW(P);
+  const tries=1/P;$('rTries').textContent=tries>999?'> 999':tries.toFixed(1);
+  $('rIso').textContent=isoTxt(i50);
+  $('rH').textContent=mo.H;$('rA').textContent=mo.A;
+  $('rBud').textContent=pct1(mo.A/mo.H);$('rPow').textContent=pct1(mo.pow);
+  const d1=x=>Math.abs(x-Math.round(x))<1e-9?fmt(x):x.toFixed(1);
+  $('rYou').textContent=fmt(mo.hp)+' · '+d1(mo.dp);
+  $('rBoss').textContent=fmt(mo.bhp)+' · '+d1(mo.bhit);
+  $('barSub').textContent=`Mistakes X ~ Binomial(${mo.H}, ${S.m.toFixed(2)}). You win if X ≤ ${mo.A}.`;
+  const wrap=$('mapwrap');
+  const sentence=`Level ${S.L}, mistake rate ${S.m.toFixed(2)}: win chance ${pctW(P)}. `+(i50===null?`At level ${S.L} you win at any mistake rate, because you survive more hits than you need to land.`:`At level ${S.L} the 50% line sits at mistake rate ${i50.toFixed(3)}.`);
+  $('liveText').textContent=sentence;
+  wrap.setAttribute('aria-valuenow',S.L);wrap.setAttribute('aria-valuetext',sentence);
+  // insight
+  const flat=models.every(x=>x.H===models[0].H&&x.A===models[0].A);
+  let ins;
+  if(flat) ins=`The 50% line is flat. With the boss scaling to your level, every level has H = ${mo.H} and A = ${mo.A}, so your win chance at m = ${S.m.toFixed(2)} is ${pctW(P)} whatever your level. Power no longer buys skill; only playing better moves you.`;
+  else{
+    const up=models[Math.min(S.L+2,Lmax)-Lmin],iu=iso(up,0.5);
+    const tail=S.L+2<=Lmax?(iu===null?` At level ${up.L} you win at any mistake rate.`:` Two levels more (level ${up.L}) moves it to ${iu.toFixed(3)}. That shift is the exchange rate: how much sloppier you may play in return for grinding.`):'';
+    ins=i50===null?`At level ${S.L} you survive ${mo.A} hits and need only ${mo.H}. Power has fully replaced skill: you win at any mistake rate.`:`At level ${S.L} you can afford a mistake rate of ${i50.toFixed(3)} and still win half your attempts.`+tail;
+  }
+  $('insight').textContent=ins;
+  // table
+  $('thP').textContent='Win at m = '+S.m.toFixed(2);
+  $('tbody').innerHTML=models.map(x=>`<tr class="${x.L===S.L?'here':''}"><td>${x.L}</td><td>${x.H}</td><td>${x.A}</td><td>${pct1(x.A/x.H)}</td><td>${pct1(x.pow)}</td><td>${pctW(win(x,S.m))}</td><td>${isoTxt(iso(x,0.5))}</td></tr>`).join('');
+  drawMap(models);drawBars(mo);
+}
+
+// map interaction
+const cMap=$('cMap');let dragging=false;
+function fromPointer(e){
+  if(!geo)return;const r=cMap.getBoundingClientRect();
+  const x=e.clientX-r.left,y=e.clientY-r.top;
+  const L=Math.round((x-pad.l)/geo.cw-0.5+Lmin),m=Math.round(((geo.h-pad.b-y)/geo.ph)*Mmax*100)/100;
+  setLM(L,m);
+}
+function setLM(L,m){
+  S.L=Math.max(Lmin,Math.min(Lmax,L));S.m=Math.max(0,Math.min(Mmax,Math.round(m*100)/100));
+  $('lvl').value=S.L;$('mis').value=S.m;update();
+}
+cMap.addEventListener('pointerdown',e=>{dragging=true;cMap.setPointerCapture(e.pointerId);$('mapwrap').focus({preventScroll:true});fromPointer(e);});
+cMap.addEventListener('pointermove',e=>{if(dragging)fromPointer(e);});
+['pointerup','pointercancel'].forEach(t=>cMap.addEventListener(t,()=>{dragging=false;}));
+$('mapwrap').addEventListener('keydown',e=>{
+  const big=e.shiftKey;let L=S.L,m=S.m;
+  if(e.key==='ArrowRight')L+=big?5:1;else if(e.key==='ArrowLeft')L-=big?5:1;
+  else if(e.key==='ArrowUp')m+=big?0.05:0.01;else if(e.key==='ArrowDown')m-=big?0.05:0.01;
+  else if(e.key==='Home')L=Lmin;else if(e.key==='End')L=Lmax;else return;
+  e.preventDefault();setLM(L,m);
+});
+
+// controls
+const bind=(id,key,num)=>$(id).addEventListener('input',e=>{S[key]=num?+e.target.value:e.target.checked;clearPreset();update();});
+bind('lvl','L',1);bind('mis','m',1);bind('bhp','bhp',1);bind('bhit','bhit',1);bind('hpl','hpl',1);bind('dpl','dpl',1);
+['scale','summon','assist'].forEach(k=>bind(k,k,0));
+$('show90').addEventListener('change',e=>{S.show90=e.target.checked;$('lg90').hidden=!S.show90;update();});
+$('attDn').addEventListener('click',()=>{S.att=Math.max(0,S.att-1);clearPreset();update();});
+$('attUp').addEventListener('click',()=>{S.att=Math.min(40,S.att+1);if(!S.assist){S.assist=true;$('assist').checked=true;}clearPreset();update();});
+function clearPreset(){document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));}
+const presets={
+  default:{},
+  scale:{scale:true},
+  a1:{assist:true,att:1},
+  a10:{assist:true,att:10}
+};
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  Object.assign(S,{L:10,m:0.2,bhp:2000,bhit:250,hpl:100,dpl:10,scale:false,summon:false,assist:false,att:0},presets[b.dataset.preset]);
+  $('lvl').value=S.L;$('mis').value=S.m;$('bhp').value=S.bhp;$('bhit').value=S.bhit;$('hpl').value=S.hpl;$('dpl').value=S.dpl;
+  $('scale').checked=S.scale;$('summon').checked=S.summon;$('assist').checked=S.assist;
+  clearPreset();b.setAttribute('aria-pressed','true');update();
+}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+window.__w09={S,model,win,iso,update,setLM};
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Draw distance budget — GS101 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px;border-radius:6px}
+@media (max-width:760px){canvas{height:260px}}
+.budget{margin-top:16px}
+.budget-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;font-size:.9rem}
+.budget-head b{font-variant-numeric:tabular-nums}
+.bar-track{position:relative;height:30px;margin-top:6px;border-bottom:1.5px solid var(--ink)}
+.bar{position:absolute;left:0;top:0;height:100%;display:flex;border-radius:4px;overflow:hidden;transition:width .2s ease}
+.bar .c{background:var(--steel);transition:width .2s ease}
+.bar .w{background:var(--ochre);transition:width .2s ease}
+.bar-tick{position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px dashed var(--ink-soft)}
+.bar-scale{position:relative;height:18px;font-size:.75rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.bar-scale span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.bar-scale span:first-child{transform:none}
+.bar-scale span:last-child{transform:translateX(-100%)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:4px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.warn{margin:8px 0 0;padding:8px 12px;border-radius:8px;border:1.5px solid var(--blood);color:var(--blood);font-weight:700}
+.readout{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:420px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px;margin-top:18px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+label output,.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+.tag{font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--blood);border:1px solid var(--blood);border-radius:4px;padding:0 5px;margin-left:6px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 .95rem var(--sans);width:9.5em;max-width:100%;padding:6px 8px;border-radius:8px;border:1.5px solid var(--steel);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.seg{display:inline-flex;border:1.5px solid var(--steel);border-radius:8px;overflow:hidden;margin-top:6px}
+.seg button{font:600 .92rem var(--sans);padding:7px 0;width:3.2em;border:0;border-left:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.seg button:first-child{border-left:0}
+.seg button[aria-checked="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:700 .88rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:2px 0 0}
+.table-wrap{overflow-x:auto;margin-top:18px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:520px;width:100%}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GS101 History and Critical Study of Games · Week 8 · Worked example</p>
+  <h1>Half the polygons, most of the view</h1>
+  <p class="lede">Switch the frame rate from 30 to 60. The budget bar loses half its length, but the visible world shrinks by only 29%. Then add a fixed cost for characters and interface and watch the world collapse much faster than the bar.</p>
+</header>
+
+<section class="panel" aria-label="Draw distance model">
+  <div class="charts">
+    <figure>
+      <figcaption>Top-down budget map<small>Shaded sector: the ground you can afford to draw. Dashed arc: the 87.4 m reference.</small></figcaption>
+      <canvas id="cMap" role="img" aria-label="Top-down map of the view cone and draw distance"></canvas>
+    </figure>
+    <figure>
+      <figcaption>First-person strip<small id="stripSub">Linear fog from 0.7 × d to d. Nothing past d is drawn.</small></figcaption>
+      <canvas id="cStrip" role="img" aria-label="First-person view with fog at the draw distance"></canvas>
+    </figure>
+  </div>
+
+  <div class="budget">
+    <div class="budget-head">
+      <span>Per-frame polygon budget <b id="bP">3,000</b></span>
+      <span>Fixed cost <b id="bC">0</b> · Scenery <b id="bW">3,000</b></span>
+    </div>
+    <div class="bar-track" id="barTrack">
+      <div class="bar" id="bar"><div class="c" id="barC"></div><div class="w" id="barW"></div></div>
+      <div class="bar-tick" id="barTick" title="30 fps budget at these settings"></div>
+    </div>
+    <div class="bar-scale" id="barScale"></div>
+    <div class="legend">
+      <span><i style="background:var(--steel)"></i>Fixed cost C (characters, weapon, interface)</span>
+      <span><i style="background:var(--ochre)"></i>P_world (scenery)</span>
+      <span><i style="border-left:2px dashed var(--ink-soft);width:2px;border-radius:0"></i>Budget P at 30 fps</span>
+    </div>
+    <p class="warn" id="warn" role="alert" hidden>No budget left for scenery.</p>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="rP">—</b><span>P, polygons per frame</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rC">—</b><span>C, fixed cost</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rW">—</b><span>P_world, scenery</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rA">—</b><span>A, visible ground (m²)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rD">—</b><span>d, draw distance (m)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rR">—</b><span>d / d_ref (vs 30 fps)</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div class="ctl">
+      <span class="lbl" id="lR">Throughput R, polygons per second <output id="oR">180,000</output></span>
+      <div class="row" role="group" aria-labelledby="lR">
+        <button class="chip" data-r="360000" aria-pressed="false">360,000 (flat-shaded spec)</button>
+        <button class="chip" data-r="180000" aria-pressed="true">180,000 (textured spec)</button>
+      </div>
+      <div class="row">
+        <label for="rIn" style="font-weight:400;font-size:.86rem">Custom</label>
+        <input id="rIn" type="number" min="10000" max="2000000" step="10000" value="180000" inputmode="numeric">
+      </div>
+      <p class="hint">Sony's published PlayStation peak figures. Range 10,000 to 2,000,000.</p>
+    </div>
+    <div class="ctl">
+      <label for="e">Efficiency e <span><span class="tag">assumption</span> <output id="oE">0.50</output></span></label>
+      <input id="e" type="range" min="0.1" max="1" step="0.05" value="0.5">
+      <p class="hint">Share of the spec-sheet rate a real game reaches. Nobody measured this. Pick it and say so.</p>
+    </div>
+    <div class="ctl">
+      <span class="lbl" id="lF">Frame rate f <output id="oF">30 fps</output></span>
+      <div class="seg" role="radiogroup" aria-labelledby="lF" id="fSeg">
+        <button role="radio" data-f="20" aria-checked="false" tabindex="-1">20</button>
+        <button role="radio" data-f="25" aria-checked="false" tabindex="-1">25</button>
+        <button role="radio" data-f="30" aria-checked="true" tabindex="0">30</button>
+        <button role="radio" data-f="50" aria-checked="false" tabindex="-1">50</button>
+        <button role="radio" data-f="60" aria-checked="false" tabindex="-1">60</button>
+      </div>
+      <p class="hint">Arrow keys move between frame rates.</p>
+    </div>
+    <div class="ctl">
+      <label for="c">Fixed cost C, polygons per frame <output id="oC">0</output></label>
+      <input id="c" type="range" min="0" max="3000" step="100" value="0">
+    </div>
+    <div class="ctl">
+      <label for="rho">Density ρ, polygons per m² <output id="oRho">0.50</output></label>
+      <input id="rho" type="range" min="0.1" max="2" step="0.05" value="0.5">
+    </div>
+    <div class="ctl">
+      <label for="th">Field of view θ <output id="oTh">90°</output></label>
+      <input id="th" type="range" min="45" max="120" step="5" value="90">
+    </div>
+    <div class="ctl">
+      <span class="lbl" id="lPre">Presets</span>
+      <div class="row" role="group" aria-labelledby="lPre">
+        <button class="chip" data-preset="s2">Section 2, no fixed cost</button>
+        <button class="chip" data-preset="s2c">Section 2, C = 1,000</button>
+        <button class="chip" data-preset="fight">Fighting game</button>
+        <button class="chip" data-preset="wide">Wide view</button>
+      </div>
+      <p class="hint">Each preset starts from the section 2 defaults.</p>
+    </div>
+    <div class="ctl">
+      <span class="lbl">View</span>
+      <div class="row">
+        <button class="chip" id="fog" aria-pressed="false">Fog off</button>
+        <button class="btn" id="reset">Reset</button>
+      </div>
+      <p class="hint">Fog off keeps the same cut at d, so you see the pop-in line the fog was hiding.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Every frame rate at the current settings</caption>
+      <thead><tr><th>Frame rate f</th><th>Budget P</th><th>P_world</th><th>Area A (m²)</th><th>Draw distance d (m)</th><th>d / d_ref</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model: P = R × e / f, P_world = max(0, P − C), A = P_world / ρ, d = √(2 × P_world / (ρ × θ_rad)). The visible ground is a circular sector of angle θ and radius d. d_ref is d at the same settings and 30 fps. Throughput presets are Sony's published PlayStation peak figures (360,000 flat-shaded and 180,000 texture-mapped polygons per second). Efficiency and density are assumptions, not measurements. The model ignores culling, level of detail and fill rate, so it explains a pressure, not any one game's draw distance.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const DEF={R:180000,e:0.5,f:30,C:0,rho:0.5,th:90};
+const D_REF_DEFAULT=87.4; // d at section 2 defaults, drawn as the reference arc
+let S=Object.assign({},DEF),fogOff=false;
+
+function model(s,f){
+  const P=s.R*s.e/f, Pw=Math.max(0,P-s.C), A=Pw/s.rho, th=s.th*Math.PI/180;
+  const d=Math.sqrt(2*Pw/(s.rho*th));
+  return {P,Pw,A,d};
+}
+
+// deterministic pseudo-random so trees stay put
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const r1=rng(8),MAPTREES=[];
+for(let i=0;i<520;i++)MAPTREES.push({u:r1()*2-1,v:r1(),k:r1()});
+const r2=rng(21),ROWS=[];
+for(let z=16;z<2600;z*=1.06){const t=[];for(let j=0;j<9;j++)t.push({x:(r2()*2-1)*2.0,k:r2(),s:.8+r2()*.5});ROWS.push({z,t});}
+ROWS.reverse();
+
+function hex(c){c=c.replace('#','');if(c.length===3)c=c.split('').map(x=>x+x).join('');return [0,2,4].map(i=>parseInt(c.substr(i,2),16));}
+function mix(a,b,t){const A=hex(a),B=hex(b);return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')';}
+
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceExtent(d){return [120,200,300,500,800,1200,2000,3000].find(v=>v>=d*1.12)||3000;}
+function niceScale(E){return [20,25,50,100,200,250,500,1000].find(v=>v>=E/5)||1000;}
+
+let dShown=null,anim=null;
+
+function drawMap(d){
+  const {g,w,h}=setup($('cMap'));
+  const paper=css('--paper'),ink=css('--ink'),soft=css('--ink-soft'),ochre=css('--ochre'),moss=css('--moss'),grid=css('--grid');
+  g.fillStyle=paper;g.fillRect(0,0,w,h);
+  const E=niceExtent(Math.max(d,D_REF_DEFAULT));
+  const half=Math.sin(Math.PI/3); // widest cone is 120°, so width must hold E × sin 60°
+  const padT=14,padB=34,padX=10;
+  const s=Math.min((h-padT-padB)/E,(w/2-padX)/(E*half));
+  const px=w/2,py=h-padB;
+  const X=x=>px+x*s,Y=y=>py-y*s;
+  const th=S.th*Math.PI/180,a0=-Math.PI/2-th/2,a1=-Math.PI/2+th/2;
+  // range rings
+  g.strokeStyle=grid;g.lineWidth=1;
+  const step=niceScale(E);
+  for(let r=step;r<=E;r+=step){g.beginPath();g.arc(px,py,r*s,Math.PI,2*Math.PI);g.stroke();}
+  // cone edges
+  g.strokeStyle=soft;g.globalAlpha=.5;g.setLineDash([2,4]);
+  [a0,a1].forEach(a=>{g.beginPath();g.moveTo(px,py);g.lineTo(px+Math.cos(a)*E*1.2*s,py+Math.sin(a)*E*1.2*s);g.stroke();});
+  g.setLineDash([]);g.globalAlpha=1;
+  // sector
+  if(d>0){
+    g.fillStyle=ochre;g.globalAlpha=.2;g.beginPath();g.moveTo(px,py);g.arc(px,py,d*s,a0,a1);g.closePath();g.fill();
+    g.globalAlpha=1;g.strokeStyle=ochre;g.lineWidth=2.5;g.beginPath();g.moveTo(px,py);g.arc(px,py,d*s,a0,a1);g.closePath();g.stroke();
+  }
+  // reference arc
+  g.strokeStyle=ink;g.globalAlpha=.55;g.lineWidth=1.5;g.setLineDash([6,5]);
+  g.beginPath();g.arc(px,py,D_REF_DEFAULT*s,a0,a1);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // trees: density ∝ ρ (share of candidates shown = ρ / 2)
+  const show=S.rho/2;
+  MAPTREES.forEach(t=>{
+    if(t.k>=show)return;
+    const x=t.u*E*half,y=t.v*E;
+    const r=Math.hypot(x,y),ang=Math.atan2(x,y);
+    const inside=d>0&&r<=d&&Math.abs(ang)<=th/2;
+    g.globalAlpha=inside?1:.22;g.fillStyle=moss;
+    g.beginPath();g.arc(X(x),Y(y),inside?3.2:2.6,0,Math.PI*2);g.fill();
+  });
+  g.globalAlpha=1;
+  // player marker
+  g.fillStyle=ink;g.beginPath();g.moveTo(px,py-9);g.lineTo(px-6,py+4);g.lineTo(px+6,py+4);g.closePath();g.fill();
+  // labels
+  g.font='600 12px '+css('--sans');g.textBaseline='middle';
+  if(d>0){
+    const la=-Math.PI/2+th/2*0.55,lx=px+Math.cos(la)*d*s,ly=py+Math.sin(la)*d*s;
+    g.fillStyle=ochre;g.textAlign='left';g.fillText('d = '+d.toFixed(1)+' m',Math.min(lx+6,w-80),Math.max(ly-10,padT+4));
+  }
+  g.fillStyle=soft;g.textAlign='right';g.font='12px '+css('--sans');
+  const ra=-Math.PI/2-th/2*0.6;g.fillText('87.4 m ref',Math.max(px+Math.cos(ra)*D_REF_DEFAULT*s-4,70),py+Math.sin(ra)*D_REF_DEFAULT*s-8);
+  // scale bar
+  const sb=step*s,sx=padX+2,sy=h-12;
+  g.strokeStyle=ink;g.lineWidth=2;g.beginPath();g.moveTo(sx,sy-4);g.lineTo(sx,sy);g.lineTo(sx+sb,sy);g.lineTo(sx+sb,sy-4);g.stroke();
+  g.fillStyle=ink;g.textAlign='left';g.fillText(step+' m',sx+sb+6,sy-2);
+  g.fillStyle=soft;g.textAlign='right';g.fillText('θ = '+S.th+'°',w-padX,h-12);
+  $('cMap').setAttribute('aria-label',`Top-down map. View cone ${S.th} degrees, draw distance ${d.toFixed(1)} metres against an 87.4 metre reference arc.`);
+}
+
+function drawStrip(d){
+  const {g,w,h}=setup($('cStrip'));
+  const paper=css('--paper'),paper2=mix(css('--paper-2'),css('--moss'),0.18),ink=css('--ink'),soft=css('--ink-soft'),moss=css('--moss'),steel=css('--steel'),blood=css('--blood');
+  const hor=Math.round(h*0.28),cam=12; // raised third-person camera so the ground spreads out
+  const F=(w/2)/Math.tan(S.th*Math.PI/360);
+  const yAt=z=>hor+F*cam/z;
+  // sky (fog colour is the page background)
+  g.fillStyle=paper;g.fillRect(0,0,w,h);
+  // ground, fading into fog between 0.7d and d
+  if(!fogOff&&d>0){
+    const yFar=Math.min(h,yAt(d)),yNear=Math.min(h,yAt(0.7*d));
+    g.fillStyle=paper;g.fillRect(0,hor,w,yFar-hor);
+    const gr=g.createLinearGradient(0,yFar,0,Math.max(yNear,yFar+1));gr.addColorStop(0,paper);gr.addColorStop(1,paper2);
+    g.fillStyle=gr;g.fillRect(0,yFar,w,Math.max(0,yNear-yFar));
+    g.fillStyle=paper2;g.fillRect(0,yNear,w,h-yNear);
+  }else{
+    g.fillStyle=d>0?paper2:paper;g.fillRect(0,hor,w,h-hor);
+  }
+  g.strokeStyle=soft;g.globalAlpha=.35;g.lineWidth=1;g.beginPath();g.moveTo(0,hor+.5);g.lineTo(w,hor+.5);g.stroke();g.globalAlpha=1;
+  // trees, far to near
+  const show=S.rho/2,tanH=Math.tan(S.th*Math.PI/360);
+  ROWS.forEach(row=>{
+    const z=row.z;if(d<=0||z>d)return;
+    const fog=fogOff?0:Math.min(1,Math.max(0,(z-0.7*d)/(0.3*d)));
+    if(fog>=1)return;
+    const col=mix(moss,paper,fog),trunk=mix(steel,paper,fog);
+    row.t.forEach(t=>{
+      if(t.k>=show)return;
+      if(Math.abs(t.x)>tanH*1.1)return;
+      const x=w/2+t.x*F; // lateral offset is stored as x/z, so screen x = w/2 + (x/z) × F
+      const base=yAt(z),ht=F*5*t.s/z,rad=Math.max(1,ht*0.32);
+      if(ht<1.2){g.fillStyle=col;g.fillRect(x,base-1.5,1.5,1.5);return;}
+      g.fillStyle=trunk;g.fillRect(x-Math.max(.6,rad*.18),base-ht*.45,Math.max(1.2,rad*.36),ht*.45);
+      g.fillStyle=col;g.beginPath();g.arc(x,base-ht+rad,rad,0,Math.PI*2);g.fill();
+    });
+  });
+  // distance ticks on the ground, drawn over the trees on a paper backing
+  g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='middle';
+  let lastY=-99;
+  [25,50,100,200,400,800].forEach(z=>{const y=yAt(z);if(y-hor<10||lastY-y<14&&lastY>0)return;lastY=y;
+    const t=z+' m',tw=g.measureText(t).width;g.fillStyle=paper;g.globalAlpha=.85;g.fillRect(0,y-7,tw+14,14);g.globalAlpha=1;
+    g.fillStyle=soft;g.fillRect(0,y,8,1);g.fillText(t,10,y);});
+  // pop-in line
+  g.font='600 12px '+css('--sans');g.textBaseline='bottom';
+  if(d>0){
+    const y=yAt(d);
+    if(fogOff){g.strokeStyle=blood;g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();g.setLineDash([]);
+      g.fillStyle=blood;g.textAlign='right';g.fillText('pop-in line at d = '+d.toFixed(1)+' m',w-8,y-3);}
+    else{g.fillStyle=soft;g.textAlign='right';g.fillText('full fog at d = '+d.toFixed(1)+' m',w-8,hor-4);}
+  }else{
+    g.fillStyle=blood;g.textAlign='center';g.textBaseline='middle';g.fillText('No budget left for scenery.',w/2,hor+40);
+  }
+  // viewer marker
+  g.fillStyle=ink;g.beginPath();g.moveTo(w/2,h-12);g.lineTo(w/2-6,h-2);g.lineTo(w/2+6,h-2);g.closePath();g.fill();
+  $('cStrip').setAttribute('aria-label',`First-person view. Trees fade into fog from ${(0.7*d).toFixed(1)} to ${d.toFixed(1)} metres${fogOff?'; fog is off, so objects vanish at a hard pop-in line':''}.`);
+}
+
+function drawViews(d){drawMap(d);drawStrip(d);}
+
+function animateTo(target){
+  if(anim)cancelAnimationFrame(anim);
+  if(reduce.matches||dShown===null){dShown=target;drawViews(target);return;}
+  const from=dShown,t0=performance.now();
+  const step=now=>{const k=Math.min(1,(now-t0)/200),e=1-Math.pow(1-k,3);dShown=from+(target-from)*e;drawViews(dShown);if(k<1)anim=requestAnimationFrame(step);else anim=null;};
+  anim=requestAnimationFrame(step);
+}
+
+function update(){
+  const m=model(S,S.f),ref=model(S,30);
+  const ratio=ref.d>0?m.d/ref.d:null;
+  // controls
+  $('oR').textContent=fmt(S.R);$('rIn').value=S.R;
+  document.querySelectorAll('[data-r]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.r===S.R));
+  $('oE').textContent=S.e.toFixed(2);$('e').value=S.e;
+  $('oF').textContent=S.f+' fps';
+  document.querySelectorAll('#fSeg button').forEach(b=>{const on=+b.dataset.f===S.f;b.setAttribute('aria-checked',on);b.tabIndex=on?0:-1;});
+  $('oC').textContent=fmt(S.C);$('c').value=S.C;
+  $('oRho').textContent=S.rho.toFixed(2);$('rho').value=S.rho;
+  $('oTh').textContent=S.th+'°';$('th').value=S.th;
+  $('fog').setAttribute('aria-pressed',fogOff);
+  // readout
+  $('rP').textContent=fmt(m.P);$('rC').textContent=fmt(S.C);$('rW').textContent=fmt(m.Pw);
+  $('rA').textContent=fmt(m.A);$('rD').textContent=m.d.toFixed(1);$('rR').textContent=ratio===null?'—':ratio.toFixed(2);
+  // budget bar
+  const maxV=[4000,5000,6000,8000,10000,15000,20000,30000,50000,80000,100000,150000,200000].find(v=>v>=Math.max(m.P,ref.P,S.C)*1.02)||Math.max(m.P,ref.P,S.C);
+  const pct=v=>(100*v/maxV)+'%';
+  $('bar').style.width=pct(m.P);
+  const cShown=Math.min(S.C,m.P);
+  $('barC').style.width=m.P>0?(100*cShown/m.P)+'%':'0';$('barW').style.width=m.P>0?(100*m.Pw/m.P)+'%':'0';
+  $('barTick').style.left=pct(ref.P);
+  $('bP').textContent=fmt(m.P);$('bC').textContent=fmt(S.C);$('bW').textContent=fmt(m.Pw);
+  $('barScale').innerHTML=[0,.25,.5,.75,1].map(k=>`<span style="left:${k*100}%">${fmt(maxV*k)}</span>`).join('');
+  $('warn').hidden=S.C<m.P;
+  // insight
+  let s;
+  if(m.Pw<=0) s=`The fixed cost of ${fmt(S.C)} polygons is at least the whole ${fmt(m.P)}-polygon budget. Characters and interface ate everything, so there is nothing left to draw the world with.`;
+  else if(S.f===30) s=`At 30 fps you can afford ${fmt(m.Pw)} scenery polygons, enough for ${fmt(m.A)} m² of ground, which is a ${S.th}° sector reaching ${m.d.toFixed(1)} m. Switch to 60 fps: the budget halves${S.C>0?' but the fixed cost does not, so the scenery share shrinks faster':', yet d keeps 71% of its length'}.`;
+  else{
+    const bShare=m.P/ref.P,dShare=ratio;
+    s=`At ${S.f} fps the budget is <b>${Math.round(bShare*100)}%</b> of the 30 fps budget, and the draw distance is <b>${Math.round(dShare*100)}%</b> of the 30 fps distance. `;
+    if(S.C>0) s+=`The ${fmt(S.C)}-polygon fixed cost comes off the top first, so scenery gets ${fmt(m.Pw)} of ${fmt(m.P)} polygons and the view shrinks faster than the bar.`;
+    else s+=`Area scales with d², so distance changes by the square root of the budget change.`;
+  }
+  $('insight').innerHTML=s;
+  // table
+  $('tbody').innerHTML=[20,25,30,50,60].map(f=>{const x=model(S,f),rr=ref.d>0?(x.d/ref.d).toFixed(2):'—';
+    return `<tr class="${f===S.f?'here':''}"><td>${f} fps</td><td>${fmt(x.P)}</td><td>${fmt(x.Pw)}</td><td>${fmt(x.A)}</td><td>${x.d.toFixed(1)}</td><td>${rr}</td></tr>`;}).join('');
+  animateTo(m.d);
+}
+
+// events
+const r2d=v=>Math.round(v*100)/100;
+document.querySelectorAll('[data-r]').forEach(b=>b.addEventListener('click',()=>{S.R=+b.dataset.r;update();}));
+$('rIn').addEventListener('change',e=>{let v=Math.round(+e.target.value);if(!isFinite(v)||v<=0)v=DEF.R;S.R=Math.min(2000000,Math.max(10000,v));update();});
+$('e').addEventListener('input',e=>{S.e=r2d(+e.target.value);update();});
+$('c').addEventListener('input',e=>{S.C=+e.target.value;update();});
+$('rho').addEventListener('input',e=>{S.rho=r2d(+e.target.value);update();});
+$('th').addEventListener('input',e=>{S.th=+e.target.value;update();});
+const segs=[...document.querySelectorAll('#fSeg button')];
+segs.forEach((b,i)=>{
+  b.addEventListener('click',()=>{S.f=+b.dataset.f;update();});
+  b.addEventListener('keydown',e=>{
+    let j=null;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown')j=(i+1)%segs.length;
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp')j=(i-1+segs.length)%segs.length;
+    else if(e.key==='Home')j=0;else if(e.key==='End')j=segs.length-1;
+    if(j!==null){e.preventDefault();S.f=+segs[j].dataset.f;update();segs[j].focus();}
+  });
+});
+$('fog').addEventListener('click',()=>{fogOff=!fogOff;update();});
+const PRE={s2:{},s2c:{C:1000},fight:{C:2500,rho:0.5,f:30},wide:{th:120}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{S=Object.assign({},DEF,PRE[b.dataset.preset]);update();}));
+$('reset').addEventListener('click',()=>{S=Object.assign({},DEF);fogOff=false;update();});
+const redraw=()=>drawViews(dShown===null?model(S,S.f).d:dShown);
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+update();
+})();
+</script>
+</body>
+</html>
