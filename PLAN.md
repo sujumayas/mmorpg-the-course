@@ -85,47 +85,47 @@ flowchart LR
 
 ## Build status
 
-| Course | Syllabus | Lectures written | Worked examples built |
-|---|---|---|---|
-| GD101 | generated | 0/14 | 0/3 |
-| CS101 | generated | 0/14 | 0/3 |
-| MA101 | generated | 0/14 | 0/4 |
-| GS101 | generated | 0/14 | 0/2 |
-| AR101 | generated | 0/14 | 0/2 |
-| GD102 | generated | 0/14 | 0/3 |
-| CS102 | generated | 0/14 | 0/2 |
-| MA102 | generated | 0/14 | 0/4 |
-| AU101 | generated | 0/14 | 0/2 |
-| PR101 | generated | 0/14 | 0/1 |
-| CS201 | generated | 0/14 | 0/2 |
-| MA201 | generated | 0/14 | 0/2 |
-| GD201 | generated | 0/14 | 0/2 |
-| GD202 | generated | 0/14 | 0/1 |
-| UX201 | generated | 0/14 | 0/2 |
-| CS202 | generated | 0/14 | 0/2 |
-| CS203 | generated | 0/14 | 0/2 |
-| GD203 | generated | 0/14 | 0/3 |
-| DB201 | generated | 0/14 | 0/1 |
-| PR201 | generated | 0/14 | 0/0 |
-| MMO301 | generated | 0/14 | 0/2 |
-| MMO302 | generated | 0/14 | 0/2 |
-| MMO303 | generated | 1/14 | 1/3 |
-| MMO304 | generated | 0/14 | 0/3 |
-| MMO305 | generated | 0/14 | 0/2 |
-| MMO306 | generated | 0/14 | 0/2 |
-| MMO307 | generated | 0/14 | 0/3 |
-| MMO308 | generated | 0/14 | 0/2 |
-| MMO309 | generated | 0/14 | 0/2 |
-| PR301 | generated | 0/14 | 0/0 |
-| MMO401 | generated | 0/14 | 0/2 |
-| MMO402 | generated | 0/14 | 0/1 |
-| MMO403 | generated | 0/14 | 0/2 |
-| MMO404 | generated | 0/14 | 0/1 |
-| PR401 | generated | 0/14 | 0/0 |
-| MMO405 | generated | 0/14 | 0/1 |
-| MMO406 | generated | 0/14 | 0/0 |
-| MMO407 | generated | 0/14 | 0/1 |
-| PR402 | generated | 0/14 | 0/0 |
+| Course | Syllabus | Lectures written | Examples built (signature) | Labs | Assessments |
+|---|---|---|---|---|---|
+| GD101 | stub | 0/14 | 0 (3) | 0 | 0 |
+| CS101 | stub | 0/14 | 0 (3) | 0 | 0 |
+| MA101 | stub | 0/14 | 0 (4) | 0 | 0 |
+| GS101 | stub | 0/14 | 0 (2) | 0 | 0 |
+| AR101 | stub | 0/14 | 0 (2) | 0 | 0 |
+| GD102 | stub | 0/14 | 0 (3) | 0 | 0 |
+| CS102 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MA102 | stub | 0/14 | 0 (4) | 0 | 0 |
+| AU101 | stub | 0/14 | 0 (2) | 0 | 0 |
+| PR101 | stub | 0/14 | 0 (1) | 0 | 0 |
+| CS201 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MA201 | stub | 0/14 | 0 (2) | 0 | 0 |
+| GD201 | stub | 0/14 | 0 (2) | 0 | 0 |
+| GD202 | stub | 0/14 | 0 (1) | 0 | 0 |
+| UX201 | stub | 0/14 | 0 (2) | 0 | 0 |
+| CS202 | stub | 0/14 | 0 (2) | 0 | 0 |
+| CS203 | stub | 0/14 | 0 (2) | 0 | 0 |
+| GD203 | stub | 0/14 | 0 (3) | 0 | 0 |
+| DB201 | stub | 0/14 | 0 (1) | 0 | 0 |
+| PR201 | stub | 0/14 | 0 (0) | 0 | 0 |
+| MMO301 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO302 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO303 | stub | 1/14 | 1 (3) | 0 | 0 |
+| MMO304 | stub | 0/14 | 0 (3) | 0 | 0 |
+| MMO305 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO306 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO307 | stub | 0/14 | 0 (3) | 0 | 0 |
+| MMO308 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO309 | stub | 0/14 | 0 (2) | 0 | 0 |
+| PR301 | stub | 0/14 | 0 (0) | 0 | 0 |
+| MMO401 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO402 | stub | 0/14 | 0 (1) | 0 | 0 |
+| MMO403 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO404 | stub | 0/14 | 0 (1) | 0 | 0 |
+| PR401 | stub | 0/14 | 0 (0) | 0 | 0 |
+| MMO405 | stub | 0/14 | 0 (1) | 0 | 0 |
+| MMO406 | stub | 0/14 | 0 (0) | 0 | 0 |
+| MMO407 | stub | 0/14 | 0 (1) | 0 | 0 |
+| PR402 | stub | 0/14 | 0 (0) | 0 | 0 |
 
 ## Course details
 

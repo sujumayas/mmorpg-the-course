@@ -47,12 +47,17 @@ def main():
         for p in c["prereqs"]:
             out.append(f"  {p} --> {c['code']}")
     out += ["```", "", "## Build status", "",
-            "| Course | Syllabus | Lectures written | Worked examples built |", "|---|---|---|---|"]
+            "| Course | Syllabus | Lectures written | Examples built (signature) | Labs | Assessments |",
+            "|---|---|---|---|---|---|"]
     for c in courses:
         d = course_dir(c)
         lec = len(list((d / "lectures").glob("*.md"))) if (d / "lectures").exists() else 0
         ex = len(list((d / "examples").glob("*.html"))) if (d / "examples").exists() else 0
-        out.append(f"| {c['code']} | generated | {lec}/14 | {ex}/{max(len(c['worked_examples']), 0)} |")
+        labs = len(list((d / "labs").glob("*.md"))) if (d / "labs").exists() else 0
+        asm = len(list((d / "assessments").glob("*.md"))) if (d / "assessments").exists() else 0
+        syl = d / "syllabus.md"
+        state = "stub" if not syl.exists() or STUB_MARK in syl.read_text() else "finished"
+        out.append(f"| {c['code']} | {state} | {lec}/14 | {ex} ({len(c['worked_examples'])}) | {labs} | {asm} |")
 
     out += ["", "## Course details", ""]
     for s in sorted(by_sem):
