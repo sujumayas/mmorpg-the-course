@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unique players in an anonymized release — MMO402 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.layout{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1000px){.layout{grid-template-columns:290px minmax(0,1fr)}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;min-width:0}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:700px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.sw{display:inline-block;width:14px;height:12px;vertical-align:-1px;margin-right:5px;border:1.5px solid currentColor;border-radius:2px}
+.sw.solid{background:var(--steel);border-color:var(--steel)}
+.sw.hatch{border-color:var(--blood);background:repeating-linear-gradient(45deg,var(--blood) 0 2px,transparent 2px 5px)}
+.sw.dot{border-radius:50%;width:11px;height:11px;border-color:var(--ochre);border-width:2px}
+.sw.fdot{border-radius:50%;width:11px;height:11px;background:var(--blood);border-color:var(--blood)}
+.sw.line{height:3px;border:0;background:var(--ink);vertical-align:3px}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15;user-select:text;overflow-wrap:anywhere}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.pass{font-weight:700}
+.ctl{margin:0 0 14px}
+.ctl:last-child{margin-bottom:0}
+.ctl-title{font-weight:700;font-size:.92rem;margin:0 0 6px}
+label,.lbl{font-weight:600;font-size:.92rem}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0}
+.row label{display:flex;align-items:center;gap:8px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number],select{font:600 .92rem var(--sans);color:var(--ink);background:var(--paper-2);border:1.5px solid var(--ink-soft);border-radius:6px;padding:5px 6px;min-width:0}
+input[type=number]{width:7.5em;font-variant-numeric:tabular-nums}
+select{max-width:11.5em}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--steel)}
+fieldset{border:0;padding:0;margin:0}
+legend{padding:0}
+.seg{display:inline-flex;border:1.5px solid var(--steel);border-radius:8px;overflow:hidden}
+.seg button{font:600 .85rem var(--sans);padding:6px 11px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.seedrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:4px 0 0}
+.presetbox{margin-top:14px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO402 Emergent Society, Governance and Ethics · Week 12 · Worked example</p>
+  <h1>Names removed, players still unique</h1>
+  <p class="lede">Uniqueness depends on one number, records per combination, <i>λ</i> = <i>N</i> / <i>C</i>. Add the guild field and almost every character stands alone. Report level in brackets and the crowd comes back.</p>
+</header>
+
+<div class="layout">
+  <aside class="panel" aria-label="Release settings">
+    <div class="ctl">
+      <div class="row"><label for="nIn">Server size <i>N</i></label><input id="nIn" type="number" min="1000" max="100000" step="1" value="10000" aria-describedby="nHint"></div>
+      <input id="nRange" type="range" min="0" max="200" step="1" value="100" aria-label="Server size N, log scale">
+      <p class="hint" id="nHint">Log slider from 1,000 to 100,000 characters. Type an exact value in the box.</p>
+    </div>
+    <fieldset class="ctl">
+      <legend class="ctl-title">Fields in the release</legend>
+      <div class="row"><label><input type="checkbox" id="fClass" checked> class</label><span class="hint">10 values</span></div>
+      <div class="row"><label><input type="checkbox" id="fRace" checked> race</label><span class="hint">10 values</span></div>
+      <div class="row"><label for="fLevel">level</label>
+        <select id="fLevel"><option value="off">off</option><option value="exact" selected>exact (60)</option><option value="b10">brackets of 10 (6)</option><option value="b20">brackets of 20 (3)</option></select></div>
+      <div class="row"><label for="fGuild">guild</label>
+        <select id="fGuild"><option value="off" selected>off</option><option value="name">name (200)</option><option value="band">size band (3)</option></select></div>
+      <div class="row"><label for="fZone">zone</label>
+        <select id="fZone"><option value="off" selected>off</option><option value="on">40 values</option></select></div>
+    </fieldset>
+    <div class="ctl">
+      <div class="row"><span class="lbl" id="skewLbl">Distribution</span>
+        <div class="seg" role="group" aria-labelledby="skewLbl"><button type="button" id="skU" aria-pressed="true">uniform</button><button type="button" id="skR" aria-pressed="false">realistic</button></div></div>
+      <p class="hint" id="skewHint">Every value equally likely.</p>
+    </div>
+    <div class="ctl">
+      <div class="row"><label for="kIn">Threshold <i>k</i></label><input id="kIn" type="number" min="2" max="20" step="1" value="5"></div>
+      <input id="kRange" type="range" min="2" max="20" step="1" value="5" aria-label="Threshold k">
+    </div>
+    <div class="ctl">
+      <div class="seedrow"><button type="button" class="chip" id="resample">Resample</button>
+        <label for="seedIn">seed</label><input id="seedIn" type="number" min="1" max="999999" step="1" value="1"></div>
+      <p class="hint">Same seed and settings give the same simulated release.</p>
+    </div>
+  </aside>
+
+  <section class="panel" aria-label="Results">
+    <div class="charts">
+      <figure>
+        <figcaption>Equivalence class sizes<small>Records in the simulated release, by the size of the class they sit in</small></figcaption>
+        <canvas id="cHist" role="img" aria-label="Histogram of class sizes"></canvas>
+        <div class="legend"><span><i class="sw solid"></i>size &ge; <i>k</i></span><span><i class="sw hatch"></i>size &lt; <i>k</i> (fails)</span><span><i class="sw dot"></i>formula, uniform</span></div>
+      </figure>
+      <figure>
+        <figcaption>Unique share against combinations<small>Curve <i>e</i><sup>&minus;N/C</sup>, with <i>C</i> on a log scale</small></figcaption>
+        <canvas id="cCurve" role="img" aria-label="Uniqueness curve against number of combinations"></canvas>
+        <div class="legend"><span><i class="sw line"></i><i>e</i><sup>&minus;N/C</sup></span><span><i class="sw fdot"></i>formula</span><span><i class="sw dot" style="border-color:var(--blood)"></i>simulated</span></div>
+      </figure>
+    </div>
+
+    <div class="readout" aria-live="polite">
+      <div class="stat" style="--c:var(--steel)"><b id="rC">—</b><span>combinations <i>C</i></span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rL">—</b><span><i>λ</i> = (<i>N</i> &minus; 1) / <i>C</i></span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rUf">—</b><span>unique, formula</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rUs">—</b><span>unique, simulated</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rKf">—</b><span id="rKfL">below <i>k</i>, formula</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rKs">—</b><span id="rKsL">below <i>k</i>, simulated</span></div>
+      <div class="stat" style="--c:var(--ink)"><b id="rUn">—</b><span>unique records, simulated</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="rPass" class="pass">—</b><span id="rPassL">passes k-anonymity</span></div>
+    </div>
+
+    <div class="insight" id="insight"></div>
+
+    <div class="presetbox">
+      <span class="lbl">Rows from the lecture's table</span>
+      <div class="presets" role="group" aria-label="Lecture presets">
+        <button type="button" class="chip" data-p="exact,off,off">class, race, level</button>
+        <button type="button" class="chip" data-p="b10,off,off">+ level bracket</button>
+        <button type="button" class="chip" data-p="exact,name,off">+ guild</button>
+        <button type="button" class="chip" data-p="b10,name,off">bracket + guild</button>
+        <button type="button" class="chip" data-p="b10,band,off">bracket + size band</button>
+        <button type="button" class="chip" data-p="b10,off,on">bracket + zone</button>
+      </div>
+      <p class="hint">Presets keep class and race on, set <i>N</i> = 10,000, uniform, and leave <i>k</i> and the seed alone.</p>
+    </div>
+  </section>
+</div>
+
+<footer>All server sizes and value counts are invented for teaching. The formula assumes each record lands in a combination uniformly at random, so "realistic" changes the simulation and not the formula. Model after Sweeney, "k-Anonymity: A Model for Protecting Privacy" (2002). No game data is used.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+function rnd(x,d){const m=Math.pow(10,d);return (Math.round(x*m*(1+1e-12))/m).toFixed(d);}
+function pct(v){
+  if(v<=0)return '0%';
+  if(v>=1)return '100%';
+  if(v<1e-6)return '<0.0001%';
+  if(v<0.0001)return (v*100).toPrecision(1)+'%';
+  if(v<0.01)return rnd(v*100,2)+'%';
+  if(v>=0.9995)return '>99.9%';
+  return rnd(v*100,1)+'%';
+}
+function sig4(x){
+  if(x===0)return '0';
+  if(x>=100)return Number(rnd(x,1)).toLocaleString('en-US',{minimumFractionDigits:1});
+  if(x>=10)return rnd(x,2);
+  if(x>=0.01)return rnd(x,3);
+  return x.toPrecision(2);
+}
+// ---------- state ----------
+const S={N:10000,k:5,seed:1,skew:'uniform',cls:true,race:true,level:'exact',guild:'off',zone:'off'};
+let sim=null;
+
+// ---------- distributions ----------
+function uniform(n){return new Array(n).fill(1/n);}
+function zipf(n){const w=[];let t=0;for(let i=1;i<=n;i++){w.push(1/i);t+=1/i;}return w.map(x=>x/t);}
+function levelWeights(realistic){
+  if(!realistic)return uniform(60);
+  const w=new Array(60).fill(0.6/59);w[59]=0.4;return w;
+}
+function bracket(w,size){const out=[];for(let i=0;i<w.length;i+=size){let t=0;for(let j=i;j<i+size;j++)t+=w[j];out.push(t);}return out;}
+function fields(){
+  const R=S.skew==='realistic',F=[];
+  if(S.cls)F.push({name:'class',w:R?zipf(10):uniform(10)});
+  if(S.race)F.push({name:'race',w:R?zipf(10):uniform(10)});
+  if(S.level!=='off'){const lw=levelWeights(R);
+    F.push(S.level==='exact'?{name:'level',w:lw}:{name:S.level==='b10'?'level/10':'level/20',w:bracket(lw,S.level==='b10'?10:20)});}
+  if(S.guild==='name')F.push({name:'guild',w:R?zipf(200):uniform(200)});
+  if(S.guild==='band')F.push({name:'guild band',w:R?zipf(3):uniform(3)});
+  if(S.zone==='on')F.push({name:'zone',w:uniform(40)});
+  return F;
+}
+function combos(F){return F.reduce((p,f)=>p*f.w.length,1);}
+
+// ---------- seeded PRNG ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+function simulate(){
+  const F=fields(),rng=mulberry32(S.seed*2654435761>>>0||1);
+  const cum=F.map(f=>{const c=[];let t=0;for(const x of f.w){t+=x;c.push(t);}c[c.length-1]=1;return c;});
+  const counts=new Map();
+  for(let r=0;r<S.N;r++){
+    let key=0;
+    for(let i=0;i<F.length;i++){
+      const u=rng(),c=cum[i];let lo=0,hi=c.length-1;
+      while(lo<hi){const m=(lo+hi)>>1;if(u<c[m])hi=m;else lo=m+1;}
+      key=key*c.length+lo;
+    }
+    counts.set(key,(counts.get(key)||0)+1);
+  }
+  const bySize=new Map();
+  for(const v of counts.values())bySize.set(v,(bySize.get(v)||0)+1);
+  sim={bySize,classes:counts.size};
+}
+function simBelow(k){let t=0;for(const [s,n] of sim.bySize)if(s<k)t+=s*n;return t/S.N;}
+function simUnique(){return (sim.bySize.get(1)||0);}
+
+// ---------- formula ----------
+function lnFact(j){let t=0;for(let i=2;i<=j;i++)t+=Math.log(i);return t;}
+function poisson(j,l){if(l===0)return j===0?1:0;return Math.exp(-l+j*Math.log(l)-lnFact(j));}
+function fUnique(C){if(C<=1)return 0;return Math.exp((S.N-1)*Math.log1p(-1/C));}
+function fBelow(C,k){const l=(S.N-1)/C;let t=0;for(let j=0;j<=k-2;j++)t+=poisson(j,l);return Math.min(1,t);}
+
+// ---------- canvas helpers ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.height};}
+function hatch(g,color){
+  const p=document.createElement('canvas');p.width=p.height=8;const q=p.getContext('2d');
+  q.strokeStyle=color;q.lineWidth=2;q.beginPath();q.moveTo(0,8);q.lineTo(8,0);q.moveTo(-2,2);q.lineTo(2,-2);q.moveTo(6,10);q.lineTo(10,6);q.stroke();
+  return g.createPattern(p,'repeat');
+}
+function niceMax(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v*1.02);}
+
+function drawHist(){
+  const {g,w,h}=setup($('cHist')),pad={l:48,r:8,t:22,b:36},K=S.k;
+  const bins=new Array(31).fill(0);
+  for(const [s,n] of sim.bySize)bins[Math.min(30,s)]+=s*n;
+  const C=combos(fields()),l=(S.N-1)/C,exp=new Array(31).fill(0);
+  let cdf=0;for(let s=1;s<30;s++){const p=poisson(s-1,l);exp[s]=S.N*p;cdf+=p;}exp[30]=S.N*Math.max(0,1-cdf);
+  const yMax=niceMax(Math.max(...bins,...exp));
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,bw=pw/30;
+  const X=s=>pad.l+(s-1)*bw,Y=v=>pad.t+ph*(1-v/yMax);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Y(yMax*i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(yMax*i/4),pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';
+  [1,5,10,15,20,25,30].forEach(s=>g.fillText(s===30?'30+':String(s),X(s)+bw/2,h-pad.b+5));
+  g.textAlign='right';g.fillText('class size',w-pad.r,h-15);
+  const pat=hatch(g,css('--blood'));
+  for(let s=1;s<=30;s++){
+    const v=bins[s];if(v<=0)continue;
+    const x=X(s)+1,bwid=Math.max(1,bw-2),y=Y(v),hh=pad.t+ph-y;
+    if(s<K){g.fillStyle=pat;g.fillRect(x,y,bwid,hh);g.strokeStyle=css('--blood');g.lineWidth=1.2;g.strokeRect(x+.5,y+.5,bwid-1,Math.max(0,hh-1));}
+    else{g.fillStyle=css('--steel');g.fillRect(x,y,bwid,hh);}
+  }
+  // k threshold line
+  if(K<=30){const xk=X(K);g.strokeStyle=css('--ink');g.setLineDash([4,3]);g.lineWidth=1.2;g.beginPath();g.moveTo(xk,pad.t);g.lineTo(xk,pad.t+ph);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ink');g.textAlign=K>25?'right':'left';g.textBaseline='top';g.fillText('k = '+K,xk+(K>25?-4:4),pad.t+4);}
+  // formula dots
+  g.strokeStyle=css('--ochre');g.lineWidth=2;
+  for(let s=1;s<=30;s++){if(exp[s]<yMax*0.004)continue;g.beginPath();g.arc(X(s)+bw/2,Y(exp[s]),3.2,0,Math.PI*2);g.stroke();}
+  // label size-1 bar
+  const u=bins[1];g.fillStyle=css('--ink');g.font='700 12px '+css('--sans');g.textBaseline='bottom';g.textAlign='left';
+  const bx=X(1)+bw/2,by=Y(u);
+  g.fillText(fmt(u)+' unique',X(1),pad.t-6);
+  if(u>0){g.strokeStyle=css('--ink');g.lineWidth=1;g.beginPath();g.moveTo(bx,pad.t-4);g.lineTo(bx,Math.max(pad.t-4,by-2));g.stroke();}
+  $('cHist').setAttribute('aria-label',`Histogram of class sizes. ${fmt(u)} records are unique, ${pct(simBelow(K))} sit in classes smaller than ${K}.`);
+}
+
+function drawCurve(){
+  const {g,w,h}=setup($('cCurve')),pad={l:44,r:12,t:14,b:36};
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const X=c=>pad.l+pw*Math.log10(c)/8,Y=v=>pad.t+ph*(1-v);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');
+  for(let i=0;i<=4;i++){const y=Y(i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(i*25+'%',pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';
+  const narrow=w<360;
+  for(let e=0;e<=8;e++){const x=X(Math.pow(10,e));g.beginPath();g.moveTo(x,pad.t+ph);g.lineTo(x,pad.t+ph+4);g.stroke();if(!narrow||e%2===0)g.fillText(e===0?'1':'10'+['⁰','¹','²','³','⁴','⁵','⁶','⁷','⁸'][e],x,h-pad.b+6);}
+  g.textAlign='right';g.fillText('combinations C',w-pad.r,h-15);
+  // N/C = 1 marker
+  const xN=X(S.N);g.strokeStyle=css('--ink-soft');g.setLineDash([3,4]);g.beginPath();g.moveTo(xN,pad.t);g.lineTo(xN,pad.t+ph);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='top';g.fillText('C = N',xN-4,pad.t+2);
+  // curve
+  g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=320;i++){const c=Math.pow(10,8*i/320),x=X(c),y=Y(Math.exp(-S.N/c));i?g.lineTo(x,y):g.moveTo(x,y);}
+  g.stroke();
+  const F=fields(),C=combos(F),fu=fUnique(C),su=simUnique()/S.N,x=X(Math.max(1,Math.min(1e8,C)));
+  // simulated hollow dot
+  g.strokeStyle=css('--blood');g.lineWidth=2.5;g.beginPath();g.arc(x,Y(su),8,0,Math.PI*2);g.stroke();
+  // formula dot
+  g.fillStyle=css('--blood');g.beginPath();g.arc(x,Y(fu),5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=1.5;g.stroke();
+  const label=F.length?F.map(f=>f.name).join(' + '):'no fields';
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--ink');
+  const tw=g.measureText(label).width,left=x+12+tw>w-pad.r;
+  let ly=Y(fu);ly=ly<pad.t+20?ly+18:ly-12;if(ly>pad.t+ph-6)ly=pad.t+ph-10;
+  g.textAlign=left?'right':'left';g.textBaseline='middle';
+  g.fillText(label,left?x-12:x+12,ly);
+  $('cCurve').setAttribute('aria-label',`Uniqueness curve. Current release with ${label} has C = ${fmt(C)} and a formula unique share of ${pct(fu)}; simulated ${pct(su)}.`);
+}
+
+// ---------- readouts ----------
+function render(){
+  const F=fields(),C=combos(F),l=(S.N-1)/C,K=S.k;
+  const fu=fUnique(C),fb=fBelow(C,K),un=simUnique(),su=un/S.N,sb=simBelow(K);
+  $('rC').textContent=fmt(C);
+  $('rL').textContent=sig4(l);
+  $('rUf').textContent=pct(fu);
+  $('rUs').textContent=pct(su);
+  $('rKf').textContent=pct(fb);
+  $('rKs').textContent=pct(sb);
+  $('rUn').textContent=fmt(un);
+  $('rKfL').innerHTML=`below <i>k</i> = ${K}, formula`;
+  $('rKsL').innerHTML=`below <i>k</i> = ${K}, simulated`;
+  const pass=sb===0;
+  $('rPass').textContent=pass?'yes':'no';
+  $('rPass').style.color=pass?'var(--moss)':'var(--blood)';
+  $('rPass').parentElement.style.setProperty('--c',pass?'var(--moss)':'var(--blood)');
+  $('rPassL').textContent=`passes ${K}-anonymity (simulated release)`;
+  let s;
+  if(C<=1) s='With no fields released, everyone is in one class. Nothing can be singled out, and nothing can be studied either.';
+  else if(l>=20) s=`Each record shares its combination with ${sig4(l)} others on average. Almost nobody is alone.`;
+  else if(l>=1) s=`Each record shares its combination with ${sig4(l)} others on average, and ${pct(fu)} of records are alone. That is about ${fmt(fu*S.N)} characters anyone could name from a public profile page.`;
+  else s=`There are ${fmt(C)} combinations for ${fmt(S.N)} records, so λ = ${sig4(l)} and ${pct(fu)} of records are alone. A unique row is a named row.`;
+  if(S.skew==='realistic') s+=` With skewed values the simulation gives ${pct(su)} unique against the uniform formula's ${pct(fu)}. Crowding at popular values hides most people, while the rare ones stay exposed.`;
+  else if(C>1) s+=` The simulation (${pct(su)}) lands within ${Math.abs((su-fu)*100).toFixed(1)} points of the formula.`;
+  $('insight').textContent=s;
+  drawHist();drawCurve();
+}
+function recompute(){simulate();render();}
+
+// ---------- controls ----------
+function nFromSlider(v){const raw=Math.pow(10,3+v/100);const m=Math.pow(10,Math.floor(Math.log10(raw))-2);return Math.round(raw/m)*m;}
+function sliderFromN(n){return Math.round((Math.log10(n)-3)*100);}
+function setN(n,fromSlider){
+  n=Math.round(Math.min(100000,Math.max(1000,n)));S.N=n;$('nIn').value=n;
+  if(!fromSlider)$('nRange').value=sliderFromN(n);
+  $('nRange').setAttribute('aria-valuetext',fmt(n)+' characters');
+  recompute();
+}
+$('nRange').addEventListener('input',e=>setN(nFromSlider(+e.target.value),true));
+$('nIn').addEventListener('change',e=>{const v=+e.target.value;setN(isFinite(v)&&v>0?v:10000,false);});
+function setK(k){k=Math.round(Math.min(20,Math.max(2,k||5)));S.k=k;$('kIn').value=k;$('kRange').value=k;render();}
+$('kRange').addEventListener('input',e=>setK(+e.target.value));
+$('kIn').addEventListener('change',e=>setK(+e.target.value));
+$('fClass').addEventListener('change',e=>{S.cls=e.target.checked;clearPreset();recompute();});
+$('fRace').addEventListener('change',e=>{S.race=e.target.checked;clearPreset();recompute();});
+$('fLevel').addEventListener('change',e=>{S.level=e.target.value;clearPreset();recompute();});
+$('fGuild').addEventListener('change',e=>{S.guild=e.target.value;clearPreset();recompute();});
+$('fZone').addEventListener('change',e=>{S.zone=e.target.value;clearPreset();recompute();});
+const hints={uniform:'Every value equally likely.',realistic:'Class and race follow Zipf weights (value i has weight 1/i), 40% of characters sit at the level cap, and guild sizes follow Zipf weights. Zone stays uniform.'};
+function setSkew(m){S.skew=m;$('skU').setAttribute('aria-pressed',m==='uniform');$('skR').setAttribute('aria-pressed',m==='realistic');$('skewHint').textContent=hints[m];recompute();}
+$('skU').addEventListener('click',()=>{clearPreset();setSkew('uniform');});
+$('skR').addEventListener('click',()=>{clearPreset();setSkew('realistic');});
+$('resample').addEventListener('click',()=>{S.seed=1+Math.floor(Math.random()*999999);$('seedIn').value=S.seed;recompute();});
+$('seedIn').addEventListener('change',e=>{const v=Math.round(+e.target.value);S.seed=v>0?v:1;$('seedIn').value=S.seed;recompute();});
+const chips=[...document.querySelectorAll('[data-p]')];
+function clearPreset(){chips.forEach(c=>c.setAttribute('aria-pressed','false'));}
+chips.forEach(b=>b.addEventListener('click',()=>{
+  const [lv,gd,zn]=b.dataset.p.split(',');
+  S.cls=S.race=true;$('fClass').checked=$('fRace').checked=true;
+  S.level=lv;S.guild=gd;S.zone=zn;$('fLevel').value=lv;$('fGuild').value=gd;$('fZone').value=zn;
+  S.skew='uniform';$('skU').setAttribute('aria-pressed','true');$('skR').setAttribute('aria-pressed','false');$('skewHint').textContent=hints.uniform;
+  clearPreset();b.setAttribute('aria-pressed','true');
+  setN(10000,false);
+}));
+chips.forEach(c=>c.setAttribute('aria-pressed','false'));chips[0].setAttribute('aria-pressed','true');
+
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,80);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+$('nRange').setAttribute('aria-valuetext','10,000 characters');
+recompute();
+window.__w12={S,fields,combos,fUnique,fBelow,simUnique,simBelow};
+})();
+</script>
+</body>
+</html>

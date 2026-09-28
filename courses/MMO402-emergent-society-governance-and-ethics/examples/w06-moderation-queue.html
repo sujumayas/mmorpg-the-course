@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moderation queue: thresholds, capacity and backlog (MMO402 Week 6)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 16px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 22px;margin-bottom:16px}
+@media (max-width:760px){.controls{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){.bands{font-size:.8rem}.bands th,.bands td{padding:4px 3px}.bands .res{display:none}}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sub{font-weight:600;font-size:.92rem;margin:0 0 4px}
+.bands{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums;min-width:0}
+.bands th,.bands td{padding:4px 6px;border-bottom:1px solid var(--grid);text-align:center}
+.bands th:first-child,.bands td:first-child{text-align:left}
+.bands input{accent-color:var(--steel);width:18px;height:18px;margin:0}
+.toggle{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;margin-top:8px;cursor:pointer}
+.toggle input{accent-color:var(--steel);margin-top:4px}
+.insight{margin:0 0 16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table.out{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;max-width:560px}
+caption{text-align:left;font-weight:600;padding-bottom:4px}
+table.out th,table.out td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+table.out th{text-align:left;font-weight:400}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO402 Emergent Society, Governance and Ethics · Week 6 · Worked example</p>
+  <h1>Human review works only while the queue keeps up</h1>
+  <p class="lede">Forty moderators can review 11,200 reports a day. Send them more than that and the queue grows every day without limit. Send them less and the reports you skip are either punished by a machine or ignored. Pick a policy and watch where 100,000 daily reports go.</p>
+</header>
+
+<section class="panel" aria-label="Moderation queue model">
+  <div class="insight" id="insight" aria-live="polite"></div>
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="sLoad">—</b><span>review load vs capacity C</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="sCorr">—</b><span>correct actions per day</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="sWrong">—</b><span>wrong actions per day</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="sWait">—</b><span id="sWaitLbl">wait at day 30</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <p class="sub" id="presetLbl">Policies from the lecture</p>
+      <div class="presets" role="group" aria-labelledby="presetLbl">
+        <button class="chip" data-p="1" aria-pressed="false">Policy 1: review all</button>
+        <button class="chip" data-p="2" aria-pressed="false">Policy 2: auto A, review B and C</button>
+        <button class="chip" data-p="3" aria-pressed="true">Policy 3: auto A, review B</button>
+        <button class="chip" data-p="4" aria-pressed="false">Policy 4: auto A and B</button>
+        <button class="chip" data-p="5" aria-pressed="false">Policy 5: Policy 3 plus spare on C</button>
+      </div>
+      <table class="bands" aria-label="Score bands and tiers">
+        <thead><tr><th scope="col">Band</th><th scope="col">Share of Q</th><th scope="col">Violating</th><th scope="col">Auto-act</th><th scope="col">Review</th><th scope="col" class="res">Result</th></tr></thead>
+        <tbody id="bandRows"></tbody>
+      </table>
+      <label class="toggle"><input type="checkbox" id="spare"> <span>Spend spare capacity on the next band down</span></label>
+    </div>
+    <div>
+      <label class="row" for="qIn">Reports per day Q <output id="oQ"></output></label>
+      <input id="qIn" type="range" min="10000" max="200000" step="1000" value="100000">
+      <label class="row" for="mIn">Moderators M <output id="oM"></output></label>
+      <input id="mIn" type="range" min="0" max="200" step="1" value="40">
+      <label class="row" for="hIn">Hours per moderator per day H <output id="oH"></output></label>
+      <input id="hIn" type="range" min="4" max="8" step="0.5" value="7">
+      <label class="row" for="aIn">Handling time per report a <output id="oA"></output></label>
+      <input id="aIn" type="range" min="0.5" max="5" step="0.1" value="1.5">
+      <p style="font-size:.86rem;margin:0;color:var(--ink-soft)">Capacity C = M × H × 60 / a = <b id="oC" style="color:var(--ink)"></b> reviews per day</p>
+    </div>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Where reports go<small>Bands (left) to tiers (middle) to outcomes (right). Heights are reports per day, every flow labelled with its count.</small></figcaption>
+      <canvas id="cFlow" role="img" aria-label="Flow of reports from bands to tiers to outcomes"></canvas>
+      <div class="legend"><span><i style="background:var(--moss)"></i>correct action</span><span><i style="background:var(--blood)"></i>wrong action</span><span><i style="background:var(--ochre)"></i>missed violation</span><span><i style="background:var(--steel)"></i>waiting in backlog</span><span><i style="background:var(--grid)"></i>no action needed</span></div>
+    </figure>
+    <figure>
+      <figcaption>The queue<small>Unreviewed reports piling up, day 0 to 30</small></figcaption>
+      <canvas id="cQueue" role="img" aria-label="Backlog over 30 days"></canvas>
+    </figure>
+  </div>
+
+  <div class="table-wrap">
+    <table class="out">
+      <caption>Readout (per day unless stated)</caption>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <p style="font-size:.84rem;color:var(--ink-soft);margin:8px 0 0">When overloaded, reviewers take reports in proportion from every review band. Missed counts only dismissed bands on day one; violations stuck in the backlog are shown separately. The spare-capacity option assumes violations are spread evenly through the band, so it is a lower bound.</p>
+</section>
+
+<footer>Band shares and violation rates are the lecture's teaching numbers for a generic game, not a real studio's data. Formulas: C = M × H × 60 / a; backlog(d) = max(0, d × (load − C)); wait = backlog / C.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const fmt1=n=>(Math.round(n*10)/10).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const BANDS=[{k:'A',share:.06,viol:.9,vl:'90%'},{k:'B',share:.08,viol:.4,vl:'40%'},{k:'C',share:.16,viol:.05,vl:'5%'},{k:'D',share:.70,viol:600/70000,vl:'0.857%'}];
+const POL={1:{auto:'',rev:'ABCD',spare:false},2:{auto:'A',rev:'BC',spare:false},3:{auto:'A',rev:'B',spare:false},4:{auto:'AB',rev:'',spare:false},5:{auto:'A',rev:'B',spare:true}};
+let Q=100000,M=40,H=7,A=1.5,spare=false;const tier={A:'auto',B:'review',C:'dismiss',D:'dismiss'};
+
+function model(){
+  const C=M*H*60/A;
+  const b=BANDS.map(x=>({k:x.k,n:Q*x.share,v:Q*x.share*x.viol,viol:x.viol,t:tier[x.k]}));
+  const load=b.filter(x=>x.t==='review').reduce((s,x)=>s+x.n,0);
+  const reviewed=Math.min(load,C),frac=load>0?reviewed/load:0;
+  const sum=(t,f)=>b.filter(x=>x.t===t).reduce((s,x)=>s+f(x),0);
+  const o={C,b,load,reviewed};
+  o.corrAuto=sum('auto',x=>x.v);o.wrong=sum('auto',x=>x.n-x.v);
+  o.corrRev=sum('review',x=>x.v)*frac;o.cleared=sum('review',x=>x.n-x.v)*frac;o.backlogInc=Math.max(0,load-C);
+  o.missed=sum('dismiss',x=>x.v);o.alone=sum('dismiss',x=>x.n-x.v);
+  o.spareBand=null;o.take=0;
+  if(spare&&load<C){const sb=b.find(x=>x.t==='dismiss');if(sb){o.spareBand=sb;o.take=Math.min(C-load,sb.n);const c=o.take*sb.viol;o.caught=c;o.corrRev+=c;o.cleared+=o.take-c;o.missed-=c;o.alone-=o.take-c;}}
+  o.correct=o.corrAuto+o.corrRev;o.prec=(o.correct+o.wrong)>0?o.correct/(o.correct+o.wrong):null;
+  o.backlog=d=>Math.max(0,d*(load-C));o.wait=d=>{const bl=o.backlog(d);return bl===0?0:(C>0?bl/C:Infinity);};
+  o.stable=load<=C;o.spareCap=Math.max(0,C-load);
+  return o;
+}
+const waitTxt=w=>w===Infinity?'never (C = 0)':fmt1(w)+' days';
+
+// ---- band table ----
+function buildBands(){
+  $('bandRows').innerHTML=BANDS.map(x=>`<tr><th scope="row">${x.k}</th><td>${Math.round(x.share*100)}%</td><td>${x.vl}</td>
+  <td><input type="checkbox" data-b="${x.k}" data-t="auto" aria-label="Band ${x.k} auto-act"></td>
+  <td><input type="checkbox" data-b="${x.k}" data-t="review" aria-label="Band ${x.k} review"></td><td class="res" id="res${x.k}"></td></tr>`).join('');
+  document.querySelectorAll('#bandRows input').forEach(i=>i.addEventListener('change',()=>{
+    const k=i.dataset.b;tier[k]=i.checked?i.dataset.t:'dismiss';markPreset(null);update();}));
+}
+function syncBands(){document.querySelectorAll('#bandRows input').forEach(i=>{i.checked=tier[i.dataset.b]===i.dataset.t;});
+  BANDS.forEach(x=>{$('res'+x.k).textContent=tier[x.k]==='auto'?'auto':tier[x.k]==='review'?'review':'dismiss';});}
+function markPreset(p){document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.p==p)));}
+function applyPreset(p){const P=POL[p];BANDS.forEach(x=>tier[x.k]=P.auto.includes(x.k)?'auto':P.rev.includes(x.k)?'review':'dismiss');spare=P.spare;$('spare').checked=spare;markPreset(p);update();}
+
+// ---- canvas helpers ----
+function setup(c,h){c.style.height=h+'px';const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,h*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,h);return {g,w:r.width,h};}
+function ribbon(g,x0,y0a,y0b,x1,y1a,y1b,col){const m=(x0+x1)/2;g.fillStyle=col;g.globalAlpha=.35;g.beginPath();g.moveTo(x0,y0a);g.bezierCurveTo(m,y0a,m,y1a,x1,y1a);g.lineTo(x1,y1b);g.bezierCurveTo(m,y1b,m,y0b,x0,y0b);g.closePath();g.fill();g.globalAlpha=1;}
+function spread(items,top,bot,minGap){ // items {y} sorted -> adjust ly
+  items.forEach(it=>it.ly=it.y);
+  for(let i=1;i<items.length;i++)if(items[i].ly<items[i-1].ly+minGap)items[i].ly=items[i-1].ly+minGap;
+  const over=items.length?items[items.length-1].ly-bot:0;if(over>0){items[items.length-1].ly-=over;for(let i=items.length-2;i>=0;i--)if(items[i].ly>items[i+1].ly-minGap)items[i].ly=items[i+1].ly-minGap;}
+  items.forEach(it=>it.ly=Math.max(top,it.ly));
+}
+function drawFlow(o){
+  const c=$('cFlow'),W=c.getBoundingClientRect().width,Hh=W<420?400:380,{g}=setup(c,Hh);
+  const top=8,bot=Hh-8,nw=9,gap=8;
+  g.font='600 11.5px '+css('--sans');const labW=Math.min(Math.round(W*.42),Math.ceil(g.measureText('Dismiss: no violation').width)+14),xB=48,xO=W-labW-nw-6,xT=Math.round(xB+(xO-xB)*.46);
+  const TC={auto:css('--blood'),review:css('--steel'),dismiss:css('--ink-soft')};
+  // outcome nodes
+  const outs=[
+    {id:'ac',t:'auto',name:'Auto: correct',v:o.corrAuto,col:css('--moss')},
+    {id:'aw',t:'auto',name:'Auto: wrong',v:o.wrong,col:css('--blood')},
+    {id:'rc',t:'review',name:'Review: correct',v:o.corrRev,col:css('--moss')},
+    {id:'rl',t:'review',name:'Review: cleared',v:o.cleared,col:css('--grid')},
+    {id:'rb',t:'review',name:'Review: to backlog',v:o.backlogInc,col:css('--steel')},
+    {id:'dm',t:'dismiss',name:'Dismiss: missed',v:o.missed,col:css('--ochre')},
+    {id:'dl',t:'dismiss',name:'Dismiss: no violation',v:o.alone,col:css('--grid')}].filter(x=>x.v>0.05);
+  const tiers=['auto','review','dismiss'].map(t=>({t,v:outs.filter(x=>x.t===t).reduce((s,x)=>s+x.v,0)})).filter(x=>x.v>0.05);
+  const bands=o.b;
+  const maxN=Math.max(outs.length,4);const k=(bot-top-(maxN-1)*gap)/Q;
+  const place=(arr)=>{let y=top;const tot=arr.reduce((s,x)=>s+Math.max(2,x.v*k),0)+(arr.length-1)*gap;y=top+((bot-top)-tot)/2;arr.forEach(x=>{x.h=Math.max(2,x.v*k);x.y=y;y+=x.h+gap;x.cur=x.y;x.cin=x.y;});};
+  bands.forEach(x=>x.v=x.n);place(bands);place(tiers);place(outs);
+  const T=Object.fromEntries(tiers.map(x=>[x.t,x]));
+  // band -> tier flows
+  const flows=[];
+  bands.forEach(bd=>{
+    if(o.spareBand===bd&&o.take>0){flows.push({b:bd,t:'review',v:o.take});if(bd.n-o.take>0.05)flows.push({b:bd,t:'dismiss',v:bd.n-o.take});}
+    else flows.push({b:bd,t:bd.t,v:bd.n});});
+  flows.forEach(f=>{const tn=T[f.t];if(!tn)return;const hb=f.b.h*f.v/f.b.n,ht=tn.h*f.v/tn.v;
+    ribbon(g,xB+nw,f.b.cur,f.b.cur+hb,xT,tn.cin,tn.cin+ht,TC[f.t]);f.my=f.b.cur+hb/2;f.b.cur+=hb;tn.cin+=ht;});
+  outs.forEach(on=>{const tn=T[on.t];const ht=tn.h*on.v/tn.v;ribbon(g,xT+nw,tn.cur,tn.cur+ht,xO,on.y,on.y+on.h,on.col==css('--grid')?css('--ink-soft'):on.col);tn.cur+=ht;});
+  // nodes
+  const node=(x,n,col)=>{g.fillStyle=col;g.fillRect(x,n.y,nw,n.h);g.strokeStyle=css('--ink');g.lineWidth=1;g.strokeRect(x+.5,n.y+.5,nw-1,Math.max(1,n.h-1));};
+  bands.forEach(bd=>node(xB,bd,css('--steel')));tiers.forEach(t=>node(xT,t,TC[t.t]));outs.forEach(on=>node(xO,on,on.col));
+  g.font='11.5px '+css('--sans');g.textBaseline='middle';
+  // band labels (left), spread
+  const bl=bands.map(bd=>({y:bd.y+bd.h/2,bd}));spread(bl,top+12,bot-12,26);
+  bl.forEach(it=>{g.fillStyle=css('--ink');g.textAlign='right';g.font='600 11.5px '+css('--sans');g.fillText('Band '+it.bd.k,xB-5,it.ly-7);g.font='11.5px '+css('--sans');g.fillStyle=css('--ink-soft');g.fillText(fmt(it.bd.n),xB-5,it.ly+7);});
+  // spare split label
+  flows.filter(f=>o.spareBand===f.b&&f.t==='review').forEach(f=>{const tx=`${fmt(f.v)} → review`;g.textAlign='left';const tw=g.measureText(tx).width;g.fillStyle=css('--paper-2');g.fillRect(xB+nw+4,f.my-8,tw+6,16);g.fillStyle=css('--ink');g.fillText(tx,xB+nw+7,f.my);});
+  // tier labels
+  const tl=tiers.map(t=>({y:t.y+t.h/2,t}));spread(tl,top+10,bot-10,34);
+  tl.forEach(it=>{const nm={auto:'Auto-act',review:'Review',dismiss:'Dismiss'}[it.t.t];const a=nm,b=fmt(it.t.v);g.font='600 11.5px '+css('--sans');const tw=Math.max(g.measureText(a).width,g.measureText(b).width);
+    const x=xT+nw+4;g.fillStyle=css('--paper-2');g.globalAlpha=.9;g.fillRect(x,it.ly-15,tw+6,30);g.globalAlpha=1;g.fillStyle=css('--ink');g.textAlign='left';g.fillText(a,x+3,it.ly-7);g.font='11.5px '+css('--sans');g.fillText(b,x+3,it.ly+7);});
+  // outcome labels
+  const ol=outs.map(on=>({y:on.y+on.h/2,on}));spread(ol,top+12,bot-12,28);
+  ol.forEach(it=>{const x=xO+nw+5;g.strokeStyle=css('--ink-soft');g.lineWidth=1;if(Math.abs(it.ly-it.y)>2){g.beginPath();g.moveTo(xO+nw,it.y);g.lineTo(x-1,it.ly);g.stroke();}
+    g.textAlign='left';g.fillStyle=css('--ink');g.font='600 11.5px '+css('--sans');g.fillText(it.on.name,x+2,it.ly-7);g.font='11.5px '+css('--sans');g.fillText(fmt(it.on.v),x+2,it.ly+7);});
+}
+function niceMax(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v*1.02)||v;}
+function drawQueue(o){
+  const c=$('cQueue'),W=c.getBoundingClientRect().width,{g,h}=setup(c,W<420?260:300);
+  const pad={l:52,r:14,t:16,b:32},pw=W-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const yM=o.stable?10000:niceMax(o.backlog(30));const X=d=>pad.l+pw*d/30,Y=v=>pad.t+ph*(1-v/yM);
+  g.font='11.5px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Y(yM*i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(W-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';const v=yM*i/4;g.fillText(v>=10000?fmt(v/1000)+'k':fmt(v),pad.l-6,y);}
+  [0,7,14,21,30].forEach(d=>{g.textAlign='center';g.textBaseline='top';g.fillText(d===0?'day 0':d,X(d),h-pad.b+6);});
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(0));g.lineTo(W-pad.r,Y(0));g.stroke();
+  g.textAlign='left';g.textBaseline='bottom';g.fillStyle=css('--ink-soft');g.fillText('zero backlog',pad.l+4,Y(0)-2);
+  const col=o.stable?css('--moss'):css('--blood');
+  g.strokeStyle=col;g.lineWidth=3;g.beginPath();g.moveTo(X(0),Y(o.backlog(0)));g.lineTo(X(30),Y(o.backlog(30)));g.stroke();
+  const dot=(d)=>{g.fillStyle=col;g.beginPath();g.arc(X(d),Y(o.backlog(d)),5,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();};
+  dot(7);dot(30);
+  g.font='600 12.5px '+css('--sans');g.fillStyle=css('--ink');
+  if(o.stable){g.textAlign='right';g.textBaseline='bottom';g.fillText(`Stable, spare capacity ${fmt(o.spareCap)} per day`,W-pad.r,Y(0)-22);}
+  else{const l1=`Day 30: ${fmt(o.backlog(30))} waiting`,l2=`wait ${waitTxt(o.wait(30))}`;g.textAlign='right';g.textBaseline='top';g.fillText(l1,X(30)-10,Y(o.backlog(30))+8);g.font='12px '+css('--sans');g.fillText(l2,X(30)-10,Y(o.backlog(30))+25);
+    g.textAlign='left';g.fillText(`Day 7: ${fmt(o.backlog(7))}`,X(7)+8,Y(o.backlog(7))+6);}
+  $('cQueue').setAttribute('aria-label',o.stable?`Backlog stays at zero. Spare capacity ${fmt(o.spareCap)} per day.`:`Backlog grows by ${fmt(o.load-o.C)} per day to ${fmt(o.backlog(30))} at day 30.`);
+}
+function update(){
+  syncBands();const o=model();
+  $('oQ').textContent=fmt(Q);$('oM').textContent=M;$('oH').textContent=H+' h';$('oA').textContent=A.toFixed(1)+' min';$('oC').textContent=fmt(o.C);
+  $('sLoad').textContent=fmt(o.load)+' / '+fmt(o.C);$('sCorr').textContent=fmt(o.correct);$('sWrong').textContent=fmt(o.wrong);
+  $('sWait').textContent=o.stable?'none':waitTxt(o.wait(30));
+  const rows=[['Review capacity C',fmt(o.C)],['Review load',fmt(o.load)],['Reviewed today',fmt(o.reviewed+o.take)],
+    ['Correct actions',fmt(o.correct)],['Wrong actions',fmt(o.wrong)],['Missed violations (day one, excluding backlog)',fmt(o.missed)],
+    ['Precision of all actions',o.prec===null?'—':fmt1(o.prec*100)+'%'],['Backlog at day 7',fmt(o.backlog(7))],['Backlog at day 30',fmt(o.backlog(30))],
+    ['Wait at day 7',o.stable?'0 days':waitTxt(o.wait(7))],['Wait at day 30',o.stable?'0 days':waitTxt(o.wait(30))]];
+  if(o.take>0)rows.splice(3,0,[`Spare reviews spent on band ${o.spareBand.k}`,fmt(o.take)+' (catches '+fmt(o.caught)+')']);
+  $('tbody').innerHTML=rows.map(r=>`<tr><th scope="row">${r[0]}</th><td>${r[1]}</td></tr>`).join('');
+  let s;
+  if(o.load===0&&o.wrong>0) s=`No humans involved. The machine acts on ${fmt(o.correct+o.wrong)} reports a day and ${fmt(o.wrong)} of them hit innocent players: precision ${fmt1(o.prec*100)}%.`;
+  else if(o.stable) s=`Review load ${fmt(o.load)} is at or under capacity ${fmt(o.C)}, so the queue is stable. You act correctly ${fmt(o.correct)} times a day, wrongly ${fmt(o.wrong)} times, and miss ${fmt(o.missed)} violations.`+(o.take>0?` Spare reviews on band ${o.spareBand.k} catch ${fmt(o.caught)} more.`:o.spareCap>0?` ${fmt(o.spareCap)} reviews a day go unused.`:'');
+  else s=`Review load ${fmt(o.load)} is above capacity ${fmt(o.C)}. The backlog grows by ${fmt(o.load-o.C)} every day: ${fmt(o.backlog(7))} after a week, and a new report waits ${waitTxt(o.wait(30))} by day 30. More careful thresholds made the system slower, not fairer.`;
+  $('insight').innerHTML=s;
+  drawFlow(o);drawQueue(o);
+}
+buildBands();
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.p)));
+$('spare').addEventListener('change',e=>{spare=e.target.checked;markPreset(null);update();});
+$('qIn').addEventListener('input',e=>{Q=+e.target.value;update();});
+$('mIn').addEventListener('input',e=>{M=+e.target.value;update();});
+$('hIn').addEventListener('input',e=>{H=+e.target.value;update();});
+$('aIn').addEventListener('input',e=>{A=+e.target.value;update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+applyPreset(3);
+})();
+</script>
+</body>
+</html>

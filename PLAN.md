@@ -102,10 +102,10 @@ flowchart LR
 | GD201 | stub | 0/14 | 0 (2) | 0 | 0 |
 | GD202 | stub | 0/14 | 0 (1) | 0 | 0 |
 | UX201 | stub | 14/14 | 14 (2) | 14 | 4 |
-| CS202 | stub | 10/14 | 0 (2) | 6 | 0 |
+| CS202 | stub | 12/14 | 0 (2) | 9 | 0 |
 | CS203 | stub | 0/14 | 0 (2) | 0 | 0 |
 | GD203 | finished | 14/14 | 14 (3) | 15 | 4 |
-| DB201 | stub | 6/14 | 0 (1) | 0 | 0 |
+| DB201 | stub | 6/14 | 0 (1) | 3 | 0 |
 | PR201 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO301 | stub | 14/14 | 14 (2) | 13 | 4 |
 | MMO302 | stub | 0/14 | 0 (2) | 0 | 0 |
@@ -118,7 +118,7 @@ flowchart LR
 | MMO309 | stub | 0/14 | 0 (2) | 0 | 0 |
 | PR301 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO401 | finished | 14/14 | 14 (2) | 14 | 4 |
-| MMO402 | stub | 14/14 | 14 (1) | 13 | 4 |
+| MMO402 | finished | 14/14 | 14 (1) | 13 | 4 |
 | MMO403 | stub | 0/14 | 0 (2) | 0 | 0 |
 | MMO404 | stub | 0/14 | 0 (1) | 0 | 0 |
 | PR401 | stub | 0/14 | 0 (0) | 0 | 0 |
@@ -293,8 +293,8 @@ From Senet to MUDs to live-service worlds: how games evolved, and how to read th
 
 **Signature worked examples**
 
-- The 1983 crash in numbers: shelf supply vs demand chart (verify figures)
-- Timeline explorer: concurrent-user peaks of landmark MMOs (verify each figure)
+- The 1983 crash in numbers: shelf supply vs demand chart (figures verified and cited in GS101 w04)
+- Timeline explorer: concurrent-user peaks of landmark MMOs (figures verified and cited in GS101 w09)
 
 **Core readings**
 
@@ -463,8 +463,8 @@ Loot, crits, drop rates, matchmaking and A/B tests all run on probability. This 
 **Signature worked examples**
 
 - 1% drop rate: after 100 kills only ~63% of players have it — and 1 in 20 still lacks it after ~300 kills
-- Dota 2 pseudo-random distribution: same average crit rate, far lower streakiness (verify C constants)
-- Gacha pity: soft/hard pity changes the expected pulls (Genshin hard pity at 90; verify soft-pity rates)
+- Dota 2 pseudo-random distribution: same average crit rate, far lower streakiness (C constants verified in MA102 w10)
+- Gacha pity: soft/hard pity changes the expected pulls (Genshin hard pity at 90; soft pity is a labelled community estimate)
 - 2d6 vs 1d12: same range, completely different feel
 
 **Core readings**
@@ -1424,7 +1424,7 @@ Player politics, law, moderation and the ethics of running worlds people live in
 
 1. Worlds as polities
 2. Emergent player government: alliances and councils
-3. EVE's Council of Stellar Management (verify)
+3. EVE's Council of Stellar Management (verified in MMO402 w03)
 4. Wars, betrayals and meta-gaming
 5. Rules, EULAs and terms of service
 6. Moderation at scale
