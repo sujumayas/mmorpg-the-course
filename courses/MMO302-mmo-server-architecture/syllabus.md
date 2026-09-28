@@ -29,7 +29,7 @@ How thousands of players share one world: zoning, sharding, interest management,
 | 12 | Single-shard architectures (EVE) and time dilation | _todo_ | _todo_ |
 | 13 | Cloud deployment and autoscaling | _todo_ | _todo_ |
 | 14 | Observability: logs, metrics, traces | _todo_ | _todo_ |
-| 15 | Final: 500-bot load test of a world server | _todo_ | _todo_ |
+| 15 | Final: 500-bot load test of a world server | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

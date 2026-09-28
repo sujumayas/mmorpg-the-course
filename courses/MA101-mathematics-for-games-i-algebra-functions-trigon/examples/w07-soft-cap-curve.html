@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soft cap curve — MA101 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.modes{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;border:0;padding:0}
+.modes legend{font-weight:600;font-size:.92rem;margin-bottom:6px;padding:0}
+.modes label{position:relative}
+.modes input{position:absolute;opacity:0;width:1px;height:1px}
+.modes span{display:inline-block;font:600 .92rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer}
+.modes input:checked+span{background:var(--ink);color:var(--paper)}
+.modes input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figure.wide{grid-column:1/-1}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,currentColor 0 5px,transparent 5px 9px)!important;height:2px}
+.legend i.bar{height:10px;width:10px;border-radius:2px}
+.say{margin:16px 0 4px;padding:12px 14px;border-left:4px solid var(--ochre);background:var(--paper-2);border-radius:0 10px 10px 0;font-size:1.02rem;font-variant-numeric:tabular-nums}
+.say b{font-weight:700}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.slabel{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.slabel output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--ochre);height:28px}
+.toggles{display:flex;flex-direction:column;gap:8px}
+.toggles label{display:flex;align-items:center;gap:8px;font-size:.95rem;cursor:pointer}
+.toggles input{width:18px;height:18px;accent-color:var(--steel)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--ochre);background:transparent;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:480px}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA101 Mathematics for Games I · Week 7 · Worked example</p>
+  <h1>A soft cap hides in the total and shouts in the gain</h1>
+  <p class="lede">Both charts show the same Vigor stat. On the left the HP curve just bends a little. On the right, the HP that one more point buys drops in steps at Vigor 40 and 60.</p>
+</header>
+
+<section class="panel">
+  <fieldset class="modes" id="modes">
+    <legend>Curve family</legend>
+    <label><input type="radio" name="mode" value="soft" checked><span>Elden Ring (soft caps)</span></label>
+    <label><input type="radio" name="mode" value="hard"><span>Hard cap (League CDR style)</span></label>
+  </fieldset>
+
+  <div class="charts">
+    <figure>
+      <figcaption id="capL">Total HP<small id="subL">Vigor 1 to 99</small></figcaption>
+      <canvas id="cTot" role="img" aria-label="Total HP versus Vigor"></canvas>
+      <div class="legend" id="legL"></div>
+    </figure>
+    <figure>
+      <figcaption id="capR">HP from one more point<small id="subR">HP(V) − HP(V − 1)</small></figcaption>
+      <canvas id="cGain" role="img" aria-label="HP gained from each extra point of Vigor"></canvas>
+      <div class="legend" id="legR"></div>
+    </figure>
+    <figure class="wide" id="figHaste" hidden>
+      <figcaption>The fix: ability haste, 10 s base cooldown<small>Casts per minute = 6 × (1 + h/100). A straight line with no dead zone. Its own axes: haste 0 to 150, casts per minute 0 to 16.</small></figcaption>
+      <canvas id="cHaste" role="img" aria-label="Casts per minute versus ability haste, a straight line" style="height:220px"></canvas>
+      <div class="legend"><span><i style="background:var(--moss)"></i>Ability haste → casts per minute</span><span><i class="dash" style="color:var(--blood)"></i>Old CDR → casts per minute (x read as CDR %)</span></div>
+    </figure>
+  </div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="readout" id="stats"></div>
+
+  <div class="controls">
+    <div>
+      <div id="softCtl">
+        <label class="slabel" for="vig">Vigor <output id="oVig" for="vig">40</output></label>
+        <input id="vig" type="range" min="1" max="99" step="1" value="40">
+        <div class="presets" role="group" aria-label="Jump to Vigor">
+          <button class="chip" data-v="25">25</button><button class="chip" data-v="39">39</button><button class="chip" data-v="40">40</button><button class="chip" data-v="41">41</button><button class="chip" data-v="60">60</button><button class="chip" data-v="61">61</button><button class="chip" data-v="99">99</button>
+        </div>
+      </div>
+      <div id="hardCtl" hidden>
+        <label class="slabel" for="cdr">CDR on items (%) <output id="oCdr" for="cdr">50</output></label>
+        <input id="cdr" type="range" min="0" max="80" step="1" value="50">
+        <label class="slabel" for="haste" style="margin-top:10px">Ability haste <output id="oHaste" for="haste">100</output></label>
+        <input id="haste" type="range" min="0" max="150" step="1" value="100">
+      </div>
+    </div>
+    <div class="toggles" id="toggles">
+      <label><input type="checkbox" id="tWiki" checked> Show wiki formula</label>
+      <label><input type="checkbox" id="tModel" checked> Show straight-line model</label>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap" id="tableWrap">
+    <table>
+      <caption id="tcap">Values from the lecture table (current row highlighted)</caption>
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Wiki curve: community formula (Fextralife, 2026), Elden Ring "HP" page, fitted to the in-game HP table; the game does not publish its formula. Straight-line model: the lecture's three pieces through (25, 800), (40, 1450), (60, 1900), (99, 2100). League of Legends CDR cap of 40% and ability haste formula base × 100 / (100 + haste): League of Legends Wiki, patch 10.23 (November 2020). All shapes are generic.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f1=n=>n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+
+// ---- Elden Ring formulas (lecture spec) ----
+function wiki(V){
+  let x;
+  if(V<=25) x=300+500*Math.pow((V-1)/24,1.5);
+  else if(V<=40) x=800+650*Math.pow((V-25)/15,1.1);
+  else if(V<=60) x=1450+450*(1-Math.pow(1-(V-40)/20,1.2));
+  else x=1900+200*(1-Math.pow(1-(V-60)/39,1.2));
+  return Math.floor(x+1e-9);
+}
+function wikiRaw(V){ // continuous, for drawing between integers
+  if(V<=25) return 300+500*Math.pow(Math.max(0,(V-1)/24),1.5);
+  if(V<=40) return 800+650*Math.pow((V-25)/15,1.1);
+  if(V<=60) return 1450+450*(1-Math.pow(1-(V-40)/20,1.2));
+  return 1900+200*(1-Math.pow(Math.max(0,1-(V-60)/39),1.2));
+}
+function model(V){ // valid 25..99; below 25 it is the first piece extended
+  if(V<=40) return 800+(650/15)*(V-25);
+  if(V<=60) return 1450+22.5*(V-40);
+  return 1900+(200/39)*(V-60);
+}
+function slope(V){ // model slope for the step from V-1 to V
+  if(V<=25) return null;
+  if(V<=40) return 650/15;
+  if(V<=60) return 22.5;
+  return 200/39;
+}
+const gain=V=>wiki(V)-wiki(V-1);
+function slopeTxt(V){const s=slope(V);return s==null?'—':s===22.5?'22.5':s>40?'43.3':'5.13';}
+const cdTxt=v=>v.toFixed(2).replace(/0$/,'');
+
+// ---- League formulas ----
+const eff=c=>Math.min(c,40);
+const cdrCasts=c=>60/(10*(1-eff(c)/100));
+const hasteCasts=h=>6*(1+h/100);
+const hasteCd=h=>10*100/(100+h);
+
+let mode='soft',V=40,C=50,H=100,showWiki=true,showModel=true;
+
+// ---- drawing helpers ----
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);
+  return {g,w:r.width,h:r.height};
+}
+function frame(c,o){ // o: x0,x1,y0,y1,xt,yt,yf,xl,yl,pad
+  const pad=o.pad||{l:50,r:12,t:14,b:36};
+  const X=x=>pad.l+(c.w-pad.l-pad.r)*(x-o.x0)/(o.x1-o.x0);
+  const Y=y=>pad.t+(c.h-pad.t-pad.b)*(1-(y-o.y0)/(o.y1-o.y0));
+  const g=c.g;g.lineWidth=1;g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');
+  o.yt.forEach(v=>{g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(c.w-pad.r,Y(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(o.yf(v),pad.l-6,Y(v));});
+  o.xt.forEach(v=>{g.textAlign='center';g.textBaseline='top';g.fillText(String(v),X(v),c.h-pad.b+5);});
+  g.textAlign='right';g.textBaseline='bottom';g.fillText(o.xl,c.w-pad.r,c.h-1);
+  if(o.yl){g.textAlign='left';g.textBaseline='top';g.fillText(o.yl,pad.l+4,1);}
+  return {X,Y,pad};
+}
+function clipPlot(c,m){c.g.save();c.g.beginPath();c.g.rect(m.pad.l,m.pad.t-2,c.w-m.pad.l-m.pad.r,c.h-m.pad.t-m.pad.b+4);c.g.clip();}
+function line(c,m,pts,color,width,dash){
+  const g=c.g;g.strokeStyle=color;g.lineWidth=width||2.5;g.setLineDash(dash||[]);g.beginPath();
+  pts.forEach((p,i)=>i?g.lineTo(m.X(p[0]),m.Y(p[1])):g.moveTo(m.X(p[0]),m.Y(p[1])));g.stroke();g.setLineDash([]);
+}
+function guide(c,m,x,label,dy){
+  const g=c.g;g.strokeStyle=css('--ink-soft');g.globalAlpha=.45;g.lineWidth=1;g.setLineDash([2,4]);
+  g.beginPath();g.moveTo(m.X(x),m.pad.t);g.lineTo(m.X(x),c.h-m.pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText(label,m.X(x)+3,m.pad.t+(dy||0));
+}
+function marker(c,m,x,y,color){
+  const g=c.g;g.strokeStyle=css('--ink');g.globalAlpha=.35;g.lineWidth=1;g.setLineDash([4,4]);
+  g.beginPath();g.moveTo(m.X(x),m.pad.t);g.lineTo(m.X(x),c.h-m.pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  if(y==null)return;
+  g.fillStyle=color;g.beginPath();g.arc(m.X(x),m.Y(y),6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+}
+function bars(c,m,from,to,f,colorFn){
+  const g=c.g,bw=Math.max(1,(m.X(to)-m.X(from))/(to-from+1)*0.78);
+  for(let x=from;x<=to;x++){const v=f(x);g.fillStyle=colorFn(x);g.fillRect(m.X(x)-bw/2,m.Y(v),bw,m.Y(0)-m.Y(v));}
+}
+function range(a,b,n){const o=[];for(let i=0;i<=n;i++)o.push(a+(b-a)*i/n);return o;}
+
+// ---- soft cap mode ----
+function drawSoft(){
+  let c=setup($('cTot'));
+  let m=frame(c,{x0:1,x1:99,y0:0,y1:2200,xt:[1,25,40,60,80,99],yt:[0,550,1100,1650,2200],yf:v=>fmt(v),xl:'Vigor',yl:''});
+  guide(c,m,40,'soft cap');guide(c,m,60,'soft cap',15);
+  clipPlot(c,m);
+  if(showModel){
+    const x0=25-800/(650/15);
+    line(c,m,[[x0,0],[25,800]],css('--steel'),2,[6,5]);
+    line(c,m,[[25,800],[40,1450],[60,1900],[99,2100]],css('--steel'),2.5);
+    c.g.fillStyle=css('--steel');c.g.font='italic 11px '+css('--sans');c.g.textAlign='left';c.g.textBaseline='middle';
+    c.g.fillText('outside model',m.X(14),m.Y(180));
+  }
+  if(showWiki) line(c,m,range(1,99,392).map(x=>[x,wikiRaw(x)]),css('--ochre'),2.5);
+  c.g.restore();
+  const my=showWiki?wiki(V):(V>=25&&showModel?model(V):null);
+  marker(c,m,V,my,showWiki?css('--ochre'):css('--steel'));
+
+  c=setup($('cGain'));
+  m=frame(c,{x0:1,x1:100,y0:0,y1:60,xt:[2,25,40,60,80,99],yt:[0,15,30,45,60],yf:v=>fmt(v),xl:'Vigor',yl:'HP per point'});
+  guide(c,m,40.5,'soft cap');guide(c,m,60.5,'soft cap',15);
+  if(showWiki) bars(c,m,2,99,gain,x=>x===V?css('--blood'):css('--ochre'));
+  if(showModel){
+    const s=[[25.5,650/15],[40.5,650/15],[40.5,22.5],[60.5,22.5],[60.5,200/39],[99.5,200/39]];
+    line(c,m,s,css('--steel'),2.5);
+  }
+  marker(c,m,V,null);
+
+  $('legL').innerHTML=`<span${showWiki?'':' hidden'}><i style="background:var(--ochre)"></i>Wiki formula, community formula (Fextralife, 2026)</span><span${showModel?'':' hidden'}><i style="background:var(--steel)"></i>Straight-line model</span><span${showModel?'':' hidden'}><i class="dash" style="color:var(--steel)"></i>Model below 25 (outside model)</span>`;
+  $('legR').innerHTML=`<span${showWiki?'':' hidden'}><i class="bar" style="background:var(--ochre)"></i>Wiki: HP(V) − HP(V − 1)</span><span${showWiki?'':' hidden'}><i class="bar" style="background:var(--blood)"></i>Point that took you to V</span><span${showModel?'':' hidden'}><i style="background:var(--steel)"></i>Model slopes 43.3, 22.5, 5.13</span>`;
+}
+function readSoft(){
+  const mod=V>=25?f1(model(V)):'outside model';
+  const last=V>1?'+'+gain(V):'none (Vigor 1 is the start)';
+  const next=V<99?'+'+gain(V+1):'none (99 is the maximum)';
+  $('say').innerHTML=`Vigor <b>${V}</b>: model HP = <b>${mod}</b>, wiki HP = <b>${fmt(wiki(V))}</b>, last point gave <b>${last}</b> HP, next point gives <b>${next}</b> HP.`;
+  const sl=slope(V);
+  $('stats').innerHTML=
+    `<div class="stat" style="--c:var(--ochre)"><b id="sWiki">${fmt(wiki(V))}</b><span>wiki HP</span></div>`+
+    `<div class="stat" style="--c:var(--steel)"><b id="sModel">${mod}</b><span>model HP</span></div>`+
+    `<div class="stat" style="--c:var(--blood)"><b id="sLast">${V>1?'+'+gain(V):'—'}</b><span>last point gave</span></div>`+
+    `<div class="stat" style="--c:var(--moss)"><b id="sNext">${V<99?'+'+gain(V+1):'—'}</b><span>next point gives</span></div>`;
+  $('oVig').textContent=V;
+  let s;
+  if(V<25) s=`Below 25 the straight-line model does not apply. The wiki curve is still speeding up here: each point buys more than the one before.`;
+  else if(V<=40) s=`You are on the first piece. The model says every point is worth 43.3 HP. The last point gave +${gain(V)}. At 40 the gain is +48, and the very next point gives +26. That drop is the soft cap. On the total curve it is only a slight bend.`;
+  else if(V<=60) s=`Second piece. Points here are worth about half as much as before 40 (model 22.5 per point). By 60 the wiki gain has fallen to +13, and the next point gives +6.`;
+  else s=`Past the second soft cap. The model gives 5.13 HP per point, a tenth of the peak. Vigor 60 to 99 costs 39 levels for 200 HP. This is where players stop investing.`;
+  $('insight').textContent=s;
+  const rows=[1,10,20,25,30,39,40,41,50,59,60,61,80,99];
+  $('tcap').textContent='Values from the lecture table (current row highlighted)';
+  $('thead').innerHTML='<tr><th>Vigor</th><th>Model HP</th><th>Wiki HP</th><th>HP from last point (wiki)</th><th>Model slope</th></tr>';
+  $('tbody').innerHTML=rows.map(r=>`<tr class="${r===V?'here':''}"><td>${r}</td><td>${r>=25?f1(model(r)):'—'}</td><td>${fmt(wiki(r))}</td><td>${r>1?'+'+gain(r):'—'}</td><td>${slopeTxt(r)}</td></tr>`).join('');
+}
+
+// ---- hard cap mode ----
+function drawHard(){
+  let c=setup($('cTot'));
+  let m=frame(c,{x0:0,x1:80,y0:0,y1:50,xt:[0,20,40,60,80],yt:[0,10,20,30,40,50],yf:v=>v+'%',xl:'CDR on items (%)',yl:''});
+  guide(c,m,40,'hard cap');
+  line(c,m,[[0,0],[40,40],[80,40]],css('--blood'),2.5);
+  marker(c,m,C,eff(C),css('--blood'));
+
+  c=setup($('cGain'));
+  m=frame(c,{x0:0,x1:81,y0:0,y1:1.2,xt:[1,20,40,60,80],yt:[0,0.25,0.5,0.75,1],yf:v=>v.toFixed(2).replace(/0$/,''),xl:'CDR on items (%)',yl:'effective % per point'});
+  guide(c,m,40.5,'hard cap');
+  bars(c,m,1,80,x=>eff(x)-eff(x-1),x=>x===C?css('--ink'):css('--blood'));
+  line(c,m,[[0.5,1],[40.5,1],[40.5,0],[80.5,0]],css('--blood'),2);
+  marker(c,m,C,null);
+
+  c=setup($('cHaste'));
+  m=frame(c,{x0:0,x1:150,y0:0,y1:16,xt:[0,25,50,75,100,125,150],yt:[0,4,8,12,16],yf:v=>String(v),xl:'ability haste (or CDR %)',yl:'casts per minute'});
+  line(c,m,range(0,80,160).map(x=>[x,cdrCasts(x)]),css('--blood'),2,[6,5]);
+  line(c,m,[[0,6],[150,15]],css('--moss'),2.5);
+  marker(c,m,H,hasteCasts(H),css('--moss'));
+
+  $('legL').innerHTML='<span><i style="background:var(--blood)"></i>effective = min(c, 40)</span>';
+  $('legR').innerHTML='<span><i class="bar" style="background:var(--blood)"></i>effective(c) − effective(c − 1)</span>';
+}
+function readHard(){
+  const e=eff(C),cd=10*(1-e/100);
+  $('say').innerHTML=`CDR <b>${C}%</b>: effective CDR = <b>${e}%</b>, cooldown <b>${cd.toFixed(1)} s</b>, <b>${f1(cdrCasts(C))}</b> casts per minute. Last point gave <b>+${C>0?eff(C)-eff(C-1):0}</b>. Ability haste <b>${H}</b>: cooldown <b>${cdTxt(hasteCd(H))} s</b>, <b>${f1(hasteCasts(H))}</b> casts per minute.`;
+  $('stats').innerHTML=
+    `<div class="stat" style="--c:var(--blood)"><b id="sEff">${e}%</b><span>effective CDR</span></div>`+
+    `<div class="stat" style="--c:var(--blood)"><b id="sCdrCasts">${f1(cdrCasts(C))}</b><span>casts/min from CDR</span></div>`+
+    `<div class="stat" style="--c:var(--moss)"><b id="sHasteCd">${cdTxt(hasteCd(H))} s</b><span>cooldown with haste</span></div>`+
+    `<div class="stat" style="--c:var(--moss)"><b id="sHaste">${f1(hasteCasts(H))}</b><span>casts/min from haste</span></div>`;
+  $('oCdr').textContent=C;$('oHaste').textContent=H;
+  $('insight').textContent=C>40
+    ?`At ${C}% CDR you get the same 40% as at exactly 40. The last ${C-40} points bought nothing. That dead zone is what a hard cap creates. Haste has no dead zone: every 10 haste adds 0.6 casts per minute.`
+    :`Below the cap each CDR point is worth one full point. At 40 the gain falls straight to zero. Compare the green haste line: it never flattens, so it has no dead zone.`;
+  $('tcap').textContent='Values from the lecture tables';
+  $('thead').innerHTML='<tr><th>Input</th><th>Effective</th><th>Cooldown (s)</th><th>Casts per minute</th></tr>';
+  const r1=[0,20,40,50].map(c=>`<tr class="${c===C?'here':''}"><td>CDR ${c}%</td><td>${eff(c)}%</td><td>${(10*(1-eff(c)/100)).toFixed(1)}</td><td>${f1(cdrCasts(c))}</td></tr>`);
+  const r2=[0,25,50,100,150].map(h=>`<tr class="${h===H?'here':''}"><td>Haste ${h}</td><td>—</td><td>${cdTxt(hasteCd(h))}</td><td>${f1(hasteCasts(h))}</td></tr>`);
+  $('tbody').innerHTML=r1.concat(r2).join('');
+}
+
+function draw(){mode==='soft'?drawSoft():drawHard();}
+function update(){
+  const soft=mode==='soft';
+  $('softCtl').hidden=!soft;$('hardCtl').hidden=soft;$('toggles').hidden=!soft;$('figHaste').hidden=soft;
+  $('capL').firstChild.nodeValue=soft?'Total HP':'Effective CDR';
+  $('subL').textContent=soft?'Vigor 1 to 99':'effective = min(c, 40), c = 0 to 80%';
+  $('capR').firstChild.nodeValue=soft?'HP from one more point':'Effective CDR from one more point';
+  $('subR').textContent=soft?'HP(V) − HP(V − 1), Vigor 2 to 99':'1 per point up to 40, then 0';
+  $('cTot').setAttribute('aria-label',soft?'Total HP versus Vigor, a gentle curve':'Effective CDR versus CDR on items, a line with a flat tail after 40');
+  $('cGain').setAttribute('aria-label',soft?'HP gained per Vigor point, dropping in steps at 40 and 60':'Effective CDR gained per point, 1 up to 40 then 0');
+  soft?readSoft():readHard();draw();
+}
+
+$('vig').addEventListener('input',e=>{V=+e.target.value;update();});
+$('cdr').addEventListener('input',e=>{C=+e.target.value;update();});
+$('haste').addEventListener('input',e=>{H=+e.target.value;update();});
+$('tWiki').addEventListener('change',e=>{showWiki=e.target.checked;update();});
+$('tModel').addEventListener('change',e=>{showModel=e.target.checked;update();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{V=+b.dataset.v;$('vig').value=V;update();}));
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',e=>{mode=e.target.value;update();}));
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+})();
+</script>
+</body>
+</html>

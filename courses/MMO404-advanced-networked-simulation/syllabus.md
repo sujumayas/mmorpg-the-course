@@ -28,7 +28,7 @@ Large battles, seamless worlds and distributed simulation: the frontier of MMO e
 | 12 | AI at scale | _todo_ | _todo_ |
 | 13 | Cost engineering | _todo_ | _todo_ |
 | 14 | Case study presentations | _todo_ | _todo_ |
-| 15 | Final: seamless 2-server handoff demo | _todo_ | _todo_ |
+| 15 | Final: seamless 2-server handoff demo | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

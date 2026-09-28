@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Burst vs sustain — GD203 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.12rem;margin:0}
+.lede b{font-variant-numeric:tabular-nums}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto 1fr;gap:14px;align-items:start}
+.charts{grid-column:1;grid-row:1 / span 2;display:grid;gap:14px;min-width:0}
+.target{grid-column:2;grid-row:1}
+.weapons{grid-column:2;grid-row:2}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr);grid-template-rows:none}.charts,.target,.weapons{grid-column:1;grid-row:auto}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:14px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+.fighead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px;margin:0 0 6px}
+figcaption{font-family:var(--serif);font-size:1.05rem}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:600 .8rem var(--sans);padding:6px 10px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.segs{display:flex;flex-wrap:wrap;gap:6px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.86rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.leads{font-size:.9rem;margin:8px 0 0;font-variant-numeric:tabular-nums}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--ochre);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ochre);color:var(--paper)}
+.chip.p{border-color:var(--ink)}
+.chip.p[aria-pressed="true"]{background:var(--ink)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+h2{font:700 .95rem var(--sans);margin:0 0 6px}
+.prm{display:grid;grid-template-columns:minmax(0,1fr) 78px;gap:2px 8px;align-items:center;margin:6px 0}
+.prm label{grid-column:1 / span 2;font-weight:600;font-size:.88rem}
+.prm input[type=range]{width:100%;height:26px;margin:0;accent-color:var(--c,var(--ink))}
+.prm input[type=number]{width:78px;font:600 .9rem var(--sans);padding:4px 6px;border:1.5px solid var(--grid);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.prm input:disabled{opacity:.4}
+.check{display:flex;gap:6px;align-items:center;font-size:.86rem;margin:2px 0 4px}
+.check input{width:18px;height:18px;accent-color:var(--c)}
+.wpn{border-left:4px solid var(--c);padding-left:10px;margin-bottom:12px}
+.wpn h2{color:var(--ink)}
+.note{font-family:var(--serif);font-size:.95rem;margin:8px 0 0;color:var(--ink)}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th.a,td.a{color:var(--blood)} th.b,td.b{color:var(--steel)}
+tr.here td{font-weight:700;background:var(--paper)}
+.readout{margin-bottom:12px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD203 Combat and Progression Design · Week 5 · Worked example</p>
+  <h1>Which weapon wins depends on how long the fight lasts</h1>
+  <p class="lede" id="caption" aria-live="polite"></p>
+  <div class="presets"><button class="chip" id="try400" aria-pressed="false">Try 400</button></div>
+</header>
+
+<div class="layout">
+  <div class="charts">
+    <section class="panel" aria-labelledby="capTop">
+      <figure>
+        <div class="fighead">
+          <figcaption id="capTop">Damage dealt so far<small id="subTop">Step curves: each jump is one hit. The band takes the color of the weapon that leads.</small></figcaption>
+          <div class="segs">
+            <div class="seg" role="group" aria-label="Top panel shows">
+              <button data-mode="dmg" aria-pressed="true">Damage dealt</button><button data-mode="hp" aria-pressed="false">Target health</button>
+            </div>
+            <div class="seg" role="group" aria-label="Time range">
+              <button data-t="10" aria-pressed="false">10 s</button><button data-t="30" aria-pressed="true">30 s</button><button data-t="120" aria-pressed="false">120 s</button>
+            </div>
+          </div>
+        </div>
+        <canvas id="cTop" role="img" aria-label="Cumulative damage over time for both weapons"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--blood)"></i><span id="lgA">A</span></span>
+          <span><i style="background:var(--steel)"></i><span id="lgB">B</span></span>
+          <span><i style="background:var(--ochre)"></i>Target health H</span>
+        </div>
+        <p class="leads" id="leads"></p>
+      </figure>
+    </section>
+
+    <section class="panel" aria-labelledby="capBot">
+      <figure>
+        <div class="fighead">
+          <figcaption id="capBot">Time to kill by target health<small>Every enemy in your game at once. The dashed line marks the current H.</small></figcaption>
+          <div class="seg" role="group" aria-label="Health range">
+            <button data-h="500" aria-pressed="false">500</button><button data-h="1000" aria-pressed="true">1,000</button><button data-h="5000" aria-pressed="false">5,000</button>
+          </div>
+        </div>
+        <canvas id="cBot" role="img" aria-label="Time to kill versus target health for both weapons"></canvas>
+      </figure>
+      <div class="table-wrap">
+        <table aria-label="Time to kill at the lecture's target health values">
+          <thead><tr><th>Health · TTK (s)</th><th class="a" id="thA1">A</th><th class="b" id="thB1">B</th><th>Faster</th></tr></thead>
+          <tbody id="ttkBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel target" aria-label="Target and presets">
+    <h2>Presets</h2>
+    <div class="presets" role="group" aria-label="Presets">
+      <button class="chip p" data-p="cannon" aria-pressed="true">Cannon vs repeater</button>
+      <button class="chip p" data-p="axe" aria-pressed="false">Axe vs sword (Minecraft Java)</button>
+      <button class="chip p" data-p="troll" aria-pressed="false">Troll</button>
+    </div>
+    <div class="table-wrap readout">
+      <table aria-label="Weapon readouts" aria-live="polite">
+        <thead><tr><th></th><th class="a" id="thA2">A</th><th class="b" id="thB2">B</th></tr></thead>
+        <tbody id="readBody"></tbody>
+      </table>
+    </div>
+    <div class="prm" style="--c:var(--ochre)"><label for="Hn">Target health H</label><input type="range" id="Hr" min="1" max="5000" step="1" aria-label="Target health slider"><input type="number" id="Hn" min="1" max="5000" step="1"></div>
+    <div class="prm" style="--c:var(--ochre)"><label for="rn">Regeneration r (health per second)</label><input type="range" id="rr" min="0" max="200" step="1" aria-label="Regeneration slider"><input type="number" id="rn" min="0" max="200" step="1"></div>
+    <p class="note" id="note"></p>
+  </section>
+
+  <section class="panel weapons" aria-label="Weapon parameters">
+    <div class="wpn" style="--c:var(--blood)" id="wA"></div>
+    <div class="wpn" style="--c:var(--steel)" id="wB"></div>
+  </section>
+</div>
+
+<footer>Model from the week 5 lecture: hits at c × L + k × Δ with L = n × Δ + R, first hit at t = 0. With regeneration the target heals r per second between hits, capped at H, and "never" means no kill by 600 s. Minecraft preset: Java Edition 1.9 onward, diamond axe 9 damage at 1.0 attacks per second, diamond sword 7 at 1.6 (Minecraft Wiki, Axe and Sword pages). Cannon and repeater are invented weapons.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const EPS=1e-9, CAP=600;
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+function fs(t){ // seconds: at least one decimal, up to three
+  if(t===Infinity)return 'never';
+  return (Math.round(t*1000)/1000).toFixed(3).replace(/0+$/,'').replace(/\.$/,'.0');
+}
+function f2(x){return x.toFixed(2);}
+function trim(x,dp){return (+x.toFixed(dp)).toString();}
+
+const PRESETS={
+  cannon:{A:{name:'Cannon',d:90,n:4,inf:false,dt:0.8,R:4},B:{name:'Repeater',d:15,n:4,inf:true,dt:0.2,R:0},H:360,r:0,T:30,Hmax:1000,
+    note:'Two invented weapons with clean arithmetic. The cannon fires 4 shots of 90, then reloads for 4.0 s.'},
+  axe:{A:{name:'Axe',d:9,n:1,inf:true,dt:1.0,R:0},B:{name:'Sword',d:7,n:1,inf:true,dt:0.625,R:0},H:20,r:0,T:10,Hmax:500,
+    note:'Minecraft Java Edition, 1.9 onward: diamond axe 9 damage at 1.0 attacks per second, diamond sword 7 at 1.6 (one swing every 0.625 s). Armor and other mitigation are ignored in this preset.'},
+  troll:{A:{name:'Cannon',d:90,n:4,inf:false,dt:0.8,R:4},B:{name:'Repeater',d:15,n:4,inf:true,dt:0.2,R:0},H:300,r:60,T:30,Hmax:1000,
+    note:'The troll regenerates 60 health per second, capped at full. The cannon deals 360 in 2.4 s but the troll heals 144 of it back during the burst, then heals to full during the reload.'}
+};
+let S={}; let preset='cannon'; let mode='dmg'; let userMode=false;
+
+function wOf(x){return {d:x.d,n:x.inf?Infinity:x.n,dt:x.dt,R:x.R};}
+function cycle(w){return w.n===Infinity?Infinity:w.n*w.dt+w.R;}
+function hitTime(w,i){if(w.n===Infinity)return i*w.dt;const c=Math.floor(i/w.n),k=i%w.n;return c*cycle(w)+k*w.dt;}
+function hitsUpTo(w,T){const a=[];for(let i=0;;i++){const t=hitTime(w,i);if(t>T+EPS||a.length>20000)break;a.push(t);}return a;}
+function ttk(w,H,r){
+  if(!(r>0)){const m=Math.max(1,Math.ceil(H/w.d-EPS));const t=hitTime(w,m-1);return t;}
+  let h=H,last=0;
+  for(let i=0;;i++){const t=hitTime(w,i);if(t>CAP+EPS)return Infinity;h=Math.min(H,h+r*(t-last));last=t;h-=w.d;if(h<=EPS)return t;}
+}
+function D(w,t){
+  if(t<-EPS)return 0;let hits;
+  if(w.n===Infinity)hits=Math.floor(t/w.dt+EPS)+1;
+  else{const l=cycle(w),c=Math.floor(t/l+EPS),rem=t-c*l;hits=c*w.n+Math.min(w.n,Math.floor(rem/w.dt+EPS)+1);}
+  return hits*w.d;
+}
+// target health path: list of [t,h] vertices, ending at kill or T
+function hpPath(w,H,r,T){
+  const pts=[[0,H]];let h=H,last=0;
+  for(let i=0;;i++){
+    const t=hitTime(w,i);if(t>T+EPS)break;
+    if(r>0){const full=last+(H-h)/r; if(h<H&&full<t){pts.push([full,H]);} h=Math.min(H,h+r*(t-last));}
+    pts.push([t,h]);h-=w.d;last=t;pts.push([t,Math.max(0,h)]);
+    if(h<=EPS)return {pts,kill:t};
+    if(pts.length>40000)break;
+  }
+  if(r>0){const full=last+(H-h)/r;if(full<T&&h<H){pts.push([full,H]);pts.push([T,H]);}else pts.push([T,Math.min(H,h+r*(T-last))]);}
+  else pts.push([T,h]);
+  return {pts,kill:null};
+}
+function hpAt(path,t){ // linear interpolation, right-continuous at hits
+  const p=path.pts;if(path.kill!==null&&t>=path.kill-EPS)return 0;
+  let v=p[0][1];
+  for(let i=0;i<p.length;i++){if(p[i][0]<=t+EPS)v=p[i][1];else{const a=p[i-1];if(a&&p[i][0]>a[0])v=a[1]+(p[i][1]-a[1])*(t-a[0])/(p[i][0]-a[0]);break;}}
+  return v;
+}
+function leadIntervals(A,B,T){
+  let ev=hitsUpTo(A,T).concat(hitsUpTo(B,T)).sort((x,y)=>x-y);const e=[];
+  for(const t of ev)if(!e.length||t-e[e.length-1]>1e-7)e.push(t);
+  const out=[];
+  for(let i=0;i<e.length;i++){
+    const a=D(A,e[i]),b=D(B,e[i]),who=a>b+EPS?'A':b>a+EPS?'B':'tie';
+    if(out.length&&out[out.length-1].who===who)continue;
+    if(out.length)out[out.length-1].end=e[i];
+    out.push({who,start:e[i],end:null,a,b});
+  }
+  return out;
+}
+
+// ---------- controls ----------
+const PRM=[['d','Damage per hit d',1,500,1],['n','Hits before reload n',1,50,1],['dt','Time between hits Δ (s)',0.05,5,0.05],['R','Reload R (s)',0,15,0.1]];
+function buildWeapon(k){
+  let h=`<h2 id="nm${k}">${k}</h2>`;
+  for(const [p,lab,mn,mx,st] of PRM){
+    h+=`<div class="prm"><label for="${k}${p}n">${lab}</label><input type="range" id="${k}${p}r" min="${mn}" max="${mx}" step="${st}" aria-label="${k} ${lab} slider"><input type="number" id="${k}${p}n" min="${mn}" max="${mx}" step="${st}"></div>`;
+    if(p==='n')h+=`<label class="check"><input type="checkbox" id="${k}inf"> No reload (never pauses)</label>`;
+  }
+  $('w'+k).innerHTML=h;
+  for(const [p,,mn,mx] of PRM){
+    const set=v=>{v=+v;if(!isFinite(v))return;v=Math.min(mx,Math.max(mn,v));if(p==='n')v=Math.round(v);S[k][p]=v;S[k].name=null;markCustom();sync();update();};
+    $(k+p+'r').addEventListener('input',e=>set(e.target.value));
+    $(k+p+'n').addEventListener('change',e=>set(e.target.value));
+  }
+  $(k+'inf').addEventListener('change',e=>{S[k].inf=e.target.checked;S[k].name=null;markCustom();sync();update();});
+}
+buildWeapon('A');buildWeapon('B');
+function markCustom(){preset=null;document.querySelectorAll('.chip.p').forEach(b=>b.setAttribute('aria-pressed','false'));}
+function nameOf(k){return S[k].name||('Weapon '+k);}
+function sync(){
+  for(const k of ['A','B']){
+    for(const [p] of PRM){$(k+p+'r').value=S[k][p];$(k+p+'n').value=S[k][p];}
+    $(k+'inf').checked=S[k].inf;$(k+'nr').disabled=$(k+'nn').disabled=$(k+'Rr').disabled=$(k+'Rn').disabled=S[k].inf;
+    $('nm'+k).textContent=k+' · '+nameOf(k);
+  }
+  $('Hr').value=$('Hn').value=S.H;$('rr').value=$('rn').value=S.r;
+  $('try400').setAttribute('aria-pressed',S.H===400?'true':'false');
+  document.querySelectorAll('[data-t]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.t===S.T?'true':'false'));
+  document.querySelectorAll('[data-h]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.h===S.Hmax?'true':'false'));
+  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode?'true':'false'));
+}
+function load(p){
+  const P=PRESETS[p];preset=p;S={A:{...P.A},B:{...P.B},H:P.H,r:P.r,T:P.T,Hmax:P.Hmax};
+  mode=P.r>0?'hp':'dmg';
+  document.querySelectorAll('.chip.p').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===p?'true':'false'));
+  $('note').textContent=P.note;sync();update();
+}
+function setH(v){v=Math.round(+v);if(!isFinite(v))return;S.H=Math.min(5000,Math.max(1,v));if(S.H>S.Hmax)S.Hmax=[500,1000,5000].find(x=>x>=S.H);sync();update();}
+function setR(v){v=+v;if(!isFinite(v))return;const was=S.r;S.r=Math.min(200,Math.max(0,v));
+  if(was===0&&S.r>0)mode='hp';else if(was>0&&S.r===0)mode='dmg';sync();update();}
+$('Hr').addEventListener('input',e=>setH(e.target.value));$('Hn').addEventListener('change',e=>setH(e.target.value));
+$('rr').addEventListener('input',e=>setR(e.target.value));$('rn').addEventListener('change',e=>setR(e.target.value));
+$('try400').addEventListener('click',()=>setH(400));
+document.querySelectorAll('.chip.p').forEach(b=>b.addEventListener('click',()=>load(b.dataset.p)));
+document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{S.T=+b.dataset.t;sync();update();}));
+document.querySelectorAll('[data-h]').forEach(b=>b.addEventListener('click',()=>{S.Hmax=+b.dataset.h;sync();update();}));
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;sync();update();}));
+
+// ---------- drawing ----------
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){if(v<=0)return 1;const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(x=>x>=v*1.02)||v;}
+const pad={l:50,r:14,t:16,b:34};
+function frame(c,xMax,yMax,xFmt,yFmt,xLabel,yTop){
+  const {g,w,h}=c;g.clearRect(0,0,w,h);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  const top=pad.t+(yTop||0);
+  for(let i=0;i<=4;i++){const y=top+(h-top-pad.b)*(1-i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(yMax*i/4),pad.l-6,y);}
+  for(let i=0;i<=4;i++){const x=pad.l+(w-pad.l-pad.r)*i/4;g.textAlign='center';g.textBaseline='top';g.fillText(xFmt(xMax*i/4),x,h-pad.b+6);}
+  g.textAlign='right';g.fillText(xLabel,w-pad.r,h-14);
+  return {X:x=>pad.l+(w-pad.l-pad.r)*x/xMax,Y:y=>top+(h-top-pad.b)*(1-y/yMax),top};
+}
+function label(g,text,x,y,color,align){
+  g.font='600 12px '+css('--sans');const tw=g.measureText(text).width;
+  const W=g.canvas.getBoundingClientRect().width;
+  let lx=align==='right'?x-tw-8:x+8; lx=Math.max(pad.l+2,Math.min(W-pad.r-tw-4,lx));
+  g.fillStyle=css('--paper');g.globalAlpha=.85;g.fillRect(lx-3,y-9,tw+6,17);g.globalAlpha=1;
+  g.fillStyle=color;g.textAlign='left';g.textBaseline='middle';g.fillText(text,lx,y);
+}
+function dot(g,x,y,color){g.fillStyle=color;g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+
+function drawTop(A,B,tA,tB){
+  const c=setupCanvas($('cTop')),T=S.T,H=S.H,r=S.r,cA=css('--blood'),cB=css('--steel'),cO=css('--ochre');
+  let fa,fb,yMax,pA,pB;
+  if(mode==='dmg'){fa=t=>D(A,t);fb=t=>D(B,t);yMax=niceMax(Math.max(D(A,T),D(B,T),H));}
+  else{pA=hpPath(A,H,r,T);pB=hpPath(B,H,r,T);fa=t=>hpAt(pA,t);fb=t=>hpAt(pB,t);yMax=niceMax(H);}
+  const F=frame(c,T,yMax,v=>trim(v,2),v=>v>=10000?trim(v/1000,1)+'k':fmt(v),'time (s)');
+  const g=c.g,N=Math.max(200,Math.round(c.w*1.5));
+  // lead band
+  g.globalAlpha=.18;
+  for(let i=0;i<N;i++){
+    const t0=T*i/N,t1=T*(i+1)/N,tm=(t0+t1)/2,a=fa(tm),b=fb(tm);
+    if(Math.abs(a-b)<EPS)continue;
+    const aLeads=mode==='dmg'?a>b:a<b;g.fillStyle=aLeads?cA:cB;
+    const y1=F.Y(Math.min(a,b,yMax*1.04)),y2=F.Y(Math.min(Math.max(a,b),yMax*1.04));
+    g.fillRect(F.X(t0),y2,F.X(t1)-F.X(t0)+.5,y1-y2);
+  }
+  g.globalAlpha=1;
+  // H line
+  g.strokeStyle=cO;g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();g.moveTo(F.X(0),F.Y(H));g.lineTo(F.X(T),F.Y(H));g.stroke();g.setLineDash([]);
+  label(g,(mode==='dmg'?'H = ':'full health ')+fmt(H),F.X(0),F.Y(H)-12,cO);
+  // curves
+  const clip=y=>Math.min(y,yMax*1.04);
+  function stepCurve(w,col){
+    const hs=hitsUpTo(w,T);g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();g.moveTo(F.X(0),F.Y(0));
+    let cum=0;for(const t of hs){g.lineTo(F.X(t),F.Y(clip(cum)));cum+=w.d;g.lineTo(F.X(t),F.Y(clip(cum)));}
+    g.lineTo(F.X(T),F.Y(clip(cum)));g.stroke();
+  }
+  function hpCurve(p,col){g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();p.pts.forEach((q,i)=>{const x=F.X(Math.min(q[0],T)),y=F.Y(q[1]);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();}
+  if(mode==='dmg'){stepCurve(B,cB);stepCurve(A,cA);}else{hpCurve(pB,cB);hpCurve(pA,cA);}
+  // crossover labels (damage mode)
+  if(mode==='dmg'){
+    const iv=leadIntervals(A,B,T);let lastX=-1e9;g.font='11px '+css('--sans');
+    for(let i=1;i<iv.length;i++){const x=F.X(iv[i].start);if(x-lastX<44)continue;lastX=x;
+      g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([3,4]);g.beginPath();g.moveTo(x,F.top);g.lineTo(x,c.h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+      g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='bottom';g.fillText(fs(iv[i].start)+' s',x,c.h-pad.b-2);}
+  }
+  // kill markers
+  const kills=[[tA,A,cA,'A'],[tB,B,cB,'B']];let ly=[];
+  for(const [t,w,col,k] of kills){
+    if(t===Infinity||t>T+EPS)continue;
+    const y=mode==='dmg'?F.Y(clip(D(w,t))):F.Y(0),x=F.X(t);dot(g,x,y,col);
+    let yy=mode==='dmg'?y-16:y-16*(ly.length+1);if(mode==='dmg'&&ly.some(v=>Math.abs(v-yy)<18))yy+=34;ly.push(yy);
+    label(g,k+' kills at '+fs(t)+' s',x,yy,col,x>c.w*0.6?'right':'left');
+  }
+  $('cTop').setAttribute('aria-label',(mode==='dmg'?'Cumulative damage':'Target remaining health')+` over ${T} seconds. A kills at ${fs(tA)} s, B kills at ${fs(tB)} s.`);
+}
+
+function drawBot(A,B,tA,tB){
+  const c=setupCanvas($('cBot')),Hm=S.Hmax,r=S.r,cA=css('--blood'),cB=css('--steel');
+  const N=Math.min(r>0?300:700,Math.max(120,Math.round(c.w)));
+  const xs=[],ya=[],yb=[];
+  for(let i=0;i<=N;i++){const H=Math.max(1,Math.round(1+(Hm-1)*i/N));xs.push(H);ya.push(ttk(A,H,r));yb.push(ttk(B,H,r));}
+  const fin=ya.concat(yb).filter(v=>v!==Infinity);const anyNever=fin.length<ya.length*2;
+  const yMax=niceMax(Math.max(1,...fin));
+  const F=frame(c,Hm,yMax,v=>fmt(v),v=>trim(v,1),'target health',anyNever?14:0);
+  const g=c.g,neverY=pad.t;
+  if(anyNever){g.strokeStyle=css('--ink-soft');g.setLineDash([2,3]);g.lineWidth=1;g.beginPath();g.moveTo(pad.l,neverY);g.lineTo(c.w-pad.r,neverY);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ink-soft');g.font='600 11px '+css('--sans');g.textAlign='right';g.textBaseline='middle';g.fillText('never',pad.l-6,neverY);}
+  const Yv=v=>v===Infinity?neverY:F.Y(v);
+  function curve(ys,col){g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();
+    for(let i=0;i<=N;i++){const x=F.X(xs[i]),y=Yv(ys[i]);if(i===0)g.moveTo(x,y);else{g.lineTo(x,Yv(ys[i-1]));g.lineTo(x,y);}}g.stroke();}
+  curve(yb,cB);curve(ya,cA);
+  const x=F.X(Math.min(S.H,Hm));g.strokeStyle=css('--ochre');g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();g.moveTo(x,neverY);g.lineTo(x,c.h-pad.b);g.stroke();g.setLineDash([]);
+  if(S.H<=Hm){dot(g,x,Yv(tB),cB);dot(g,x,Yv(tA),cA);
+    const right=x>c.w*.6;label(g,'A '+fs(tA)+(tA===Infinity?'':' s'),x,Yv(tA)+(Math.abs(Yv(tA)-Yv(tB))<18?-12:0),cA,right?'right':'left');
+    label(g,'B '+fs(tB)+(tB===Infinity?'':' s'),x,Yv(tB)+(Math.abs(Yv(tA)-Yv(tB))<18?12:0),cB,right?'right':'left');}
+  $('cBot').setAttribute('aria-label',`Time to kill for target health 1 to ${fmt(Hm)}. At ${fmt(S.H)} health A takes ${fs(tA)} s and B ${fs(tB)} s.`);
+}
+
+// ---------- text ----------
+function readouts(A,B,tA,tB){
+  const rows=[['Alpha',w=>fmt(w.d)],['Burst DPS',w=>f2(w.d/w.dt)],['Clip damage',w=>w.n===Infinity?'—':fmt(w.n*w.d)],
+    ['Sustained DPS',w=>f2(w.n===Infinity?w.d/w.dt:w.n*w.d/cycle(w))],
+    [`TTK at H ${fmt(S.H)} (s)`,(w,t)=>fs(t)],['Avg DPS over kill',(w,t)=>t===Infinity?'—':t<EPS?'instant':f2(S.H/t)]];
+  $('readBody').innerHTML=rows.map(([n,f])=>`<tr><td>${n}</td><td class="a" data-k="A">${f(A,tA)}</td><td class="b" data-k="B">${f(B,tB)}</td></tr>`).join('');
+  const nA=nameOf('A'),nB=nameOf('B');
+  $('thA2').textContent='A · '+nA;$('thB2').textContent='B · '+nB;$('thA1').textContent=nA;$('thB1').textContent=nB;
+  $('lgA').textContent='A · '+nA;$('lgB').textContent='B · '+nB;
+  const Hs=[90,180,300,360,400,720,1000,3000];if(!Hs.includes(S.H)){Hs.push(S.H);Hs.sort((x,y)=>x-y);}
+  $('ttkBody').innerHTML=Hs.map(H=>{const a=ttk(A,H,S.r),b=ttk(B,H,S.r),win=Math.abs(a-b)<EPS?'Tie':a<b?nA:nB;
+    return `<tr class="${H===S.H?'here':''}"><td>${fmt(H)}</td><td class="a">${fs(a)}</td><td class="b">${fs(b)}</td><td>${win}</td></tr>`;}).join('');
+}
+function leadsText(A,B){
+  if(mode!=='dmg'){$('leads').textContent=`Remaining target health with ${S.r} regeneration per second. The band shows which weapon has the target lower. Kill times: A ${fs(ttk(A,S.H,S.r))}${ttk(A,S.H,S.r)===Infinity?'':' s'}, B ${fs(ttk(B,S.H,S.r))}${ttk(B,S.H,S.r)===Infinity?'':' s'}.`;return;}
+  const iv=leadIntervals(A,B,S.T);
+  const part=x=>{const who=x.who==='tie'?'tie':x.who+' leads';return x.end===null?`${who} from ${fs(x.start)} s`:`${who} on [${fs(x.start)}, ${fs(x.end)})`;};
+  $('leads').textContent='Lead in damage dealt: '+iv.map(part).join(' · ')+'.';
+}
+function caption(A,B,tA,tB){
+  const nA=nameOf('A'),nB=nameOf('B'),H=S.H,r=S.r,sec=t=>t===Infinity?'never':fs(t)+' s';
+  if(r===0&&H<400&&preset==='cannon'){
+    $('caption').innerHTML=`${nA} kills ${fmt(H)} health in <b>${fs(tA)} s</b>. Add ${fmt(400-H)} health and it takes <b>${fs(ttk(A,400,0))} s</b>.`;return;
+  }
+  const kl=(n,t)=>t===Infinity?`${n} <b>never</b> kills`:`${n} kills in <b>${sec(t)}</b>`;
+  let s=`Against ${fmt(H)} health${r>0?` regenerating ${r} per second`:''}, ${kl(nA,tA)} and ${kl(nB,tB)}. `;
+  const clipA=A.n===Infinity?Infinity:A.n*A.d,sA=A.n===Infinity?A.d/A.dt:A.n*A.d/cycle(A);
+  if(tA===Infinity)s+=`${nA}'s clip falls short and its sustained ${f2(sA)} DPS cannot beat ${r} regeneration during the reload.`;
+  else if(tB===Infinity)s+=`${nB}'s damage cannot outpace ${r} regeneration.`;
+  else if(r===0&&clipA<H&&tA>tB)s+=`${fmt(H)} is past ${nA}'s ${fmt(clipA)} clip, so it sits through a ${fs(A.R)} s reload before it can finish.`;
+  else if(Math.abs(tA-tB)<EPS)s+='A tie. Change either weapon slightly and it tips.';
+  else s+=`${tA<tB?nA:nB} is faster at this health.`;
+  $('caption').innerHTML=s;
+}
+function update(){
+  const A=wOf(S.A),B=wOf(S.B),tA=ttk(A,S.H,S.r),tB=ttk(B,S.H,S.r);
+  $('subTop').textContent=mode==='dmg'?'Step curves: each jump is one hit. The band takes the color of the weapon that leads.':'Target health for each weapon: drops on each hit, climbs at r per second, capped at H.';
+  $('capTop').firstChild.textContent=mode==='dmg'?'Damage dealt so far':'Target health remaining';
+  readouts(A,B,tA,tB);leadsText(A,B);caption(A,B,tA,tB);drawTop(A,B,tA,tB);drawBot(A,B,tA,tB);
+}
+let raf=0;function redraw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(update);}
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+load('cannon');
+window.__model={ttk,D,leadIntervals,wOf,load:load,setH,setR,state:()=>S};
+})();
+</script>
+</body>
+</html>

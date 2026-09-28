@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Swing Meter — MA102 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--blood)}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.verdict{margin:14px 0 0;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:5px solid var(--c,var(--ink));font-family:var(--serif);font-size:1.05rem}
+.verdict b{font-family:var(--sans);font-variant-numeric:tabular-nums}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;margin-top:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:240px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend i.line{height:0;border-top:2px dashed var(--ink-soft);background:none}
+.nums{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;margin-top:8px}
+.nums th,.nums td{padding:4px 6px;text-align:right;border-bottom:1px solid var(--grid)}
+.nums th:first-child,.nums td:first-child{text-align:left}
+.nums thead th{font-weight:600;color:var(--ink-soft);font-size:.8rem}
+.sw{color:var(--blood);font-weight:700}.st{color:var(--steel);font-weight:700}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 20px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--blood);height:28px;margin:2px 0}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:0}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:14px}
+.chip,.reset{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.reset{border-color:var(--ink);margin-left:auto}
+.tabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,.table-wrap:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+#p1 canvas,#p2 canvas{height:280px}
+.note{font-family:var(--serif);font-size:.98rem;margin:10px 0 0;max-width:72ch}
+.table-wrap{overflow-x:auto;margin-top:10px}
+.table-wrap .nums{min-width:320px}
+.pt{max-height:260px;overflow-y:auto}
+#longBody td{white-space:nowrap}
+.pt .nums{min-width:0}
+@media (max-width:480px){.nums th,.nums td{padding:4px 3px;font-size:.84rem}}
+tr.here td{background:var(--paper-2);font-weight:700}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA102 Mathematics for Games II · Week 5 · Worked example</p>
+  <h1>Same damage per hit. <em id="headDiff">Not the same kill time.</em></h1>
+  <p class="lede">Both weapons average 20 damage per hit. The swingy one crits, so it often lands its last hit with damage to spare. Against a health pool, that overkill changes the average number of hits to kill.</p>
+  <p class="verdict" id="verdict" aria-live="polite"></p>
+</header>
+
+<section class="panel" aria-label="Controls">
+  <div class="controls">
+    <div>
+      <label for="cIn">Crit chance c <output id="oC">25%</output></label>
+      <input id="cIn" type="range" min="0" max="100" step="1" value="25">
+      <p class="hint">Mean fixed at 20. Swingy base b = 20 / (1 + c(m − 1)) = <b id="oB">16</b></p>
+    </div>
+    <div>
+      <label for="mIn">Crit multiplier m <output id="oM">×2.00</output></label>
+      <input id="mIn" type="range" min="1" max="5" step="0.05" value="2">
+      <p class="hint">Crit hit = m × b = <b id="oCrit">32</b></p>
+    </div>
+    <div>
+      <label for="hIn">Enemy HP H <output id="oH">100</output></label>
+      <input id="hIn" type="range" min="10" max="300" step="1" value="100">
+      <p class="hint">Steady needs ceil(H / 20) = <b id="oTs">5</b> hits</p>
+    </div>
+  </div>
+  <div class="row" role="group" aria-label="Lecture presets for enemy HP">
+    <span class="hint" style="margin-right:4px">Lecture HP:</span>
+    <button class="chip" data-h="32" aria-pressed="false">32</button>
+    <button class="chip" data-h="96" aria-pressed="false">96</button>
+    <button class="chip" data-h="100" aria-pressed="true">100</button>
+    <button class="chip" data-h="112" aria-pressed="false">112</button>
+    <button class="reset" id="reset">Reset</button>
+  </div>
+</section>
+
+<section class="panel" aria-label="Linked views">
+  <div class="charts">
+    <figure>
+      <figcaption>One hit<small>Damage of a single hit and its probability. Dashed line is the shared mean.</small></figcaption>
+      <canvas id="cHit" role="img" aria-label="Per-hit damage distribution"></canvas>
+      <div class="legend"><span><i style="background:var(--steel)"></i>Steady</span><span><i style="background:var(--blood)"></i>Swingy</span><span><i class="line"></i>mean 20</span></div>
+      <table class="nums" aria-label="Per-hit statistics">
+        <thead><tr><th>Per hit</th><th>Mean</th><th>SD</th><th>CV</th></tr></thead>
+        <tbody>
+          <tr><td class="st">Steady</td><td>20.00</td><td>0.00</td><td>0.000</td></tr>
+          <tr><td class="sw">Swingy</td><td id="swMu">—</td><td id="swSd">—</td><td id="swCv">—</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <figure>
+      <figcaption>Hits to kill<small>P(T = n): chance the enemy dies on exactly hit n. Solid lines mark each E[T].</small></figcaption>
+      <canvas id="cKill" role="img" aria-label="Hits to kill distribution"></canvas>
+      <div class="legend"><span><i style="background:var(--steel)"></i>Steady</span><span><i style="background:var(--blood)"></i>Swingy</span></div>
+      <table class="nums" aria-label="Hits to kill statistics">
+        <thead><tr><th>Hits to kill</th><th>E[T]</th><th>SD(T)</th><th>Range</th></tr></thead>
+        <tbody>
+          <tr><td class="st">Steady</td><td id="stE">—</td><td>0.00</td><td id="stR">—</td></tr>
+          <tr><td class="sw">Swingy</td><td id="swE">—</td><td id="swSdT">—</td><td id="swR">—</td></tr>
+        </tbody>
+      </table>
+      <div class="table-wrap pt" tabindex="0" aria-label="Probability table for hits to kill, scrollable">
+        <p class="hint" style="margin:0">Red columns are Swingy; the Steady column is P(T = n) for Steady.</p>
+        <table class="nums">
+          <thead><tr><th>n</th><th class="sw">P(T = n)</th><th class="sw">P(T ≤ n)</th><th class="sw">n × P</th><th class="st">Steady</th></tr></thead>
+          <tbody id="ptBody"></tbody>
+        </table>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<section class="panel" aria-label="Bottom view">
+  <div class="tabs" role="tablist" aria-label="Bottom view">
+    <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Kill time vs HP</button>
+    <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Long fight</button>
+  </div>
+  <div id="p1" role="tabpanel" aria-labelledby="t1">
+    <figure>
+      <figcaption>Expected hits to kill, enemy HP 10 to 300<small>Green bands: HP values where Swingy kills faster on average. Dots follow the HP slider.</small></figcaption>
+      <canvas id="cHp" role="img" aria-label="Expected hits to kill versus enemy HP"></canvas>
+      <div class="legend"><span><i style="background:var(--steel)"></i>Steady, ceil(H / 20)</span><span><i style="background:var(--blood)"></i>Swingy E[T]</span><span><i style="background:var(--moss);opacity:.35"></i>Swingy faster</span></div>
+    </figure>
+    <p class="note" id="hpNote"></p>
+  </div>
+  <div id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+    <figure>
+      <figcaption>Relative spread of total damage over a fight<small>CV of total = per-hit CV / √n. Log scale on fight length.</small></figcaption>
+      <canvas id="cLong" role="img" aria-label="Coefficient of variation of total damage versus fight length"></canvas>
+    </figure>
+    <div class="table-wrap">
+      <table class="nums" aria-label="Long fight values for Swingy">
+        <thead><tr><th>Hits in fight n</th><th>Mean total</th><th>SD of total</th><th>CV of total</th></tr></thead>
+        <tbody id="longBody"></tbody>
+      </table>
+    </div>
+    <p class="note" id="longNote"></p>
+  </div>
+</section>
+
+<footer>Model: each hit deals b, or m × b on a crit with chance c, independent of other hits. The enemy dies on the first hit where total damage reaches H. P(T ≤ n) sums binomial probabilities over crit counts k with b(n + k(m − 1)) ≥ H. Weapons are abstract; no game data is used here.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MU=20,EPS=1e-9;
+const DEF={c:25,m:2,h:100};
+let c=.25,m=2,H=100;
+
+// ---------- model ----------
+function base(){return MU/(1+c*(m-1));}
+function perHit(){const b=base(),v=b*b*(m-1)*(m-1)*c*(1-c),sd=Math.sqrt(Math.max(0,v));return {b,mu:b*(1+c*(m-1)),v,sd,cv:sd/MU};}
+// Distribution of hits-to-kill for the swingy weapon at health h.
+function killDist(h){
+  const b=base(),nMax=Math.max(1,Math.ceil(h/b-EPS));
+  let pmf=[1];const cdf=[0],pT=[0];let prev=0;
+  for(let n=1;n<=nMax;n++){
+    const nx=new Array(n+1).fill(0);
+    for(let k=0;k<n;k++){nx[k]+=pmf[k]*(1-c);nx[k+1]+=pmf[k]*c;}
+    pmf=nx;
+    let P=0;
+    for(let k=0;k<=n;k++) if(b*(n+k*(m-1))>=h-EPS) P+=pmf[k];
+    if(n===nMax) P=1;
+    P=Math.min(1,P);
+    cdf.push(P);pT.push(Math.max(0,P-prev));prev=P;
+    if(P>=1-1e-12){cdf[n]=1;pT[n]=Math.max(0,1-(cdf[n-1]||0));break;}
+  }
+  let E=0,E2=0;for(let n=1;n<pT.length;n++){E+=n*pT[n];E2+=n*n*pT[n];}
+  return {pT,cdf,E,sd:Math.sqrt(Math.max(0,E2-E*E))};
+}
+const steadyT=h=>Math.ceil(h/MU-EPS);
+
+// ---------- canvas helpers ----------
+function setup(cv){
+  const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);
+  return {g,w:r.width,h:r.height};
+}
+function niceMax(v){if(v<=0)return 1;const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=v*1.001)||v;}
+function yGrid(g,w,h,p,yMax,fmtY){
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=p.t+(h-p.t-p.b)*(1-i/4);g.beginPath();g.moveTo(p.l,y);g.lineTo(w-p.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(fmtY(yMax*i/4),p.l-6,y);}
+}
+function xLabel(g,w,h,p,t){g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='bottom';g.fillText(t,w-p.r,h-1);}
+const P={l:44,r:10,t:14,b:36};
+
+// ---------- One hit ----------
+function drawHit(ph){
+  const {g,w,h}=setup($('cHit')),p=P;
+  const crit=m*ph.b,xMax=Math.max(40,Math.ceil((crit+4)/10)*10),xMin=0;
+  yGrid(g,w,h,p,1,v=>v.toFixed(2));
+  const X=x=>p.l+(w-p.l-p.r)*(x-xMin)/(xMax-xMin),Y=y=>p.t+(h-p.t-p.b)*(1-y);
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  const step=xMax>100?40:xMax>60?20:10;
+  for(let x=0;x<=xMax;x+=step)g.fillText(x,X(x),h-p.b+6);
+  xLabel(g,w,h,p,'damage');
+  const bw=Math.max(6,Math.min(18,(w-p.l-p.r)/28));
+  function bar(x,y,col,off){g.fillStyle=col;g.fillRect(X(x)+off-bw/2,Y(y),bw,Y(0)-Y(y));}
+  // Swingy bars (merge if same x)
+  const bars=[];
+  if(1-c>1e-12)bars.push([ph.b,1-c]);
+  if(c>1e-12)bars.push([crit,c]);
+  if(bars.length===2&&Math.abs(bars[0][0]-bars[1][0])<1e-9)bars.splice(0,2,[ph.b,1]);
+  bar(MU,1,css('--steel'),-bw/2-1);
+  bars.forEach(([x,y])=>bar(x,y,css('--blood'),Math.abs(x-MU)<1e-9?bw/2+1:0));
+  g.strokeStyle=css('--ink');g.globalAlpha=.6;g.setLineDash([5,4]);g.lineWidth=1.5;
+  g.beginPath();g.moveTo(X(MU),p.t);g.lineTo(X(MU),Y(0));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.font='600 12px '+css('--sans');g.textBaseline='bottom';
+  bars.forEach(([x,y])=>{g.fillStyle=css('--blood');g.textAlign='center';g.fillText(y.toFixed(2),X(x),Y(y)-2);});
+  $('cHit').setAttribute('aria-label',`One hit. Steady always deals 20. Swingy deals ${fmt1(ph.b)} with probability ${(1-c).toFixed(2)} and ${fmt1(crit)} with probability ${c.toFixed(2)}.`);
+}
+const fmt1=v=>(Math.round(v*100)/100).toString();
+
+// ---------- Hits to kill ----------
+function drawKill(d,ts){
+  const {g,w,h}=setup($('cKill'));
+  const nTop=Math.max(ts,d.pT.length-1),nMin=1;
+  const yMax=1,p={l:P.l,r:P.r,t:34,b:P.b};
+  yGrid(g,w,h,p,yMax,v=>v.toFixed(2));
+  const slots=nTop-nMin+1,sw=(w-p.l-p.r)/slots;
+  const X=n=>p.l+sw*(n-nMin+.5),Y=y=>p.t+(h-p.t-p.b)*(1-y/yMax);
+  const bw=Math.max(1.5,Math.min(16,sw*.38));
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.font='12px '+css('--sans');
+  const every=Math.ceil(slots/(w<420?10:16));
+  for(let n=nMin;n<=nTop;n++)if((n-nMin)%every===0||n===nTop)g.fillText(n,X(n),h-p.b+6);
+  xLabel(g,w,h,p,'hits n');
+  g.fillStyle=css('--steel');g.fillRect(X(ts)-bw-1,Y(1),bw,Y(0)-Y(1));
+  g.fillStyle=css('--blood');
+  for(let n=1;n<d.pT.length;n++){const v=d.pT[n];if(v>0)g.fillRect(X(n)+1,Y(v),bw,Y(0)-Y(v));}
+  // E[T] lines: x position interpolates between slots
+  function eLine(E,col,label,dy){const x=X(E);g.strokeStyle=col;g.lineWidth=2;g.beginPath();g.moveTo(x,p.t);g.lineTo(x,Y(0));g.stroke();
+    g.fillStyle=col;g.font='600 12px '+css('--sans');g.textBaseline='bottom';
+    const tw=g.measureText(label).width;let tx=x+4;g.textAlign='left';if(tx+tw>w-p.r){tx=x-4;g.textAlign='right';}
+    g.fillText(label,tx,dy);}
+  const left=d.E<ts;
+  eLine(ts,css('--steel'),'E[T] '+ts.toFixed(2),left?30:15);
+  eLine(d.E,css('--blood'),'E[T] '+d.E.toFixed(2),left?15:30);
+  $('cKill').setAttribute('aria-label',`Hits to kill at ${H} HP. Steady always ${ts}. Swingy expected ${d.E.toFixed(2)} with SD ${d.sd.toFixed(2)}.`);
+}
+
+// ---------- Kill time vs HP ----------
+let hpCache=null,hpKey='';
+function hpCurve(){
+  const key=c+'|'+m;if(key===hpKey)return hpCache;
+  const arr=[];for(let h=10;h<=300;h++)arr.push({h,sw:killDist(h).E,st:steadyT(h)});
+  hpKey=key;hpCache=arr;return arr;
+}
+function drawHp(){
+  const {g,w,h}=setup($('cHp')),p={l:40,r:12,t:14,b:36};
+  const arr=hpCurve(),yMax=niceMax(Math.max(...arr.map(a=>Math.max(a.sw,a.st))));
+  const X=x=>p.l+(w-p.l-p.r)*(x-10)/290,Y=y=>p.t+(h-p.t-p.b)*(1-y/yMax);
+  // shading where swingy is faster
+  g.fillStyle=css('--moss');g.globalAlpha=.22;
+  arr.forEach(a=>{if(a.sw<a.st-1e-9)g.fillRect(X(a.h-.5),p.t,X(a.h+.5)-X(a.h-.5)+.5,Y(0)-p.t);});
+  g.globalAlpha=1;
+  yGrid(g,w,h,p,yMax,v=>Math.round(v*10)/10+'');
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  [10,50,100,150,200,250,300].forEach(x=>{if(w<420&&(x===50||x===150||x===250))return;g.fillText(x,X(x),h-p.b+6);});
+  xLabel(g,w,h,p,'enemy HP');
+  // steady staircase
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  arr.forEach((a,i)=>{const x0=X(a.h-.5),x1=X(a.h+.5);if(i===0)g.moveTo(X(a.h),Y(a.st));else g.lineTo(x0,Y(a.st));g.lineTo(i===arr.length-1?X(a.h):x1,Y(a.st));});
+  g.stroke();
+  g.strokeStyle=css('--blood');g.lineWidth=2.2;g.beginPath();
+  arr.forEach((a,i)=>{i?g.lineTo(X(a.h),Y(a.sw)):g.moveTo(X(a.h),Y(a.sw));});g.stroke();
+  const cur=arr[H-10];
+  [[cur.st,css('--steel')],[cur.sw,css('--blood')]].forEach(([v,col])=>{g.fillStyle=col;g.beginPath();g.arc(X(H),Y(v),5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+  const faster=arr.filter(a=>a.sw<a.st-1e-9).length,slower=arr.filter(a=>a.sw>a.st+1e-9).length;
+  $('hpNote').innerHTML=`Across HP 10 to 300, Swingy is faster at <b>${faster}</b> HP values and slower at <b>${slower}</b>. At H = ${H}: Steady ${cur.st} hits, Swingy ${cur.sw.toFixed(2)}. Swingy wins just past a Steady step, where Steady's last hit is mostly overkill, and loses just before one.`;
+  $('cHp').setAttribute('aria-label',`Expected hits to kill versus HP. Swingy faster at ${faster} of 291 HP values.`);
+}
+
+// ---------- Long fight ----------
+const LONG_N=[1,5,20,50,100];
+function drawLong(ph){
+  const {g,w,h}=setup($('cLong')),p={l:52,r:12,t:14,b:36};
+  const yMax=ph.cv>0?niceMax(ph.cv):0.1;
+  yGrid(g,w,h,p,yMax,v=>(v*100).toFixed(yMax<.2?1:0)+'%');
+  const L=Math.log(200),X=n=>p.l+(w-p.l-p.r)*Math.log(n)/L,Y=y=>p.t+(h-p.t-p.b)*(1-y/yMax);
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  [1,2,5,10,20,50,100,200].forEach(n=>g.fillText(n,X(n),h-p.b+6));
+  xLabel(g,w,h,p,'hits in fight (log)');
+  g.strokeStyle=css('--blood');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=300;i++){const n=Math.exp(L*i/300),y=ph.cv/Math.sqrt(n);i?g.lineTo(X(n),Y(y)):g.moveTo(X(n),Y(y));}
+  g.stroke();
+  LONG_N.forEach(n=>{const y=ph.cv/Math.sqrt(n);g.fillStyle=css('--blood');g.beginPath();g.arc(X(n),Y(y),4.5,0,Math.PI*2);g.fill();
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText(y.toFixed(3),X(n)+5,Y(y)-3);});
+  g.strokeStyle=css('--steel');g.lineWidth=2;g.beginPath();g.moveTo(X(1),Y(0));g.lineTo(X(200),Y(0));g.stroke();
+  $('longBody').innerHTML=LONG_N.map(n=>{const sd=ph.sd*Math.sqrt(n);return `<tr><td>${n}</td><td>${(MU*n).toLocaleString('en-US')}</td><td>${sd.toFixed(2)}</td><td>${(ph.cv/Math.sqrt(n)).toFixed(3)} (${(ph.cv/Math.sqrt(n)*100).toFixed(1)}%)</td></tr>`;}).join('');
+  $('longNote').textContent=ph.cv>0
+    ?`Mean total grows like n; SD grows like √n. Quadrupling the fight from 5 to 20 hits halves the CV, ${(ph.cv/Math.sqrt(5)).toFixed(3)} to ${(ph.cv/Math.sqrt(20)).toFixed(3)}. Steady has CV 0 at every length.`
+    :`With no crit randomness (c = 0%, c = 100% or m = 1) both weapons have zero spread at every fight length.`;
+  $('cLong').setAttribute('aria-label',`CV of total damage falls from ${ph.cv.toFixed(3)} at 1 hit to ${(ph.cv/10).toFixed(3)} at 100 hits.`);
+}
+
+// ---------- update ----------
+function update(){
+  const ph=perHit(),d=killDist(H),ts=steadyT(H);
+  $('oC').textContent=Math.round(c*100)+'%';$('oM').textContent='×'+m.toFixed(2);$('oH').textContent=H;
+  $('oB').textContent=fmt1(ph.b);$('oCrit').textContent=fmt1(m*ph.b);$('oTs').textContent=ts;
+  $('swMu').textContent=ph.mu.toFixed(2);$('swSd').textContent=ph.sd.toFixed(2);$('swCv').textContent=ph.cv.toFixed(3);
+  $('stE').textContent=ts.toFixed(2);$('stR').textContent=ts+' always';
+  $('swE').textContent=d.E.toFixed(2);$('swSdT').textContent=d.sd.toFixed(2);
+  let lo=0,hi=0;for(let n=1;n<d.pT.length;n++)if(d.pT[n]>1e-12){if(!lo)lo=n;hi=n;}
+  $('swR').textContent=lo===hi?lo+' always':lo+' to '+hi;
+  const rows=[],nTop=Math.max(ts,d.pT.length-1);
+  for(let n=1;n<=nTop;n++){const pt=d.pT[n]||0,cd=n<d.cdf.length?d.cdf[n]:1;
+    if(pt<=1e-12&&n!==ts&&cd<=1e-12)continue;
+    rows.push(`<tr class="${n===ts?'here':''}"><td>${n}</td><td>${pt.toFixed(4)}</td><td>${cd.toFixed(4)}</td><td>${(n*pt).toFixed(3)}</td><td>${n===ts?'1':'0'}</td></tr>`);}
+  rows.push(`<tr><td>E[T]</td><td colspan="2"></td><td class="sw">${d.E.toFixed(3)}</td><td class="st">${ts}</td></tr>`);
+  $('ptBody').innerHTML=rows.join('');
+  const rel=d.E/ts-1,pctTxt=Math.abs(rel*100).toFixed(1)+'%';
+  let v,col;
+  if(Math.abs(d.E-ts)<5e-4){v=`At ${H} HP both weapons need <b>${ts.toFixed(2)}</b> hits on average. Here the spread costs nothing.`;col='--ink';$('headDiff').textContent='Here, the same kill time.';}
+  else if(rel>0){v=`At ${H} HP, Swingy kills <b>${pctTxt} slower</b>: <b>${d.E.toFixed(2)}</b> hits on average versus Steady's <b>${ts}</b>. The lost damage is overkill.`;col='--blood';$('headDiff').textContent='Not the same kill time.';}
+  else{v=`At ${H} HP, Swingy kills <b>${pctTxt} faster</b>: <b>${d.E.toFixed(2)}</b> hits on average versus Steady's <b>${ts}</b>. Steady's last hit wastes ${ts*MU-H} damage here.`;col='--moss';$('headDiff').textContent='Not the same kill time.';}
+  $('verdict').innerHTML=v;$('verdict').style.setProperty('--c',`var(${col})`);
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.h===H)));
+  drawHit(ph);drawKill(d,ts);
+  if(!$('p1').hidden)drawHp();else drawLong(ph);
+}
+
+// ---------- events ----------
+$('cIn').addEventListener('input',e=>{c=+e.target.value/100;update();});
+$('mIn').addEventListener('input',e=>{m=+e.target.value;update();});
+$('hIn').addEventListener('input',e=>{H=+e.target.value;update();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{H=+b.dataset.h;$('hIn').value=H;update();}));
+$('reset').addEventListener('click',()=>{c=DEF.c/100;m=DEF.m;H=DEF.h;$('cIn').value=DEF.c;$('mIn').value=DEF.m;$('hIn').value=DEF.h;update();});
+const tabs=[$('t1'),$('t2')];
+function sel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',String(on));x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});if(focus)t.focus();update();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t,false));t.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2],true);}
+  else if(e.key==='Home'){e.preventDefault();sel(tabs[0],true);}else if(e.key==='End'){e.preventDefault();sel(tabs[1],true);}});});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

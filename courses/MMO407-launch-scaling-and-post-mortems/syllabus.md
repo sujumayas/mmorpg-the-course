@@ -28,7 +28,7 @@ Why MMO launches fail and how some recover: case-based course on launches, relau
 | 12 | Writing a post-mortem | _todo_ | _todo_ |
 | 13 | Launch plan workshop | _todo_ | _todo_ |
 | 14 | Presentations | _todo_ | _todo_ |
-| 15 | Final: launch plan + post-mortem analysis | _todo_ | _todo_ |
+| 15 | Final: launch plan + post-mortem analysis | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

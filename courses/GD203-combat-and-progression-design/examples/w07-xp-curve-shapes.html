@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>XP curve shapes · GD203 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:22px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.tabs{display:flex;gap:6px;margin:20px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:260px}
+.toggle{font:600 .82rem var(--sans);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.toggle input{accent-color:var(--steel);width:18px;height:18px;margin:0}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+.readout.six{grid-template-columns:repeat(6,1fr)}
+@media (max-width:760px){.readout,.readout.six{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat b small{font-size:.8rem;font-weight:600;color:var(--ink-soft)}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl-title{font-weight:600;font-size:.92rem;margin:0 0 6px}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+label output,label.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+legend{padding:0}
+.fams{display:flex;flex-wrap:wrap;gap:6px}
+.fams label{position:relative}
+.fams input{position:absolute;opacity:0;width:1px;height:1px}
+.fams span{display:inline-block;font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);cursor:pointer}
+.fams input:checked+span{background:var(--steel);color:var(--paper)}
+.fams input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--ochre);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ochre);color:var(--paper)}
+.note{font-family:var(--serif);font-size:.95rem;margin:10px 0 0;max-width:70ch;color:var(--ink)}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px;max-width:100%}
+.table-wrap h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:0 0 6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:560px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.btn{font:600 .85rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;margin-left:8px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD203 Combat and Progression Design · Week 7 · Worked example</p>
+  <h1>Where does the XP live?</h1>
+  <p class="lede">On the left every curve just climbs. On the right you can see where half of all XP is still ahead of you. With exponential cost that point sits a fixed number of levels before the cap. Drag the cap and watch it stay put.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Where the XP lives</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Pacing</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="charts">
+    <figure>
+      <figcaption><span>Per-level cost c(n)<small>XP to go from level n − 1 to n</small></span>
+        <label class="toggle"><input type="checkbox" id="logC"> Log y-axis</label></figcaption>
+      <canvas id="cCost" role="img" aria-label="Bar chart of XP cost per level"></canvas>
+    </figure>
+    <figure>
+      <figcaption><span>Share of total XP reached by level<small>T(n) / T(N). Shaded levels hold the second half.</small></span></figcaption>
+      <canvas id="cShare" role="img" aria-label="Line chart of cumulative XP share by level with the halfway level marked"></canvas>
+    </figure>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--ochre)"><b id="rT">—</b><span>T(N), total XP to cap</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rC">—</b><span>c(N), last level-up</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rRatio">—</b><span>c(N) / c(2)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rHalf">—</b><span id="rHalfLbl">halfway level (estimate)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rLast5">—</b><span>XP in last 5 level-ups</span></div>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div>
+      <fieldset>
+        <legend class="ctl-title">Curve family</legend>
+        <div class="fams">
+          <label><input type="radio" name="fam" value="flat"><span>Flat</span></label>
+          <label><input type="radio" name="fam" value="lin"><span>Linear cost</span></label>
+          <label><input type="radio" name="fam" value="poly"><span>Polynomial total</span></label>
+          <label><input type="radio" name="fam" value="exp" checked><span>Exponential</span></label>
+        </div>
+      </fieldset>
+      <label class="row" for="nIn">Cap N <output id="oN">20</output></label>
+      <input id="nIn" type="range" min="10" max="120" step="1" value="20">
+      <div id="pWrap" hidden>
+        <label class="row" for="pIn">Power p <output id="oP">3.0</output></label>
+        <input id="pIn" type="range" min="1.5" max="4" step="0.1" value="3">
+      </div>
+      <div id="rWrap">
+        <label class="row" for="rIn">Growth ratio r <output id="oR">1.25</output></label>
+        <input id="rIn" type="range" min="1.02" max="1.40" step="0.01" value="1.25">
+      </div>
+    </div>
+    <div>
+      <p class="ctl-title">Shipped tables (exact formulas)</p>
+      <div class="presets" role="group" aria-label="Game presets">
+        <button class="chip" data-preset="rs" aria-pressed="false">RuneScape skill (1 to 99)</button>
+        <button class="chip" data-preset="dnd" aria-pressed="false">D&amp;D 3.5 (1 to 20)</button>
+        <button class="chip" data-preset="pkmn" aria-pressed="false">Pokémon Medium Fast (1 to 100)</button>
+      </div>
+      <p class="note" id="presetNote">Pick a preset to load a real table. Moving any control returns to the plain family formulas.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <h2 id="cmpTitle">All four families at N = 20</h2>
+    <table aria-labelledby="cmpTitle">
+      <thead><tr><th>Family</th><th>c(2)</th><th>c(10)</th><th>c(N)</th><th>T(N)</th><th>Halfway level</th><th>Share in last 5</th></tr></thead>
+      <tbody id="cmpBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <figure>
+    <figcaption><span>Minutes per level and XP per level<small><span style="color:var(--steel);font-weight:700">Minutes per level</span> on the left axis. <span style="color:var(--ochre);font-weight:700">XP per level</span> on the right axis. Dashed line is where half the play time is used.</small></span>
+      <label class="toggle"><input type="checkbox" id="logX"> Log XP axis</label></figcaption>
+    <canvas id="cPace" role="img" aria-label="Minutes per level and XP per level by level" style="height:300px"></canvas>
+  </figure>
+
+  <div class="readout six">
+    <div class="stat" style="--c:var(--steel)"><b id="qT2">—</b><span>t₂, first level-up (min)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="qTN">—</b><span>t(N), last level-up (min)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="qCN">—</b><span>c(N), XP</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="qTT">—</b><span>T(N), XP</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="qHalfT">—</b><span>half the time used by level</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="qHalfX">—</b><span>half the XP earned by level</span></div>
+  </div>
+  <div class="insight" id="paceInsight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div>
+      <label class="row" for="hIn">Total hours H <output id="oH">40</output></label>
+      <input id="hIn" type="range" min="5" max="200" step="1" value="40">
+      <label class="row" for="n2In">Cap N <output id="oN2">30</output></label>
+      <input id="n2In" type="range" min="5" max="120" step="1" value="30">
+      <label class="row" for="gIn">Time ratio g <output id="oG">1.08</output></label>
+      <input id="gIn" type="range" min="1" max="1.2" step="0.01" value="1.08">
+    </div>
+    <div>
+      <label class="row" for="iIn">Income at level 2, I₂ (XP/h) <output id="oI">600</output></label>
+      <input id="iIn" type="range" min="50" max="5000" step="50" value="600">
+      <label class="row" for="qIn">Income ratio q <output id="oQ">1.12</output></label>
+      <input id="qIn" type="range" min="1" max="1.25" step="0.01" value="1.12">
+      <p class="note">t₂ = 60H × (g − 1) / (g<sup>N−1</sup> − 1). t(n) = t₂ × g<sup>n−2</sup>. I(n) = I₂ × q<sup>n−2</sup>. c(n) = t(n)/60 × I(n).</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <h2 id="paceTitle">Pacing table <button class="btn" id="copyBtn" type="button">Copy as tab-separated</button> <span id="copyMsg" class="note" style="font-size:.85rem" aria-live="polite"></span></h2>
+    <table aria-labelledby="paceTitle">
+      <thead><tr><th>n</th><th>t(n) min</th><th>I(n) XP/h</th><th>c(n) XP</th><th>T(n) XP</th><th>Time so far (h)</th></tr></thead>
+      <tbody id="paceBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Formulas: Old School RuneScape Wiki, "Experience" (current game); D&amp;D 3.5 edition Player's Handbook (2003) advancement table, T(n) = 500 × n × (n − 1); Bulbapedia, "Experience" (Generation III onward), Medium Fast T(n) = n³. Flat, linear, polynomial and exponential tables use the scale constants from the week 7 lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const fmt1=n=>n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const pct1=n=>(n*100).toFixed(1)+'%';
+const FAMNAME={flat:'Flat',lin:'Linear cost',poly:'Polynomial total',exp:'Exponential'};
+
+const S={fam:'exp',N:20,p:3,r:1.25,preset:null,logC:false};
+const P={H:40,N:30,g:1.08,I2:600,q:1.12,log:false};
+
+// ---------- XP models ----------
+function rsT(L){let s=0;for(let l=1;l<L;l++)s+=Math.floor(l+300*Math.pow(2,l/7));return Math.floor(s/4);}
+function build(fam,N,p,r,preset){
+  const T=new Array(N+1).fill(0);
+  if(preset==='rs'){for(let n=1;n<=N;n++)T[n]=rsT(n);}
+  else if(preset==='dnd'){for(let n=1;n<=N;n++)T[n]=500*n*(n-1);}
+  else if(preset==='pkmn'){for(let n=1;n<=N;n++)T[n]=n*n*n;}
+  else{
+    T[1]=0;
+    for(let n=2;n<=N;n++){
+      let c;
+      if(fam==='flat')c=1000;
+      else if(fam==='lin')c=1000*(n-1);
+      else if(fam==='poly')c=(Math.pow(n,p)-1)-(Math.pow(n-1,p)-1);
+      else c=1000*Math.pow(r,n-2);
+      T[n]=T[n-1]+c;
+    }
+  }
+  const c=n=>T[n]-T[n-1];
+  let half=1;while(half<N&&T[half]<T[N]/2)half++;
+  let est,estLbl;
+  if(preset==='rs'){est=99-7;estLbl='99 − 7';}
+  else if(preset==='pkmn'){est=N/Math.cbrt(2);estLbl='N / 2^(1/3)';}
+  else if(fam==='flat'){est=1+(N-1)/2;estLbl='1 + (N − 1)/2';}
+  else if(fam==='lin'||preset==='dnd'){est=(1+Math.sqrt(1+2*N*(N-1)))/2;estLbl='root of n(n − 1) = N(N − 1)/2';}
+  else if(fam==='poly'){est=N/Math.pow(2,1/p);estLbl='N / 2^(1/p)';}
+  else{est=N-Math.log(2)/Math.log(r);estLbl='N − ln 2 / ln r';}
+  return {T,c,N,half,est,estLbl,last5:(T[N]-T[N-5])/T[N]};
+}
+function cur(){return build(S.fam,S.N,S.p,S.r,S.preset);}
+
+// ---------- canvas helpers ----------
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};
+}
+function short(v){
+  const a=Math.abs(v);
+  if(a>=1e6)return (v/1e6).toFixed(a>=1e7?0:1).replace(/\.0$/,'')+'M';
+  if(a>=1e5)return Math.round(v/1e3)+'k';
+  if(a>=1e4)return (v/1e3).toFixed(1).replace(/\.0$/,'')+'k';
+  if(a>=1000)return (v/1e3).toFixed(1).replace(/\.0$/,'')+'k';
+  if(a>=10||a===0)return fmt(v);
+  return v.toPrecision(2).replace(/\.0+$/,'');
+}
+function niceMax(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*m).find(x=>x>=v*1.001)||v;}
+// scale: {min,max,log}
+function yScale(s,pad,h){
+  if(s.log){const a=Math.log10(s.min),b=Math.log10(s.max);return v=>pad.t+(h-pad.t-pad.b)*(1-(Math.log10(Math.max(v,s.min))-a)/(b-a));}
+  return v=>pad.t+(h-pad.t-pad.b)*(1-(v-s.min)/(s.max-s.min));
+}
+function yTicks(s){
+  if(s.log){const out=[];for(let e=Math.round(Math.log10(s.min));e<=Math.round(Math.log10(s.max));e++)out.push(Math.pow(10,e));return out;}
+  return [0,1,2,3,4].map(i=>s.min+(s.max-s.min)*i/4);
+}
+function logRange(vals){const lo=Math.min(...vals.filter(v=>v>0)),hi=Math.max(...vals);return {min:Math.pow(10,Math.floor(Math.log10(lo))),max:Math.pow(10,Math.max(Math.ceil(Math.log10(hi)),Math.floor(Math.log10(lo))+1)),log:true};}
+function xTicks(a,b,maxN){const span=b-a;const step=[1,2,5,10,20,25,50].find(s=>span/s<=maxN)||100;const out=[];for(let v=Math.ceil(a/step)*step;v<=b;v+=step)out.push(v);if(out[0]!==a)out.unshift(a);return out;}
+function gridY(g,w,h,pad,s,Y,fmtY,side,color){
+  g.font='12px '+css('--sans');g.fillStyle=color||css('--ink-soft');
+  yTicks(s).forEach(v=>{const y=Y(v);
+    if(side==='left'){g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fmtY(v),pad.l-6,y);}
+    else{g.textAlign='left';g.textBaseline='middle';g.fillText(fmtY(v),w-pad.r+6,y);}
+  });
+}
+function gridX(g,w,h,pad,X,a,b,label){
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  xTicks(a,b,w<420?5:9).forEach(v=>g.fillText(v,X(v),h-pad.b+6));
+  g.textAlign='right';g.fillText(label,w-pad.r,h-16);
+}
+
+// ---------- tab 1 charts ----------
+function drawCost(m){
+  const {g,w,h}=setupCanvas($('cCost'));const pad={l:52,r:10,t:12,b:36};
+  const N=m.N,vals=[];for(let n=2;n<=N;n++)vals.push(m.c(n));
+  const s=S.logC?logRange(vals):{min:0,max:niceMax(Math.max(...vals)),log:false};
+  const Y=yScale(s,pad,h),X=v=>pad.l+(w-pad.l-pad.r)*(v-1.5)/(N-1);
+  gridY(g,w,h,pad,s,Y,short,'left');gridX(g,w,h,pad,X,2,N,'level n');
+  const bw=Math.max(1,(w-pad.l-pad.r)/(N-1)*0.78);
+  for(let n=2;n<=N;n++){
+    g.fillStyle=n>=m.half?css('--blood'):css('--ochre');
+    const y=Y(m.c(n)),base=S.logC?Y(s.min):Y(0);
+    g.fillRect(X(n)-bw/2,Math.min(y,base),bw,Math.max(1,Math.abs(base-y)));
+  }
+}
+function drawShare(m){
+  const {g,w,h}=setupCanvas($('cShare'));const pad={l:44,r:10,t:12,b:36};
+  const N=m.N,X=v=>pad.l+(w-pad.l-pad.r)*(v-1)/(N-1),s={min:0,max:1,log:false},Y=yScale(s,pad,h);
+  // shaded second half
+  g.fillStyle=css('--blood');g.globalAlpha=.12;g.fillRect(X(m.half),pad.t,X(N)-X(m.half),h-pad.t-pad.b);g.globalAlpha=1;
+  gridY(g,w,h,pad,s,Y,v=>Math.round(v*100)+'%','left');gridX(g,w,h,pad,X,1,N,'level n');
+  // 50% guide
+  g.strokeStyle=css('--ink');g.globalAlpha=.55;g.setLineDash([5,4]);g.lineWidth=1.2;g.beginPath();g.moveTo(pad.l,Y(.5));g.lineTo(w-pad.r,Y(.5));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // straight reference (flat cost)
+  g.strokeStyle=css('--ink-soft');g.globalAlpha=.5;g.lineWidth=1.5;g.setLineDash([2,4]);g.beginPath();g.moveTo(X(1),Y(0));g.lineTo(X(N),Y(1));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // share line
+  g.strokeStyle=css('--moss');g.lineWidth=2.5;g.beginPath();
+  for(let n=1;n<=N;n++){const px=X(n),py=Y(m.T[n]/m.T[N]);n===1?g.moveTo(px,py):g.lineTo(px,py);}g.stroke();
+  // halfway marker
+  const hx=X(m.half);g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(hx,pad.t);g.lineTo(hx,h-pad.b);g.stroke();
+  g.fillStyle=css('--blood');g.beginPath();g.arc(hx,Y(m.T[m.half]/m.T[N]),5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  // labels, placed left of marker
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--ink');g.textBaseline='top';
+  const l1='Halfway: level '+m.half,ups=N-m.half+1,l2='Second half of all XP:',l3=ups+' level-up'+(ups===1?'':'s')+' ('+m.half+' to '+N+')';
+  const tw=Math.max(g.measureText(l1).width,g.measureText(l2).width,g.measureText(l3).width);
+  const lx=Math.max(pad.l+6,hx-8-tw);
+  g.textAlign='left';
+  g.fillStyle=css('--blood');g.fillText(l1,lx,pad.t+6);
+  g.fillStyle=css('--ink');g.font='12px '+css('--sans');g.fillText(l2,lx,pad.t+22);g.fillText(l3,lx,pad.t+37);
+}
+
+// ---------- tab 1 readouts ----------
+function render1(){
+  const m=cur(),N=m.N;
+  $('rT').textContent=fmt(m.T[N]);
+  $('rC').textContent=fmt(m.c(N));
+  const ratio=m.c(N)/m.c(2);
+  $('rRatio').textContent=(ratio>=100?fmt(ratio):ratio.toFixed(ratio<10?2:1).replace(/\.?0+$/,''))+'×';
+  $('rHalf').innerHTML=m.half+' <small>('+fmt1(m.est)+')</small>';
+  $('rHalfLbl').textContent='halfway level (estimate '+m.estLbl+')';
+  $('rLast5').textContent=pct1(m.last5);
+  $('oN').textContent=N;$('oP').textContent=S.p.toFixed(1);$('oR').textContent=S.r.toFixed(2);
+  const gap=N-m.half,fam=S.preset==='rs'?'exp':S.preset==='dnd'?'lin':S.preset==='pkmn'?'poly':S.fam;
+  let s=`<b>Half of all XP is earned by level ${m.half} of ${N}.</b> The last ${N-m.half+1} level-ups (levels ${m.half} to ${N}) hold the second half. The last 5 level-ups hold ${pct1(m.last5)}. `;
+  if(S.preset==='rs')s+=`RuneScape's cost doubles every 7 levels (r = 2<sup>1/7</sup> ≈ 1.104), so halfway is 99 − 7 = 92. T(92) = ${fmt(m.T[92])} and T(99) = ${fmt(m.T[99])}. The last level alone costs ${fmt(m.c(99))} XP, ${pct1(m.c(99)/m.T[99])} of the total.`;
+  else if(S.preset==='pkmn')s+=`T(79) = ${fmt(m.T[79])} falls short of 500,000 and T(80) = ${fmt(m.T[80])} passes it. A cubic total always puts halfway at N / 2<sup>1/3</sup>, about 79% of the cap.`;
+  else if(fam==='exp')s+=`With exponential cost the gap to the cap is about ln 2 / ln r = ${(Math.log(2)/Math.log(S.r)).toFixed(1)} levels, whatever N is. Drag the cap and the gap stays the same.`;
+  else if(fam==='poly')s+=`Halfway is ${Math.round(m.half/N*100)}% of the cap. For a polynomial total it stays near N / 2<sup>1/p</sup> = ${(1/Math.pow(2,1/S.p)).toFixed(2)} × N, so a higher cap moves it later in step.`;
+  else if(fam==='lin')s+=`Linear cost gives a quadratic total, which puts halfway near N / √2, about 71% of the cap.`;
+  else s+=`Flat cost puts halfway in the middle. Every level is the same size.`;
+  $('insight').innerHTML=s;
+  // comparison table
+  $('cmpTitle').textContent=`All four families at N = ${N}`+(S.preset?' (plain family formulas, not the preset)':'');
+  const rows=[['flat','Flat, a = 1,000'],['lin','Linear cost, a = 1,000'],['poly',`Polynomial, T = n^${S.p.toFixed(1).replace(/\.0$/,'')} − 1`],['exp',`Exponential, a = 1,000, r = ${S.r.toFixed(2)}`]];
+  $('cmpBody').innerHTML=rows.map(([k,label])=>{const f=build(k,N,S.p,S.r,null);
+    return `<tr class="${!S.preset&&k===S.fam?'here':''}"><td>${label}</td><td>${fmt(f.c(2))}</td><td>${fmt(f.c(10))}</td><td>${fmt(f.c(N))}</td><td>${fmt(f.T[N])}</td><td>${f.half} (${fmt1(f.est)})</td><td>${pct1(f.last5)}</td></tr>`;}).join('');
+  $('pWrap').hidden=S.fam!=='poly';$('rWrap').hidden=S.fam!=='exp';
+  drawCost(m);drawShare(m);
+}
+
+// ---------- tab 2 pacing ----------
+function pace(){
+  const {H,N,g,I2,q}=P;
+  const t2=g===1?60*H/(N-1):60*H*(g-1)/(Math.pow(g,N-1)-1);
+  const rows=[];let T=0,cum=0,halfT=null;
+  for(let n=2;n<=N;n++){const t=t2*Math.pow(g,n-2),I=I2*Math.pow(q,n-2),c=t/60*I;T+=c;cum+=t;
+    if(halfT===null&&cum>=60*H/2-1e-9)halfT=n;rows.push({n,t,I,c,T,cum});}
+  let halfX=rows.find(r=>r.T>=T/2).n;
+  return {t2,rows,T,halfT,halfX};
+}
+function drawPace(p){
+  const {g,w,h}=setupCanvas($('cPace'));const pad={l:48,r:52,t:14,b:36};
+  const N=P.N,X=v=>pad.l+(w-pad.l-pad.r)*(v-2)/Math.max(1,N-2);
+  const ts=p.rows.map(r=>r.t),cs=p.rows.map(r=>r.c);
+  const sL={min:0,max:niceMax(Math.max(...ts)),log:false},YL=yScale(sL,pad,h);
+  const sR=P.log?logRange(cs):{min:0,max:niceMax(Math.max(...cs)),log:false},YR=yScale(sR,pad,h);
+  gridY(g,w,h,pad,sL,YL,v=>short(v),'left',css('--steel'));
+  gridY(g,w,h,pad,sR,YR,short,'right',css('--ochre'));
+  gridX(g,w,h,pad,X,2,N,'level n');
+  const hx=X(p.halfT);g.strokeStyle=css('--blood');g.lineWidth=1.5;g.setLineDash([5,4]);g.beginPath();g.moveTo(hx,pad.t);g.lineTo(hx,h-pad.b);g.stroke();g.setLineDash([]);
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--blood');g.textBaseline='top';
+  const lbl='Half the time: level '+p.halfT,tw=g.measureText(lbl).width;g.textAlign='left';g.fillText(lbl,Math.max(pad.l+4,hx-6-tw),pad.t+2);
+  [[ts,YL,'--steel'],[cs,YR,'--ochre']].forEach(([arr,Y,col])=>{g.strokeStyle=css(col);g.lineWidth=2.5;g.beginPath();arr.forEach((v,i)=>{const px=X(i+2),py=Y(v);i?g.lineTo(px,py):g.moveTo(px,py);});g.stroke();});
+}
+function render2(){
+  const p=pace(),N=P.N,last=p.rows[p.rows.length-1];
+  $('oH').textContent=P.H;$('oN2').textContent=N;$('oG').textContent=P.g.toFixed(2);$('oI').textContent=fmt(P.I2);$('oQ').textContent=P.q.toFixed(2);
+  $('qT2').textContent=fmt1(p.t2);$('qTN').textContent=fmt1(last.t);$('qCN').textContent=fmt(last.c);$('qTT').textContent=fmt(p.T);
+  $('qHalfT').textContent=p.halfT;$('qHalfX').textContent=p.halfX;
+  const xr=P.g*P.q;
+  $('paceInsight').innerHTML=`<b>Half of the ${P.H} hours are used by level ${p.halfT} of ${N}, and half the XP is earned by level ${p.halfX}.</b> XP per level grows by g × q = ${xr.toFixed(2)} per level while time per level grows by only ${P.g.toFixed(2)}. Read the XP table alone and the game looks ${Math.round((xr-1)*100)}% grindier per level. It is ${Math.round((P.g-1)*100)}% longer per level.`;
+  $('paceBody').innerHTML=p.rows.map(r=>`<tr class="${r.n===p.halfT?'here':''}"><td>${r.n}</td><td>${fmt1(r.t)}</td><td>${fmt(r.I)}</td><td>${fmt(r.c)}</td><td>${fmt(r.T)}</td><td>${(r.cum/60).toFixed(1)}</td></tr>`).join('');
+  drawPace(p);
+}
+
+// ---------- events ----------
+function clearPreset(){S.preset=null;document.querySelectorAll('.chip[data-preset]').forEach(b=>b.setAttribute('aria-pressed','false'));$('presetNote').textContent='Plain family formula. Pick a preset to load a real table.';$('nIn').disabled=false;}
+document.querySelectorAll('input[name=fam]').forEach(r=>r.addEventListener('change',()=>{clearPreset();S.fam=r.value;render1();}));
+$('nIn').addEventListener('input',e=>{clearPreset();S.N=+e.target.value;render1();});
+$('pIn').addEventListener('input',e=>{clearPreset();S.p=+e.target.value;render1();});
+$('rIn').addEventListener('input',e=>{clearPreset();S.r=+e.target.value;render1();});
+$('logC').addEventListener('change',e=>{S.logC=e.target.checked;render1();});
+const NOTES={
+  rs:{N:99,fam:'exp',note:'Old School RuneScape skill table, exact formula T(L) = floor(¼ × Σ floor(ℓ + 300 × 2^(ℓ/7))). Level 2 needs 83 XP, level 10 needs 1,154.'},
+  dnd:{N:20,fam:'lin',note:'D&D 3.5 edition, T(n) = 500 × n × (n − 1). Each level costs 1,000 more than the last, the linear-cost family with a = 1,000.'},
+  pkmn:{N:100,fam:'poly',note:'Pokémon Medium Fast group (Generation III onward), T(n) = n³, so T(1) = 1 and level 100 needs 1,000,000.'}
+};
+document.querySelectorAll('.chip[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.preset,d=NOTES[k];
+  S.preset=k;S.N=d.N;S.fam=d.fam;if(k==='pkmn')S.p=3;
+  document.querySelector(`input[name=fam][value=${d.fam}]`).checked=true;
+  $('nIn').value=d.N;$('pIn').value=S.p;
+  document.querySelectorAll('.chip[data-preset]').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+  $('presetNote').textContent=d.note+' Moving any control returns to the plain family formulas.';
+  render1();
+}));
+[['hIn','H'],['n2In','N'],['gIn','g'],['iIn','I2'],['qIn','q']].forEach(([id,k])=>$(id).addEventListener('input',e=>{P[k]=+e.target.value;render2();}));
+$('logX').addEventListener('change',e=>{P.log=e.target.checked;render2();});
+$('copyBtn').addEventListener('click',()=>{
+  const p=pace(),txt=['n\tt(n) min\tI(n) XP/h\tc(n) XP\tT(n) XP'].concat(p.rows.map(r=>[r.n,r.t.toFixed(1),Math.round(r.I),Math.round(r.c),Math.round(r.T)].join('\t'))).join('\n');
+  const done=m=>{$('copyMsg').textContent=m;};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(()=>done('Copied.'),()=>done('Copy blocked. Select the table instead.'));
+  else done('Copy not available. Select the table instead.');
+});
+const tabs=[$('t1'),$('t2')];
+function redraw(){$('p1').hidden?render2():render1();}
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();redraw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2]);}});});
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+render1();render2();
+window.__xp={build,pace,S,P};
+})();
+</script>
+</body>
+</html>

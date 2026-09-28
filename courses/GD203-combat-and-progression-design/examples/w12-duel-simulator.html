@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duel simulator · GD203 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.9rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.first{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2)}
+.first .lbl{font-family:var(--serif);font-size:1.12rem;font-weight:600}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:700 1rem var(--sans);padding:10px 18px;border:0;background:transparent;color:var(--ink);cursor:pointer;min-width:96px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button+button{border-left:2px solid var(--ink)}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1024px){.views{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.hist{position:relative;display:flex;gap:4px;height:236px;padding-left:40px;padding-bottom:22px;margin-top:24px}
+.hist .gl{position:absolute;left:40px;right:0;border-top:1px solid var(--grid);pointer-events:none}
+.hist .gl span{position:absolute;left:-40px;width:34px;text-align:right;top:-9px;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.col{flex:1 1 0;min-width:0;display:flex;flex-direction:column}
+.plot{position:relative;height:184px}
+.bar{position:absolute;bottom:0;left:14%;right:14%;background:var(--c,var(--steel));border-radius:3px 3px 0 0;transition:height .3s ease-out;height:0}
+.ex{position:absolute;bottom:0;left:6%;right:6%;border:2px dashed var(--ink);border-bottom:0;border-radius:3px 3px 0 0;pointer-events:none}
+.val{position:absolute;left:-10px;right:-10px;text-align:center;font-size:.76rem;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tick{height:30px;text-align:center;font-size:.76rem;color:var(--ink-soft);padding-top:4px;border-top:1.5px solid var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tick b{color:var(--ink)}
+.dl{position:absolute;top:0;height:236px;border-left:2px dotted var(--ink);pointer-events:none}
+.dl span{position:absolute;bottom:0;left:4px;font-size:.72rem;font-weight:700;white-space:nowrap;background:var(--paper-2);padding:0 3px;border-radius:3px}
+.dl.flip span{left:auto;right:4px}
+.big{font-size:1.5rem;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums;margin:10px 0 2px}
+.verdict{font-family:var(--serif);font-size:1.6rem;font-weight:600;margin:10px 0 2px}
+.win{color:var(--moss)}.lose{color:var(--blood)}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:.9rem;margin:10px 0 0;font-variant-numeric:tabular-nums}
+.facts dt{color:var(--ink-soft)}.facts dd{margin:0;font-weight:600}
+.sub{font-size:.88rem;color:var(--ink-soft);margin:2px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
+.legend i.o{background:transparent;border:2px dashed var(--ink)}
+.legend i.ln{height:3px;vertical-align:3px}
+.conv{margin-top:12px}
+.conv svg{display:block;width:100%;height:150px}
+.conv h3{font:600 .88rem var(--sans);margin:0;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+@media (min-width:760px){.controls{grid-template-columns:1fr 1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:10px 12px 12px;margin:0;min-width:0}
+legend{font-weight:700;font-size:.9rem;padding:0 4px}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .86rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:700 .9rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer}
+.btn.alt{background:transparent;color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+input[type=number]{font:600 .95rem var(--sans);width:7.5em;padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+.small{font-size:.84rem;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto;margin-top:16px;max-height:420px;overflow-y:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.here{font-weight:700;background:var(--paper-2);outline:2px solid var(--steel);outline-offset:-2px}
+.two{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1024px){.two{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}}
+@media (max-width:560px){.nfights{display:none}th,td{padding:5px 5px;font-size:.84rem}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.note{font-family:var(--serif);font-size:.98rem;margin:12px 0 0;max-width:70ch}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:78ch}
+code{font-size:.92em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD203 Combat and Progression Design · Week 12 · Worked example</p>
+  <h1>The average says 4 hits. The dice say 3, 4 or 5.</h1>
+  <p class="lede">Same sword, same enemy. The left view predicts from the average hit. The right view runs the fight many times with real crit rolls. Flip who swings first and watch how far apart they land.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Scenarios">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Crit sword duel</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Underdog</button>
+  <button class="tab" role="tab" id="t3" aria-selected="false" aria-controls="p3" tabindex="-1">Doom shotgun</button>
+</div>
+
+<!-- Panel 1: crit sword duel -->
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="first">
+    <span class="lbl" id="firstLbl">Who swings first?</span>
+    <div class="seg" role="group" aria-labelledby="firstLbl">
+      <button id="fHero" aria-pressed="true">Hero</button>
+      <button id="fEnemy" aria-pressed="false">Enemy</button>
+    </div>
+    <span class="small" id="firstNote"></span>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Spreadsheet view<small>One number. Enemy health divided by the average hit, rounded up.</small></figcaption>
+      <div class="hist" id="hSheet" aria-hidden="true"></div>
+      <div class="verdict" id="sVerdict">—</div>
+      <p class="sub" id="sVerdictSub"></p>
+      <dl class="facts">
+        <dt>Mean hit</dt><dd id="sMean">—</dd>
+        <dt>Average hits to kill</dt><dd id="sHtk">—</dd>
+        <dt>Enemy kills hero with swing</dt><dd id="sE">—</dd>
+        <dt>Hero swings before that</dt><dd id="sD">—</dd>
+      </dl>
+    </figure>
+
+    <figure>
+      <figcaption>Simulation view<small>Hero hits to kill across simulated fights. Dashed outlines are the exact distribution.</small></figcaption>
+      <div class="hist" id="hSim" aria-hidden="true"></div>
+      <div class="legend">
+        <span><i style="background:var(--moss)"></i>hero wins</span>
+        <span><i style="background:var(--blood)"></i>hero loses</span>
+        <span><i class="o"></i>exact</span>
+      </div>
+      <p class="big" id="simWin">—</p>
+      <p class="sub" id="simExact"></p>
+      <div class="conv">
+        <h3>Win rate as fights run, with 95% band</h3>
+        <svg id="conv" role="img" aria-label="Simulated win rate against fights run, converging on the exact value"></svg>
+        <div class="legend">
+          <span><i class="ln" style="background:var(--ink)"></i>simulated</span>
+          <span><i style="background:var(--ochre);opacity:.35"></i>95% interval</span>
+          <span><i class="ln" style="background:var(--steel)"></i>exact</span>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight"></div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Hero sword</legend>
+      <label for="base">Base damage <output id="oBase"></output></label>
+      <input id="base" type="range" min="1" max="30" step="1" value="10">
+      <label for="crit">Crit chance <output id="oCrit"></output></label>
+      <input id="crit" type="range" min="0" max="100" step="1" value="25">
+      <span class="small" style="display:block;margin-top:6px" id="multLbl">Crit multiplier</span>
+      <div class="chips" role="group" aria-labelledby="multLbl" id="multChips">
+        <button class="chip" data-m="1.5" aria-pressed="false">×1.5</button>
+        <button class="chip" data-m="2" aria-pressed="true">×2</button>
+        <button class="chip" data-m="3" aria-pressed="false">×3</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Enemy</legend>
+      <label for="hp">Enemy health <output id="oHp"></output></label>
+      <input id="hp" type="range" min="10" max="150" step="1" value="50">
+      <label for="ehtk">Enemy kills hero in <output id="oE"></output></label>
+      <input id="ehtk" type="range" min="1" max="10" step="1" value="4">
+      <p class="small" style="margin:6px 0 0">The enemy deals fixed damage, so its kill always takes this many swings.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Simulation</legend>
+      <span class="small" id="nLbl">Fights per run</span>
+      <div class="chips" role="group" aria-labelledby="nLbl" id="nChips">
+        <button class="chip" data-n="100" aria-pressed="false">100</button>
+        <button class="chip" data-n="1000" aria-pressed="true">1,000</button>
+        <button class="chip" data-n="10000" aria-pressed="false">10,000</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="run">Run</button>
+        <button class="btn alt" id="more">Run +1,000</button>
+      </div>
+      <div class="row">
+        <label for="seed" style="margin:0">Seed</label>
+        <input id="seed" type="number" min="0" max="4294967295" step="1" value="42">
+        <button class="btn alt" id="newSeed">New seed</button>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Hits to kill: exact, simulated and spreadsheet">
+      <thead><tr><th>Hits</th><th>Exact</th><th>Simulated</th><th class="nfights">Fights</th><th>Spreadsheet</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Panel 2: underdog -->
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <div class="first">
+    <span class="lbl" id="uFirstLbl">Who swings first?</span>
+    <div class="seg" role="group" aria-labelledby="uFirstLbl">
+      <button id="uA" aria-pressed="true">A</button>
+      <button id="uB" aria-pressed="false">B</button>
+    </div>
+    <span class="small">Both fighters have 50 health. A hits a steady 10, so A kills in 5 swings.</span>
+  </div>
+  <span class="small" id="wLbl">Weapons</span>
+  <div class="chips" role="group" aria-labelledby="wLbl" id="wChips" style="margin-bottom:14px">
+    <button class="chip" data-w="steady" aria-pressed="false">B steady 9</button>
+    <button class="chip" data-w="swingyB" aria-pressed="true">B deals 0 or 18 (avg 9)</button>
+    <button class="chip" data-w="swingyA" aria-pressed="false">Flip: A deals 0 or 20, B steady 9</button>
+  </div>
+  <div class="two">
+    <figure>
+      <figcaption id="uCap">Swings B needs to kill A</figcaption>
+      <div class="hist" id="hU" aria-hidden="true"></div>
+      <div class="legend">
+        <span><i style="background:var(--moss)"></i>B (the underdog) wins</span>
+        <span><i style="background:var(--blood)"></i>A (the favorite) wins</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>B's win rate<small>Average damage: A 10, B 9. On averages B always loses.</small></figcaption>
+      <p class="big" id="uExact">—</p>
+      <p class="sub" id="uSim"></p>
+      <p class="note" id="uNote"></p>
+      <div class="table-wrap" style="margin-top:10px">
+        <table aria-label="B win rate by weapon and first swinger">
+          <thead><tr><th>Weapons</th><th>A first</th><th>B first</th></tr></thead>
+          <tbody id="uBody"></tbody>
+        </table>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<!-- Panel 3: Doom shotgun -->
+<section class="panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+  <div class="two">
+    <figure>
+      <figcaption>Damage from one shotgun blast<small>7 pellets, each 5, 10 or 15 (5 × 1d3), all hitting. Share of the 2,187 equally likely combinations.</small></figcaption>
+      <div class="hist" id="hD" aria-hidden="true"></div>
+      <div class="legend">
+        <span><i style="background:var(--moss)"></i>kills in one blast</span>
+        <span><i style="background:var(--blood)"></i>target survives</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>One-blast kill chance</figcaption>
+      <p class="big" id="dPct">—</p>
+      <p class="sub" id="dFrac"></p>
+      <p class="verdict" style="font-size:1.2rem" id="dAvg"></p>
+      <label for="dHp">Target health <output id="oDHp"></output></label>
+      <input id="dHp" type="range" min="20" max="200" step="1" value="60">
+      <div class="chips" role="group" aria-label="Health presets" id="dChips">
+        <button class="chip" data-h="60">60 (Imp)</button>
+        <button class="chip" data-h="70">70</button>
+        <button class="chip" data-h="80">80</button>
+        <button class="chip" data-h="100">100</button>
+      </div>
+      <p class="note">Seven small random pellets add up to a narrow spread around 70, from 35 to 105. The Imp has 60 health, so the average says one blast always kills. About one blast in eight falls short.</p>
+    </figure>
+  </div>
+</section>
+
+<footer>Model from the lecture. A hero hit deals <code>base × mult</code> with the crit chance, else <code>base</code>. Exact hits-to-kill comes from dynamic programming over damage dealt. The hero wins if hits to kill <code>≤ enemy swings</code> when the hero goes first, <code>≤ enemy swings − 1</code> when the enemy goes first. Interval <code>1.96 × sqrt(p(1 − p) / N)</code>. Random numbers come from mulberry32, so a seed reproduces a run. Doom shotgun and Imp health from the Doom source release (linuxdoom-1.10, 1997), Doom and Doom II era; the real game draws from a fixed 256-entry random table, so its rolls are close to uniform, not exact. Text only, no game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const p1=v=>(v*100).toFixed(1)+'%';
+const p2=v=>(v*100).toFixed(2)+'%';
+const trim=(v,d)=>v.toFixed(d).replace(/\.?0+$/,'');
+const ord=n=>n+(n%100>=11&&n%100<=13?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* Exact hits-to-kill: damage lo with prob 1-p, hi with prob p. Returns Map k -> prob.
+   Works in integer half-points so a 1.5 multiplier stays exact. Stops when leftover mass is tiny. */
+function htkDist(hp,lo,hi,p,kmax){
+  const H=Math.round(hp*2),L=Math.round(lo*2),U=Math.round(hi*2);
+  let cur=new Map([[0,1]]);const out=new Map();let k=0;
+  while(cur.size&&k<(kmax||1000)){
+    k++;const nx=new Map();let mass=0;
+    for(const [s,q] of cur){
+      for(const [d,w] of [[U,p],[L,1-p]]){
+        if(w<=0)continue;const t=s+d,m=q*w;
+        if(t>=H)out.set(k,(out.get(k)||0)+m);
+        else{nx.set(t,(nx.get(t)||0)+m);mass+=m;}
+      }
+    }
+    cur=nx;if(mass<1e-13)break;
+  }
+  return out;
+}
+
+/* Histogram built from HTML so numbers stay text. bins: [{k,label,v,ex,c,valText}] */
+function hist(el,bins,yMax,opts){
+  opts=opts||{};
+  const key=bins.map(b=>b.k).join(',');
+  const showVals=bins.length<=13;
+  const tickEvery=Math.max(1,Math.ceil(bins.length/10));
+  const fresh=el.dataset.key!==key;
+  if(fresh){
+    el.dataset.key=key;
+    let h='';
+    for(const f of [0.5,1])h+=`<div class="gl" style="bottom:${52+184*f}px"><span>${opts.yFmt?opts.yFmt(yMax*f):Math.round(yMax*f*100)+'%'}</span></div>`;
+    bins.forEach((b,i)=>{
+      h+=`<div class="col"><div class="plot"><div class="ex"></div><div class="bar"></div><span class="val"></span></div><div class="tick">${(i%tickEvery===0||b.strong)?b.label:''}</div></div>`;
+    });
+    h+='<div class="dl" hidden><span></span></div>';
+    el.innerHTML=h;
+  } else {
+    el.querySelectorAll('.gl span').forEach((s,i)=>{const f=[0.5,1][i];s.textContent=opts.yFmt?opts.yFmt(yMax*f):Math.round(yMax*f*100)+'%';});
+  }
+  const cols=el.querySelectorAll('.col');
+  const apply=()=>bins.forEach((b,i)=>{
+    const c=cols[i],bar=c.querySelector('.bar'),ex=c.querySelector('.ex'),val=c.querySelector('.val'),tk=c.querySelector('.tick');
+    const hv=Math.min(1,(b.v||0)/yMax)*100;
+    bar.style.setProperty('--c',b.c);bar.style.height=hv+'%';
+    if(b.ex==null){ex.hidden=true;}else{ex.hidden=false;ex.style.height=Math.min(1,b.ex/yMax)*100+'%';}
+    const top=Math.max(hv,b.ex==null?0:Math.min(1,b.ex/yMax)*100);
+    val.textContent=showVals&&(b.v>0||b.ex>0)?b.valText:'';
+    val.style.bottom=`calc(${top}% + 2px)`;
+    tk.innerHTML=(i%tickEvery===0||b.strong)?(b.strong?'<b>'+b.label+'</b>':b.label):'';
+  });
+  if(fresh&&!reduced.matches){requestAnimationFrame(()=>requestAnimationFrame(apply));}else apply();
+  // divider line: sits after the last bin with k <= opts.cut
+  const dl=el.querySelector('.dl');
+  if(opts.cut==null){dl.hidden=true;return;}
+  let idx=0;bins.forEach((b,i)=>{if(b.k<=opts.cut)idx=i+1;});
+  dl.hidden=false;
+  const colsW=el.clientWidth-40,gap=4,n=bins.length,cw=(colsW-gap*(n-1))/n;
+  const x=40+idx*cw+(idx>0&&idx<n?(idx-0.5)*gap:Math.max(0,idx-1)*gap);
+  dl.style.left=Math.min(el.clientWidth-2,x)+'px';
+  dl.classList.toggle('flip',idx>n/2);
+  dl.querySelector('span').textContent=opts.cutLabel||'';
+}
+
+/* ---------- Panel 1 ---------- */
+const S={base:10,crit:25,mult:2,hp:50,E:4,first:'hero',N:1000,seed:42};
+let sim=null,exact=null,animId=0;
+
+function deadline(){return S.first==='hero'?S.E:S.E-1;}
+function computeExact(){
+  const p=S.crit/100,d=htkDist(S.hp,S.base,S.base*S.mult,p);
+  const D=deadline();let win=0,mean=0;
+  for(const [k,q] of d){if(k<=D)win+=q;mean+=k*q;}
+  const mh=S.base*(1+p*(S.mult-1));
+  const avgHits=S.hp/mh,sheet=Math.ceil(avgHits-1e-9);
+  exact={dist:d,win,mean,meanHit:mh,avgHits,sheet,sheetWin:sheet<=D};
+}
+function newSim(){sim={rng:mulberry32(S.seed>>>0),n:0,wins:0,sumK:0,counts:new Map(),trace:[[0,0]],step:Math.max(1,Math.ceil(S.N/250))};}
+function fights(k){
+  const H=S.hp*2,L=S.base*2,U=Math.round(S.base*S.mult*2),p=S.crit/100,D=deadline(),r=sim.rng;
+  for(let i=0;i<k;i++){
+    let dmg=0,h=0;
+    while(dmg<H){h++;dmg+=r()<p?U:L;}
+    sim.counts.set(h,(sim.counts.get(h)||0)+1);sim.n++;sim.sumK+=h;if(h<=D)sim.wins++;
+    if(sim.n%sim.step===0)sim.trace.push([sim.n,sim.wins]);
+  }
+}
+function ci(p,n){return n?1.96*Math.sqrt(p*(1-p)/n):0;}
+
+function binsRange(){
+  let lo=Infinity,hi=-Infinity;
+  for(const [k,q] of exact.dist)if(q>1e-9){lo=Math.min(lo,k);hi=Math.max(hi,k);}
+  for(const k of sim.counts.keys()){lo=Math.min(lo,k);hi=Math.max(hi,k);}
+  lo=Math.min(lo,exact.sheet);hi=Math.max(hi,exact.sheet);
+  const out=[];for(let k=lo;k<=hi;k++)out.push(k);return out;
+}
+function render(){
+  const D=deadline(),ks=binsRange(),green='var(--moss)',red='var(--blood)';
+  const cutLabel=D<=0?'hero never swings':`hero gets ${D} swing${D===1?'':'s'}`;
+  // spreadsheet view
+  hist($('hSheet'),ks.map(k=>({k,label:k,v:k===exact.sheet?1:0,ex:null,c:exact.sheetWin?green:red,valText:k===exact.sheet?'100%':'',strong:k===exact.sheet})),1,{cut:D,cutLabel});
+  $('sVerdict').textContent=exact.sheetWin?'Hero wins':'Hero loses';
+  $('sVerdict').className='verdict '+(exact.sheetWin?'win':'lose');
+  $('sVerdictSub').textContent=`Every time. Predicted win rate ${exact.sheetWin?'100%':'0%'}.`;
+  $('sMean').textContent=`${trim(exact.meanHit,3)}  (${100-S.crit}% × ${S.base} + ${S.crit}% × ${trim(S.base*S.mult,1)})`;
+  $('sHtk').textContent=`${S.hp} / ${trim(exact.meanHit,3)} = ${exact.avgHits.toFixed(2)} → ${exact.sheet} hits`;
+  $('sE').textContent=ord(S.E);
+  $('sD').textContent=D<=0?'none':`${D} swing${D===1?'':'s'}`;
+  // simulation view
+  const n=sim.n;let yMax=0;
+  const bins=ks.map(k=>{const v=n?(sim.counts.get(k)||0)/n:0,ex=exact.dist.get(k)||0;yMax=Math.max(yMax,v,ex);return {k,label:k,v,ex,c:k<=D?green:red,valText:p1(v)};});
+  yMax=Math.min(1,Math.max(.1,Math.ceil(yMax*10+.2)/10));
+  hist($('hSim'),bins,yMax,{cut:D,cutLabel});
+  const pw=n?sim.wins/n:0,half=ci(pw,n);
+  $('simWin').innerHTML=`Hero wins <span class="${pw>=.5?'win':'lose'}">${p1(pw)}</span> ± ${(half*100).toFixed(1)} <span style="font-size:.95rem;font-weight:600">(95%, ${fmt(n)} fights)</span>`;
+  const inside=Math.abs(pw-exact.win)<=half+1e-12;
+  $('simExact').textContent=`Exact win rate ${p1(exact.win)}. ${n?(inside?'The exact value is inside the interval.':'The exact value is outside this interval. That happens in about 1 run in 20.'):''} Seed ${S.seed}.`;
+  drawConv();
+  // table
+  const rows=[];
+  for(const k of ks){
+    const ex=exact.dist.get(k)||0,c=sim.counts.get(k)||0;
+    if(ex<5e-5&&!c&&k!==exact.sheet)continue;
+    rows.push(`<tr class="${k===exact.sheet?'here':''}"><td>${k}${k<=D?' (win)':''}</td><td>${p1(ex)}</td><td>${n?p1(c/n):'—'}</td><td class="nfights">${fmt(c)}</td><td>${k===exact.sheet?'100%':'—'}</td></tr>`);
+  }
+  rows.push(`<tr><td>Mean</td><td>${trim(exact.mean,3)}</td><td>${n?(sim.sumK/n).toFixed(3):'—'}</td><td class="nfights">—</td><td>${exact.avgHits.toFixed(2)}</td></tr>`);
+  rows.push(`<tr><td>Hero win rate</td><td>${p1(exact.win)}</td><td>${p1(pw)} ± ${(half*100).toFixed(1)}</td><td class="nfights">${fmt(sim.wins)}</td><td>${exact.sheetWin?'100%':'0%'}</td></tr>`);
+  $('tbody').innerHTML=rows.join('');
+  // insight
+  const certain=exact.win<1e-12||exact.win>1-1e-12;
+  let s;
+  if(D<=0) s=`The enemy kills the hero with its first swing, before the hero acts. Both views agree at 0%.`;
+  else if(certain&&(exact.win>.5)===exact.sheetWin) s=`The dice cannot change this fight, so both views agree at ${exact.win>.5?'100%':'0%'}. ${S.crit===0?'With crit chance 0 every fight is identical. ':''}Agreement here is how you check that a simulation is right.`;
+  else if(exact.sheetWin) s=`The spreadsheet says the hero always wins. The exact answer is <b>${p1(exact.win)}</b>. In ${p1(1-exact.win)} of fights the hero needs more than ${D} hit${D===1?'':'s'} and the enemy's ${ord(S.E)} swing lands first.`;
+  else s=`The spreadsheet says the hero always loses. The exact answer is <b>${p1(exact.win)}</b>. In that share of fights enough crits land for the hero to kill within ${D} hit${D===1?'':'s'}.`;
+  $('insight').innerHTML=s;
+  $('firstNote').textContent=S.first==='hero'?`Hero gets ${S.E} swings before the enemy's ${ord(S.E)} lands.`:`Hero gets ${Math.max(0,S.E-1)} swing${S.E-1===1?'':'s'} before the enemy's ${ord(S.E)} lands.`;
+  $('oBase').textContent=S.base;$('oCrit').textContent=S.crit+'%';$('oHp').textContent=S.hp;$('oE').textContent=S.E+' swing'+(S.E===1?'':'s');
+}
+function drawConv(){
+  const svg=$('conv'),w=svg.clientWidth||300,h=150,pl=36,pr=8,pt=8,pb=22;
+  const tr=sim.trace.slice();if(tr[tr.length-1][0]!==sim.n)tr.push([sim.n,sim.wins]);
+  const xMax=Math.max(sim.n,1),X=n=>pl+(w-pl-pr)*n/xMax,Y=v=>pt+(h-pt-pb)*(1-v);
+  const pts=tr.filter(t=>t[0]>0).map(([n,wn])=>{const p=wn/n;return [n,p,ci(p,n)];});
+  let g='';
+  for(const v of [0,.5,1])g+=`<line x1="${pl}" x2="${w-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${pl-5}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--ink-soft)">${v*100}%</text>`;
+  g+=`<text x="${w-pr}" y="${h-5}" text-anchor="end" font-size="11" fill="var(--ink-soft)">${fmt(sim.n)} fights</text><text x="${pl}" y="${h-5}" font-size="11" fill="var(--ink-soft)">0</text>`;
+  if(pts.length){
+    const up=pts.map(t=>`${X(t[0]).toFixed(1)},${Y(Math.min(1,t[1]+t[2])).toFixed(1)}`),dn=pts.slice().reverse().map(t=>`${X(t[0]).toFixed(1)},${Y(Math.max(0,t[1]-t[2])).toFixed(1)}`);
+    g+=`<polygon points="${up.concat(dn).join(' ')}" fill="var(--ochre)" opacity=".3"/>`;
+    g+=`<line x1="${pl}" x2="${w-pr}" y1="${Y(exact.win)}" y2="${Y(exact.win)}" stroke="var(--steel)" stroke-width="2" stroke-dasharray="6 4"/>`;
+    g+=`<polyline points="${pts.map(t=>`${X(t[0]).toFixed(1)},${Y(t[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+  }
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.innerHTML=g;
+}
+function announce(){$('live').textContent=`Hero wins ${p1(sim.n?sim.wins/sim.n:0)} over ${fmt(sim.n)} fights. Exact ${p1(exact.win)}. Spreadsheet says ${exact.sheetWin?'hero wins':'hero loses'}.`;}
+function runAnimated(k){
+  const id=++animId;
+  if(reduced.matches){fights(k);render();announce();return;}
+  const chunk=Math.max(1,Math.ceil(k/30));let left=k;
+  (function step(){if(id!==animId)return;const c=Math.min(chunk,left);fights(c);left-=c;render();if(left>0)requestAnimationFrame(step);else announce();})();
+}
+function recompute(animate){animId++;computeExact();newSim();if(animate)runAnimated(S.N);else{fights(S.N);render();announce();}}
+
+$('base').addEventListener('input',e=>{S.base=+e.target.value;recompute(false);});
+$('crit').addEventListener('input',e=>{S.crit=+e.target.value;recompute(false);});
+$('hp').addEventListener('input',e=>{S.hp=+e.target.value;recompute(false);});
+$('ehtk').addEventListener('input',e=>{S.E=+e.target.value;recompute(false);});
+function setFirst(f){S.first=f;$('fHero').setAttribute('aria-pressed',f==='hero');$('fEnemy').setAttribute('aria-pressed',f==='enemy');recompute(false);}
+$('fHero').addEventListener('click',()=>setFirst('hero'));
+$('fEnemy').addEventListener('click',()=>setFirst('enemy'));
+function pressOne(group,btn){group.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',b===btn));}
+$('multChips').querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{pressOne($('multChips'),b);S.mult=+b.dataset.m;recompute(false);}));
+$('nChips').querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{pressOne($('nChips'),b);S.N=+b.dataset.n;recompute(true);}));
+$('run').addEventListener('click',()=>recompute(true));
+$('more').addEventListener('click',()=>{animId++;runAnimated(1000);});
+$('seed').addEventListener('change',e=>{let v=Math.floor(Math.abs(+e.target.value||0))%4294967296;e.target.value=v;S.seed=v;recompute(true);uRender();});
+$('newSeed').addEventListener('click',()=>{S.seed=Math.floor(Math.random()*100000);$('seed').value=S.seed;recompute(true);uRender();});
+
+/* ---------- Panel 2: underdog ---------- */
+const U={w:'swingyB',first:'A'};
+function fightersFor(w){
+  return {A:w==='swingyA'?{lo:0,hi:20}:{lo:10,hi:10},B:w==='swingyB'?{lo:0,hi:18}:{lo:9,hi:9}};
+}
+function uExact(w,first){
+  const F=fightersFor(w);
+  const X=w==='swingyA'?'A':'B',Y=X==='A'?'B':'A';
+  const hY=Math.ceil(50/F[Y].lo);
+  const D=first===X?hY:hY-1;
+  const d=htkDist(50,F[X].lo,F[X].hi,F[X].lo===F[X].hi?0:.5,200);
+  let px=0;for(const [k,q] of d)if(k<=D)px+=q;
+  return {X,D,d,hY,bWin:X==='B'?px:1-px};
+}
+function uSim(w,first){
+  const F=fightersFor(w),r=mulberry32(S.seed>>>0),N=10000;let bw=0;
+  const roll=f=>f.lo===f.hi?f.lo:(r()<.5?f.hi:f.lo);
+  for(let i=0;i<N;i++){
+    let hA=50,hB=50,t=first;
+    for(;;){
+      if(t==='A'){hB-=roll(F.A);if(hB<=0)break;t='B';}
+      else{hA-=roll(F.B);if(hA<=0){bw++;break;}t='A';}
+    }
+  }
+  return {p:bw/N,N};
+}
+const wNames={steady:'B steady 9',swingyB:'B deals 0 or 18',swingyA:'A deals 0 or 20, B steady 9'};
+function uRender(){
+  const e=uExact(U.w,U.first),s=uSim(U.w,U.first);
+  const who=e.X,maxK=e.D+4,bins=[];let tail=0;
+  for(const [k,q] of e.d)if(k>=maxK)tail+=q;
+  let yMax=0;
+  for(let k=1;k<=maxK;k++){
+    const v=k<maxK?(e.d.get(k)||0):tail;yMax=Math.max(yMax,v);
+    const xWins=k<=e.D,bWins=who==='B'?xWins:!xWins;
+    bins.push({k,label:k<maxK?k:k+'+',v,ex:null,c:bWins?'var(--moss)':'var(--blood)',valText:p1(v)});
+  }
+  yMax=Math.min(1,Math.max(.1,Math.ceil(yMax*10+.2)/10));
+  const other=who==='A'?'B':'A';
+  $('uCap').innerHTML=`Swings ${who} needs to kill ${other}<small>${other} is steady and kills in ${e.hY} swings. ${who} gets ${e.D} swing${e.D===1?'':'s'} before that.</small>`;
+  hist($('hU'),bins,yMax,{cut:e.D,cutLabel:`${who} gets ${e.D} swings`});
+  $('uExact').innerHTML=`B wins <span class="${e.bWin>0?'win':'lose'}">${trim(e.bWin*100,2)}%</span>`;
+  if(e.bWin===.5)$('uExact').innerHTML='B wins <span class="win">50.0%</span>';
+  $('uSim').textContent=`Simulated ${p1(s.p)} ± ${(ci(s.p,s.N)*100).toFixed(1)} (95%, ${fmt(s.N)} fights, seed ${S.seed}). Exact value above.`;
+  let note;
+  if(U.w==='steady')note=`B needs 6 swings of 9 and never gets more than 5. Average in, average out. B cannot win.`;
+  else if(U.w==='swingyB')note=`Same average of 9, but B now wins by landing 3 heavy hits (54 damage) within its ${e.D} swings. Variance handed the underdog ${p1(e.bWin)} of fights.`;
+  else note=`Give the variance to the favorite instead. A needs 3 heavies in its ${e.D} swings, and A's win rate falls from 100% to ${p1(1-e.bWin)}. Variance helps whoever would lose on average.`;
+  $('uNote').textContent=note;
+  $('uBody').innerHTML=['steady','swingyB','swingyA'].map(w=>`<tr><td>${wNames[w]}</td>${['A','B'].map(f=>`<td class="${w===U.w&&f===U.first?'here':''}">${p1(uExact(w,f).bWin)}</td>`).join('')}</tr>`).join('');
+}
+function setUFirst(f){U.first=f;$('uA').setAttribute('aria-pressed',f==='A');$('uB').setAttribute('aria-pressed',f==='B');uRender();}
+$('uA').addEventListener('click',()=>setUFirst('A'));
+$('uB').addEventListener('click',()=>setUFirst('B'));
+$('wChips').querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{pressOne($('wChips'),b);U.w=b.dataset.w;uRender();}));
+
+/* ---------- Panel 3: Doom shotgun ---------- */
+const doomCounts=new Map();
+(function(){for(let i=0;i<2187;i++){let x=i,s=0;for(let j=0;j<7;j++){s+=5*(x%3+1);x=Math.floor(x/3);}doomCounts.set(s,(doomCounts.get(s)||0)+1);}})();
+let dHp=60;
+function dRender(){
+  let kills=0;const bins=[];let yMax=0;
+  for(let t=35;t<=105;t+=5){const c=doomCounts.get(t)||0,v=c/2187;yMax=Math.max(yMax,v);if(t>=dHp)kills+=c;
+    bins.push({k:t,label:t,v,ex:null,c:t>=dHp?'var(--moss)':'var(--blood)',valText:(v*100).toFixed(1)+'%',strong:t===70});}
+  yMax=Math.ceil(yMax*10+.2)/10;
+  const cut=dHp-1;
+  hist($('hD'),bins,yMax,{cut:cut<35?null:cut,cutLabel:`health ${dHp}`});
+  $('dPct').innerHTML=`<span class="${kills/2187>=.5?'win':'lose'}">${p2(kills/2187)}</span>`;
+  $('dFrac').textContent=`${fmt(kills)} / 2,187 combinations kill a ${dHp}-health target in one blast.`;
+  $('dAvg').innerHTML=70>=dHp?`The average (70 ≥ ${dHp}) says one blast always kills`:`The average (70 &lt; ${dHp}) says one blast never kills`;
+  $('oDHp').textContent=dHp;
+  $('dChips').querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.h===dHp));
+}
+$('dHp').addEventListener('input',e=>{dHp=+e.target.value;dRender();});
+$('dChips').querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{dHp=+b.dataset.h;$('dHp').value=dHp;dRender();}));
+
+/* ---------- Tabs ---------- */
+const tabs=[$('t1'),$('t2'),$('t3')];
+function redraw(){if(!$('p1').hidden)render();if(!$('p2').hidden)uRender();if(!$('p3').hidden)dRender();}
+function sel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});if(focus)t.focus();redraw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t,true));t.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){e.preventDefault();sel(tabs[(i+1)%3],true);}
+  else if(e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+2)%3],true);}
+  else if(e.key==='Home'){e.preventDefault();sel(tabs[0],true);}
+  else if(e.key==='End'){e.preventDefault();sel(tabs[2],true);}});});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redraw,80);});
+
+// first screen: defaults with 1,000 fights already run
+computeExact();newSim();fights(S.N);render();announce();
+uRender();dRender();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
+})();
+</script>
+</body>
+</html>

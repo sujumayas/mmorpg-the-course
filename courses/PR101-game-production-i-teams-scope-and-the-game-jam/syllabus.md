@@ -30,7 +30,7 @@ How games actually get made: small teams, version control, agile, scoping, and f
 | 12 | Crunch: causes, costs, alternatives | _todo_ | _todo_ |
 | 13 | Builds and release checklists | _todo_ | _todo_ |
 | 14 | Post-mortems as a practice | _todo_ | _todo_ |
-| 15 | Final: team game release + post-mortem | _todo_ | _todo_ |
+| 15 | Final: team game release + post-mortem | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

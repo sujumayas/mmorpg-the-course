@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tooltip DPS vs expected DPS — MA102 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.verdict{font-family:var(--serif);font-size:1.2rem;margin:0 0 12px;display:flex;flex-wrap:wrap;gap:4px 18px}
+.verdict b{font-weight:600}
+.verdict .flip{color:var(--moss);font-family:var(--sans);font-weight:700;font-size:.9rem;align-self:center}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink-soft);font-size:12px}
+svg .val{fill:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+svg .grp{fill:var(--ink);font-weight:600;font-size:13px}
+@media (max-width:560px){svg text{font-size:15px}svg .grp{font-size:16px}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:2px}
+.legend i.line{height:3px;vertical-align:middle;width:18px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+label small{font-weight:400;color:var(--ink-soft)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+#b{accent-color:var(--blood)}
+button.reset{font:600 .9rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;justify-self:start}
+button.reset:hover{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+@media (max-width:760px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding:0 0 4px}
+caption span{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:0}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+tr.total td{font-weight:700}
+tr.dps td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:no-preference){svg .anim{transition:all .18s ease-out}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA102 Mathematics for Games II · Week 4 · Worked example</p>
+  <h1>The tooltip picks the Maul. The fight picks the Rapier.</h1>
+  <p class="lede">Tooltip DPS is damage divided by speed. Expected DPS also averages misses and crits. Misses hit both weapons by the same fraction, so they never change the order. The Rapier's crit bonus is what flips it, and the flip happens at one crossing point.</p>
+</header>
+
+<section class="panel" aria-label="Weapon comparison">
+  <p class="verdict" id="verdict" aria-live="polite"></p>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Tooltip vs fight<small>Pale bar: what the tooltip prints. Solid bar: expected DPS for this character.</small></figcaption>
+      <svg id="bars" viewBox="0 0 480 280" role="img" aria-labelledby="barsDesc"><desc id="barsDesc">Grouped bars of tooltip and expected DPS for both weapons</desc></svg>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>Iron Maul</span>
+        <span><i style="background:var(--blood)"></i>Keen Rapier</span>
+        <span><i style="background:var(--ink-soft);opacity:.3"></i>tooltip</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Expected DPS vs Rapier crit bonus<small>The Maul ignores the Rapier's bonus, so its line is flat. The dot is where they tie.</small></figcaption>
+      <svg id="lines" viewBox="0 0 480 280" role="img" aria-labelledby="linesDesc"><desc id="linesDesc">Expected DPS of both weapons as the Rapier crit bonus goes from 0 to 50 percent</desc></svg>
+      <div class="legend">
+        <span><i class="line" style="background:var(--steel)"></i>Iron Maul</span>
+        <span><i class="line" style="background:var(--blood)"></i>Keen Rapier</span>
+        <span><i class="line" style="background:var(--ink-soft)"></i>current bonus</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rMaul">—</b><span>Maul expected DPS</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rRap">—</b><span>Rapier expected DPS</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rGap">—</b><span>Rapier minus Maul</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rTie">—</b><span>tie at Rapier bonus</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="q">Miss chance q <output id="oq"></output></label>
+      <input id="q" type="range" min="0" max="40" step="1" value="10">
+    </div>
+    <div>
+      <label for="c0">Base crit chance c0 <output id="oc0"></output></label>
+      <input id="c0" type="range" min="0" max="30" step="1" value="5">
+    </div>
+    <div>
+      <label for="b">Rapier crit bonus b <output id="ob"></output></label>
+      <input id="b" type="range" min="0" max="50" step="1" value="25">
+    </div>
+    <div>
+      <label for="m">Crit multiplier m <output id="om"></output></label>
+      <input id="m" type="range" min="150" max="300" step="5" value="200">
+    </div>
+    <button class="reset" id="reset" type="button">Reset to lecture values</button>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <table>
+        <caption><span style="background:var(--steel)"></span>Iron Maul, one swing (D = 120, s = 3.0 s)</caption>
+        <thead><tr><th>Outcome</th><th>Probability</th><th>Damage</th><th>Prob. × dmg</th></tr></thead>
+        <tbody id="tMaul"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption><span style="background:var(--blood)"></span>Keen Rapier, one swing (D = 36, s = 1.0 s)</caption>
+        <thead><tr><th>Outcome</th><th>Probability</th><th>Damage</th><th>Prob. × dmg</th></tr></thead>
+        <tbody id="tRap"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Invented weapons with hand-checkable numbers. Maul averages (90 + 150) / 2 = 120 per swing every 3.0 s. Rapier averages (30 + 42) / 2 = 36 per swing every 1.0 s. Expected DPS = (1 − q) × D × (1 + c(m − 1)) / s. Tie: b* = ((40/36)(1 + c0(m − 1)) − 1) / (m − 1) − c0.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const W={maul:{name:'Iron Maul',D:120,s:3,col:'var(--steel)'},rap:{name:'Keen Rapier',D:36,s:1,col:'var(--blood)'}};
+const DEF={q:10,c0:5,b:25,m:200};
+const f2=n=>(Math.round(n*100+1e-9)/100).toFixed(2);
+const pctS=(n,d)=>(n*100).toFixed(d==null?0:d)+'%';
+const trimP=n=>{const s=(Math.round(n*10000)/100).toFixed(2);return s.replace(/\.?0+$/,'')+'%';};
+function st(){return{q:$('q').value/100,c0:$('c0').value/100,b:$('b').value/100,m:$('m').value/100};}
+function critC(w,p,b){return Math.min(1,w==='maul'?p.c0:p.c0+(b==null?p.b:b));}
+function tip(w){return W[w].D/W[w].s;}
+function exp(w,p,b){const c=critC(w,p,b);return (1-p.q)*W[w].D*(1+c*(p.m-1))/W[w].s;}
+function tie(p){return ((40/36)*(1+p.c0*(p.m-1))-1)/(p.m-1)-p.c0;}
+function el(tag,attrs,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;return e;}
+function niceMax(v){return v<=57?60:Math.ceil(v*1.05/20)*20;}
+
+function drawBars(p){
+  const svg=$('bars');[...svg.querySelectorAll(':scope > :not(desc)')].forEach(n=>n.remove());
+  const L=40,R=470,T=24,B=246,vals=[tip('maul'),exp('maul',p),tip('rap'),exp('rap',p)];
+  const yM=niceMax(Math.max(...vals)),y=v=>B-(B-T)*v/yM;
+  for(let i=0;i<=4;i++){const v=yM*i/4;svg.append(el('line',{x1:L,x2:R,y1:y(v),y2:y(v),stroke:'var(--grid)'}));svg.append(el('text',{x:L-6,y:y(v)+4,'text-anchor':'end'},Math.round(v)));}
+  const groups=[['maul',150],['rap',360]],bw=62;
+  groups.forEach(([w,cx])=>{
+    const t=tip(w),e=exp(w,p);
+    [[t,cx-bw-4,true],[e,cx+4,false]].forEach(([v,x,pale])=>{
+      svg.append(el('rect',{class:'anim',x:x,y:y(v),width:bw,height:B-y(v),rx:3,fill:pale?'var(--ink-soft)':W[w].col,'fill-opacity':pale?0.28:1}));
+      svg.append(el('text',{class:'val',x:x+bw/2,y:y(v)-6,'text-anchor':'middle'},f2(v)));
+      svg.append(el('text',{x:x+bw/2,y:B+16,'text-anchor':'middle'},pale?'tooltip':'expected'));
+    });
+    svg.append(el('text',{class:'grp',x:cx,y:B+32,'text-anchor':'middle'},W[w].name));
+  });
+  svg.append(el('line',{x1:L,x2:R,y1:B,y2:B,stroke:'var(--ink-soft)'}));
+}
+
+function drawLines(p){
+  const svg=$('lines');[...svg.querySelectorAll(':scope > :not(desc)')].forEach(n=>n.remove());
+  const L=40,R=468,T=16,B=240,xM=0.5;
+  const yM=niceMax(Math.max(exp('maul',p),exp('rap',p,0.5)));
+  const x=b=>L+(R-L)*b/xM,y=v=>B-(B-T)*v/yM;
+  for(let i=0;i<=4;i++){const v=yM*i/4;svg.append(el('line',{x1:L,x2:R,y1:y(v),y2:y(v),stroke:'var(--grid)'}));svg.append(el('text',{x:L-6,y:y(v)+4,'text-anchor':'end'},Math.round(v)));}
+  for(let i=0;i<=5;i++){const b=i/10;svg.append(el('text',{x:x(b),y:B+16,'text-anchor':'middle'},'+'+Math.round(b*100)+'%'));}
+  svg.append(el('text',{x:R,y:B+34,'text-anchor':'end'},'Rapier crit bonus b'));
+  svg.append(el('line',{x1:L,x2:R,y1:B,y2:B,stroke:'var(--ink-soft)'}));
+  // current slider marker
+  svg.append(el('line',{x1:x(p.b),x2:x(p.b),y1:T,y2:B,stroke:'var(--ink-soft)','stroke-dasharray':'4 4'}));
+  const mE=exp('maul',p);
+  svg.append(el('line',{x1:x(0),x2:x(xM),y1:y(mE),y2:y(mE),stroke:'var(--steel)','stroke-width':3}));
+  let d='';for(let i=0;i<=100;i++){const b=xM*i/100;d+=(i?'L':'M')+x(b).toFixed(1)+' '+y(exp('rap',p,b)).toFixed(1);}
+  svg.append(el('path',{d:d,fill:'none',stroke:'var(--blood)','stroke-width':3}));
+  // current points
+  [[mE,'var(--steel)'],[exp('rap',p),'var(--blood)']].forEach(([v,c])=>svg.append(el('circle',{cx:x(p.b),cy:y(v),r:5,fill:c,stroke:'var(--paper-2)','stroke-width':2})));
+  const bs=tie(p);
+  if(bs>=0&&bs<=xM){
+    const tx=x(bs),ty=y(mE);
+    svg.append(el('circle',{cx:tx,cy:ty,r:7,fill:'var(--ochre)',stroke:'var(--ink)','stroke-width':1.5}));
+    const right=tx<R-110;
+    svg.append(el('text',{class:'val',x:right?tx+10:tx-10,y:ty-12,'text-anchor':right?'start':'end'},'tie at +'+trimP(bs)));
+  }else{
+    svg.append(el('text',{class:'val',x:(L+R)/2,y:T+14,'text-anchor':'middle'},'no tie in range'));
+  }
+}
+
+function table(w,p){
+  const c=critC(w,p),D=W[w].D,pm=p.q,pn=(1-p.q)*(1-c),pc=(1-p.q)*c,cd=p.m*D;
+  const rows=[['Miss',pm,0],['Normal hit',pn,D],['Crit',pc,cd]];
+  const tot=pn*D+pc*cd;
+  let h=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1].toFixed(3)}</td><td>${f2(r[2])}</td><td>${f2(r[1]*r[2])}</td></tr>`).join('');
+  h+=`<tr class="total"><td>Total per swing</td><td>${(pm+pn+pc).toFixed(3)}</td><td></td><td>${f2(tot)}</td></tr>`;
+  h+=`<tr class="dps"><td>Expected DPS</td><td colspan="2">${f2(tot)} / ${W[w].s.toFixed(1)} s</td><td>${f2(tot/W[w].s)}</td></tr>`;
+  $(w==='maul'?'tMaul':'tRap').innerHTML=h;
+}
+
+function update(){
+  const p=st();
+  $('oq').textContent=pctS(p.q);$('oc0').textContent=pctS(p.c0);$('ob').textContent='+'+pctS(p.b);$('om').textContent='×'+p.m.toFixed(2);
+  const mT=tip('maul'),rT=tip('rap'),mE=exp('maul',p),rE=exp('rap',p),bs=tie(p);
+  const tL=mT>=rT?'Maul':'Rapier';
+  const fL=Math.abs(mE-rE)<0.005?'tie':(mE>rE?'Maul':'Rapier');
+  $('verdict').innerHTML=`<span>Tooltip leader: <b>${tL}</b>.</span><span>Fight leader: <b>${fL}</b>.</span>`+(fL!==tL&&fL!=='tie'?'<span class="flip">Ranking flipped</span>':'');
+  $('rMaul').textContent=f2(mE);$('rRap').textContent=f2(rE);
+  const g=rE-mE;$('rGap').textContent=(g>=0?'+':'−')+f2(Math.abs(g));
+  $('rTie').textContent=(bs>=0&&bs<=0.5)?'+'+trimP(bs):'no tie in range';
+  const hit=1-p.q,cM=1+p.c0*(p.m-1),cR=1+critC('rap',p)*(p.m-1);
+  $('insight').innerHTML=`Both weapons keep the same <b>×${hit.toFixed(2)}</b> of their damage after misses, so the miss slider scales both lines and the tie stays at +${trimP(bs)}. `+
+    `The crit multipliers differ. They are <b>×${cM.toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}</b> for the Maul, <b>×${cR.toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}</b> for the Rapier. `+
+    `The tooltip gap is ${f2(mT/rT)}× in the Maul's favor, so the Rapier leads in the fight once its crit multiplier is more than ${f2(mT/rT)}× the Maul's (now ${f2(cR/cM)}×).`;
+  drawBars(p);drawLines(p);table('maul',p);table('rap',p);
+}
+['q','c0','b','m'].forEach(id=>$(id).addEventListener('input',update));
+$('reset').addEventListener('click',()=>{for(const k in DEF)$(k).value=DEF[k];update();});
+update();
+})();
+</script>
+</body>
+</html>

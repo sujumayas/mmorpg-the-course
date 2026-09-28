@@ -27,7 +27,7 @@ Capstone teams pitch, prototype and plan an MMO-scope project.
 | 12 | Vertical slice sprint 1 | _todo_ | _todo_ |
 | 13 | Vertical slice sprint 2 | _todo_ | _todo_ |
 | 14 | Pre-production review | _todo_ | _todo_ |
-| 15 | Final: pre-production package | _todo_ | _todo_ |
+| 15 | Final: pre-production package | [assessments](#assessment-materials) | — |
 
 ## Assessment
 

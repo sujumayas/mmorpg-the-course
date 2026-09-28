@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A/B test simulator — MA102 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption b{font-family:var(--sans);font-variant-numeric:tabular-nums}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.84rem;min-height:1.3em}
+figcaption small.warn{color:var(--blood);font-weight:600}
+canvas{display:block;width:100%;height:270px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 4px;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend i.line{height:3px}
+.legend i.ring{width:11px;height:11px;border-radius:50%;border:2.5px solid var(--ink);background:transparent}
+.legend i.dot{width:11px;height:11px;border-radius:50%}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin:16px 0 4px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px 26px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 12px}
+.chip,.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.seg{display:inline-flex;border:1.5px solid var(--steel);border-radius:8px;overflow:hidden}
+.seg label{display:block;font-weight:600;padding:7px 12px;cursor:pointer;position:relative}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg label:has(input:checked){background:var(--steel);color:var(--paper)}
+.seg label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:-3px}
+.check{font-weight:600;font-size:.92rem;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+details{margin-top:16px;border:1.5px solid var(--grid);border-radius:10px;padding:10px 14px;background:var(--paper)}
+summary{font-family:var(--serif);font-size:1.05rem;cursor:pointer}
+.one{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:10px}
+@media (max-width:760px){.one{grid-template-columns:1fr}}
+.nums{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.nums label{flex-direction:column;gap:2px;font-size:.84rem}
+.nums input{width:96px;font:600 1rem var(--sans);padding:6px 8px;border:1.5px solid var(--steel);border-radius:6px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.93rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th{text-align:left;font-weight:600;color:var(--ink-soft)}
+td.v{font-weight:700}
+.verdict-sig{color:var(--ochre)}
+.small{font-size:.86rem;color:var(--ink-soft);margin:6px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+footer p{margin:0 0 8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA102 Mathematics for Games II · Week 14 · Worked example</p>
+  <h1>A real 4-point win, and most tests miss it</h1>
+  <p class="lede">The new tutorial truly lifts completion from 40% to 44%. Run the test 1,000 times with 1,000 players per group and fewer than half come back significant. Set the lift to zero and about 5% still "win". Those are false positives.</p>
+</header>
+
+<section class="panel" aria-label="A/B test simulator">
+  <div class="charts">
+    <figure>
+      <figcaption>1,000 experiments. Significant: <b id="sigCount">—</b> of 1,000<small id="histSub"></small></figcaption>
+      <canvas id="cHist" role="img" aria-label="Histogram of z statistics from 1,000 simulated A/B tests"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>not significant</span>
+        <span><i style="background:var(--ochre)"></i>significant (beyond ±<span id="legZ">1.96</span>)</span>
+        <span><i class="line" style="background:var(--ink)"></i>null curve, if lift were 0</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Power vs players per group<small>Chance a test of this lift comes back significant</small></figcaption>
+      <canvas id="cPow" role="img" aria-label="Power curve versus players per group on a log scale"></canvas>
+      <div class="legend">
+        <span><i class="line" style="background:var(--moss)"></i>analytic power</span>
+        <span><i class="dot" style="background:var(--moss)"></i>at current n</span>
+        <span><i class="ring"></i>simulated share significant</span>
+        <span><i class="line" style="background:var(--ink-soft)"></i>80% guide</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rPA">—</b><span>baseline p<sub>A</sub></span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rPB">—</b><span>true p<sub>B</sub></span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rN">—</b><span>players per group</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rSE">—</b><span>SE under H₀ (pooled)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rPow">—</b><span>analytic power</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSim">—</b><span>simulated significant</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rReq">—</b><span>n per group for 80% power</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="pA"><span>Baseline rate p<sub>A</sub></span> <output id="oPA">40%</output></label>
+      <input id="pA" type="range" min="1" max="90" step="1" value="40">
+      <label for="lift">True lift d <output id="oLift">+4 pts</output></label>
+      <input id="lift" type="range" min="-20" max="30" step="1" value="8">
+      <label for="nIdx">Players per group n <output id="oN">1,000</output></label>
+      <input id="nIdx" type="range" min="0" max="11" step="1" value="6">
+    </div>
+    <div>
+      <span class="lbl" id="presetLbl">Presets</span>
+      <div class="row" role="group" aria-labelledby="presetLbl">
+        <button class="chip" data-p="aa" aria-pressed="false">A/A test</button>
+        <button class="chip" data-p="play" aria-pressed="false">Playtest</button>
+        <button class="chip" data-p="tut" aria-pressed="true">Tutorial test</button>
+        <button class="chip" data-p="well" aria-pressed="false">Well powered</button>
+      </div>
+      <span class="lbl" id="alphaLbl">Significance level α</span>
+      <div class="row">
+        <div class="seg" role="radiogroup" aria-labelledby="alphaLbl">
+          <label><input type="radio" name="alpha" value="0.05" checked>0.05 (±1.96)</label>
+          <label><input type="radio" name="alpha" value="0.01">0.01 (±2.576)</label>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" id="run">Run 1,000 new experiments</button>
+        <label class="check"><input type="checkbox" id="fixed" checked>Fixed seed</label>
+        <span class="small" id="seedNote">seed 14</span>
+      </div>
+    </div>
+  </div>
+
+  <details id="oneTest" open>
+    <summary>One test in full: check the arithmetic</summary>
+    <div class="one">
+      <div>
+        <p class="small" style="margin-top:0">Starts on experiment 1 of the current run. Type your own counts or load a row from the lecture table.</p>
+        <div class="nums">
+          <label for="kA"><span>k<sub>A</sub> (A completes)</span><input id="kA" type="number" min="0" step="1" inputmode="numeric"></label>
+          <label for="kB"><span>k<sub>B</sub> (B completes)</span><input id="kB" type="number" min="0" step="1" inputmode="numeric"></label>
+          <label for="kN"><span>n per group</span><input id="kN" type="number" min="1" step="1" inputmode="numeric"></label>
+        </div>
+        <div class="row" role="group" aria-label="Load example counts" style="margin-top:10px">
+          <button class="chip" data-k="first">Experiment 1</button>
+          <button class="chip" data-k="4,6,10">4 vs 6 of 10</button>
+          <button class="chip" data-k="400,440,1000">400 vs 440 of 1,000</button>
+          <button class="chip" data-k="800,880,2000">800 vs 880 of 2,000</button>
+        </div>
+        <p class="small" id="kErr" role="alert"></p>
+      </div>
+      <div class="table-wrap">
+        <table aria-label="Test arithmetic">
+          <tbody>
+            <tr><th>Observed rates</th><td id="tRates">—</td></tr>
+            <tr><th>Pooled p̂ = (k<sub>A</sub>+k<sub>B</sub>)/2n</th><td class="v" id="tPool">—</td></tr>
+            <tr><th>SE = √(p̂(1−p̂)·2/n)</th><td class="v" id="tSE">—</td></tr>
+            <tr><th>z = (k<sub>B</sub>/n − k<sub>A</sub>/n)/SE</th><td class="v" id="tZ">—</td></tr>
+            <tr><th>p-value = 2(1 − Φ(|z|))</th><td class="v" id="tP">—</td></tr>
+            <tr><th>Verdict at α = <span id="tAlpha">0.05</span></th><td class="v" id="tVerdict">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+</section>
+
+<footer>
+  <p>Each experiment draws k<sub>A</sub> ~ Binomial(n, p<sub>A</sub>) and k<sub>B</sub> ~ Binomial(n, p<sub>B</sub>) and runs a two-sided pooled two-proportion z-test. For n ≤ 1,000 the counts are exact sums of n uniform draws. For n above 1,000 they use the normal approximation to the binomial, rounded to the nearest whole count (continuity correction). Φ uses the Abramowitz and Stegun 7.1.26 erf approximation. Seeded runs use mulberry32.</p>
+  <p>Analytic power uses the unpooled SE at the true rates, power = Φ(d/SE₁ − z<sub>α</sub>) + Φ(−d/SE₁ − z<sub>α</sub>). Required n = (z<sub>α</sub> + 0.8416)² × (p<sub>A</sub>(1−p<sub>A</sub>) + p<sub>B</sub>(1−p<sub>B</sub>)) / d², rounded up. p<sub>B</sub> is capped at 99.9% and floored at 0.1%.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS=[10,20,50,100,200,500,1000,2000,2400,5000,10000,20000];
+const fmtInt=n=>Math.round(n).toLocaleString('en-US');
+const pct1=x=>(x*100).toFixed(1)+'%';
+const S={pA:40,liftHalf:8,nIdx:6,alpha:0.05,fixed:true,seed:14,runSeed:14,z:[],first:null};
+
+// ---- math ----
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
+const Phi=x=>0.5*(1+erf(x/Math.SQRT2));
+const zCrit=a=>a===0.01?2.576:1.96;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){let u=0;while(u===0)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r());}
+function binom(r,n,p){
+  if(n<=1000){let k=0;for(let i=0;i<n;i++)if(r()<p)k++;return k;}
+  const k=Math.round(n*p+Math.sqrt(n*p*(1-p))*gauss(r));return Math.min(n,Math.max(0,k));
+}
+function testStats(kA,kB,n){
+  const pool=(kA+kB)/(2*n),se=Math.sqrt(pool*(1-pool)*2/n);
+  const z=se===0?0:(kB/n-kA/n)/se,p=2*(1-Phi(Math.abs(z)));
+  return {pool,se,z,p:Math.max(0,p)};
+}
+function power(pA,pB,n,a){
+  const d=pB-pA,zc=zCrit(a);if(d===0)return a;
+  const se1=Math.sqrt(pA*(1-pA)/n+pB*(1-pB)/n);
+  return Phi(d/se1-zc)+Phi(-d/se1-zc);
+}
+function requiredN(pA,pB,a){
+  const d=pB-pA;if(d===0)return Infinity;
+  return Math.ceil(Math.round((zCrit(a)+0.8416)**2*(pA*(1-pA)+pB*(1-pB))/(d*d)*1e9)/1e9);
+}
+function rates(){const pA=S.pA/100;let pB=(S.pA*2+S.liftHalf)/200;pB=Math.min(0.999,Math.max(0.001,pB));return {pA,pB:Math.round(pB*10000)/10000};}
+function simulate(pA,pB,n,seed){
+  const r=mulberry32(seed),zs=new Array(1000);let first=null;
+  for(let i=0;i<1000;i++){const kA=binom(r,n,pA),kB=binom(r,n,pB);zs[i]=testStats(kA,kB,n).z;if(i===0)first={kA,kB,n};}
+  return {zs,first};
+}
+window.MA102W14={testStats,power,requiredN,simulate,Phi};
+
+// ---- canvas helpers ----
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+
+const LO=-5,HI=8,BW=0.25,NB=Math.round((HI-LO)/BW);
+function drawHist(){
+  const {g,w,h}=setup($('cHist')),pad={l:40,r:10,t:10,b:36};
+  const zc=zCrit(S.alpha),sig=new Array(NB).fill(0),non=new Array(NB).fill(0);
+  S.z.forEach(z=>{let b=Math.floor((z-LO)/BW);b=Math.min(NB-1,Math.max(0,b));(Math.abs(z)>=zc?sig:non)[b]++;});
+  const peak=Math.max(1000*BW*0.3989,...sig.map((s,i)=>s+non[i]));
+  const yMax=Math.ceil(peak/20)*20;
+  const X=v=>pad.l+(w-pad.l-pad.r)*(v-LO)/(HI-LO),Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=yMax*i/4,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(v),pad.l-5,y);}
+  g.textAlign='center';g.textBaseline='top';
+  const ticks=w<380?[-4,-2,0,2,4,6]:[-4,-3,-2,-1,0,1,2,3,4,5,6,7];
+  ticks.forEach(t=>g.fillText(String(t).replace('-','−'),X(t),h-pad.b+5));
+  g.textAlign='left';g.fillText('≤−5',pad.l-2,h-pad.b+19);g.textAlign='right';g.fillText('≥8',w-pad.r,h-pad.b+19);
+  g.textAlign='center';g.fillText('z',X(1.5),h-pad.b+19);
+  const bw=(w-pad.l-pad.r)/NB;
+  for(let i=0;i<NB;i++){const x=pad.l+i*bw;
+    if(non[i]){g.fillStyle=css('--steel');g.fillRect(x+0.5,Y(non[i]),Math.max(1,bw-1),Y(0)-Y(non[i]));}
+    if(sig[i]){g.fillStyle=css('--ochre');g.fillRect(x+0.5,Y(non[i]+sig[i]),Math.max(1,bw-1),Y(non[i])-Y(non[i]+sig[i]));}}
+  g.strokeStyle=css('--blood');g.lineWidth=1.5;g.setLineDash([5,4]);
+  [-zc,zc].forEach(v=>{g.beginPath();g.moveTo(X(v),pad.t);g.lineTo(X(v),Y(0));g.stroke();});g.setLineDash([]);
+  g.fillStyle=css('--blood');g.textBaseline='top';g.textAlign='left';g.fillText('+'+zc,X(zc)+3,pad.t);g.textAlign='right';g.fillText('−'+zc,X(-zc)-3,pad.t);
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();
+  for(let i=0;i<=260;i++){const z=LO+(HI-LO)*i/260,y=1000*BW*Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);i?g.lineTo(X(z),Y(y)):g.moveTo(X(z),Y(y));}
+  g.stroke();
+}
+function drawPow(pA,pB,n,pw,simFrac){
+  const {g,w,h}=setup($('cPow')),pad={l:44,r:14,t:10,b:36};
+  const L0=Math.log10(10),L1=Math.log10(20000);
+  const X=v=>pad.l+(w-pad.l-pad.r)*(Math.log10(v)-L0)/(L1-L0),Y=v=>pad.t+(h-pad.t-pad.b)*(1-v);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=i/4,y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(v*100)+'%',pad.l-5,y);}
+  g.textAlign='center';g.textBaseline='top';g.fillStyle=css('--ink-soft');
+  const xt=w<380?[10,100,1000,10000]:[10,50,100,500,1000,5000,20000];
+  xt.forEach(t=>{g.strokeStyle=css('--grid');g.beginPath();g.moveTo(X(t),pad.t);g.lineTo(X(t),Y(0));g.stroke();g.fillText(t>=1000?(t/1000)+'k':t,X(t),h-pad.b+5);});
+  g.fillText('players per group (log scale)',pad.l+(w-pad.l-pad.r)/2,h-pad.b+19);
+  g.strokeStyle=css('--ink-soft');g.setLineDash([6,5]);g.beginPath();g.moveTo(pad.l,Y(0.8));g.lineTo(w-pad.r,Y(0.8));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='bottom';g.fillText('80%',pad.l+4,Y(0.8)-2);
+  g.strokeStyle=css('--moss');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=240;i++){const v=Math.pow(10,L0+(L1-L0)*i/240),p=power(pA,pB,v,S.alpha);i?g.lineTo(X(v),Y(p)):g.moveTo(X(v),Y(p));}
+  g.stroke();
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.lineWidth=1;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(n),pad.t);g.lineTo(X(n),Y(0));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--moss');g.beginPath();g.arc(X(n),Y(pw),6.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();g.arc(X(n),Y(simFrac),9,0,Math.PI*2);g.stroke();
+}
+
+// ---- one-test panel ----
+function fmtP(p){if(p<0.0001)return '< 0.0001';return p>=0.1?p.toFixed(3):p.toFixed(4);}
+function showOne(kA,kB,n){
+  $('kA').value=kA;$('kB').value=kB;$('kN').value=n;renderOne();
+}
+function renderOne(){
+  const kA=+$('kA').value,kB=+$('kB').value,n=+$('kN').value;
+  const ok=[kA,kB,n].every(Number.isInteger)&&n>=1&&kA>=0&&kB>=0&&kA<=n&&kB<=n&&$('kA').value!==''&&$('kB').value!==''&&$('kN').value!=='';
+  $('kErr').textContent=ok?'':'Counts must be whole numbers from 0 to n.';
+  const ids=['tRates','tPool','tSE','tZ','tP','tVerdict'];
+  if(!ok){ids.forEach(i=>$(i).textContent='—');return;}
+  const t=testStats(kA,kB,n),zc=zCrit(S.alpha),sig=Math.abs(t.z)>=zc;
+  $('tRates').textContent=`${fmtInt(kA)} of ${fmtInt(n)} (${pct1(kA/n)}) vs ${fmtInt(kB)} of ${fmtInt(n)} (${pct1(kB/n)})`;
+  $('tPool').textContent=t.pool.toFixed(4);
+  $('tSE').textContent=t.se.toFixed(5);
+  $('tZ').textContent=t.z.toFixed(3).replace('-','−');
+  $('tP').textContent=fmtP(t.p);
+  $('tAlpha').textContent=S.alpha;
+  const v=$('tVerdict');v.textContent=sig?`Significant (|z| ≥ ${zc})`:`Not significant (|z| < ${zc})`;v.className='v'+(sig?' verdict-sig':'');
+}
+
+// ---- update ----
+function resim(){const {pA,pB}=rates(),n=NS[S.nIdx];const r=simulate(pA,pB,n,S.runSeed);S.z=r.zs;S.first=r.first;showOne(r.first.kA,r.first.kB,r.first.n);}
+function update(){
+  const {pA,pB}=rates(),n=NS[S.nIdx],zc=zCrit(S.alpha),d=pB-pA;
+  const nSig=S.z.filter(z=>Math.abs(z)>=zc).length,simFrac=nSig/1000;
+  const pw=power(pA,pB,n,S.alpha),req=requiredN(pA,pB,S.alpha);
+  const pbar=(pA+pB)/2,se0=Math.sqrt(pbar*(1-pbar)*2/n);
+  const liftPts=S.liftHalf/2;
+  $('oPA').textContent=S.pA+'%';
+  $('oLift').textContent=(liftPts>0?'+':liftPts<0?'−':'')+Math.abs(liftPts)+' pts';
+  $('oN').textContent=fmtInt(n);
+  $('pA').setAttribute('aria-valuetext',S.pA+' percent');
+  $('lift').setAttribute('aria-valuetext',(liftPts<0?'minus ':'plus ')+Math.abs(liftPts)+' percentage points');
+  $('nIdx').setAttribute('aria-valuetext',fmtInt(n)+' players per group');
+  $('sigCount').textContent=fmtInt(nSig);
+  const sub=$('histSub');
+  if(d===0){sub.textContent='Lift is 0: every one of these is a false positive';sub.className='warn';}
+  else{sub.textContent=`True lift ${(d>0?'+':'−')+(Math.abs(d)*100).toFixed(1)} pts: significant ones are correct detections`;sub.className='';}
+  $('legZ').textContent=zc;
+  $('rPA').textContent=pct1(pA);$('rPB').textContent=pct1(pB);$('rN').textContent=fmtInt(n);
+  $('rSE').textContent=se0.toFixed(5);$('rPow').textContent=pct1(pw);$('rSim').textContent=pct1(simFrac);
+  $('rReq').textContent=isFinite(req)?fmtInt(req):'none (d = 0)';
+  let s;
+  if(d===0) s=`No real difference exists, yet <b>${fmtInt(nSig)} of 1,000</b> tests cross ±${zc}. At α = ${S.alpha} you expect about ${S.alpha*1000}. Ship on one of these and you shipped noise.`;
+  else if(pw<0.8) s=`B really is better by ${(Math.abs(d)*100).toFixed(1)} points, but at ${fmtInt(n)} players per group only <b>${pct1(pw)}</b> of tests detect it (${fmtInt(nSig)} of 1,000 in this run). The rest say "not significant" about a real effect. You need <b>${fmtInt(req)}</b> per group for 80% power.`;
+  else s=`At ${fmtInt(n)} players per group the test detects this ${(Math.abs(d)*100).toFixed(1)}-point lift <b>${pct1(pw)}</b> of the time (${fmtInt(nSig)} of 1,000 here). 80% power needs ${fmtInt(req)} per group, so this test is big enough.`;
+  $('insight').innerHTML=s;
+  $('seedNote').textContent='seed '+S.runSeed;
+  const P={aa:S.liftHalf===0,play:S.nIdx===0,tut:S.pA===40&&S.liftHalf===8&&S.nIdx===6,well:S.pA===40&&S.liftHalf===8&&S.nIdx===8};
+  document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',P[b.dataset.p]?'true':'false'));
+  renderOne();
+  drawHist();drawPow(pA,pB,n,pw,simFrac);
+}
+function changed(){if(S.fixed)S.runSeed=S.seed;resim();update();}
+
+$('pA').addEventListener('input',e=>{S.pA=+e.target.value;changed();});
+$('lift').addEventListener('input',e=>{S.liftHalf=+e.target.value;changed();});
+$('nIdx').addEventListener('input',e=>{S.nIdx=+e.target.value;changed();});
+document.querySelectorAll('input[name=alpha]').forEach(r=>r.addEventListener('change',e=>{S.alpha=+e.target.value;update();}));
+$('fixed').addEventListener('change',e=>{S.fixed=e.target.checked;if(S.fixed){S.runSeed=S.seed;resim();update();}});
+$('run').addEventListener('click',()=>{S.fixed=false;$('fixed').checked=false;S.runSeed=(Math.random()*4294967296)>>>0;resim();update();});
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
+  const p=b.dataset.p;
+  if(p==='aa')S.liftHalf=0;
+  if(p==='play')S.nIdx=0;
+  if(p==='tut'){S.pA=40;S.liftHalf=8;S.nIdx=6;}
+  if(p==='well'){S.pA=40;S.liftHalf=8;S.nIdx=8;}
+  $('pA').value=S.pA;$('lift').value=S.liftHalf;$('nIdx').value=S.nIdx;changed();
+}));
+['kA','kB','kN'].forEach(id=>$(id).addEventListener('input',renderOne));
+document.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>{
+  if(b.dataset.k==='first'){showOne(S.first.kA,S.first.kB,S.first.n);return;}
+  const [a,c,n]=b.dataset.k.split(',').map(Number);showOne(a,c,n);
+}));
+if(window.matchMedia('(max-width:760px)').matches)$('oneTest').open=false;
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+resim();update();
+})();
+</script>
+</body>
+</html>

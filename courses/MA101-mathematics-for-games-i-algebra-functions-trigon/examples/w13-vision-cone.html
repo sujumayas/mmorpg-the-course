@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vision cone threshold · MA101 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:22px 16px 48px}
+header{max-width:70ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 4px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,3.8vw,2.5rem);line-height:1.1;margin:0 0 8px;letter-spacing:-.01em}
+h1 code{font-family:var(--serif);white-space:nowrap}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.lede{font-family:var(--serif);font-size:1.04rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 10px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;aspect-ratio:1/1;border-radius:6px}
+#map{touch-action:none;cursor:crosshair}
+#map:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (max-width:760px){#plot{aspect-ratio:4/3}}
+.cap{font-size:.86rem;color:var(--ink-soft);margin:6px 0 0}
+.insight{margin:12px 0 0;padding:10px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.insight b{font-family:var(--sans)}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 18px;margin:12px 0 0;font-family:var(--mono);font-size:.88rem;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.readout{grid-template-columns:1fr}}
+.readout div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--grid);padding:3px 0;min-width:0}
+.readout dt{color:var(--ink-soft);white-space:nowrap}
+.readout dd{margin:0;text-align:right;overflow-wrap:anywhere}
+.readout .big{grid-column:1/-1;font-size:1rem;border-bottom:0}
+.pass{color:var(--moss);font-weight:700}.fail{color:var(--blood);font-weight:700}
+.seen{color:var(--blood);font-weight:700}.hidden{color:var(--ink);font-weight:700}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 20px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.toggle{justify-content:flex-start;align-items:center;font-weight:600;cursor:pointer;margin:4px 0}
+.toggle input{width:20px;height:20px;accent-color:var(--steel);margin:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:600 .9rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer}
+.small{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.tables{display:grid;grid-template-columns:3fr 2fr;gap:18px;margin-top:18px}
+@media (max-width:860px){.tables{grid-template-columns:1fr}}
+.tables>div{min-width:0}
+@media (min-width:761px){.views figure{display:flex;flex-direction:column}.views figcaption{flex:1}.views .cap{min-height:2.8em}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td.m{font-family:var(--mono);font-size:.86rem}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.rowbtn{font:inherit;font-family:var(--mono);font-size:.86rem;background:none;border:0;border-bottom:1px dashed var(--ink-soft);color:var(--ink);padding:0;cursor:pointer}
+.readout [hidden],[hidden]{display:none!important}
+@media (max-width:480px){th,td{padding:5px 5px}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA101 Mathematics for Games I · Week 13 · Worked example</p>
+  <h1>A vision cone is a line cut across a cosine</h1>
+  <p class="lede">The guard's code checks one number, <code>f̂ · d̂</code>, against one constant, <code>c = cos(h)</code>. The map shows where that test passes. The plot shows the same test as a marker above or below a flat line.</p>
+</header>
+
+<section class="panel" aria-label="Vision cone explorer">
+  <div class="views">
+    <figure>
+      <figcaption>Top-down map<small>Guard at the origin. Drag the diamond, or focus the map and use arrow keys (Shift for 5 m).</small></figcaption>
+      <canvas id="map" tabindex="0" role="img" aria-roledescription="draggable map" aria-label="Top-down map with guard, vision cone and player. Arrow keys move the player 0.5 meters, Shift plus arrow moves 5 meters." aria-describedby="status"></canvas>
+      <p class="cap"><span style="color:var(--steel)">Outline</span>: the cone you asked for. <span style="color:var(--steel)">Shading</span>: where the active test passes.</p>
+    </figure>
+    <figure>
+      <figcaption id="plotTitle">What the code compares<small id="plotSub">f̂ · d̂ against the angle θ from forward. θ is for display only.</small></figcaption>
+      <canvas id="plot" role="img" aria-label="Plot of the dot product against angle, with the threshold line c"></canvas>
+      <p class="cap" id="plotCap">The code checks one thing. Is the marker on or above the line?</p>
+    </figure>
+  </div>
+
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <p class="sr" id="status" aria-live="polite"></p>
+
+  <dl class="readout" id="readout">
+    <div><dt>p (player)</dt><dd id="rP"></dd></div>
+    <div><dt>f̂</dt><dd id="rF"></dd></div>
+    <div><dt>d = p − g</dt><dd id="rD"></dd></div>
+    <div><dt>|d|</dt><dd id="rLen"></dd></div>
+    <div><dt>d̂ = d / |d|</dt><dd id="rDh"></dd></div>
+    <div><dt id="lDot">f̂ · d̂</dt><dd id="rDot"></dd></div>
+    <div><dt>c = cos(h)</dt><dd id="rC"></dd></div>
+    <div><dt>c²</dt><dd id="rC2"></dd></div>
+    <div><dt>l̂ · d (l̂ = (−f.y, f.x))</dt><dd id="rSide"></dd></div>
+    <div><dt>θ (display only)</dt><dd id="rTheta"></dd></div>
+    <div><dt>range test |d| ≤ R</dt><dd id="rRange"></dd></div>
+    <div><dt id="lCone">cone test f̂ · d̂ ≥ c</dt><dd id="rCone"></dd></div>
+    <div id="focusRow" hidden><dt>focus = clamp((dot − c)/(1 − c))</dt><dd id="rFocus"></dd></div>
+    <div class="big"><dt>result</dt><dd id="rSeen"></dd></div>
+  </dl>
+
+  <div class="controls">
+    <div>
+      <label for="phi">Guard facing φ <output id="oPhi">0°</output></label>
+      <input id="phi" type="range" min="0" max="359" step="1" value="0">
+      <label for="h" style="margin-top:10px">Half-angle h <output id="oH">30°</output></label>
+      <input id="h" type="range" min="5" max="90" step="1" value="30">
+      <label for="R" style="margin-top:10px">Range R <output id="oR">20.0 m</output></label>
+      <input id="R" type="range" min="5" max="25" step="0.5" value="20">
+    </div>
+    <div>
+      <span style="font-weight:600;font-size:.92rem">"Sees 60° ahead" means which?</span>
+      <div class="presets" role="group" aria-label="Half-angle presets">
+        <button class="chip" type="button" data-h="30" aria-pressed="true">60° total (h = 30°)</button>
+        <button class="chip" type="button" data-h="60" aria-pressed="false">60° each side (h = 60°)</button>
+      </div>
+      <label class="toggle" style="margin-top:14px"><input type="checkbox" id="bug"> Forget to normalize d</label>
+      <label class="toggle"><input type="checkbox" id="graded"> Graded detection</label>
+    </div>
+    <div>
+      <button class="btn" type="button" id="snap">Snap to test positions</button>
+      <p class="small" id="snapNext"></p>
+      <p class="small">Guard at (0, 0). The lecture's table uses facing 0°, h = 30°, R = 20 m, normalize on.</p>
+    </div>
+  </div>
+
+  <div class="tables">
+    <div>
+      <h2>Test positions, live</h2>
+      <div class="table-wrap">
+        <table aria-label="Test positions evaluated with the current settings">
+          <thead><tr><th>Player</th><th id="tDot">f̂ · d̂</th><th>|d|</th><th>θ</th><th>In range?</th><th>Seen?</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="small">Click a position to move the player there.</p>
+    </div>
+    <div>
+      <h2>The "60° ahead" ambiguity</h2>
+      <div class="table-wrap">
+        <table aria-label="Two readings of 60 degrees ahead">
+          <thead><tr><th>Reading</th><th>h</th><th>Full cone</th><th>c = cos(h)</th></tr></thead>
+          <tbody>
+            <tr id="amb30"><td>60° in total</td><td>30°</td><td>60°</td><td class="m">0.866</td></tr>
+            <tr id="amb60"><td>60° to each side</td><td>60°</td><td>120°</td><td class="m">0.500</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small" id="ambNote"></p>
+    </div>
+  </div>
+</section>
+
+<footer>Everything is drawn generically: a circle for the guard, a diamond for the player. Formulas from the week 13 lecture: d = p − g, cone test f̂ · d̂ ≥ cos(h), range test |d| ≤ R. The angle θ comes from atan2 and is shown only so you can check the table. The code never needs it.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DEG=Math.PI/180;
+const TESTS=[[10,0],[3,1],[10,5],[10,6],[5,5],[0,8],[-6,0],[18,9],[25,0]];
+const S={phi:0,h:30,R:20,bug:false,graded:false,px:10,py:6};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+// ---------- formatting ----------
+const minus=s=>s.replace(/-/g,'−');
+function f3(v){let s=v.toFixed(3);if(/^-0\.000$/.test(s))s='0.000';return minus(s);}
+function f1(v){let s=v.toFixed(1);if(/^-0\.0$/.test(s))s='0.0';return minus(s);}
+function num(v){return minus(String(+v.toFixed(3)));}
+const vec=(x,y)=>`(${f3(x)}, ${f3(y)})`;
+const pt=(x,y)=>`(${num(x)}, ${num(y)})`;
+
+// ---------- the model (exact formulas from the lecture) ----------
+function evalAt(px,py){
+  const fx=Math.cos(S.phi*DEG),fy=Math.sin(S.phi*DEG);
+  const dx=px,dy=py; // g = (0,0)
+  const len=Math.sqrt(dx*dx+dy*dy);
+  const c=Math.cos(S.h*DEG);
+  const onGuard=len<1e-6;
+  const dhx=onGuard?0:dx/len,dhy=onGuard?0:dy/len;
+  const dotN=fx*dhx+fy*dhy;       // f̂ · d̂
+  const dotRaw=fx*dx+fy*dy;       // f̂ · d
+  const dot=S.bug?dotRaw:dotN;    // active test value
+  const range=len<=S.R;
+  const cone=onGuard?true:dot>=c;
+  const side=-fy*dx+fx*dy;        // l̂ · d
+  const theta=Math.atan2(fx*dy-fy*dx,dotRaw)/DEG; // display only
+  const focus=range?Math.min(1,Math.max(0,(dot-c)/(1-c))):0;
+  return {fx,fy,dx,dy,len,c,onGuard,dhx,dhy,dotN,dotRaw,dot,range,cone,seen:onGuard||(range&&cone),side,theta,focus};
+}
+
+// ---------- canvas helpers ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function rgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');const n=parseInt(hex,16);return [(n>>16)&255,(n>>8)&255,n&255];}
+function arrow(g,x0,y0,x1,y1,color,w){
+  g.strokeStyle=color;g.fillStyle=color;g.lineWidth=w||2;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();
+  const a=Math.atan2(y1-y0,x1-x0),L=9;
+  g.beginPath();g.moveTo(x1,y1);g.lineTo(x1-L*Math.cos(a-0.4),y1-L*Math.sin(a-0.4));g.lineTo(x1-L*Math.cos(a+0.4),y1-L*Math.sin(a+0.4));g.closePath();g.fill();
+}
+
+// ---------- map ----------
+const W=25;let shadeKey='',shadeCanvas=null;
+function buildShade(size){
+  const key=[S.phi,S.h,S.R,S.bug,S.graded,Math.round(size),css('--steel')].join('|');
+  if(key===shadeKey&&shadeCanvas)return shadeCanvas;
+  const n=Math.max(2,Math.ceil(size/2)); // 2 css px per cell
+  const off=document.createElement('canvas');off.width=n;off.height=n;
+  const g=off.getContext('2d'),img=g.createImageData(n,n),[r,gg,b]=rgb(css('--steel'));
+  for(let j=0;j<n;j++){
+    const wy=W-(j+.5)/n*2*W;
+    for(let i=0;i<n;i++){
+      const wx=-W+(i+.5)/n*2*W,e=evalAt(wx,wy);
+      let a=0;
+      if(S.graded){a=e.range?e.focus*0.6:0;}else if(e.range&&e.cone)a=0.3;
+      const k=(j*n+i)*4;img.data[k]=r;img.data[k+1]=gg;img.data[k+2]=b;img.data[k+3]=Math.round(a*255);
+    }
+  }
+  g.putImageData(img,0,0);shadeKey=key;shadeCanvas=off;return off;
+}
+function drawMap(e){
+  const {g,w,h}=setup($('map')),k=w/(2*W),X=x=>(x+W)*k,Y=y=>(W-y)*k;
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),blood=css('--blood'),ochre=css('--ochre'),paper=css('--paper'),sans=css('--sans');
+  g.clearRect(0,0,w,h);g.fillStyle=paper;g.fillRect(0,0,w,h);
+  // grid every 5 m
+  g.lineWidth=1;
+  for(let v=-W;v<=W;v+=5){
+    g.strokeStyle=v===0?soft:grid;g.globalAlpha=v===0?.5:1;
+    g.beginPath();g.moveTo(X(v),0);g.lineTo(X(v),h);g.stroke();
+    g.beginPath();g.moveTo(0,Y(v));g.lineTo(w,Y(v));g.stroke();
+  }
+  g.globalAlpha=1;
+  // shading pass
+  g.imageSmoothingEnabled=true;g.drawImage(buildShade(w),0,0,w,h);
+  // range circle
+  g.strokeStyle=steel;g.lineWidth=1.5;g.setLineDash([5,5]);g.beginPath();g.arc(X(0),Y(0),S.R*k,0,Math.PI*2);g.stroke();g.setLineDash([]);
+  // intended cone wedge (canvas y is flipped, so angles are negated)
+  const a0=-(S.phi+S.h)*DEG,a1=-(S.phi-S.h)*DEG;
+  g.fillStyle=steel;g.globalAlpha=S.bug?0.06:0.1;g.beginPath();g.moveTo(X(0),Y(0));g.arc(X(0),Y(0),S.R*k,a0,a1);g.closePath();g.fill();
+  g.globalAlpha=1;g.strokeStyle=steel;g.lineWidth=2;g.stroke();
+  // axis labels every 10 m
+  g.fillStyle=soft;g.font='11px '+sans;
+  for(let v=-20;v<=20;v+=10){
+    g.textAlign='center';g.textBaseline='bottom';g.fillText(minus(String(v)),X(v),h-3);
+    if(v!==0){g.textAlign='left';g.textBaseline='middle';g.fillText(minus(String(v)),4,Y(v));}
+  }
+  g.textAlign='right';g.textBaseline='top';g.fillText('x, y in meters',w-5,4);
+  const px=X(S.px),py=Y(S.py);
+  // d line
+  if(!e.onGuard){
+    g.strokeStyle=soft;g.lineWidth=1.25;g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(px,py);g.stroke();
+  }
+  // f̂ arrow and d̂ arrow, both drawn at 3.5 m per unit so they are visible
+  const U=3.5;
+  arrow(g,X(0),Y(0),X(U*e.fx),Y(U*e.fy),ink,2.5);
+  g.font='600 12px '+sans;g.fillStyle=ink;g.textAlign='center';g.textBaseline='middle';
+  g.fillText('f̂',X((U+1.3)*e.fx),Y((U+1.3)*e.fy));
+  if(!e.onGuard){
+    arrow(g,X(0),Y(0),X(U*e.dhx),Y(U*e.dhy),ochre,2.5);
+    const lx=X((U+1.2)*e.dhx+0.9*(-e.dhy)),ly=Y((U+1.2)*e.dhy+0.9*e.dhx);
+    g.fillStyle=ochre;g.font='600 11.5px '+sans;g.textAlign=e.dhx>=-0.2?'left':'right';
+    g.fillText('d̂, length 1',lx,ly);
+  }
+  // guard
+  g.fillStyle=ink;g.beginPath();g.arc(X(0),Y(0),7,0,Math.PI*2);g.fill();
+  g.strokeStyle=paper;g.lineWidth=2;g.stroke();
+  // player diamond
+  const col=e.seen?blood:soft,r=9;
+  g.fillStyle=col;g.beginPath();g.moveTo(px,py-r);g.lineTo(px+r,py);g.lineTo(px,py+r);g.lineTo(px-r,py);g.closePath();g.fill();
+  g.strokeStyle=paper;g.lineWidth=2;g.stroke();
+  const word=e.onGuard?'SEEN (player on guard)':(e.seen?'SEEN':'HIDDEN');
+  g.font='700 12px '+sans;g.textBaseline='middle';
+  const right=px<w-90;g.textAlign=right?'left':'right';
+  const tx=right?px+13:px-13,ty=py<14?py+14:py;
+  g.lineWidth=3;g.strokeStyle=paper;g.strokeText(word,tx,ty);g.fillStyle=e.seen?blood:ink;g.fillText(word,tx,ty);
+}
+
+// ---------- plot ----------
+function niceMax(v){const steps=[1.2,1.5,2,2.5,3,4,5,6,8,10,12,15,20,25,30,40];return steps.find(s=>s>=v)||v;}
+function drawPlot(e){
+  const {g,w,h}=setup($('plot')),pad={l:44,r:10,t:22,b:30};
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),blood=css('--blood'),paper=css('--paper'),sans=css('--sans');
+  const amp=S.bug?e.len:1,yM=S.bug?niceMax(Math.max(1.2,amp*1.1)):1.2,c=e.c;
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t+180)/360,Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v+yM)/(2*yM));
+  g.clearRect(0,0,w,h);g.fillStyle=paper;g.fillRect(0,0,w,h);
+  g.font='11px '+sans;g.lineWidth=1;
+  // x ticks every 30°
+  for(let t=-180;t<=180;t+=30){
+    g.strokeStyle=grid;g.beginPath();g.moveTo(X(t),pad.t);g.lineTo(X(t),h-pad.b);g.stroke();
+    if(w>420||t%60===0){g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText(minus(String(t))+'°',X(t),h-pad.b+5);}
+  }
+  // y ticks
+  const step=S.bug?(yM<=2?0.5:yM<=6?1:yM<=12?2:5):0.5;
+  for(let v=-Math.floor(yM/step)*step;v<=yM+1e-9;v+=step){
+    g.strokeStyle=Math.abs(v)<1e-9?soft:grid;g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();
+    g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText(minus(String(+v.toFixed(2))),pad.l-6,Y(v));
+  }
+  g.textAlign='left';g.textBaseline='top';g.fillStyle=soft;g.fillText(S.bug?'f̂ · d':'f̂ · d̂',4,4);
+  g.textAlign='right';g.fillText('θ (display only)',w-pad.r,4);
+  // band where curve >= c
+  let band=null;
+  if(amp>=c&&amp>0){const tb=Math.acos(Math.min(1,c/amp))/DEG;band=tb;}
+  if(band!==null){
+    g.fillStyle=steel;g.globalAlpha=.1;g.fillRect(X(-band),pad.t,X(band)-X(-band),h-pad.t-pad.b);
+    g.globalAlpha=.3;g.beginPath();
+    for(let i=0;i<=120;i++){const t=-band+2*band*i/120;const y=amp*Math.cos(t*DEG);i?g.lineTo(X(t),Y(y)):g.moveTo(X(t),Y(y));}
+    g.lineTo(X(band),Y(c));g.lineTo(X(-band),Y(c));g.closePath();g.fill();g.globalAlpha=1;
+  }
+  // ±h dashed lines
+  g.strokeStyle=steel;g.lineWidth=1.5;g.setLineDash([5,4]);
+  [-S.h,S.h].forEach(t=>{g.beginPath();g.moveTo(X(t),pad.t);g.lineTo(X(t),h-pad.b);g.stroke();});
+  g.setLineDash([]);g.fillStyle=steel;g.font='600 11px '+sans;g.textBaseline='bottom';g.textAlign='center';
+  g.fillText('−h',X(-S.h)-(S.h<12?8:0),pad.t-2);g.fillText('+h',X(S.h)+(S.h<12?8:0),pad.t-2);
+  // curve
+  g.strokeStyle=ink;g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=360;i++){const t=-180+i;const y=amp*Math.cos(t*DEG);i?g.lineTo(X(t),Y(y)):g.moveTo(X(t),Y(y));}
+  g.stroke();
+  // threshold line
+  g.strokeStyle=blood;g.lineWidth=2;g.beginPath();g.moveTo(pad.l,Y(c));g.lineTo(w-pad.r,Y(c));g.stroke();
+  g.font='600 11.5px '+sans;g.textAlign='left';g.textBaseline='bottom';
+  const lbl=(w<460?'c = cos(h) = ':'threshold c = cos(h) = ')+f3(c);
+  const ly=Y(c)-4<pad.t+12?Y(c)+16:Y(c)-4;
+  g.lineWidth=3;g.strokeStyle=paper;g.strokeText(lbl,pad.l+4,ly);g.fillStyle=blood;g.fillText(lbl,pad.l+4,ly);
+  // player marker
+  if(!e.onGuard){
+    const mx=X(e.theta),my=Y(e.dot);
+    g.strokeStyle=soft;g.lineWidth=1;g.setLineDash([2,3]);g.beginPath();g.moveTo(mx,my);g.lineTo(mx,Y(c));g.stroke();g.setLineDash([]);
+    const col=e.seen?blood:soft,r=8;
+    g.fillStyle=col;g.beginPath();g.moveTo(mx,my-r);g.lineTo(mx+r,my);g.lineTo(mx,my+r);g.lineTo(mx-r,my);g.closePath();g.fill();
+    g.strokeStyle=paper;g.lineWidth=2;g.stroke();
+    let word=e.seen?'SEEN':'HIDDEN';if(e.cone&&!e.range)word='HIDDEN (out of range)';
+    g.font='700 12px '+sans;g.textBaseline='middle';const right=mx<w-150;g.textAlign=right?'left':'right';
+    const tx=right?mx+12:mx-12,ty=e.dot>=c?my-14:my+14;
+    g.lineWidth=3;g.strokeStyle=paper;g.strokeText(word,tx,ty);g.fillStyle=e.seen?blood:ink;g.fillText(word,tx,ty);
+  }
+}
+
+// ---------- readouts ----------
+function isFirstScreen(){return S.phi===0&&S.h===30&&S.R===20&&!S.bug&&!S.graded&&S.px===10&&S.py===6;}
+function readouts(e){
+  $('rP').textContent=pt(S.px,S.py);
+  $('rF').textContent=vec(e.fx,e.fy);
+  $('rD').textContent=vec(e.dx,e.dy);
+  $('rLen').textContent=f3(e.len);
+  $('rDh').textContent=e.onGuard?'player on guard':vec(e.dhx,e.dhy);
+  $('lDot').textContent=S.bug?'f̂ · d (bug: not normalized)':'f̂ · d̂';
+  $('rDot').textContent=e.onGuard?'player on guard':f3(e.dot);
+  $('rC').textContent=f3(e.c);$('rC2').textContent=f3(e.c*e.c);
+  $('rSide').innerHTML=f3(e.side)+' '+(Math.abs(e.side)<5e-4?'<b>ON THE FORWARD LINE</b>':(e.side>0?'<b>LEFT</b>':'<b>RIGHT</b>'));
+  $('rTheta').textContent=e.onGuard?'undefined':f1(e.theta)+'°';
+  $('rRange').innerHTML=`${f3(e.len)} ≤ ${f3(S.R)} <span class="${e.range?'pass':'fail'}">${e.range?'PASS':'FAIL'}</span>`;
+  $('lCone').textContent=S.bug?'cone test f̂ · d ≥ c':'cone test f̂ · d̂ ≥ c';
+  $('rCone').innerHTML=e.onGuard?'<span class="pass">PASS</span> (player on guard)':`${f3(e.dot)} ≥ ${f3(e.c)} <span class="${e.cone?'pass':'fail'}">${e.cone?'PASS':'FAIL'}</span>`;
+  $('focusRow').hidden=!S.graded;$('rFocus').textContent=f3(e.focus);
+  $('rSeen').innerHTML=`<span class="${e.seen?'seen':'hidden'}">${e.seen?'SEEN':'HIDDEN'}</span>${e.onGuard?' (player on guard)':''}`;
+  $('oPhi').textContent=S.phi+'°';$('oH').textContent=S.h+'°';$('oR').textContent=S.R.toFixed(1)+' m';
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.h===S.h)));
+  $('amb30').className=S.h===30?'here':'';$('amb60').className=S.h===60?'here':'';
+  $('ambNote').textContent=S.h===30?'Current guard: h = 30°, a 60° cone in total.':S.h===60?'Current guard: h = 60°, a 120° cone. Twice the angle of the other reading.':`Current guard: h = ${S.h}°, full cone ${2*S.h}°, c = ${f3(e.c)}.`;
+  // plot captions
+  $('plotSub').textContent=S.bug?'f̂ · d against θ. The curve is |d| × cos(θ).':'f̂ · d̂ against the angle θ from forward. θ is for display only.';
+  $('plotCap').textContent=S.bug?'Unnormalized: the test now depends on distance.':'The code checks one thing. Is the marker on or above the line?';
+  // insight
+  let s;
+  if(isFirstScreen())s='One meter from being seen. Drag the player up or down.';
+  else if(e.onGuard)s='The player is on the guard. d has no direction, so the code treats this as seen.';
+  else if(S.bug){
+    if(e.seen&&Math.abs(e.theta)>S.h+1e-9)s=`Bug: f̂ · d = ${f3(e.dot)} passes c = ${f3(e.c)} with the player ${f1(Math.abs(e.theta))}° off forward, outside the ${S.h}° half-angle. The curve is ${f3(e.len)} times taller than cosine, so the band spreads toward ±90°.`;
+    else s=`Unnormalized: the test now depends on distance. f̂ · d = ${f3(e.dot)} against c = ${f3(e.c)}. Move the player farther out along the same direction and the marker climbs.`;
+  } else if(e.cone&&!e.range)s=`f̂ · d̂ = ${f3(e.dot)} clears c = ${f3(e.c)}, but |d| = ${f3(e.len)} is beyond R = ${num(S.R)}. The range test hides the player.`;
+  else if(e.cone)s=`f̂ · d̂ = ${f3(e.dot)} is ${f3(e.dot-e.c)} above c = ${f3(e.c)} and the player is in range. <b>SEEN</b>.`;
+  else s=`f̂ · d̂ = ${f3(e.dot)} is ${f3(e.c-e.dot)} below c = ${f3(e.c)}. <b>HIDDEN</b>. Widen the cone and the line drops.`;
+  if(S.graded&&!e.onGuard)s+=` Focus ${f3(e.focus)}.`;
+  $('insight').innerHTML=s;
+  $('status').textContent=`Player at ${pt(S.px,S.py)}. ${S.bug?'f̂ · d':'f̂ · d̂'} ${e.onGuard?'undefined':f3(e.dot)}. ${e.seen?'Seen':'Hidden'}.`;
+  // test table
+  $('tDot').textContent=S.bug?'f̂ · d':'f̂ · d̂';
+  $('tbody').innerHTML=TESTS.map(([x,y],i)=>{const t=evalAt(x,y),here=x===S.px&&y===S.py;
+    return `<tr class="${here?'here':''}"><td><button class="rowbtn" type="button" data-i="${i}" aria-label="Move player to ${pt(x,y)}">${pt(x,y)}</button></td><td class="m">${f3(t.dot)}</td><td class="m">${f3(t.len)}</td><td class="m">${f1(t.theta)}°</td><td>${t.range?'yes':'no'}</td><td>${t.seen?'yes':(t.cone&&!t.range?'no (range)':'no')}</td></tr>`;}).join('');
+  $('snapNext').textContent='Next: '+pt(...TESTS[nextIndex()]);
+}
+function update(){const e=evalAt(S.px,S.py);readouts(e);drawMap(e);drawPlot(e);}
+
+// ---------- player movement ----------
+const clampW=v=>Math.max(-W,Math.min(W,v));
+let anim=null;
+function setPlayer(x,y){if(anim){cancelAnimationFrame(anim);anim=null;}S.px=+clampW(x).toFixed(3);S.py=+clampW(y).toFixed(3);update();}
+function moveTo(x,y){
+  if(reduce.matches){setPlayer(x,y);return;}
+  if(anim)cancelAnimationFrame(anim);
+  const x0=S.px,y0=S.py,t0=performance.now(),D=380;
+  const step=t=>{const u=Math.min(1,(t-t0)/D),k=1-Math.pow(1-u,3);
+    if(u<1){S.px=x0+(x-x0)*k;S.py=y0+(y-y0)*k;update();anim=requestAnimationFrame(step);}
+    else{anim=null;S.px=x;S.py=y;update();}};
+  anim=requestAnimationFrame(step);
+}
+function nextIndex(){const i=TESTS.findIndex(([x,y])=>x===S.px&&y===S.py);return i<0?0:(i+1)%TESTS.length;}
+$('snap').addEventListener('click',()=>{const [x,y]=TESTS[nextIndex()];moveTo(x,y);});
+$('tbody').addEventListener('click',ev=>{const b=ev.target.closest('.rowbtn');if(b){const [x,y]=TESTS[+b.dataset.i];moveTo(x,y);}});
+
+const map=$('map');let dragging=false;
+function fromPointer(ev){const r=map.getBoundingClientRect(),k=r.width/(2*W);
+  const x=(ev.clientX-r.left)/k-W,y=W-(ev.clientY-r.top)/k;return [Math.round(x*2)/2,Math.round(y*2)/2];}
+map.addEventListener('pointerdown',ev=>{dragging=true;map.setPointerCapture(ev.pointerId);map.focus({preventScroll:true});setPlayer(...fromPointer(ev));ev.preventDefault();});
+map.addEventListener('pointermove',ev=>{if(dragging)setPlayer(...fromPointer(ev));});
+['pointerup','pointercancel'].forEach(t=>map.addEventListener(t,()=>{dragging=false;}));
+map.addEventListener('keydown',ev=>{
+  const st=ev.shiftKey?5:0.5,m={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,st],ArrowDown:[0,-st]}[ev.key];
+  if(!m)return;ev.preventDefault();setPlayer(S.px+m[0],S.py+m[1]);
+});
+
+// ---------- controls ----------
+$('phi').addEventListener('input',e=>{S.phi=+e.target.value;update();});
+$('h').addEventListener('input',e=>{S.h=+e.target.value;update();});
+$('R').addEventListener('input',e=>{S.R=+e.target.value;update();});
+$('bug').addEventListener('change',e=>{S.bug=e.target.checked;update();});
+$('graded').addEventListener('change',e=>{S.graded=e.target.checked;update();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{S.h=+b.dataset.h;$('h').value=S.h;update();}));
+
+let rz=null;
+window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(update);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+window.__visionCone={state:S,evalAt,setPlayer};
+update();
+})();
+</script>
+</body>
+</html>

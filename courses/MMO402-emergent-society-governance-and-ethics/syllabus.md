@@ -29,7 +29,7 @@ Player politics, law, moderation and the ethics of running worlds people live in
 | 12 | Research ethics in online worlds | _todo_ | _todo_ |
 | 13 | Shutdown ethics | _todo_ | _todo_ |
 | 14 | Debates | _todo_ | _todo_ |
-| 15 | Final: governance design paper | _todo_ | _todo_ |
+| 15 | Final: governance design paper | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

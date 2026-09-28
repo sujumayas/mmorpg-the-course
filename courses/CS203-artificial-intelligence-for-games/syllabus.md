@@ -29,7 +29,7 @@ NPC behavior that is fun rather than optimal: pathfinding, decision making and g
 | 12 | MMO mob AI: leashing, aggro, threat tables | _todo_ | _todo_ |
 | 13 | Boss AI and scripted encounters | _todo_ | _todo_ |
 | 14 | Performance: AI LOD, time-slicing | _todo_ | _todo_ |
-| 15 | Final: NPC ecosystem demo | _todo_ | _todo_ |
+| 15 | Final: NPC ecosystem demo | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

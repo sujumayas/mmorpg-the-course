@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mana budget — MMO303 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:22px 0 8px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px;touch-action:none;cursor:ew-resize}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat b.small{font-size:1rem;line-height:1.35}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+input[type=number]{width:5.6em;font:inherit;font-variant-numeric:tabular-nums;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+.check{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:10px 0 6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:6px;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-weight:600;color:var(--ink-soft);font-size:.82rem}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+tr.off td{color:var(--ink-soft)}
+td.tag{text-align:left}
+.tag b{font-weight:700}
+.note{font-family:var(--serif);font-size:.96rem;margin:8px 0 0;max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 2px;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO303 Game Balance I · Week 7 · Worked example</p>
+  <h1>Short fights run out of time. Long fights run out of mana.</h1>
+  <p class="lede">Drag the fight length. On the left, the mana budget line sweeps past each spell. On the right, sustainable healing holds flat, bends, then decays. The bends sit exactly where the budget line crosses a spell.</p>
+</header>
+
+<section class="panel" aria-label="Mana budget model">
+  <div class="charts">
+    <figure>
+      <figcaption>The spell plane<small>Each spell as mana per second (across) and healing per second (up). The healer can reach anything under the frontier and left of the budget.</small></figcaption>
+      <canvas id="cPlane" tabindex="0" role="img" aria-label="Spell plane"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><i style="border-color:var(--ochre)"></i>efficient frontier</span>
+        <span><i style="border-color:var(--steel);border-top-style:dashed"></i>budget B = M/T + r</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Sustainable HPS vs fight length<small>Best healing per second the healer can hold for the whole fight, 10 s to 600 s.</small></figcaption>
+      <canvas id="cCurve" tabindex="0" role="img" aria-label="Sustainable HPS versus fight length"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><i style="border-color:var(--ochre)"></i>sustainable HPS</span>
+        <span><i style="border-color:var(--ink-soft);border-top-style:dotted"></i>region boundary</span>
+        <span id="lgD" hidden><i style="border-color:var(--blood)"></i>incoming DTPS</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rB">—</b><span>budget B (mana/s)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rH">—</b><span>sustainable HPS</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rReg" class="small">—</b><span>active region</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rMix" class="small">—</b><span>share of fight time</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="T">Fight length T <output id="oT">60 s</output></label>
+      <input id="T" type="range" min="10" max="600" step="1" value="60">
+      <label for="M" style="margin-top:8px">Mana pool M <output id="oM">10,000</output></label>
+      <input id="M" type="range" min="2000" max="30000" step="500" value="10000">
+      <label for="r" style="margin-top:8px">Regeneration r <output id="or">20 mana/s</output></label>
+      <input id="r" type="range" min="0" max="100" step="1" value="20">
+    </div>
+    <div>
+      <label for="oh">Overheal <output id="oOh">0%</output></label>
+      <input id="oh" type="range" min="0" max="50" step="1" value="0">
+      <div class="row">
+        <label class="check" for="dOn"><input type="checkbox" id="dOn"> Show incoming DTPS</label>
+      </div>
+      <label for="D">Incoming DTPS <output id="oD">700</output></label>
+      <input id="D" type="range" min="0" max="1200" step="10" value="700" disabled>
+      <p class="note" id="dNote"></p>
+    </div>
+  </div>
+
+  <h2>Spells</h2>
+  <div class="row">
+    <label class="check" for="s3On"><input type="checkbox" id="s3On"> Add third spell</label>
+    <span role="group" aria-label="Third spell presets" style="display:inline-flex;gap:6px">
+      <button class="chip" id="pQuick" data-p="quick" aria-pressed="true" disabled>Quick</button>
+      <button class="chip" id="pFlash" data-p="flash" aria-pressed="false" disabled>Flash</button>
+    </span>
+  </div>
+  <div class="table-wrap">
+    <table aria-label="Spell list with rates">
+      <thead><tr><th scope="col">Spell</th><th scope="col">Heal</th><th scope="col">Cost</th><th scope="col">Cast (s)</th><th scope="col">HPS</th><th scope="col">MPS</th><th scope="col">HPM</th><th scope="col">OOM if cast alone</th><th scope="col">Status</th></tr></thead>
+      <tbody id="spellBody"></tbody>
+    </table>
+  </div>
+  <p class="note">HPS, HPM and status include overheal. Time to OOM is M / (MPS − r). The region boundaries on the right chart are the OOM times of the frontier spells.</p>
+
+  <h2>Frontier segments</h2>
+  <div class="table-wrap">
+    <table aria-label="Frontier segments and marginal HPM">
+      <thead><tr><th scope="col">Segment</th><th scope="col">Extra HPS</th><th scope="col">Extra MPS</th><th scope="col">Marginal HPM</th><th scope="col">Used when B is</th></tr></thead>
+      <tbody id="segBody"></tbody>
+    </table>
+  </div>
+
+  <h2>Fight lengths</h2>
+  <div class="table-wrap">
+    <table aria-label="Sustainable HPS at several fight lengths">
+      <thead><tr><th scope="col">Fight length T</th><th scope="col">Budget B</th><th scope="col">Region</th><th scope="col">Time on each spell</th><th scope="col">Sustainable HPS</th></tr></thead>
+      <tbody id="fightBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 7 lecture. Spells are invented teaching values: Mend 2,000 / 250 / 2.5 s, Surge 1,500 / 375 / 1.5 s, Quick 900 / 150 / 1.0 s, Flash 1,000 / 300 / 1.25 s. Region 1 is cast-time bound, the last region is mana bound, regions in between blend two neighbouring frontier spells. Drag either chart or use the sliders.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f1=n=>n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const f0=n=>Math.round(n).toLocaleString('en-US');
+const f2=n=>n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+const pc=n=>(n*100).toFixed(1)+'%';
+
+const PRESETS={quick:{name:'Quick',H:900,C:150,t:1.0},flash:{name:'Flash',H:1000,C:300,t:1.25}};
+const spells=[
+  {id:0,name:'Mend',H:2000,C:250,t:2.5,on:true},
+  {id:1,name:'Surge',H:1500,C:375,t:1.5,on:true},
+  {id:2,name:'Quick',H:900,C:150,t:1.0,on:false}
+];
+const S={T:60,M:10000,r:20,oh:0,dOn:false,D:700};
+
+// ---------- model ----------
+function rates(s){const H=s.H*(1-S.oh);return {hps:H/s.t,mps:s.C/s.t,hpm:H/s.C};}
+function frontier(){
+  // hull vertices from origin: [{m,h,spell}]
+  const pts=spells.filter(s=>s.on).map(s=>{const q=rates(s);return {m:q.mps,h:q.hps,spell:s};})
+    .filter(p=>p.m>0&&p.h>0).sort((a,b)=>a.m-b.m||b.h-a.h);
+  const uniq=[];for(const p of pts){if(!uniq.length||Math.abs(uniq[uniq.length-1].m-p.m)>1e-9)uniq.push(p);}
+  const hull=[{m:0,h:0,spell:null}];
+  const cross=(o,a,b)=>(a.m-o.m)*(b.h-o.h)-(a.h-o.h)*(b.m-o.m);
+  for(const p of uniq){while(hull.length>=2&&cross(hull[hull.length-2],hull[hull.length-1],p)>=-1e-9)hull.pop();hull.push(p);}
+  // keep only the rising part: more mana must buy more healing
+  let top=0;for(let i=1;i<hull.length;i++)if(hull[i].h>hull[top].h+1e-9)top=i;
+  return hull.slice(0,top+1);
+}
+function solve(B,F){
+  const k=F.length-1,out={B,hps:0,region:1,shares:[],j:k};
+  if(k<1)return out;
+  if(B>=F[k].m){out.hps=F[k].h;out.region=1;out.shares=[{s:F[k].spell,f:1}];out.j=k;return out;}
+  let j=0;while(j<k-1&&B>=F[j+1].m)j++;
+  const a=F[j],b=F[j+1],f=(B-a.m)/(b.m-a.m);
+  out.hps=a.h+f*(b.h-a.h);out.region=k-j+1;out.j=j;
+  out.shares=[{s:b.spell,f}];
+  out.shares.push(a.spell?{s:a.spell,f:1-f}:{s:null,f:1-f});
+  return out;
+}
+const budget=T=>S.M/T+S.r;
+function regionName(res,F){
+  const k=F.length-1;
+  if(res.region===1)return 'cast-time bound';
+  if(res.j===0)return 'mana bound, idle part of the time';
+  return 'blend of '+F[res.j].spell.name+' and '+F[res.j+1].spell.name;
+}
+function mixText(res){
+  return res.shares.filter(x=>x.f>1e-6||res.shares.length===1).map(x=>(x.s?x.s.name:'idle')+' '+x.f.toFixed(3)).join(' · ');
+}
+function crossing(F){
+  // fight length where HPS(T) drops to D
+  const D=S.D,k=F.length-1;
+  if(k<1)return {kind:'always'};
+  if(D>F[k].h+1e-9)return {kind:'always'};
+  if(D<=0)return {kind:'never'};
+  let Bs=F[k].m;
+  for(let j=0;j<k;j++){if(D<=F[j+1].h+1e-9){Bs=F[j].m+(D-F[j].h)*(F[j+1].m-F[j].m)/(F[j+1].h-F[j].h);break;}}
+  if(Bs<=S.r+1e-9)return {kind:'never'};
+  return {kind:'at',T:S.M/(Bs-S.r),B:Bs};
+}
+
+// ---------- drawing ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:48,r:14,t:26,b:36};
+function nice(v,base){const steps=[base,base*1.25,base*1.5,base*2,base*2.5,base*3,base*4,base*5];for(const s of steps)if(s>=v)return s;return Math.ceil(v/base)*base;}
+function frame(c,xMax,yMax,xTicks,yTicks,xFmt,xLabel,yLabel){
+  const {g,w,h}=c;g.clearRect(0,0,w,h);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=yTicks;i++){const y=Y(c,yMax,yMax*i/yTicks);
+    g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(f0(yMax*i/yTicks),pad.l-6,y);}
+  for(let i=0;i<=xTicks;i++){const x=X(c,xMax,xMax*i/xTicks);
+    g.textAlign=i===0?'left':(i===xTicks?'right':'center');g.textBaseline='top';g.fillStyle=css('--ink-soft');g.fillText(xFmt(xMax*i/xTicks),x,h-pad.b+6);}
+  g.textAlign='right';g.textBaseline='bottom';g.fillText(xLabel,w-pad.r,h-2);
+  g.textAlign='left';g.textBaseline='top';g.fillText(yLabel,4,4);
+}
+const X=(c,xMax,v)=>pad.l+(c.w-pad.l-pad.r)*v/xMax;
+const Y=(c,yMax,v)=>pad.t+(c.h-pad.t-pad.b)*(1-v/yMax);
+function dot(g,x,y,r,fill,stroke,lw){g.beginPath();g.arc(x,y,r,0,Math.PI*2);if(fill){g.fillStyle=fill;g.fill();}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw||2;g.stroke();}}
+function label(g,text,x,y,w,color,bold){
+  g.font=(bold?'600 ':'')+'12px '+css('--sans');g.fillStyle=color;
+  const tw=g.measureText(text).width;let tx=Math.min(w-pad.r-tw,Math.max(pad.l+2,x-tw/2));
+  g.textBaseline='middle';g.textAlign='left';
+  g.save();g.strokeStyle=css('--paper-2');g.lineWidth=3;g.lineJoin='round';g.strokeText(text,tx,y);g.restore();
+  g.fillText(text,tx,y);
+}
+let plane={xMax:400,yMax:1200},curve={yMax:1200};
+
+function drawPlane(F,res,B){
+  const c=setup($('cPlane'));const {g,w,h}=c;
+  const all=spells.filter(s=>s.on).map(s=>({s,q:rates(s)}));
+  const xMax=nice(Math.max(400,...all.map(p=>p.q.mps*1.08)),100),yMax=nice(Math.max(1200,...all.map(p=>p.q.hps*1.08)),200);
+  plane={xMax,yMax,c};
+  frame(c,xMax,yMax,4,6,f0,'MPS (mana/s)','HPS');
+  const k=F.length-1;
+  // reachable area under frontier, left of budget
+  const xr=Math.min(B,F[k].m);
+  g.beginPath();g.moveTo(X(c,xMax,0),Y(c,yMax,0));
+  for(let i=1;i<=k;i++){if(F[i].m<=xr)g.lineTo(X(c,xMax,F[i].m),Y(c,yMax,F[i].h));else break;}
+  g.lineTo(X(c,xMax,xr),Y(c,yMax,res.hps));g.lineTo(X(c,xMax,xr),Y(c,yMax,0));g.closePath();
+  g.globalAlpha=.16;g.fillStyle=css('--ochre');g.fill();g.globalAlpha=1;
+  // frontier
+  g.strokeStyle=css('--ochre');g.lineWidth=2.5;g.beginPath();
+  F.forEach((p,i)=>{const px=X(c,xMax,p.m),py=Y(c,yMax,p.h);i?g.lineTo(px,py):g.moveTo(px,py);});
+  g.lineTo(X(c,xMax,xMax),Y(c,yMax,F[k].h));g.globalAlpha=1;g.stroke();
+  // budget line
+  const bx=X(c,xMax,Math.min(B,xMax));
+  g.strokeStyle=css('--steel');g.lineWidth=2;g.setLineDash([6,5]);g.beginPath();g.moveTo(bx,pad.t);g.lineTo(bx,h-pad.b);g.stroke();g.setLineDash([]);
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--steel');g.textBaseline='bottom';
+  const bt=(B>xMax?'budget B = '+f1(B)+' →':'budget B = M/T + r = '+f1(B));
+  const btw=g.measureText(bt).width;let btx=bx+6;g.textAlign='left';if(btx+btw>w-pad.r){btx=bx-6;g.textAlign='right';}
+  g.fillText(bt,Math.max(pad.l+btw*(g.textAlign==='right'?1:0),btx),pad.t-6);
+  // marker first so labels stay readable
+  dot(g,X(c,xMax,xr),Y(c,yMax,res.hps),7,css('--ochre'),css('--paper'),2.5);
+  // spells
+  const onF=new Set(F.filter(p=>p.spell).map(p=>p.spell.id));
+  all.forEach(({s,q})=>{const px=X(c,xMax,q.mps),py=Y(c,yMax,q.hps);
+    if(onF.has(s.id)){dot(g,px,py,5.5,css('--ink'),css('--paper-2'),2);label(g,s.name,px,py-14,w,css('--ink'),true);}
+    else{dot(g,px,py,5,null,css('--ink-soft'),2);label(g,s.name+' · never cast',px,py+16,w,css('--ink-soft'),false);}
+  });
+}
+
+function drawCurve(F,res,cr){
+  const c=setup($('cCurve'));const {g,w,h}=c;
+  const yMax=nice(Math.max(1200,F[F.length-1].h*1.05),200);curve={yMax,c};
+  frame(c,590,yMax,0,6,v=>'',  'fight length T (s)','HPS');
+  // custom x ticks (10..600)
+  g.fillStyle=css('--ink-soft');g.textBaseline='top';g.font='12px '+css('--sans');
+  [10,150,300,450,600].forEach((t,i,a)=>{g.textAlign=i===0?'left':(i===a.length-1?'right':'center');g.fillText(f0(t),XT(c,t),h-pad.b+6);});
+  // boundaries
+  g.font='12px '+css('--sans');
+  const placed=[];
+  F.slice(1).map(p=>p.m>S.r?S.M/(p.m-S.r):-1).filter(Tb=>Tb>=10&&Tb<=600).sort((a,b)=>a-b).forEach(Tb=>{
+    const x=XT(c,Tb);g.strokeStyle=css('--ink-soft');g.lineWidth=1.2;g.setLineDash([2,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+    const txt=f1(Tb)+' s',tw=g.measureText(txt).width,right=x>w-60,x0=right?x-4-tw:x+4;
+    let row=0;while(placed.some(q=>q.row===row&&x0<q.x1+4&&x0+tw>q.x0-4))row++;
+    placed.push({row,x0,x1:x0+tw});
+    g.fillStyle=css('--ink-soft');g.textBaseline='bottom';g.textAlign='left';g.fillText(txt,x0,pad.t-6+row*16);});
+  // DTPS line
+  if(S.dOn){const y=Y(c,yMax,S.D);g.strokeStyle=css('--blood');g.lineWidth=1.8;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    if(cr.kind==='at'&&cr.T>=10&&cr.T<=600){const x=XT(c,cr.T);dot(g,x,y,5,css('--blood'),css('--paper'),2);
+      label(g,'falls behind at '+f1(cr.T)+' s',x,y+(S.D>yMax*0.85?14:-12),w,css('--blood'),true);}}
+  // curve
+  g.strokeStyle=css('--ochre');g.lineWidth=2.5;g.beginPath();
+  for(let t=10;t<=600;t++){const v=solve(budget(t),F).hps,px=XT(c,t),py=Y(c,yMax,v);t===10?g.moveTo(px,py):g.lineTo(px,py);}
+  g.stroke();
+  dot(g,XT(c,S.T),Y(c,yMax,res.hps),7,css('--ochre'),css('--paper'),2.5);
+  g.strokeStyle=css('--ink');g.globalAlpha=.3;g.setLineDash([4,4]);g.beginPath();g.moveTo(XT(c,S.T),pad.t);g.lineTo(XT(c,S.T),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+}
+const XT=(c,t)=>pad.l+(c.w-pad.l-pad.r)*(t-10)/590;
+
+// ---------- tables and text ----------
+function spellRow(s){
+  const q=rates(s),F=frontier(),on=F.some(p=>p.spell&&p.spell.id===s.id);
+  const oom=q.mps<=S.r?'never':f1(S.M/(q.mps-S.r))+' s';
+  return {q,on,oom};
+}
+function renderSpellTable(){
+  const tb=$('spellBody');
+  if(!tb.dataset.built){
+    tb.innerHTML=spells.map(s=>`<tr id="row${s.id}"><td><b id="nm${s.id}">${s.name}</b></td>`+
+      ['H','C','t'].map(k=>`<td><input type="number" data-id="${s.id}" data-k="${k}" aria-label="${k==='H'?'Heal':k==='C'?'Cost':'Cast time'} of spell ${s.id+1}" min="${k==='t'?0.1:1}" step="${k==='t'?0.05:k==='H'?50:5}" value="${s[k]}"></td>`).join('')+
+      `<td id="hps${s.id}"></td><td id="mps${s.id}"></td><td id="hpm${s.id}"></td><td id="oom${s.id}"></td><td class="tag" id="st${s.id}"></td></tr>`).join('');
+    tb.dataset.built='1';
+    tb.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
+      const v=parseFloat(inp.value),s=spells[+inp.dataset.id],min=+inp.min;
+      if(!(v>=min))return; s[inp.dataset.k]=v; if(s.id===2)syncName(); update();}));
+  }
+  spells.forEach(s=>{
+    $('row'+s.id).hidden=!s.on;$('nm'+s.id).textContent=s.name;
+    const {q,on,oom}=spellRow(s);
+    $('hps'+s.id).textContent=f1(q.hps);$('mps'+s.id).textContent=f1(q.mps);$('hpm'+s.id).textContent=f2(q.hpm);
+    $('oom'+s.id).textContent=oom;$('st'+s.id).innerHTML=on?'<b>on frontier</b>':'never cast';
+    $('row'+s.id).className=on?'':'off';
+  });
+}
+function syncName(){
+  const s=spells[2];let n='Spell 3';
+  for(const k in PRESETS){const p=PRESETS[k];if(p.H===s.H&&p.C===s.C&&p.t===s.t)n=p.name;}
+  s.name=n;
+  $('pQuick').setAttribute('aria-pressed',n==='Quick');$('pFlash').setAttribute('aria-pressed',n==='Flash');
+}
+function renderSegs(F){
+  const rows=[];
+  for(let i=1;i<F.length;i++){
+    const a=F[i-1],b=F[i],dh=b.h-a.h,dm=b.m-a.m;
+    const lo=a.m,hi=b.m;
+    rows.push(`<tr><td>${a.spell?a.spell.name:'Idle'} to ${b.spell.name}</td><td>${f1(dh)}</td><td>${f1(dm)}</td><td>${f2(dh/dm)}</td><td>${f1(lo)} to ${f1(hi)}</td></tr>`);
+  }
+  const k=F.length-1;
+  if(k>=1)rows.push(`<tr class="off"><td>${F[k].spell.name} only</td><td>—</td><td>—</td><td>—</td><td>${f1(F[k].m)} or more</td></tr>`);
+  $('segBody').innerHTML=rows.join('');
+}
+function renderFights(F){
+  const Ts=[30,60,90,120,180,300,600];
+  let list=Ts.map(t=>({t,now:t===S.T}));
+  if(!Ts.includes(S.T))list.push({t:S.T,now:true});
+  list.sort((a,b)=>a.t-b.t);
+  const rows=list.map(({t,now})=>{const r=solve(budget(t),F);
+    return `<tr class="${now?'here':''}"><td>${f0(t)} s${now?' (now)':''}</td><td>${f1(r.B)}</td><td>${r.region}</td><td>${mixText(r)}</td><td>${f1(r.hps)}</td></tr>`;});
+  const inf=solve(S.r,F);
+  rows.push(`<tr><td>very long</td><td>${f1(S.r)}</td><td>${inf.region}</td><td>${mixText(inf)}</td><td>${f1(inf.hps)}</td></tr>`);
+  $('fightBody').innerHTML=rows.join('');
+}
+
+function update(){
+  const F=frontier(),B=budget(S.T),res=solve(B,F),cr=crossing(F),k=F.length-1;
+  $('oT').textContent=S.T+' s';$('oM').textContent=f0(S.M);$('or').textContent=S.r+' mana/s';$('oOh').textContent=Math.round(S.oh*100)+'%';$('oD').textContent=f0(S.D);
+  $('rB').textContent=f1(B);$('rH').textContent=f1(res.hps);
+  $('rReg').textContent=k<1?'—':res.region+' · '+regionName(res,F);
+  $('rMix').textContent=k<1?'—':res.shares.filter(x=>x.f>1e-6||res.shares.length===1).map(x=>(x.s?x.s.name:'idle')+' '+pc(x.f)).join(' · ');
+  // insight
+  let s='';
+  if(k>=1){
+    const top=F[k].spell;
+    if(res.region===1)s=`At ${S.T} s the healer can afford ${f1(B)} mana per second, more than ${top.name} burns (${f1(F[k].m)}). Casting time is the limit, so the answer is to spam ${top.name} for <b>${f1(res.hps)} HPS</b>. Mana doesn't matter yet.`;
+    else if(res.j===0){const b=F[1].spell;s=`At ${S.T} s the budget of ${f1(B)} mana per second can't even pay for ${b.name} (${f1(F[1].m)}). Mana is the limit. The healer casts ${b.name} ${pc(B/F[1].m)} of the time and waits the rest, for <b>${f1(res.hps)} HPS</b>, which is B × HPM = ${f1(B)} × ${f2(F[1].h/F[1].m)}. Cast speed has dropped out.`;}
+    else{const a=F[res.j],b=F[res.j+1];s=`At ${S.T} s the budget of ${f1(B)} mana per second sits between ${a.spell.name} (${f1(a.m)}) and ${b.spell.name} (${f1(b.m)}). The healer blends them for <b>${f1(res.hps)} HPS</b>. Each extra point of HPS from ${b.spell.name} costs mana at a marginal HPM of ${f2((b.h-a.h)/(b.m-a.m))}.`;}
+    const bounds=F.slice(1).filter(p=>p.m>S.r).map(p=>`${p.spell.name} ${f1(S.M/(p.m-S.r))} s`);
+    if(bounds.length)s+=` The curve bends where fights outlast each frontier spell's time to OOM: ${bounds.join(', ')}.`;
+    const never=spells.filter(x=>x.on&&!F.some(p=>p.spell&&p.spell.id===x.id)).map(x=>x.name);
+    if(never.length)s+=` ${never.join(' and ')} sits below the frontier, so no fight length ever makes it the right button.`;
+  }
+  $('insight').innerHTML=s;
+  // DTPS note
+  let dn='';
+  if(S.dOn){dn=cr.kind==='always'?`At ${f0(S.D)} DTPS the healer falls behind at every fight length. Even ${F[k].spell.name} spam heals only ${f1(F[k].h)}.`:
+    cr.kind==='never'?`At ${f0(S.D)} DTPS the healer never falls behind. Regeneration alone sustains ${f1(solve(S.r,F).hps)} HPS.`:
+    `Healer falls behind at T = ${f1(cr.T)} s. Past that, the tank loses health every second: a hidden enrage timer.`;}
+  else dn='Turn this on to find the fight length where the healer can no longer keep up with incoming damage.';
+  $('dNote').textContent=dn;$('lgD').hidden=!S.dOn;
+  renderSpellTable();renderSegs(F);renderFights(F);
+  if(k>=1){drawPlane(F,res,B);drawCurve(F,res,cr);}
+  $('cPlane').setAttribute('aria-label',`Spell plane. Budget ${f1(B)} mana per second. Best reachable point ${f1(res.hps)} HPS. Frontier: ${F.slice(1).map(p=>p.spell.name).join(', ')}.`);
+  $('cCurve').setAttribute('aria-label',`Sustainable HPS versus fight length. At ${S.T} seconds: ${f1(res.hps)} HPS.`+(S.dOn&&cr.kind==='at'?` Healer falls behind at ${f1(cr.T)} seconds.`:''));
+}
+
+// ---------- events ----------
+function setT(t){S.T=Math.round(Math.min(600,Math.max(10,t)));$('T').value=S.T;update();}
+$('T').addEventListener('input',e=>{S.T=+e.target.value;update();});
+$('M').addEventListener('input',e=>{S.M=+e.target.value;update();});
+$('r').addEventListener('input',e=>{S.r=+e.target.value;update();});
+$('oh').addEventListener('input',e=>{S.oh=+e.target.value/100;update();});
+$('D').addEventListener('input',e=>{S.D=+e.target.value;update();});
+$('dOn').addEventListener('change',e=>{S.dOn=e.target.checked;$('D').disabled=!S.dOn;if(S.dOn){S.D=700;$('D').value=700;}update();});
+$('s3On').addEventListener('change',e=>{spells[2].on=e.target.checked;$('pQuick').disabled=$('pFlash').disabled=!e.target.checked;update();});
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
+  const p=PRESETS[b.dataset.p],s=spells[2];s.H=p.H;s.C=p.C;s.t=p.t;
+  document.querySelectorAll('#row2 input').forEach(i=>i.value=s[i.dataset.k]);syncName();update();}));
+function drag(canvas,toT){
+  let down=false;
+  const go=e=>{const r=canvas.getBoundingClientRect();setT(toT(e.clientX-r.left,r.width));};
+  canvas.addEventListener('pointerdown',e=>{down=true;canvas.setPointerCapture(e.pointerId);go(e);});
+  canvas.addEventListener('pointermove',e=>{if(down)go(e);});
+  canvas.addEventListener('pointerup',()=>{down=false;});
+  canvas.addEventListener('keydown',e=>{
+    const d={ArrowRight:1,ArrowUp:1,ArrowLeft:-1,ArrowDown:-1}[e.key];
+    if(d){e.preventDefault();setT(S.T+d*(e.shiftKey?10:1));}});
+}
+drag($('cCurve'),(x,w)=>10+590*(x-pad.l)/(w-pad.l-pad.r));
+drag($('cPlane'),(x,w)=>{const B=plane.xMax*(x-pad.l)/(w-pad.l-pad.r);return B<=S.r+0.5?600:S.M/(B-S.r);});
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dice shapes: 2d6 vs 1d12 — MA102 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px}
+@media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px}
+figure+figure{margin-top:10px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;touch-action:none;cursor:crosshair}
+#cDist{height:230px}
+#cSucc{height:270px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.86rem;margin:6px 0 4px}
+.sw{display:inline-block;width:16px;height:12px;vertical-align:-1px;margin-right:6px;border:1.5px solid}
+.sw.a{background:var(--steel);border-color:var(--steel)}
+.sw.b{border-color:var(--ochre);background:repeating-linear-gradient(45deg,var(--ochre) 0 2px,transparent 2px 5px)}
+.ln{display:inline-block;width:22px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid}
+.ln.a{border-color:var(--steel)}
+.ln.b{border-color:var(--ochre);border-top-style:dashed}
+.ln.p{border-color:var(--ink-soft);border-top-style:dotted;border-top-width:3px}
+.insight{margin:14px 0 0;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.insight b{font-family:var(--sans)}
+.ctl{display:flex;flex-direction:column;gap:14px}
+.box{border:1.5px solid var(--grid);border-radius:10px;padding:10px 12px;background:var(--paper)}
+.box h2{font:700 .95rem var(--sans);margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.box h2 .sw,.box h2 .ln{margin:0}
+label,.lbl{font-weight:600;font-size:.92rem}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
+.stepper{display:inline-flex;align-items:center;gap:4px}
+.stepper button{font:700 1rem var(--sans);width:34px;height:34px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.stepper button:disabled{opacity:.35;cursor:default}
+.stepper output{min-width:3ch;text-align:center;font-variant-numeric:tabular-nums;font-weight:700}
+select{font:600 .95rem var(--sans);padding:6px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+.expr{font:700 1.05rem var(--sans);font-variant-numeric:tabular-nums}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.seg{display:flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{flex:1;font:600 .88rem var(--sans);padding:8px 10px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.check{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;min-height:32px}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-family:var(--serif);font-size:.95rem;margin:4px 0 0;color:var(--ink-soft)}
+h3{font:700 1rem var(--sans);margin:18px 0 6px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.84rem;color:var(--ink-soft);font-weight:600}
+.num th.ca{color:var(--steel)}.num th.cb{color:var(--ochre)}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.est{color:var(--ink-soft)}
+.full{min-width:560px}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:700}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA102 Mathematics for Games II · Week 8 · Worked example</p>
+  <h1>Same bars, different curves</h1>
+  <p class="lede">2d6 and 1d12 cover almost the same range, and both succeed 41.7% of the time on 8 or more. The bottom chart shows the difference. One die gives a straight line, two dice give an S-curve, so a +1 bonus is worth twice as much in the middle of 2d6.</p>
+</header>
+
+<section class="panel" aria-label="Dice comparison">
+  <div class="layout">
+    <div>
+      <figure>
+        <figcaption>Chance of each result<small>P(roll = x). Solid bars are rule A, hatched bars are rule B.</small></figcaption>
+        <canvas id="cDist" role="img" aria-label="Probability of each total for rule A and rule B"></canvas>
+        <div class="legend">
+          <span><i class="sw a"></i><span id="lgA1">A</span></span>
+          <span><i class="sw b"></i><span id="lgB1">B</span></span>
+          <span id="lgNorm" hidden><i class="ln p"></i>normal curve</span>
+        </div>
+      </figure>
+      <figure>
+        <figcaption>Chance of success at each target<small id="succSub">P(roll ≥ target). Click or drag on either chart to move the target.</small></figcaption>
+        <canvas id="cSucc" role="img" aria-label="Success chance against target for rule A and rule B"></canvas>
+        <div class="legend">
+          <span><i class="ln a"></i><span id="lgA2">A</span></span>
+          <span><i class="ln b"></i><span id="lgB2">B</span></span>
+          <span id="lgPlus"><i class="ln p"></i>same rule with +1</span>
+        </div>
+      </figure>
+      <p class="insight" id="insight" aria-live="polite"></p>
+    </div>
+
+    <div class="ctl">
+      <div class="box">
+        <div class="row"><label for="target">Target</label><output id="oTarget" for="target">8</output></div>
+        <input id="target" type="range" min="1" max="12" step="1" value="8">
+        <div class="seg" role="group" aria-label="Success rule" style="margin-top:8px">
+          <button id="mGe" aria-pressed="true">roll ≥ target</button>
+          <button id="mLe" aria-pressed="false">roll ≤ target</button>
+        </div>
+        <label class="check" style="margin-top:8px"><input type="checkbox" id="plus1" checked> Show +1 bonus</label>
+        <label class="check"><input type="checkbox" id="normal"> Normal overlay</label>
+        <p class="note" id="modeNote"></p>
+      </div>
+
+      <div class="box">
+        <h2><i class="sw a"></i>Rule A <span class="expr" id="exA">2d6</span></h2>
+        <div class="rule" id="ruleA"></div>
+      </div>
+      <div class="box">
+        <h2><i class="sw b"></i>Rule B <span class="expr" id="exB">1d12</span></h2>
+        <div class="rule" id="ruleB"></div>
+      </div>
+
+      <div class="box">
+        <span class="lbl">Presets</span>
+        <div class="presets" role="group" aria-label="Presets" style="margin-top:6px">
+          <button class="chip" data-p="0" aria-pressed="true">2d6 vs 1d12</button>
+          <button class="chip" data-p="1" aria-pressed="false">3d6 vs 1d20</button>
+          <button class="chip" data-p="2" aria-pressed="false">8d6 (Fireball)</button>
+          <button class="chip" data-p="3" aria-pressed="false">d20 advantage vs d20</button>
+        </div>
+        <p class="note" id="presetNote"></p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Numbers at the target</h3>
+  <div class="table-wrap">
+    <table class="num" aria-label="Statistics for both rules at the current target">
+      <thead><tr><th></th><th class="ca" id="hA">A</th><th class="cb" id="hB">B</th></tr></thead>
+      <tbody id="numBody"></tbody>
+    </table>
+  </div>
+
+  <details open>
+    <summary>Every target, exact values</summary>
+    <div class="table-wrap">
+      <table class="full" aria-label="Exact probabilities for every target">
+        <thead id="fullHead"></thead>
+        <tbody id="fullBody"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<footer>Exact values come from convolving one die at a time (advantage uses P(max of two d20 = k) = (2k − 1)/400). The normal estimate uses μ and σ from the same distribution with a continuity correction of half a point. Rules named in text only: GURPS uses 3d6 roll-under, D&D 5th edition uses d20 checks, advantage, and 8d6 for Fireball.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const FACES=[4,6,8,10,12,20];
+const pc=(p,d)=>(p*100).toFixed(d===undefined?2:d)+'%';
+const trim=(x,d)=>{let s=x.toFixed(d);if(s.indexOf('.')>=0)s=s.replace(/0+$/,'').replace(/\.$/,'');return s==='-0'?'0':s;};
+const sgn=b=>b>0?' + '+b:b<0?' − '+(-b):'';
+
+// ---------- model ----------
+const S={A:{n:2,f:6,b:0},B:{n:1,f:12,b:0},t:8,mode:'ge',plus:true,normal:false};
+
+function dist(r){ // returns {lo, p:[...]} probabilities for totals lo..lo+p.length-1
+  let p,lo;
+  if(r.f==='adv'){p=[];for(let k=1;k<=20;k++)p.push((2*k-1)/400);lo=1+r.b;}
+  else{
+    let c=[1];
+    for(let i=0;i<r.n;i++){const q=new Array(c.length+r.f-1).fill(0);for(let j=0;j<c.length;j++)for(let k=0;k<r.f;k++)q[j+k]+=c[j];c=q;}
+    const T=Math.pow(r.f,r.n);p=c.map(v=>v/T);lo=r.n+r.b;
+  }
+  let mu=0;p.forEach((v,i)=>mu+=v*(lo+i));let va=0;p.forEach((v,i)=>va+=v*Math.pow(lo+i-mu,2));
+  return {lo,hi:lo+p.length-1,p,mu,sd:Math.sqrt(va)};
+}
+const pEq=(D,x)=>(x<D.lo||x>D.hi)?0:D.p[x-D.lo];
+function pGe(D,t){let s=0;for(let x=Math.max(t,D.lo);x<=D.hi;x++)s+=D.p[x-D.lo];return Math.min(1,s);}
+function pLe(D,t){let s=0;for(let x=D.lo;x<=Math.min(t,D.hi);x++)s+=D.p[x-D.lo];return Math.min(1,s);}
+const succ=(D,t)=>S.mode==='ge'?pGe(D,t):pLe(D,t);
+// +1 bonus: roll-over adds 1 to the roll; roll-under adds 1 to the skill (target).
+const succPlus=(D,t)=>S.mode==='ge'?pGe(D,t-1):pLe(D,t+1);
+function Phi(z){ // Abramowitz-Stegun 7.1.26 via erf
+  const x=Math.abs(z)/Math.SQRT2,t=1/(1+0.3275911*x);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);
+  return z>=0?0.5*(1+y):0.5*(1-y);
+}
+const normSucc=(D,t)=>S.mode==='ge'?1-Phi((t-0.5-D.mu)/D.sd):Phi((t+0.5-D.mu)/D.sd);
+const exprOf=r=>(r.f==='adv'?'d20 adv':r.n+'d'+r.f)+sgn(r.b);
+
+// ---------- rule editors ----------
+function buildEditor(key){
+  const r=S[key],el=$('rule'+key);
+  el.innerHTML=
+   `<span class="lbl" id="${key}nL">Dice</span><span class="stepper"><button data-a="n-" aria-label="Fewer dice for rule ${key}">−</button><output id="${key}n" aria-labelledby="${key}nL">${r.n}</output><button data-a="n+" aria-label="More dice for rule ${key}">+</button></span>
+    <label for="${key}f">Die</label><select id="${key}f">${FACES.map(f=>`<option value="${f}">d${f}</option>`).join('')}<option value="adv">d20 with advantage</option></select>
+    <span class="lbl" id="${key}bL">Bonus</span><span class="stepper"><button data-a="b-" aria-label="Lower bonus for rule ${key}">−</button><output id="${key}b" aria-labelledby="${key}bL">${r.b}</output><button data-a="b+" aria-label="Raise bonus for rule ${key}">+</button></span>`;
+  el.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
+    const a=btn.dataset.a,r=S[key];
+    if(a==='n-')r.n=Math.max(1,r.n-1);if(a==='n+')r.n=Math.min(12,r.n+1);
+    if(a==='b-')r.b=Math.max(-10,r.b-1);if(a==='b+')r.b=Math.min(10,r.b+1);
+    clearPreset();update();
+  }));
+  $(key+'f').addEventListener('change',e=>{const v=e.target.value;S[key].f=v==='adv'?'adv':+v;clearPreset();update();});
+}
+function syncEditor(key){
+  const r=S[key],el=$('rule'+key),adv=r.f==='adv';
+  $(key+'n').textContent=adv?'—':r.n;$(key+'b').textContent=(r.b>0?'+':'')+r.b;
+  $(key+'f').value=String(r.f);
+  el.querySelector('[data-a="n-"]').disabled=adv||r.n<=1;el.querySelector('[data-a="n+"]').disabled=adv||r.n>=12;
+  el.querySelector('[data-a="b-"]').disabled=r.b<=-10;el.querySelector('[data-a="b+"]').disabled=r.b>=10;
+  $('ex'+key).textContent=exprOf(r);
+}
+
+// ---------- presets ----------
+const PRESETS=[
+  {A:{n:2,f:6,b:0},B:{n:1,f:12,b:0},t:8,mode:'ge',normal:false,note:'The lecture’s comparison. Both give 41.67% at 8, but the +1 gain differs: 16.67 points on 2d6, 8.33 on 1d12.'},
+  {A:{n:3,f:6,b:0},B:{n:1,f:20,b:0},t:10,mode:'le',normal:false,note:'Both average 10.5. GURPS-style roll-under: succeed if 3d6 ≤ skill. Skill 10 is 50.0%, skill 11 is 62.5%. Switch to roll ≥ and set the target to 16 to compare with the lecture’s table (4.63% vs 25%).'},
+  {A:{n:8,f:6,b:0},B:{n:2,f:20,b:7},t:35,mode:'ge',normal:true,note:'8d6 against 2d20 + 7. Same mean of 28. At 35 or more, 8d6 is 9.07% exact and 8.92% by the normal estimate. The printed range 8 to 48 hides how narrow the real spread is.'},
+  {A:{n:1,f:'adv',b:0},B:{n:1,f:20,b:0},t:11,mode:'ge',normal:false,note:'Advantage: roll two d20, keep the higher. Needing 11, a flat 50% becomes 75%. Needing 20, 5% becomes 9.75%. Not a sum, but the curve still bends.'}
+];
+const chips=[...document.querySelectorAll('.chip')];
+function clearPreset(){chips.forEach(c=>c.setAttribute('aria-pressed','false'));$('presetNote').textContent='';}
+function applyPreset(i){
+  const p=PRESETS[i];S.A={...p.A};S.B={...p.B};S.t=p.t;S.mode=p.mode;S.normal=p.normal;$('normal').checked=p.normal;
+  chips.forEach((c,j)=>c.setAttribute('aria-pressed',String(j===i)));$('presetNote').textContent=p.note;update();
+}
+chips.forEach((c,i)=>c.addEventListener('click',()=>applyPreset(i)));
+
+// ---------- drawing ----------
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:48,r:12,t:14,b:30};
+let X={lo:1,hi:12};
+const xpx=(x,w)=>pad.l+(w-pad.l-pad.r)*(x-(X.lo-0.5))/(X.hi-X.lo+1);
+const ypx=(y,h,yMax)=>pad.t+(h-pad.t-pad.b)*(1-y/yMax);
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*m).find(k=>k>=v*1.02)||v;}
+function xTicks(){const span=X.hi-X.lo;const step=[1,2,4,5,10,20,25,50].find(s=>span/s<=14)||50;const out=[];for(let x=Math.ceil(X.lo/step)*step;x<=X.hi;x+=step)out.push(x);return out;}
+function frame(g,w,h,yMax,yFmt,ySteps){
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=ySteps;i++){const v=yMax*i/ySteps,y=ypx(v,h,yMax);
+    g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(v),pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';
+  xTicks().forEach(x=>g.fillText(String(x),xpx(x,w),h-pad.b+6));
+}
+function targetLine(g,w,h){
+  const x=xpx(S.t,w);g.strokeStyle=css('--ink');g.globalAlpha=.55;g.setLineDash([4,4]);g.lineWidth=1.5;
+  g.beginPath();g.moveTo(x,pad.t-4);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+}
+function hatch(g,color){
+  const c=document.createElement('canvas');c.width=c.height=6;const h=c.getContext('2d');
+  h.strokeStyle=color;h.lineWidth=1.6;h.beginPath();h.moveTo(0,6);h.lineTo(6,0);h.moveTo(-1,1);h.lineTo(1,-1);h.moveTo(5,7);h.lineTo(7,5);h.stroke();
+  return g.createPattern(c,'repeat');
+}
+function drawDist(DA,DB){
+  const c=setupCanvas($('cDist')),{g,w,h}=c;
+  let peak=Math.max(...DA.p,...DB.p);
+  if(S.normal)peak=Math.max(peak,1/(DA.sd*Math.sqrt(2*Math.PI)),1/(DB.sd*Math.sqrt(2*Math.PI)));
+  const yMax=niceMax(peak);
+  frame(g,w,h,yMax,v=>trim(v*100,1)+'%',4);
+  const slot=(w-pad.l-pad.r)/(X.hi-X.lo+1),bw=Math.max(1,slot*0.42),gap=slot>6?Math.min(1.5,slot*0.06):0;
+  const y0=ypx(0,h,yMax),colA=css('--steel'),colB=css('--ochre'),pat=hatch(g,colB);
+  for(let x=X.lo;x<=X.hi;x++){
+    const cx=xpx(x,w),a=pEq(DA,x),b=pEq(DB,x);
+    if(a>0){const y=ypx(a,h,yMax);g.fillStyle=colA;g.fillRect(cx-bw-gap/2,y,bw,y0-y);}
+    if(b>0){const y=ypx(b,h,yMax);g.fillStyle=pat;g.fillRect(cx+gap/2,y,bw,y0-y);
+      if(bw>3){g.strokeStyle=colB;g.lineWidth=1.2;g.strokeRect(cx+gap/2+.6,y+.6,bw-1.2,y0-y-1.2);}}
+  }
+  if(S.normal){
+    [[DA,colA,[]],[DB,colB,[7,5]]].forEach(([D,col,dash])=>{
+      g.strokeStyle=css('--ink');g.lineWidth=4;g.globalAlpha=.25;g.setLineDash(dash);curve(D);g.globalAlpha=1;
+      g.strokeStyle=col;g.lineWidth=2;curve(D);g.setLineDash([]);
+    });
+  }
+  function curve(D){g.beginPath();const n=300;for(let i=0;i<=n;i++){const x=X.lo-0.5+(X.hi-X.lo+1)*i/n,y=Math.exp(-0.5*Math.pow((x-D.mu)/D.sd,2))/(D.sd*Math.sqrt(2*Math.PI));
+    const px=xpx(x,w),py=ypx(y,h,yMax);i?g.lineTo(px,py):g.moveTo(px,py);}g.stroke();}
+  targetLine(g,w,h);
+}
+function stepPath(g,w,h,f){
+  g.beginPath();
+  for(let x=X.lo;x<=X.hi;x++){const y=ypx(f(x),h,1),x0=xpx(x-0.5,w),x1=xpx(x+0.5,w);x===X.lo?g.moveTo(x0,y):g.lineTo(x0,y);g.lineTo(x1,y);}
+  g.stroke();
+}
+function drawSucc(DA,DB){
+  const c=setupCanvas($('cSucc')),{g,w,h}=c;
+  frame(g,w,h,1,v=>Math.round(v*100)+'%',4);
+  const colA=css('--steel'),colB=css('--ochre');
+  if(S.plus){
+    g.lineWidth=1.8;g.setLineDash([2,4]);
+    g.strokeStyle=colA;stepPath(g,w,h,t=>succPlus(DA,t));
+    g.strokeStyle=colB;stepPath(g,w,h,t=>succPlus(DB,t));
+    g.setLineDash([]);
+  }
+  g.lineWidth=2.6;g.strokeStyle=colA;stepPath(g,w,h,t=>succ(DA,t));
+  g.setLineDash([8,5]);g.strokeStyle=colB;stepPath(g,w,h,t=>succ(DB,t));g.setLineDash([]);
+  targetLine(g,w,h);
+  // gap brackets at the target
+  const xt=xpx(S.t,w);
+  const items=[[DA,colA,-1,'A'],[DB,colB,1,'B']];
+  items.forEach(([D,col,side,name])=>{
+    const p=succ(D,S.t),q=succPlus(D,S.t),y=ypx(p,h,1);
+    g.fillStyle=col;g.beginPath();g.arc(xt,y,5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    if(S.plus&&q-p>1e-9){
+      const yq=ypx(q,h,1),bx=xt+side*9;
+      g.strokeStyle=col;g.lineWidth=3;g.beginPath();g.moveTo(bx,y);g.lineTo(bx,yq);g.stroke();
+      g.lineWidth=1.5;g.beginPath();g.moveTo(bx-4,yq);g.lineTo(bx+4,yq);g.moveTo(bx-4,y);g.lineTo(bx+4,y);g.stroke();
+    }
+  });
+  if(S.plus){
+    // labels, placed to avoid each other
+    const la=items.map(([D,col,side,name])=>{const p=succ(D,S.t),q=succPlus(D,S.t);return {col,side,name,gain:q-p,y:ypx((p+q)/2,h,1)};});
+    if(Math.abs(la[0].y-la[1].y)<18){const m=(la[0].y+la[1].y)/2;la[0].y=m-10;la[1].y=m+10;}
+    g.font='700 13px '+css('--sans');g.textBaseline='middle';
+    la.forEach(L=>{
+      const txt=L.name+' +'+(L.gain*100).toFixed(1)+' pts';const tw=g.measureText(txt).width;
+      let side=L.side;if(side<0&&xt-16-tw<pad.l)side=1;if(side>0&&xt+16+tw>w-pad.r)side=-1;
+      const tx=side<0?xt-16-tw:xt+16,ty=Math.max(pad.t+8,Math.min(h-pad.b-8,L.y));
+      g.fillStyle=css('--paper-2');g.globalAlpha=.9;g.fillRect(tx-3,ty-9,tw+6,18);g.globalAlpha=1;
+      g.fillStyle=L.col;g.textAlign='left';g.fillText(txt,tx,ty);
+    });
+  }
+}
+
+// ---------- readouts ----------
+function update(){
+  syncEditor('A');syncEditor('B');
+  const DA=dist(S.A),DB=dist(S.B);
+  X={lo:Math.min(DA.lo,DB.lo),hi:Math.max(DA.hi,DB.hi)};
+  S.t=Math.max(X.lo,Math.min(X.hi,S.t));
+  const sl=$('target');sl.min=X.lo;sl.max=X.hi;sl.value=S.t;$('oTarget').textContent=S.t;
+  sl.setAttribute('aria-valuetext','target '+S.t);
+  $('mGe').setAttribute('aria-pressed',String(S.mode==='ge'));$('mLe').setAttribute('aria-pressed',String(S.mode==='le'));
+  const ge=S.mode==='ge',rel=ge?'≥':'≤',eA=exprOf(S.A),eB=exprOf(S.B);
+  ['lgA1','lgA2','hA'].forEach(id=>$(id).textContent='A: '+eA);['lgB1','lgB2','hB'].forEach(id=>$(id).textContent='B: '+eB);
+  $('lgNorm').hidden=!S.normal;$('lgPlus').hidden=!S.plus;
+  $('succSub').textContent=`P(roll ${rel} target). Click or drag on either chart to move the target.`;
+  $('modeNote').textContent=ge?'+1 means +1 added to the roll.':'Roll-under: +1 means +1 to skill, so the target rises by one.';
+
+  const sA=succ(DA,S.t),sB=succ(DB,S.t),gA=succPlus(DA,S.t)-sA,gB=succPlus(DB,S.t)-sB;
+  const rows=[
+    ['Range',D=>D.lo+' to '+D.hi],
+    ['Mean',D=>trim(D.mu,3)],
+    ['SD',D=>D.sd.toFixed(3)],
+    [`P(= ${S.t})`,D=>pc(pEq(D,S.t))],
+    [`P(${rel} ${S.t})`,D=>pc(succ(D,S.t))]
+  ];
+  if(S.normal)rows.push([`Normal estimate of P(${rel} ${S.t})`,D=>pc(normSucc(D,S.t)),'est']);
+  rows.push([ge?`+1 to roll, gain at ${S.t}`:`+1 to skill, gain at ${S.t}`,D=>'+'+((succPlus(D,S.t)-succ(D,S.t))*100).toFixed(2)+' pts']);
+  $('numBody').innerHTML=rows.map(r=>`<tr${r[0].startsWith('P(')?' class="here"':''}><td>${r[0]}</td><td class="${r[2]||''}">${r[1](DA)}</td><td class="${r[2]||''}">${r[1](DB)}</td></tr>`).join('');
+
+  // full table
+  $('fullHead').innerHTML=`<tr><th>Target</th><th>P(A = t)</th><th>P(B = t)</th><th>P(A ${rel} t)</th><th>P(B ${rel} t)</th><th>A gain from +1</th><th>B gain from +1</th></tr>`;
+  let fb='';
+  for(let t=X.lo;t<=X.hi;t++){
+    fb+=`<tr${t===S.t?' class="here"':''}><td>${t}</td><td>${pc(pEq(DA,t))}</td><td>${pc(pEq(DB,t))}</td><td>${pc(succ(DA,t))}</td><td>${pc(succ(DB,t))}</td><td>+${((succPlus(DA,t)-succ(DA,t))*100).toFixed(2)}</td><td>+${((succPlus(DB,t)-succ(DB,t))*100).toFixed(2)}</td></tr>`;
+  }
+  $('fullBody').innerHTML=fb;
+
+  // insight sentence
+  const f1=p=>(p*100).toFixed(1)+'%',f2=p=>(p*100).toFixed(1);
+  let s=`At target ${S.t}, <b>A (${eA})</b> succeeds ${f1(sA)} of the time and <b>B (${eB})</b> ${f1(sB)}. `;
+  if(Math.abs(sA-sB)<0.0005)s+='Same answer, different rules. ';
+  s+=`A +1 bonus adds <b>${f2(gA)} points</b> to A and <b>${f2(gB)} points</b> to B. `;
+  if(gA>1e-9&&gB>1e-9){const r=gA/gB;if(r>1.15)s+=`Here +1 is worth ${trim(r,2)}× as much on A.`;else if(r<1/1.15)s+=`Here +1 is worth ${trim(1/r,2)}× as much on B.`;else s+='Here +1 is worth about the same on both.';}
+  s+=' The +1 gain always equals the chance of rolling exactly one step short of the target, so it follows the bar chart.';
+  $('insight').innerHTML=s;
+  $('cDist').setAttribute('aria-label',`Probability of each total for ${eA} and ${eB}, target ${S.t}`);
+  $('cSucc').setAttribute('aria-label',`Success chance: ${eA} ${f1(sA)}, ${eB} ${f1(sB)} at target ${S.t}; +1 gains ${f2(gA)} and ${f2(gB)} points`);
+  drawDist(DA,DB);drawSucc(DA,DB);
+}
+
+// ---------- events ----------
+buildEditor('A');buildEditor('B');
+$('target').addEventListener('input',e=>{S.t=+e.target.value;update();});
+$('mGe').addEventListener('click',()=>{S.mode='ge';update();});
+$('mLe').addEventListener('click',()=>{S.mode='le';update();});
+$('plus1').addEventListener('change',e=>{S.plus=e.target.checked;update();});
+$('normal').addEventListener('change',e=>{S.normal=e.target.checked;update();});
+['cDist','cSucc'].forEach(id=>{
+  const c=$(id);
+  const pick=e=>{const r=c.getBoundingClientRect(),w=r.width,fx=(e.clientX-r.left-pad.l)/(w-pad.l-pad.r);
+    const nt=Math.max(X.lo,Math.min(X.hi,Math.floor(X.lo-0.5+fx*(X.hi-X.lo+1)+0.5)));
+    if(nt!==S.t){S.t=nt;update();}};
+  c.addEventListener('pointerdown',e=>{c.setPointerCapture(e.pointerId);pick(e);});
+  c.addEventListener('pointermove',e=>{if(e.buttons)pick(e);});
+});
+let rz;window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(update);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+$('presetNote').textContent=PRESETS[0].note;
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

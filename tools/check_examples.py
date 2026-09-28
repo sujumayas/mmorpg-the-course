@@ -22,7 +22,9 @@ def check(browser, path):
         errs = []
         page.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
         page.on("pageerror", lambda e: errs.append(str(e)))
-        page.goto(path.resolve().as_uri())
+        # Block font requests: the page must work offline, and waiting on them can hang.
+        page.route("**/fonts.{googleapis,gstatic}.com/**", lambda r: r.abort())
+        page.goto(path.resolve().as_uri(), wait_until="domcontentloaded")
         page.wait_for_timeout(600)
         # Font requests may fail offline; ignore those.
         errs = [e for e in errs if "fonts.g" not in e and "net::ERR" not in e]

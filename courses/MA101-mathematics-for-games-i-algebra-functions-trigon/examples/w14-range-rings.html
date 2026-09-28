@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Range rings and squared distance — MA101 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:820px){.charts{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cMap{aspect-ratio:1/1;height:auto;touch-action:none;cursor:grab;border-radius:6px}
+#cMap:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+#cLines{height:340px;flex:1 1 auto;min-height:300px}
+.lines-fig{display:flex;flex-direction:column}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:5px;border-radius:3px}
+.bugcap{margin:6px 0 0;font-weight:700;color:var(--blood);font-size:.92rem}
+.readout{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0 4px}
+@media (max-width:820px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-family:var(--mono);font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.mono{font-family:var(--mono);font-size:.9rem;font-variant-numeric:tabular-nums}
+.compare{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--paper-2);white-space:pre-wrap;overflow-wrap:anywhere}
+.zone{display:inline-block;padding:1px 9px;border-radius:999px;font-family:var(--sans);font-weight:700;color:var(--paper)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:minmax(0,1fr)}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+select,input[type=number]{font:600 .95rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);width:100%}
+.check{display:flex;align-items:flex-start;gap:8px;justify-content:flex-start;font-weight:600;margin-top:10px}
+.check input{width:20px;height:20px;accent-color:var(--steel);margin:1px 0 0;flex:none}
+.check[aria-disabled="true"]{opacity:.5}
+.pos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pos label{flex-direction:column;gap:2px}
+.btn{font:700 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;margin-top:12px;width:100%}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:480px;width:100%}
+.tcap{font-family:var(--serif);font-size:1rem;margin:16px 0 0}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+td{font-family:var(--mono);font-size:.88rem;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA101 Mathematics for Games I · Week 14 · Worked example</p>
+  <h1>Squaring bends the ruler, not the order</h1>
+  <p class="lede">One block further on each axis and this mob is gone. Drag the player.</p>
+</header>
+
+<section class="panel" aria-label="Range rings">
+  <div class="charts">
+    <figure>
+      <figcaption>Top-down map<small>Mob at the origin. Inner ring r<sub>near</sub>, outer ring r<sub>far</sub>. Drag the diamond, or focus the map and use arrow keys (Shift for 10 blocks).</small></figcaption>
+      <canvas id="cMap" tabindex="0" role="img" aria-label="Top-down map with range rings around a mob. Focus and use arrow keys to move the player."></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><i id="lgSafe"></i>safe</span>
+        <span><i id="lgRand"></i>random</span>
+        <span><i id="lgDesp"></i>despawn</span>
+      </div>
+      <p class="bugcap" id="bugCap" hidden>Compared S with r instead of r².</p>
+    </figure>
+    <figure class="lines-fig">
+      <figcaption>Two rulers, same order<small id="linesSub">Top: distance D. Bottom: squared distance S = D². Each thin line joins D = k to S = k².</small></figcaption>
+      <canvas id="cLines" role="img" aria-label="Linked number lines for distance and squared distance"></canvas>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rDx">0</b><span>dx</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rDz">0</b><span>dz</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rS">0</b><span>S = dx² + dz²</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rD">0</b><span>D = sqrt(S)</span></div>
+    <div class="stat" id="zoneStat"><b id="rZone">safe</b><span>zone</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rN2">0</b><span>r_near²</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rF2">0</b><span>r_far²</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rMan">0</b><span>Manhattan</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rCheb">0</b><span>Chebyshev</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rAlt">0</b><span>Alternating</span></div>
+  </div>
+  <div class="compare mono" id="compare" aria-live="polite"></div>
+
+  <div class="controls">
+    <div>
+      <label for="rNear"><span>Inner radius r<sub>near</sub></span> <output id="oNear">32</output></label>
+      <input id="rNear" type="range" min="8" max="64" step="1" value="32">
+      <label for="rFar" style="margin-top:10px"><span>Outer radius r<sub>far</sub></span> <output id="oFar">128</output></label>
+      <input id="rFar" type="range" min="32" max="160" step="1" value="128">
+      <p class="hint" id="radHint">Outer is kept at or above inner.</p>
+    </div>
+    <div>
+      <label for="metric">Distance metric</label>
+      <select id="metric">
+        <option value="euc" selected>Euclidean</option>
+        <option value="man">Manhattan</option>
+        <option value="cheb">Chebyshev</option>
+        <option value="alt">Alternating diagonal (D&amp;D 3.5)</option>
+      </select>
+      <label class="check" id="bugWrap"><input type="checkbox" id="bug"> Forgot to square the radius</label>
+      <label class="check"><input type="checkbox" id="box"> Per-axis box check</label>
+    </div>
+    <div>
+      <div class="pos">
+        <label for="px">Player x <input id="px" type="number" min="-160" max="160" step="1" value="90"></label>
+        <label for="pz">Player z <input id="pz" type="number" min="-160" max="160" step="1" value="90"></label>
+      </div>
+      <button class="btn" id="snap" type="button">Snap to test positions</button>
+      <p class="hint" id="snapHint">Cycles through the eight rows in the table below.</p>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <p class="tcap">Test positions, mob at the origin, current radii and metric</p>
+  <div class="table-wrap">
+    <table aria-label="Test positions">
+      <thead><tr><th>Player (x, z)</th><th>S</th><th>D</th><th>Manhattan</th><th>Chebyshev</th><th>Alternating</th><th>Zone</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Ring radii follow the lecture's despawn example (32 and 128 blocks). Metrics as defined in the lecture: Manhattan |dx| + |dz|, Chebyshev max(|dx|, |dz|), alternating diagonal max + floor(min / 2). All shapes are drawn generically.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f2=n=>n.toFixed(2);
+const W=160;
+const TESTS=[[20,20],[30,10],[30,30],[65,65],[90,90],[100,80],[91,91],[120,50]];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+let rNear=32,rFar=128,metric='euc',bug=false,box=false,P={x:90,z:90},snapIdx=4,anim=null;
+
+const M={
+  euc:(x,z)=>Math.hypot(x,z),
+  man:(x,z)=>Math.abs(x)+Math.abs(z),
+  cheb:(x,z)=>Math.max(Math.abs(x),Math.abs(z)),
+  alt:(x,z)=>{const a=Math.abs(x),b=Math.abs(z);return Math.max(a,b)+Math.floor(Math.min(a,b)/2);}
+};
+const NAMES={euc:'Euclidean',man:'Manhattan',cheb:'Chebyshev',alt:'Alternating'};
+// Zone classifier used by the map, the readouts and the table.
+function zone(x,z,useBug){
+  if(metric==='euc'){
+    const S=x*x+z*z,tn=useBug?rNear:rNear*rNear,tf=useBug?rFar:rFar*rFar;
+    return S<=tn?'safe':S<=tf?'random':'despawn';
+  }
+  const v=M[metric](x,z);return v<=rNear?'safe':v<=rFar?'random':'despawn';
+}
+const zoneColor=z=>css(z==='safe'?'--moss':z==='random'?'--ochre':'--blood');
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+
+// ---------- Map ----------
+let mapGeom=null;
+// half-width of region metric<=r in row |z|=a (integer cells), or -1 if empty
+function rowHalf(a,r){ if(M[metric](0,a)>r) return -1; let w=0; while(w<400&&M[metric](w+1,a)<=r) w++; return w; }
+function regionPath(g,X,Z,r){
+  // outline of union of integer cells with metric<=r
+  const pts=[];let top=0;while(rowHalf(top+1,r)>=0&&top<400)top++;
+  for(let z=-top;z<=top;z++){const w=rowHalf(Math.abs(z),r);pts.push([w+.5,z-.5],[w+.5,z+.5]);}
+  for(let z=top;z>=-top;z--){const w=rowHalf(Math.abs(z),r);pts.push([-w-.5,z+.5],[-w-.5,z-.5]);}
+  g.beginPath();pts.forEach((p,i)=>i?g.lineTo(X(p[0]),Z(p[1])):g.moveTo(X(p[0]),Z(p[1])));g.closePath();
+}
+function ringPath(g,X,Z,k,r){
+  if(metric==='euc'){g.beginPath();g.arc(X(0),Z(0),r*k,0,Math.PI*2);g.closePath();}
+  else regionPath(g,X,Z,r);
+}
+function drawMap(){
+  const c=setupCanvas($('cMap')),g=c.g,s=c.w,pl=34,pr=10,pt=10,pb=34;
+  const pw=s-pl-pr,ph=s-pt-pb,k=pw/(2*W),kz=ph/(2*W);
+  const X=x=>pl+(x+W)*k,Z=z=>pt+(z+W)*kz;
+  mapGeom={X,Z,k,kz,pl,pt,pw,ph};
+  g.clearRect(0,0,s,s);
+  // despawn backdrop
+  g.save();g.beginPath();g.rect(pl,pt,pw,ph);g.clip();
+  g.globalAlpha=.16;g.fillStyle=css('--blood');g.fillRect(pl,pt,pw,ph);g.globalAlpha=1;
+  const effN=(metric==='euc'&&bug)?Math.sqrt(rNear):rNear,effF=(metric==='euc'&&bug)?Math.sqrt(rFar):rFar;
+  const ringK=(metric==='euc')?k:1;
+  g.fillStyle=css('--paper-2');ringPath(g,X,Z,ringK,effF);g.fill();
+  g.globalAlpha=.30;g.fillStyle=css('--ochre');ringPath(g,X,Z,ringK,effF);g.fill();g.globalAlpha=1;
+  g.fillStyle=css('--paper-2');ringPath(g,X,Z,ringK,effN);g.fill();
+  g.globalAlpha=.30;g.fillStyle=css('--moss');ringPath(g,X,Z,ringK,effN);g.fill();g.globalAlpha=1;
+  // grid
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let v=-W;v<=W;v+=16){g.globalAlpha=v%32===0?.9:.45;g.beginPath();g.moveTo(X(v),pt);g.lineTo(X(v),pt+ph);g.moveTo(pl,Z(v));g.lineTo(pl+pw,Z(v));g.stroke();}
+  g.globalAlpha=1;
+  // correct rings, faint, when bug on
+  if(metric==='euc'&&bug){
+    g.strokeStyle=css('--ink-soft');g.setLineDash([3,4]);g.lineWidth=1.2;
+    [rNear,rFar].forEach(r=>{ringPath(g,X,Z,k,r);g.stroke();});g.setLineDash([]);
+  }
+  // rings
+  g.lineWidth=2.2;g.strokeStyle=(metric==='euc'&&bug)?css('--blood'):css('--steel');
+  ringPath(g,X,Z,ringK,effN);g.stroke();ringPath(g,X,Z,ringK,effF);g.stroke();
+  // box check
+  if(box){
+    g.setLineDash([7,5]);g.lineWidth=2;g.strokeStyle=css('--ink');
+    g.strokeRect(X(-rFar),Z(-rFar),2*rFar*k,2*rFar*kz);g.setLineDash([]);
+  }
+  // mob to player line
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.setLineDash([5,4]);
+  g.beginPath();g.moveTo(X(0),Z(0));g.lineTo(X(P.x),Z(P.z));g.stroke();g.setLineDash([]);
+  g.restore();
+  // mob
+  g.fillStyle=css('--steel');g.strokeStyle=css('--paper');g.lineWidth=2;
+  g.beginPath();g.arc(X(0),Z(0),7,0,Math.PI*2);g.fill();g.stroke();
+  // player diamond
+  const px=X(P.x),pz=Z(P.z),r=9;
+  g.fillStyle=css('--ink');g.strokeStyle=css('--paper');g.lineWidth=2;
+  g.beginPath();g.moveTo(px,pz-r);g.lineTo(px+r,pz);g.lineTo(px,pz+r);g.lineTo(px-r,pz);g.closePath();g.fill();g.stroke();
+  // D label at midpoint
+  const D=M[metric](P.x,P.z),lbl=(metric==='euc'?'D = '+f2(D):NAMES[metric]+' = '+D);
+  g.font='600 12px '+css('--sans');
+  const mx=(X(0)+px)/2,mz=(Z(0)+pz)/2,tw=g.measureText(lbl).width;
+  const lx=Math.min(Math.max(mx+8,pl+2),pl+pw-tw-8),lz=Math.min(Math.max(mz-10,pt+10),pt+ph-10);
+  g.fillStyle=css('--paper');g.globalAlpha=.85;g.fillRect(lx-3,lz-9,tw+6,18);g.globalAlpha=1;
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='middle';g.fillText(lbl,lx,lz);
+  // axis labels
+  g.font='10px '+css('--sans');g.fillStyle=css('--ink-soft');
+  g.textAlign='center';g.textBaseline='top';
+  for(let v=-W;v<=W;v+=32)g.fillText(String(v).replace('-','−'),X(v),pt+ph+4);
+  g.textAlign='right';g.textBaseline='middle';
+  for(let v=-W;v<=W;v+=32)g.fillText(String(v).replace('-','−'),pl-4,Z(v));
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--ink');
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('x →',pl+pw,s-1);
+  g.textAlign='left';g.textBaseline='bottom';g.fillText('z ↓',2,pt+ph+30);
+}
+
+// ---------- Number lines ----------
+function drawLines(){
+  const c=setupCanvas($('cLines')),g=c.g,w=c.w,h=c.h,pl=18,pr=22;
+  const L=w-pl-pr,yT=80,yB=h-72,Dmax=200,Smax=40000;
+  const XD=d=>pl+L*Math.min(d,Dmax)/Dmax,XS=s=>pl+L*Math.min(s,Smax)/Smax;
+  g.clearRect(0,0,w,h);
+  const ink=css('--ink'),soft=css('--ink-soft'),steel=css('--steel'),blood=css('--blood'),ochre=css('--ochre');
+  const euc=metric==='euc';
+  const Dval=M[metric](P.x,P.z),S=P.x*P.x+P.z*P.z;
+  function line(y,max,step,labelFn,title){
+    g.strokeStyle=ink;g.lineWidth=1.5;g.beginPath();g.moveTo(pl,y);g.lineTo(pl+L,y);g.stroke();
+    g.font='10px '+css('--sans');g.fillStyle=soft;g.textAlign='center';
+    for(let v=0;v<=max;v+=step){const x=pl+L*v/max;g.beginPath();g.moveTo(x,y-4);g.lineTo(x,y+4);g.stroke();}
+    const every=(L/(max/step)<34)?2:1;
+    for(let i=0,v=0;v<=max;v+=step,i++){if(i%every)continue;const x=pl+L*v/max;g.textBaseline='top';g.fillText(labelFn(v),x,y+7);}
+    g.font='600 12px '+css('--sans');g.fillStyle=ink;g.textAlign='left';g.textBaseline='bottom';g.fillText(title,pl,y-(y===yT?50:30));
+  }
+  const kfmt=v=>(L>460?fmt(v):(v===0?'0':(v/1000)+'k'));
+  line(yT,Dmax,25,v=>String(v),euc?'Distance D (blocks)':NAMES[metric]+' distance (blocks)');
+  if(euc){
+    line(yB,Smax,5000,kfmt,'Squared distance S = D²');
+    // thin connectors
+    g.strokeStyle=soft;g.lineWidth=.8;g.globalAlpha=.55;
+    for(let k=0;k<=192;k+=16){g.beginPath();g.moveTo(XD(k),yT+4);g.lineTo(XS(k*k),yB-4);g.stroke();}
+    g.globalAlpha=1;
+    // radius connectors
+    const pairs=bug?[[Math.sqrt(rNear),rNear],[Math.sqrt(rFar),rFar]]:[[rNear,rNear*rNear],[rFar,rFar*rFar]];
+    if(bug){ // show where the correct marks were, faint
+      g.strokeStyle=steel;g.globalAlpha=.35;g.setLineDash([3,4]);g.lineWidth=1.5;
+      [rNear,rFar].forEach(r=>{g.beginPath();g.moveTo(XD(r),yT);g.lineTo(XS(r*r),yB);g.stroke();});
+      g.setLineDash([]);g.globalAlpha=1;
+    }
+    g.strokeStyle=bug?blood:steel;g.lineWidth=3;
+    pairs.forEach(p=>{g.beginPath();g.moveTo(XD(p[0]),yT);g.lineTo(XS(p[1]),yB);g.stroke();});
+    // marks
+    g.font='600 11px '+css('--sans');g.textBaseline='bottom';g.fillStyle=bug?blood:steel;
+    const labsT=bug?['√'+rNear+' = '+f2(Math.sqrt(rNear)),'√'+rFar+' = '+f2(Math.sqrt(rFar))]:['r_near '+rNear,'r_far '+rFar];
+    placeLabels(g,[XD(pairs[0][0]),XD(pairs[1][0])],yT-8,labsT,pl,pl+L);
+    const labsB=bug?['S = '+rNear,'S = '+rFar]:['r_near² '+fmt(rNear*rNear),'r_far² '+fmt(rFar*rFar)];
+    g.textBaseline='top';placeLabels(g,[XS(pairs[0][1]),XS(pairs[1][1])],yB+22,labsB,pl,pl+L);
+    // player
+    const col=zoneColor(zone(P.x,P.z,bug));
+    g.strokeStyle=col;g.lineWidth=2.5;g.setLineDash([2,3]);g.beginPath();g.moveTo(XD(Dval),yT);g.lineTo(XS(S),yB);g.stroke();g.setLineDash([]);
+    diamond(g,XD(Dval),yT,col);diamond(g,XS(S),yB,col);
+    if(Dval>Dmax)arrow(g,pl+L+4,yT,ink);
+    if(S>Smax)arrow(g,pl+L+4,yB,ink);
+  }else{
+    [rNear,rFar].forEach(r=>{g.strokeStyle=steel;g.lineWidth=3;g.beginPath();g.moveTo(XD(r),yT-10);g.lineTo(XD(r),yT+10);g.stroke();});
+    g.font='600 11px '+css('--sans');g.fillStyle=steel;g.textBaseline='bottom';
+    placeLabels(g,[XD(rNear),XD(rFar)],yT-12,['r_near '+rNear,'r_far '+rFar],pl,pl+L);
+    const col=zoneColor(zone(P.x,P.z,false));
+    diamond(g,XD(Dval),yT,col);if(Dval>Dmax)arrow(g,pl+L+4,yT,ink);
+    g.font='15px '+css('--serif');g.fillStyle=ink;g.textAlign='left';g.textBaseline='top';
+    wrap(g,'Grid metrics are whole numbers already. Compare the metric with r directly: no square root, and nothing to square.',pl,yT+48,L,21);
+  }
+}
+function placeLabels(g,xs,y,labels,lo,hi){
+  // keep two labels apart and inside bounds
+  const ws=labels.map(t=>g.measureText(t).width);
+  let a=xs[0]-ws[0]/2,b=xs[1]-ws[1]/2;
+  a=Math.max(lo,Math.min(a,hi-ws[0]));b=Math.max(lo,Math.min(b,hi-ws[1]));
+  let dy=0;if(b<a+ws[0]+8){dy=14;}
+  g.textAlign='left';g.fillText(labels[0],a,y-(g.textBaseline==='bottom'?dy:0));g.fillText(labels[1],b,y+(g.textBaseline==='top'?dy:0));
+}
+function diamond(g,x,y,col){const r=8;g.fillStyle=col;g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(x,y-r);g.lineTo(x+r,y);g.lineTo(x,y+r);g.lineTo(x-r,y);g.closePath();g.fill();g.stroke();}
+function arrow(g,x,y,col){g.fillStyle=col;g.beginPath();g.moveTo(x+8,y);g.lineTo(x,y-5);g.lineTo(x,y+5);g.closePath();g.fill();}
+function wrap(g,text,x,y,maxW,lh){const words=text.split(' ');let line='';for(const wd of words){const t=line?line+' '+wd:wd;if(g.measureText(t).width>maxW&&line){g.fillText(line,x,y);y+=lh;line=wd;}else line=t;}if(line)g.fillText(line,x,y);}
+
+// ---------- Readouts ----------
+function readouts(){
+  const x=P.x,z=P.z,S=x*x+z*z,D=Math.sqrt(S),euc=metric==='euc',useBug=euc&&bug;
+  const zn=zone(x,z,useBug),truth=zone(x,z,false);
+  $('rDx').textContent=x;$('rDz').textContent=z;
+  $('rS').textContent=euc?fmt(S):'n/a (integer metric)';
+  $('rD').textContent=f2(D);
+  $('rN2').textContent=euc?fmt(rNear*rNear):'n/a';$('rF2').textContent=euc?fmt(rFar*rFar):'n/a';
+  $('rMan').textContent=M.man(x,z);$('rCheb').textContent=M.cheb(x,z);$('rAlt').textContent=M.alt(x,z);
+  $('rZone').textContent=zn+(useBug&&zn!==truth?' (should be '+truth+')':'');
+  $('zoneStat').style.setProperty('--c',zoneColor(zn));
+  // comparison lines
+  let lines=[];
+  if(euc){
+    const tn=useBug?rNear:rNear*rNear,tf=useBug?rFar:rFar*rFar,nn=useBug?'r_near':'r_near²',nf=useBug?'r_far':'r_far²';
+    if(S<=tn)lines.push(`${fmt(S)} ≤ ${fmt(tn)} (${nn}) → safe`);
+    else{lines.push(`${fmt(S)} > ${fmt(tn)} (${nn}) → not safe`);
+      lines.push(S<=tf?`${fmt(S)} ≤ ${fmt(tf)} (${nf}) → random`:`${fmt(S)} > ${fmt(tf)} (${nf}) → despawn`);}
+    if(!useBug)lines.push(`check with D: ${f2(D)} vs ${rNear} and ${rFar} → ${zone(x,z,false)} (same answer)`);
+    else lines.push(`correct: ${fmt(S)} vs ${fmt(rNear*rNear)} and ${fmt(rFar*rFar)} → ${truth}`);
+  }else{
+    const v=M[metric](x,z),n=NAMES[metric];
+    if(v<=rNear)lines.push(`${n} ${v} ≤ ${rNear} (r_near) → safe`);
+    else{lines.push(`${n} ${v} > ${rNear} (r_near) → not safe`);lines.push(v<=rFar?`${n} ${v} ≤ ${rFar} (r_far) → random`:`${n} ${v} > ${rFar} (r_far) → despawn`);}
+  }
+  $('compare').textContent=lines.join('\n');
+  // insight
+  let s;
+  if(useBug){
+    s=`The code compares S = ${fmt(S)} with ${rNear} and ${rFar}, which are distances, not squared distances. The rings shrink to ${f2(Math.sqrt(rNear))} and ${f2(Math.sqrt(rFar))} blocks. `+
+      (zn!==truth?`This player is labelled <b>${zn}</b> but is really <b>${truth}</b>.`:`This spot happens to get the right zone, but almost the whole map is now despawn.`);
+  }else if(euc){
+    const gapS=rFar*rFar-S,gapD=rFar-D;
+    if(zn==='random')s=`S = ${fmt(S)} is ${fmt(Math.abs(gapS))} below r_far² = ${fmt(rFar*rFar)}. D = ${f2(D)} is ${f2(gapD)} below ${rFar}. The gaps have different sizes, but both say <b>random</b>, because squaring never reorders non-negative numbers.`;
+    else if(zn==='despawn')s=`S = ${fmt(S)} is ${fmt(-gapS)} above r_far² = ${fmt(rFar*rFar)}, and D = ${f2(D)} is ${f2(-gapD)} above ${rFar}. Both say <b>despawn</b>. The square-root call was never needed to get this answer.`;
+    else s=`S = ${fmt(S)} ≤ ${fmt(rNear*rNear)} and D = ${f2(D)} ≤ ${rNear}. Both say <b>safe</b>. Compare squares with squares and the answer never changes.`;
+    if(box){const inBox=Math.abs(x)<=rFar&&Math.abs(z)<=rFar;if(inBox&&zn==='despawn')s+=` The per-axis box check says this player is in range. That is the corner error: the box reaches ${f2(rFar*Math.SQRT2)} blocks on the diagonal.`;else s+=` The dashed box is the per-axis check |dx| ≤ ${rFar} and |dz| ≤ ${rFar}. Its corners stick out past the circle.`;}
+  }else{
+    s=`${NAMES[metric]} distance here is ${M[metric](x,z)}, Euclidean is ${f2(D)}. The "circle" of this metric is ${metric==='man'?'a diamond':metric==='cheb'?'a square':'an octagon'}, so the same radius reaches ${metric==='cheb'?'further':'less far'} on the diagonal than a circle does.`;
+  }
+  $('insight').innerHTML=s;
+  $('oNear').textContent=rNear;$('oFar').textContent=rFar;
+  if(document.activeElement!==$('px'))$('px').value=x;
+  if(document.activeElement!==$('pz'))$('pz').value=z;
+  // table
+  $('tbody').innerHTML=TESTS.map(([tx,tz])=>{
+    const tS=tx*tx+tz*tz,here=tx===x&&tz===z,zz=zone(tx,tz,useBug);
+    return `<tr class="${here?'here':''}"><td>(${tx}, ${tz})</td><td>${fmt(tS)}</td><td>${f2(Math.sqrt(tS))}</td><td>${M.man(tx,tz)}</td><td>${M.cheb(tx,tz)}</td><td>${M.alt(tx,tz)}</td><td>${zz}</td></tr>`;
+  }).join('');
+  $('cMap').setAttribute('aria-label',`Map. Player at x ${x}, z ${z}, zone ${zn}. Arrow keys move 1 block, Shift plus arrow moves 10.`);
+}
+function legend(){$('lgSafe').style.background=css('--moss');$('lgRand').style.background=css('--ochre');$('lgDesp').style.background=css('--blood');}
+function update(){readouts();drawMap();drawLines();
+  const euc=metric==='euc';$('bug').disabled=!euc;$('bugWrap').setAttribute('aria-disabled',String(!euc));
+  $('bugCap').hidden=!(euc&&bug);
+  $('linesSub').textContent=euc?(bug?'Bug on: the thresholds sit at S = r_near and S = r_far, almost at zero on the S line.':'Top: distance D. Bottom: squared distance S = D². Each thin line joins D = k to S = k².'):'Grid metric: one ruler is enough.';
+}
+const clampW=v=>Math.max(-W,Math.min(W,Math.round(v)));
+function setP(x,z){P={x:clampW(x),z:clampW(z)};update();}
+
+// ---------- Events ----------
+$('rNear').addEventListener('input',e=>{rNear=+e.target.value;if(rFar<rNear){rFar=rNear;$('rFar').value=rFar;}update();});
+$('rFar').addEventListener('input',e=>{rFar=+e.target.value;if(rFar<rNear){rNear=Math.max(8,rFar);$('rNear').value=rNear;}update();});
+$('metric').addEventListener('change',e=>{metric=e.target.value;if(metric!=='euc'){bug=false;$('bug').checked=false;}update();});
+$('bug').addEventListener('change',e=>{bug=e.target.checked;update();});
+$('box').addEventListener('change',e=>{box=e.target.checked;update();});
+['px','pz'].forEach(id=>$(id).addEventListener('input',()=>{const x=+$('px').value,z=+$('pz').value;if(Number.isFinite(x)&&Number.isFinite(z))setP(x,z);}));
+$('snap').addEventListener('click',()=>{
+  snapIdx=(snapIdx+1)%TESTS.length;const [tx,tz]=TESTS[snapIdx];
+  if(anim)cancelAnimationFrame(anim);
+  if(reduce.matches){setP(tx,tz);return;}
+  const from={...P},t0=performance.now(),dur=320;
+  const step=t=>{const u=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-u,3);
+    setP(from.x+(tx-from.x)*e,from.z+(tz-from.z)*e);if(u<1)anim=requestAnimationFrame(step);else{anim=null;setP(tx,tz);}};
+  anim=requestAnimationFrame(step);
+});
+const map=$('cMap');let dragging=false;
+function toWorld(ev){const r=map.getBoundingClientRect(),G=mapGeom;return {x:(ev.clientX-r.left-G.pl)/G.k-W,z:(ev.clientY-r.top-G.pt)/G.kz-W};}
+map.addEventListener('pointerdown',ev=>{dragging=true;map.setPointerCapture(ev.pointerId);map.style.cursor='grabbing';const p=toWorld(ev);setP(p.x,p.z);});
+map.addEventListener('pointermove',ev=>{if(!dragging)return;const p=toWorld(ev);setP(p.x,p.z);});
+['pointerup','pointercancel'].forEach(t=>map.addEventListener(t,()=>{dragging=false;map.style.cursor='grab';}));
+map.addEventListener('keydown',e=>{
+  const d=e.shiftKey?10:1,m={ArrowLeft:[-d,0],ArrowRight:[d,0],ArrowUp:[0,-d],ArrowDown:[0,d]}[e.key];
+  if(!m)return;e.preventDefault();setP(P.x+m[0],P.z+m[1]);
+});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{drawMap();drawLines();},60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{legend();update();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+legend();update();
+// test hook for automated checks
+window.__rangeRings={setP,get state(){return {P,rNear,rFar,metric,bug};}};
+})();
+</script>
+</body>
+</html>

@@ -29,7 +29,7 @@ Why players do what they do: motivation, learning, perception and the UX methods
 | 12 | Surveys and interviews | _todo_ | _todo_ |
 | 13 | Biometrics and eye-tracking overview | _todo_ | _todo_ |
 | 14 | UX research reporting | _todo_ | _todo_ |
-| 15 | Final: UX study of a shipped game | _todo_ | _todo_ |
+| 15 | Final: UX study of a shipped game | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Effective Classes · MMO303 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+:root{--k1:var(--steel);--k2:var(--blood);--k3:var(--ochre);--k4:var(--moss);
+--k5:color-mix(in srgb,var(--steel) 45%,var(--paper-2));--k6:color-mix(in srgb,var(--blood) 45%,var(--paper-2));
+--k7:color-mix(in srgb,var(--ochre) 45%,var(--paper-2));--k8:color-mix(in srgb,var(--moss) 45%,var(--paper-2))}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--blood)}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.panels{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0}
+h2+small{display:block;color:var(--ink-soft);font-size:.84rem;margin:0 0 12px}
+/* roster cards: fixed size, never change */
+.roster{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.card{position:relative;height:118px;background:var(--paper-2);border-radius:10px;padding:10px 8px 8px;border:1.5px solid transparent;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card.hl{border-color:var(--focus)}
+.card i{display:block;width:100%;height:10px;border-radius:3px;background:var(--c)}
+.card .nm{font-weight:600;font-size:.86rem;margin-top:6px}
+.card b{font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.card .rare{font-size:.72rem;color:var(--ink-soft);opacity:.8;font-style:italic}
+.card .rare[hidden]{display:block!important;visibility:hidden}
+.see{font-family:var(--serif);margin:14px 0 0;font-size:.98rem}
+/* effective roster */
+.big{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.big b{font-size:clamp(2.3rem,7vw,3.2rem);font-variant-numeric:tabular-nums;line-height:1;color:var(--blood)}
+.big span{font-size:1.05rem;color:var(--ink-soft)}
+.sub{display:flex;flex-wrap:wrap;gap:4px 16px;font-variant-numeric:tabular-nums;font-size:.95rem;margin:6px 0 0}
+.sub strong{font-weight:700}
+.slots{position:relative;display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:14px 0 4px;height:26px}
+.slot{border:1.5px solid var(--ink);border-radius:5px;overflow:hidden;position:relative}
+.slot div{position:absolute;inset:0 auto 0 0;background:var(--blood);transition:width .25s ease}
+.marker{position:absolute;top:-6px;bottom:-6px;width:0;border-left:2.5px dashed var(--ochre)}
+.markerLabel{font-size:.8rem;color:var(--ochre);font-weight:600;margin:10px 0 0}
+.scale{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;font-size:.72rem;color:var(--ink-soft);text-align:right;font-variant-numeric:tabular-nums}
+.tree{display:block;width:100%;height:230px;margin-top:12px;background:var(--paper-2);border-radius:8px}
+.tree rect{stroke:var(--paper);stroke-width:2}
+.tree rect.hl{stroke:var(--focus);stroke-width:3}
+.tree text{font:600 12px var(--sans);pointer-events:none}
+.bound,.role{font-size:.92rem;margin:10px 0 0;font-variant-numeric:tabular-nums}
+.role{padding:10px 12px;border-radius:10px;background:var(--paper-2);border-left:4px solid var(--ochre)}
+/* controls */
+.controls{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.lab output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{accent-color:var(--steel)}
+#conc{width:100%;height:28px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.toggle{display:flex;align-items:center;gap:8px;font-size:.92rem;margin-top:12px;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--ochre)}
+.vsl{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:8px}
+.vs{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.vs input{writing-mode:vertical-lr;direction:rtl;width:28px;height:140px;margin:0}
+.vs label{font-size:.78rem;font-weight:600;display:flex;align-items:center;gap:3px}
+.vs label i{width:9px;height:9px;border-radius:2px;background:var(--c);display:inline-block}
+.vs output{font-size:.76rem;font-variant-numeric:tabular-nums}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:340px}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tfoot td{font-weight:700}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO303 Game Balance I · Week 1 · Worked example</p>
+  <h1>Eight classes on the roster. <em id="hN">2.57</em> in play.</h1>
+  <p class="lede">The left panel is what a player sees on the class select screen. The right panel redraws the same roster by how much of the ladder each class occupies. Drag the concentration slider and watch only one side move.</p>
+</header>
+
+<div class="panels">
+  <section class="panel" aria-labelledby="h-roster">
+    <h2 id="h-roster">Roster (what players see)</h2><small>Every class is still selectable. Card size never changes.</small>
+    <div class="roster" id="roster"></div>
+    <p class="see" id="see"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-eff">
+    <h2 id="h-eff">Effective roster</h2><small>Area proportional to pick share p<sub>i</sub></small>
+    <div aria-live="polite">
+      <div class="big"><b id="rN">—</b><span>N<sub>eff</sub> of 8</span></div>
+      <div class="sub"><span>HHI = <strong id="rH">—</strong></span><span>Σ p² = <strong id="rS">—</strong></span></div>
+    </div>
+    <div class="slots" id="slots" role="img" aria-label="Effective classes out of 8"></div>
+    <div class="scale" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+    <p class="markerLabel" id="markerLabel" hidden>Dashed line: HHI 1,800 (U.S. 2023 'highly concentrated' line) = N<sub>eff</sub> 5.56</p>
+    <p class="bound" id="bound"></p>
+    <svg class="tree" id="tree" role="img" aria-label="Treemap of pick shares"></svg>
+    <div class="role" id="role" hidden></div>
+  </section>
+</div>
+
+<section class="panel controls" aria-label="Controls" style="margin-top:14px">
+  <div>
+    <span style="font-weight:600;font-size:.92rem">Distributions from the lecture</span>
+    <div class="presets" role="group" aria-label="Preset distributions">
+      <button class="chip" data-p="A" aria-pressed="false">A: even</button>
+      <button class="chip" data-p="B" aria-pressed="false">B: healthy lean</button>
+      <button class="chip" data-p="C" aria-pressed="true">C: one dominant</button>
+      <button class="chip" data-p="G" aria-pressed="false">GOATS-like</button>
+    </div>
+    <label class="lab" for="conc">Concentration c (even → C) <output id="oC">1.00</output></label>
+    <input id="conc" type="range" min="0" max="1" step="0.01" value="1">
+    <small style="color:var(--ink-soft);font-size:.8rem">p<sub>i</sub> = (1 − c) × 12.5% + c × C<sub>i</sub></small>
+    <label class="toggle"><input type="checkbox" id="thr"> Show HHI threshold</label>
+  </div>
+  <div>
+    <span style="font-weight:600;font-size:.92rem">Pick share per class (%)</span>
+    <small style="display:block;color:var(--ink-soft);font-size:.8rem">Moving one rescales the other seven so the total stays 100%.</small>
+    <div class="vsl" id="vsl"></div>
+  </div>
+</section>
+
+<div class="insight" id="insight" aria-live="polite"></div>
+
+<div class="table-wrap">
+  <table aria-label="Shares and squared shares">
+    <thead><tr><th>Class</th><th>Share</th><th>p²</th><th>Part of Σ p²</th></tr></thead>
+    <tbody id="tbody"></tbody>
+    <tfoot><tr><td>Total</td><td>100%</td><td id="tS">—</td><td>100%</td></tr></tfoot>
+  </table>
+</div>
+
+<footer>Formulas: N<sub>eff</sub> = 1 / Σ p<sub>i</sub>² (Laakso &amp; Taagepera 1979; Hill 1973), HHI = 10,000 × Σ p<sub>i</sub>². Threshold: U.S. DOJ and FTC, <i>Merger Guidelines</i> (December 2023), HHI above 1,800 is highly concentrated. Distributions A, B and C are illustrative figures for a fictional eight-class game. The GOATS-like preset is a stylised version of the 2019 <i>Overwatch</i> three-tank, three-support composition, not real pick data.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const PRE={A:Array(8).fill(12.5),B:[30,20,15,10,10,5,5,5],C:[60,10,10,5,5,5,3,2],G:[16,16,16,16,16,16,2,2]};
+const rnd=(x,d)=>{const m=Math.pow(10,d);return Math.round(+(x*m).toPrecision(12))/m;};
+const fix=(x,d)=>rnd(x,d).toFixed(d);
+const pct=x=>String(rnd(x,2))+'%';
+const thou=x=>rnd(x,0).toLocaleString('en-US');
+let shares=PRE.C.slice(),preset='C',cVal=1,hl=-1;
+
+// build static DOM
+const roster=$('roster'),vsl=$('vsl'),slots=$('slots');
+for(let i=0;i<8;i++){
+  const c=document.createElement('div');c.className='card';c.id='card'+i;c.style.setProperty('--c',`var(--k${i+1})`);
+  c.innerHTML=`<i></i><span class="nm">Class ${i+1}</span><b id="cs${i}">—</b><span class="rare" id="rare${i}" hidden>rarely seen</span>`;
+  c.addEventListener('mouseenter',()=>setHl(i));c.addEventListener('mouseleave',()=>setHl(-1));
+  roster.appendChild(c);
+  const v=document.createElement('div');v.className='vs';v.style.setProperty('--c',`var(--k${i+1})`);
+  v.innerHTML=`<input type="range" id="s${i}" min="0" max="100" step="1" aria-label="Class ${i+1} pick share, percent"><label for="s${i}"><i></i>${i+1}</label><output id="so${i}">—</output>`;
+  vsl.appendChild(v);
+  const s=document.createElement('div');s.className='slot';s.innerHTML='<div></div>';slots.appendChild(s);
+}
+const mk=document.createElement('div');mk.className='marker';mk.hidden=true;mk.style.left=(5.5556/8*100)+'%';slots.appendChild(mk);
+
+function setHl(i){hl=i;for(let j=0;j<8;j++)$('card'+j).classList.toggle('hl',j===i);drawTree();}
+
+function stats(){
+  const S=shares.reduce((a,p)=>a+(p/100)*(p/100),0);
+  const pmax=Math.max(...shares)/100;
+  return {S,N:1/S,H:10000*S,pmax,ub:1/(pmax*pmax+(1-pmax)*(1-pmax)/7)};
+}
+
+function squarify(items,x,y,w,h,out){
+  if(!items.length)return;
+  if(items.length===1){out.push(Object.assign({},items[0],{x,y,w,h}));return;}
+  const s=Math.min(w,h),sum=r=>r.reduce((a,b)=>a+b.a,0);
+  const worst=r=>{const t=sum(r),mx=Math.max(...r.map(q=>q.a)),mn=Math.min(...r.map(q=>q.a));return Math.max(s*s*mx/(t*t),t*t/(s*s*mn));};
+  let row=[items[0]],i=1;
+  while(i<items.length&&worst(row.concat(items[i]))<=worst(row)){row.push(items[i]);i++;}
+  const t=sum(row);
+  if(w>=h){const cw=t/h;let yy=y;row.forEach(r=>{const rh=r.a/cw;out.push(Object.assign({},r,{x,y:yy,w:cw,h:rh}));yy+=rh;});squarify(items.slice(i),x+cw,y,w-cw,h,out);}
+  else{const rh=t/w;let xx=x;row.forEach(r=>{const rw=r.a/rh;out.push(Object.assign({},r,{x:xx,y,w:rw,h:rh}));xx+=rw;});squarify(items.slice(i),x,y+rh,w,h-rh,out);}
+}
+function drawTree(){
+  const svg=$('tree'),W=svg.clientWidth||300,H=svg.clientHeight||230;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const items=shares.map((p,i)=>({i,p,a:p/100*W*H})).filter(q=>q.a>1e-6).sort((a,b)=>b.a-a.a);
+  const out=[];squarify(items,0,0,W,H,out);
+  svg.innerHTML=out.map(r=>{
+    const light=r.i>=4,tc=light?'var(--ink)':'var(--paper)';
+    let txt='';
+    if(r.w>26&&r.h>18)txt+=`<text x="${r.x+6}" y="${r.y+16}" fill="${tc}">${r.i+1}</text>`;
+    if(r.w>54&&r.h>36)txt+=`<text x="${r.x+6}" y="${r.y+32}" fill="${tc}" style="font-weight:400">${pct(r.p)}</text>`;
+    return `<rect x="${r.x}" y="${r.y}" width="${Math.max(0,r.w)}" height="${Math.max(0,r.h)}" style="fill:var(--k${r.i+1})" class="${r.i===hl?'hl':''}"><title>Class ${r.i+1}: ${pct(r.p)}</title></rect>${txt}`;
+  }).join('');
+  svg.setAttribute('aria-label','Treemap of pick shares: '+shares.map((p,i)=>`class ${i+1} ${pct(p)}`).join(', '));
+}
+
+function render(){
+  const st=stats(),N=rnd(st.N,2);
+  $('rN').textContent=fix(st.N,2);$('hN').textContent=fix(st.N,2);
+  $('rH').textContent=thou(st.H);$('rS').textContent=fix(st.S,4);$('tS').textContent=fix(st.S,4);
+  [...slots.querySelectorAll('.slot div')].forEach((d,k)=>{d.style.width=(Math.max(0,Math.min(1,N-k))*100)+'%';});
+  slots.setAttribute('aria-label',`${fix(st.N,2)} effective classes out of 8`);
+  $('bound').innerHTML=`Top class has ${pct(st.pmax*100)}. Most you could have with this top class: <strong>${fix(st.ub,2)}</strong>`;
+  shares.forEach((p,i)=>{
+    $('cs'+i).textContent=pct(p);$('rare'+i).hidden=!(p<1);
+    $('s'+i).value=Math.floor(p+1e-9);$('so'+i).textContent=pct(p);
+  });
+  $('tbody').innerHTML=shares.map((p,i)=>{const q=(p/100)*(p/100);return `<tr><td>Class ${i+1}</td><td>${pct(p)}</td><td>${fix(q,4)}</td><td>${fix(q/st.S*100,1)}%</td></tr>`;}).join('');
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.p===preset)));
+  $('oC').textContent=cVal===null?'off path':fix(cVal,2);
+  // role view: GOATS preset only
+  const r=$('role');
+  if(preset==='G'){
+    const R=[shares[0]+shares[1]+shares[2],shares[3]+shares[4]+shares[5],shares[6]+shares[7]].map(x=>x/100);
+    const RS=R.reduce((a,x)=>a+x*x,0);
+    r.hidden=false;
+    r.innerHTML=`<strong>Count by role instead.</strong> Tank (classes 1-3) ${pct(R[0]*100)}, Support (4-6) ${pct(R[1]*100)}, Damage (7-8) ${pct(R[2]*100)}.<br>Role N<sub>eff</sub> = 1 / (${fix(R[0]*R[0],4)} + ${fix(R[1]*R[1],4)} + ${fix(R[2]*R[2],4)}) = <strong>${fix(1/RS,2)} of 3</strong>. The hero count looks healthy; the role count shows one role almost gone.`;
+  } else r.hidden=true;
+  // insight
+  const top=shares.indexOf(Math.max(...shares)),topPart=(shares[top]/100)**2/st.S*100;
+  let s=`Players see <b>8</b> classes. The ladder behaves like <b>${fix(st.N,2)}</b> equally popular ones. `;
+  if(N>=7.995) s+=`Every class holds 12.5%, so the effective roster equals the real one.`;
+  else if(topPart>=40) s+=`Class ${top+1} alone makes up ${fix(topPart,1)}% of Σ p², so most of the lost diversity comes from its growth, not from the small classes shrinking.`;
+  else s+=`The largest class, class ${top+1}, makes up ${fix(topPart,1)}% of Σ p². Squaring makes big shares count far more than small ones.`;
+  if($('thr').checked) s+=` HHI ${thou(st.H)} is ${rnd(st.H,0)>1800?'above':'at or below'} the 1,800 line a U.S. regulator would call highly concentrated.`;
+  $('insight').innerHTML=s;
+  $('see').textContent=shares.some(p=>p<1)?'Some cards are tagged "rarely seen". That is all the player notices.':'Nothing here tells the player anything has changed.';
+  drawTree();
+}
+
+function setShare(i,v){
+  const old=shares[i],O=100-old,R=100-v;
+  shares=shares.map((p,j)=>j===i?v:(O>1e-9?p*R/O:R/7));
+}
+for(let i=0;i<8;i++){
+  const s=$('s'+i);
+  s.addEventListener('input',()=>{setShare(i,+s.value);preset=null;cVal=null;render();});
+  s.addEventListener('focus',()=>setHl(i));s.addEventListener('blur',()=>setHl(-1));
+}
+$('conc').addEventListener('input',e=>{
+  cVal=+e.target.value;shares=PRE.C.map(ci=>(1-cVal)*12.5+cVal*ci);
+  preset=cVal===0?'A':cVal===1?'C':null;render();
+});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  preset=b.dataset.p;shares=PRE[preset].slice();
+  if(preset==='A'){cVal=0;$('conc').value=0;}else if(preset==='C'){cVal=1;$('conc').value=1;}else cVal=null;
+  render();
+}));
+$('thr').addEventListener('change',e=>{mk.hidden=!e.target.checked;$('markerLabel').hidden=!e.target.checked;render();});
+window.addEventListener('resize',drawTree);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawTree);
+render();
+})();
+</script>
+</body>
+</html>

@@ -27,7 +27,7 @@ Capstone teams produce, test and publicly launch their project with live-ops for
 | 12 | Patch | _todo_ | _todo_ |
 | 13 | Economy review | _todo_ | _todo_ |
 | 14 | Post-mortem | _todo_ | _todo_ |
-| 15 | Final: public showcase | _todo_ | _todo_ |
+| 15 | Final: public showcase | [assessments](#assessment-materials) | — |
 
 ## Assessment
 

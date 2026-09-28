@@ -29,7 +29,7 @@ Long-term balance: rating systems, gear treadmills, power creep, catch-up mechan
 | 12 | Alternative advancement and account progression | _todo_ | _todo_ |
 | 13 | Meta-game and patch cycles | _todo_ | _todo_ |
 | 14 | Measuring balance with win rates and pick rates | _todo_ | _todo_ |
-| 15 | Final: season design with rating simulation | _todo_ | _todo_ |
+| 15 | Final: season design with rating simulation | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

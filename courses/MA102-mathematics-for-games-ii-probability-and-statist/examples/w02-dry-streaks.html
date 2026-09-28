@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dry streaks and the gambler's fallacy · MA102 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cRows{aspect-ratio:1/1;max-width:440px;margin:0 auto}
+#cHist{height:190px;margin-top:10px}
+#cNext{height:300px}
+#cCoin{height:120px}
+.sub{font-weight:600;font-size:.92rem;margin:12px 0 0}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0 4px}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .88rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:600 .9rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.note{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
+.legend i.line{height:3px;width:18px;vertical-align:middle}
+.table-wrap{overflow-x:auto;margin-top:16px;max-width:100%}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:600px;width:100%}
+.tcap{font-family:var(--serif);font-size:1rem;margin:16px 0 0}
+.tcap+.table-wrap{margin-top:6px}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.8rem;color:var(--ink-soft);font-weight:600;vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+details{margin-top:10px;font-size:.88rem}
+details pre{white-space:pre-wrap;word-break:break-word;font-size:.8rem;background:var(--paper);padding:8px;border-radius:6px;margin:6px 0 0}
+.seedline{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:.88rem}
+.seedline code{font-variant-numeric:tabular-nums;font-weight:700}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA102 Mathematics for Games II · Week 2 · Worked example</p>
+  <h1>Am I due for the drop?</h1>
+  <p class="lede">Long dry streaks are common when every attempt is rolled fresh, yet after any streak the next attempt is still exactly <i>p</i>. A bag with the same long-run rate makes the player truly due, and it caps the drought.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Dry streaks</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Coin runs</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <div class="charts">
+    <figure>
+      <figcaption>What players see<small>First 60 of 1,000 simulated players, 60 attempts each. Filled square = success. Red underline = that player's longest drought.</small></figcaption>
+      <canvas id="cRows" role="img" aria-label="Grid of 60 player histories"></canvas>
+      <p class="sub">Longest drought per player, all 1,000 players</p>
+      <canvas id="cHist" role="img" aria-label="Histogram of longest drought per player"></canvas>
+      <div class="legend" id="histLegend">
+        <span><i style="background:var(--steel)"></i>players</span>
+        <span><i class="line" style="background:var(--ink)"></i>mean</span>
+        <span id="lgMax"><i class="line" style="background:var(--blood)"></i>theoretical maximum</span>
+      </div>
+      <div class="readout">
+        <div class="stat" style="--c:var(--ink)"><b id="rMean">—</b><span>mean longest drought</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rMax">—</b><span>longest seen in sim</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rTMax">—</b><span id="rTMaxL">theoretical maximum</span></div>
+      </div>
+      <details><summary>Histogram as text</summary><pre id="histText"></pre></details>
+    </figure>
+    <figure>
+      <figcaption>What happens next<small>Every moment, across all players, where exactly <i>k</i> failures have just happened since the last success (or the start). Bar = share of the next attempts that succeeded.</small></figcaption>
+      <canvas id="cNext" role="img" aria-label="Observed next-attempt success rate by streak length, with theory line"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>observed</span>
+        <span><i style="background:var(--ink)"></i>selected k</span>
+        <span><i class="line" style="background:var(--ochre)"></i>theory</span>
+        <span>no bar = fewer than 30 moments (n/a)</span>
+      </div>
+      <p class="note" id="bagNote" hidden>In Bag mode, k counts failures since the bag was filled, while its winner is still inside. Counting from the last success instead gives much lower bars, because the draws right after a win come from a bag with no winner left.</p>
+      <div class="readout">
+        <div class="stat" style="--c:var(--steel)"><b id="rObs">—</b><span id="rObsL">observed next success</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rTh">—</b><span>theory, next success</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rRun">—</b><span id="rRunL">chance of k failures in a row</span></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <span class="lbl" id="sysLbl">System</span>
+      <div class="presets" role="group" aria-labelledby="sysLbl">
+        <button class="chip" data-sys="ind" aria-pressed="true">Independent</button>
+        <button class="chip" data-sys="bag" aria-pressed="false">Bag</button>
+        <button class="chip" data-sys="streak" aria-pressed="false">Streak bonus</button>
+      </div>
+      <p class="note" id="sysNote"></p>
+      <div id="bWrap" hidden style="margin-top:8px">
+        <label for="b">Bonus per failure, b <output id="oB">5 pts</output></label>
+        <input id="b" type="range" min="0" max="10" step="1" value="5">
+        <p class="note">Hypothetical streak bonus, see week 10.</p>
+      </div>
+    </div>
+    <div>
+      <label for="p">Success chance, p <output id="oP">10%</output></label>
+      <input id="p" type="range" min="2" max="50" step="1" value="10">
+      <div class="presets" role="group" aria-label="p presets">
+        <button class="chip" data-p="5" aria-pressed="false">5%</button>
+        <button class="chip" data-p="10" aria-pressed="true">10%</button>
+        <button class="chip" data-p="20" aria-pressed="false">20%</button>
+        <button class="chip" data-p="25" aria-pressed="false">25%</button>
+      </div>
+      <p class="note" id="bagSize"></p>
+    </div>
+    <div>
+      <label for="k">Failures so far, k <output id="oK">10</output></label>
+      <input id="k" type="range" min="0" max="30" step="1" value="10">
+      <div class="seedline" style="margin-top:10px">
+        <span>Seed <code id="seed"></code></span>
+        <button class="btn" id="newSeed">New seed</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="tcap" id="tCap">Exact values</p>
+  <div class="table-wrap">
+    <table aria-labelledby="tCap">
+      <thead><tr><th>Failures so far (k)</th><th>Chance of k failures in a row (independent)</th><th>Next attempt succeeds (independent)</th><th id="thBag">Next draw succeeds (bag)</th><th id="thStreak">Next attempt succeeds (streak bonus)</th><th id="thObs">Observed next success (current system)</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <p class="insight" id="coinInsight" aria-live="polite"></p>
+  <figure>
+    <figcaption>100 fair coin flips<small>Filled = heads, empty = tails. The longest run of the same face is outlined in red.</small></figcaption>
+    <canvas id="cCoin" role="img" aria-label="Row of 100 coin flips with the longest run outlined"></canvas>
+    <div class="seedline" style="margin-top:10px"><button class="btn" id="newFlips">Flip 100 again</button></div>
+    <p id="coinSeq" class="note" style="word-break:break-all;font-variant-numeric:tabular-nums;letter-spacing:.04em"></p>
+  </figure>
+  <p class="tcap" id="cCap">Chance that a run of the same face appears somewhere in 100 flips</p>
+  <div class="table-wrap">
+    <table style="min-width:420px" aria-labelledby="cCap">
+      <thead><tr><th>Run of the same face, at least</th><th>Exact (dynamic programming)</th><th>Observed in 1,000 simulated sequences</th></tr></thead>
+      <tbody id="coinBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model: independent rolls succeed with probability p every attempt. A bag holds N = round(1/p) tickets with one winner, drawn without replacement and refilled when empty. The streak bonus is a teaching model, chance = min(1, p + b × k), in the spirit of the miss-streak help in XCOM 2: War of the Chosen on easier difficulties (see the lecture). All simulation uses a seeded generator (mulberry32), so a seed always reproduces the same players.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const pc=(x,d)=>(x*100).toFixed(d===undefined?1:d)+'%';
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const PLAYERS=1000,ATT=60,KMAX=30,MINN=30;
+let sys='ind',P=10,B=5,K=10,seed=20260902,coinSeed=1;
+let sim=null,animT=1,rafId=0;
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const bagN=()=>Math.max(1,Math.round(100/P));
+function chance(k){ // integer arithmetic in percentage points
+  if(sys==='streak')return Math.min(100,P+B*k)/100;
+  return P/100;
+}
+function theoryNext(s,k){
+  if(s==='ind')return P/100;
+  if(s==='bag'){const N=bagN();return k<N?1/(N-k):null;}
+  return Math.min(100,P+B*k)/100;
+}
+function theoryMax(s){
+  if(s==='ind')return null;
+  if(s==='bag')return 2*bagN()-2;
+  if(B===0)return null;
+  return Math.max(0,Math.ceil((100-P)/B));
+}
+function simulate(){
+  const rng=mulberry32(seed+(sys==='ind'?0:sys==='bag'?101:202));
+  const out=new Uint8Array(PLAYERS*ATT),longest=new Uint16Array(PLAYERS);
+  const cnt=new Float64Array(ATT+1),suc=new Float64Array(ATT+1);
+  const N=bagN();
+  for(let i=0;i<PLAYERS;i++){
+    let run=0,best=0,pos=0,j=0,wonThisBag=false,win=Math.floor(rng()*N);
+    for(let t=0;t<ATT;t++){
+      let s;
+      if(sys==='bag'){s=(pos===win);pos++;if(pos===N){pos=0;win=Math.floor(rng()*N);}}
+      else if(sys==='ind'){s=rng()<P/100;}
+      else{s=rng()<chance(run);}
+      if(sys==='bag'){ // condition on j failures since the bag was filled, winner still inside
+        if(!wonThisBag){cnt[j]++;if(s)suc[j]++;}
+        if(s)wonThisBag=true;j++;if(pos===0){j=0;wonThisBag=false;}
+      }else{cnt[run]++;if(s)suc[run]++;}
+      if(s){out[i*ATT+t]=1;run=0;}else{run++;if(run>best)best=run;}
+    }
+    longest[i]=best;
+  }
+  return {out,longest,cnt,suc};
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+
+function drawRows(){
+  const c=setupCanvas($('cRows')),g=c.g,n=60,cell=c.w/n,gap=cell>6?1:0.5;
+  g.clearRect(0,0,c.w,c.h);
+  const shown=Math.ceil(n*animT);
+  const ochre=css('--ochre'),blood=css('--blood'),grid=css('--grid'),paper=css('--paper');
+  g.fillStyle=paper;g.fillRect(0,0,c.w,c.h);
+  for(let i=0;i<shown;i++){
+    // find this row's longest drought segment
+    let run=0,best=0,end=-1;
+    for(let t=0;t<ATT;t++){if(sim.out[i*ATT+t]){run=0;}else{run++;if(run>best){best=run;end=t;}}}
+    for(let t=0;t<n;t++){
+      const x=t*cell,y=i*cell;
+      if(sim.out[i*ATT+t]){g.fillStyle=ochre;g.fillRect(x+gap/2,y+gap/2,cell-gap,cell-gap);}
+      else{g.strokeStyle=grid;g.lineWidth=0.6;g.strokeRect(x+gap,y+gap,cell-2*gap,cell-2*gap);}
+    }
+    if(best>0){g.fillStyle=blood;g.fillRect((end-best+1)*cell,i*cell+cell-Math.max(1.2,cell*0.22),best*cell,Math.max(1.2,cell*0.22));}
+  }
+}
+
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v)||v;}
+
+function drawHist(){
+  const c=setupCanvas($('cHist')),g=c.g,pad={l:40,r:10,t:10,b:28};
+  g.clearRect(0,0,c.w,c.h);
+  const bins=new Array(ATT+1).fill(0);sim.longest.forEach(v=>bins[v]++);
+  const yMax=niceMax(Math.max(...bins)),W=c.w-pad.l-pad.r,H=c.h-pad.t-pad.b,bw=W/(ATT+1);
+  g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let i=0;i<=2;i++){const y=pad.t+H*(1-i/2);g.beginPath();g.moveTo(pad.l,y);g.lineTo(c.w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(yMax*i/2),pad.l-5,y);}
+  g.textAlign='center';g.textBaseline='top';
+  for(let x=0;x<=ATT;x+=10)g.fillText(x,pad.l+bw*(x+.5),c.h-pad.b+5);
+  g.textAlign='right';g.fillText('attempts',c.w-pad.r,c.h-12);
+  g.fillStyle=css('--steel');
+  bins.forEach((v,x)=>{if(!v)return;const h=H*v/yMax;g.fillRect(pad.l+bw*x+0.5,pad.t+H-h,Math.max(1,bw-1),h);});
+  const mean=sim.longest.reduce((a,b)=>a+b,0)/PLAYERS;
+  const vline=(x,col,dash)=>{const px=pad.l+bw*(x+.5);g.strokeStyle=col;g.lineWidth=2;g.setLineDash(dash);g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,pad.t+H);g.stroke();g.setLineDash([]);};
+  vline(mean,css('--ink'),[]);
+  const tm=theoryMax(sys);if(tm!==null&&tm<=ATT)vline(tm,css('--blood'),[5,4]);
+  return {bins,mean};
+}
+
+function drawNext(){
+  const c=setupCanvas($('cNext')),g=c.g,pad={l:46,r:10,t:12,b:30};
+  g.clearRect(0,0,c.w,c.h);
+  const obs=[];let peak=0;
+  for(let k=0;k<=KMAX;k++){const n=sim.cnt[k];const r=n>=MINN?sim.suc[k]/n:null;obs.push(r);if(r!==null)peak=Math.max(peak,r);const t=theoryNext(sys,k);if(t!==null)peak=Math.max(peak,t);}
+  const yMax=Math.min(1,niceMax(Math.max(peak*1.1,0.02)));
+  const W=c.w-pad.l-pad.r,H=c.h-pad.t-pad.b,bw=W/(KMAX+1);
+  g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+H*(1-i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(c.w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';const v=yMax*i/4*100;g.fillText((v%1?v.toFixed(1):v)+'%',pad.l-5,y);}
+  g.textAlign='center';g.textBaseline='top';
+  for(let k=0;k<=KMAX;k+=5)g.fillText(k,pad.l+bw*(k+.5),c.h-pad.b+5);
+  g.textAlign='right';g.fillText('k, failures so far',c.w-pad.r,c.h-12);
+  obs.forEach((r,k)=>{if(r===null)return;const h=H*Math.min(r,yMax)/yMax;g.fillStyle=k===K?css('--ink'):css('--steel');g.fillRect(pad.l+bw*k+1,pad.t+H-h,Math.max(1,bw-2),h);});
+  // selected k marker when n/a
+  if(obs[K]===null){g.fillStyle=css('--ink');g.textAlign='center';g.textBaseline='bottom';g.fillText('n/a',pad.l+bw*(K+.5),pad.t+H-2);}
+  // theory line (step-free polyline across k)
+  g.strokeStyle=css('--ochre');g.lineWidth=3;g.beginPath();let on=false;
+  for(let k=0;k<=KMAX;k++){const t=theoryNext(sys,k);if(t===null){on=false;continue;}const x=pad.l+bw*(k+.5),y=pad.t+H*(1-Math.min(t,yMax)/yMax);on?g.lineTo(x,y):g.moveTo(x,y);on=true;}
+  g.stroke();
+  for(let k=0;k<=KMAX;k++){const t=theoryNext(sys,k);if(t===null)continue;const x=pad.l+bw*(k+.5),y=pad.t+H*(1-Math.min(t,yMax)/yMax);g.fillStyle=css('--ochre');g.beginPath();g.arc(x,y,k===K?5:2.5,0,Math.PI*2);g.fill();}
+  return obs;
+}
+
+function runChance(s,k){ // chance of k failures in a row from a fresh start
+  if(s==='ind')return Math.pow(1-P/100,k);
+  if(s==='bag'){const N=bagN();if(k<N)return (N-k)/N;return null;}
+  let q=1;for(let i=0;i<k;i++)q*=1-Math.min(100,P+B*i)/100;return q;
+}
+const cellPct=x=>x===null?'—':pc(x,x>0&&x<0.001?3:x<0.1&&x>0?2:1);
+
+function renderText(obs,mean){
+  const N=bagN(),tm=theoryMax(sys),mx=Math.max(...sim.longest);
+  $('rMean').textContent=mean.toFixed(1);
+  $('rMax').textContent=mx;
+  $('rTMax').textContent=tm===null?'none':tm;
+  $('rTMaxL').textContent=sys==='bag'?`theoretical maximum, 2N − 2`:sys==='streak'?'theoretical maximum':'theoretical maximum (unbounded)';
+  $('lgMax').hidden=(tm===null||tm>ATT);
+  if(tm!==null&&tm>ATT)$('rTMaxL').textContent+=', beyond the 60-attempt window';
+  const n=sim.cnt[K]||0,o=obs[K];
+  $('rObs').textContent=o===null?'n/a':pc(o);
+  $('rObsL').textContent=`observed next success, n = ${fmt(n)} moments`;
+  const t=theoryNext(sys,K);
+  $('rTh').textContent=t===null?'impossible':pc(t);
+  const rc=runChance(sys,K);
+  $('rRun').textContent=rc===null?'impossible':cellPct(rc);
+  $('rRunL').textContent=`chance of ${K} failures in a row from a fresh start (${sys==='ind'?'(1 − p)^k':sys==='bag'?'(N − k) / N':'product of misses'})`;
+  $('bagNote').hidden=sys!=='bag';
+  $('bagSize').textContent=`Bag of N = ${N} tickets, long-run rate 1/${N} = ${pc(1/N)}.`+(Math.abs(1/N-P/100)>1e-9?' Not exactly p, because N must be a whole number.':'');
+  $('sysNote').textContent=sys==='ind'?'Each attempt succeeds if rand() < p.':sys==='bag'?`N = round(1/p) = ${N} tickets, one winner, shuffled per player, refilled when empty.`:'Chance on each attempt = min(1, p + b × k), k = failures since the last success.';
+  // insight
+  const lp=sim.longest.reduce((a,v)=>a+(v>=20?1:0),0);
+  let s;
+  if(sys==='ind'){
+    s=`<b>${fmt(lp)} of 1,000 players</b> (${pc(lp/PLAYERS)}) sat through a drought of 20 or more attempts, and the worst was ${mx}. Yet after exactly ${K} misses the next attempt succeeded <b>${o===null?'n/a':pc(o)}</b> of the time over ${fmt(n)} moments. Theory says ${pc(P/100,0)}, whatever k is. The streak looks like it is building to something. Nothing is building.`;
+  }else if(sys==='bag'){
+    s=`Same long-run rate, 1 in ${N}. No player went more than <b>${mx}</b> attempts dry, and the rule allows at most 2N − 2 = <b>${2*N-2}</b>. After ${K} failures since the bag was filled the next draw wins ${t===null?'with no chance, because the bag is already spent':'<b>'+pc(t)+'</b>'}. Here the player really is due.`;
+  }else{
+    s=`With b = ${B} points per failure, ${tm===null?'there is no cap on droughts, so this behaves like independent rolls':`the chance reaches 100% after ${tm} failures, so no drought can exceed <b>${tm}</b>`}. The longest seen was ${mx}. After ${K} failures the next attempt succeeds <b>${t===null?'n/a':pc(t)}</b> in theory and ${o===null?'n/a (too few moments)':pc(o)} in the simulation. The displayed p is no longer the chance on attempt k + 1.`;
+  }
+  $('insight').innerHTML=s;
+  // table
+  const ks=[0,1,3,5,7,9,10,20,30];if(!ks.includes(K)){ks.push(K);ks.sort((a,b)=>a-b);}
+  $('thBag').textContent=`Next draw succeeds (bag of ${N})`;
+  $('thStreak').textContent=`Next attempt succeeds (streak bonus, b = ${B})`;
+  $('thObs').textContent=`Observed next success (${sys==='ind'?'independent':sys==='bag'?'bag':'streak bonus'}, n)`;
+  $('tCap').textContent=`Exact values at p = ${P}%. Highlighted row follows the k slider.`;
+  $('tbody').innerHTML=ks.map(k=>{
+    const bag=k<N?`${pc(1/(N-k))} (1 of ${N-k})`:(k<=2*N-2?'impossible within one bag':'impossible');
+    const ob=k<=KMAX&&obs[k]!==null?`${pc(obs[k])} (${fmt(sim.cnt[k])})`:`n/a (${fmt(sim.cnt[k]||0)})`;
+    return `<tr class="${k===K?'here':''}"><td>${k}</td><td>${cellPct(Math.pow(1-P/100,k))}</td><td>${pc(P/100)}</td><td>${bag}</td><td>${pc(Math.min(100,P+B*k)/100)}</td><td>${ob}</td></tr>`;
+  }).join('');
+}
+
+let histData=null;
+function renderHistText(){
+  const b=histData.bins,rows=[];
+  for(let x=0;x<=ATT;x++)if(b[x])rows.push(`${x}: ${b[x]}`);
+  $('histText').textContent='Longest drought: players\n'+rows.join(', ');
+}
+
+function drawAll(){
+  drawRows();
+  histData=drawHist();
+  const obs=drawNext();
+  renderText(obs,histData.mean);
+  renderHistText();
+}
+function recompute(animate){
+  sim=simulate();
+  $('seed').textContent=seed;
+  if(animate&&!reduce.matches){
+    cancelAnimationFrame(rafId);const t0=performance.now();
+    const step=now=>{animT=Math.min(1,(now-t0)/450);drawRows();if(animT<1)rafId=requestAnimationFrame(step);};
+    animT=0;drawAll();rafId=requestAnimationFrame(step);
+  }else{animT=1;drawAll();}
+}
+
+// coin runs
+function exactRun(n,L){ // P(some run of the same face of length >= L in n fair flips)
+  let d=new Float64Array(L);d[1]=1;
+  for(let i=1;i<n;i++){const nd=new Float64Array(L);for(let r=1;r<L;r++){nd[1]+=d[r]*.5;if(r+1<L)nd[r+1]+=d[r]*.5;}d=nd;}
+  let s=0;for(let r=1;r<L;r++)s+=d[r];return 1-s;
+}
+function longestRun(a){let best=1,run=1,end=0;for(let i=1;i<a.length;i++){if(a[i]===a[i-1]){run++;}else run=1;if(run>best){best=run;end=i;}}return {best,end};}
+let flips=null;
+function coinTable(){
+  const rng=mulberry32(seed^0x9e3779b9),hits={};const Ls=[4,5,6,7,8,9,10];Ls.forEach(L=>hits[L]=0);
+  const a=new Uint8Array(100);
+  for(let s=0;s<1000;s++){for(let i=0;i<100;i++)a[i]=rng()<.5?1:0;const b=longestRun(a).best;Ls.forEach(L=>{if(b>=L)hits[L]++;});}
+  $('coinBody').innerHTML=Ls.map(L=>`<tr><td>${L}</td><td>${pc(exactRun(100,L))}</td><td>${pc(hits[L]/1000)} (${hits[L]} of 1,000)</td></tr>`).join('');
+}
+function newFlips(){
+  const rng=mulberry32(seed+7919*coinSeed);flips=new Uint8Array(100);for(let i=0;i<100;i++)flips[i]=rng()<.5?1:0;
+  drawCoin();
+}
+function drawCoin(){
+  const cv=$('cCoin'),r=cv.getBoundingClientRect(),perRow=r.width<600?25:50,rowsN=100/perRow;
+  const cell=Math.min(r.width/perRow,24);cv.style.height=(cell*rowsN+4)+'px';
+  const c=setupCanvas(cv),g=c.g;g.clearRect(0,0,c.w,c.h);
+  const lr=longestRun(flips),st=lr.end-lr.best+1;
+  for(let i=0;i<100;i++){
+    const x=(i%perRow)*cell+2,y=Math.floor(i/perRow)*cell+2,s=cell-4;
+    if(flips[i]){g.fillStyle=css('--ink');g.fillRect(x,y,s,s);}else{g.strokeStyle=css('--ink-soft');g.lineWidth=1.2;g.strokeRect(x+.5,y+.5,s-1,s-1);}
+    if(i>=st&&i<=lr.end){g.strokeStyle=css('--blood');g.lineWidth=2.5;g.strokeRect(x-1.5,y-1.5,s+3,s+3);}
+  }
+  const face=flips[lr.end]?'heads':'tails';
+  $('coinInsight').innerHTML=`Longest run in these 100 flips: <b>${lr.best} ${face} in a row</b>, flips ${st+1} to ${lr.end+1}. A run of 5 or more shows up in 97.2% of sequences and a run of 7 or more in 54.2%. People writing a fake sequence by hand almost never include runs this long.`;
+  $('coinSeq').textContent=Array.from(flips,v=>v?'H':'T').join('');
+}
+
+// events
+document.querySelectorAll('[data-sys]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-sys]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  sys=b.dataset.sys;$('bWrap').hidden=sys!=='streak';recompute(false);
+}));
+function setP(v){P=v;$('p').value=v;$('oP').textContent=v+'%';document.querySelectorAll('[data-p]').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.p===v));recompute(false);}
+$('p').addEventListener('input',e=>setP(+e.target.value));
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>setP(+b.dataset.p)));
+$('b').addEventListener('input',e=>{B=+e.target.value;$('oB').textContent=B+' pts';recompute(false);});
+$('k').addEventListener('input',e=>{K=+e.target.value;$('oK').textContent=K;animT=1;drawAll();});
+$('newSeed').addEventListener('click',()=>{seed=(Math.random()*1e9)>>>0;recompute(true);coinTable();});
+$('newFlips').addEventListener('click',()=>{coinSeed++;newFlips();});
+const tabs=[$('t1'),$('t2')];
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();if(t.id==='t2')drawCoin();else drawAll();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2]);}});});
+const redraw=()=>{$('p1').hidden?drawCoin():drawAll();};
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+
+// test hook for automated checks
+window.__dry={theoryNext:(s,k)=>theoryNext(s,k),runChance:(s,k)=>runChance(s,k),theoryMax:s=>theoryMax(s),exactRun,setP,bagN};
+
+newFlips();coinTable();recompute(true);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{animT=1;redraw();});
+})();
+</script>
+</body>
+</html>

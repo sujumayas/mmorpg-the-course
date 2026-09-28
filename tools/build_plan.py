@@ -96,6 +96,8 @@ def main():
             exs = sorted((d / "examples").glob(f"w{i:02d}-*.html"))
             lcell = f"[lecture](lectures/{lec[0].name})" if lec else "_todo_"
             ecell = " · ".join(f"[{e.stem[4:]}](examples/{e.name})" for e in exs) or "_todo_"
+            if i > 14:  # exam / showcase week: no lecture by design
+                lcell, ecell = "[assessments](#assessment-materials)", "—"
             lines.append(f"| {i} | {w} | {lcell} | {ecell} |")
         if c["worked_examples"]:
             lines += ["", "## Signature worked examples", ""] + [f"- {w}" for w in c["worked_examples"]]

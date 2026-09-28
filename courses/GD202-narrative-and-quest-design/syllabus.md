@@ -29,7 +29,7 @@ Interactive storytelling, branching dialogue and quest structures — the buildi
 | 12 | Tools: Ink, Yarn Spinner | _todo_ | _todo_ |
 | 13 | Narrative in multiplayer: shared vs personal story | _todo_ | _todo_ |
 | 14 | Narrative testing | _todo_ | _todo_ |
-| 15 | Final: quest chain with branching dialogue | _todo_ | _todo_ |
+| 15 | Final: quest chain with branching dialogue | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

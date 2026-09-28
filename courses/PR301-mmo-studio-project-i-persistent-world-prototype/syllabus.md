@@ -27,7 +27,7 @@ Teams build a small persistent online world with an economy, grouping, and at le
 | 12 | Sprint 5: group encounter | _todo_ | _todo_ |
 | 13 | Beta: open class playtest | _todo_ | _todo_ |
 | 14 | Stabilization | _todo_ | _todo_ |
-| 15 | Final: showcase + post-mortem | _todo_ | _todo_ |
+| 15 | Final: showcase + post-mortem | [assessments](#assessment-materials) | — |
 
 ## Assessment
 

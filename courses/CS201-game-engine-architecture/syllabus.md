@@ -29,7 +29,7 @@ Build a small engine in C++: the loop, memory, entities, rendering hooks, resour
 | 12 | Serialization and save files | _todo_ | _todo_ |
 | 13 | Profiling: CPU, GPU, frame budgets | _todo_ | _todo_ |
 | 14 | Tools and editors | _todo_ | _todo_ |
-| 15 | Final: mini engine + demo game | _todo_ | _todo_ |
+| 15 | Final: mini engine + demo game | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

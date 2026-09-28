@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stat weights meet at the peak · MMO303 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.caption{font-family:var(--serif);font-size:1.12rem;margin:0 0 14px;padding:10px 14px;border-radius:10px;background:var(--paper-2);border-left:4px solid var(--c,var(--ink))}
+.charts{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+@media (max-width:899px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:290px}
+#cHill{touch-action:none;cursor:ew-resize}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px 12px;margin:16px 0 4px}
+@media (max-width:899px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px;margin-top:18px;align-items:start}
+@media (max-width:899px){.controls{grid-template-columns:1fr}}
+.field{margin-bottom:12px}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:4px 0 0}
+input[type=number],select{font:600 1rem var(--sans);color:var(--ink);background:var(--paper);border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);padding:6px 8px;width:7.5em;font-variant-numeric:tabular-nums}
+.switch{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.92rem;cursor:pointer;margin-bottom:12px;justify-content:flex-start}
+.switch input{appearance:none;-webkit-appearance:none;width:44px;height:24px;border-radius:999px;background:var(--grid);border:1.5px solid var(--ink-soft);position:relative;cursor:pointer;flex:none;margin:0}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:var(--ink);transition:transform .15s}
+.switch input:checked{background:var(--steel);border-color:var(--steel)}
+.switch input:checked::after{transform:translateX(20px);background:var(--paper)}
+.switch small{display:block;font-weight:400;color:var(--ink-soft);font-size:.8rem}
+.btn{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.note{font-family:var(--serif);font-size:.98rem;margin:14px 0 0;max-width:72ch}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:600px;width:100%}
+.tcap{font-family:var(--serif);font-size:1rem;margin:18px 0 0}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-weight:600;color:var(--ink-soft)}
+tr.here td{font-weight:700;background:var(--paper-2)}
+tr.pk td:first-child::after{content:" peak";font-size:.75rem;color:var(--ochre);font-weight:700}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO303 Game Balance I · Week 12 · Worked example</p>
+  <h1>A stat weight is a slope, not a price tag</h1>
+  <p class="lede">You have a fixed pool of rating to split between crit and haste. The left chart is the DPS you get from each split. The right chart is what each stat is worth at your split. The weights only match at the top of the hill.</p>
+</header>
+
+<section class="panel" aria-label="Stat weight explorer">
+  <p class="caption" id="caption" aria-live="polite">Haste is worth more here. Move toward the peak and watch the bars meet.</p>
+
+  <div class="charts">
+    <figure>
+      <figcaption>DPS for every crit/haste split<small>Haste rating = budget − crit rating. The y-axis is zoomed so the gentle hill is visible. Drag the dot.</small></figcaption>
+      <canvas id="cHill" role="img" aria-label="DPS curve against crit rating"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ochre)"></i>DPS</span>
+        <span><i style="background:var(--ink)"></i>tangent at your split</span>
+        <span>▼ peak</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Normalized stat weights<small>DPS per point of each stat, divided by DPS per point of power</small></figcaption>
+      <canvas id="cBars" role="img" aria-label="Bar chart of crit, haste and power weights"></canvas>
+    </figure>
+  </div>
+
+  <div class="readout" id="readout">
+    <div class="stat" style="--c:var(--blood)"><b id="rCrit">—</b><span>crit rating</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rHaste">—</b><span>haste rating</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rCp">—</b><span>crit chance</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rHp">—</b><span>haste</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rDps">—</b><span>DPS</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rWc">—</b><span>crit weight</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rWh">—</b><span>haste weight</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rPk">—</b><span>peak split (crit / haste)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rPkD">—</b><span>peak DPS</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rBelow">—</b><span>below peak</span></div>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="controls">
+    <div>
+      <div class="field">
+        <label for="crit">Crit rating <output id="oCrit" for="crit">1,000</output></label>
+        <input id="crit" type="range" min="0" max="1200" step="1" value="1000">
+      </div>
+      <button class="btn" id="jump" type="button">Jump to peak</button>
+      <p class="note" id="note"></p>
+    </div>
+    <div>
+      <div class="field"><label for="budget">Secondary budget <input id="budget" type="number" min="400" max="3000" step="100" value="1200"></label></div>
+      <div class="field"><label for="power">Power <input id="power" type="number" min="500" max="3000" step="50" value="1000"></label></div>
+      <div class="field"><label for="rc">Rating per 1% crit <select id="rc"></select></label></div>
+      <div class="field"><label for="rh">Rating per 1% haste <select id="rh"></select></label></div>
+    </div>
+    <div>
+      <label class="switch"><input type="checkbox" role="switch" id="talent"><span>Crit damage talent<small>Off: crits deal 2× (m = 2). On: 2.5× (m = 2.5).</small></span></label>
+      <label class="switch"><input type="checkbox" role="switch" id="cap"><span>Crit cap at 30%<small>Crit chance stops at 30%. Extra crit rating does nothing.</small></span></label>
+    </div>
+  </div>
+
+  <p class="tcap" id="tcap">Splits across the budget (current row in bold)</p>
+  <div class="table-wrap">
+    <table aria-labelledby="tcap">
+      <thead><tr><th>Crit rating</th><th>Haste rating</th><th>Crit</th><th>Haste</th><th>DPS</th><th>Crit weight</th><th>Haste weight</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model: DPS = P × (1 + (m − 1)·c) × (1 + h), with c = 5% + crit rating / (100 × rating per 1%) and h = haste rating / (100 × rating per 1%). Weights are ∂DPS/∂stat ÷ ∂DPS/∂P. The class and its numbers are fictional teaching values, not data from a shipped game. Peak found by checking every whole rating point.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+// Round half to even so tie values match the lecture (1,380.625 -> 1,380.6).
+function rnd(x,d){const k=Math.pow(10,d),v=x*k,f=Math.floor(v),r=v-f;
+  let n;if(Math.abs(r-0.5)<1e-7)n=(f%2===0)?f:f+1;else n=Math.round(v);return n/k;}
+function num(x,d){return rnd(x,d).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});}
+const int=x=>Math.round(x).toLocaleString('en-US');
+
+const S={crit:1000,B:1200,P:1000,Rc:40,Rh:40,m:2,cap:false};
+let ghost=null,ghostTimer=null,ghostStart=0,raf=null;
+
+function model(x,st){st=st||S;
+  const cap=st.cap?0.30:1.0;
+  const c=Math.min(cap,0.05+x/(100*st.Rc)),h=(st.B-x)/(100*st.Rh);
+  const cf=1+(st.m-1)*c,hf=1+h,D=st.P*cf*hf,dP=cf*hf;
+  const dc=(c>=cap)?0:st.P*(st.m-1)/(100*st.Rc)*hf;
+  const dh=st.P/(100*st.Rh)*cf;
+  return {c,h,D,wc:dc/dP,wh:dh/dP,slope:dc-dh};
+}
+function curve(st){const a=new Float64Array(st.B+1);for(let x=0;x<=st.B;x++)a[x]=model(x,st).D;return a;}
+function peakOf(a){let bx=0;for(let x=1;x<a.length;x++)if(a[x]>a[bx])bx=x;return bx;}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function niceStep(range,n){const raw=range/n,mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  return [1,2,2.5,5,10].map(s=>s*mag).find(s=>s>=raw)||10*mag;}
+
+const pad={l:54,r:14,t:18,b:36};
+let geo=null;
+let cur=null,pk=0;
+
+function drawHill(){
+  const c=setup($('cHill')),g=c.g,w=c.w,h=c.h;
+  let lo=Infinity,hi=-Infinity;
+  const sets=ghost?[cur,ghost]:[cur];
+  sets.forEach(a=>{for(let i=0;i<a.length;i++){if(a[i]<lo)lo=a[i];if(a[i]>hi)hi=a[i];}});
+  const span=Math.max(hi-lo,hi*0.004),step=niceStep(span*1.25,4);
+  const y0=Math.floor((lo-span*0.12)/step)*step,y1=Math.ceil((hi+span*0.18)/step)*step;
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/S.B,Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-y0)/(y1-y0));
+  geo={X,Y,w,h};
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let v=y0;v<=y1+1e-9;v+=step){const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(int(v),pad.l-6,y);}
+  const xs=niceStep(S.B,4);
+  for(let x=0;x<=S.B+1e-9;x+=xs){g.textAlign='center';g.textBaseline='top';g.fillText(int(x),X(x),h-pad.b+6);}
+  g.textAlign='left';g.fillText('← all haste',pad.l,h-14);g.textAlign='right';g.fillText('all crit →',w-pad.r,h-14);
+  // ghost
+  if(ghost){let a=1;if(!reduce.matches){a=Math.max(0,1-(performance.now()-ghostStart)/2000);}
+    g.globalAlpha=0.45*a;g.strokeStyle=css('--ink-soft');g.lineWidth=2;g.setLineDash([5,4]);line(g,ghost,X,Y);g.setLineDash([]);g.globalAlpha=1;}
+  g.strokeStyle=css('--ochre');g.lineWidth=2.5;line(g,cur,X,Y);
+  // tangent
+  const md=model(S.crit),tl=S.B*0.16;
+  const xa=Math.max(0,S.crit-tl),xb=Math.min(S.B,S.crit+tl);
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(X(xa),Y(md.D+md.slope*(xa-S.crit)));g.lineTo(X(xb),Y(md.D+md.slope*(xb-S.crit)));g.stroke();g.restore();
+  // peak triangle
+  const px=X(pk),py=Y(cur[pk]);
+  g.fillStyle=css('--ochre');g.beginPath();g.moveTo(px,py-8);g.lineTo(px-6,py-18);g.lineTo(px+6,py-18);g.closePath();g.fill();
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText('peak',px,py-20);
+  // current dot
+  const cx=X(S.crit),cy=Y(md.D);
+  g.strokeStyle=css('--ink');g.globalAlpha=.3;g.setLineDash([4,4]);g.beginPath();g.moveTo(cx,pad.t);g.lineTo(cx,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--ink');g.beginPath();g.arc(cx,cy,7,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2.5;g.stroke();
+}
+function line(g,a,X,Y){g.beginPath();for(let x=0;x<a.length;x++){const px=X(x),py=Y(a[x]);x?g.lineTo(px,py):g.moveTo(px,py);}g.stroke();}
+
+function drawBars(){
+  const c=setup($('cBars')),g=c.g,w=c.w,h=c.h,md=model(S.crit);
+  const top=Math.max(md.wc,md.wh);
+  let yMax=Math.max(0.3,top*1.3);const st=niceStep(yMax,4);yMax=Math.ceil(yMax/st)*st;
+  const Y=v=>pad.t+14+(h-pad.t-14-pad.b)*(1-Math.min(v,yMax)/yMax);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let v=0;v<=yMax+1e-9;v+=st){const y=Y(v);g.beginPath();g.moveTo(46,y);g.lineTo(w-8,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(num(v,2),40,y);}
+  const inner=w-46-8,bw=Math.min(78,inner*0.24),pw=Math.min(22,bw*0.35);
+  const xs=[46+inner*0.24,46+inner*0.58,46+inner*0.88];
+  const bars=[{x:xs[0],v:md.wc,col:css('--blood'),lab:'Crit',wd:bw},{x:xs[1],v:md.wh,col:css('--steel'),lab:'Haste',wd:bw},{x:xs[2],v:1,col:css('--ink-soft'),lab:'Power',wd:pw}];
+  bars.forEach(b=>{const y=Y(b.v),y0=Y(0);g.fillStyle=b.col;g.fillRect(b.x-b.wd/2,y,b.wd,y0-y);
+    if(b.v>yMax){ // break mark for clipped power bar
+      g.fillStyle=css('--paper-2');g.beginPath();const bx=b.x-b.wd/2-3,by=y+18;g.moveTo(bx,by);g.lineTo(bx+b.wd+6,by-6);g.lineTo(bx+b.wd+6,by);g.lineTo(bx,by+6);g.closePath();g.fill();}
+    g.fillStyle=css('--ink');g.font='700 14px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText(num(b.v,3),b.x,y-3);
+    g.font='600 12px '+css('--sans');g.textBaseline='top';g.fillStyle=css('--ink');g.fillText(b.lab,b.x,Y(0)+6);});
+  if(Math.abs(md.wc-md.wh)<=0.002){const y=Y(Math.max(md.wc,md.wh))-24,mx=(xs[0]+xs[1])/2;
+    g.font='700 12px '+css('--sans');const tw=g.measureText('balanced').width+14;
+    g.fillStyle=css('--moss');g.beginPath();g.roundRect?g.roundRect(mx-tw/2,y-10,tw,20,10):g.rect(mx-tw/2,y-10,tw,20);g.fill();
+    g.fillStyle=css('--paper');g.textAlign='center';g.textBaseline='middle';g.fillText('balanced',mx,y);}
+}
+
+function readouts(){
+  const md=model(S.crit),pkD=cur[pk],below=(pkD-md.D)/pkD*100;
+  $('rCrit').textContent=int(S.crit);$('rHaste').textContent=int(S.B-S.crit);
+  $('rCp').textContent=num(md.c*100,1)+'%';$('rHp').textContent=num(md.h*100,1)+'%';
+  $('rDps').textContent=num(md.D,1);$('rWc').textContent=num(md.wc,3);$('rWh').textContent=num(md.wh,3);
+  $('rPk').textContent=int(pk)+' / '+int(S.B-pk);$('rPkD').textContent=num(pkD,1);
+  $('rBelow').textContent=num(below,2)+'%';$('oCrit').textContent=int(S.crit);
+  const wc=rnd(md.wc,3),wh=rnd(md.wh,3);let cap,col;
+  const capped=S.cap&&md.c>=0.30;
+  if(capped){cap='Crit is capped at 30%. Each extra crit rating point is worth 0.000, so every point past the cap is wasted.';col='--blood';}
+  else if(Math.abs(md.wc-md.wh)<=0.002){cap='Balanced. Both weights read '+num(md.wc,3)+' and the tangent is flat, so you are at the top of the hill.';col='--moss';}
+  else if(md.wh>md.wc){cap='Haste is worth more here. Move toward the peak and watch the bars meet.';col='--steel';}
+  else{cap='Crit is worth more here. Move toward the peak and watch the bars meet.';col='--blood';}
+  const cp=$('caption');cp.textContent=cap;cp.style.setProperty('--c','var('+col+')');
+  $('live').textContent=`Crit ${int(S.crit)}, haste ${int(S.B-S.crit)}, DPS ${num(md.D,1)}, crit weight ${num(md.wc,3)}, haste weight ${num(md.wh,3)}.`;
+  $('crit').setAttribute('aria-valuetext',`${int(S.crit)} crit rating, ${int(S.B-S.crit)} haste rating, DPS ${num(md.D,1)}`);
+  let n=`At this split, ${num(md.wc,3)} and ${num(md.wh,3)} mean one crit point is worth ${num(md.wc,3)} power and one haste point ${num(md.wh,3)} power. `;
+  n+=`The peak is ${int(pk)} crit / ${int(S.B-pk)} haste at ${num(pkD,1)} DPS, and you are ${num(below,2)}% below it.`;
+  if(S.m===2.5)n+=' The talent tilted the hill toward crit.';
+  $('note').textContent=n;
+  // table
+  const pts=new Set();const stp=S.B/6;for(let i=0;i<=6;i++)pts.add(Math.round(stp*i));pts.add(pk);pts.add(S.crit);
+  const arr=[...pts].sort((a,b)=>a-b);
+  $('tbody').innerHTML=arr.map(x=>{const r=model(x);return `<tr class="${x===S.crit?'here':''}${x===pk?' pk':''}"><td>${int(x)}</td><td>${int(S.B-x)}</td><td>${num(r.c*100,1)}%</td><td>${num(r.h*100,1)}%</td><td>${num(r.D,1)}</td><td>${num(r.wc,3)}</td><td>${num(r.wh,3)}</td></tr>`;}).join('');
+}
+function draw(){drawHill();drawBars();}
+function recompute(){cur=curve(S);pk=peakOf(cur);}
+function update(){readouts();draw();}
+
+function setCrit(x){S.crit=Math.max(0,Math.min(S.B,Math.round(x)));$('crit').value=S.crit;update();}
+
+// ghost handling
+function startGhost(prev){ghost=prev;ghostStart=performance.now();clearTimeout(ghostTimer);cancelAnimationFrame(raf);
+  if(!reduce.matches){const tick=()=>{if(!ghost)return;drawHill();if(performance.now()-ghostStart<2000)raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);}
+  ghostTimer=setTimeout(()=>{ghost=null;drawHill();},2000);}
+
+// controls
+for(let v=20;v<=80;v+=5){['rc','rh'].forEach(id=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===40)o.selected=true;$(id).appendChild(o);});}
+$('crit').addEventListener('input',e=>setCrit(+e.target.value));
+$('jump').addEventListener('click',()=>setCrit(pk));
+function clampNum(el,min,max,step){let v=+el.value;if(!isFinite(v))v=+el.defaultValue;v=Math.round(v/step)*step;v=Math.max(min,Math.min(max,v));el.value=v;return v;}
+$('budget').addEventListener('change',e=>{S.B=clampNum(e.target,400,3000,100);$('crit').max=S.B;ghost=null;recompute();setCrit(Math.min(S.crit,S.B));});
+$('power').addEventListener('change',e=>{S.P=clampNum(e.target,500,3000,50);ghost=null;recompute();update();});
+$('rc').addEventListener('change',e=>{S.Rc=+e.target.value;ghost=null;recompute();update();});
+$('rh').addEventListener('change',e=>{S.Rh=+e.target.value;ghost=null;recompute();update();});
+$('talent').addEventListener('change',e=>{const prev=cur;S.m=e.target.checked?2.5:2;recompute();startGhost(prev);update();});
+$('cap').addEventListener('change',e=>{S.cap=e.target.checked;ghost=null;recompute();update();});
+
+// drag the dot
+const hc=$('cHill');let dragging=false;
+function fromEvent(e){const r=hc.getBoundingClientRect(),x=e.clientX-r.left;return (x-pad.l)/(r.width-pad.l-pad.r)*S.B;}
+hc.addEventListener('pointerdown',e=>{dragging=true;hc.setPointerCapture(e.pointerId);setCrit(fromEvent(e));});
+hc.addEventListener('pointermove',e=>{if(dragging)setCrit(fromEvent(e));});
+['pointerup','pointercancel'].forEach(t=>hc.addEventListener(t,()=>{dragging=false;}));
+
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+recompute();update();
+window.__w12={S,model,peak:()=>pk,setCrit};
+})();
+</script>
+</body>
+</html>

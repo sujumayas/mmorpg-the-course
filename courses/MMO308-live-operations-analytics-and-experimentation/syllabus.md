@@ -29,7 +29,7 @@ Running a world after launch: KPIs, cohorts, retention, A/B tests, patches and e
 | 12 | Economy monitoring | _todo_ | _todo_ |
 | 13 | Incident response | _todo_ | _todo_ |
 | 14 | Sunsetting content and servers | _todo_ | _todo_ |
-| 15 | Final: live-ops plan + analysis report | _todo_ | _todo_ |
+| 15 | Final: live-ops plan + analysis report | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

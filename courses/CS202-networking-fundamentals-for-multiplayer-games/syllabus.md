@@ -29,7 +29,7 @@ How multiplayer works under latency: sockets, authority, prediction, reconciliat
 | 12 | Deterministic lockstep (RTS) | _todo_ | _todo_ |
 | 13 | Tick rate and bandwidth budgets | _todo_ | _todo_ |
 | 14 | Testing under bad networks (netem, clumsy) | _todo_ | _todo_ |
-| 15 | Final: networked arena prototype | _todo_ | _todo_ |
+| 15 | Final: networked arena prototype | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

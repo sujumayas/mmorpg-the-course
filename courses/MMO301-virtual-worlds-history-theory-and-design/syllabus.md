@@ -29,7 +29,7 @@ The foundational MMO course: what makes a world persistent, shared and alive, fr
 | 12 | Persistence and time: what should last? | _todo_ | _todo_ |
 | 13 | Worlds that died: shutdowns and their lessons | _todo_ | _todo_ |
 | 14 | Designing a world concept | _todo_ | _todo_ |
-| 15 | Final: world design bible | _todo_ | _todo_ |
+| 15 | Final: world design bible | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

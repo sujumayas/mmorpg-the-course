@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gacha pity timers · MA102 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--blood)}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px;cursor:crosshair;border-radius:6px}
+canvas:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 4px;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.legend i.dash{border-top-style:dashed}
+.legend i.box{height:10px;border:0;border-radius:2px}
+.inspect{margin:10px 0 0;font-size:.92rem;font-variant-numeric:tabular-nums;min-height:1.5em}
+.inspect b{font-weight:700}
+.readout{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.gauge{position:relative;height:8px;background:var(--grid);border-radius:4px;margin-top:6px}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;background:var(--ochre);border-radius:4px}
+.gauge .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+label.check{justify-content:flex-start;align-items:center;font-weight:600;margin-top:4px}
+label.check input{width:20px;height:20px;accent-color:var(--blood);margin:0}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+input[type=range]:disabled{opacity:.45}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.note{font-family:var(--serif);font-size:.96rem;margin:10px 0 0;max-width:70ch}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:100%}
+caption{text-align:left;font-family:var(--serif);padding:0 0 6px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.84rem;line-height:1.25;vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+tr.soft td:first-child{box-shadow:inset 3px 0 0 var(--blood)}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA102 Mathematics for Games II · Week 10 · Worked example</p>
+  <h1>The 1.6% is the mean. The typical player waits <em id="hMed">76</em> pulls.</h1>
+  <p class="lede">A published consolidated rate is honest about the average. Soft pity then piles most players into a narrow band just after the ramp starts, so the median sits far above the mean. Move the sliders and watch the spike and the two markers.</p>
+</header>
+
+<section class="panel" aria-label="Pity model explorer">
+  <div class="charts">
+    <figure>
+      <figcaption>Chance on each pull<small>p<sub>n</sub>, the chance pull n succeeds given no success yet</small></figcaption>
+      <canvas id="cP" tabindex="0" role="img" aria-label="Per-pull chance by pull number. Use left and right arrow keys to inspect a pull."></canvas>
+      <div class="legend"><span><i style="border-color:var(--steel)"></i>p<sub>n</sub></span><span><i class="box" style="background:var(--blood);opacity:.25"></i>soft-pity ramp</span></div>
+    </figure>
+    <figure>
+      <figcaption>Pull on which the success lands<small>P(first success at n) = p<sub>n</sub> × Π(1 − p<sub>i</sub>), share of all players</small></figcaption>
+      <canvas id="cD" tabindex="0" role="img" aria-label="Distribution of the pull on which the first success lands, with mean and median markers. Use left and right arrow keys to inspect a pull."></canvas>
+      <div class="legend"><span><i class="box" style="background:var(--ochre)"></i>share landing here</span><span><i style="border-color:var(--ink)"></i>mean</span><span><i class="dash" style="border-color:var(--blood)"></i>median</span><span><i style="border-color:var(--ink-soft);opacity:.6"></i>cumulative (right axis)</span></div>
+    </figure>
+  </div>
+  <p class="inspect" id="inspect" aria-live="polite"></p>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="rE">—</b><span>expected pulls</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rRate">—</b><span>consolidated rate</span>
+      <div class="gauge" aria-hidden="true"><div class="fill" id="gFill"></div><div class="tick" id="gTick" title="published 1.6%"></div></div>
+      <span id="rTarget" style="display:block;margin-top:2px">tick = 1.6% published</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rMed">—</b><span>median pull</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rSD">—</b><span>SD of pulls</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rS">—</b><span id="lS">P(reach soft start)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rH">—</b><span id="lH">P(reach hard pity)</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="base">Base rate <output id="oBase">0.6%</output></label>
+      <input id="base" type="range" min="1" max="50" step="1" value="6">
+      <label for="hard" style="margin-top:10px">Hard pity H (guaranteed on pull H) <output id="oHard">90</output></label>
+      <input id="hard" type="range" min="10" max="200" step="1" value="90">
+      <span style="display:block;font-weight:600;font-size:.92rem;margin-top:12px">Presets</span>
+      <div class="presets" role="group" aria-label="Model presets">
+        <button class="chip" data-p="genshin" aria-pressed="true">Genshin community model (0.6%, 74, +6, 90)</button>
+        <button class="chip" data-p="hard" aria-pressed="false">Hard pity only</button>
+        <button class="chip" data-p="none" aria-pressed="false">No pity (H = 1000)</button>
+        <button class="chip" data-p="hs" aria-pressed="false">Hearthstone-style (5%, hard 40, hypothetical rate)</button>
+      </div>
+    </div>
+    <div>
+      <label class="check" for="softOn"><input id="softOn" type="checkbox" checked> Soft pity on</label>
+      <label for="soft" style="margin-top:8px">Soft-pity start S <output id="oSoft">74</output></label>
+      <input id="soft" type="range" min="1" max="90" step="1" value="74">
+      <label for="step" style="margin-top:10px">Step d per pull <output id="oStep">+6 pts</output></label>
+      <input id="step" type="range" min="0.5" max="20" step="0.5" value="6">
+      <p class="note" id="note"></p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <p style="font-family:var(--serif);margin:0 0 6px">Key rows. Compare with the lecture's table in section 4.</p>
+    <table>
+      <thead><tr><th scope="col">Pull n</th><th scope="col">Chance on this pull</th><th scope="col">P(success lands here)</th><th scope="col">Cumulative</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model: p<sub>n</sub> = base for n &lt; S; p<sub>n</sub> = min(1, base + d × (n − S + 1)) for S ≤ n &lt; H; p<sub>H</sub> = 1. Expected pulls E = Σ<sub>k=0</sub><sup>H−1</sup> Π<sub>n=1</sub><sup>k</sup>(1 − p<sub>n</sub>), consolidated rate = 1/E, median = first pull where the cumulative share reaches 50%. Published figures (0.6% base, 1.6% consolidated, guarantee within 90 pulls): HoYoverse, Genshin Impact in-game wish details. The soft-pity start at 74 and the +6 point step are a community estimate from player pull histories (Paimon.moe tracker), not an official formula. The Hearthstone-style preset uses Blizzard's 40-pack Legendary guarantee with a made-up 5% per-pack rate.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const HMAX_SLIDER=200;
+const st={base:0.006,S:74,d:0.06,H:90,soft:true,cur:null};
+
+/* ---------- model ---------- */
+function model(base,S,d,H,soft){
+  const p=new Array(H+1),f=new Array(H+1),cum=new Array(H+1),surv=new Array(H+1);
+  let s=1,c=0,E=0,E2=0,med=null,reachS=null;
+  for(let n=1;n<=H;n++){
+    let q;
+    if(n===H) q=1;
+    else if(soft&&n>=S) q=Math.min(1,base+d*(n-S+1));
+    else q=base;
+    p[n]=q; surv[n]=s;               // surv[n] = P(reach pull n)
+    if(n===S) reachS=s;
+    E+=s;                             // sum of survival over k = 0..H-1
+    const fn=s*q; f[n]=fn; c+=fn; cum[n]=c;
+    E2+=n*n*fn;
+    if(med===null&&c>=0.5-1e-12) med=n;
+    s*=(1-q);
+  }
+  const sd=Math.sqrt(Math.max(0,E2-E*E));
+  return {p,f,cum,surv,E,rate:1/E,med,sd,reachS:reachS===null?0:reachS,reachH:surv[H],H,S,soft};
+}
+
+/* ---------- self test against the lecture's spec values ---------- */
+(function selfTest(){
+  const near=(a,b,t)=>Math.abs(a-b)<=t;
+  const cases=[
+    ['Genshin model',model(.006,74,.06,90,true),m=>near(m.E,62.30,.005)&&near(m.rate*100,1.605,.0005)&&m.med===76&&near(m.sd,24.3,.05)&&near(m.reachS,.6445,.00005)],
+    ['Hard pity only',model(.006,74,.06,90,false),m=>near(m.E,69.70,.005)&&near(m.rate*100,1.435,.0005)&&m.med===90&&near(m.reachH,.5853,.00005)],
+    ['Soft 60, +4, H 90',model(.006,60,.04,90,true),m=>near(m.E,53.89,.005)&&near(m.rate*100,1.855,.0005)&&m.med===63],
+    ['Base 5%, hard 40',model(.05,40,.06,40,false),m=>near(m.E,17.43,.005)&&near(m.reachH,.1353,.00005)]
+  ];
+  let ok=true;
+  cases.forEach(([name,m,test])=>{
+    const pass=test(m); ok=ok&&pass;
+    const msg=`[w10-gacha-pity self-test] ${pass?'PASS':'FAIL'} ${name}: E=${m.E.toFixed(2)} rate=${(m.rate*100).toFixed(3)}% median=${m.med} SD=${m.sd.toFixed(1)} P(reach S)=${m.reachS.toFixed(4)} P(reach H)=${m.reachH.toFixed(4)}`;
+    pass?console.info(msg):console.error(msg);
+  });
+  window.__gachaSelfTest=ok;
+})();
+
+/* ---------- formatting ---------- */
+const pctF=(x,dp)=>(x*100).toFixed(dp)+'%';
+function pctAuto(x){
+  if(x===0) return '0%';
+  if(x<0.00005) return '≈0%';
+  if(x>=0.99995&&x<1) return '≈100%';
+  const v=x*100;
+  return v.toFixed(2)+'%';
+}
+function cumF(x){
+  if(x>=1-1e-12) return '100%';
+  const v=x*100;
+  if(v>=99.995) return v.toFixed(3)+'%';
+  if(v>=99.5) return v.toFixed(2)+'%';
+  return v.toFixed(1)+'%';
+}
+function chanceF(q){
+  if(q>=1) return '100%';
+  const v=q*100;
+  return (Math.round(v*100)/100).toString()+'%';
+}
+const int=n=>Math.round(n).toLocaleString('en-US');
+
+/* ---------- canvas helpers ---------- */
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:44,r:40,t:26,b:30};
+function niceStep(H){
+  const raw=H/5,mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  for(const m of [1,2,2.5,5,10]) if(m*mag>=raw) return m*mag;
+  return 10*mag;
+}
+function xOf(n,w,H){const bw=(w-pad.l-pad.r)/H;return pad.l+(n-0.5)*bw;}
+function nOf(px,w,H){const bw=(w-pad.l-pad.r)/H;return Math.max(1,Math.min(H,Math.floor((px-pad.l)/bw)+1));}
+function frame(g,w,h,H,yMax,yFmt,rightAxis){
+  g.clearRect(0,0,w,h);
+  const ph=h-pad.t-pad.b;
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ph*(1-i/4);
+    g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(yMax*i/4),pad.l-6,y);
+    if(rightAxis){g.textAlign='left';g.globalAlpha=.75;g.fillText(Math.round(i*25)+'%',w-pad.r+5,y);g.globalAlpha=1;}
+  }
+  const step=niceStep(H);
+  g.textAlign='center';g.textBaseline='top';g.fillStyle=css('--ink-soft');
+  const ticks=[1];for(let t=step;t<H;t+=step) ticks.push(t);ticks.push(H);
+  const xH=xOf(H,w,H);
+  ticks.forEach((t,i)=>{
+    const x=xOf(t,w,H),last=i===ticks.length-1;
+    if(!last&&(xH-x<30||(i>0&&x-xOf(ticks[i-1],w,H)<26))) return;
+    g.fillText(int(t),x,h-pad.b+6);
+  });
+}
+function shade(g,w,h,m){
+  if(!m.soft||m.S>=m.H) return;
+  const x0=xOf(m.S,w,m.H)-(w-pad.l-pad.r)/m.H/2,x1=w-pad.r;
+  g.fillStyle=css('--blood');g.globalAlpha=.12;g.fillRect(x0,pad.t,x1-x0,h-pad.t-pad.b);g.globalAlpha=1;
+}
+function cursorLine(g,w,h,m){
+  if(st.cur===null) return;
+  const x=xOf(st.cur,w,m.H);
+  g.strokeStyle=css('--focus');g.globalAlpha=.7;g.lineWidth=1.5;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.globalAlpha=1;
+}
+
+let M=null;
+function drawP(){
+  const {g,w,h}=setup($('cP')),m=M,H=m.H,ph=h-pad.t-pad.b;
+  frame(g,w,h,H,1,v=>Math.round(v*100)+'%',false);
+  shade(g,w,h,m);
+  const y=v=>pad.t+ph*(1-v);
+  // floor label for the base rate
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.lineJoin='round';g.beginPath();
+  for(let n=1;n<=H;n++){const px=xOf(n,w,H),py=y(m.p[n]);n===1?g.moveTo(px,py):g.lineTo(px,py);}
+  g.stroke();
+  g.fillStyle=css('--steel');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';
+  g.fillText('base '+chanceF(st.base),pad.l+4,y(st.base)-4);
+  if(m.soft&&m.S<m.H){
+    g.fillStyle=css('--blood');g.textAlign='left';g.textBaseline='top';
+    const sx=xOf(m.S,w,H);
+    g.fillText('soft pity from '+m.S,Math.min(sx+4,w-pad.r-110),pad.t+4);
+  }
+  cursorLine(g,w,h,m);
+  if(st.cur!==null){
+    g.fillStyle=css('--steel');g.beginPath();g.arc(xOf(st.cur,w,H),y(m.p[st.cur]),5,0,Math.PI*2);g.fill();
+    g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  }
+}
+function drawD(){
+  const {g,w,h}=setup($('cD')),m=M,H=m.H,ph=h-pad.t-pad.b;
+  let fmax=0;for(let n=1;n<=H;n++) fmax=Math.max(fmax,m.f[n]);
+  const niceMax=[.005,.01,.02,.025,.04,.05,.08,.1,.12,.16,.2,.25,.3,.4,.5,.6,.8,1].find(v=>v>=fmax*1.08)||1;
+  frame(g,w,h,H,niceMax,v=>(v*100).toFixed(niceMax<.04?1:0)+'%',true);
+  shade(g,w,h,m);
+  const bw=(w-pad.l-pad.r)/H,gap=bw>4?1:0;
+  g.fillStyle=css('--ochre');
+  for(let n=1;n<=H;n++){
+    const v=m.f[n];if(v<=0) continue;
+    const bh=ph*Math.min(1,v/niceMax);
+    g.fillRect(pad.l+(n-1)*bw+gap/2,pad.t+ph-bh,Math.max(.6,bw-gap),Math.max(bh,v>0?0.6:0));
+  }
+  // cumulative, secondary axis 0..100%
+  g.strokeStyle=css('--ink-soft');g.globalAlpha=.55;g.lineWidth=1.5;g.beginPath();
+  for(let n=1;n<=H;n++){const px=xOf(n,w,H),py=pad.t+ph*(1-m.cum[n]);n===1?g.moveTo(px,py):g.lineTo(px,py);}
+  g.stroke();g.globalAlpha=1;
+  // mean (solid) and median (dashed)
+  // mean sits at continuous position E on the pull axis (center of bar E)
+  const xE=xOf(m.E,w,H),xMed=xOf(m.med,w,H);
+  g.lineWidth=2;
+  g.strokeStyle=css('--ink');g.setLineDash([]);g.beginPath();g.moveTo(xE,pad.t);g.lineTo(xE,h-pad.b);g.stroke();
+  g.strokeStyle=css('--blood');g.setLineDash([6,4]);g.beginPath();g.moveTo(xMed,pad.t);g.lineTo(xMed,h-pad.b);g.stroke();g.setLineDash([]);
+  g.font='700 12px '+css('--sans');g.textBaseline='bottom';
+  const meanLbl='mean '+m.E.toFixed(1),medLbl='median '+m.med;
+  const meanLeft=xE<=xMed;
+  g.fillStyle=css('--ink');g.textAlign=meanLeft?'right':'left';
+  let mx=meanLeft?xE-4:xE+4;
+  g.fillText(meanLbl,clampLbl(g,meanLbl,mx,meanLeft,w),pad.t-6);
+  g.fillStyle=css('--blood');g.textAlign=meanLeft?'left':'right';
+  let dx=meanLeft?xMed+4:xMed-4;
+  const sameSpot=Math.abs(xE-xMed)<2;
+  g.fillText(medLbl,clampLbl(g,medLbl,dx,!meanLeft,w),sameSpot?pad.t+14:pad.t-6);
+  cursorLine(g,w,h,m);
+}
+function clampLbl(g,txt,x,alignRight,w){
+  const tw=g.measureText(txt).width;
+  if(alignRight) return Math.max(tw+2,x);
+  return Math.min(w-tw-2,x);
+}
+
+/* ---------- readouts ---------- */
+function readouts(){
+  const m=M;
+  $('rE').textContent=m.E.toFixed(2);
+  $('rRate').textContent=(m.rate*100).toFixed(3)+'%';
+  $('rMed').textContent=int(m.med);
+  $('rSD').textContent=m.sd.toFixed(1);
+  const sOn=m.soft&&m.S<m.H;
+  $('lS').textContent=sOn?`P(reach pull ${m.S})`:'P(reach soft start)';
+  $('rS').textContent=sOn?m.reachS.toFixed(4):'—';
+  $('lH').textContent=`P(reach pull ${int(m.H)})`;
+  $('rH').textContent=m.reachH<0.00005?(m.reachH===0?'0':'≈0'):m.reachH.toFixed(4);
+  $('hMed').textContent=int(m.med);
+  const gMax=Math.max(0.03,m.rate*1.15);
+  $('gFill').style.width=Math.min(100,m.rate/gMax*100)+'%';
+  $('gTick').style.left=`calc(${(0.016/gMax*100).toFixed(2)}% - 1px)`;
+  const diff=m.rate*100-1.6;
+  $('rTarget').textContent=Math.abs(diff)<0.0095?'matches published 1.6% (tick)':`${diff>0?'+':'−'}${Math.abs(diff).toFixed(2)} pts vs published 1.6% (tick)`;
+
+  // insight sentence
+  const H=m.H,mean=m.E.toFixed(1);
+  let s=`The consolidated rate says one success per <b>${mean}</b> pulls on average. The median player needs <b>${int(m.med)}</b>. `;
+  if(sOn){
+    const before=m.cum[m.S-1]||0,band=Math.min(H,m.S+8),inBand=m.cum[band]-before;
+    s+=`${pctF(1-before,1)} of players are still waiting when soft pity starts at pull ${m.S}, and ${pctF(inBand,1)} of everyone lands in pulls ${m.S} to ${band}. `;
+    s+=m.med-m.E>5?`That spike drags the median ${(m.med-m.E).toFixed(1)} pulls above the mean.`:`Here the ramp starts early enough that mean and median sit close together.`;
+  }else if(H<=HMAX_SLIDER){
+    s+=`With no soft pity, <b>${pctF(m.f[H],1)}</b> of players land exactly on the guarantee at pull ${H}. The guarantee is not a rare safety net.`;
+  }else{
+    s+=`No guarantee in reach: ${pctF(1-m.cum[200],1)} of players still have nothing after 200 pulls. With no pity at all the mean would be 1/base = ${(1/st.base).toFixed(1)}.`;
+  }
+  $('insight').innerHTML=s;
+
+  // key-row table
+  const rows=new Set([1]);
+  if(sOn){
+    [50,m.S-1,m.S,m.S+1,m.S+2,m.S+3,m.S+4,m.S+6,m.S+11].forEach(n=>{if(n>=1&&n<=H&&(n!==50||50<m.S-1)) rows.add(n);});
+  }else{
+    const step=niceStep(Math.min(H,200));
+    for(let n=step;n<Math.min(H,200);n+=step) rows.add(n);
+    rows.add(m.med);
+    if(H<=HMAX_SLIDER) rows.add(H-1);
+  }
+  if(H<=HMAX_SLIDER) rows.add(H);
+  rows.add(m.med);
+  const list=[...rows].filter(n=>n>=1&&n<=H).sort((a,b)=>a-b);
+  $('tbody').innerHTML=list.map(n=>{
+    const cls=[(sOn&&n>=m.S&&n<H)?'soft':'',n===st.cur?'here':''].join(' ');
+    return `<tr class="${cls}"><td>${int(n)}${n===m.med?' (median)':''}${n===H&&H<=HMAX_SLIDER?' (hard pity)':''}</td><td>${chanceF(m.p[n])}</td><td>${pctAuto(m.f[n])}</td><td>${cumF(m.cum[n])}</td></tr>`;
+  }).join('');
+}
+function inspect(){
+  const m=M,n=st.cur;
+  if(n===null){$('inspect').textContent='';return;}
+  $('inspect').innerHTML=`<b>Pull ${int(n)}</b>: chance ${chanceF(m.p[n])} · lands here ${pctAuto(m.f[n])} · cumulative ${cumF(m.cum[n])} · still waiting on arrival ${pctAuto(m.surv[n])}`;
+}
+
+/* ---------- state and events ---------- */
+function syncControls(){
+  $('oBase').textContent=(st.base*100).toFixed(1)+'%';
+  $('base').value=Math.round(st.base*1000);
+  $('hard').value=Math.min(st.H,HMAX_SLIDER);
+  $('oHard').textContent=st.H>HMAX_SLIDER?int(st.H)+' (preset)':int(st.H);
+  $('soft').max=Math.min(st.H,HMAX_SLIDER);
+  if(st.S>st.H) st.S=st.H;
+  $('soft').value=st.S;$('oSoft').textContent=st.S;
+  $('step').value=st.d*100;$('oStep').textContent='+'+(+(st.d*100).toFixed(1))+' pts';
+  $('softOn').checked=st.soft;
+  $('soft').disabled=!st.soft;$('step').disabled=!st.soft;
+}
+function update(keepCur){
+  M=model(st.base,st.S,st.d,st.H,st.soft);
+  if(!keepCur||st.cur===null||st.cur>M.H) st.cur=M.med;
+  syncControls();readouts();inspect();drawP();drawD();
+}
+function redraw(){if(M){readouts();inspect();drawP();drawD();}}
+const notes={
+  genshin:'Published: 0.6% base, 1.6% consolidated, guarantee within 90. The ramp from pull 74 at about +6 points per pull is the community estimate. It lands on 1.605%, which rounds to the published figure.',
+  hard:'0.6% flat with only the 90-pull guarantee. The consolidated rate falls to 1.435%, below the published 1.6%, so the real game must raise the chance before 90.',
+  none:'0.6% forever, H pushed to 1000 so the guarantee almost never matters. With no cap at all the mean would be 1/0.006 = 166.7. The cap at 1000 removes the 0.25% of players who would wait longer, so the readout shows 166.26. The tail runs past 400 pulls. The chart shows all 1000 pulls.',
+  hs:'Hypothetical 5% per pack with a hard guarantee at pack 40, the shape of Hearthstone\'s Legendary rule. About 1 player in 7 reaches the pity pack. The 5% rate is made up for illustration.'
+};
+const presets={
+  genshin:{base:.006,S:74,d:.06,H:90,soft:true},
+  hard:{base:.006,S:74,d:.06,H:90,soft:false},
+  none:{base:.006,S:74,d:.06,H:1000,soft:false},
+  hs:{base:.05,S:40,d:.06,H:40,soft:false}
+};
+function clearPresets(){document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));$('note').textContent='Custom settings. Pick a preset to compare with the lecture tables.';}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');
+  Object.assign(st,presets[b.dataset.p]);$('note').textContent=notes[b.dataset.p];update(false);
+}));
+$('base').addEventListener('input',e=>{st.base=+e.target.value/1000;clearPresets();update(true);});
+$('hard').addEventListener('input',e=>{st.H=+e.target.value;clearPresets();update(true);});
+$('soft').addEventListener('input',e=>{st.S=+e.target.value;clearPresets();update(true);});
+$('step').addEventListener('input',e=>{st.d=+e.target.value/100;clearPresets();update(true);});
+$('softOn').addEventListener('change',e=>{st.soft=e.target.checked;clearPresets();update(true);});
+
+['cP','cD'].forEach(id=>{
+  const c=$(id);
+  const move=e=>{const r=c.getBoundingClientRect();st.cur=nOf(e.clientX-r.left,r.width,M.H);readouts();inspect();drawP();drawD();};
+  c.addEventListener('pointermove',move);c.addEventListener('pointerdown',move);
+  c.addEventListener('keydown',e=>{
+    const big=Math.max(1,Math.round(M.H/20));
+    let n=st.cur||1;
+    if(e.key==='ArrowRight') n+=e.shiftKey?big:1;
+    else if(e.key==='ArrowLeft') n-=e.shiftKey?big:1;
+    else if(e.key==='Home') n=1;
+    else if(e.key==='End') n=M.H;
+    else if(e.key==='m'||e.key==='M') n=M.med;
+    else return;
+    e.preventDefault();st.cur=Math.max(1,Math.min(M.H,n));readouts();inspect();drawP();drawD();
+  });
+});
+
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+$('note').textContent=notes.genshin;
+update(false);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(redraw);
+window.__gacha={model,st,get M(){return M;}};
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lanchester's square law — MMO303 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+--sideA:var(--steel);--sideB:var(--ochre);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:80ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h1 sup{font-size:.55em}
+.lede{font-family:var(--serif);font-size:1.12rem;margin:0}
+.lede b{color:var(--blood)}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.layout{display:grid;gap:14px}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1024px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cField{height:230px}
+@media (min-width:1024px){#cField{height:300px}}
+#cAlive{height:250px}
+.bars{display:grid;gap:10px;margin-top:6px}
+.bar-row{display:grid;grid-template-columns:5.2rem 1fr;gap:8px;align-items:center}
+.bar-name{font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:6px}
+.shape{display:inline-block;width:12px;height:12px;background:var(--c)}
+.shape.circle{border-radius:50%}
+.bar-track{background:var(--paper);border-radius:6px;height:34px;position:relative;overflow:hidden;border:1px solid var(--grid)}
+.bar-fill{position:absolute;inset:0 auto 0 0;background:var(--c);opacity:.85;border-radius:5px 0 0 5px;transition:width .35s ease}
+.bar-val{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--paper);padding:0 6px;border-radius:4px;font-size:.9rem}
+.ratio{font-family:var(--serif);font-size:1.6rem;font-variant-numeric:tabular-nums;margin:12px 0 2px}
+.ratio small{font-family:var(--sans);font-size:.85rem;color:var(--ink-soft);display:block}
+.formula{font-size:.85rem;color:var(--ink-soft);margin:8px 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 0}
+.btn{font:700 .95rem var(--sans);padding:9px 16px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;margin-left:auto;font-size:.95rem}
+button:focus-visible,input:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.readout{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px;margin:14px 0 0}
+@media (min-width:700px){.readout{grid-template-columns:repeat(4,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.stat em{font-style:normal;font-size:.82rem;color:var(--ink-soft);display:block;font-variant-numeric:tabular-nums}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.thin{height:1.5px}
+.controls{display:grid;grid-template-columns:1fr;gap:16px;margin-top:14px}
+@media (min-width:760px){.controls{grid-template-columns:1fr 1fr}}
+@media (min-width:1024px){.controls{grid-template-columns:1fr 1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;margin:0;padding:10px 12px 12px;min-width:0}
+legend{font-weight:700;padding:0 6px;display:flex;align-items:center;gap:6px}
+label.sl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+label.sl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;height:28px;margin:0}
+#fsA input[type=range]{accent-color:var(--steel)}
+#fsB input[type=range]{accent-color:var(--ochre)}
+.seg{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:.92rem}
+.seg label{display:flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}
+.seg input{width:18px;height:18px;margin:0;accent-color:var(--ink)}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:4px 0 0}
+details{margin-top:10px}
+summary{cursor:pointer;font-weight:600;font-size:.92rem;min-height:32px;display:list-item}
+.chk{display:flex;gap:8px;align-items:center;font-size:.92rem;margin-top:8px}
+.chk input{width:18px;height:18px}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:560px;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO303 Game Balance I · Week 11 · Worked example</p>
+  <h1>Fighting strength = N<sup>2</sup> × DPS × HP</h1>
+  <p class="lede" id="caption"><b>25% more players, 56% more fighting strength.</b></p>
+</header>
+
+<section class="panel layout" aria-label="Battle simulation">
+  <figure>
+    <figcaption>Battlefield<small><span style="color:var(--sideA)">&#9679;</span> Side A circles fire right, <span style="color:var(--sideB)">&#9632;</span> side B squares fire left. The ring around each player is its health. Front row dies first under focus fire.</small></figcaption>
+    <canvas id="cField" role="img" aria-label="Battlefield showing both groups and their health"></canvas>
+    <div class="actions">
+      <button class="btn primary" id="bFight" type="button">Fight</button>
+      <button class="btn" id="bInstant" type="button">Instant result</button>
+      <button class="btn" id="bReset" type="button">Reset</button>
+      <span class="clock" id="clock" aria-live="off">t = 0.00 s</span>
+    </div>
+    <div class="presets" role="group" aria-label="Scenarios from the lecture">
+      <button class="chip" type="button" data-p='{}'>10 v 8</button>
+      <button class="chip" type="button" data-p='{"nA":15,"nB":12}'>15 v 12</button>
+      <button class="chip" type="button" data-p='{"nA":8}'>8 v 8</button>
+      <button class="chip" type="button" data-p='{"dpsB":125,"hpB":1250}'>B +25% DPS and HP</button>
+      <button class="chip" type="button" data-p='{"tA":"spread"}'>A spreads, B focuses</button>
+      <button class="chip" type="button" data-p='{"healers":2,"hps":150}'>2 healers at 150</button>
+      <button class="chip" type="button" data-p='{"healers":2,"hps":250}'>2 healers at 250</button>
+      <button class="chip" type="button" data-p='{"rule":"area"}'>Uncapped area fire</button>
+    </div>
+  </figure>
+
+  <div class="readout" id="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="rWin">—</b><span>winner</span><em id="rWinSub"></em></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rSurv">—</b><span>survivors, simulation</span><em id="rSurvSub"></em></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rSq">—</b><span>survivors, square law</span><em id="rLin"></em></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rTime">—</b><span>fight length, simulation</span><em id="rTimeSq"></em></div>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Players alive over time<small>Steps: the discrete simulation. Thin curves: the continuous equations.</small></figcaption>
+      <canvas id="cAlive" role="img" aria-label="Players alive on each side over time"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--sideA)"></i>Side A</span>
+        <span><i style="background:var(--sideB)"></i>Side B</span>
+        <span id="lgCont"><i class="thin" style="background:var(--ink-soft)"></i><span id="lgContTxt">Square law (continuous)</span></span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Fighting strength at the start<small>N² × DPS × HP, in ordinary player² (100 DPS × 1,000 HP = 1)</small></figcaption>
+      <div class="bars">
+        <div class="bar-row"><span class="bar-name"><i class="shape circle" style="--c:var(--sideA)"></i>Side A</span>
+          <div class="bar-track"><div class="bar-fill" id="barA" style="--c:var(--sideA)"></div><span class="bar-val" id="valA"></span></div></div>
+        <div class="bar-row"><span class="bar-name"><i class="shape" style="--c:var(--sideB)"></i>Side B</span>
+          <div class="bar-track"><div class="bar-fill" id="barB" style="--c:var(--sideB)"></div><span class="bar-val" id="valB"></span></div></div>
+      </div>
+      <p class="ratio" id="ratio">—</p>
+      <p class="formula" id="strNote"></p>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <fieldset id="fsA">
+      <legend><i class="shape circle" style="--c:var(--sideA)"></i>Side A</legend>
+      <label class="sl" for="nA">Players <output id="onA"></output></label>
+      <input id="nA" type="range" min="1" max="40" step="1">
+      <label class="sl" for="dpsA">DPS per player <output id="odpsA"></output></label>
+      <input id="dpsA" type="range" min="50" max="300" step="5">
+      <label class="sl" for="hpA">HP per player <output id="ohpA"></output></label>
+      <input id="hpA" type="range" min="500" max="3000" step="50">
+      <div class="seg" role="radiogroup" aria-label="Side A targeting">
+        <label><input type="radio" name="tA" value="focus">Focus</label>
+        <label><input type="radio" name="tA" value="spread">Spread</label>
+      </div>
+    </fieldset>
+    <fieldset id="fsB">
+      <legend><i class="shape" style="--c:var(--sideB)"></i>Side B</legend>
+      <label class="sl" for="nB">Players <output id="onB"></output></label>
+      <input id="nB" type="range" min="1" max="40" step="1">
+      <label class="sl" for="dpsB">DPS per player <output id="odpsB"></output></label>
+      <input id="dpsB" type="range" min="50" max="300" step="5">
+      <label class="sl" for="hpB">HP per player <output id="ohpB"></output></label>
+      <input id="hpB" type="range" min="500" max="3000" step="50">
+      <div class="seg" role="radiogroup" aria-label="Side B targeting">
+        <label><input type="radio" name="tB" value="focus">Focus</label>
+        <label><input type="radio" name="tB" value="spread">Spread</label>
+      </div>
+      <details id="healDet">
+        <summary>Healers on side B</summary>
+        <label class="sl" for="healers">Side B players who heal <output id="ohealers"></output></label>
+        <input id="healers" type="range" min="0" max="4" step="1">
+        <label class="sl" for="hps">Healing per healer, HP/s <output id="ohps"></output></label>
+        <input id="hps" type="range" min="0" max="500" step="10">
+        <label class="chk"><input type="checkbox" id="hFirst">Side A kills healers first</label>
+        <p class="hint">Healers deal no damage and heal the lowest-health living ally. They stand at the back of B's order unless side A targets them first.</p>
+      </details>
+    </fieldset>
+    <fieldset>
+      <legend>Combat rule</legend>
+      <div class="seg" role="radiogroup" aria-label="Combat rule" style="flex-direction:column;gap:2px">
+        <label><input type="radio" name="rule" value="aimed">Aimed fire</label>
+        <label><input type="radio" name="rule" value="area">Uncapped area fire</label>
+        <label><input type="radio" name="rule" value="cap5">Area fire, target cap 5</label>
+      </div>
+      <p class="hint" id="ruleHint"></p>
+    </fieldset>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tCap">Vary side A's size against the current side B</caption>
+      <thead><tr><th>Side A players</th><th>Strength A : B</th><th>Square law survivors</th><th>Linear law survivors</th><th>Simulation</th><th>Sim. fight length</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model: F. W. Lanchester, <i>Aircraft in Warfare</i> (1916), aimed-fire and area-fire equations. Discrete simulation: step 0.01 s, deaths applied at the same time on both sides, overkill damage lost, 300 s limit. Continuous curves: Euler integration with step 0.001 s. Area fire uses 10% of the DPS slider per target to keep fights watchable.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const DEF={nA:10,nB:8,dpsA:100,hpA:1000,dpsB:100,hpB:1000,tA:'focus',tB:'focus',rule:'aimed',healers:0,hps:150,hFirst:false};
+let P={...DEF};
+const n2=(v,d=2)=>{const s=(+v).toFixed(d);return s.replace(/\.?0+$/,'')};
+const f2=v=>(+v).toFixed(2);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+
+/* ---------- discrete simulation ---------- */
+function simulate(p,record){
+  const dt=0.01,EPS=1e-7,MAXSTEP=30000;
+  const nA=p.nA,nB=p.nB,hB=Math.min(p.healers,nB);
+  const hpA=new Float64Array(nA).fill(p.hpA),hpB=new Float64Array(nB).fill(p.hpB);
+  const aliveA=new Uint8Array(nA).fill(1),aliveB=new Uint8Array(nB).fill(1);
+  const healB=new Uint8Array(nB);for(let i=nB-hB;i<nB;i++)healB[i]=1;
+  const oA=[...Array(nA).keys()];
+  const dealersB=[],healersB=[];for(let i=0;i<nB;i++)(healB[i]?healersB:dealersB).push(i);
+  const oB=p.hFirst?healersB.concat(dealersB):dealersB.concat(healersB);
+  const dmgA=new Float64Array(nA),dmgB=new Float64Array(nB);
+  let a=nA,b=nB,step=0;
+  const hist=[[0,a,b]],snaps=[];
+  const snap=()=>{const s=new Float32Array(nA+nB);for(let i=0;i<nA;i++)s[i]=hpA[i]/p.hpA;for(let i=0;i<nB;i++)s[nA+i]=hpB[i]/p.hpB;snaps.push(s);};
+  if(record)snap();
+  function plan(sumDps,alive,ord,dmg,targeting){
+    dmg.fill(0);if(sumDps<=0)return;
+    const live=[];for(const i of ord)if(alive[i])live.push(i);
+    if(!live.length)return;
+    if(p.rule==='aimed'){
+      const tot=sumDps*dt;
+      if(targeting==='focus')dmg[live[0]]+=tot;else{const per=tot/live.length;for(const i of live)dmg[i]+=per;}
+    }else{
+      const per=0.1*sumDps*dt,cap=p.rule==='cap5'?5:Infinity;
+      for(let k=0;k<live.length&&k<cap;k++)dmg[live[k]]+=per;
+    }
+  }
+  while(true){
+    let sA=0,sB=0;
+    for(let i=0;i<nA;i++)if(aliveA[i])sA+=p.dpsA;
+    for(let i=0;i<nB;i++)if(aliveB[i]&&!healB[i])sB+=p.dpsB;
+    plan(sB,aliveA,oA,dmgA,p.tB);
+    plan(sA,aliveB,oB,dmgB,p.tA);
+    for(let i=0;i<nA;i++){hpA[i]-=dmgA[i];if(aliveA[i]&&hpA[i]<=EPS){aliveA[i]=0;hpA[i]=0;a--;}}
+    for(let i=0;i<nB;i++){hpB[i]-=dmgB[i];if(aliveB[i]&&hpB[i]<=EPS){aliveB[i]=0;hpB[i]=0;b--;}}
+    step++;
+    if(hB&&p.hps>0){
+      for(let h=0;h<nB;h++){
+        if(!healB[h]||!aliveB[h])continue;
+        let lo=-1;for(let i=0;i<nB;i++)if(aliveB[i]&&(lo<0||hpB[i]<hpB[lo]-1e-9))lo=i;
+        if(lo>=0)hpB[lo]=Math.min(p.hpB,hpB[lo]+p.hps*dt);
+      }
+    }
+    const t=step/100;
+    const last=hist[hist.length-1];
+    if(last[1]!==a||last[2]!==b)hist.push([t,a,b]);
+    if(record&&step%5===0)snap();
+    if(a===0||b===0||step>=MAXSTEP){
+      if(record&&step%5!==0)snap();
+      hist.push([t,a,b]);
+      let hpSumA=0,hpSumB=0;for(let i=0;i<nA;i++)hpSumA+=hpA[i]/p.hpA;for(let i=0;i<nB;i++)hpSumB+=hpB[i]/p.hpB;
+      return {t,a,b,stalemate:(a>0&&b>0),hpEqA:hpSumA,hpEqB:hpSumB,avgA:a?hpSumA/a:0,avgB:b?hpSumB/b:0,hist,snaps,oB};
+    }
+  }
+}
+
+/* ---------- continuous model ---------- */
+function continuous(p){
+  if(p.healers>0)return null;
+  const al=p.dpsA/p.hpB,be=p.dpsB/p.hpA,f=p.rule==='aimed'?1:0.1,dt=0.001;
+  let A=p.nA,B=p.nB,t=0,end=null;const pts=[[0,A,B]];
+  for(let i=1;i<=300000;i++){
+    let dA,dB;
+    if(p.rule==='aimed'){dA=-be*B;dB=-al*A;}
+    else if(p.rule==='area'){dA=-f*be*A*B;dB=-f*al*A*B;}
+    else{dA=-f*be*B*Math.min(A,5);dB=-f*al*A*Math.min(B,5);}
+    A+=dA*dt;B+=dB*dt;t=i*dt;
+    if(A<=0||B<=0){A=Math.max(0,A);B=Math.max(0,B);pts.push([t,A,B]);end=t;break;}
+    if(i%50===0)pts.push([t,A,B]);
+    if(A<1e-4&&B<1e-4)break;
+  }
+  return {pts,end,A,B};
+}
+
+/* ---------- closed-form predictions (aimed-fire rates) ---------- */
+function predict(p){
+  const nBd=p.nB-Math.min(p.healers,p.nB);
+  const al=p.dpsA/p.hpB,be=p.dpsB/p.hpA;
+  const sA=p.nA*p.nA*p.dpsA*p.hpA/1e5,sB=nBd*nBd*p.dpsB*p.hpB/1e5;
+  const out={sA,sB,nBd};
+  if(p.healers>0)return out;
+  const A0=p.nA,B0=p.nB,k=Math.sqrt(al*be);
+  const sq=al*A0*A0-be*B0*B0;
+  if(Math.abs(sq)<1e-9){out.sq={w:'none',n:0};out.tSq=Infinity;}
+  else if(sq>0){out.sq={w:'A',n:Math.sqrt(A0*A0-be/al*B0*B0)};out.tSq=Math.atanh(Math.sqrt(be/al)*B0/A0)/k;}
+  else{out.sq={w:'B',n:Math.sqrt(B0*B0-al/be*A0*A0)};out.tSq=Math.atanh(Math.sqrt(al/be)*A0/B0)/k;}
+  const ln=al*A0-be*B0;
+  if(Math.abs(ln)<1e-9)out.ln={w:'none',n:0};
+  else if(ln>0)out.ln={w:'A',n:A0-be/al*B0};else out.ln={w:'B',n:B0-al/be*A0};
+  return out;
+}
+
+/* ---------- state ---------- */
+let R=null,C=null,PR=null,playT=null,anim=0,animStart=0,speed=1;
+
+function readControls(){
+  P.nA=+$('nA').value;P.nB=+$('nB').value;P.dpsA=+$('dpsA').value;P.hpA=+$('hpA').value;P.dpsB=+$('dpsB').value;P.hpB=+$('hpB').value;
+  P.tA=document.querySelector('input[name=tA]:checked').value;P.tB=document.querySelector('input[name=tB]:checked').value;
+  P.rule=document.querySelector('input[name=rule]:checked').value;
+  P.healers=Math.min(+$('healers').value,P.nB);P.hps=+$('hps').value;P.hFirst=$('hFirst').checked;
+}
+function writeControls(){
+  ['nA','nB','dpsA','hpA','dpsB','hpB','healers','hps'].forEach(k=>$(k).value=P[k]);
+  document.querySelectorAll('input[name=tA]').forEach(r=>r.checked=r.value===P.tA);
+  document.querySelectorAll('input[name=tB]').forEach(r=>r.checked=r.value===P.tB);
+  document.querySelectorAll('input[name=rule]').forEach(r=>r.checked=r.value===P.rule);
+  $('hFirst').checked=P.hFirst;
+  if(P.healers>0)$('healDet').open=true;
+}
+function outputs(){
+  $('onA').textContent=P.nA;$('onB').textContent=P.nB;
+  $('odpsA').textContent=P.dpsA;$('odpsB').textContent=P.dpsB;
+  $('ohpA').textContent=fmt(P.hpA);$('ohpB').textContent=fmt(P.hpB);
+  $('ohealers').textContent=$('healers').value;$('ohps').textContent=P.hps;
+  $('ruleHint').textContent=P.rule==='aimed'?'Each side’s total damage goes to one target (focus) or is split evenly across all living enemies (spread).'
+    :P.rule==='area'?'Area DPS = 10% of the DPS slider, applied to every living enemy. Targeting choice does not apply.'
+    :'Area DPS = 10% of the DPS slider, applied to the first 5 living enemies. Targeting choice does not apply.';
+  document.querySelectorAll('.seg input[name=tA],.seg input[name=tB]').forEach(r=>r.disabled=P.rule!=='aimed');
+}
+
+/* ---------- run ---------- */
+function compute(){
+  readControls();outputs();
+  R=simulate(P,true);C=continuous(P);PR=predict(P);
+  strength();readout();table();
+}
+function strength(){
+  const {sA,sB}=PR,m=Math.max(sA,sB)||1;
+  $('barA').style.width=(sA/m*100)+'%';$('barB').style.width=(sB/m*100)+'%';
+  $('valA').textContent=n2(sA);$('valB').textContent=n2(sB);
+  const r=sA>=sB?(sB>0?sA/sB:Infinity):(sA>0?sB/sA:Infinity);
+  $('ratio').innerHTML=(sA>=sB?`${isFinite(r)?f2(r):'∞'} : 1`:`1 : ${isFinite(r)?f2(r):'∞'}`)+`<small>A : B strength ratio${P.healers?' (healers not counted: they deal no damage)':''}</small>`;
+  $('strNote').textContent=`A: ${P.nA}² × ${P.dpsA} × ${fmt(P.hpA)} / 100,000 = ${n2(sA)}.  B: ${PR.nBd}² × ${P.dpsB} × ${fmt(P.hpB)} / 100,000 = ${n2(sB)}.`;
+  // caption
+  const big=Math.max(P.nA,P.nB),small=Math.min(P.nA,P.nB);
+  const sBig=P.nA>=P.nB?sA:sB,sSmall=P.nA>=P.nB?sB:sA;
+  let cap;
+  if(big===small)cap=`Equal numbers. Strength ${n2(sA)} : ${n2(sB)} comes from DPS × HP alone.`;
+  else{
+    const pp=Math.round((big/small-1)*100),ps=sSmall>0?Math.round((sBig/sSmall-1)*100):Infinity;
+    cap=`${pp}% more players, ${isFinite(ps)?ps+'%':'infinitely'} ${ps>=0?'more':'less'} fighting strength.`.replace(/-(\d+)% less/,'$1% less');
+  }
+  $('caption').innerHTML=`<b>${cap}</b>`;
+}
+const pct=v=>Math.round(v*100)+'%';
+function readout(){
+  const w=R.stalemate?'Stalemate':(R.a===0&&R.b===0?'Mutual wipe':(R.a>0?'Side A':'Side B'));
+  $('rWin').textContent=w;
+  $('rWinSub').textContent=R.stalemate?`${R.a} A and ${R.b} B still alive at 300 s`:`predicted by strength: ${PR.sA>PR.sB?'A':PR.sB>PR.sA?'B':'tie'}${P.healers?' (ignores healing)':''}`;
+  if(R.a===0&&R.b===0){$('rSurv').textContent='0';$('rSurvSub').textContent='both sides dead';}
+  else if(R.stalemate){$('rSurv').textContent=`${R.a} A / ${R.b} B`;$('rSurvSub').textContent='no winner';}
+  else{
+    const A=R.a>0,n=A?R.a:R.b,N=A?P.nA:P.nB,avg=A?R.avgA:R.avgB,eq=A?R.hpEqA:R.hpEqB;
+    $('rSurv').textContent=`${n} of ${N}`;
+    $('rSurvSub').textContent=`avg ${pct(avg)} HP, ${f2(eq)} players’ worth of HP`;
+  }
+  if(!PR.sq){$('rSq').textContent='n/a';$('rLin').textContent='no closed form with healers';}
+  else{
+    const s=PR.sq,l=PR.ln;
+    $('rSq').textContent=s.w==='none'?'0.00 (both)':`${s.w} ${f2(s.n)}`;
+    $('rLin').textContent='linear law: '+(l.w==='none'?'0.00 (both)':`${l.w} ${f2(l.n)}`);
+  }
+  $('rTime').textContent=R.stalemate?'300 s +':`${f2(R.t)} s`;
+  $('rTimeSq').textContent=!PR.sq?'square law: n/a (healers)':('square law: '+(isFinite(PR.tSq)?`${f2(PR.tSq)} s`:'never ends cleanly'));
+  // insight
+  let s='';
+  if(P.healers>0){
+    s=`With ${P.healers} healer${P.healers>1?'s':''} at ${P.hps} HP/s, side B converts healing into time. `+(R.stalemate?'Healing matches incoming focus damage, so deaths stop: a stalemate.':`The fight lasts ${f2(R.t)} s. Near the flip point fights stretch out, because healing and focus damage almost cancel.`);
+  }else if(P.rule!=='aimed'){
+    s=P.rule==='area'?`Uncapped area fire hits everyone, so numbers count once (linear law). The linear law predicts ${PR.ln.w==='none'?'a wipe':PR.ln.w+' '+f2(PR.ln.n)}; the simulation leaves ${f2(R.a>0?R.hpEqA:R.hpEqB)} players’ worth of HP, spread across ${R.a||R.b} damaged players.`
+      :`A 5-target cap turns area fire back into aimed fire while a side has more than 5 alive, so the square law returns. Compare the survivors with uncapped area fire.`;
+  }else if(P.tA!==P.tB){
+    const sp=P.tA==='spread'?'A':'B';
+    s=`Side ${sp} spreads its damage, so every enemy keeps firing until the end. Focus fire removes shooters one by one; that is worth more than a 25% headcount edge.`;
+  }else if(P.tA==='spread'){
+    s=`Both sides spread damage. No one on either side dies until the losers all drop at once, at ${f2(R.t)} s. "We were winning until we weren't."`;
+  }else if(PR.sq&&PR.sq.w!=='none'){
+    const lose=(PR.sq.w==='A'?P.nA:P.nB)-(PR.sq.w==='A'?R.a:R.b);
+    s=`Side ${PR.sq.w} loses only ${lose} player${lose===1?'':'s'}. If the fight were a set of one-on-one duels, the linear law says it would keep ${f2(PR.ln.n)}. Square law: √(${P.nA}² − ${P.nB}²·β/α) = ${f2(PR.sq.n)}.`;
+    if(PR.sq.w!==(R.a>0?'A':R.b>0?'B':'none'))s+=' The discrete result differs because the strengths are nearly equal.';
+  }else s='Equal strength: the continuous curves meet at zero and the simulation ends in a mutual wipe or a single survivor.';
+  $('insight').textContent=s;
+}
+function table(){
+  const B=P.nB,rows=[...new Set([B,B+1,B+2,B+4,2*B,P.nA].map(v=>Math.max(1,Math.min(40,v))))].sort((x,y)=>x-y);
+  $('tCap').textContent=`Side A size against ${B} side B players, current stats and rules`;
+  $('tbody').innerHTML=rows.map(nA=>{
+    const q={...P,nA},pr=predict(q),r=simulate(q,false);
+    const sim=r.stalemate?'stalemate':(r.a===0&&r.b===0?'mutual wipe':(r.a>0?`A, ${r.a} of ${nA}`:`B, ${r.b} of ${B}`));
+    const sq=pr.sq?(pr.sq.w==='none'?'0 (both)':`${pr.sq.w} ${f2(pr.sq.n)}`):'—';
+    const ln=pr.ln?(pr.ln.w==='none'?'0 (both)':`${pr.ln.w} ${f2(pr.ln.n)}`):'—';
+    return `<tr class="${nA===P.nA?'here':''}"><td>${nA}</td><td>${n2(pr.sA)} : ${n2(pr.sB)}</td><td>${sq}</td><td>${ln}</td><td>${sim}</td><td>${r.stalemate?'300 s +':f2(r.t)+' s'}</td></tr>`;
+  }).join('');
+}
+
+/* ---------- drawing ---------- */
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function layoutSide(n,x0,x1,y0,y1,facingRight){
+  // columns fill from the front (centre line) outward
+  const W=x1-x0,H=y1-y0;let best=null;
+  for(let cols=1;cols<=n;cols++){const rows=Math.ceil(n/cols),cell=Math.min(W/cols,H/rows);if(!best||cell>best.cell)best={cols,rows,cell};}
+  const cell=Math.min(best.cell,56),pos=[];
+  const gw=cell*best.cols,gh=cell*best.rows;
+  const ox=facingRight?x1-gw:x0,oy=y0+(H-gh)/2;
+  for(let i=0;i<n;i++){
+    const c=Math.floor(i/best.rows),r=i%best.rows;
+    const col=facingRight?best.cols-1-c:c;
+    pos.push({x:ox+col*cell+cell/2,y:oy+r*cell+cell/2});
+  }
+  return {pos,cell};
+}
+function frameAt(t){ // snapshot index for time t
+  if(!R)return null;const i=Math.min(R.snaps.length-1,Math.round(t/0.05));return R.snaps[i];
+}
+function drawField(t){
+  const c=setupCanvas($('cField')),g=c.g,w=c.w,h=c.h;g.clearRect(0,0,w,h);
+  const s=frameAt(t);if(!s)return;
+  const colA=css('--sideA')||css('--steel'),colB=css('--sideB')||css('--ochre'),ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),paper=css('--paper-2');
+  const mid=w/2,gap=Math.min(60,w*.08),pad=10;
+  const LA=layoutSide(P.nA,pad,mid-gap,pad,h-pad,true),LB=layoutSide(P.nB,mid+gap,w-pad,pad,h-pad,false);
+  // B positions follow B's natural index; order of fire uses R.oB
+  const nA=P.nA,nB=P.nB,hB=Math.min(P.healers,nB);
+  const aliveA=i=>s[i]>0,aliveB=i=>s[nA+i]>0;
+  // target lines
+  if(nA<=20&&nB<=20){
+    const liveA=[],liveB=[];for(let i=0;i<nA;i++)if(aliveA(i))liveA.push(i);for(const i of R.oB)if(aliveB(i))liveB.push(i);
+    g.lineWidth=1;
+    const lines=(from,fromPos,toList,toPos,targeting,col,shooterOk)=>{
+      if(!toList.length)return;g.strokeStyle=col;g.globalAlpha=.28;g.beginPath();
+      from.forEach((i,k)=>{if(!shooterOk(i))return;const p0=fromPos[i];let ts;
+        if(P.rule==='aimed')ts=[targeting==='focus'?toList[0]:toList[k%toList.length]];
+        else ts=P.rule==='cap5'?toList.slice(0,5):toList;
+        ts.forEach(j=>{const p1=toPos[j];g.moveTo(p0.x,p0.y);g.lineTo(p1.x,p1.y);});});
+      g.stroke();g.globalAlpha=1;};
+    lines(liveA,LA.pos,liveB,LB.pos,P.tA,colA,()=>true);
+    lines(liveB,LB.pos,liveA,LA.pos,P.tB,colB,i=>i<nB-hB);
+  }
+  const drawUnit=(p,cell,frac,col,shape,healer)=>{
+    const r=Math.max(3,cell*.3);const dead=frac<=0;
+    g.lineWidth=Math.max(1.5,cell*.06);
+    g.beginPath();if(shape==='c')g.arc(p.x,p.y,r,0,Math.PI*2);else g.rect(p.x-r*.9,p.y-r*.9,r*1.8,r*1.8);
+    if(dead){g.globalAlpha=.35;g.strokeStyle=soft;g.lineWidth=1;g.stroke();g.globalAlpha=1;return;}
+    g.fillStyle=col;g.fill();
+    // health ring
+    const rr=r+Math.max(2.5,cell*.1);
+    g.lineWidth=Math.max(2,cell*.07);g.strokeStyle=grid;g.beginPath();g.arc(p.x,p.y,rr,0,Math.PI*2);g.stroke();
+    g.strokeStyle=frac<.34?css('--blood'):ink;g.beginPath();g.arc(p.x,p.y,rr,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,frac));g.stroke();
+    if(healer){g.strokeStyle=paper;g.lineWidth=Math.max(1.5,r*.28);g.beginPath();g.moveTo(p.x-r*.55,p.y);g.lineTo(p.x+r*.55,p.y);g.moveTo(p.x,p.y-r*.55);g.lineTo(p.x,p.y+r*.55);g.stroke();}
+  };
+  for(let i=0;i<nA;i++)drawUnit(LA.pos[i],LA.cell,s[i],colA,'c',false);
+  for(let i=0;i<nB;i++)drawUnit(LB.pos[i],LB.cell,s[nA+i],colB,'s',i>=nB-hB);
+  // centre line
+  g.strokeStyle=grid;g.setLineDash([3,5]);g.beginPath();g.moveTo(mid,6);g.lineTo(mid,h-6);g.stroke();g.setLineDash([]);
+  // alive labels
+  let a=0,b=0;for(let i=0;i<nA;i++)if(aliveA(i))a++;for(let i=0;i<nB;i++)if(aliveB(i))b++;
+  g.font='700 13px '+css('--sans');g.textBaseline='top';g.fillStyle=ink;
+  g.textAlign='left';g.fillText(`A ${a}/${nA}`,pad,2);g.textAlign='right';g.fillText(`B ${b}/${nB}`,w-pad,2);
+}
+function aliveAt(t){let a=P.nA,b=P.nB;for(const e of R.hist){if(e[0]<=t+1e-9){a=e[1];b=e[2];}else break;}return [a,b];}
+function drawAlive(tNow){
+  const c=setupCanvas($('cAlive')),g=c.g,w=c.w,h=c.h;g.clearRect(0,0,w,h);
+  const pad={l:40,r:12,t:12,b:34};
+  const T=R.t;let xMax=T;
+  if(C&&C.end&&C.end<T*1.6)xMax=Math.max(xMax,C.end);
+  xMax=niceMax(xMax*1.04);
+  const yMax=Math.max(P.nA,P.nB);
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/xMax,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  const yt=niceTicks(yMax);
+  yt.forEach(v=>{g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,Y(v));});
+  niceTicks(xMax).forEach(v=>{g.textAlign='center';g.textBaseline='top';g.fillText(n2(v,1),X(v),h-pad.b+6);});
+  g.textAlign='right';g.fillText('seconds',w-pad.r,h-14);
+  const colA=css('--sideA')||css('--steel'),colB=css('--sideB')||css('--ochre');
+  // continuous
+  if(C){
+    [[1,colA],[2,colB]].forEach(([k,col])=>{g.strokeStyle=col;g.globalAlpha=.7;g.lineWidth=1.3;g.beginPath();
+      C.pts.forEach((p,i)=>{if(p[0]>xMax)return;i?g.lineTo(X(p[0]),Y(p[k])):g.moveTo(X(p[0]),Y(p[k]));});g.stroke();g.globalAlpha=1;});
+  }
+  // discrete steps
+  const tEnd=Math.min(tNow,T);
+  [[1,colA],[2,colB]].forEach(([k,col])=>{g.strokeStyle=col;g.lineWidth=2.6;g.beginPath();let prev=R.hist[0][k];g.moveTo(X(0),Y(prev));
+    for(const e of R.hist){if(e[0]>tEnd)break;g.lineTo(X(e[0]),Y(prev));g.lineTo(X(e[0]),Y(e[k]));prev=e[k];}
+    g.lineTo(X(tEnd),Y(prev));g.stroke();});
+  // end marker
+  if(tNow>=T){g.strokeStyle=css('--ink');g.lineWidth=1.5;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(T),pad.t);g.lineTo(X(T),h-pad.b);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ink');g.font='700 12px '+css('--sans');g.textBaseline='top';const lbl=(R.stalemate?'stalemate ':'end ')+f2(T)+' s';
+    const tx=X(T);g.textAlign=tx>w-90?'right':'left';g.fillText(lbl,tx+(tx>w-90?-5:5),pad.t);}
+  else{g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.beginPath();g.moveTo(X(tNow),pad.t);g.lineTo(X(tNow),h-pad.b);g.stroke();}
+}
+function niceMax(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v)));for(const k of [1,1.2,1.5,2,2.5,3,4,5,6,8,10])if(k*m>=v)return k*m;return 10*m;}
+function niceTicks(max){const raw=max/5,m=Math.pow(10,Math.floor(Math.log10(raw)));let st=m;for(const k of [1,2,2.5,5,10])if(k*m>=raw){st=k*m;break;}const out=[];for(let v=0;v<=max+1e-9;v+=st)out.push(+v.toFixed(6));return out;}
+
+function legend(){
+  $('lgCont').hidden=false;
+  $('lgContTxt').textContent=P.healers>0?'Continuous curve hidden: no closed form with healers':
+    P.rule==='aimed'?'Square law (continuous)':P.rule==='area'?'Linear law, area fire (continuous)':'Capped area fire (continuous)';
+}
+function render(t){drawField(t);drawAlive(t);$('clock').textContent=`t = ${f2(Math.min(t,R.t))} s`;}
+
+/* ---------- animation ---------- */
+function stop(){if(anim)cancelAnimationFrame(anim);anim=0;}
+function showFinal(){stop();playT=R.t;render(R.t);}
+function fight(){
+  stop();compute();legend();
+  if(reduce.matches){showFinal();return;}
+  speed=Math.max(1,R.t/12);animStart=performance.now();playT=0;
+  const tick=now=>{playT=(now-animStart)/1000*speed;if(playT>=R.t){showFinal();return;}render(playT);anim=requestAnimationFrame(tick);};
+  anim=requestAnimationFrame(tick);
+}
+function refresh(){stop();compute();legend();showFinal();}
+
+/* ---------- events ---------- */
+document.querySelectorAll('.controls input').forEach(el=>el.addEventListener(el.type==='range'?'input':'change',refresh));
+$('bFight').addEventListener('click',fight);
+$('bInstant').addEventListener('click',refresh);
+$('bReset').addEventListener('click',()=>{P={...DEF};$('healDet').open=false;writeControls();refresh();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{P={...DEF,...JSON.parse(b.dataset.p)};$('healDet').open=P.healers>0;writeControls();refresh();}));
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(R)render(playT??R.t);},80);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(R)render(playT??R.t);});
+writeControls();refresh();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(!anim&&R)render(playT??R.t);});
+window.__lanchester={simulate,predict,continuous,get P(){return P;},get R(){return R;},get C(){return C;}};
+})();
+</script>
+</body>
+</html>

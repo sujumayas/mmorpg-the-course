@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diagonal movement and normalize — MA101 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;aspect-ratio:1/1;height:auto;border-radius:var(--radius-sm);touch-action:none}
+canvas:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.btn,.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.chip{border-color:var(--steel)}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}
+.seg button{font:600 .88rem var(--sans);padding:8px 11px;border:0;background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.clock{font-size:.88rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;margin:8px 0 0;min-height:1.5em}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.switch{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;cursor:pointer}
+.switch input{width:20px;height:20px;accent-color:var(--steel)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr auto;gap:18px;margin-top:16px;align-items:start}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.pad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:4px}
+.pad button{font:700 1.2rem var(--sans);border:1.5px solid var(--ink);border-radius:8px;background:var(--paper-2);color:var(--ink);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
+.pad button.on{background:var(--ink);color:var(--paper)}
+.padlabel{font-weight:600;font-size:.92rem;margin:0 0 6px}
+.stick{margin-top:10px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+@media (max-width:760px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:4px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+td{white-space:nowrap}
+@media (max-width:420px){table{font-size:.84rem}th,td{padding:6px 5px}}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:baseline}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA101 Mathematics for Games I · Week 12 · Worked example</p>
+  <h1>Two keys at once, √2 the speed</h1>
+  <p class="lede">Dot A adds the arrow keys raw. Dot B normalizes the same input first. Corner to corner, A arrives in the time B needs to walk one wall, because the input (1, 1) is 1.414 long.</p>
+</header>
+
+<section class="panel" aria-label="Diagonal movement explorer">
+  <div class="views">
+    <figure>
+      <figcaption>Race<small>100 × 100 arena. Click it, then hold arrow keys or WASD. Both dots get the same input.</small></figcaption>
+      <canvas id="arena" tabindex="0" role="application" aria-roledescription="arena" aria-label="Race arena. Hold arrow keys or W A S D to move both dots. Dot A uses raw input, dot B normalized input." aria-describedby="clock"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>A raw, filled dot, solid trail</span>
+        <span><i style="background:var(--moss)"></i>B normalized, hollow dot, dashed trail</span>
+      </div>
+      <div class="row">
+        <button class="btn" id="raceDiag" type="button">Corner to corner (1, 1)</button>
+        <button class="btn" id="raceWall" type="button">One wall (1, 0)</button>
+        <button class="btn" id="reset" type="button">Reset</button>
+      </div>
+      <p class="clock" id="clock" aria-live="polite"></p>
+    </figure>
+    <figure>
+      <figcaption>Input space<small>Faint square: |x| ≤ 1, |y| ≤ 1. Faint circle: length 1. Click an arrow to inspect it.</small></figcaption>
+      <canvas id="space" tabindex="0" role="application" aria-roledescription="input diagram" aria-label="Input space diagram. In analog stick mode, arrow keys move the stick knob." aria-describedby="spaceDesc"></canvas>
+      <p class="sr" id="spaceDesc" aria-live="polite"></p>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Rule drawn in the diagram">
+          <button type="button" data-mode="raw" aria-pressed="true">Raw</button>
+          <button type="button" data-mode="norm" aria-pressed="false">Normalize</button>
+          <button type="button" data-mode="clamp" aria-pressed="false">Clamp length</button>
+        </div>
+        <label class="switch"><input type="checkbox" id="analog"> Analog stick</label>
+      </div>
+      <div class="stick" id="stickWrap" hidden>
+        <label for="sx">Stick x <output id="osx">0.50</output></label>
+        <input id="sx" type="range" min="-1" max="1" step="0.01" value="0.5">
+        <label for="sy">Stick y <output id="osy">0.00</output></label>
+        <input id="sy" type="range" min="-1" max="1" step="0.01" value="0">
+        <div class="row" role="group" aria-label="Stick presets">
+          <button class="chip" type="button" data-sx="0.5" data-sy="0">(0.5, 0)</button>
+          <button class="chip" type="button" data-sx="0.3" data-sy="0.4">(0.3, 0.4)</button>
+          <button class="chip" type="button" data-sx="0.9" data-sy="0.9">(0.9, 0.9)</button>
+          <button class="chip" type="button" data-sx="1" data-sy="1">(1, 1) corner</button>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rIn">—</b><span>input vector</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rLen">—</b><span>input length</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rRatio">—</b><span>raw speed ÷ normalized speed</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSpeed">—</b><span>speed setting, units/s</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="speed">Speed s <output id="oSpeed">5</output></label>
+      <input id="speed" type="range" min="1" max="10" step="1" value="5">
+      <div class="insight" id="insight"></div>
+    </div>
+    <div>
+      <p class="padlabel" id="padLabel">8-way pad (hold to move)</p>
+      <div class="pad" role="group" aria-labelledby="padLabel">
+        <button type="button" data-x="-1" data-y="1" aria-label="Up left, input (-1, 1)">↖</button>
+        <button type="button" data-x="0" data-y="1" aria-label="Up, input (0, 1)">↑</button>
+        <button type="button" data-x="1" data-y="1" aria-label="Up right, input (1, 1)">↗</button>
+        <button type="button" data-x="-1" data-y="0" aria-label="Left, input (-1, 0)">←</button>
+        <button type="button" data-x="0" data-y="0" aria-label="No keys or opposite keys, input (0, 0)">·</button>
+        <button type="button" data-x="1" data-y="0" aria-label="Right, input (1, 0)">→</button>
+        <button type="button" data-x="-1" data-y="-1" aria-label="Down left, input (-1, -1)">↙</button>
+        <button type="button" data-x="0" data-y="-1" aria-label="Down, input (0, -1)">↓</button>
+        <button type="button" data-x="1" data-y="-1" aria-label="Down right, input (1, -1)">↘</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <table>
+        <caption>Velocity for the inspected input</caption>
+        <thead><tr><th>Rule</th><th>Velocity</th><th>Speed</th></tr></thead>
+        <tbody>
+          <tr id="trRaw"><td><span class="sw" style="background:var(--blood)"></span>Raw</td><td id="vRaw">—</td><td id="sRaw">—</td></tr>
+          <tr id="trNorm"><td><span class="sw" style="background:var(--moss)"></span>Normalize</td><td id="vNorm">—</td><td id="sNorm">—</td></tr>
+          <tr id="trClamp"><td><span class="sw" style="background:var(--ochre)"></span>Clamp length</td><td id="vClamp">—</td><td id="sClamp">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Race times at this speed</caption>
+        <thead><tr><th>Route</th><th>Distance</th><th>A raw</th><th>B normalized</th></tr></thead>
+        <tbody>
+          <tr id="trDiag"><td>Corner to corner</td><td id="dDiag">141.4</td><td id="tDiagA">—</td><td id="tDiagB">—</td></tr>
+          <tr id="trWall"><td>One wall</td><td>100.0</td><td id="tWallA">—</td><td id="tWallB">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Formulas: input = (right − left, up − down); raw = s × input; normalize = s × input / |input|, or (0, 0) when |input| is 0; clamp length = s × input / |input| only when |input| &gt; 1. The race clock runs faster than real time so a 28-second race fits on screen; all times shown are model seconds. Doom (1993) and Quake (1996) numbers are in the lecture, from id Software's released source.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const f2=n=>{const s=(Math.abs(n)<0.005?0:n).toFixed(2);return s.replace('-','−');};
+const vec=v=>'('+f2(v[0])+', '+f2(v[1])+')';
+const len=v=>Math.hypot(v[0],v[1]);
+const EPS=1e-6;
+function raw(v,s){return [s*v[0],s*v[1]];}
+function norm(v,s){const l=len(v);return l>EPS?[s*v[0]/l,s*v[1]/l]:[0,0];}
+function clampL(v,s){const l=len(v);return l>1?[s*v[0]/l,s*v[1]/l]:[s*v[0],s*v[1]];}
+const RULES={raw,norm,clamp:clampL};
+
+let S=5, mode='raw', analog=false, stick=[0.5,0];
+let inspect=[1,1];                 // input shown in diagram and readouts
+const held=new Set();              // keyboard keys held
+let padHeld=null, pulseUntil=0;    // on-screen pad
+let A=[0,0],B=[0,0],trailA=[[0,0]],trailB=[[0,0]];
+let race=null;                     // {dir,target,dist,tA,tB,t,mult}
+const FREE_MULT=4;
+
+function keyInput(){
+  const k=held;
+  const r=(k.has('ArrowRight')||k.has('d'))?1:0, l=(k.has('ArrowLeft')||k.has('a'))?1:0;
+  const u=(k.has('ArrowUp')||k.has('w'))?1:0, d=(k.has('ArrowDown')||k.has('s'))?1:0;
+  return [r-l,u-d];
+}
+function liveInput(now){
+  if(analog) return stick;
+  if(held.size) return keyInput();
+  if(padHeld&&(padHeld.hold||now<pulseUntil)) return padHeld.v;
+  return [0,0];
+}
+
+// ---------- canvases ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function arrow(g,x0,y0,x1,y1,color,w){
+  const a=Math.atan2(y1-y0,x1-x0),h=Math.min(11,4+w*2.4);
+  g.strokeStyle=color;g.fillStyle=color;g.lineWidth=w;g.lineCap='round';
+  g.beginPath();g.moveTo(x0,y0);g.lineTo(x1-Math.cos(a)*h*.6,y1-Math.sin(a)*h*.6);g.stroke();
+  g.beginPath();g.moveTo(x1,y1);g.lineTo(x1-h*Math.cos(a-.4),y1-h*Math.sin(a-.4));g.lineTo(x1-h*Math.cos(a+.4),y1-h*Math.sin(a+.4));g.closePath();g.fill();
+}
+function label(g,text,x,y,color,align){
+  g.font='600 12px '+css('--sans');g.textBaseline='middle';
+  const W=g.canvas.width/(window.devicePixelRatio||1),tw=g.measureText(text).width;
+  let x0=align==='right'?x-tw:align==='center'?x-tw/2:x;x0=Math.max(4,Math.min(W-4-tw,x0));
+  g.textAlign='left';x=x0;
+  g.lineWidth=4;g.strokeStyle=css('--paper-2');g.strokeText(text,x,y);g.fillStyle=color;g.fillText(text,x,y);
+}
+
+function drawArena(){
+  const c=setup($('arena')),g=c.g,pad={l:30,r:14,t:14,b:26};
+  const size=Math.min(c.w-pad.l-pad.r,c.h-pad.t-pad.b);
+  const X=x=>pad.l+size*x/100,Y=y=>pad.t+size*(1-y/100);
+  g.clearRect(0,0,c.w,c.h);
+  g.fillStyle=css('--paper');g.fillRect(X(0),Y(100),size,size);
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');
+  for(let i=0;i<=4;i++){
+    const v=i*25;g.beginPath();g.moveTo(X(v),Y(0));g.lineTo(X(v),Y(100));g.stroke();
+    g.beginPath();g.moveTo(X(0),Y(v));g.lineTo(X(100),Y(v));g.stroke();
+    if(i%2===0){g.textAlign='center';g.textBaseline='top';g.fillText(v,X(v),Y(0)+6);
+      g.textAlign='right';g.textBaseline='middle';g.fillText(v,X(0)-6,Y(v));}
+  }
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(X(0),Y(100),size,size);
+  if(race){
+    g.strokeStyle=css('--ink-soft');g.setLineDash([3,5]);g.lineWidth=1.5;
+    g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(race.target[0]),Y(race.target[1]));g.stroke();g.setLineDash([]);
+    g.beginPath();g.arc(X(race.target[0]),Y(race.target[1]),12,0,Math.PI*2);g.stroke();
+  }
+  if(race&&race.t>=race.tA&&race.tB>race.tA+1e-9){
+    // where B was when A arrived: the gap the lesson is about
+    const vb=norm(race.dir,S),gp=[vb[0]*race.tA,vb[1]*race.tA];
+    g.globalAlpha=.9;g.beginPath();g.arc(X(gp[0]),Y(gp[1]),8,0,Math.PI*2);g.setLineDash([3,3]);g.lineWidth=2;g.strokeStyle=css('--moss');g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    label(g,'B at '+race.tA.toFixed(2)+' s, when A arrived',X(gp[0])+13,Y(gp[1])+2,css('--moss'),'left');
+  }
+  const trail=(t,color,dash)=>{if(t.length<2)return;g.strokeStyle=color;g.lineWidth=3;g.setLineDash(dash);g.beginPath();
+    t.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.stroke();g.setLineDash([]);};
+  trail(trailA,css('--blood'),[]);trail(trailB,css('--moss'),[7,5]);
+  // racers: A filled, B hollow ring
+  const same=Math.hypot(A[0]-B[0],A[1]-B[1])<4;
+  g.beginPath();g.arc(X(B[0]),Y(B[1]),10,0,Math.PI*2);g.lineWidth=3.5;g.strokeStyle=css('--moss');g.fillStyle=css('--paper');g.fill();g.stroke();
+  g.beginPath();g.arc(X(A[0]),Y(A[1]),same?6:9,0,Math.PI*2);g.fillStyle=css('--blood');g.fill();
+  const lx=(p,dy,txt,col)=>{const right=p[0]<70;label(g,txt,X(p[0])+(right?15:-15),Y(p[1])+dy,col,right?'left':'right');};
+  if(same){lx(A,-8,'A raw',css('--blood'));lx(B,8,'B normalized',css('--moss'));}
+  else{lx(A,0,'A raw',css('--blood'));lx(B,0,'B normalized',css('--moss'));}
+}
+
+let spaceGeo=null;
+function drawSpace(){
+  const c=setup($('space')),g=c.g,m=14;
+  const size=Math.min(c.w,c.h)-2*m,R=1.6,sc=size/(2*R),cx=c.w/2,cy=c.h/2;
+  const X=x=>cx+x*sc,Y=y=>cy-y*sc;spaceGeo={X,Y,sc,cx,cy};
+  g.clearRect(0,0,c.w,c.h);
+  g.fillStyle=css('--paper');g.fillRect(X(-R),Y(R),size,size);
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  [-1.5,-1,-.5,.5,1,1.5].forEach(v=>{g.beginPath();g.moveTo(X(v),Y(-R));g.lineTo(X(v),Y(R));g.stroke();g.beginPath();g.moveTo(X(-R),Y(v));g.lineTo(X(R),Y(v));g.stroke();});
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1;
+  g.beginPath();g.moveTo(X(-R),Y(0));g.lineTo(X(R),Y(0));g.moveTo(X(0),Y(-R));g.lineTo(X(0),Y(R));g.stroke();
+  g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  [-1,1].forEach(v=>{g.fillText(v,X(v)+(v>0?-9:9),Y(0)+5);});g.textAlign='left';g.textBaseline='middle';[-1,1].forEach(v=>g.fillText(v,X(0)+6,Y(v)+(v>0?9:-9)));
+  // faint square and circle
+  g.globalAlpha=.55;g.strokeStyle=css('--steel');g.lineWidth=1.5;g.setLineDash([5,4]);g.strokeRect(X(-1),Y(1),2*sc,2*sc);g.setLineDash([]);
+  g.beginPath();g.arc(cx,cy,sc,0,Math.PI*2);g.stroke();g.globalAlpha=1;
+  const col={raw:css('--blood'),norm:css('--moss'),clamp:css('--ochre')};
+  if(!analog){
+    const dirs=[[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+    dirs.forEach(d=>{const e=RULES[mode](d,1);
+      const hi=d[0]===inspect[0]&&d[1]===inspect[1];if(hi)return;
+      g.globalAlpha=.55;arrow(g,cx,cy,X(e[0]),Y(e[1]),css('--ink-soft'),2);g.globalAlpha=1;});
+    const e=RULES[mode](inspect,1),l=len(e);
+    if(l<EPS){g.beginPath();g.arc(cx,cy,6,0,Math.PI*2);g.fillStyle=col[mode];g.fill();label(g,'(0, 0) length 0.00',cx+10,cy-14,col[mode]);}
+    else{arrow(g,cx,cy,X(e[0]),Y(e[1]),col[mode],4);
+      const ux=e[0]/l,uy=e[1]/l;label(g,'length '+l.toFixed(3),X(e[0])+ux*16,Y(e[1])-uy*16+(Math.abs(uy)<.1?-14:0),col[mode],ux>0.3?'left':ux<-0.3?'right':'center');}
+  }else{
+    // stick knob and three result dots
+    const pts=['raw','norm','clamp'].map(k=>({k,p:RULES[k](stick,1)}));
+    g.globalAlpha=.4;arrow(g,cx,cy,X(stick[0]),Y(stick[1]),css('--ink-soft'),2);g.globalAlpha=1;
+    const groups=[];pts.forEach(o=>{const gr=groups.find(q=>Math.hypot(q.p[0]-o.p[0],q.p[1]-o.p[1])<.04);gr?gr.k.push(o.k):groups.push({p:o.p,k:[o.k]});});
+    const names={raw:'raw',norm:'normalize',clamp:'clamp'};
+    groups.forEach((q,i)=>{
+      const x=X(q.p[0]),y=Y(q.p[1]);
+      q.k.slice().reverse().forEach((k,j)=>{g.beginPath();g.arc(x,y,7-j*1.5+(k===mode?2:0),0,Math.PI*2);g.fillStyle=col[k];g.fill();g.strokeStyle=css('--paper');g.lineWidth=1.5;g.stroke();});
+      const right=q.p[0]<.6,dy=[-16,18,34][i];
+      label(g,q.k.map(k=>names[k]).join(' = ')+' '+len(q.p).toFixed(2),x+(right?12:-12),y+dy,col[q.k[0]],right?'left':'right');
+    });
+    g.beginPath();g.arc(X(stick[0]),Y(stick[1]),13,0,Math.PI*2);g.strokeStyle=css('--ink');g.lineWidth=2;g.stroke();
+  }
+}
+
+// ---------- readouts ----------
+function readouts(){
+  const v=inspect,l=len(v);
+  const r=raw(v,S),n=norm(v,S),c=clampL(v,S);
+  $('rIn').textContent=vec(v);$('rLen').textContent=l.toFixed(3);
+  const ns=len(n),rs=len(r);
+  $('rRatio').textContent=ns>EPS?(rs/ns).toFixed(3):'—';
+  $('rSpeed').textContent=S;$('oSpeed').textContent=S;
+  $('vRaw').textContent=vec(r);$('sRaw').textContent=f2(rs);
+  $('vNorm').textContent=vec(n)+(l<EPS?' by guard':'');$('sNorm').textContent=f2(ns);
+  $('vClamp').textContent=vec(c);$('sClamp').textContent=f2(len(c));
+  ['Raw','Norm','Clamp'].forEach(k=>$('tr'+k).classList.toggle('here',k.toLowerCase()===mode));
+  // race times
+  const d=100*Math.SQRT2;
+  $('dDiag').textContent=d.toFixed(1);
+  $('tDiagA').textContent=(d/len(raw([1,1],S))).toFixed(2)+' s';
+  $('tDiagB').textContent=(d/len(norm([1,1],S))).toFixed(2)+' s';
+  $('tWallA').textContent=(100/S).toFixed(2)+' s';$('tWallB').textContent=(100/S).toFixed(2)+' s';
+  $('trDiag').classList.toggle('here',!!race&&race.id==='diag');$('trWall').classList.toggle('here',!!race&&race.id==='wall');
+  // insight
+  let s;
+  if(l<EPS) s='Input (0, 0) has no direction. Normalize would divide by zero, so the guard returns (0, 0) and every rule gives speed 0.00. No NaN.';
+  else if(!analog&&v[0]!==0&&v[1]!==0) s=`Input ${vec(v).replace(/\.00/g,'')} is √2 = 1.414 long, so raw speed is <b>${f2(rs)}</b> instead of ${f2(ns)}, ${((rs/ns-1)*100).toFixed(1)}% faster. Raw keyboard input sits on the corners of the square. Normalized input sits on the circle.`;
+  else if(!analog) s=`A single key gives length 1.000, so raw and normalized agree at ${f2(rs)} units/s. The bug only shows when two perpendicular keys add. Try a diagonal.`;
+  else if(l<1) s=`The stick is at ${(l*100).toFixed(0)}% tilt. Raw and clamp give ${f2(rs)} units/s, a gentle walk. Normalize throws the tilt away and gives the full ${f2(ns)}. For sticks, clamp the length.`;
+  else s=`The stick reports length ${l.toFixed(3)}, past the circle. Raw gives ${f2(rs)} units/s. Clamp and normalize both pull it back to ${f2(len(c))}. Clamping is the rule that works for keys and sticks.`;
+  $('insight').innerHTML=s;
+  $('spaceDesc').textContent=`Inspected input ${vec(v)}, length ${l.toFixed(3)}. ${mode} rule gives velocity ${vec(RULES[mode](v,S))}.`;
+}
+function clockText(){
+  if(race){
+    const tA=race.tA,tB=race.tB,t=race.t,done=t>=Math.max(tA,tB);
+    const route=race.id==='diag'?'Corner to corner':'One wall';
+    if(done){let s=`${route}: A arrived at ${tA.toFixed(2)} s, B at ${tB.toFixed(2)} s.`;
+      if(tB>tA+1e-9){const f=len(norm(race.dir,S))*tA;s+=` When A arrived, B had covered ${f.toFixed(1)} of ${race.dist.toFixed(1)} units.`;}
+      return s;}
+    return `${route}: clock ${t.toFixed(2)} s (playing ${race.mult.toFixed(0)}× real time).`;
+  }
+  return `Free movement (clock ${FREE_MULT}× real time). A at (${A[0].toFixed(1)}, ${A[1].toFixed(1)}), B at (${B[0].toFixed(1)}, ${B[1].toFixed(1)}).`;
+}
+let lastClock='';
+function setClock(){const t=clockText();if(t!==lastClock){$('clock').textContent=t;lastClock=t;}}
+
+// ---------- race + movement ----------
+function startRace(id){
+  const dir=id==='diag'?[1,1]:[1,0],target=id==='diag'?[100,100]:[100,0];
+  const dist=len(target),tA=dist/len(raw(dir,S)),tB=dist/len(norm(dir,S));
+  race={id,dir,target,dist,tA,tB,t:0,mult:Math.max(4,Math.max(tA,tB)/6)};
+  inspect=dir.slice();
+  if(reduce.matches) race.t=Math.max(tA,tB);
+  applyRace();readouts();draw();
+}
+function applyRace(){
+  const r=race,va=raw(r.dir,S),vb=norm(r.dir,S);
+  const ta=Math.min(r.t,r.tA),tb=Math.min(r.t,r.tB);
+  A=r.t>=r.tA?r.target.slice():[va[0]*ta,va[1]*ta];
+  B=r.t>=r.tB?r.target.slice():[vb[0]*tb,vb[1]*tb];
+  trailA=[[0,0],A.slice()];trailB=[[0,0],B.slice()];
+}
+function resetAll(){race=null;A=[0,0];B=[0,0];trailA=[[0,0]];trailB=[[0,0]];readouts();draw();}
+function push(t,p){const q=t[t.length-1];if(Math.hypot(q[0]-p[0],q[1]-p[1])>0.6)t.push(p.slice());if(t.length>4000)t.shift();}
+const cl=v=>Math.min(100,Math.max(0,v));
+
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  let moved=false;
+  if(race&&race.t<Math.max(race.tA,race.tB)){race.t=Math.min(Math.max(race.tA,race.tB),race.t+dt*race.mult);applyRace();moved=true;}
+  const inp=liveInput(now);
+  if(len(inp)>EPS){
+    if(race){race=null;trailA=[A.slice()];trailB=[B.slice()];readouts();}
+    const va=raw(inp,S),vb=norm(inp,S),k=dt*FREE_MULT;
+    A=[cl(A[0]+va[0]*k),cl(A[1]+va[1]*k)];B=[cl(B[0]+vb[0]*k),cl(B[1]+vb[1]*k)];
+    push(trailA,A);push(trailB,B);moved=true;
+  }
+  if(moved)drawArena();
+  setClock();
+  requestAnimationFrame(frame);
+}
+
+function draw(){drawArena();drawSpace();setClock();}
+
+// ---------- input events ----------
+const KEYS={ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight',w:'w',a:'a',s:'s',d:'d',W:'w',A:'a',S:'s',D:'d'};
+function nudgeStick(k,big){
+  const st=big?.1:.05,m={ArrowUp:[0,1],w:[0,1],ArrowDown:[0,-1],s:[0,-1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[k];
+  setStick(stick[0]+m[0]*st,stick[1]+m[1]*st);
+}
+function onKeyDown(e){
+  const k=KEYS[e.key];if(!k)return;e.preventDefault();
+  if(analog){nudgeStick(k,e.shiftKey);return;}
+  held.add(k);inspect=keyInput();readouts();drawSpace();
+}
+function onKeyUp(e){const k=KEYS[e.key];if(!k)return;held.delete(k);}
+$('arena').addEventListener('keydown',onKeyDown);$('arena').addEventListener('keyup',onKeyUp);
+$('arena').addEventListener('blur',()=>held.clear());
+$('space').addEventListener('keydown',e=>{const k=KEYS[e.key];if(!k)return;e.preventDefault();
+  if(analog){nudgeStick(k,e.shiftKey);return;}
+  // digital: arrows pick the inspected direction
+  const m={ArrowUp:[0,1],w:[0,1],ArrowDown:[0,-1],s:[0,-1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[k];
+  const dirs=[[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+  let i=dirs.findIndex(d=>d[0]===inspect[0]&&d[1]===inspect[1]);if(i<0)i=0;
+  i=(i+(m[0]+m[1]>0?1:-1)+8)%8;inspect=dirs[i].slice();readouts();drawSpace();});
+
+// pad
+document.querySelectorAll('.pad button').forEach(b=>{
+  const v=[+b.dataset.x,+b.dataset.y];
+  const on=hold=>{if(analog)setAnalog(false);padHeld={v,hold};inspect=v.slice();b.classList.add('on');readouts();drawSpace();};
+  const off=()=>{if(padHeld&&padHeld.v===v)padHeld.hold=false;b.classList.remove('on');};
+  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);on(true);});
+  b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('lostpointercapture',off);
+  b.addEventListener('click',e=>{if(e.detail===0){on(false);pulseUntil=performance.now()+600;setTimeout(()=>b.classList.remove('on'),600);}});
+});
+
+// diagram pointer: pick arrows or drag stick
+function spacePoint(e){const r=$('space').getBoundingClientRect(),G=spaceGeo;return [(e.clientX-r.left-G.cx)/G.sc,-(e.clientY-r.top-G.cy)/G.sc];}
+let dragging=false;
+$('space').addEventListener('pointerdown',e=>{if(!spaceGeo)return;const p=spacePoint(e);
+  if(analog){dragging=true;$('space').setPointerCapture(e.pointerId);setStick(p[0],p[1]);return;}
+  const dirs=[[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+  let best=null,bd=1e9;dirs.forEach(d=>{const t=RULES[mode](d,1),dd=Math.hypot(t[0]-p[0],t[1]-p[1]);if(dd<bd){bd=dd;best=d;}});
+  inspect=len(p)<.25?[0,0]:best.slice();readouts();drawSpace();});
+$('space').addEventListener('pointermove',e=>{if(dragging){const p=spacePoint(e);setStick(p[0],p[1]);}});
+$('space').addEventListener('pointerup',()=>dragging=false);$('space').addEventListener('pointercancel',()=>dragging=false);
+
+function setStick(x,y){
+  x=Math.round(Math.min(1,Math.max(-1,x))*100)/100;y=Math.round(Math.min(1,Math.max(-1,y))*100)/100;
+  stick=[x,y];$('sx').value=x;$('sy').value=y;$('osx').textContent=f2(x);$('osy').textContent=f2(y);
+  if(analog){inspect=stick;readouts();drawSpace();}
+}
+$('sx').addEventListener('input',e=>setStick(+e.target.value,stick[1]));
+$('sy').addEventListener('input',e=>setStick(stick[0],+e.target.value));
+document.querySelectorAll('#stickWrap .chip').forEach(b=>b.addEventListener('click',()=>setStick(+b.dataset.sx,+b.dataset.sy)));
+
+function setAnalog(on){
+  analog=on;$('analog').checked=on;$('stickWrap').hidden=!on;held.clear();
+  if(on){if(race){race=null;}inspect=stick;}else{inspect=[1,1];}
+  readouts();draw();
+}
+$('analog').addEventListener('change',e=>setAnalog(e.target.checked));
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
+  mode=b.dataset.mode;document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));readouts();drawSpace();}));
+$('speed').addEventListener('input',e=>{S=+e.target.value;if(race){const id=race.id;startRace(id);}else readouts();});
+$('raceDiag').addEventListener('click',()=>{if(analog)setAnalog(false);startRace('diag');});
+$('raceWall').addEventListener('click',()=>{if(analog)setAnalog(false);startRace('wall');});
+$('reset').addEventListener('click',()=>{if(analog)setAnalog(false);inspect=[1,1];resetAll();});
+
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+
+// First screen: the finished corner-to-corner race, so the gap is visible before any input.
+startRace('diag');race.t=Math.max(race.tA,race.tB);applyRace();readouts();draw();
+requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
+// test hook
+window.__w12={setStick,setAnalog,startRace,setSpeed:v=>{$('speed').value=v;S=v;readouts();},setInspect:v=>{inspect=v;readouts();drawSpace();},state:()=>({A,B,race,inspect,S})};
+})();
+</script>
+</body>
+</html>

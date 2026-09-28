@@ -22,15 +22,15 @@ What a game is, how its parts produce experience, and how designers test ideas c
 | 4 | MDA: mechanics, dynamics, aesthetics | _todo_ | _todo_ |
 | 5 | Player experience goals and the 8 kinds of fun | _todo_ | _todo_ |
 | 6 | Paper prototyping I: cards, dice, boards | _todo_ | _todo_ |
-| 7 | Playtesting method: observe, don't explain | _todo_ | _todo_ |
+| 7 | Playtesting method: observe, don't explain | [lecture](lectures/w07-playtesting-observe-dont-explain.md) | _todo_ |
 | 8 | Iteration loops and kill-your-darlings | _todo_ | _todo_ |
 | 9 | Choice and meaningful decisions (Sid Meier's 'interesting decisions') | _todo_ | _todo_ |
 | 10 | Chance vs skill; the role of randomness | _todo_ | _todo_ |
 | 11 | Balance intuition: dominant strategies and how to spot them | _todo_ | _todo_ |
 | 12 | Feedback: juice, clarity, readability | _todo_ | _todo_ |
-| 13 | Genres as clusters of mechanics | _todo_ | _todo_ |
+| 13 | Genres as clusters of mechanics | [lecture](lectures/w13-genres-as-clusters-of-mechanics.md) | _todo_ |
 | 14 | Design documents: one-pagers and pitch | _todo_ | _todo_ |
-| 15 | Final: paper game showcase and playtest report | _todo_ | _todo_ |
+| 15 | Final: paper game showcase and playtest report | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

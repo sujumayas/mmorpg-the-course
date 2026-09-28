@@ -30,7 +30,7 @@ First programming course, taught entirely through small games: variables to game
 | 12 | Debugging: breakpoints, logging, rubber-ducking | _todo_ | _todo_ |
 | 13 | Randomness: spawning and procedural variety | _todo_ | _todo_ |
 | 14 | Polish pass: sound, particles, screen shake | _todo_ | _todo_ |
-| 15 | Final: arcade game release | _todo_ | _todo_ |
+| 15 | Final: arcade game release | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

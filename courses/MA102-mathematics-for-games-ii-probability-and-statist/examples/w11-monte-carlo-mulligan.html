@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monte Carlo Mulligan — MA102 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.insight{margin:14px 0 0;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:5px solid var(--steel);font-family:var(--serif);font-size:1.03rem}
+.insight b{font-family:var(--sans);font-variant-numeric:tabular-nums}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;margin-top:16px}
+.controls{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:flex-end}
+.group{display:flex;flex-direction:column;gap:5px;min-width:0}
+.glabel{font-weight:600;font-size:.88rem}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:600 .9rem var(--sans);padding:8px 13px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.runs{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.btn.primary{background:var(--steel);color:var(--paper)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.seed input{font:600 .95rem var(--sans);width:7.5em;padding:7px 9px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.check{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem;cursor:pointer;min-height:36px}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px}
+@media (min-width:900px){.views{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:320px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.hand{display:flex;flex-direction:column;gap:10px}
+.hgroup{display:flex;flex-direction:column;gap:4px}
+.hgroup .cap{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+.cards{display:flex;flex-wrap:wrap;gap:6px}
+.card{width:36px;height:50px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);display:flex;align-items:center;justify-content:center;font:700 1.05rem var(--sans);color:var(--ink-soft)}
+.card.key{background:var(--ochre);border-color:var(--ochre);color:var(--paper)}
+.hgroup.tossed .card{opacity:.38;border-style:dashed}
+.result{font-weight:700;font-variant-numeric:tabular-nums}
+.result.yes{color:var(--moss)}.result.no{color:var(--blood)}
+.tally{margin-top:12px;padding-top:10px;border-top:1px solid var(--grid);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:18px 0 4px}
+.sub{font-size:.86rem;color:var(--ink-soft);margin:0 0 6px;max-width:70ch}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:560px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.yes{color:var(--moss);font-weight:700}td.no{color:var(--blood);font-weight:700}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA102 Mathematics for Games II · Week 11 · Worked example</p>
+  <h1>Monte Carlo: how often does a hard mulligan find your key card?</h1>
+  <p class="lede">A 30-card deck holds two copies of a key card. Each line in the plot is one simulation adding trials. Early on the estimates scatter wildly. As trials pile up, every run closes in on the exact answer, and the 95% band shrinks like 1/&radic;n.</p>
+  <p class="insight" id="insight" aria-live="polite"></p>
+</header>
+
+<section class="panel" aria-label="Simulation controls and views">
+  <div class="controls">
+    <div class="group">
+      <span class="glabel" id="lTurn">Turn order</span>
+      <div class="seg" role="group" aria-labelledby="lTurn">
+        <button type="button" id="bFirst" aria-pressed="true">Going first</button>
+        <button type="button" id="bSecond" aria-pressed="false">Going second</button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="glabel" id="lMul">Hard mulligan</span>
+      <div class="seg" role="group" aria-labelledby="lMul">
+        <button type="button" id="bMulOn" aria-pressed="true">On</button>
+        <button type="button" id="bMulOff" aria-pressed="false">Off</button>
+      </div>
+    </div>
+    <div class="group seed">
+      <label class="glabel" for="seed">Seed</label>
+      <input id="seed" type="number" inputmode="numeric" step="1" value="42">
+    </div>
+    <label class="check"><input type="checkbox" id="overlay" checked> Show 20 independent runs (seeds 1-20)</label>
+  </div>
+  <div class="runs" style="margin-top:12px" role="group" aria-label="Run trials">
+    <button type="button" class="btn" data-run="1">Deal 1</button>
+    <button type="button" class="btn" data-run="100">Run 100</button>
+    <button type="button" class="btn" data-run="10000">Run 10,000</button>
+    <button type="button" class="btn primary" data-run="1000000">Run 1,000,000</button>
+    <button type="button" class="btn" id="reset">Reset</button>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Latest trial<small>Opening hand, any mulligan, then the draws for turns 1 to 3. K is a copy of the key card.</small></figcaption>
+      <div class="hand" id="hand" aria-live="off"></div>
+      <div class="tally">
+        <div class="stat" style="--c:var(--ochre)"><b id="sHits">0</b><span>hits (key card by turn 3)</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="sN">0</b><span>trials</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="sP">—</b><span>estimate p&#770;</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="sM">—</b><span>95% margin, &plusmn;1.96 SE</span></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Running estimate vs number of trials<small>Log scale from 10 to 1,000,000 trials. Shaded band is p&#770; &plusmn; 1.96 &times; &radic;(p&#770;(1&minus;p&#770;)/n).</small></figcaption>
+      <canvas id="plot" role="img" aria-label="Running estimate with 95 percent band converging on the exact value"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>Your run (seed <span id="lgSeed">42</span>)</span>
+        <span><i style="background:var(--steel);opacity:.22"></i>95% band</span>
+        <span><i style="background:var(--ochre);height:3px"></i>Exact value (dashed)</span>
+        <span id="lgOv"><i style="background:var(--ink-soft);height:2px;opacity:.6"></i>20 other seeds</span>
+      </div>
+    </figure>
+  </div>
+
+  <h2>Your run at each checkpoint</h2>
+  <p class="sub">Copy these into the lecture's tables. Exact values come from the complement rule, not the simulation.</p>
+  <div class="table-wrap">
+    <table aria-label="Estimate at checkpoints">
+      <thead><tr><th>Trials n</th><th>Hits</th><th>p&#770;</th><th>SE</th><th>95% margin</th><th>Exact</th><th>Exact inside band?</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <h2>The ruler: margin of error before you run anything</h2>
+  <p class="sub">1.96 &times; &radic;(p(1&minus;p)/n), in percentage points. Ten times the trials buys only about a third of the margin.</p>
+  <div class="table-wrap">
+    <table aria-label="Margin of error by number of trials">
+      <thead><tr><th>Trials n</th><th>&plusmn;margin, p = 0.5</th><th id="rulerHead">&plusmn;margin, p = exact</th><th>Trials to halve it</th></tr></thead>
+      <tbody id="ruler"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Rules model: Hearthstone Wiki, "Mulligan" (current rules, 2026). 30-card deck, two copies of the key card, 3 opening cards going first and 4 going second, replacements drawn before the tossed cards are shuffled back, one draw per turn including the first player's turn 1. The generator is mulberry32, so seed 42 here gives different digits from the lecture's Python runs. Both must land inside their margins around the same exact values. Method history: Eckhardt (1987), <i>Los Alamos Science</i> 15.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NMAX=1e6;
+
+// ---------- exact values ----------
+function C(n,k){let r=1;for(let i=0;i<k;i++)r=r*(n-i)/(i+1);return r;}
+function exact(first,mul){
+  const k=first?3:4;
+  const noMul=1-C(28,k+3)/C(30,k+3);
+  if(!mul)return noMul;
+  const p0=1-C(28,k)/C(30,k);
+  const missRepl=C(28-k,k)/C(30-k,k);       // both copies still in the 30-k card deck
+  const missDraw=C(28-k,3)/C(30-k,3);       // tossed cards return: 30-k cards, both copies
+  return p0+(1-p0)*(1-missRepl*missDraw);
+}
+
+// ---------- seeded generator (mulberry32) ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// ---------- checkpoints on a log grid ----------
+const CP=[];{const s=new Set();for(let i=0;i<=200;i++)s.add(Math.round(Math.pow(10,1+i/40)));[...s].sort((a,b)=>a-b).forEach(v=>CP.push(v));}
+const TABLE_N=[10,100,1000,10000,100000,1000000];
+
+// ---------- one run ----------
+function makeRun(seed){
+  const deck=new Int8Array(30);deck[0]=1;deck[1]=1;
+  return {seed,rng:mulberry32(seed),deck,pool:new Int8Array(30),n:0,hits:0,pts:[],ci:0,last:null};
+}
+// Partial Fisher-Yates: positions from..to-1 become uniform draws from positions from..len-1.
+function draw(arr,len,from,to,rng){for(let i=from;i<to;i++){const j=i+Math.floor(rng()*(len-i));const t=arr[i];arr[i]=arr[j];arr[j]=t;}}
+function trial(run,first,mul,record){
+  const d=run.deck,rng=run.rng,k=first?3:4;
+  draw(d,30,0,k,rng);                    // opening hand = d[0..k)
+  let hasKey=false;for(let i=0;i<k;i++)if(d[i])hasKey=true;
+  let rec=null;
+  if(record)rec={open:Array.from(d.slice(0,k)),tossed:false,repl:[],draws:[]};
+  let win;
+  if(mul&&!hasKey){
+    draw(d,30,k,2*k,rng);                // replacements from the top of the rest
+    let got=false;for(let i=k;i<2*k;i++)if(d[i])got=true;
+    // tossed cards join what is left of the deck, which is shuffled; draw 3
+    const p=run.pool;let m=0;
+    for(let i=2*k;i<30;i++)p[m++]=d[i];
+    for(let i=0;i<k;i++)p[m++]=d[i];
+    draw(p,m,0,3,rng);
+    for(let i=0;i<3;i++)if(p[i])got=true;
+    // write the pool back so the deck stays a permutation of 30 cards
+    for(let i=0;i<m;i++)d[i<30-2*k?2*k+i:i-(30-2*k)]=p[i];
+    win=got;
+    if(rec){rec.tossed=true;rec.repl=Array.from(d.slice(k,2*k));rec.draws=Array.from(p.slice(0,3));}
+  }else{
+    draw(d,30,k,k+3,rng);
+    win=hasKey;for(let i=k;i<k+3;i++)if(d[i])win=true;
+    if(rec)rec.draws=Array.from(d.slice(k,k+3));
+  }
+  run.n++;if(win)run.hits++;
+  while(run.ci<CP.length&&CP[run.ci]===run.n){run.pts.push([run.n,run.hits]);run.ci++;}
+  if(rec){rec.win=win;run.last=rec;}
+}
+function advance(run,to,first,mul){
+  while(run.n<to-1)trial(run,first,mul,false);
+  if(run.n<to)trial(run,first,mul,true);
+}
+
+// ---------- state ----------
+let first=true,mul=true,seed=42,showOv=true;
+let main,ov=[],target=0,job=0,animating=false;
+function fresh(){main=makeRun(seed>>>0);ov=[];for(let s=1;s<=20;s++)ov.push(makeRun(s));}
+
+function runTo(t){
+  target=Math.min(NMAX,t);
+  const my=++job;
+  const slow=!reduced&&target-main.n<=100&&target-main.n>1;
+  animating=true;setButtons();
+  function step(){
+    if(my!==job)return;
+    const start=performance.now();
+    const runs=showOv?[main,...ov]:[main];
+    if(slow){
+      const to=Math.min(target,main.n+2);
+      runs.forEach(r=>advance(r,to,first,mul));
+    }else{
+      do{
+        let r=runs[0];for(const x of runs)if(x.n<r.n)r=x;
+        if(r.n>=target)break;
+        advance(r,Math.min(target,r.n+5000),first,mul);
+      }while(performance.now()-start<14);
+    }
+    render(false);
+    const done=main.n>=target&&(!showOv||ov.every(r=>r.n>=target));
+    if(done){animating=false;render(true);setButtons();}
+    else requestAnimationFrame(step);
+  }
+  step();
+}
+function runSync(t){
+  target=t;advance(main,t,first,mul);if(showOv)ov.forEach(r=>advance(r,t,first,mul));animating=false;render(true);setButtons();
+}
+function restart(){
+  const n=main&&main.n>0?main.n:10000;job++;fresh();runSync(n);
+}
+
+// ---------- rendering ----------
+const pct=v=>(v*100).toFixed(1)+'%';
+function stats(n,h){const p=h/n,se=Math.sqrt(p*(1-p)/n);return {p,se,m:1.96*se};}
+function pts(v){return v>=1?v.toFixed(1):v.toFixed(2);}
+
+function renderHand(){
+  const r=main.last,h=$('hand');
+  if(!r){h.innerHTML='<p class="sub">No trials yet. Press Deal 1.</p>';return;}
+  const cards=a=>a.map(c=>`<span class="card${c?' key':''}" aria-label="${c?'key card':'other card'}">${c?'K':''}</span>`).join('');
+  let s='';
+  if(r.tossed){
+    s+=`<div class="hgroup tossed"><span class="cap">Opening hand: no K, so all ${r.open.length} shuffled back</span><div class="cards">${cards(r.open)}</div></div>`;
+    s+=`<div class="hgroup"><span class="cap">Replacements from the top</span><div class="cards">${cards(r.repl)}</div></div>`;
+  }else{
+    s+=`<div class="hgroup"><span class="cap">Opening hand${mul?' (kept: holds a K)':' (no mulligan)'}</span><div class="cards">${cards(r.open)}</div></div>`;
+  }
+  s+=`<div class="hgroup"><span class="cap">Draws for turns 1, 2, 3</span><div class="cards">${cards(r.draws)}</div></div>`;
+  s+=`<div>Trial ${fmt(main.n)}: key card by turn 3? <span class="result ${r.win?'yes':'no'}">${r.win?'Yes':'No'}</span></div>`;
+  h.innerHTML=s;
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function drawPlot(){
+  const {g,w,h}=setupCanvas($('plot'));
+  const pad={l:44,r:12,t:14,b:30},Y0=0.2,Y1=0.8;
+  const X=n=>pad.l+(w-pad.l-pad.r)*(Math.log10(n)-1)/5;
+  const Y=p=>pad.t+(h-pad.t-pad.b)*(1-(p-Y0)/(Y1-Y0));
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),ochre=css('--ochre');
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let v=2;v<=8;v++){const y=Y(v/10);g.strokeStyle=grid;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText((v/10).toFixed(1),pad.l-6,y);}
+  const xl=['10','100','1k','10k','100k','1M'];
+  for(let i=0;i<=5;i++){const x=X(Math.pow(10,i+1));g.strokeStyle=grid;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    g.fillStyle=soft;g.textAlign=i===0?'left':i===5?'right':'center';g.textBaseline='top';g.fillText(xl[i],x,h-pad.b+6);}
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  const series=r=>{const a=r.pts.slice();if(r.n>=10&&(!a.length||a[a.length-1][0]!==r.n))a.push([r.n,r.hits]);return a;};
+  // overlay runs
+  if(showOv){g.strokeStyle=soft;g.globalAlpha=.45;g.lineWidth=1.1;
+    for(const r of ov){const a=series(r);if(a.length<2)continue;g.beginPath();a.forEach(([n,hh],i)=>{const x=X(n),y=Y(hh/n);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();}
+    g.globalAlpha=1;}
+  // band + line for main run
+  const a=series(main);
+  if(a.length>=1){
+    g.fillStyle=steel;g.globalAlpha=.2;g.beginPath();
+    a.forEach(([n,hh],i)=>{const s=stats(n,hh);const x=X(n),y=Y(s.p+s.m);i?g.lineTo(x,y):g.moveTo(x,y);});
+    for(let i=a.length-1;i>=0;i--){const [n,hh]=a[i],s=stats(n,hh);g.lineTo(X(n),Y(s.p-s.m));}
+    g.closePath();g.fill();g.globalAlpha=1;
+    g.strokeStyle=steel;g.lineWidth=2.5;g.beginPath();a.forEach(([n,hh],i)=>{const x=X(n),y=Y(hh/n);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+    const [n,hh]=a[a.length-1];g.fillStyle=steel;g.beginPath();g.arc(X(n),Y(hh/n),5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  }
+  // exact line
+  const ex=exact(first,mul);
+  g.strokeStyle=ochre;g.lineWidth=2;g.setLineDash([7,5]);g.beginPath();g.moveTo(pad.l,Y(ex));g.lineTo(w-pad.r,Y(ex));g.stroke();g.setLineDash([]);
+  g.restore();
+  g.font='600 12px '+css('--sans');g.fillStyle=ochre;g.textAlign='right';g.textBaseline='bottom';
+  const ly=Y(ex)-5;g.fillText('exact '+ex.toFixed(4),w-pad.r-2,ly);
+  g.fillStyle=soft;g.font='12px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('trials (log)',pad.l+4,pad.t+2);
+}
+
+function render(full){
+  const ex=exact(first,mul);
+  $('sHits').textContent=fmt(main.hits);$('sN').textContent=fmt(main.n);
+  if(main.n>0){const s=stats(main.n,main.hits);$('sP').textContent=s.p.toFixed(4);$('sM').textContent='±'+s.m.toFixed(4);}
+  else{$('sP').textContent='—';$('sM').textContent='—';}
+  renderHand();drawPlot();
+  // checkpoint table
+  const rows=[];const ns=TABLE_N.filter(n=>n<=main.n);if(main.n>0&&!ns.includes(main.n))ns.push(main.n);
+  for(const n of ns){
+    const cp=n===main.n?[n,main.hits]:main.pts.find(p=>p[0]===n);if(!cp)continue;
+    const s=stats(cp[0],cp[1]),inside=Math.abs(s.p-ex)<=s.m;
+    rows.push(`<tr class="${n===main.n?'here':''}"><td>${fmt(n)}</td><td>${fmt(cp[1])}</td><td>${s.p.toFixed(4)}</td><td>${s.se.toFixed(4)}</td><td>±${s.m.toFixed(4)}</td><td>${ex.toFixed(4)}</td><td class="${inside?'yes':'no'}">${inside?'yes':'no'}</td></tr>`);
+  }
+  $('tbody').innerHTML=rows.join('')||'<tr><td colspan="7">No trials yet.</td></tr>';
+  // ruler
+  $('rulerHead').textContent='±margin, p = '+ex.toFixed(4);
+  $('ruler').innerHTML=[100,1000,10000,100000,1000000].map(n=>{
+    const m5=1.96*Math.sqrt(.25/n),me=1.96*Math.sqrt(ex*(1-ex)/n);
+    return `<tr><td>${fmt(n)}</td><td>±${pts(m5*100)} pts (±${m5.toFixed(n>=10000?4:3)})</td><td>±${pts(me*100)} pts (±${me.toFixed(n>=10000?4:3)})</td><td>${fmt(4*n)}</td></tr>`;}).join('');
+  if(full)insight();
+}
+function insight(){
+  const ex=exact(first,mul),who=first?'going first':'going second',how=mul?'with a hard mulligan':'with no mulligan';
+  let s;
+  if(main.n===0){s=`Exact answer ${who} ${how}: <b>${ex.toFixed(4)}</b>. Deal a hand or run trials to estimate it.`;}
+  else{
+    const st=stats(main.n,main.hits),inside=Math.abs(st.p-ex)<=st.m;
+    s=`After <b>${fmt(main.n)}</b> trials ${who} ${how}, the estimate is <b>${st.p.toFixed(4)} ± ${st.m.toFixed(4)}</b>. The exact answer, <b>${ex.toFixed(4)}</b>, is ${inside?'inside':'outside'} the band. `;
+    if(showOv&&ov.every(r=>r.n===main.n)){
+      const k=ov.filter(r=>{const t=stats(r.n,r.hits);return Math.abs(t.p-ex)<=t.m;}).length;
+      s+=`${k} of the 20 other seeds also cover it. `;
+    }
+    s+=main.n<NMAX?`Halving the band takes <b>${fmt(4*main.n)}</b> trials, four times as many.`:`At a million trials the band is about ±0.1 points. Another decimal would take 100 million.`;
+  }
+  $('insight').innerHTML=s;
+}
+function setButtons(){
+  document.querySelectorAll('[data-run]').forEach(b=>b.disabled=main.n>=NMAX);
+}
+
+// ---------- events ----------
+function seg(on,off,val,set){on.addEventListener('click',()=>{if(val())return;on.setAttribute('aria-pressed','true');off.setAttribute('aria-pressed','false');set();restart();});}
+seg($('bFirst'),$('bSecond'),()=>first,()=>{first=true;});
+seg($('bSecond'),$('bFirst'),()=>!first,()=>{first=false;});
+seg($('bMulOn'),$('bMulOff'),()=>mul,()=>{mul=true;});
+seg($('bMulOff'),$('bMulOn'),()=>!mul,()=>{mul=false;});
+$('seed').addEventListener('change',e=>{const v=parseInt(e.target.value,10);seed=Number.isFinite(v)?v:42;e.target.value=seed;$('lgSeed').textContent=seed;restart();});
+$('overlay').addEventListener('change',e=>{showOv=e.target.checked;$('lgOv').hidden=!showOv;if(showOv&&main.n>0)runTo(main.n);else render(true);});
+document.querySelectorAll('[data-run]').forEach(b=>b.addEventListener('click',()=>{
+  const add=+b.dataset.run,base=Math.max(main.n,animating?target:main.n);
+  if(add===1&&!animating){runSync(Math.min(NMAX,main.n+1));return;}
+  runTo(base+add);
+}));
+$('reset').addEventListener('click',()=>{job++;fresh();target=0;animating=false;render(true);setButtons();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(drawPlot,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawPlot);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawPlot);
+
+// expose for tests
+window.__mc={exact,makeRun,advance,stats,get main(){return main;},get ov(){return ov;}};
+
+fresh();runSync(10000);
+})();
+</script>
+</body>
+</html>

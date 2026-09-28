@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monte Carlo DPS · MMO303 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bar .lbl{font-weight:600;font-size:.9rem;margin-right:4px}
+.chip,.btn{font:600 .88rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:260px}
+.figstat{font-size:.92rem;margin:6px 0 0;font-variant-numeric:tabular-nums}
+.figstat b{font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.nrow{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:end;margin-top:14px}
+@media (max-width:760px){.nrow{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 8px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:560px;width:100%}
+table.narrow{min-width:0}
+caption{text-align:left;font-weight:600;font-size:.9rem;padding-bottom:4px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink-soft);font-size:.84rem}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:baseline}
+.ctl{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media (max-width:860px){.ctl{grid-template-columns:1fr}}
+.ctl fieldset{border:none;box-shadow:inset 0 4px 0 var(--c,var(--ink));padding:14px 0 0;margin:0;min-width:0}
+.ctl legend{float:left;width:100%;font-family:var(--serif);font-weight:600;padding:0;margin-bottom:6px}
+.ctl legend+*{clear:both}
+.seedrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px}
+input[type=number]{font:600 .95rem var(--sans);width:7em;padding:6px 8px;border:1.5px solid var(--ink);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink)}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.92rem;margin-top:10px;justify-content:flex-start}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:4px 0 0}
+.note{font-family:var(--serif);font-size:.98rem;margin:10px 0 0;max-width:72ch}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO303 Game Balance I · Week 13 · Worked example</p>
+  <h1>One fight lies. A thousand fights don&rsquo;t.</h1>
+  <p class="lede">The Duelist really is 3.2% stronger. Yet on the left, single fights overlap so much that the Marksman wins about one in three. On the right, the uncertainty of each average shrinks as 1&nbsp;/&nbsp;&radic;N until the two bands pull apart for good.</p>
+</header>
+
+<section class="panel" aria-label="Simulation">
+  <div class="bar" role="group" aria-label="Presets">
+    <span class="lbl">Preset</span>
+    <button class="chip" data-preset="default" aria-pressed="true">Lecture default</button>
+    <button class="chip" data-preset="equal" aria-pressed="false">Equal means</button>
+    <button class="chip" data-preset="dice" aria-pressed="false">In-class dice</button>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>One fight at a time<small>Single-fight DPS for every fight run so far. The width never shrinks.</small></figcaption>
+      <canvas id="cHist" role="img" aria-label="Overlaid histograms of single-fight DPS for the Duelist and the Marksman"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>A · Duelist</span>
+        <span><i style="background:var(--steel)"></i>B · Marksman</span>
+        <span id="binNote">bin 1 DPS</span>
+      </div>
+      <p class="figstat" id="beatStat" aria-live="polite">—</p>
+    </figure>
+    <figure>
+      <figcaption>The average over N fights<small>Running mean with its 95% band, N on a log scale</small></figcaption>
+      <canvas id="cConv" role="img" aria-label="Running mean DPS of each class with 95 percent bands versus number of fights"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood);opacity:.55"></i>A: μ̂ ± 1.96 s/√N</span>
+        <span><i style="background:var(--steel);opacity:.55"></i>B: μ̂ ± 1.96 s/√N</span>
+      </div>
+      <p class="figstat" id="sepStat" aria-live="polite">—</p>
+    </figure>
+  </div>
+
+  <div class="nrow">
+    <div>
+      <label for="nSlider">Fights per class run so far <output id="oN">0</output></label>
+      <input id="nSlider" type="range" min="0" max="1000" step="1" value="0" aria-describedby="nHint">
+      <p class="hint" id="nHint">Log scale. The seed fixes the sequence, so fight 17 is always the same fight.</p>
+    </div>
+    <div class="bar" role="group" aria-label="Run fights">
+      <button class="btn primary" id="run1">Run 1 fight</button>
+      <button class="btn" id="run10">Run 10</button>
+      <button class="btn" id="run100">Run 100</button>
+      <button class="btn" id="runAll">Run to 5,000</button>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="rGap">—</b><span>true gap μ<sub>A</sub> − μ<sub>B</sub></span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSd">—</b><span>σ<sub>diff</sub> = √(σ<sub>A</sub>² + σ<sub>B</sub>²)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rNeed">—</b><span id="rNeedLbl">fights needed, (1.96 σ<sub>diff</sub> / gap)²</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rWrong">—</b><span id="rWrongLbl">chance the averages rank wrong</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Per class: theory next to this run</caption>
+      <thead><tr><th>Class</th><th>μ (theory)</th><th>σ (theory)</th><th>μ̂ (sim)</th><th>s (sim)</th><th>SE = s/√N</th><th>95% half-width</th></tr></thead>
+      <tbody id="tClass"></tbody>
+    </table>
+  </div>
+
+  <div class="table-wrap">
+    <table class="narrow">
+      <caption>The difference A − B</caption>
+      <tbody id="tDiff"></tbody>
+    </table>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>How many fights? (normal approximation, independent runs)</caption>
+      <thead><tr><th>Fights per class N</th><th>SE of A mean</th><th>95% half-width, A</th><th>SE of difference</th><th>Chance of wrong ranking</th></tr></thead>
+      <tbody id="tN"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" aria-label="Class and fight settings">
+  <h2>Settings</h2>
+  <div class="ctl">
+    <fieldset style="--c:var(--blood)">
+      <legend>A · Duelist</legend>
+      <label for="dA">Base damage D <output id="oDA"></output></label>
+      <input id="dA" type="range" min="50" max="200" step="0.1">
+      <label for="pA">Crit chance p <output id="oPA"></output></label>
+      <input id="pA" type="range" min="0" max="100" step="1">
+      <label for="mA">Crit multiplier m <output id="oMA"></output></label>
+      <input id="mA" type="range" min="1" max="3" step="0.1">
+    </fieldset>
+    <fieldset style="--c:var(--steel)">
+      <legend>B · Marksman</legend>
+      <label for="dB">Base damage D <output id="oDB"></output></label>
+      <input id="dB" type="range" min="50" max="200" step="0.1">
+      <label for="pB">Crit chance p <output id="oPB"></output></label>
+      <input id="pB" type="range" min="0" max="100" step="1">
+      <label for="mB">Crit multiplier m <output id="oMB"></output></label>
+      <input id="mB" type="range" min="1" max="3" step="0.1">
+    </fieldset>
+    <fieldset style="--c:var(--ochre)">
+      <legend>Fight</legend>
+      <label for="nHits">Hits per fight n <output id="oNH"></output></label>
+      <input id="nHits" type="range" min="5" max="100" step="1">
+      <label for="tLen">Fight length T (s) <output id="oT"></output></label>
+      <input id="tLen" type="range" min="5" max="300" step="1">
+      <div class="seedrow">
+        <label for="seed" style="display:inline">Seed</label>
+        <input id="seed" type="number" min="0" max="4294967295" step="1" value="13">
+      </div>
+      <label class="check" for="crn"><input id="crn" type="checkbox"> Common random numbers</label>
+      <p class="hint">When on, hit i of fight j uses the same random draw for both classes. Watch the SE of the difference drop.</p>
+    </fieldset>
+  </div>
+  <p class="note">Each hit: draw u from U(0,1), crit if u &lt; p, deal D × m on a crit and D otherwise. Fight DPS = total / T. Theory: μ = nD(1 + p(m − 1)) / T and σ = D(m − 1)&radic;(np(1 − p)) / T. Random numbers come from a seeded mulberry32 generator.</p>
+</section>
+
+<footer>Model and numbers from MMO303 week 13, section 2. SimulationCraft's default of iterating to a target error comes from the SimulationCraft wiki, StatisticalBehaviour. The Duelist and Marksman are generic classes invented for this course.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MAXN=5000;
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+const PRESETS={
+  default:{dA:100,pA:25,mA:2,dB:110,pB:10,mB:2,n:40,T:60},
+  equal:{dA:100,pA:25,mA:2,dB:125/1.1,pB:10,mB:2,n:40,T:60},
+  dice:{dA:100,pA:25,mA:2,dB:110,pB:10,mB:2,n:10,T:15}
+};
+let P=Object.assign({},PRESETS.default), seed=13, crn=false, N=1000, anim=null;
+let fA,fB,meanA,meanB,sdA,sdB,sdD,beat;
+
+// ---------- math ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function erfc(x){const z=Math.abs(x),t=1/(1+0.5*z);
+  const r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));
+  return x>=0?r:2-r;}
+const Phi=z=>0.5*erfc(-z/Math.SQRT2);
+function theory(D,p,m){const n=P.n,T=P.T;return{mu:n*D*(1+p*(m-1))/T,sd:D*(m-1)*Math.sqrt(n*p*(1-p))/T};}
+function pmf(n,p){const out=new Float64Array(n+1);let lc=0;
+  for(let k=0;k<=n;k++){ if(k>0)lc+=Math.log(n-k+1)-Math.log(k);
+    out[k]=(p===0)?(k===0?1:0):(p===1)?(k===n?1:0):Math.exp(lc+k*Math.log(p)+(n-k)*Math.log(1-p)); }
+  return out;}
+function exactBeat(){ // P(B > A) for independent single fights
+  const n=P.n,a=pmf(n,P.pA/100),b=pmf(n,P.pB/100);let w=0;
+  for(let i=0;i<=n;i++){if(a[i]<1e-15)continue;const A=P.dA*(n+(P.mA-1)*i);
+    for(let j=0;j<=n;j++){const B=P.dB*(n+(P.mB-1)*j);if(B>A+1e-9)w+=a[i]*b[j];}}
+  return w;}
+function crnSd(){ // theoretical SD of A-B per fight when both use the same draw
+  const pa=P.pA/100,pb=P.pB/100,a=P.dA*(P.mA-1),b=P.dB*(P.mB-1);
+  const v=a*a*pa*(1-pa)+b*b*pb*(1-pb)-2*a*b*(Math.min(pa,pb)-pa*pb);
+  return Math.sqrt(Math.max(0,P.n*v))/P.T;}
+
+// ---------- simulation: always 5,000 fights, N picks how many are shown ----------
+function simulate(){
+  const rA=mulberry32(seed>>>0), rB=mulberry32((seed^0x9E3779B9)>>>0);
+  const pa=P.pA/100,pb=P.pB/100;
+  fA=new Float64Array(MAXN);fB=new Float64Array(MAXN);
+  for(let j=0;j<MAXN;j++){
+    let sa=0,sb=0;
+    for(let i=0;i<P.n;i++){
+      const ua=rA(), ubRaw=rB(), ub=crn?ua:ubRaw;
+      sa+=P.dA*(ua<pa?P.mA:1); sb+=P.dB*(ub<pb?P.mB:1);
+    }
+    fA[j]=sa/P.T; fB[j]=sb/P.T;
+  }
+  meanA=new Float64Array(MAXN+1);meanB=new Float64Array(MAXN+1);
+  sdA=new Float64Array(MAXN+1);sdB=new Float64Array(MAXN+1);sdD=new Float64Array(MAXN+1);beat=new Int32Array(MAXN+1);
+  let mA=0,mB=0,mD=0,qA=0,qB=0,qD=0,c=0;
+  for(let k=1;k<=MAXN;k++){
+    const a=fA[k-1],b=fB[k-1],d=a-b;
+    let o=mA;mA+=(a-mA)/k;qA+=(a-o)*(a-mA);
+    o=mB;mB+=(b-mB)/k;qB+=(b-o)*(b-mB);
+    o=mD;mD+=(d-mD)/k;qD+=(d-o)*(d-mD);
+    if(b>a+1e-9)c++;
+    meanA[k]=mA;meanB[k]=mB;beat[k]=c;
+    sdA[k]=k>1?Math.sqrt(qA/(k-1)):0;sdB[k]=k>1?Math.sqrt(qB/(k-1)):0;sdD[k]=k>1?Math.sqrt(qD/(k-1)):0;
+  }
+}
+
+// ---------- formatting ----------
+const f=(x,d)=>x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fi=x=>Math.round(x).toLocaleString('en-US');
+function fp(x){ // probability as percent
+  if(x<1e-12)return 'effectively 0';
+  const v=x*100;
+  if(v>=1)return f(v,1)+'%';
+  if(v>=0.001)return f(v,3).replace(/0+$/,'')+'%';
+  return (v.toPrecision(2))+'%';
+}
+
+// ---------- derived ----------
+function stats(){
+  const A=theory(P.dA,P.pA/100,P.mA),B=theory(P.dB,P.pB/100,P.mB);
+  const gap=A.mu-B.mu, sdiff=Math.hypot(A.sd,B.sd);
+  return{A,B,gap,sdiff};
+}
+function bandSd(k,which,S){ // sample SD, theoretical below N=5
+  if(k<5)return which==='A'?S.A.sd:S.B.sd;
+  return which==='A'?sdA[k]:sdB[k];
+}
+function separated(k,S){const hA=1.96*bandSd(k,'A',S)/Math.sqrt(k),hB=1.96*bandSd(k,'B',S)/Math.sqrt(k);return Math.abs(meanA[k]-meanB[k])>hA+hB;}
+function sepPoint(S){
+  if(N<1||!separated(N,S))return null;
+  let k=N;while(k>1&&separated(k-1,S))k--;return k;
+}
+
+// ---------- canvas helpers ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.height};}
+const pad={l:44,r:10,t:12,b:34};
+function niceStep(range,target){const raw=range/target,mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  return [1,2,2.5,5,10].map(m=>m*mag).find(s=>range/s<=target)||mag*10;}
+
+function drawHist(S){
+  const {g,w,h}=setup($('cHist'));g.clearRect(0,0,w,h);
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const spacing=Math.max(P.dA*(P.mA-1),P.dB*(P.mB-1))/P.T;
+  const bw=Math.max(1,Math.ceil(spacing-1e-9));
+  $('binNote').textContent='bin width '+bw+' DPS';
+  let lo=Math.min(S.A.mu-4*S.A.sd,S.B.mu-4*S.B.sd),hi=Math.max(S.A.mu+4*S.A.sd,S.B.mu+4*S.B.sd);
+  if(hi-lo<12){const c=(hi+lo)/2;lo=c-6;hi=c+6;}
+  lo=Math.floor(lo/bw)*bw;hi=Math.ceil(hi/bw)*bw;
+  const nb=Math.round((hi-lo)/bw);
+  const hA=new Array(nb).fill(0),hB=new Array(nb).fill(0);
+  const idx=v=>Math.min(nb-1,Math.max(0,Math.floor((v-lo)/bw+1e-9)));
+  for(let j=0;j<N;j++){hA[idx(fA[j])]++;hB[idx(fB[j])]++;}
+  const pdf=(x,mu,sd)=>sd>0?Math.exp(-0.5*((x-mu)/sd)**2)/(sd*Math.sqrt(2*Math.PI)):0;
+  const peakTheory=Math.max(S.A.sd>0?N*bw*pdf(S.A.mu,S.A.mu,S.A.sd):0,S.B.sd>0?N*bw*pdf(S.B.mu,S.B.mu,S.B.sd):0);
+  let yMax=Math.max(1,...hA,...hB,peakTheory*1.05);
+  const ys=niceStep(yMax,4);yMax=Math.ceil(yMax/ys)*ys;
+  const X=v=>pad.l+pw*(v-lo)/(hi-lo),Y=v=>pad.t+ph*(1-v/yMax);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');
+  for(let v=0;v<=yMax+1e-9;v+=ys){const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fi(v),pad.l-6,y);}
+  const xs=niceStep(hi-lo,Math.max(3,Math.floor(pw/60)));
+  g.textAlign='center';g.textBaseline='top';
+  for(let v=Math.ceil(lo/xs)*xs;v<=hi+1e-9;v+=xs){g.fillText(f(v,xs<1?1:0),X(v),h-pad.b+6);}
+  g.textAlign='right';g.fillText('DPS in one fight',w-pad.r,h-14);
+  g.save();g.translate(12,pad.t+ph/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillText('fights',0,0);g.restore();
+  [[hA,'--blood'],[hB,'--steel']].forEach(([hh,col])=>{
+    g.fillStyle=css(col);g.globalAlpha=.45;
+    for(let b=0;b<nb;b++){if(!hh[b])continue;const x0=X(lo+b*bw),x1=X(lo+(b+1)*bw);g.fillRect(x0+.5,Y(hh[b]),Math.max(1,x1-x0-1),Y(0)-Y(hh[b]));}
+    g.globalAlpha=1;
+  });
+  [[S.A,'--blood'],[S.B,'--steel']].forEach(([T,col])=>{
+    const c=css(col);
+    if(N>0&&T.sd>0){g.strokeStyle=c;g.lineWidth=1.5;g.globalAlpha=.8;g.beginPath();
+      for(let i=0;i<=160;i++){const x=lo+(hi-lo)*i/160,y=N*bw*pdf(x,T.mu,T.sd);i?g.lineTo(X(x),Y(y)):g.moveTo(X(x),Y(y));}
+      g.stroke();g.globalAlpha=1;}
+    g.strokeStyle=c;g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();g.moveTo(X(T.mu),pad.t);g.lineTo(X(T.mu),Y(0));g.stroke();g.setLineDash([]);
+  });
+  if(N===0){g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='middle';g.font='14px '+css('--sans');g.fillText('No fights yet. Press Run 1 fight.',pad.l+pw/2,pad.t+ph/2);}
+}
+
+function drawConv(S,sep){
+  const {g,w,h}=setup($('cConv'));g.clearRect(0,0,w,h);
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const sdm=Math.max(S.A.sd,S.B.sd,0.5);
+  let lo=Math.min(S.A.mu,S.B.mu)-2.3*sdm,hi=Math.max(S.A.mu,S.B.mu)+2.3*sdm;
+  const ys=niceStep(hi-lo,5);lo=Math.floor(lo/ys)*ys;hi=Math.ceil(hi/ys)*ys;
+  const L=Math.log(MAXN);
+  const X=k=>pad.l+pw*Math.log(k)/L,Y=v=>pad.t+ph*(1-(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo));
+  g.font='12px '+css('--sans');g.lineWidth=1;g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');
+  for(let v=lo;v<=hi+1e-9;v+=ys){const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(f(v,ys<1?1:0),pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';
+  [1,10,100,1000,5000].forEach(k=>{const x=X(k);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();if(k===5000){g.textAlign='right';g.fillText(fi(k),x,h-pad.b+6);g.textAlign='center';}else g.fillText(fi(k),x,h-pad.b+6);});
+  g.textAlign='right';g.fillText('fights N',w-pad.r,h-12);
+  g.save();g.translate(12,pad.t+ph/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillText('average DPS',0,0);g.restore();
+  g.save();g.beginPath();g.rect(pad.l,pad.t,pw,ph);g.clip();
+  [[S.A,'--blood'],[S.B,'--steel']].forEach(([T,col])=>{g.strokeStyle=css(col);g.globalAlpha=.5;g.setLineDash([3,4]);g.beginPath();g.moveTo(pad.l,Y(T.mu));g.lineTo(w-pad.r,Y(T.mu));g.stroke();g.setLineDash([]);g.globalAlpha=1;});
+  if(N>=1){
+    const step=Math.max(1,Math.floor(N/1500));
+    const ks=[];for(let k=1;k<=N;k+=(k<200?1:step))ks.push(k);if(ks[ks.length-1]!==N)ks.push(N);
+    [['A',meanA,'--blood'],['B',meanB,'--steel']].forEach(([which,m,col])=>{
+      const c=css(col),half=k=>1.96*bandSd(k,which,S)/Math.sqrt(k);
+      g.fillStyle=c;g.globalAlpha=.2;g.beginPath();
+      ks.forEach((k,i)=>{const x=X(k),y=Y(m[k]+half(k));i?g.lineTo(x,y):g.moveTo(x,y);});
+      for(let i=ks.length-1;i>=0;i--){const k=ks[i];g.lineTo(X(k),Y(m[k]-half(k)));}
+      g.closePath();g.fill();g.globalAlpha=1;
+      if(N===1){g.fillStyle=c;g.fillRect(X(1),Y(m[1]+half(1)),3,Y(m[1]-half(1))-Y(m[1]+half(1)));}
+      g.strokeStyle=c;g.lineWidth=2.2;g.beginPath();ks.forEach((k,i)=>{const x=X(k),y=Y(m[k]);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+      g.fillStyle=c;g.beginPath();g.arc(X(N),Y(m[N]),4,0,Math.PI*2);g.fill();
+    });
+  }
+  g.restore();
+  if(sep){
+    const x=X(sep),y=Y((meanA[sep]+meanB[sep])/2);
+    g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    g.fillStyle=css('--ink');g.beginPath();g.arc(x,y,5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.font='600 12px '+css('--sans');g.fillStyle=css('--ink');g.textBaseline='bottom';
+    const txt='separate at N = '+fi(sep);g.textAlign=x>pad.l+pw*0.6?'right':'left';
+    g.fillText(txt,x+(g.textAlign==='left'?6:-6),pad.t+14);
+  }
+  if(N===0){g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='middle';g.font='14px '+css('--sans');g.fillText('Run fights to draw the averages.',pad.l+pw/2,pad.t+ph/2);}
+}
+
+// ---------- readouts ----------
+function render(){
+  const S=stats(),sep=sepPoint(S),rn=Math.sqrt(Math.max(N,1)),ag=Math.abs(S.gap);
+  $('oN').textContent=fi(N);
+  const sv=N<=0?0:Math.round(1000*Math.log(N)/Math.log(MAXN));
+  $('nSlider').value=sv;$('nSlider').setAttribute('aria-valuetext',fi(N)+' fights');
+  // stat tiles
+  $('rGap').textContent=(S.gap<0?'−':'')+f(ag,3);
+  $('rSd').textContent=f(S.sdiff,3);
+  if(ag<1e-9){$('rNeed').textContent='∞';}
+  else{const nn=(1.96*S.sdiff/ag)**2;$('rNeed').textContent=nn<1000?f(nn,1)+' → '+fi(Math.ceil(nn)):fi(Math.ceil(nn));}
+  const pw=Phi(-ag/(S.sdiff/rn));
+  $('rWrong').textContent=S.sdiff>0?fp(pw):(ag>0?'0%':'50%');
+  $('rWrongLbl').textContent='chance the averages rank wrong at N = '+fi(Math.max(N,1));
+  // figure stats
+  if(N>0){const c=beat[N];$('beatStat').innerHTML=`Fights where B beat A: <b>${fi(c)} of ${fi(N)} (${f(100*c/N,1)}%)</b>. Exact for one fight${crn?' with independent draws':''}: ${f(100*exactBeat(),2)}%.`;}
+  else $('beatStat').innerHTML=`No fights yet. Exact chance B beats A in one fight: <b>${f(100*exactBeat(),2)}%</b>.`;
+  $('sepStat').innerHTML=N===0?'Bands separate at N = …':sep?`Bands separate at <b>N = ${fi(sep)}</b> and stay apart through N = ${fi(N)}.`:`Bands still overlap at N = ${fi(N)}. <b>No separation yet.</b>`;
+  // class table
+  const row=(name,col,T,m,s,k,which)=>{
+    const sd=k>=2?s:NaN,se=k>=2?s/Math.sqrt(k):NaN;
+    return `<tr><td><span class="sw" style="background:var(${col})"></span>${name}</td><td>${f(T.mu,3)}</td><td>${f(T.sd,3)}</td><td>${k?f(m,2):'—'}</td><td>${k>=2?f(sd,2):'—'}</td><td>${k>=2?f(se,3):'—'}</td><td>${k>=2?'±'+f(1.96*se,2):'—'}</td></tr>`;};
+  $('tClass').innerHTML=row('A · Duelist','--blood',S.A,meanA[N],sdA[N],N,'A')+row('B · Marksman','--steel',S.B,meanB[N],sdB[N],N,'B');
+  // difference table
+  const indSE=N>=2?Math.hypot(sdA[N],sdB[N])/Math.sqrt(N):NaN, pairSE=N>=2?sdD[N]/Math.sqrt(N):NaN;
+  const cs=crnSd();
+  const d=[
+    ['Simulated difference μ̂<sub>A</sub> − μ̂<sub>B</sub>',N?f(meanA[N]-meanB[N],3):'—'],
+    ['SE of difference, treating runs as independent: √(s<sub>A</sub>² + s<sub>B</sub>²)/√N',N>=2?f(indSE,3):'—'],
+    ['SE of difference, paired fight by fight: s<sub>A−B</sub>/√N'+(crn?' (common random numbers on)':' (off, so about the same)'),N>=2?f(pairSE,3):'—'],
+    ['Theory σ<sub>diff</sub> per fight: independent / common random numbers',f(S.sdiff,3)+' / '+f(cs,3)],
+    ['Fights needed for the gap with common random numbers',ag<1e-9?'∞':(()=>{const x=(1.96*cs/ag)**2;return x<1000?f(x,1)+' → '+fi(Math.ceil(x)):fi(Math.ceil(x));})()],
+    ['Fights needed for a 1% gap ('+f(S.A.mu/100,3)+' DPS), independent',S.A.mu>0?fi(Math.ceil((1.96*S.sdiff/(S.A.mu/100))**2)):'—']
+  ];
+  $('tDiff').innerHTML=d.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+  // N table
+  const Ns=[1,10,100,1000];if(N>0&&!Ns.includes(N))Ns.push(N);Ns.sort((a,b)=>a-b);
+  $('tN').innerHTML=Ns.map(k=>{const se=S.A.sd/Math.sqrt(k),sd=S.sdiff/Math.sqrt(k);
+    const pr=S.sdiff>0?fp(Phi(-ag/sd)):(ag>0?'0%':'50%');
+    return `<tr class="${k===N?'here':''}"><td>${fi(k)}${k===N?' (now)':''}</td><td>${f(se,2)}</td><td>±${f(1.96*se,2)}</td><td>${f(sd,2)}</td><td>${pr}</td></tr>`;}).join('');
+  // insight
+  let s;
+  if(N===0)s='No fights run. Press <b>Run 1 fight</b> a few times: the Marksman will post the higher number surprisingly often.';
+  else{
+    s=`After ${fi(N)} fight${N>1?'s':''} each, the Duelist averages <b>${f(meanA[N],2)}</b> and the Marksman <b>${f(meanB[N],2)}</b>. `;
+    if(N<5)s+=`One or two fights prove nothing. The single-fight spread (σ = ${f(S.A.sd,2)} and ${f(S.B.sd,2)}) is bigger than the ${f(ag,2)} DPS gap. `;
+    else s+=`Single fights still spread just as wide as at N = 1, but each average is now pinned to ±${f(1.96*sdA[N]/Math.sqrt(N),2)} and ±${f(1.96*sdB[N]/Math.sqrt(N),2)}. `;
+    if(ag<0.01*S.A.mu*0.2)s+='The true means are equal (or nearly), so the bands keep overlapping. That is what "balanced, as far as the sim can tell" looks like.';
+    else if(sep)s+=`The bands parted at N = ${fi(sep)}. The sample-size formula gives ${fi(Math.ceil((1.96*S.sdiff/ag)**2))} fights for the interval of the difference. Two separate bands must clear each other, so most seeds part later than that, and luck moves it either way. Try a few seeds.`;
+    else s+=`The bands still overlap, so this run cannot rank the classes yet. The formula says about ${fi(Math.ceil((1.96*S.sdiff/ag)**2))} fights.`;
+  }
+  $('insight').innerHTML=s;
+  drawHist(S);drawConv(S,sep);
+}
+
+// ---------- controls ----------
+const sliders=[['dA','oDA',v=>f(v,2)],['pA','oPA',v=>fi(v)+'%'],['mA','oMA',v=>f(v,1)+'×'],['dB','oDB',v=>f(v,2)],['pB','oPB',v=>fi(v)+'%'],['mB','oMB',v=>f(v,1)+'×'],['nHits','oNH',v=>fi(v)],['tLen','oT',v=>fi(v)]];
+const key={dA:'dA',pA:'pA',mA:'mA',dB:'dB',pB:'pB',mB:'mB',nHits:'n',tLen:'T'};
+function syncControls(){sliders.forEach(([id,o,fmt])=>{$(id).value=P[key[id]];$(o).textContent=fmt(P[key[id]]);});}
+function stopAnim(){if(anim){cancelAnimationFrame(anim);anim=null;}}
+function recompute(){simulate();render();}
+sliders.forEach(([id,o,fmt])=>$(id).addEventListener('input',e=>{stopAnim();P[key[id]]=+e.target.value;$(o).textContent=fmt(P[key[id]]);clearPreset();recompute();}));
+function clearPreset(){document.querySelectorAll('[data-preset]').forEach(b=>{const pr=PRESETS[b.dataset.preset];b.setAttribute('aria-pressed',String(Object.keys(pr).every(k=>Math.abs(pr[k]-P[k])<1e-9)));});}
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{stopAnim();P=Object.assign({},PRESETS[b.dataset.preset]);syncControls();clearPreset();recompute();}));
+$('seed').addEventListener('change',e=>{stopAnim();let v=Math.floor(+e.target.value);if(!isFinite(v)||v<0)v=0;seed=v;e.target.value=v;recompute();});
+$('crn').addEventListener('change',e=>{stopAnim();crn=e.target.checked;recompute();});
+$('nSlider').addEventListener('input',e=>{stopAnim();const v=+e.target.value;N=v===0?0:Math.min(MAXN,Math.max(1,Math.round(Math.pow(MAXN,v/1000))));render();});
+const add=k=>()=>{stopAnim();N=Math.min(MAXN,N+k);render();};
+$('run1').addEventListener('click',add(1));$('run10').addEventListener('click',add(10));$('run100').addEventListener('click',add(100));
+$('reset').addEventListener('click',()=>{stopAnim();N=0;render();});
+$('runAll').addEventListener('click',()=>{
+  stopAnim();
+  if(reduceMotion.matches){N=MAXN;render();return;}
+  const tick=()=>{N=Math.min(MAXN,Math.ceil(N*1.07)+1);render();anim=N<MAXN?requestAnimationFrame(tick):null;};
+  anim=requestAnimationFrame(tick);
+});
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+syncControls();recompute();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>

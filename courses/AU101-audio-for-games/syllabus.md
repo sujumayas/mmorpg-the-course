@@ -29,7 +29,7 @@ Sound as feedback and atmosphere: SFX design, adaptive music and implementation 
 | 12 | Audio for MMOs: many players, one mix | _todo_ | _todo_ |
 | 13 | Accessibility: subtitles and visual sound cues | _todo_ | _todo_ |
 | 14 | Optimization: voices, memory, streaming | _todo_ | _todo_ |
-| 15 | Final: sound pass on a game slice | _todo_ | _todo_ |
+| 15 | Final: sound pass on a game slice | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

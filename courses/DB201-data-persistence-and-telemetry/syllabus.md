@@ -29,7 +29,7 @@ Saving the world: relational modeling of characters and items, transactions, cac
 | 12 | Dashboards and KPIs | _todo_ | _todo_ |
 | 13 | Privacy, GDPR and data retention | _todo_ | _todo_ |
 | 14 | Backups and disaster recovery | _todo_ | _todo_ |
-| 15 | Final: persistent inventory service with telemetry | _todo_ | _todo_ |
+| 15 | Final: persistent inventory service with telemetry | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

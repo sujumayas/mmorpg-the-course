@@ -29,7 +29,7 @@ Color, shape, composition and readability for game art — including pixel art a
 | 12 | Accessibility: color-blindness and contrast | _todo_ | _todo_ |
 | 13 | Art style bibles | _todo_ | _todo_ |
 | 14 | Pipeline: export, atlases, import settings | _todo_ | _todo_ |
-| 15 | Final: art portfolio piece | _todo_ | _todo_ |
+| 15 | Final: art portfolio piece | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

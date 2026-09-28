@@ -87,14 +87,14 @@ flowchart LR
 
 | Course | Syllabus | Lectures written | Examples built (signature) | Labs | Assessments |
 |---|---|---|---|---|---|
-| GD101 | stub | 0/14 | 0 (3) | 0 | 0 |
+| GD101 | stub | 2/14 | 0 (3) | 0 | 0 |
 | CS101 | stub | 0/14 | 0 (3) | 0 | 0 |
-| MA101 | stub | 0/14 | 0 (4) | 0 | 0 |
+| MA101 | finished | 14/14 | 14 (4) | 14 | 5 |
 | GS101 | stub | 0/14 | 0 (2) | 0 | 0 |
 | AR101 | stub | 0/14 | 0 (2) | 0 | 0 |
 | GD102 | stub | 0/14 | 0 (3) | 0 | 0 |
 | CS102 | stub | 0/14 | 0 (2) | 0 | 0 |
-| MA102 | stub | 0/14 | 0 (4) | 0 | 0 |
+| MA102 | stub | 14/14 | 15 (4) | 14 | 3 |
 | AU101 | stub | 0/14 | 0 (2) | 0 | 0 |
 | PR101 | stub | 0/14 | 0 (1) | 0 | 0 |
 | CS201 | stub | 0/14 | 0 (2) | 0 | 0 |
@@ -104,12 +104,12 @@ flowchart LR
 | UX201 | stub | 0/14 | 0 (2) | 0 | 0 |
 | CS202 | stub | 0/14 | 0 (2) | 0 | 0 |
 | CS203 | stub | 0/14 | 0 (2) | 0 | 0 |
-| GD203 | stub | 0/14 | 0 (3) | 0 | 0 |
+| GD203 | stub | 14/14 | 14 (3) | 15 | 2 |
 | DB201 | stub | 0/14 | 0 (1) | 0 | 0 |
 | PR201 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO301 | stub | 0/14 | 0 (2) | 0 | 0 |
 | MMO302 | stub | 0/14 | 0 (2) | 0 | 0 |
-| MMO303 | stub | 1/14 | 1 (3) | 0 | 0 |
+| MMO303 | stub | 14/14 | 14 (3) | 14 | 3 |
 | MMO304 | stub | 0/14 | 0 (3) | 0 | 0 |
 | MMO305 | stub | 0/14 | 0 (2) | 0 | 0 |
 | MMO306 | stub | 0/14 | 0 (2) | 0 | 0 |
@@ -251,7 +251,7 @@ The math that sits inside every stat sheet and every movement script: functions,
 **Signature worked examples**
 
 - Armor / (Armor + K): mitigation curve vs effective HP line (League of Legends K=100, WoW K=400+85·level) — the course's anchor example
-- RuneScape XP curve: why level 92 is halfway to 99 (verify exact totals)
+- RuneScape XP curve: why level 92 is halfway to 99 (verified: 6,517,253 of 13,034,431 XP)
 - Diagonal movement bug: why un-normalized WASD is ~41% faster
 - Dot product vision cone: stealth guard that 'sees' 60° ahead
 

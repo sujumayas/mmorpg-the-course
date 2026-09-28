@@ -29,7 +29,7 @@ Economics for world designers: scarcity, money supply, inflation, crafting chain
 | 12 | Economic telemetry and dashboards | _todo_ | _todo_ |
 | 13 | Case studies: EVE, Diablo, RuneScape Grand Exchange | _todo_ | _todo_ |
 | 14 | Designing an economy from scratch | _todo_ | _todo_ |
-| 15 | Final: economy spec + simulation | _todo_ | _todo_ |
+| 15 | Final: economy spec + simulation | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

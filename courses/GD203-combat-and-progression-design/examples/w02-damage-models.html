@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Subtractive vs divisive armor · GD203 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--blood)}
+h1 strong{font-weight:600;color:var(--steel)}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 4px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.topbar{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px;align-items:end;margin-bottom:14px}
+@media (max-width:760px){.topbar{grid-template-columns:1fr;gap:12px}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output,.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px}
+@media (max-width:860px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px;touch-action:none;cursor:ew-resize}
+@media (max-width:760px){canvas{height:260px}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0;padding:0;list-style:none}
+.legend li{display:flex;align-items:center;gap:6px}
+.legend svg{flex:none}
+.legend b{font-variant-numeric:tabular-nums}
+.group{margin:10px 0 14px}
+.group h3{font:600 .95rem var(--sans);margin:0 0 6px}
+.group h3 span{font-weight:400;color:var(--ink-soft)}
+.bar{display:grid;grid-template-columns:5.6rem minmax(0,1fr) 3.6rem;align-items:center;gap:8px;margin:5px 0;font-size:.86rem}
+.track{height:22px;border-radius:4px;background:var(--paper);border:1px solid var(--grid);overflow:hidden}
+.fill{height:100%;width:0;transition:width .25s ease-out}
+.fill.sub{background:var(--ink)}
+.fill.div{background:var(--steel)}
+.bar b{text-align:right;font-variant-numeric:tabular-nums;font-size:.98rem}
+.axis{display:grid;grid-template-columns:5.6rem minmax(0,1fr) 3.6rem;gap:8px;font-size:.76rem;color:var(--ink-soft)}
+.axis .ticks{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.insight b{font-family:var(--sans);font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
+@media (max-width:860px){.controls{grid-template-columns:1fr}}
+fieldset{border:1px solid var(--grid);border-radius:10px;padding:10px 12px 12px;margin:0;min-width:0}
+legend{font-weight:700;font-size:.92rem;padding:0 4px}
+.nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.nums.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.nums label{display:block;font-size:.82rem;font-weight:600}
+input[type=number],select{width:100%;font:600 1rem var(--sans);font-variant-numeric:tabular-nums;padding:6px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);margin-top:3px;min-height:38px}
+.check{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin-top:12px;font-weight:600;font-size:.92rem}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.note{font-size:.88rem;color:var(--ink-soft);margin:8px 0 0}
+#crossTxt{font-family:var(--serif);font-size:.98rem;color:var(--ink);margin:8px 0 0}
+.tables{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;margin-top:18px}
+@media (max-width:860px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:4px}
+th,td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-weight:600;font-size:.8rem;color:var(--ink-soft);vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD203 Combat and Progression Design · Week 2 · Worked example</p>
+  <h1><em>Subtractive</em> armor retires weak enemies. <strong>Divisive</strong> armor never does.</h1>
+  <p class="lede">Ten swarm hits of 20 and one ogre hit of 200 carry the same raw damage. At 20 armor, subtraction erases the swarm and barely dents the ogre. Division cuts both by the same share.</p>
+</header>
+
+<section class="panel" aria-label="Damage model explorer">
+  <div class="topbar">
+    <div>
+      <label for="armor">Defender armor A <output id="oA" for="armor">20</output></label>
+      <input id="armor" type="range" min="0" max="300" step="1" value="20">
+    </div>
+    <div>
+      <span class="lbl" id="modeLbl">Formula</span>
+      <div class="seg" role="group" aria-labelledby="modeLbl">
+        <button class="chip" data-mode="sub" aria-pressed="false">Subtractive</button>
+        <button class="chip" data-mode="div" aria-pressed="false">Divisive</button>
+        <button class="chip" data-mode="both" aria-pressed="true">Both</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Fraction that gets through<small>f = damage taken ÷ raw hit. Drag on the chart or use the armor slider.</small></figcaption>
+      <canvas id="cF" role="img" aria-label="Fraction of each hit that gets through versus armor. Exact values are listed below the chart."></canvas>
+      <ul class="legend" id="legend" aria-live="polite"></ul>
+    </figure>
+    <figure>
+      <figcaption>Same raw damage, different outcome<small>Damage actually taken at the current armor. Full track = the raw total.</small></figcaption>
+      <div class="group">
+        <h3>Swarm <span id="swarmDesc">10 hits × 20</span></h3>
+        <div class="bar"><span>Subtractive</span><div class="track"><div class="fill sub" id="bSwS"></div></div><b id="vSwS">0.0</b></div>
+        <div class="bar"><span>Divisive</span><div class="track"><div class="fill div" id="bSwD"></div></div><b id="vSwD">0.0</b></div>
+      </div>
+      <div class="group">
+        <h3>Ogre <span id="ogreDesc">1 hit × 200</span></h3>
+        <div class="bar"><span>Subtractive</span><div class="track"><div class="fill sub" id="bOgS"></div></div><b id="vOgS">0.0</b></div>
+        <div class="bar"><span>Divisive</span><div class="track"><div class="fill div" id="bOgD"></div></div><b id="vOgD">0.0</b></div>
+      </div>
+      <div class="axis" aria-hidden="true"><span></span><div class="ticks" id="ticks"></div><span></span></div>
+      <p class="note" id="perHit"></p>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Divisive constant</legend>
+      <label for="k">K, the armor that halves damage <output id="oK" for="k">100</output></label>
+      <input id="k" type="range" min="10" max="400" step="5" value="100">
+      <p class="note">f = K / (A + K). The same fraction for every hit size.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Hit sizes</legend>
+      <div class="nums">
+        <label for="d0">Swarm D<input id="d0" type="number" min="1" max="1000" step="1" value="20" inputmode="numeric"></label>
+        <label for="d1">Soldier D<input id="d1" type="number" min="1" max="1000" step="1" value="100" inputmode="numeric"></label>
+        <label for="d2">Boss D<input id="d2" type="number" min="1" max="1000" step="1" value="500" inputmode="numeric"></label>
+      </div>
+      <div class="nums two" style="margin-top:8px">
+        <label for="n">Swarm size N<input id="n" type="number" min="1" max="20" step="1" value="10" inputmode="numeric"></label>
+        <label for="sd">Swarm hit d<input id="sd" type="number" min="1" max="200" step="1" value="20" inputmode="numeric"></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Subtractive rules</legend>
+      <label for="floor">Floor</label>
+      <select id="floor">
+        <option value="none" selected>None: max(0, D − A)</option>
+        <option value="flat">Flat 1: max(1, D − A)</option>
+        <option value="pct">10% of D: max(0.1D, D − A)</option>
+      </select>
+      <label class="check" for="cross"><input id="cross" type="checkbox"> Show crossover</label>
+      <span class="lbl" id="hlLbl" style="margin-top:8px">Highlighted hit</span>
+      <div class="seg" role="group" aria-labelledby="hlLbl">
+        <button class="chip" data-hl="0" aria-pressed="false">Swarm</button>
+        <button class="chip" data-hl="1" aria-pressed="false">Soldier</button>
+        <button class="chip" data-hl="2" aria-pressed="true">Boss</button>
+      </div>
+      <p id="crossTxt" aria-live="polite" hidden></p>
+    </fieldset>
+  </div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <table>
+        <caption>Fraction that gets through</caption>
+        <thead><tr id="h1row"></tr></thead>
+        <tbody id="t1"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption id="cap2">Damage taken, same raw total</caption>
+        <thead><tr><th>Armor</th><th>Swarm, sub</th><th>Ogre, sub</th><th>Either, div</th></tr></thead>
+        <tbody id="t2"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Formulas: subtractive <code>max(0, D − A)</code> with optional floors; divisive <code>D × K / (A + K)</code>. Subtractive lets more through than divisive exactly when D &gt; A + K (no floor). Game references and sources are in the GD203 week 2 lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const one=n=>(Math.round(n*10+1e-9)/10).toFixed(1);
+const pct=f=>one(f*100)+'%';
+const X_MAX=300;
+const S={A:20,K:100,mode:'both',D:[20,100,500],N:10,d:20,floor:'none',hl:2,cross:false};
+const NAMES=['Swarm','Soldier','Boss'];
+const COLORS=['--blood','--ochre','--moss'];
+const DASH=[[],[8,5],[2,4]];
+
+function taken(D,A){
+  const raw=Math.max(0,D-A);
+  if(S.floor==='flat')return Math.max(1,raw);
+  if(S.floor==='pct')return Math.max(0.1*D,raw);
+  return raw;
+}
+const fSub=(D,A)=>taken(D,A)/D;
+const fDiv=A=>S.K/(A+S.K);
+
+/* ---------- View 1: canvas ---------- */
+const cv=$('cF');let geo=null;
+function setup(){
+  const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  return {g,w:r.width,h:r.height};
+}
+const pad={l:46,r:12,t:12,b:34};
+function px(x,w){return pad.l+(w-pad.l-pad.r)*x/X_MAX;}
+function py(y,h){return pad.t+(h-pad.t-pad.b)*(1-y);}
+function line(g,w,h,f,color,width,dash,alpha){
+  g.save();g.globalAlpha=alpha==null?1:alpha;g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash);g.lineJoin='round';
+  g.beginPath();
+  for(let i=0;i<=600;i++){const x=X_MAX*i/600,X=px(x,w),Y=py(f(x),h);i?g.lineTo(X,Y):g.moveTo(X,Y);}
+  g.stroke();g.restore();
+}
+function draw(){
+  const {g,w,h}=setup();geo={w,h};
+  g.clearRect(0,0,w,h);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=py(i/4,h);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(i*25+'%',pad.l-6,y);
+  }
+  for(let a=0;a<=X_MAX;a+=50){
+    g.textAlign='center';g.textBaseline='top';g.fillStyle=css('--ink-soft');g.fillText(a,px(a,w),h-pad.b+6);
+  }
+  g.textAlign='right';g.fillText('armor A',w-pad.r,h-14);
+
+  const showSub=S.mode!=='div',showDiv=S.mode!=='sub';
+  // crossover shading: between highlighted subtractive line and divisive curve where sub > div
+  if(S.cross){
+    const D=S.D[S.hl];g.save();g.fillStyle=css(COLORS[S.hl]);g.globalAlpha=.18;
+    let open=false,pts=[];
+    const flush=()=>{if(pts.length>1){g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));for(let i=pts.length-1;i>=0;i--)g.lineTo(pts[i][0],pts[i][2]);g.closePath();g.fill();}pts=[];};
+    for(let i=0;i<=600;i++){
+      const x=X_MAX*i/600,s=fSub(D,x),v=fDiv(x);
+      if(s>v+1e-12){pts.push([px(x,w),py(s,h),py(v,h)]);}else flush();
+    }
+    flush();g.restore();
+  }
+  // faint references
+  if(!showSub)S.D.forEach((D,i)=>line(g,w,h,x=>fSub(D,x),css(COLORS[i]),1.5,DASH[i],.3));
+  if(!showDiv&&S.cross)line(g,w,h,fDiv,css('--steel'),2,[],.35);
+  if(showDiv)line(g,w,h,fDiv,css('--steel'),4,[],1);
+  if(showSub)S.D.forEach((D,i)=>line(g,w,h,x=>fSub(D,x),css(COLORS[i]),i===S.hl&&S.cross?3.5:2.5,DASH[i],1));
+
+  // marker
+  const mx=px(S.A,w);
+  g.save();g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(mx,pad.t);g.lineTo(mx,h-pad.b);g.stroke();g.restore();
+  const labs=[];
+  if(showSub)S.D.forEach((D,i)=>labs.push({y:fSub(D,S.A),c:css(COLORS[i]),t:'D='+D+'  '+pct(fSub(D,S.A))}));
+  if(showDiv)labs.push({y:fDiv(S.A),c:css('--steel'),t:'every hit  '+pct(fDiv(S.A))});
+  labs.forEach(L=>{g.fillStyle=L.c;g.beginPath();g.arc(mx,py(L.y,h),5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();});
+  // labels with de-overlap
+  g.font='600 12px '+css('--sans');
+  const right=mx<w-150;
+  labs.forEach(L=>{L.py=py(L.y,h);});
+  labs.sort((a,b)=>a.py-b.py);
+  const gap=16,top=pad.t+8,bot=h-pad.b-8;
+  for(let i=0;i<labs.length;i++){labs[i].ly=Math.max(labs[i].py,i?labs[i-1].ly+gap:top);}
+  const over=labs.length?labs[labs.length-1].ly-bot:0;
+  if(over>0){labs.forEach(L=>L.ly-=over);for(let i=1;i<labs.length;i++)labs[i].ly=Math.max(labs[i].ly,labs[i-1].ly+gap);}
+  labs.forEach(L=>{
+    const tx=right?mx+10:mx-10;g.textAlign=right?'left':'right';g.textBaseline='middle';
+    const tw=g.measureText(L.t).width;
+    g.fillStyle=css('--paper-2');g.globalAlpha=.85;g.fillRect(right?tx-3:tx-tw-3,L.ly-8,tw+6,16);g.globalAlpha=1;
+    g.fillStyle=L.c;g.fillText(L.t,tx,L.ly);
+  });
+}
+
+function sampleSVG(i,color){
+  const dash=DASH[i]?DASH[i].join(' '):'';
+  return `<svg width="26" height="10" aria-hidden="true"><line x1="1" y1="5" x2="25" y2="5" stroke="var(${color})" stroke-width="${color==='--steel'?4:2.5}" ${dash?`stroke-dasharray="${dash}"`:''} stroke-linecap="butt"/></svg>`;
+}
+function legend(){
+  const items=[];
+  const subOn=S.mode!=='div',divOn=S.mode!=='sub';
+  S.D.forEach((D,i)=>items.push(`<li style="opacity:${subOn?1:.55}">${sampleSVG(i,COLORS[i])}${NAMES[i]} D = ${D}, subtractive: <b>${pct(fSub(D,S.A))}</b></li>`));
+  items.push(`<li style="opacity:${divOn?1:.55}">${sampleSVG(-1,'--steel')}Divisive, every hit size: <b>${pct(fDiv(S.A))}</b></li>`);
+  $('legend').innerHTML=items.join('');
+}
+
+/* ---------- View 2: bars ---------- */
+function bars(){
+  const tot=S.N*S.d,A=S.A;
+  const swS=S.N*taken(S.d,A),ogS=taken(tot,A),dv=tot*fDiv(A);
+  const set=(id,v)=>{$('b'+id).style.width=(100*v/tot)+'%';$('v'+id).textContent=one(v);};
+  set('SwS',swS);set('SwD',dv);set('OgS',ogS);set('OgD',dv);
+  $('swarmDesc').textContent=`${S.N} hit${S.N>1?'s':''} × ${S.d} = ${tot} raw`;
+  $('ogreDesc').textContent=`1 hit × ${tot} = ${tot} raw`;
+  $('ticks').innerHTML=[0,1,2,3,4].map(i=>`<span>${Math.round(tot*i/4)}</span>`).join('');
+  $('perHit').textContent=`Each swarm hit, subtractive: ${one(taken(S.d,A))} of ${S.d}. Divisive: ${one(S.d*fDiv(A))} of ${S.d}.`;
+  return {swS,ogS,dv,tot};
+}
+
+/* ---------- text ---------- */
+function insight(r){
+  const A=S.A,t=r.tot;let s;
+  if(A===0)s=`With no armor, every formula lets all <b>${t}</b> raw damage through. Drag the armor up and watch the swarm.`;
+  else if(r.swS===0)s=`At <b>${A}</b> armor, subtraction stops the whole swarm (<b>0.0</b> of ${t}) and still lets <b>${one(r.ogS)}</b> of the ogre's ${t} through. Division lets <b>${one(r.dv)}</b> through from either, because the fraction does not depend on hit size.`;
+  else if(S.floor!=='none'&&S.d-A<=0)s=`At <b>${A}</b> armor the swarm would be harmless, but the floor keeps it at <b>${one(r.swS)}</b> of ${t}. Division lets <b>${one(r.dv)}</b> through from either.`;
+  else if(r.swS<r.ogS)s=`At <b>${A}</b> armor, subtraction already favors the defender against the swarm: <b>${one(r.swS)}</b> taken against <b>${one(r.ogS)}</b> from the ogre. At ${S.d} armor the swarm does nothing. Division lets <b>${one(r.dv)}</b> through from either.`;
+  else s=`At <b>${A}</b> armor, subtraction lets through <b>${one(r.swS)}</b> from the swarm and <b>${one(r.ogS)}</b> from the ogre. Division lets <b>${one(r.dv)}</b> through from either.`;
+  $('insight').innerHTML=s;
+}
+function crossText(){
+  const el=$('crossTxt');el.hidden=!S.cross;if(!S.cross)return;
+  const D=S.D[S.hl],AK=S.A+S.K;
+  let lo=null,hi=null;
+  for(let a=0;a<=X_MAX;a++){if(fSub(D,a)>fDiv(a)+1e-12){if(lo===null)lo=a;hi=a;}}
+  let s=`Subtractive is softer for hits above A + K = <b>${AK}</b>. `;
+  s+=`The ${NAMES[S.hl].toLowerCase()} hit (D = ${D}) is ${D>AK?'above':(D===AK?'equal to':'below')} that, so at this armor subtraction lets ${D>AK?'more':(D===AK?'the same':'less')} through (${pct(fSub(D,S.A))} against ${pct(fDiv(S.A))}). `;
+  s+=lo===null?`It is never softer on this chart, so nothing is shaded.`:`Shaded: armor ${lo} to ${hi}.`;
+  if(S.floor!=='none')s+=` With a floor on, the shading follows the floored line.`;
+  el.innerHTML=s;
+}
+function tables(){
+  $('h1row').innerHTML=`<th>Armor</th>`+S.D.map((D,i)=>`<th>${NAMES[i]} (${D}), sub</th>`).join('')+`<th>Any hit, div</th>`;
+  const rows1=[0,10,20,50,100,200];if(!rows1.includes(S.A)){rows1.push(S.A);rows1.sort((a,b)=>a-b);}
+  $('t1').innerHTML=rows1.map(a=>`<tr class="${a===S.A?'here':''}"><td>${a}</td>${S.D.map(D=>`<td>${pct(fSub(D,a))}</td>`).join('')}<td>${pct(fDiv(a))}</td></tr>`).join('');
+  const tot=S.N*S.d;
+  $('cap2').textContent=`Damage taken: ${S.N} × ${S.d} swarm vs one ${tot} hit`;
+  const rows2=[0,10,20,50];if(!rows2.includes(S.A)){rows2.push(S.A);rows2.sort((a,b)=>a-b);}
+  $('t2').innerHTML=rows2.map(a=>`<tr class="${a===S.A?'here':''}"><td>${a}</td><td>${one(S.N*taken(S.d,a))}</td><td>${one(taken(tot,a))}</td><td>${one(tot*fDiv(a))}</td></tr>`).join('');
+}
+
+function update(){
+  $('oA').textContent=S.A;$('oK').textContent=S.K;
+  draw();legend();const r=bars();insight(r);crossText();tables();
+}
+
+/* ---------- events ---------- */
+$('armor').addEventListener('input',e=>{S.A=+e.target.value;update();});
+$('k').addEventListener('input',e=>{S.K=+e.target.value;update();});
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',x===b));S.mode=b.dataset.mode;update();}));
+document.querySelectorAll('[data-hl]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-hl]').forEach(x=>x.setAttribute('aria-pressed',x===b));S.hl=+b.dataset.hl;update();}));
+$('floor').addEventListener('change',e=>{S.floor=e.target.value;update();});
+$('cross').addEventListener('change',e=>{S.cross=e.target.checked;update();});
+function numIn(id,min,max,apply){
+  const el=$(id);
+  el.addEventListener('input',()=>{const v=Math.round(+el.value);if(el.value!==''&&v>=min&&v<=max){apply(v);update();}});
+  el.addEventListener('change',()=>{let v=Math.round(+el.value);if(!isFinite(v)||el.value==='')v=min;v=Math.min(max,Math.max(min,v));el.value=v;apply(v);update();});
+}
+[0,1,2].forEach(i=>numIn('d'+i,1,1000,v=>{S.D[i]=v;}));
+numIn('n',1,20,v=>{S.N=v;});
+numIn('sd',1,200,v=>{S.d=v;});
+function fromPointer(e){
+  if(!geo)return;const r=cv.getBoundingClientRect();
+  const a=Math.round((e.clientX-r.left-pad.l)/(geo.w-pad.l-pad.r)*X_MAX);
+  S.A=Math.min(X_MAX,Math.max(0,a));$('armor').value=S.A;update();
+}
+let dragging=false;
+cv.addEventListener('pointerdown',e=>{dragging=true;cv.setPointerCapture(e.pointerId);fromPointer(e);});
+cv.addEventListener('pointermove',e=>{if(dragging)fromPointer(e);});
+cv.addEventListener('pointerup',()=>{dragging=false;});
+cv.addEventListener('pointercancel',()=>{dragging=false;});
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+})();
+</script>
+</body>
+</html>

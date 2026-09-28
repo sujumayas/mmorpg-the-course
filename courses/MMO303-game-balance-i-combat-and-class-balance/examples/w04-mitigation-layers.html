@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mitigation layers · MMO303 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--plum:#7a4f8a;--teal:#2f7f7a;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--plum:#b99ad0;--teal:#6fc2bb}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--plum:#b99ad0;--teal:#6fc2bb}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:flex-end;margin:0 0 12px}
+.group-label{display:block;font-weight:600;font-size:.88rem;margin-bottom:4px}
+.presets,.modes{display:flex;flex-wrap:wrap;gap:6px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-weight:600;font-size:.88rem;margin-bottom:4px;padding:0}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.mode{position:relative}
+.mode input{position:absolute;opacity:0;width:1px;height:1px}
+.mode span{display:inline-block;font:600 .9rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer}
+.mode input:checked+span{background:var(--ink);color:var(--paper)}
+.mode input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.row{margin:0 0 7px;cursor:default}
+.row .lab{display:flex;justify-content:space-between;gap:8px;font-size:.8rem;line-height:1.3;min-height:1.3em;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.row .lab b{color:var(--ink);font-weight:600}
+.row .lab .rt{text-align:right}
+.track{position:relative;height:18px;border-radius:4px;background:var(--paper);overflow:hidden;box-shadow:inset 0 0 0 1px var(--grid)}
+.dbl .track{background-color:var(--paper);background-image:linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:12.5% 100%}
+.seg{position:absolute;top:0;bottom:0}
+.seg.old{opacity:.3}
+.seg.rest{background:var(--ink-soft);opacity:.55}
+.seg.off{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.55) 0 4px,transparent 4px 8px)}
+.flag{position:absolute;right:4px;top:0;bottom:0;display:flex;align-items:center;font:700 .72rem var(--sans);color:var(--paper);background:var(--ink);padding:0 5px;border-radius:3px;margin:2px 0}
+.row.hl .lab b{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px}
+.row.hl .track{box-shadow:inset 0 0 0 2px var(--ink)}
+.axis{position:relative;height:30px;margin-top:2px;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;top:0;transform:translateX(-50%);text-align:center;line-height:1.2;white-space:nowrap}
+.axis span:first-child{transform:none;text-align:left}
+.axis span:last-child{transform:translateX(-100%);text-align:right}
+.axis em{font-style:normal}
+@media (max-width:560px){.axis em.odd{visibility:hidden}}
+.axis-name{font-size:.75rem;color:var(--ink-soft);margin:0}
+.big{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:8px;border-top:1px solid var(--grid);padding-top:8px}
+.big b{font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.big span{font-size:.85rem;color:var(--ink-soft)}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+.readout.six{grid-template-columns:repeat(6,1fr)}
+@media (max-width:760px){.readout,.readout.six{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat b.inf{font-size:1.05rem}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.insight p{margin:0 0 6px}.insight p:last-child{margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:20px 0 8px}
+.layers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:900px){.layers{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.layers{grid-template-columns:1fr}}
+.card{border:1.5px solid var(--grid);border-left:6px solid var(--c);border-radius:10px;padding:8px 10px;background:var(--paper)}
+.card.hl{border-color:var(--ink);border-left-color:var(--c)}
+.card .top{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.card .name{font-weight:700;font-size:.92rem}
+.card .btns{display:flex;gap:6px}
+.small{font:600 .8rem var(--sans);padding:5px 9px;border-radius:7px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);cursor:pointer}
+.small[disabled]{opacity:.45;cursor:not-allowed}
+.card .rrow{display:flex;align-items:center;gap:8px;margin-top:4px}
+input[type=range]{flex:1;min-width:0;accent-color:var(--steel);height:28px}
+input[type=number]{width:5.2em;font:600 .95rem var(--sans);padding:4px 6px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.pctsign{font-size:.9rem;color:var(--ink-soft)}
+.opts{display:flex;flex-wrap:wrap;gap:12px 26px;margin-top:14px;align-items:center}
+.opts label{font-weight:600;font-size:.92rem;display:flex;align-items:center;gap:8px}
+.opts input[type=checkbox]{width:18px;height:18px;accent-color:var(--steel)}
+.note{font-family:var(--serif);font-size:.95rem;margin:8px 0 0;max-width:75ch;color:var(--ink)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:560px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:baseline}
+tfoot td{font-weight:700;border-top:1.5px solid var(--ink)}
+tr.hl td{background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO303 Game Balance I · Week 4 · Worked example</p>
+  <h1>Stack mitigation in doublings</h1>
+  <p class="lede">Five 20% layers. On the left each layer seems to cut less damage than the one before. On the right every layer adds the same block of survival. Switch the rule to additive and the fifth layer makes the tank immune.</p>
+</header>
+
+<div class="toolbar">
+  <div>
+    <span class="group-label" id="presetLbl">Presets</span>
+    <div class="presets" role="group" aria-labelledby="presetLbl">
+      <button class="chip" data-preset="five" aria-pressed="true">Five 20% layers</button>
+      <button class="chip" data-preset="warrior" aria-pressed="false">Classic warrior</button>
+      <button class="chip" data-preset="q1" aria-pressed="false">Check yourself Q1 (40/25/10)</button>
+      <button class="chip" data-preset="pools" aria-pressed="false">Two pools (20+20 | 30)</button>
+    </div>
+  </div>
+  <fieldset>
+    <legend>Stacking rule</legend>
+    <div class="modes">
+      <label class="mode"><input type="radio" name="mode" value="mult" checked><span>Multiplicative</span></label>
+      <label class="mode"><input type="radio" name="mode" value="add"><span>Additive</span></label>
+      <label class="mode"><input type="radio" name="mode" value="pools"><span>Two pools</span></label>
+    </div>
+  </fieldset>
+</div>
+
+<section class="panel" aria-label="Mitigation stack">
+  <div class="charts">
+    <figure>
+      <figcaption>Damage let through<small id="leftSub">Each layer cuts a slice off whatever got past the layers before it</small></figcaption>
+      <div id="leftRows" aria-hidden="true"></div>
+      <div class="axis" aria-hidden="true"><span>0%</span><span style="left:25%">25%</span><span style="left:50%">50%</span><span style="left:75%">75%</span><span style="left:100%">100%</span></div>
+      <div class="big"><b id="bigF">0.32768</b><span id="bigFsub">of each hit gets through</span></div>
+    </figure>
+    <figure>
+      <figcaption>Survival in doublings<small>Each block is &minus;log<sub>2</sub>(1 &minus; r) wide. Ticks show doublings and the survival multiplier M.</small></figcaption>
+      <div id="rightRows" class="dbl" aria-hidden="true"></div>
+      <div class="axis" id="dblAxis" aria-hidden="true"></div>
+      <div class="big"><b id="bigD">1.610</b><span id="bigDsub">doublings, M = 3.052</span></div>
+    </figure>
+  </div>
+
+  <div class="readout" id="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rF">&mdash;</b><span>let through, f</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rRed">&mdash;</b><span>total reduction, 1 &minus; f</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rM">&mdash;</b><span>survival multiplier M = 1/f</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rD">&mdash;</b><span>doublings, log<sub>2</sub>(M)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rEhp">&mdash;</b><span id="rEhpLbl">EHP = HP &times; M</span></div>
+    <div class="stat" style="--c:var(--teal)" id="absStat" hidden><b id="rAbs">&mdash;</b><span id="rAbsLbl">absorb raw value, S / f</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <h2>Layers</h2>
+  <div class="layers" id="layers"></div>
+  <div class="opts">
+    <button class="small" id="addBtn" type="button">+ Add layer</button>
+    <label for="hp">HP <input id="hp" type="number" min="1" max="10000000" step="100" value="10000"></label>
+    <label for="absOn"><input id="absOn" type="checkbox"> Show absorb after the layers</label>
+    <label for="absS" id="absWrap" hidden>Absorb S <input id="absS" type="number" min="0" max="10000000" step="100" value="2000"></label>
+  </div>
+  <p class="note" id="note"></p>
+
+  <div class="table-wrap">
+    <table>
+      <caption class="sr">Per-layer values in the order the stack applies them</caption>
+      <thead><tr><th>Layer</th><th id="thPool">Pool</th><th>r</th><th>Factor 1/(1 &minus; r)</th><th>Own doublings</th><th id="thMarg">Adds here</th><th>Points cut</th><th>Let through after</th></tr></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot><tr id="tfoot"></tr></tfoot>
+    </table>
+  </div>
+</section>
+
+<footer>Classic warrior preset: 75% armor cap (Warcraft Wiki, "Armor", patch 1.12 rules as re-released in WoW Classic, 2019) and Shield Wall, 75% for 10 seconds (Wowhead Classic, spell 871). Two pools follow the Path of Exile "increased" and "more" split (Path of Exile Wiki, "Stat"). All layers are drawn generically.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const COLORS=['--steel','--blood','--ochre','--moss','--plum','--teal'];
+const MAXL=6,DMAX=8;
+const strip=s=>s.indexOf('.')<0?s:s.replace(/0+$/,'').replace(/\.$/,'');
+const fStr=x=>strip(x.toFixed(5));
+const pctStr=x=>strip((x*100).toFixed(2))+'%';
+const mStr=x=>strip(x.toFixed(3));
+const dStr=x=>x.toFixed(3);
+const intStr=x=>Math.round(x).toLocaleString('en-US');
+const ptsStr=x=>(x*100).toFixed(1);
+
+const PRESETS={
+  five:{mode:'mult',layers:[20,20,20,20,20].map(r=>({r,pool:'A'})),note:'Five identical 20% layers on a 10,000 HP tank, the table from section 2 of the lecture. Each layer multiplies survival by 1.25, which is 0.322 doublings.'},
+  warrior:{mode:'mult',layers:[{r:75,pool:'A',name:'Armor cap'},{r:75,pool:'B',name:'Shield Wall'}],note:'Classic WoW warrior at the 75% armor cap with Shield Wall (75% for 10 s) active. Two layers of exactly 2 doublings each. 75% + 75% is not 150%.'},
+  q1:{mode:null,layers:[{r:40,pool:'A'},{r:25,pool:'A'},{r:10,pool:'B'}],note:'Check yourself question 1. Compare multiplicative (M = 2.469) with additive (M = 4).'},
+  pools:{mode:'pools',layers:[{r:20,pool:'A'},{r:20,pool:'A'},{r:30,pool:'B'}],note:'Two pools. Layers inside a pool add, and the two pool results multiply: f = (1 − 0.4) × (1 − 0.3) = 0.42. This is Path of Exile’s increased/more split, on the defense side.'}
+};
+let S={mode:'mult',hp:10000,absorb:false,absS:2000,layers:[],hl:-1};
+
+function loadPreset(key){
+  const p=PRESETS[key];
+  S.layers=p.layers.map(l=>Object.assign({},l));
+  if(p.mode) S.mode=p.mode; else if(S.mode==='pools') S.mode='mult';
+  document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.preset===key));
+  document.querySelector(`input[name=mode][value=${S.mode}]`).checked=true;
+  $('note').textContent=p.note;
+  renderControls();update();
+}
+function clearPreset(){document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed','false'));}
+
+// Core model. Returns steps in the order the stack is applied.
+function compute(){
+  const idx=S.layers.map((l,i)=>i);
+  const order=S.mode==='pools'?idx.filter(i=>S.layers[i].pool==='A').concat(idx.filter(i=>S.layers[i].pool==='B')):idx;
+  let before=1,sum=0,sumA=0,sumB=0;const steps=[];
+  for(const i of order){
+    const r=S.layers[i].r;let after;
+    if(S.mode==='mult') after=before*(100-r)/100;
+    else if(S.mode==='add'){sum+=r;after=Math.max(0,100-sum)/100;}
+    else if(S.layers[i].pool==='A'){sumA+=r;after=Math.max(0,100-sumA)/100;}
+    else{sumB+=r;after=Math.max(0,100-sumA)/100*Math.max(0,100-sumB)/100;}
+    const dPrev=before>0?-Math.log2(before):Infinity,d=after>0?-Math.log2(after):Infinity;
+    steps.push({i,r,before,after,dPrev,d,own:-Math.log2(1-r/100),factor:1/(1-r/100)});
+    before=after;
+  }
+  return {steps,f:before,sum,sumA,sumB};
+}
+function fOther(mode){
+  if(mode==='mult') return S.layers.reduce((p,l)=>p*(100-l.r)/100,1);
+  const s=S.layers.reduce((a,l)=>a+l.r,0);return Math.max(0,100-s)/100;
+}
+function lname(i){const l=S.layers[i];return `Layer ${i+1}`+(l.name?` · ${l.name}`:'')+(S.mode==='pools'?` (pool ${l.pool})`:'');}
+function col(i){return `var(${COLORS[i%COLORS.length]})`;}
+const clip=d=>Math.min(d,DMAX)/DMAX*100;
+
+function renderPanels(res){
+  const L=[],R=[];
+  L.push(`<div class="row"><div class="lab"><b>No layers</b><span class="rt">100% gets through</span></div><div class="track"><div class="seg rest" style="left:0;width:100%"></div></div></div>`);
+  R.push(`<div class="row"><div class="lab"><b>No layers</b><span class="rt">0 doublings, M = 1</span></div><div class="track"></div></div>`);
+  res.steps.forEach((s,k)=>{
+    const hl=s.i===S.hl?' hl':'';
+    let ls=`<div class="seg rest" style="left:0;width:${s.after*100}%"></div>`;
+    let rs='';
+    for(let j=0;j<=k;j++){
+      const t=res.steps[j],old=j<k?' old':'';
+      const w=(t.before-t.after)*100;
+      if(w>0) ls+=`<div class="seg${old}" style="left:${t.after*100}%;width:${w}%;background:${col(t.i)}"></div>`;
+      const a=clip(t.dPrev),b=clip(t.d);
+      if(b>a) rs+=`<div class="seg${old}${t.d===Infinity&&!old?' off':''}" style="left:${a}%;width:${b-a}%;background-color:${col(t.i)}"></div>`;
+    }
+    let flag='';
+    if(s.d===Infinity) flag='<span class="flag">immune &rarr; &infin;</span>';
+    else if(s.d>DMAX) flag=`<span class="flag">&rarr; ${dStr(s.d)}</span>`;
+    const cut=s.before-s.after;
+    const addD=s.d-s.dPrev;
+    L.push(`<div class="row${hl}" data-layer="${s.i}"><div class="lab"><b>${lname(s.i)}: &minus;${ptsStr(cut)} pts</b><span class="rt">${pctStr(s.after)} left</span></div><div class="track">${ls}</div></div>`);
+    R.push(`<div class="row${hl}" data-layer="${s.i}"><div class="lab"><b>${lname(s.i)}: +${s.d===Infinity?'&infin;':dStr(addD)}</b><span class="rt">${s.d===Infinity?'immune':dStr(s.d)+' total'}</span></div><div class="track">${rs}${flag}</div></div>`);
+  });
+  $('leftRows').innerHTML=L.join('');$('rightRows').innerHTML=R.join('');
+  $('leftSub').textContent=S.mode==='mult'?'Each layer cuts a slice off whatever got past the layers before it':S.mode==='add'?'Additive: each layer cuts r points off the original 100%':'Pool A layers cut from the original, then pool B cuts a share of what pool A let through';
+}
+
+function update(){
+  const res=compute(),f=res.f,imm=f<=0;
+  renderPanels(res);
+  const M=1/f,D=-Math.log2(f);
+  $('bigF').textContent=fStr(f);$('bigFsub').textContent=imm?'gets through. The pool reached 100%.':`of each hit gets through (${pctStr(f)})`;
+  $('bigD').textContent=imm?'∞':dStr(D);$('bigDsub').textContent=imm?'doublings. Immune.':`doublings, M = ${mStr(M)}`;
+  $('rF').textContent=fStr(f);
+  $('rRed').textContent=pctStr(1-f);
+  $('rM').textContent=imm?'infinite (immune)':mStr(M);$('rM').className=imm?'inf':'';
+  $('rD').textContent=imm?'infinite':dStr(D);$('rD').className=imm?'inf':'';
+  $('rEhp').textContent=imm?'infinite (immune)':intStr(S.hp*M);$('rEhp').className=imm?'inf':'';
+  $('rEhpLbl').textContent=`EHP at ${intStr(S.hp)} HP`;
+  $('absStat').hidden=!S.absorb;$('absWrap').hidden=!S.absorb;$('readout').classList.toggle('six',S.absorb);
+  if(S.absorb){$('rAbs').textContent=imm?'not needed':intStr(S.absS/f);$('rAbs').className=imm?'inf':'';$('rAbsLbl').textContent=`raw damage a ${intStr(S.absS)} absorb soaks, S / f`;}
+  // table
+  const pools=S.mode==='pools';
+  $('thPool').hidden=!pools;
+  $('thMarg').textContent=S.mode==='mult'?'Adds here (same)':'Adds here';
+  $('tbody').innerHTML=res.steps.map(s=>`<tr class="${s.i===S.hl?'hl':''}"><td><i style="background:${col(s.i)}"></i>${S.layers[s.i].name?`${s.i+1} · ${S.layers[s.i].name}`:s.i+1}</td>${pools?`<td>${S.layers[s.i].pool}</td>`:''}<td>${s.r}%</td><td>${mStr(s.factor)}</td><td>${dStr(s.own)}</td><td>${s.d===Infinity?'&infin;':dStr(s.d-s.dPrev)}</td><td>${ptsStr(s.before-s.after)}</td><td>${fStr(s.after)}</td></tr>`).join('');
+  $('tfoot').innerHTML=`<td>Total</td>${pools?'<td></td>':''}<td>${S.mode==='mult'?'':res.steps.reduce((a,s)=>a+s.r,0)+'%'}</td><td>${imm?'&infin;':mStr(M)}</td><td></td><td>${imm?'&infin;':dStr(D)}</td><td>${ptsStr(1-f)}</td><td>${fStr(f)}</td>`;
+  $('insight').innerHTML=insight(res,f);
+  $('addBtn').disabled=S.layers.length>=MAXL;
+}
+
+function insight(res,f){
+  const st=res.steps;if(!st.length) return '<p>No layers. Add one to start the stack.</p>';
+  const cuts=st.map(s=>ptsStr(s.before-s.after));
+  const adds=st.map(s=>s.d===Infinity?'immune':'+'+dStr(s.d-s.dPrev));
+  const allSame=st.every(s=>s.r===st[0].r);
+  let p='';
+  if(S.mode==='mult'){
+    if(allSame&&st.length>1) p=`<p>All ${st.length} layers are ${st[0].r}%. On the left the slices shrink (${cuts.join(', ')} points), so each layer looks weaker. On the right every block is the same ${dStr(st[0].own)} doublings, so each layer multiplies survival by &times;${mStr(st[0].factor)} wherever it sits.</p>`;
+    else p=`<p>Each block on the right is that layer's own &minus;log<sub>2</sub>(1 &minus; r), whatever else is stacked. The blocks add to ${dStr(-Math.log2(f))} doublings, so M = 2<sup>${dStr(-Math.log2(f))}</sup> = ${mStr(1/f)}.</p>`;
+    const fa=fOther('add');
+    p+=`<p>The same layers added in one pool would give ${fa<=0?'f = 0, immune':`f = ${fStr(fa)}, M = ${mStr(1/fa)}`}.</p>`;
+  }else if(S.mode==='add'){
+    p=`<p>One pool: ${st.map(s=>s.r+'%').join(' + ')} = ${res.sum}%. Doublings each layer adds, in order: ${adds.join(', ')}. ${allSame&&st.length>1?'Identical layers, and each is worth more than the one before.':'Later layers are worth more because the pool closes in on 100%.'}</p>`;
+    if(f<=0) p+=`<p>The pool reached ${res.sum}%, so no damage gets through. The tank is immune, and the designer now needs a cap.</p>`;
+    const fm=fOther('mult');
+    p+=`<p>Multiplied instead, the same layers give f = ${fStr(fm)}, M = ${mStr(1/fm)}.</p>`;
+  }else{
+    const fa=Math.max(0,100-res.sumA)/100,fb=Math.max(0,100-res.sumB)/100;
+    p=`<p>Pool A adds to ${res.sumA}% (&times;${fa>0?mStr(1/fa):'&infin;'}). Pool B adds to ${res.sumB}% (&times;${fb>0?mStr(1/fb):'&infin;'}). The pools multiply: f = ${fStr(fa)} &times; ${fStr(fb)} = ${fStr(f)}, M = ${f>0?mStr(1/f):'infinite'}.</p><p>Moving a layer to the other pool is a balance change. Try it with the pool buttons.</p>`;
+  }
+  return p;
+}
+
+function renderControls(){
+  const pools=S.mode==='pools';
+  $('layers').innerHTML=S.layers.map((l,i)=>`
+    <div class="card${i===S.hl?' hl':''}" data-layer="${i}" style="--c:${col(i)}">
+      <div class="top"><span class="name">Layer ${i+1}${l.name?' · '+l.name:''}</span>
+        <span class="btns"><button type="button" class="small pool" data-i="${i}" ${pools?'':'hidden'} aria-label="Layer ${i+1} is in pool ${l.pool}. Switch pool">Pool ${l.pool}</button>
+        <button type="button" class="small rm" data-i="${i}" aria-label="Remove layer ${i+1}">Remove</button></span></div>
+      <div class="rrow"><input type="range" min="0" max="95" step="1" value="${l.r}" data-i="${i}" aria-label="Layer ${i+1} reduction, percent">
+        <input type="number" min="0" max="95" step="1" value="${l.r}" data-i="${i}" aria-label="Layer ${i+1} reduction, percent, exact"><span class="pctsign">%</span></div>
+    </div>`).join('');
+}
+function setR(i,v,src){
+  v=Math.max(0,Math.min(95,Math.round(v)));S.layers[i].r=v;clearPreset();
+  const card=document.querySelector(`.card[data-layer="${i}"]`);
+  card.querySelectorAll('input').forEach(x=>{if(x!==src)x.value=v;});
+  update();
+}
+const box=$('layers');
+box.addEventListener('input',e=>{
+  const t=e.target;if(!t.dataset.i)return;const i=+t.dataset.i;
+  if(t.type==='range') setR(i,+t.value,t);
+  else if(t.value!==''&&!isNaN(+t.value)) setR(i,+t.value,t);
+});
+box.addEventListener('change',e=>{const t=e.target;if(t.type==='number'){t.value=S.layers[+t.dataset.i].r;}});
+box.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;
+  if(b.classList.contains('rm')){
+    S.layers.splice(i,1);clearPreset();S.hl=-1;renderControls();update();
+    const rms=box.querySelectorAll('.rm');(rms[Math.min(i,rms.length-1)]||$('addBtn')).focus();
+  }else if(b.classList.contains('pool')){
+    S.layers[i].pool=S.layers[i].pool==='A'?'B':'A';clearPreset();renderControls();update();
+    box.querySelector(`.pool[data-i="${i}"]`).focus();
+  }
+});
+function setHl(i){
+  if(S.hl===i)return;S.hl=i;
+  document.querySelectorAll('[data-layer]').forEach(el=>el.classList.toggle('hl',+el.dataset.layer===i));
+  document.querySelectorAll('#tbody tr').forEach(tr=>tr.classList.remove('hl'));
+  const st=compute().steps,k=st.findIndex(s=>s.i===i);
+  if(k>=0){const tr=$('tbody').children[k];if(tr)tr.classList.add('hl');}
+}
+box.addEventListener('focusin',e=>{const c=e.target.closest('.card');if(c)setHl(+c.dataset.layer);});
+box.addEventListener('focusout',e=>{if(!box.contains(e.relatedTarget))setHl(-1);});
+['layers','leftRows','rightRows'].forEach(id=>{
+  $(id).addEventListener('mouseover',e=>{const c=e.target.closest('[data-layer]');setHl(c?+c.dataset.layer:-1);});
+  $(id).addEventListener('mouseleave',()=>setHl(-1));
+});
+$('addBtn').addEventListener('click',()=>{
+  if(S.layers.length>=MAXL)return;S.layers.push({r:20,pool:'A'});clearPreset();renderControls();update();
+  const rs=box.querySelectorAll('input[type=range]');rs[rs.length-1].focus();
+});
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',()=>{S.mode=r.value;renderControls();update();}));
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>loadPreset(b.dataset.preset)));
+$('hp').addEventListener('input',e=>{const v=+e.target.value;if(v>0){S.hp=v;update();}});
+$('hp').addEventListener('change',e=>{e.target.value=S.hp;});
+$('absOn').addEventListener('change',e=>{S.absorb=e.target.checked;update();});
+$('absS').addEventListener('input',e=>{const v=+e.target.value;if(v>=0&&e.target.value!==''){S.absS=v;update();}});
+$('absS').addEventListener('change',e=>{e.target.value=S.absS;});
+
+// doublings axis
+$('dblAxis').innerHTML=Array.from({length:DMAX+1},(_,d)=>`<span style="left:${d/DMAX*100}%">${d}<br><em class="${d%2?'odd':''}">${Math.pow(2,d)}&times;</em></span>`).join('');
+
+window.__MMO303w04={S,compute,loadPreset,update,renderControls};
+loadPreset('five');
+})();
+</script>
+</body>
+</html>

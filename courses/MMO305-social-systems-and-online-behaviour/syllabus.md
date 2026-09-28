@@ -29,7 +29,7 @@ The social science of MMOs: groups, guilds, trust, status, toxicity and how syst
 | 12 | Community management | _todo_ | _todo_ |
 | 13 | Ethnography of online worlds (Taylor, Boellstorff) | _todo_ | _todo_ |
 | 14 | Designing for positive social play | _todo_ | _todo_ |
-| 15 | Final: social system design + research proposal | _todo_ | _todo_ |
+| 15 | Final: social system design + research proposal | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

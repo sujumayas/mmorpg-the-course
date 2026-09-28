@@ -29,7 +29,7 @@ Spaces that teach, guide and challenge — from single rooms to open worlds and 
 | 12 | Spawn design and contested resources | _todo_ | _todo_ |
 | 13 | Metrics: player speed, jump, scale | _todo_ | _todo_ |
 | 14 | Playtesting levels with heatmaps | _todo_ | _todo_ |
-| 15 | Final: greybox zone + design doc | _todo_ | _todo_ |
+| 15 | Final: greybox zone + design doc | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

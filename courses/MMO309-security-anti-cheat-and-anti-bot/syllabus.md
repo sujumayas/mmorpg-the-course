@@ -29,7 +29,7 @@ Defending a persistent world: exploits, duplication, cheats, bots and account se
 | 12 | Legal and ethical considerations | _todo_ | _todo_ |
 | 13 | Bug bounty and disclosure | _todo_ | _todo_ |
 | 14 | Case studies | _todo_ | _todo_ |
-| 15 | Final: threat model + detection prototype | _todo_ | _todo_ |
+| 15 | Final: threat model + detection prototype | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

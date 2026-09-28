@@ -29,7 +29,7 @@ Vectors, matrices, transforms and Newtonian motion — the math under 3D worlds 
 | 12 | Raycasting | _todo_ | _todo_ |
 | 13 | Projectile motion and aiming at moving targets | _todo_ | _todo_ |
 | 14 | Determinism and floating point | _todo_ | _todo_ |
-| 15 | Final exam + physics sandbox | _todo_ | _todo_ |
+| 15 | Final exam + physics sandbox | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

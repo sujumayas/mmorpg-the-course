@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Armor curve · MA101 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h1 .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.62em;line-height:1.05;margin:0 .15em}
+h1 .frac span:first-child{border-bottom:2px solid currentColor;padding:0 .2em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.summary{font-family:var(--serif);font-size:1.12rem;margin:0 0 12px;padding:10px 14px;border-radius:10px;background:var(--paper-2);display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.summary span{user-select:all}
+.copy{font:600 .82rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);cursor:pointer}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 4px;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--moss) 0 6px,transparent 6px 10px)!important}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15;user-select:all;overflow-wrap:anywhere}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.badge{display:inline-block;margin-top:4px;font:700 .75rem var(--sans);padding:2px 8px;border-radius:999px;background:var(--blood);color:var(--paper)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl{margin-bottom:12px}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+input[type=number]{font:600 .95rem var(--sans);width:7.5em;padding:5px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.check{justify-content:flex-start;font-weight:600}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.note{font-family:var(--serif);font-size:.96rem;margin:10px 0 0;max-width:70ch}
+.muted{color:var(--ink-soft);font-size:.85rem;font-weight:400}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:100%}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA101 Mathematics for Games I · Week 6 · Worked example</p>
+  <h1>m(A) = <span class="frac"><span>A</span><span>A + K</span></span></h1>
+  <p class="lede">One formula, two graphs. The percentage on the left bends toward 100% and looks like it is running out. The effective health on the right, for the same armor, is a straight line.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="View">
+  <button class="tab" role="tab" id="tCurves" aria-selected="true" aria-controls="panel">Two views</button>
+  <button class="tab" role="tab" id="tCompare" aria-selected="false" aria-controls="panel" tabindex="-1">Compare with 1 &minus; 0.5<sup>A/K</sup></button>
+</div>
+
+<section class="panel" id="panel" role="tabpanel" aria-labelledby="tCurves">
+  <p class="summary" aria-live="polite"><span id="summary">&nbsp;</span><button class="copy" id="copyBtn" type="button">Copy numbers</button></p>
+
+  <div class="charts">
+    <figure>
+      <figcaption>What the tooltip shows<small>Mitigation m(A), the share of each hit blocked</small></figcaption>
+      <canvas id="cMit" role="img" aria-label="Mitigation versus armor"></canvas>
+      <div class="legend"><span><i style="background:var(--steel)"></i>m(A)</span><span class="cmpOnly" hidden><i class="dash"></i>1 &minus; 0.5<sup>A/K</sup></span></div>
+    </figure>
+    <figure>
+      <figcaption>What keeps you alive<small>Effective health EHP = H / (1 &minus; m), raw damage you can take</small></figcaption>
+      <canvas id="cEhp" role="img" aria-label="Effective health versus armor"></canvas>
+      <div class="legend"><span><i style="background:var(--ochre)"></i>EHP</span><span class="cmpOnly" hidden><i class="dash"></i>H &middot; 2<sup>A/K</sup></span></div>
+    </figure>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rMit">&nbsp;</b><span>m(A), blocked</span><div id="badge" class="badge" hidden>formula exceeds 100%</div></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rTaken">&nbsp;</b><span>damage taken per 100 incoming</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rEhp">&nbsp;</b><span>effective health (EHP)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rSlope">&nbsp;</b><span id="rSlopeLbl">EHP gained per armor point</span></div>
+  </div>
+  <div class="readout cmpOnly" hidden>
+    <div class="stat" style="--c:var(--steel)"><b id="rRatMult">&nbsp;</b><span>rational EHP multiplier</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rExpMit">&nbsp;</b><span>exponential, blocked</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rExpMult">&nbsp;</b><span>exponential EHP multiplier</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rHalf">&nbsp;</b><span>K used by both curves</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <div class="ctl">
+        <label for="armor">Armor A <input id="armorNum" type="number" min="0" max="600" step="1" value="100" aria-label="Armor A, exact value"></label>
+        <input id="armor" type="range" min="0" max="600" step="1" value="100" aria-describedby="armorRange">
+        <span class="muted" id="armorRange">0 to 600</span>
+      </div>
+      <div class="ctl">
+        <label for="hp">Health H <input id="hp" type="number" min="100" max="10000" step="100" value="1000"></label>
+      </div>
+      <div class="ctl">
+        <label class="check" for="neg"><input id="neg" type="checkbox"> Show negative armor</label>
+        <span class="muted" id="negNote"></span>
+      </div>
+      <div class="ctl">
+        <label for="target">Armor needed for <span><input id="target" type="number" min="0" max="108" step="0.1" value="60"> %</span></label>
+        <p class="note" style="margin-top:6px"><b id="rTarget" style="user-select:all">&nbsp;</b> <span class="muted" id="rTargetHow"></span></p>
+      </div>
+    </div>
+    <div>
+      <span class="lbl" id="presetLbl">Which game's formula?</span>
+      <div class="presets" role="group" aria-labelledby="presetLbl">
+        <button class="chip" type="button" data-p="lol" aria-pressed="true">League of Legends (K = 100)</button>
+        <button class="chip" type="button" data-p="wow" aria-pressed="false">Classic WoW</button>
+        <button class="chip" type="button" data-p="dota" aria-pressed="false">Dota 2 patch 7.20</button>
+        <button class="chip" type="button" data-p="custom" aria-pressed="false">Custom K</button>
+      </div>
+      <div class="ctl" id="lvlWrap" hidden style="margin-top:12px">
+        <label for="lvl">Attacker level L <output id="oLvl">30</output></label>
+        <input id="lvl" type="range" min="1" max="59" step="1" value="30">
+      </div>
+      <div class="ctl" id="kWrap" hidden style="margin-top:12px">
+        <label for="kIn">K <output id="oK">200</output></label>
+        <input id="kIn" type="range" min="10" max="1000" step="1" value="200">
+      </div>
+      <p class="note" id="note"></p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tCap">Values at landmark armor</caption>
+      <thead><tr><th>Armor A</th><th>m(A)</th><th>Damage taken</th><th>EHP</th><th>EHP gained from previous row</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Formulas: League of Legends Wiki, "Armor" (patch V26.10), including the negative-armor multiplier 2 &minus; 100/(100 &minus; A). Warcraft Wiki, "Armor" (classic era, attackers level 1 to 59, K = 400 + 85&middot;L, 75% cap). Valve, "Dota 2 Gameplay Update 7.20" (November 2018), reduction 0.052A / (0.9 + 0.048A), shown as printed; the patch notes do not say how the game treats values past 225 armor. Valve replaced it in patch 7.27 (June 2020) with 0.06A / (1 + 0.06A), which has a 100% asymptote (Liquipedia, Armor/Changelogs). Asymptote notation after OpenStax, College Algebra 2e, section 5.6.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const EPS=1e-9;
+const S={p:'lol',L:30,Kc:200,A:100,H:1000,neg:false,cmp:false,t:60};
+const NOTES={
+  lol:'League of Legends: damage × 100 / (100 + A). K = 100, so every armor point adds 1% of H as effective health.',
+  wow:'Classic-era World of Warcraft: K = 400 + 85 × L grows with the attacker’s level. Mitigation is capped at 75%, reached at A = 3K. Past the cap the EHP line goes flat.',
+  dota:'Dota 2 patch 7.20, as printed. Divide top and bottom by 0.048: m = (13/12) · A / (A + 18.75). The asymptote is 0.052 / 0.048 ≈ 108.3%, so the formula crosses 100% at A = 225.',
+  custom:'Your own K. K is the armor that blocks exactly half of each hit, and each K of armor adds one more H of effective health.'
+};
+
+/* ---------- model ---------- */
+function K(){return S.p==='lol'?100:S.p==='wow'?400+85*S.L:S.p==='dota'?18.75:S.Kc;}
+function half(){return S.p==='dota'?0.45/0.028:K();}
+function cap(){return S.p==='wow'?0.75:Infinity;}
+function asym(){return S.p==='dota'?0.052/0.048:1;}
+function m(a){
+  if(S.p==='dota') return 0.052*a/(0.9+0.048*a);
+  if(S.p==='lol'&&a<0) return 1-(2-100/(100-a));
+  const k=K();if(a<=-k) return NaN;
+  return Math.min(cap(),a/(a+k));
+}
+function ehp(a){const r=1-m(a);if(!isFinite(r))return NaN;if(Math.abs(r)<EPS)return Infinity;if(r<0)return NaN;return S.H/r;}
+function expM(a){return 1-Math.pow(0.5,a/half());}
+function expE(a){return S.H*Math.pow(2,a/half());}
+function linear(a){return S.p==='custom'||(S.p==='lol'&&a>=0)||(S.p==='wow'&&a<3*K());}
+function slope(a){
+  if(S.p==='wow'&&a>=3*K()) return 0;
+  if(linear(a)) return S.H/K();
+  const h=0.01,y1=ehp(a-h),y2=ehp(a+h);
+  return (isFinite(y1)&&isFinite(y2))?(y2-y1)/(2*h):NaN;
+}
+function xMin(){return S.neg?Math.ceil(-0.95*K()):0;}
+function xMax(){return S.p==='dota'?300:S.p==='wow'?Math.round(4*K()):S.p==='custom'?Math.max(600,Math.round(4*K())):600;}
+function plotXMin(){return S.neg?-1.1*K():0;}
+
+/* ---------- formatting ---------- */
+const int=n=>(Math.round(n)||0).toLocaleString('en-US');
+function num(v,d){if(Math.abs(v-Math.round(v))<1e-6)return int(v);return v.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:d});}
+const pct1=v=>(v*100).toFixed(1)+'%';
+function slopeTxt(s){if(!isFinite(s))return 'undefined';const a=Math.abs(s);return (s<0?'-':'+')+num(a,a>=10?1:a>=1?2:3);}
+function ehpTxt(a){const e=ehp(a);if(e===Infinity)return 'unbounded';if(!isFinite(e))return 'undefined';return int(e);}
+function mult(v){return num(v,2);}
+
+/* ---------- canvas helpers ---------- */
+const pad={l:52,r:14,t:14,b:34};
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function view(c,x0,x1,y0,y1){const W=c.w-pad.l-pad.r,Hh=c.h-pad.t-pad.b;return Object.assign(c,{x0,x1,y0,y1,X:x=>pad.l+W*(x-x0)/(x1-x0),Y:y=>pad.t+Hh*(1-(y-y0)/(y1-y0))});}
+function niceStep(span,n){const s0=span/n,mag=Math.pow(10,Math.floor(Math.log10(s0))),r=s0/mag;return (r<1.5?1:r<3?2:r<7?5:10)*mag;}
+function niceCeil(v){const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*mag).find(x=>x>=v*1.02)||v;}
+function axes(v,yFmt){
+  const g=v.g;g.clearRect(0,0,v.w,v.h);g.font='12px '+css('--sans');g.lineWidth=1;
+  const ys=niceStep(v.y1-v.y0,v.h<240?4:5);
+  for(let y=Math.ceil(v.y0/ys-EPS)*ys;y<=v.y1+EPS;y+=ys){const py=v.Y(y);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,py);g.lineTo(v.w-pad.r,py);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(y),pad.l-6,py);}
+  const xs=niceStep(v.x1-v.x0,v.w<360?4:6);
+  for(let x=Math.ceil(v.x0/xs-EPS)*xs;x<=v.x1+EPS;x+=xs){const px=v.X(x);g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.fillText(int(x),px,v.h-pad.b+6);g.strokeStyle=css('--ink-soft');g.beginPath();g.moveTo(px,v.h-pad.b);g.lineTo(px,v.h-pad.b+4);g.stroke();}
+  g.strokeStyle=css('--ink');g.globalAlpha=.6;g.beginPath();g.moveTo(pad.l,v.h-pad.b);g.lineTo(v.w-pad.r,v.h-pad.b);g.moveTo(pad.l,pad.t);g.lineTo(pad.l,v.h-pad.b);g.stroke();g.globalAlpha=1;
+  if(v.y0<0){g.strokeStyle=css('--ink-soft');g.beginPath();g.moveTo(pad.l,v.Y(0));g.lineTo(v.w-pad.r,v.Y(0));g.stroke();}
+  g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='top';g.fillText('Armor A',v.w-pad.r,v.h-15);
+}
+function clip(v){v.g.save();v.g.beginPath();v.g.rect(pad.l,pad.t-2,v.w-pad.l-pad.r,v.h-pad.t-pad.b+4);v.g.clip();}
+function curve(v,f,color,opts){
+  opts=opts||{};const g=v.g;clip(v);g.strokeStyle=color;g.lineWidth=opts.w||2.6;g.setLineDash(opts.dash||[]);g.globalAlpha=opts.alpha||1;g.beginPath();
+  const a0=opts.from!==undefined?Math.max(v.x0,opts.from):v.x0,a1=opts.to!==undefined?Math.min(v.x1,opts.to):v.x1,n=500,span=v.y1-v.y0;let pen=false;
+  for(let i=0;i<=n;i++){const x=a0+(a1-a0)*i/n;let y=f(x);if(!isFinite(y)){pen=false;continue;}y=Math.max(v.y0-3*span,Math.min(v.y1+3*span,y));const px=v.X(x),py=v.Y(y);pen?g.lineTo(px,py):g.moveTo(px,py);pen=true;}
+  g.stroke();g.setLineDash([]);g.globalAlpha=1;g.restore();
+}
+function hline(v,y,color,dash,label,below){const g=v.g,py=v.Y(y);g.strokeStyle=color;g.lineWidth=1.6;g.setLineDash(dash);g.beginPath();g.moveTo(pad.l,py);g.lineTo(v.w-pad.r,py);g.stroke();g.setLineDash([]);if(label){g.fillStyle=color;g.font='600 12px '+css('--sans');const L=S.cmp&&below;g.textAlign=L?'left':'right';g.textBaseline=below?'top':'bottom';g.fillText(label,L?v.X(half())+6:v.w-pad.r-4,py+(below?3:-3));}}
+function vline(v,x,color,dash,label,alignRight){if(x<v.x0||x>v.x1)return;const g=v.g,px=v.X(x);g.strokeStyle=color;g.lineWidth=1.6;g.setLineDash(dash);g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,v.h-pad.b);g.stroke();g.setLineDash([]);if(label){g.fillStyle=color;g.font='600 12px '+css('--sans');g.textBaseline='top';const tw=g.measureText(label).width,right=alignRight||px+6+tw>v.w-pad.r;g.textAlign=right?'right':'left';g.fillText(label,px+(right?-5:5),pad.t+(S.cmp?40:20));}}
+function marker(v,x,y,color){
+  const g=v.g,px=v.X(x);g.strokeStyle=css('--ink');g.globalAlpha=.45;g.lineWidth=1.2;g.setLineDash([4,4]);g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,v.h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  if(!isFinite(y))return;const py=Math.max(pad.t,Math.min(v.h-pad.b,v.Y(y)));
+  g.fillStyle=color;g.beginPath();g.arc(px,py,6.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+}
+function leaves(v,f,color,from){
+  const n=2000,a0=Math.max(v.x0,from||v.x0);
+  for(let i=0;i<=n;i++){const x=a0+(v.x1-a0)*i/n,y=f(x);if(!isFinite(y)||y>v.y1){
+    // refine by bisection
+    let lo=a0+(v.x1-a0)*Math.max(0,i-1)/n,hi=x;for(let k=0;k<40;k++){const mid=(lo+hi)/2,ym=f(mid);(isFinite(ym)&&ym<=v.y1)?lo=mid:hi=mid;}
+    const px=v.X(hi),g=v.g;g.fillStyle=color;g.beginPath();g.moveTo(px,pad.t-2);g.lineTo(px-6,pad.t+9);g.lineTo(px+6,pad.t+9);g.closePath();g.fill();
+    g.font='600 12px '+css('--sans');g.textBaseline='top';const lab='leaves chart at A ≈ '+num(hi,0),tw=g.measureText(lab).width,right=px+10+tw>v.w-pad.r;g.textAlign=right?'right':'left';g.fillText(lab,px+(right?-9:9),pad.t+(color===css('--moss')?36:2));
+    return hi;}}
+  return null;
+}
+
+/* ---------- drawing ---------- */
+function drawMit(){
+  const c=setup($('cMit')),y0=S.neg?-2:0,y1=S.p==='dota'?1.1:1,v=view(c,plotXMin(),xMax(),y0,y1),g=v.g;
+  axes(v,y=>Math.round(y*100)+'%');
+  if(S.p==='dota'){g.fillStyle=css('--blood');g.globalAlpha=.1;g.fillRect(v.X(225),pad.t,v.X(300)-v.X(225),v.h-pad.t-pad.b);g.globalAlpha=1;}
+  hline(v,asym(),css('--ink-soft'),[7,5],'asymptote: '+(asym()*100).toFixed(S.p==='dota'?1:0)+'%',S.p!=='dota');
+  if(S.p==='wow') hline(v,0.75,css('--blood'),[],'75% hard cap',true);
+  vline(v,half(),css('--steel'),[2,4],S.p==='dota'?'m = 50% at A ≈ 16.1':'K = '+int(K()));
+  if(S.neg){vline(v,-K(),css('--blood'),[7,5],'A = −K',false);
+    if(S.p==='lol') curve(v,a=>a/(a+100),css('--steel'),{from:-99.99,to:0,dash:[3,4],w:1.6,alpha:.55});}
+  const from=S.neg?-K()+1e-6:0;
+  curve(v,m,css('--steel'),{from});
+  if(S.cmp) curve(v,expM,css('--moss'),{dash:[8,5],from:S.neg?v.x0:0});
+  marker(v,S.A,m(S.A),css('--steel'));
+  $('cMit').setAttribute('aria-label',`Mitigation curve. At armor ${int(S.A)}, m = ${pct1(m(S.A))}. Horizontal asymptote at ${(asym()*100).toFixed(1)}%.`);
+}
+function drawEhp(){
+  const c=setup($('cEhp')),x1=xMax();let y1;
+  if(S.cmp||S.p==='dota') y1=10*S.H;
+  else{let mx=0;for(let i=0;i<=200;i++){const e=ehp(plotXMin()+(x1-plotXMin())*i/200);if(isFinite(e))mx=Math.max(mx,e);}y1=niceCeil(mx);}
+  const v=view(c,plotXMin(),x1,0,y1),g=v.g;
+  axes(v,y=>y>=10000?num(y/1000,1)+'k':int(y));
+  if(S.p==='dota'){g.fillStyle=css('--blood');g.globalAlpha=.1;g.fillRect(v.X(225),pad.t,v.X(300)-v.X(225),v.h-pad.t-pad.b);g.globalAlpha=1;
+    g.fillStyle=css('--blood');g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='middle';g.fillText('m ≥ 100%:',v.X(262.5),v.Y(y1*0.55));g.fillText('EHP undefined',v.X(262.5),v.Y(y1*0.55)+15);}
+  // equal-step ticks every K, labelled +H
+  if(S.p!=='dota'){const k=K(),gap=v.X(k)-v.X(0);g.strokeStyle=css('--ochre');g.fillStyle=css('--ochre');g.lineWidth=2;g.font='700 11px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+    for(let a=k,i=1;a<=x1+EPS;a+=k,i++){const px=v.X(a),py=v.h-pad.b;g.beginPath();g.moveTo(px,py);g.lineTo(px,py-8);g.stroke();if(gap>=26||(gap>=13&&i%2===0))g.fillText('+H',px,py-10);}}
+  if(S.neg) vline(v,-K(),css('--blood'),[7,5],'A = −K',false);
+  if(S.p==='wow') vline(v,3*K(),css('--blood'),[],'cap at 3K = '+int(3*K()),true);
+  const from=S.neg?-K()+1e-6:0;
+  curve(v,ehp,css('--ochre'),{from});
+  if(S.p==='dota') leaves(v,ehp,css('--ochre'),0);
+  if(S.cmp){curve(v,expE,css('--moss'),{dash:[8,5],from:S.neg?v.x0:0});leaves(v,expE,css('--moss'),0);}
+  marker(v,S.A,ehp(S.A),css('--ochre'));
+  $('cEhp').setAttribute('aria-label',`Effective health. At armor ${int(S.A)}, EHP = ${ehpTxt(S.A)}.`);
+}
+
+/* ---------- readouts ---------- */
+function targetArmor(t){
+  if(!(t>=0)) return {txt:'enter a percentage',how:''};
+  if(S.p==='dota'){if(t>=0.052/0.048-EPS) return {txt:'never',how:'the formula only approaches 108.3%'};return {txt:num(0.9*t/(0.052-0.048*t),1)+' armor',how:'A = 0.9m / (0.052 − 0.048m)'};}
+  if(S.p==='wow'&&t>0.75+EPS) return {txt:'never',how:'above the 75% cap, reached at 3K = '+int(3*K())};
+  if(t>=1) return {txt:'never',how:'m only approaches 100%'};
+  return {txt:num(K()*t/(1-t),1)+' armor',how:'A = K·m / (1 − m), K = '+int(K())};
+}
+let summaryText='';
+function readouts(){
+  const a=S.A,mm=m(a),e=ehp(a),s=slope(a);
+  $('rMit').textContent=pct1(mm);
+  $('badge').hidden=!(mm>1+EPS);
+  $('rTaken').textContent=(100*(1-mm)).toFixed(1)+(mm>1+EPS?' (heals)':'');
+  $('rEhp').textContent=ehpTxt(a);
+  $('rSlope').textContent=slopeTxt(s);
+  $('rSlopeLbl').textContent=linear(a)?'EHP per armor point (H / K)':'EHP per armor point (slope here)';
+  const tg=targetArmor(S.t/100);$('rTarget').textContent=tg.txt;$('rTargetHow').textContent=tg.how;
+  let tail;
+  if(!isFinite(e)) tail=mm>1+EPS?'EHP undefined, the formula blocks more than 100%':'EHP unbounded, no damage taken';
+  else if(S.p==='wow'&&a>=3*K()) tail=`EHP ${int(e)} (+0 per point, past the 75% cap)`;
+  else if(linear(a)) tail=`EHP ${int(e)} (${slopeTxt(s)} per point, ${S.p==='wow'?'until the cap at '+int(3*K()):'always'})`;
+  else tail=`EHP ${int(e)} (${slopeTxt(s)} per point here${S.p==='dota'?', and rising':''})`;
+  summaryText=`${int(a)} armor: ${pct1(mm)} blocked, ${tail}`;
+  if(S.cmp){const em=expM(a);summaryText=`${int(a)} armor, K = ${num(half(),1)}: rational ${pct1(mm)} (EHP ×${isFinite(e)?mult(e/S.H):'∞'}), exponential ${pct1(em)} (EHP ×${mult(1/(1-em))})`;
+    $('rRatMult').textContent=isFinite(e)?'×'+mult(e/S.H):'undefined';$('rExpMit').textContent=pct1(em);$('rExpMult').textContent='×'+mult(Math.pow(2,a/half()));$('rHalf').textContent=num(half(),1);}
+  $('summary').textContent=summaryText;
+  // table
+  let xs;const k=K();
+  if(S.p==='dota') xs=[0,10,20,50,100,225,300];
+  else if(S.p==='wow') xs=[0,2000,k,2*k,3*k,4*k].sort((p,q)=>p-q);
+  else xs=[0,k/2,k,2*k,3*k,4*k];
+  if(S.neg) xs=[Math.ceil(-0.95*k),-k/2].concat(xs);
+  xs=xs.filter((x,i,arr)=>arr.indexOf(x)===i);
+  let prev=null;const rows=xs.map(x=>{const ev=ehp(x),here=Math.abs(x-a)<0.5;
+    const gain=(prev===null||!isFinite(ev)||!isFinite(prev))?'—':(ev-prev>=0?'+':'-')+int(Math.abs(ev-prev));prev=ev;
+    return `<tr class="${here?'here':''}"><td>${num(x,1)}</td><td>${pct1(m(x))}</td><td>${(100*(1-m(x))).toFixed(1)}%</td><td>${ehpTxt(x)}</td><td>${gain}</td></tr>`;});
+  $('tbody').innerHTML=rows.join('');
+  $('tCap').textContent=`Values at landmark armor, H = ${int(S.H)}${S.p==='wow'?', attacker level '+S.L+', K = '+int(k):''}`;
+}
+function syncArmorInputs(){const lo=xMin(),hi=xMax();for(const el of [$('armor'),$('armorNum')]){el.min=lo;el.max=hi;}S.A=Math.max(lo,Math.min(hi,S.A));$('armor').value=S.A;$('armorNum').value=S.A;$('armorRange').textContent=`${int(lo)} to ${int(hi)}`;}
+function update(){syncArmorInputs();readouts();drawMit();drawEhp();}
+
+/* ---------- events ---------- */
+$('armor').addEventListener('input',e=>{S.A=+e.target.value;$('armorNum').value=S.A;readouts();drawMit();drawEhp();});
+$('armorNum').addEventListener('change',e=>{const v=+e.target.value;if(isFinite(v))S.A=Math.round(v);update();});
+$('hp').addEventListener('change',e=>{let v=+e.target.value;if(!isFinite(v)||v<=0)v=1000;S.H=Math.max(100,Math.min(10000,Math.round(v)));e.target.value=S.H;update();});
+$('hp').addEventListener('input',e=>{const v=+e.target.value;if(v>=100&&v<=10000){S.H=v;readouts();drawMit();drawEhp();}});
+$('target').addEventListener('input',e=>{S.t=parseFloat(e.target.value);readouts();});
+$('neg').addEventListener('change',e=>{S.neg=e.target.checked;update();});
+$('lvl').addEventListener('input',e=>{S.L=+e.target.value;$('oLvl').textContent=S.L;update();});
+$('kIn').addEventListener('input',e=>{S.Kc=+e.target.value;$('oK').textContent=S.Kc;update();});
+const DEFAULT_A={lol:100,wow:2000,dota:20};
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  S.p=b.dataset.p;$('lvlWrap').hidden=S.p!=='wow';$('kWrap').hidden=S.p!=='custom';
+  const negOK=S.p==='lol'||S.p==='custom';$('neg').disabled=!negOK;if(!negOK){S.neg=false;$('neg').checked=false;}
+  $('negNote').textContent=negOK?(S.p==='lol'?'Uses League’s separate formula below 0. The faint dashed curve is the plain formula it avoids.':'The plain formula, heading for the vertical asymptote at A = −K.'):'Available for League and Custom K.';
+  $('note').textContent=NOTES[S.p];S.A=S.p==='custom'?S.Kc:DEFAULT_A[S.p];update();
+}));
+const tabs=[$('tCurves'),$('tCompare')];
+function sel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',String(on));x.tabIndex=on?0:-1;});
+  $('panel').setAttribute('aria-labelledby',t.id);S.cmp=t.id==='tCompare';document.querySelectorAll('.cmpOnly').forEach(el=>el.hidden=!S.cmp);if(focus)t.focus();update();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t,false));t.addEventListener('keydown',e=>{if(['ArrowRight','ArrowLeft','Home','End'].includes(e.key)){e.preventDefault();sel(tabs[e.key==='Home'?0:e.key==='End'?1:(i+1)%2],true);}});});
+$('copyBtn').addEventListener('click',()=>{
+  const lines=[summaryText,`m(A) = ${$('rMit').textContent}`,`damage taken per 100 = ${$('rTaken').textContent}`,`EHP = ${$('rEhp').textContent}`,`EHP per armor point = ${$('rSlope').textContent}`,`armor for ${S.t}% = ${$('rTarget').textContent}`].join('\n');
+  const done=()=>{$('copyBtn').textContent='Copied';setTimeout(()=>$('copyBtn').textContent='Copy numbers',1400);};
+  try{navigator.clipboard.writeText(lines).then(done,()=>{});}catch(err){}
+});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{drawMit();drawEhp();},60);});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawMit();drawEhp();});}catch(err){}
+$('note').textContent=NOTES.lol;
+$('negNote').textContent='Uses League’s separate formula below 0. The faint dashed curve is the plain formula it avoids.';
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawMit();drawEhp();});
+update();
+window.__armor={S,m,ehp,update};
+})();
+</script>
+</body>
+</html>

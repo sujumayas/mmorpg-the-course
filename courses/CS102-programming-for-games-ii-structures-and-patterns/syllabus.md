@@ -30,7 +30,7 @@ Object-oriented and data-oriented thinking, core data structures and the pattern
 | 12 | Pattern: Command (input, replay, undo) | _todo_ | _todo_ |
 | 13 | Data-driven design: stats in JSON/CSV | _todo_ | _todo_ |
 | 14 | Unit testing gameplay rules | _todo_ | _todo_ |
-| 15 | Final: data-driven RPG combat module | _todo_ | _todo_ |
+| 15 | Final: data-driven RPG combat module | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

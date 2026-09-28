@@ -29,7 +29,7 @@ Producing content faster than players consume it: quest hubs, dungeons, raid enc
 | 12 | Content tooling and pipelines | _todo_ | _todo_ |
 | 13 | Content budgets and cadence planning | _todo_ | _todo_ |
 | 14 | Accessibility in group content | _todo_ | _todo_ |
-| 15 | Final: dungeon with 3 boss encounters | _todo_ | _todo_ |
+| 15 | Final: dungeon with 3 boss encounters | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

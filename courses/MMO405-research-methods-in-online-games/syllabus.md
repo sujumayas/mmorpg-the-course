@@ -28,7 +28,7 @@ How to produce evidence about online worlds: telemetry analysis, surveys, ethnog
 | 12 | Peer review | _todo_ | _todo_ |
 | 13 | Replication | _todo_ | _todo_ |
 | 14 | Research presentations | _todo_ | _todo_ |
-| 15 | Final: research paper | _todo_ | _todo_ |
+| 15 | Final: research paper | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

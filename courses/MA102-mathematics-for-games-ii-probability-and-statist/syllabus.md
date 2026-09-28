@@ -17,21 +17,21 @@ Loot, crits, drop rates, matchmaking and A/B tests all run on probability. This 
 
 | Week | Topic | Lecture | Example |
 |---|---|---|---|
-| 1 | Probability basics: sample spaces and events | _todo_ | _todo_ |
-| 2 | Independent events: the gambler's fallacy in loot | _todo_ | _todo_ |
-| 3 | Complement rule: chance of at least one drop | _todo_ | _todo_ |
-| 4 | Expected value: comparing weapons | _todo_ | _todo_ |
-| 5 | Variance and standard deviation: 'swingy' designs | _todo_ | _todo_ |
-| 6 | Binomial distribution: crits over a fight | _todo_ | _todo_ |
-| 7 | Geometric distribution: kills until the drop | _todo_ | _todo_ |
-| 8 | Dice sums and the normal curve (2d6 vs 1d12) | _todo_ | _todo_ |
-| 9 | Weighted tables and loot table design | _todo_ | _todo_ |
-| 10 | Pseudo-random distribution and pity timers | _todo_ | _todo_ |
-| 11 | Monte Carlo simulation | _todo_ | _todo_ |
-| 12 | Descriptive statistics for playtests | _todo_ | _todo_ |
-| 13 | Sampling, confidence and why n=5 lies | _todo_ | _todo_ |
-| 14 | Intro to hypothesis testing (A/B) | _todo_ | _todo_ |
-| 15 | Final exam + loot system design | _todo_ | _todo_ |
+| 1 | Probability basics: sample spaces and events | [lecture](lectures/w01-sample-spaces-and-events.md) | [advantage-grid](examples/w01-advantage-grid.html) |
+| 2 | Independent events: the gambler's fallacy in loot | [lecture](lectures/w02-independent-events-and-the-gamblers-fallacy.md) | [dry-streaks](examples/w02-dry-streaks.html) |
+| 3 | Complement rule: chance of at least one drop | [lecture](lectures/w03-complement-rule-chance-of-at-least-one-drop.md) | [drop-curve](examples/w03-drop-curve.html) |
+| 4 | Expected value: comparing weapons | [lecture](lectures/w04-expected-value-comparing-weapons.md) | [expected-dps](examples/w04-expected-dps.html) |
+| 5 | Variance and standard deviation: 'swingy' designs | [lecture](lectures/w05-variance-and-swingy-designs.md) | [swing-meter](examples/w05-swing-meter.html) |
+| 6 | Binomial distribution: crits over a fight | [lecture](lectures/w06-binomial-crits-over-a-fight.md) | [crit-binomial](examples/w06-crit-binomial.html) |
+| 7 | Geometric distribution: kills until the drop | [lecture](lectures/w07-geometric-distribution-kills-until-the-drop.md) | [kills-until-drop](examples/w07-kills-until-drop.html) |
+| 8 | Dice sums and the normal curve (2d6 vs 1d12) | [lecture](lectures/w08-dice-sums-and-the-normal-curve.md) | [dice-shapes](examples/w08-dice-shapes.html) |
+| 9 | Weighted tables and loot table design | [lecture](lectures/w09-weighted-tables-and-loot-table-design.md) | [loot-weights](examples/w09-loot-weights.html) |
+| 10 | Pseudo-random distribution and pity timers | [lecture](lectures/w10-pseudo-random-distribution-and-pity-timers.md) | [gacha-pity](examples/w10-gacha-pity.html) · [prd-streaks](examples/w10-prd-streaks.html) |
+| 11 | Monte Carlo simulation | [lecture](lectures/w11-monte-carlo-simulation.md) | [monte-carlo-mulligan](examples/w11-monte-carlo-mulligan.html) |
+| 12 | Descriptive statistics for playtests | [lecture](lectures/w12-descriptive-statistics-for-playtests.md) | [playtest-spread](examples/w12-playtest-spread.html) |
+| 13 | Sampling, confidence and why n=5 lies | [lecture](lectures/w13-sampling-confidence-and-why-n5-lies.md) | [sampling-intervals](examples/w13-sampling-intervals.html) |
+| 14 | Intro to hypothesis testing (A/B) | [lecture](lectures/w14-intro-to-hypothesis-testing-ab.md) | [ab-test-simulator](examples/w14-ab-test-simulator.html) |
+| 15 | Final exam + loot system design | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

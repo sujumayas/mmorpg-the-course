@@ -16,21 +16,21 @@ Balancing many classes, roles and encounters at once: mitigation math, the holy 
 
 | Week | Topic | Lecture | Example |
 |---|---|---|---|
-| 1 | What 'balanced' means: fairness, viability, diversity | _todo_ | _todo_ |
+| 1 | What 'balanced' means: fairness, viability, diversity | [lecture](lectures/w01-what-balanced-means.md) | [effective-classes](examples/w01-effective-classes.html) |
 | 2 | Armor and damage mitigation: A/(A+K) | [lecture](lectures/w02-armor-and-damage-mitigation.md) | [armor-curve](examples/w02-armor-curve.html) |
-| 3 | Effective HP and effective DPS | _todo_ | _todo_ |
-| 4 | Stacking mitigation: multiplicative layers | _todo_ | _todo_ |
-| 5 | The holy trinity: tank, healer, DPS | _todo_ | _todo_ |
-| 6 | Threat, aggro and control | _todo_ | _todo_ |
-| 7 | Healing throughput and mana economy | _todo_ | _todo_ |
-| 8 | Crowd control and diminishing returns | _todo_ | _todo_ |
-| 9 | Intransitivity and counters | _todo_ | _todo_ |
-| 10 | Game theory: payoff matrices and Nash equilibria | _todo_ | _todo_ |
-| 11 | Lanchester's laws and group combat | _todo_ | _todo_ |
-| 12 | Stat weights and theorycrafting | _todo_ | _todo_ |
-| 13 | Combat simulators | _todo_ | _todo_ |
-| 14 | Communicating balance changes (patch notes) | _todo_ | _todo_ |
-| 15 | Final: 4-class balance pass with simulation evidence | _todo_ | _todo_ |
+| 3 | Effective HP and effective DPS | [lecture](lectures/w03-effective-hp-and-effective-dps.md) | [resist-split](examples/w03-resist-split.html) |
+| 4 | Stacking mitigation: multiplicative layers | [lecture](lectures/w04-stacking-mitigation-multiplicative-layers.md) | [mitigation-layers](examples/w04-mitigation-layers.html) |
+| 5 | The holy trinity: tank, healer, DPS | [lecture](lectures/w05-the-holy-trinity-tank-healer-dps.md) | [role-composition](examples/w05-role-composition.html) |
+| 6 | Threat, aggro and control | [lecture](lectures/w06-threat-aggro-and-control.md) | [threat-race](examples/w06-threat-race.html) |
+| 7 | Healing throughput and mana economy | [lecture](lectures/w07-healing-throughput-and-mana-economy.md) | [mana-budget](examples/w07-mana-budget.html) |
+| 8 | Crowd control and diminishing returns | [lecture](lectures/w08-crowd-control-and-diminishing-returns.md) | [cc-diminishing-returns](examples/w08-cc-diminishing-returns.html) |
+| 9 | Intransitivity and counters | [lecture](lectures/w09-intransitivity-and-counters.md) | [counter-triangle](examples/w09-counter-triangle.html) |
+| 10 | Game theory: payoff matrices and Nash equilibria | [lecture](lectures/w10-game-theory-payoff-matrices-and-nash-equilibria.md) | [counter-triangle](examples/w10-counter-triangle.html) |
+| 11 | Lanchester's laws and group combat | [lecture](lectures/w11-lanchesters-laws-and-group-combat.md) | [lanchester-battle](examples/w11-lanchester-battle.html) |
+| 12 | Stat weights and theorycrafting | [lecture](lectures/w12-stat-weights-and-theorycrafting.md) | [stat-weights](examples/w12-stat-weights.html) |
+| 13 | Combat simulators | [lecture](lectures/w13-combat-simulators.md) | [monte-carlo-dps](examples/w13-monte-carlo-dps.html) |
+| 14 | Communicating balance changes (patch notes) | [lecture](lectures/w14-communicating-balance-changes.md) | [patch-line-translator](examples/w14-patch-line-translator.html) |
+| 15 | Final: 4-class balance pass with simulation evidence | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

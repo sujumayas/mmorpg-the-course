@@ -30,7 +30,7 @@ Games as systems of resources and loops. The foundation for economy, progression
 | 12 | Emergent behavior from simple rules | _todo_ | _todo_ |
 | 13 | Systems documentation | _todo_ | _todo_ |
 | 14 | Tuning with spreadsheets | _todo_ | _todo_ |
-| 15 | Final: system design document + simulation | _todo_ | _todo_ |
+| 15 | Final: system design document + simulation | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

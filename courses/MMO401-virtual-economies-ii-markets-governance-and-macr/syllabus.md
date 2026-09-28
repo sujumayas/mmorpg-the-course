@@ -29,7 +29,7 @@ Advanced economy design and management: monetary policy, market microstructure, 
 | 12 | Economic shocks: exploits and rollbacks | _todo_ | _todo_ |
 | 13 | Reading an economic report | _todo_ | _todo_ |
 | 14 | Intervention design | _todo_ | _todo_ |
-| 15 | Final: agent-based economy + policy memo | _todo_ | _todo_ |
+| 15 | Final: agent-based economy + policy memo | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

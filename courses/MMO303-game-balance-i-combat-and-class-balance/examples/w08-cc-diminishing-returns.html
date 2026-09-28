@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CC diminishing returns — MMO303 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:14px;min-width:0}
+figure{margin:0 0 12px;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cTime{height:184px;touch-action:pan-y;cursor:ew-resize}
+#cCum{height:240px}
+.cumrow{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px;align-items:stretch}
+@media (max-width:560px){.cumrow{grid-template-columns:minmax(0,1fr)}}
+.gauge{display:flex;flex-direction:column;justify-content:center;gap:6px;border-left:4px solid var(--ochre);padding-left:10px}
+.gauge b{font-size:1.9rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.gauge span{font-size:.84rem;color:var(--ink-soft)}
+.meter{height:12px;border-radius:6px;background:var(--paper);border:1.5px solid var(--ink);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ochre);width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0;color:var(--ink)}
+.legend i{display:inline-block;width:16px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px;border:1.5px solid var(--blood)}
+.sw1{background:var(--blood)}
+.sw2{background:repeating-linear-gradient(135deg,var(--blood) 0 3px,transparent 3px 6px)}
+.sw3{background:radial-gradient(var(--blood) 1.2px,transparent 1.5px) 0 0/5px 5px}
+.sw0{background:transparent}
+.swR{border-color:var(--ink-soft)!important;background:repeating-linear-gradient(45deg,var(--ink-soft) 0 1px,transparent 1px 5px)}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:4px 0 10px}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin:0 0 12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.warn{font-size:.86rem;color:var(--ink-soft);margin:4px 0 0;min-height:1.2em}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;min-width:430px}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink-soft);font-size:.82rem}
+tr.imm td{color:var(--ink-soft)}
+tr.reset td:nth-child(3){color:var(--moss);font-weight:700}
+fieldset{border:0;padding:0;margin:0 0 14px;min-width:0}
+legend,.h{font-weight:700;font-size:.95rem;margin:0 0 6px;padding:0}
+.radios{display:grid;gap:4px}
+.radios label{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;cursor:pointer;padding:3px 0}
+.radios input{margin-top:4px;accent-color:var(--steel)}
+.row{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:.88rem}
+.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+.casts{display:grid;gap:8px}
+.cast{border:1px solid var(--grid);border-radius:10px;padding:8px 10px;background:var(--paper-2)}
+.cast header{display:flex;justify-content:space-between;align-items:center;margin:0 0 2px;max-width:none}
+.cast header b{font-size:.9rem}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+button{font:600 .86rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button:hover{background:var(--paper-2)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.small{padding:3px 8px;font-size:.8rem;border-color:var(--ink-soft)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.mlist{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin:4px 0 8px}
+.mlist input{width:100%;font:600 .85rem var(--sans);padding:5px 3px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);text-align:center;font-variant-numeric:tabular-nums}
+.check{display:flex;gap:8px;align-items:center;font-size:.9rem;margin-top:6px}
+.check input{accent-color:var(--steel);width:18px;height:18px}
+.tip{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:80ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO303 Game Balance I · Week 8 · Worked example</p>
+  <h1>Diminishing returns turn more CC into a ceiling</h1>
+  <p class="lede">Four 6-second stuns land back to back on one target. The timeline looks busy either way. The bars below it tell the truth. Without DR the chain is worth 24 seconds, and under the WoW rule from 2015 to The War Within it stops at 10.5.</p>
+</header>
+
+<div class="layout">
+<div class="panel" id="views">
+  <figure>
+    <figcaption>60-second timeline, one target<small>Bar length is the actual duration. The hatched strip is the reset window R after each effect ends. Drag a bar to move its cast.</small></figcaption>
+    <canvas id="cTime" role="img" aria-label="Timeline of crowd control applications"></canvas>
+    <div class="legend" aria-hidden="true">
+      <span><i class="sw1"></i>step 1, full</span>
+      <span><i class="sw2"></i>½ or less, striped</span>
+      <span><i class="sw3"></i>¼ or less, dotted</span>
+      <span><i class="sw0"></i>0, immune</span>
+      <span><i class="swR"></i>reset window</span>
+    </div>
+    <p class="warn" id="moved" aria-live="polite"></p>
+  </figure>
+
+  <figure>
+    <figcaption>Total control after each application<small>Bars follow the current chain. Thin line: the same casts with no DR. Dashed line: the DR ceiling for one cycle.</small></figcaption>
+    <div class="cumrow">
+      <canvas id="cCum" role="img" aria-label="Cumulative control time by number of applications"></canvas>
+      <div class="gauge">
+        <span>Uptime ceiling</span>
+        <b id="gVal">—</b>
+        <div class="meter" aria-hidden="true"><i id="gBar"></i></div>
+        <span id="gNote">—</span>
+      </div>
+    </div>
+  </figure>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--blood)"><b id="rTot">—</b><span>total control</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rNo">—</b><span>same casts, no DR</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rCeil">—</b><span id="rCeilL">ceiling per cycle</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rUp">—</b><span>uptime ceiling</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rBest">—</b><span>longest first</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rWorst">—</b><span>shortest first</span></div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Each application in cast order">
+      <thead><tr><th>Cast</th><th>Starts</th><th>Step</th><th>Multiplier</th><th>Base</th><th>Actual</th><th>Running total</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel" id="controls">
+  <fieldset>
+    <legend>DR rule</legend>
+    <div class="radios" id="presets"></div>
+  </fieldset>
+
+  <div id="customWrap" hidden>
+    <span class="h">Multipliers, step 1 to 6</span>
+    <div class="mlist" id="mlist"></div>
+    <div class="row"><label for="rIn">Reset window R</label><output id="oR" for="rIn">18 s</output></div>
+    <input id="rIn" type="range" min="0" max="40" step="1" value="18">
+    <p class="tip">A 0 makes the target immune from that step on. Steps past 6 are immune.</p>
+  </div>
+
+  <span class="h" style="display:block;margin-top:10px">Applications (same DR category)</span>
+  <div class="btns">
+    <button id="bChain">Chain now</button>
+    <button id="bLong">Longest first</button>
+    <button id="bShort">Shortest first</button>
+  </div>
+  <div class="casts" id="casts"></div>
+  <div class="btns"><button id="bAdd">Add application</button></div>
+
+  <span class="h">Tenacity</span>
+  <div class="row"><label for="ten">Duration reduction, before DR</label><output id="oTen" for="ten">0%</output></div>
+  <input id="ten" type="range" min="0" max="90" step="1" value="0">
+  <label class="check"><input type="checkbox" id="floor"> League-style floor of 0.3 s</label>
+  <p class="tip">Try: set tenacity to 44% and one base duration to 2 s (1.12 s), then 0.5 s with the floor on (0.3 s).</p>
+</div>
+</div>
+
+<footer>DR parameters: Warcraft Wiki, "Diminishing returns" (18 s window from a 2015 Warlords of Draenor hotfix; patch 12.0.0 immunity after two applications and 16 s; patch 12.1.0 window 20 s; accessed September 2026). Tenacity and its 0.3 s floor: League of Legends Wiki, "Tenacity". "Halve forever" follows the Midnight PvE stun change described by Maxroll, which halves down to one sixteenth. All ability durations here are invented for teaching.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const r2=x=>Math.round(x*100+1e-9)/100;
+const fs=x=>{const v=r2(x);return (Number.isInteger(v)?v.toFixed(1):String(v));};
+const fp=x=>(Math.round(x*1000+1e-9)/10).toFixed(1)+'%';
+const MAXN=6,TMAX=60;
+
+const PRESETS=[
+  {id:'wow15',name:'WoW, 2015 to The War Within',m:[1,.5,.25,0],R:18},
+  {id:'mid0',name:'WoW Midnight 12.0 (per Warcraft Wiki)',m:[1,.5,0],R:16},
+  {id:'mid1',name:'WoW Midnight 12.1 (per Warcraft Wiki)',m:[1,.5,0],R:20},
+  {id:'halve',name:'Halve forever (floor 1/16)',m:null,R:16,halve:true},
+  {id:'nodr',name:'No DR',m:null,R:0,nodr:true},
+  {id:'custom',name:'Custom',m:[1,.5,.25,0,0,0],R:18}
+];
+let preset=PRESETS[0];
+let custom={m:[1,.5,.25,0,0,0],R:18};
+let apps=[{d:6,t:0},{d:6,t:6},{d:6,t:9},{d:6,t:10.5}];
+let ten=0,useFloor=false;
+
+function R(){return preset.id==='custom'?custom.R:preset.R;}
+function mult(k){
+  if(preset.nodr) return 1;
+  if(preset.halve) return Math.max(Math.pow(.5,k-1),1/16);
+  const list=preset.id==='custom'?custom.m:preset.m;
+  for(let i=0;i<k;i++){ if(i>=list.length||list[i]<=0) return 0; }
+  return list[k-1];
+}
+function hasImmunity(){return !(preset.nodr||preset.halve);}
+function actual(k,d){
+  const m=mult(k);let a=m*d*(1-ten);
+  if(useFloor&&a>0) a=Math.max(a,.3);
+  return {m,a};
+}
+function base(d){let a=d*(1-ten);if(useFloor&&a>0)a=Math.max(a,.3);return a;}
+
+// Simulate a chain. Returns rows in cast order.
+function simulate(list){
+  const order=list.map((a,i)=>({...a,i})).sort((x,y)=>x.t-y.t||x.i-y.i);
+  let prevEnd=-Infinity,lastEff=null,k=0,total=0,noDR=0;const rows=[];
+  for(const a of order){
+    const start=Math.max(a.t,prevEnd);
+    const reset=(lastEff===null)||(start>lastEff+R()+1e-9);
+    k=reset?1:k+1;
+    const {m,a:act}=actual(k,a.d);
+    const end=start+act;
+    total+=act;noDR+=base(a.d);
+    rows.push({i:a.i,t:a.t,start,end,k,m,d:a.d,act,total,noDR,moved:start>a.t+1e-9,reset:reset&&lastEff!==null});
+    prevEnd=end; if(act>0) lastEff=end;
+  }
+  return rows;
+}
+function chainOrder(list,t0){
+  const tmp=list.map(a=>({d:a.d,t:t0}));
+  const rows=simulate(tmp);
+  return {apps:tmp.map((a,i)=>({d:a.d,t:r2(rows.find(r=>r.i===i).start)})),total:rows.length?rows[rows.length-1].total:0};
+}
+function cycleCeiling(d){let s=0;for(let k=1;k<=MAXN;k++){s+=actual(k,d).a;}return s;}
+function uptime(d){
+  if(!hasImmunity()) return null;
+  let s=0;for(let k=1;k<=MAXN;k++){const x=actual(k,d);if(x.m<=0)break;s+=x.a;}
+  const r=R();return s/(s+r);
+}
+function stepLabel(m){
+  if(m<=0) return '0';
+  const map={1:'1',.5:'½',.25:'¼',.125:'⅛',.0625:'1/16'};
+  return map[m]||String(r2(m));
+}
+function multText(m){return m<=0?'0 (immune)':m.toFixed(m<.1?4:2);}
+
+// ---------- canvas helpers
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};
+}
+function fillStep(g,x,y,w,h,m,col){
+  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
+  if(m>=1){g.fillStyle=col;g.fillRect(x,y,w,h);}
+  else if(m>=.5){g.globalAlpha=.22;g.fillStyle=col;g.fillRect(x,y,w,h);g.globalAlpha=1;g.strokeStyle=col;g.lineWidth=2.4;
+    for(let s=x-h;s<x+w+h;s+=6){g.beginPath();g.moveTo(s,y+h);g.lineTo(s+h,y);g.stroke();}}
+  else {g.globalAlpha=.12;g.fillStyle=col;g.fillRect(x,y,w,h);g.globalAlpha=1;g.fillStyle=col;
+    for(let yy=y+2.5;yy<y+h;yy+=5)for(let xx=x+2.5;xx<x+w;xx+=5){g.beginPath();g.arc(xx,yy,1.2,0,6.3);g.fill();}}
+  g.restore();
+  g.strokeStyle=col;g.lineWidth=1.5;g.strokeRect(x+.75,y+.75,Math.max(0,w-1.5),h-1.5);
+}
+
+let rowsCache=[],tl={};
+function drawTimeline(rows){
+  const c=setup($('cTime')),g=c.g,w=c.w,h=c.h;
+  const pad={l:10,r:10,t:44,b:26};const pw=w-pad.l-pad.r;const X=t=>pad.l+pw*t/TMAX;
+  tl={pad,pw,w};
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood');
+  g.font='12px '+css('--sans');
+  // grid + axis
+  for(let t=0;t<=TMAX;t+=10){const x=X(t);g.strokeStyle=grid;g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t-4);g.lineTo(x,h-pad.b);g.stroke();
+    g.fillStyle=soft;g.textAlign=t===0?'left':t===TMAX?'right':'center';g.textBaseline='top';g.fillText(t+(t===TMAX?' s':''),x,h-pad.b+6);}
+  const laneY=pad.t,laneH=46,rY=laneY+laneH+8,rH=14;
+  g.fillStyle=soft;g.textAlign='left';g.textBaseline='middle';
+  // reset windows
+  const r=R();
+  if(r>0){rows.forEach(o=>{if(o.act<=0)return;const x0=X(o.end),x1=X(Math.min(TMAX,o.end+r));if(x1<=x0)return;
+    g.save();g.beginPath();g.rect(x0,rY,x1-x0,rH);g.clip();g.globalAlpha=.55;g.strokeStyle=soft;g.lineWidth=1;
+    for(let s=x0-rH;s<x1+rH;s+=5){g.beginPath();g.moveTo(s,rY+rH);g.lineTo(s+rH,rY);g.stroke();}g.restore();
+    g.strokeStyle=soft;g.globalAlpha=.8;g.strokeRect(x0+.5,rY+.5,x1-x0-1,rH-1);g.globalAlpha=1;});
+    // reset tick at end of last effective window
+    let lastEff=null;rows.forEach(o=>{if(o.act>0)lastEff=o.end;});
+    if(lastEff!==null&&lastEff+r<=TMAX){const x=X(lastEff+r);g.strokeStyle=css('--moss');g.lineWidth=2;g.beginPath();g.moveTo(x,rY-2);g.lineTo(x,rY+rH+2);g.stroke();
+      g.fillStyle=css('--moss');g.textBaseline='top';g.textAlign=x>w-70?'right':'left';g.fillText('DR resets',x+(x>w-70?-4:4),rY+rH-12);}
+  }
+  // lane
+  g.strokeStyle=grid;g.lineWidth=1;g.strokeRect(pad.l+.5,laneY+.5,pw-1,laneH-1);
+  const labels=[];
+  rows.forEach(o=>{
+    if(o.start>=TMAX)return;
+    const x0=X(o.start),x1=X(Math.min(TMAX,o.end));
+    if(o.act>0){fillStep(g,x0,laneY,Math.max(2,x1-x0),laneH,o.m,blood);}
+    else{g.strokeStyle=ink;g.lineWidth=1.5;g.setLineDash([3,3]);g.strokeRect(x0-3,laneY+2,6,laneH-4);g.setLineDash([]);}
+    labels.push({x:(x0+Math.max(x0+2,x1))/2,txt:(o.act>0?stepLabel(o.m):(w<600?'0':'0 immune')),imm:o.act<=0});
+  });
+  // staggered labels above lane
+  g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+  const rowsL=[[],[],[]];
+  labels.forEach(L=>{const wd=g.measureText(L.txt).width+6;let row=0;
+    for(row=0;row<3;row++){if(!rowsL[row].some(b=>Math.abs(b.x-L.x)<(b.wd+wd)/2))break;}
+    if(row>2)row=2;rowsL[row].push({x:L.x,wd});
+    const lx=Math.min(w-wd/2,Math.max(wd/2,L.x));
+    g.fillStyle=L.imm?soft:ink;g.fillText(L.txt,lx,laneY-3-row*14);});
+}
+
+function niceMax(v){const mag=Math.pow(10,Math.floor(Math.log10(Math.max(v,1))));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(x=>x>=v)||v;}
+function drawCum(rows,ceil){
+  const c=setup($('cCum')),g=c.g,w=c.w,h=c.h;
+  const pad={l:40,r:10,t:14,b:30};const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const noMax=rows.length?rows[rows.length-1].noDR:0,tot=rows.length?rows[rows.length-1].total:0;
+  const yM=niceMax(Math.max(noMax,ceil,tot,1)*1.08);
+  const Y=v=>pad.t+ph*(1-v/yM),slot=pw/MAXN,X=n=>pad.l+slot*(n-.5);
+  const soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),ochre=css('--ochre'),ink=css('--ink');
+  g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const v=yM*i/4,y=Y(v);g.strokeStyle=grid;g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText(r2(v)+'s',pad.l-6,y);}
+  for(let n=1;n<=MAXN;n++){g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText(n,X(n),h-pad.b+6);}
+  g.textAlign='right';g.fillText('applications',w-pad.r,h-13);
+  const bw=Math.min(46,slot*.62);
+  rows.forEach((o,j)=>{const x=X(j+1)-bw/2,y=Y(o.total);fillStep(g,x,y,bw,Math.max(1,Y(0)-y),o.act>0?o.m:0,blood);
+    g.fillStyle=ink;g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText(fs(o.total),X(j+1),y-3);g.font='12px '+css('--sans');});
+  // no-DR ghost
+  if(rows.length){g.strokeStyle=soft;g.lineWidth=2;g.globalAlpha=.8;g.beginPath();
+    rows.forEach((o,j)=>{const x=X(j+1),y=Y(o.noDR);j?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+    rows.forEach((o,j)=>{g.fillStyle=soft;g.beginPath();g.arc(X(j+1),Y(o.noDR),3.5,0,6.3);g.fill();});g.globalAlpha=1;
+    const L=rows[rows.length-1];g.fillStyle=soft;g.textAlign=rows.length>=5?'right':'left';g.textBaseline='bottom';
+    g.fillText('no DR '+fs(L.noDR)+' s',X(rows.length)+(rows.length>=5?-8:8),Y(L.noDR)-4);}
+  // ceiling
+  const y=Y(ceil);g.strokeStyle=ochre;g.lineWidth=2;g.setLineDash([7,5]);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.setLineDash([]);
+  g.fillStyle=ochre;g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('ceiling '+fs(ceil)+' s',w-pad.r-2,y-3);
+}
+
+// ---------- controls
+function buildPresets(){
+  $('presets').innerHTML=PRESETS.map((p,i)=>`<label><input type="radio" name="preset" value="${p.id}" ${i===0?'checked':''}><span>${p.name}${p.m&&p.id!=='custom'?` <small style="color:var(--ink-soft)">m = (${p.m.join(', ')}), R = ${p.R} s</small>`:''}</span></label>`).join('');
+  document.querySelectorAll('input[name=preset]').forEach(r=>r.addEventListener('change',()=>{
+    const prev=preset;const next=PRESETS.find(p=>p.id===r.value);
+    if(next.id==='custom'){
+      const m=[];for(let k=1;k<=MAXN;k++)m.push(r2(mult(k)*10000)/10000);
+      custom={m,R:prev.nodr?18:prev.R};$('rIn').value=custom.R;buildMlist();
+    }
+    preset=next;$('customWrap').hidden=preset.id!=='custom';update();}));
+}
+function buildMlist(){
+  $('mlist').innerHTML=custom.m.map((v,i)=>`<input type="number" min="0" max="1" step="0.05" value="${v}" aria-label="Multiplier for step ${i+1}" data-i="${i}">`).join('');
+  $('mlist').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
+    let v=parseFloat(inp.value);if(!isFinite(v))v=0;v=Math.min(1,Math.max(0,v));custom.m[+inp.dataset.i]=v;update();}));
+  $('oR').textContent=custom.R+' s';
+}
+function buildCasts(){
+  $('casts').innerHTML=apps.map((a,i)=>`<div class="cast" role="group" aria-label="Application ${i+1}">
+    <header><b>Cast ${i+1}</b><button class="small" data-rm="${i}" ${apps.length<=1?'disabled':''} aria-label="Remove cast ${i+1}">Remove</button></header>
+    <div class="row"><label for="d${i}">Base duration</label><output id="od${i}" for="d${i}">${fs(a.d)} s</output></div>
+    <input id="d${i}" type="range" min="0.5" max="10" step="0.5" value="${a.d}">
+    <div class="row"><label for="t${i}">Cast at</label><output id="ot${i}" for="t${i}">${fs(a.t)} s</output></div>
+    <input id="t${i}" type="range" min="0" max="60" step="0.5" value="${a.t}">
+  </div>`).join('');
+  apps.forEach((a,i)=>{
+    $('d'+i).addEventListener('input',e=>{apps[i].d=+e.target.value;$('od'+i).textContent=fs(apps[i].d)+' s';update();});
+    $('t'+i).addEventListener('input',e=>{apps[i].t=+e.target.value;$('ot'+i).textContent=fs(apps[i].t)+' s';update();});
+  });
+  document.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{apps.splice(+b.dataset.rm,1);buildCasts();update();$('bAdd').focus();}));
+  $('bAdd').disabled=apps.length>=MAXN;
+}
+function syncSliders(){apps.forEach((a,i)=>{$('t'+i).value=a.t;$('ot'+i).textContent=fs(a.t)+' s';$('d'+i).value=a.d;$('od'+i).textContent=fs(a.d)+' s';});}
+function t0(){return Math.min(...apps.map(a=>a.t));}
+function reorder(cmp){
+  const order=simulate(apps).map(r=>apps[r.i]);
+  const sorted=cmp?order.slice().sort(cmp):order;
+  apps=chainOrder(sorted,t0()).apps;buildCasts();update();
+}
+$('bChain').addEventListener('click',()=>reorder(null));
+$('bLong').addEventListener('click',()=>reorder((a,b)=>b.d-a.d));
+$('bShort').addEventListener('click',()=>reorder((a,b)=>a.d-b.d));
+$('bAdd').addEventListener('click',()=>{if(apps.length>=MAXN)return;const rows=simulate(apps);const last=rows[rows.length-1];
+  apps.push({d:6,t:Math.min(TMAX,r2(last?last.end:0))});buildCasts();update();});
+$('rIn').addEventListener('input',e=>{custom.R=+e.target.value;$('oR').textContent=custom.R+' s';update();});
+$('ten').addEventListener('input',e=>{ten=+e.target.value/100;$('oTen').textContent=e.target.value+'%';update();});
+$('floor').addEventListener('change',e=>{useFloor=e.target.checked;update();});
+
+// drag on timeline
+let drag=null;
+const cT=$('cTime');
+function tAt(ev){const r=cT.getBoundingClientRect();const x=ev.clientX-r.left;return Math.min(TMAX,Math.max(0,Math.round(((x-tl.pad.l)/tl.pw*TMAX)*2)/2));}
+cT.addEventListener('pointerdown',ev=>{
+  const t=tAt(ev);let best=null,bd=Infinity;
+  rowsCache.forEach(o=>{const dist=(t>=o.start&&t<=o.end)?0:Math.min(Math.abs(t-o.start),Math.abs(t-o.end));if(dist<bd){bd=dist;best=o;}});
+  if(!best||bd>2)return;drag={i:best.i,off:t-best.start};cT.setPointerCapture(ev.pointerId);ev.preventDefault();});
+cT.addEventListener('pointermove',ev=>{if(!drag)return;const t=Math.max(0,Math.min(TMAX,tAt(ev)-drag.off));apps[drag.i].t=Math.round(t*2)/2;syncSliders();update();});
+['pointerup','pointercancel'].forEach(n=>cT.addEventListener(n,()=>{drag=null;}));
+
+// ---------- update
+function update(){
+  const rows=simulate(apps);rowsCache=rows;
+  const last=rows[rows.length-1];const total=last?last.total:0,noDR=last?last.noDR:0;
+  const dMax=Math.max(...apps.map(a=>a.d));const ceil=cycleCeiling(dMax);
+  const d1=rows[0].d,up=uptime(d1);
+  const durs=apps.map(a=>a.d);
+  const best=chainOrder(durs.slice().sort((a,b)=>b-a).map(d=>({d,t:0})),0).total;
+  const worst=chainOrder(durs.slice().sort((a,b)=>a-b).map(d=>({d,t:0})),0).total;
+
+  $('rTot').textContent=fs(total)+' s';$('rNo').textContent=fs(noDR)+' s';
+  $('rCeil').textContent=fs(ceil)+' s';$('rCeilL').textContent=`ceiling per cycle, d = ${fs(dMax)} s`;
+  $('rUp').textContent=up===null?'none':fp(up);
+  $('rBest').textContent=fs(best)+' s';$('rWorst').textContent=fs(worst)+' s';
+  $('gVal').textContent=up===null?'100%':fp(up);$('gBar').style.width=((up===null?1:up)*100)+'%';
+  $('gNote').textContent=up===null?(preset.nodr?'No DR. Only cooldowns stop a chain.':'No immunity step, so DR never forces a break.')
+    :`Cycle ${fs(cycleCeiling(d1))} s of control, then ${R()} s reset. d = ${fs(d1)} s (first cast).`;
+
+  $('tbody').innerHTML=rows.map(o=>`<tr class="${o.act<=0?'imm':''} ${o.reset?'reset':''}"><td>Cast ${o.i+1}</td><td>${fs(o.start)} s</td><td>${o.k}${o.reset?' (reset)':''}</td><td>${multText(o.m)}</td><td>${fs(o.d)} s</td><td>${o.act>0?fs(o.act)+' s':'immune'}</td><td>${fs(o.total)} s</td></tr>`).join('');
+
+  const moved=rows.filter(o=>o.moved);
+  $('moved').textContent=moved.length?moved.map(o=>`Cast ${o.i+1} was set for ${fs(o.t)} s, inside the previous effect, so it chains at ${fs(o.start)} s.`).join(' '):'';
+
+  const wasted=rows.filter(o=>o.act<=0).length,resets=rows.filter(o=>o.reset).length;
+  let s=`${rows.length} cast${rows.length>1?'s':''} give <b>${fs(total)} s</b> of control. With no DR the same casts give ${fs(noDR)} s. `;
+  if(wasted) s+=`${wasted} landed on an immune target and did nothing. `;
+  if(resets) s+=`${resets} came after the ${R()} s window ran out, so DR reset and ${resets>1?'they':'it'} landed at full length. `;
+  if(best-worst>0.001) s+=`Order matters: longest first gives ${fs(best)} s, shortest first ${fs(worst)} s. `;
+  s+= up===null?`This rule has no immunity step, so it slows a chain without ever ending it.`:`However hard a team tries, one category controls this target at most <b>${fp(up)}</b> of the time.`;
+  $('insight').innerHTML=s;
+
+  drawTimeline(rows);drawCum(rows,ceil);
+}
+
+buildPresets();buildMlist();buildCasts();update();
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+})();
+</script>
+</body>
+</html>

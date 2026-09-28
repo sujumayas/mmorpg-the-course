@@ -28,7 +28,7 @@ Building settings that support thousands of simultaneous stories and years of ex
 | 12 | Transmedia | _todo_ | _todo_ |
 | 13 | Community lore and roleplay | _todo_ | _todo_ |
 | 14 | Bible workshop | _todo_ | _todo_ |
-| 15 | Final: world bible | _todo_ | _todo_ |
+| 15 | Final: world bible | [assessments](#assessment-materials) | — |
 
 ## Readings
 

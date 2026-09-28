@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Level sweep · GD203 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.models{border:0;padding:0;margin:0 0 12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.models legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px;width:100%}
+.models label{position:relative;display:inline-flex}
+.models input{position:absolute;opacity:0;width:1px;height:1px}
+.models span{font:600 .9rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer;transition:background .15s,color .15s}
+.models input:checked+span{background:var(--ink);color:var(--paper)}
+.models input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.fix{font:700 .92rem var(--sans);padding:9px 15px;border-radius:8px;border:1.5px solid var(--moss);background:var(--moss);color:var(--paper);cursor:pointer;margin-left:auto;transition:opacity .15s}
+.fix[disabled]{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1024px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:260px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend svg{vertical-align:middle;margin-right:6px}
+.toggle{font:600 .82rem var(--sans);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.toggle input{width:18px;height:18px;accent-color:var(--steel)}
+.band{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.84rem;font-family:var(--sans)}
+.band input{width:4.2em;font:600 .9rem var(--sans);padding:3px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+.exp{margin:8px 0 0;font-size:.95rem;font-variant-numeric:tabular-nums}
+.exp code{font-family:var(--sans);font-weight:700}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 22px;margin-top:16px}
+@media (min-width:1024px){.controls{grid-template-columns:repeat(5,1fr)}}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+.controls label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+.controls output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=range]:disabled{opacity:.4}
+.ctl.lvl input{accent-color:var(--ink)}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.formula{font-size:.88rem;color:var(--ink-soft);margin:10px 0 0}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:560px;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td.bad{color:var(--blood);font-weight:700}
+td.ok{color:var(--moss);font-weight:700}
+tr.here td{background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD203 Combat and Progression Design · Week 11 · Worked example</p>
+  <h1>Both stats climb. The fight still collapses.</h1>
+  <p class="lede">Weapon damage and Strength each grow in a straight line, and so does enemy health. The left chart looks healthy. The right chart shows what players feel: by level 6 an enemy dies in under 3 hits, and by level 30 in under 1.</p>
+</header>
+
+<section class="panel" aria-label="Level sweep">
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+    <fieldset class="models">
+      <legend>Damage model</legend>
+      <label><input type="radio" name="model" value="weapon"><span>Weapon only</span></label>
+      <label><input type="radio" name="model" value="mult" checked><span>Multiplied stats</span></label>
+      <label><input type="radio" name="model" value="ratio"><span>Ratio</span></label>
+      <label><input type="radio" name="model" value="poke"><span>Pokémon (gen V)</span></label>
+    </fieldset>
+    <button class="fix" id="fix" type="button">Divide by defense</button>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption><span>Raw values<small>Player damage per hit and enemy HP</small></span>
+        <label class="toggle"><input type="checkbox" id="log"> Log scale</label></figcaption>
+      <canvas id="cRaw" role="img" aria-label="Raw damage and HP against level"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="6" aria-hidden="true"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--blood)" stroke-width="3"/></svg>Damage per hit (solid)</span>
+        <span><svg width="22" height="6" aria-hidden="true"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--ochre)" stroke-width="3" stroke-dasharray="6 4"/></svg>Enemy HP (dashed)</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption><span>Hits to kill<small>Enemy HP ÷ damage per hit. What the player feels.</small></span>
+        <span class="band">Target band
+          <label>from <input type="number" id="lo" value="3" min="0" max="50" step="0.5" inputmode="decimal" aria-label="Band lower limit"></label>
+          <label>to <input type="number" id="hi" value="7" min="0" max="50" step="0.5" inputmode="decimal" aria-label="Band upper limit"></label></span></figcaption>
+      <canvas id="cHits" role="img" aria-label="Hits to kill against level"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="10" aria-hidden="true"><rect x="0" y="0" width="22" height="10" fill="var(--moss)" opacity=".25"/></svg>Target band</span>
+        <span><svg width="22" height="10" aria-hidden="true"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--steel)" stroke-width="3"/></svg>Hits (in band)</span>
+        <span><svg width="22" height="10" aria-hidden="true"><path d="M6 1 L11 9 L1 9 Z" fill="var(--blood)" transform="translate(5 0)"/></svg>Outside band (triangle)</span>
+      </div>
+      <p class="exp" id="exp" aria-live="polite"></p>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="rL">—</b><span>level inspected</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rD">—</b><span id="rDl">damage per hit</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rH">—</b><span>enemy HP</span></div>
+    <div class="stat" style="--c:var(--steel)" id="rKs"><b id="rK">—</b><span id="rKl">hits to kill</span></div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl lvl"><label for="lvl">Inspect level <output id="oLvl">6</output></label><input id="lvl" type="range" min="1" max="60" step="1" value="6"></div>
+    <div class="ctl"><label for="gW">Weapon growth gW <output id="ogW">2</output></label><input id="gW" type="range" min="0" max="5" step="0.5" value="2"></div>
+    <div class="ctl"><label for="gS">Strength growth gS <output id="ogS">2</output></label><input id="gS" type="range" min="0" max="5" step="0.5" value="2"></div>
+    <div class="ctl"><label for="gD">Defense growth gD <output id="ogD">2</output></label><input id="gD" type="range" min="0" max="5" step="0.5" value="2"></div>
+    <div class="ctl"><label for="gH">Enemy HP growth gH <output id="ogH">10</output></label><input id="gH" type="range" min="0" max="30" step="1" value="10"></div>
+  </div>
+  <p class="formula" id="formula"></p>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tcap">Spreadsheet view</caption>
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Pokémon formulas (generation V onward): Bulbapedia, "Damage" and "Stat"; Smogon University, "The Complete Damage Formula for Black &amp; White". Preset assumes equal levels, base stats 100, IV 31, EV 0, neutral nature, power 80, no same-type bonus, neutral type matchup, no critical hit. Exponents are least-squares slopes of log(value) against log(level) over levels 30 to 60.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2=n=>n.toFixed(2);
+const num=n=>Number.isInteger(n)?String(n):(Math.round(n*100)/100).toString();
+const W0=10,S0=10,D0=10,H0=50,K=12;
+const st={model:'mult',gW:2,gS:2,gD:2,gH:10,L:6,lo:3,hi:7,log:false};
+const lastLvl={sweep:6,poke:50};
+
+function pokeRow(L){
+  const A=Math.floor(231*L/100)+5,HP=Math.floor(231*L/100)+L+10;
+  const base=Math.floor(Math.floor((Math.floor(2*L/5)+2)*80*A/A)/50)+2;
+  let s=0,mn=Infinity,mx=0;
+  for(let r=85;r<=100;r++){const d=Math.floor(base*r/100);s+=d;mn=Math.min(mn,d);mx=Math.max(mx,d);}
+  const mean=s/16;
+  return {L,A,HP,mn,mx,dmg:mean,hits:HP/mean};
+}
+function sweepRow(L){
+  const W=W0+st.gW*L,S=S0+st.gS*L,D=D0+st.gD*L,HP=H0+st.gH*L;
+  let dmg;
+  if(st.model==='weapon')dmg=W;else if(st.model==='mult')dmg=W*S/K;else dmg=W*S/D;
+  return {L,W,S,D,HP,dmg,hits:HP/dmg};
+}
+const row=L=>st.model==='poke'?pokeRow(L):sweepRow(L);
+const range=()=>st.model==='poke'?[5,100]:[1,60];
+function series(){const [a,b]=range(),out=[];for(let L=a;L<=b;L++)out.push(row(L));return out;}
+function slope(key){
+  let n=0,sx=0,sy=0,sxx=0,sxy=0;
+  for(let L=30;L<=60;L++){const x=Math.log(L),y=Math.log(row(L)[key]);n++;sx+=x;sy+=y;sxx+=x*x;sxy+=x*y;}
+  return (n*sxy-sx*sy)/(n*sxx-sx*sx);
+}
+const band=h=>h<st.lo-1e-9?'below':h>st.hi+1e-9?'above':'in band';
+
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*m).find(x=>x>=v*1.02)||v;}
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:52,r:14,t:12,b:34};
+
+function frame(c,xr,yTicks,ymap,yfmt){
+  const {g,w,h}=c;g.clearRect(0,0,w,h);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  yTicks.forEach(v=>{const y=ymap(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(yfmt(v),pad.l-6,y);});
+  const step=xr[1]>60?25:10,ticks=[xr[0]];for(let t=step;t<=xr[1];t+=step)if(t-xr[0]>=step/2)ticks.push(t);
+  ticks.forEach(t=>{const x=xmap(c,xr,t);g.textAlign='center';g.textBaseline='top';g.fillText(t,x,h-pad.b+6);});
+  g.textAlign='right';g.fillText('level',w-pad.r,h-14);
+}
+const xmap=(c,xr,L)=>pad.l+(c.w-pad.l-pad.r)*(L-xr[0])/(xr[1]-xr[0]);
+function line(c,xr,pts,ymap,color,dash){
+  const g=c.g;g.strokeStyle=color;g.lineWidth=2.5;g.setLineDash(dash||[]);g.beginPath();
+  pts.forEach((p,i)=>{const x=xmap(c,xr,p[0]),y=ymap(p[1]);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.setLineDash([]);
+}
+function cursor(c,xr){const g=c.g,x=xmap(c,xr,st.L);g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,c.h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+function dot(c,x,y,color){const g=c.g;g.fillStyle=color;g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+
+function drawRaw(data){
+  const c=setup($('cRaw')),xr=range(),H=c.h-pad.t-pad.b;
+  const vals=data.flatMap(d=>[d.dmg,d.HP]),mx=Math.max(...vals),mn=Math.min(...vals);
+  let ymap,ticks,fmt=v=>v>=10000?Math.round(v/1000)+'k':Math.round(v).toLocaleString('en-US');
+  if(st.log){
+    const lo=Math.pow(10,Math.floor(Math.log10(mn))),hi=Math.pow(10,Math.ceil(Math.log10(mx)));
+    ymap=v=>pad.t+H*(1-(Math.log10(v)-Math.log10(lo))/(Math.log10(hi)-Math.log10(lo)));
+    ticks=[];for(let p=lo;p<=hi*1.001;p*=10){ticks.push(p);if(p*3<hi)ticks.push(p*3);}
+  }else{const top=niceMax(mx);ymap=v=>pad.t+H*(1-v/top);ticks=[0,1,2,3,4].map(i=>top*i/4);}
+  frame(c,xr,ticks,ymap,fmt);
+  line(c,xr,data.map(d=>[d.L,d.dmg]),ymap,css('--blood'));
+  line(c,xr,data.map(d=>[d.L,d.HP]),ymap,css('--ochre'),[8,5]);
+  cursor(c,xr);const r=row(st.L),x=xmap(c,xr,st.L);dot(c,x,ymap(r.dmg),css('--blood'));dot(c,x,ymap(r.HP),css('--ochre'));
+  $('cRaw').setAttribute('aria-label',`Raw values from level ${xr[0]} to ${xr[1]}. Damage rises from ${f2(data[0].dmg)} to ${f2(data[data.length-1].dmg)}; enemy HP from ${num(data[0].HP)} to ${num(data[data.length-1].HP)}.`);
+}
+function drawHits(data){
+  const c=setup($('cHits')),xr=range(),H=c.h-pad.t-pad.b,g=c.g;
+  const mx=Math.max(...data.map(d=>d.hits));
+  const top=Math.min(niceMax(Math.max(mx,st.hi+1)),Math.max(20,niceMax(st.hi*2.5)));
+  const ymap=v=>pad.t+H*(1-Math.min(v,top)/top);
+  frame(c,xr,[0,1,2,3,4].map(i=>top*i/4),ymap,v=>num(Math.round(v*10)/10));
+  g.fillStyle=css('--moss');g.globalAlpha=.22;
+  const yHi=ymap(Math.min(st.hi,top)),yLo=ymap(Math.max(0,st.lo));g.fillRect(pad.l,yHi,c.w-pad.l-pad.r,yLo-yHi);g.globalAlpha=1;
+  line(c,xr,data.map(d=>[d.L,d.hits]),ymap,css('--steel'));
+  g.fillStyle=css('--blood');
+  data.forEach(d=>{if(band(d.hits)!=='in band'){const x=xmap(c,xr,d.L),y=ymap(d.hits);g.beginPath();g.moveTo(x,y-5);g.lineTo(x+4.5,y+3.5);g.lineTo(x-4.5,y+3.5);g.closePath();g.fill();}});
+  cursor(c,xr);const r=row(st.L);dot(c,xmap(c,xr,st.L),ymap(r.hits),band(r.hits)==='in band'?css('--steel'):css('--blood'));
+  const out=data.filter(d=>band(d.hits)!=='in band').length;
+  $('cHits').setAttribute('aria-label',`Hits to kill from level ${xr[0]} to ${xr[1]}: minimum ${f2(Math.min(...data.map(d=>d.hits)))}, maximum ${f2(mx)}. ${out} of ${data.length} levels fall outside the ${num(st.lo)} to ${num(st.hi)} band.`);
+}
+
+function sign(v){return (v<0?'−':'')+Math.abs(v).toFixed(2);}
+function texts(data){
+  const r=row(st.L),poke=st.model==='poke';
+  $('oLvl').textContent=st.L;
+  $('rL').textContent=st.L;
+  $('rD').textContent=f2(r.dmg);$('rDl').textContent=poke?`mean damage (range ${r.mn}-${r.mx})`:'damage per hit';
+  $('rH').textContent=num(r.HP);
+  $('rK').textContent=f2(r.hits);const b=band(r.hits);
+  $('rKl').textContent='hits to kill, '+b;$('rKs').style.setProperty('--c',b==='in band'?'var(--steel)':'var(--blood)');
+  const a=slope('HP'),bb=slope('dmg');
+  $('exp').innerHTML=`HP grows like <code>L^${a.toFixed(2)}</code>, damage like <code>L^${bb.toFixed(2)}</code>, <code>a − b = ${sign(Math.abs(a-bb)<0.005?0:a-bb)}</code>`;
+  const out=data.filter(d=>band(d.hits)!=='in band'),first=out[0];
+  const mn=Math.min(...data.map(d=>d.hits)),mx=Math.max(...data.map(d=>d.hits));
+  const span=`Across levels ${data[0].L}-${data[data.length-1].L}, hits to kill runs from <b>${f2(mn)}</b> to <b>${f2(mx)}</b>. `;
+  const where=out.length?`${out.length} of ${data.length} levels fall outside the band, starting at level ${first.L} (${f2(first.hits)} hits).`:`Every level stays inside the ${num(st.lo)}-${num(st.hi)} band.`;
+  let s;
+  if(st.model==='mult')s=`Weapon and Strength each grow in a straight line, so their product grows like L². Enemy HP grows like L. ${span}${where} Press <b>Divide by defense</b>.`;
+  else if(st.model==='ratio')s=(st.gS===st.gD?`Strength and Defense grow at the same rate, so they cancel and damage is just W. The left chart barely changed, but hits to kill is now flat. `:`Strength grows at ${num(st.gS)} per level and Defense at ${num(st.gD)}, so they no longer cancel and the line tilts. `)+span+where;
+  else if(st.model==='weapon')s=`Damage is the weapon alone, one linear stat against one linear stat. Whether the line is flat depends on whether gH ÷ gW matches HP₀ ÷ W₀ = 5. ${span}${where}`;
+  else s=`Level enters damage through (2L/5 + 2) and HP through the stat formula, both roughly linear, and Attack ÷ Defense stays 1 at equal levels. ${span}The small constants (+2, +5, +10) shorten early fights; above level 20 the line barely moves. ${where}`;
+  $('insight').innerHTML=s;
+  const F={weapon:'damage = W',mult:'damage = W × S / 12',ratio:'damage = W × S / Def'};
+  $('formula').textContent=poke?'Pokémon preset: stat = floor(231L/100) + 5, HP = floor(231L/100) + L + 10, base = floor(floor((floor(2L/5) + 2) × 80 × A / D) / 50) + 2, mean over r = 85..100 of floor(base × r / 100). Sliders are disabled.'
+    :`W = 10 + ${num(st.gW)}L, S = 10 + ${num(st.gS)}L, Def = 10 + ${num(st.gD)}L, HP = 50 + ${num(st.gH)}L, ${F[st.model]}.`;
+  // table
+  const levels=poke?[5,10,20,30,50,75,100]:[1,5,10,20,30,60];
+  const chk=h=>{const x=band(h);return `<td class="${x==='in band'?'ok':'bad'}">${x==='in band'?'ok':x}</td>`;};
+  if(poke){
+    $('thead').innerHTML='<tr><th>Level</th><th>Attack = Defense</th><th>HP</th><th>Damage range</th><th>Mean damage</th><th>Share of HP</th><th>Hits to KO</th><th>Check</th></tr>';
+    $('tbody').innerHTML=levels.map(L=>{const p=pokeRow(L);return `<tr class="${L===st.L?'here':''}"><td>${L}</td><td>${p.A}</td><td>${p.HP}</td><td>${p.mn}-${p.mx}</td><td>${f2(p.dmg)}</td><td>${(100*p.dmg/p.HP).toFixed(1)}%</td><td>${f2(p.hits)}</td>${chk(p.hits)}</tr>`;}).join('');
+  }else{
+    $('thead').innerHTML='<tr><th>Level</th><th>W</th><th>S</th><th>Def</th><th>Damage</th><th>Enemy HP</th><th>Hits to kill</th><th>Check</th></tr>';
+    const useS=st.model!=='weapon',useD=st.model==='ratio';
+    $('tbody').innerHTML=levels.map(L=>{const p=sweepRow(L);return `<tr class="${L===st.L?'here':''}"><td>${L}</td><td>${num(p.W)}</td><td>${useS?num(p.S):'—'}</td><td>${useD?num(p.D):'—'}</td><td>${f2(p.dmg)}</td><td>${num(p.HP)}</td><td>${f2(p.hits)}</td>${chk(p.hits)}</tr>`;}).join('');
+  }
+  $('tcap').textContent=poke?'Spreadsheet view: the lecture’s Pokémon table':'Spreadsheet view: levels 1, 5, 10, 20, 30, 60';
+  const fix=$('fix');
+  if(st.model==='ratio'){fix.textContent='Back to multiplied stats';fix.disabled=false;}
+  else{fix.textContent='Divide by defense';fix.disabled=false;}
+  fix.hidden=poke;
+}
+function update(){const d=series();texts(d);drawRaw(d);drawHits(d);}
+
+function setModel(m){
+  const wasPoke=st.model==='poke';
+  if(wasPoke)lastLvl.poke=st.L;else lastLvl.sweep=st.L;
+  st.model=m;
+  document.querySelector(`input[name=model][value=${m}]`).checked=true;
+  const poke=m==='poke',s=$('lvl'),[a,b]=range();
+  s.min=a;s.max=b;
+  if(poke!==wasPoke)st.L=poke?lastLvl.poke:lastLvl.sweep;
+  st.L=Math.min(b,Math.max(a,st.L));s.value=st.L;
+  ['gW','gS','gD','gH'].forEach(k=>$(k).disabled=poke);
+  $('gS').disabled=poke||m==='weapon';$('gD').disabled=poke||m!=='ratio';
+  update();
+}
+document.querySelectorAll('input[name=model]').forEach(r=>r.addEventListener('change',()=>setModel(r.value)));
+$('fix').addEventListener('click',()=>setModel(st.model==='ratio'?'mult':'ratio'));
+['gW','gS','gD','gH'].forEach(k=>$(k).addEventListener('input',e=>{st[k]=+e.target.value;$('o'+k).textContent=num(st[k]);update();}));
+$('lvl').addEventListener('input',e=>{st.L=+e.target.value;update();});
+$('log').addEventListener('change',e=>{st.log=e.target.checked;update();});
+function readBand(){let lo=parseFloat($('lo').value),hi=parseFloat($('hi').value);if(!isFinite(lo))lo=0;if(!isFinite(hi))hi=lo;if(hi<lo)[lo,hi]=[hi,lo];st.lo=Math.max(0,lo);st.hi=Math.max(0,hi);update();}
+$('lo').addEventListener('input',readBand);$('hi').addEventListener('input',readBand);
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+setModel('mult');
+})();
+</script>
+</body>
+</html>

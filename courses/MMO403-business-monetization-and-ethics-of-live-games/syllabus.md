@@ -29,7 +29,7 @@ Business models for persistent worlds and the line between monetization and mani
 | 12 | Publishing, platforms and fees | _todo_ | _todo_ |
 | 13 | Team and budget planning | _todo_ | _todo_ |
 | 14 | Pitching to publishers/investors | _todo_ | _todo_ |
-| 15 | Final: business plan | _todo_ | _todo_ |
+| 15 | Final: business plan | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

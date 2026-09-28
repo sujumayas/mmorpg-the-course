@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patch line translator · MMO303 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.chart{width:100%;height:250px;display:block}
+.chart svg{display:block;width:100%;height:100%;overflow:visible}
+.chart text{font-family:var(--sans);fill:var(--ink-soft);font-size:11px}
+.chart text.val{fill:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.patchline{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:var(--paper);border:1px dashed var(--ink-soft);font:600 .9rem ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:14px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl{margin-bottom:12px}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number],select{font:500 .95rem var(--sans);color:var(--ink);background:var(--paper);border:1.5px solid var(--ink-soft);border-radius:6px;padding:5px 6px;width:100%;min-width:0;font-variant-numeric:tabular-nums}
+.presets,.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.seg .chip{min-width:44px}
+.note{font-family:var(--serif);font-size:.96rem;margin:10px 0 0;max-width:70ch;color:var(--ink)}
+details{margin-top:14px;border-top:1px solid var(--grid);padding-top:10px}
+summary{cursor:pointer;font-weight:700}
+.edit{width:100%;border-collapse:collapse;margin-top:8px;font-size:.88rem;table-layout:fixed}
+.edit th,.edit td{padding:3px 3px;text-align:center}
+.edit th:first-child,.edit td:first-child{text-align:left;width:5.2em}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table.data{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:520px}
+table.data th,table.data td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:760px){table.data{min-width:0;font-size:.8rem}table.data th,table.data td{padding:5px 4px}}
+.cross{margin:6px 0 0;font-size:.9rem;font-weight:600}
+.neg{color:var(--blood)}.pos{color:var(--moss)}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO303 Game Balance I · Week 14 · Worked example</p>
+  <h1>The note says one number. The player feels another.</h1>
+  <p class="lede">The left panel is the patch note. It never moves. The right panel is the change each player feels at their rank, against their target, as a share of their total damage.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Per-rank line</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Breakpoints</button>
+</div>
+
+<!-- ============ TAB 1 ============ -->
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <p class="insight" id="ins1" aria-live="polite"></p>
+  <div class="charts">
+    <figure>
+      <figcaption>What the note says<small>Flat damage per rank, old and new</small></figcaption>
+      <div class="chart" id="cNote" role="img" aria-label="Paired bars of old and new flat damage per rank"></div>
+      <div class="legend"><span><i style="background:var(--steel)"></i>Old</span><span><i style="background:var(--blood)"></i>New</span></div>
+      <p class="patchline" id="pline"></p>
+    </figure>
+    <figure>
+      <figcaption>What the player feels<small>Relative change δ per rank, in percent</small></figcaption>
+      <div class="chart" id="cFeel" role="img" aria-label="Bars of relative change per rank for the flat part and for the whole ability"></div>
+      <div class="legend"><span><i style="background:var(--ochre);opacity:.35;outline:1.5px solid var(--ochre)"></i>Flat part only</span><span><i style="background:var(--ochre)"></i>Whole ability</span><span><i style="background:var(--blood)"></i>Negative</span></div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rOld">—</b><span id="rOldL">old total, rank 5</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rNew">—</b><span>new total</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rD">—</b><span>δ of the ability</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rS">—</b><span>share s of total damage</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rT">—</b><span>δ total = s × δ</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <span class="lbl" id="presetLbl">Preset</span>
+      <div class="presets" role="group" aria-labelledby="presetLbl" id="pre1">
+        <button class="chip" data-p="zac" aria-pressed="true">Zac W, patch 14.5</button>
+        <button class="chip" data-p="warden" aria-pressed="false">Warden Shield Bash</button>
+        <button class="chip" data-p="frost" aria-pressed="false">Frost Lance</button>
+      </div>
+      <p class="note" id="pnote"></p>
+      <div class="ctl" style="margin-top:14px">
+        <span class="lbl" id="rankLbl">Selected rank</span>
+        <div class="seg" role="group" aria-labelledby="rankLbl" id="rankSeg"></div>
+      </div>
+    </div>
+    <div>
+      <div class="ctl">
+        <label for="hp">Target maximum health <output id="oHp">2,000</output></label>
+        <input id="hp" type="range" min="500" max="5000" step="100" value="2000">
+        <p class="hint" id="hpHint"></p>
+      </div>
+      <div class="ctl">
+        <label for="share">Share of total damage, s <output id="oShare">0.25</output></label>
+        <input id="share" type="range" min="0" max="1" step="0.01" value="0.25">
+      </div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Edit the patch line</summary>
+    <div class="row2">
+      <div><label for="nRanks">Ranks</label>
+        <select id="nRanks"><option>3</option><option>4</option><option selected>5</option></select></div>
+      <div><label for="mode">Unchanged part</label>
+        <select id="mode"><option value="pct" selected>% of target max health</option><option value="fixed">Fixed bonus damage</option></select></div>
+    </div>
+    <table class="edit" aria-label="Per-rank values">
+      <thead><tr id="editHead"></tr></thead>
+      <tbody id="editBody"></tbody>
+    </table>
+  </details>
+
+  <div class="table-wrap">
+    <table class="data" aria-label="Per-rank values and relative changes">
+      <thead><tr><th>Rank</th><th>Flat old ⇒ new</th><th>δ flat</th><th id="thExtra">%HP part</th><th>Total old ⇒ new</th><th>δ whole</th><th>s × δ</th></tr></thead>
+      <tbody id="tb1"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ TAB 2 ============ -->
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <p class="insight" id="ins2" aria-live="polite"></p>
+  <div class="charts">
+    <figure>
+      <figcaption>What the note says<small>Damage per shot, old and new</small></figcaption>
+      <div class="chart" id="cLine" style="height:150px" role="img" aria-label="Number line of damage per shot with old and new markers"></div>
+      <p class="patchline" id="pline2"></p>
+      <p class="hint">A small move on a smooth scale. Nothing here tells you about kills.</p>
+    </figure>
+    <figure>
+      <figcaption>What the player feels<small>Shots to kill = ⌈health ÷ (damage × multiplier)⌉</small></figcaption>
+      <div class="chart" id="cStep" style="height:270px" role="img" aria-label="Step chart of shots to kill against damage per shot"></div>
+      <div class="legend"><span><i style="background:var(--steel)"></i>Body shots</span><span><i style="background:var(--blood)"></i>Headshots</span><span><i style="background:var(--ochre);opacity:.35"></i>Old to new</span></div>
+      <p class="cross" id="cross" aria-live="polite"></p>
+    </figure>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data" aria-label="Old and new outcomes with relative change">
+      <thead><tr><th id="thOut">Outcome</th><th>Old</th><th>New</th><th>δ</th></tr></thead>
+      <tbody id="tb2"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div>
+      <span class="lbl" id="pre2Lbl">Preset</span>
+      <div class="presets" role="group" aria-labelledby="pre2Lbl" id="pre2">
+        <button class="chip" data-p="hanzo" aria-pressed="true">Hanzo, Sep 2024</button>
+        <button class="chip" data-p="cy3" aria-pressed="false">Check yourself 3</button>
+      </div>
+      <p class="note" id="pnote2"></p>
+      <div class="row2">
+        <div><label for="dOld">Old damage</label><input id="dOld" type="number" min="1" max="1000" step="1" value="120"></div>
+        <div><label for="dNew">New damage</label><input id="dNew" type="number" min="1" max="1000" step="1" value="125"></div>
+        <div><label for="tOld">Old draw time (s)</label><input id="tOld" type="number" min="0.05" max="10" step="0.01" value="0.72"></div>
+        <div><label for="tNew">New draw time (s)</label><input id="tNew" type="number" min="0.05" max="10" step="0.01" value="0.87"></div>
+      </div>
+    </div>
+    <div>
+      <div class="ctl">
+        <label for="th">Target health <output id="oTh">250</output></label>
+        <input id="th" type="range" min="100" max="600" step="25" value="250">
+      </div>
+      <div class="ctl">
+        <label for="hm">Headshot multiplier <output id="oHm">2.0×</output></label>
+        <input id="hm" type="range" min="1" max="3" step="0.1" value="2">
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>Sources: Riot Games, League of Legends patch 14.5 notes (March 2024), Zac W damage and max-health term. Blizzard Entertainment, Overwatch 2 patch notes (September 17, 2024), Hanzo Storm Bow damage and draw time. Warden and Frost Lance are invented classes from the lecture. Damage shares are invented for teaching; magic resistance cancels in δ and is left out.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const MINUS='−';
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const num=(n,d)=>{const s=(+n).toFixed(d);return s.replace(/\.?0+$/,'')||'0';};
+function sPct(x,d=1,unit=true){ // signed percent from fraction
+  if(!isFinite(x)) return '—';
+  const a=Math.abs(x*100).toFixed(d);
+  const z=+a===0;
+  return (z?'':(x>0?'+':MINUS))+a+(unit?'%':'');
+}
+function sgnClass(x){const a=+Math.abs(x*100).toFixed(1);return a===0?'':(x>0?'pos':'neg');}
+const val=v=>v.replace('-',MINUS);
+
+// ---------- SVG helpers ----------
+function svgRoot(host){
+  host.innerHTML='';const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return null;
+  const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`0 0 ${w} ${h}`);s.setAttribute('aria-hidden','true');
+  host.appendChild(s);return {s,w,h};
+}
+function el(p,tag,attrs,text){const e=document.createElementNS(NS,tag);for(const k in attrs)if(attrs[k]!=null)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;p.appendChild(e);return e;}
+function niceStep(range,target){const raw=range/target,mag=Math.pow(10,Math.floor(Math.log10(raw)));for(const m of [1,2,2.5,5,10]){if(m*mag>=raw)return m*mag;}return 10*mag;}
+
+// ================= TAB 1 =================
+const PRESETS={
+  zac:{n:5,old:[35,50,65,80,95],neu:[40,50,60,70,80],extra:[4,5,6,7,8],mode:'pct',share:0.25,rank:5,hp:2000,
+    note:'League of Legends patch 14.5 (March 2024). The max-health term was unchanged. Top-lane Zac maxes W first; jungle Zac keeps it at rank 1 early.'},
+  warden:{n:3,old:[60,80,100],neu:[70,85,100],extra:[0,0,0],mode:'pct',share:0.3,rank:3,hp:2000,
+    note:'Invented class from lecture section 3. No unchanged part, so δ whole equals δ flat and target health does nothing.'},
+  frost:{n:4,old:[50,70,90,110],neu:[60,75,90,105],extra:[40,40,40,40],mode:'fixed',share:0.3,rank:4,hp:2000,
+    note:'Invented ability from Check yourself 1. A fixed 40 bonus damage at every rank dilutes the flat change.'}
+};
+const S1={n:5,old:[],neu:[],extra:[],mode:'pct',hp:2000,share:0.25,rank:5,preset:'zac'};
+
+function load(p){
+  const P=PRESETS[p];S1.preset=p;S1.n=P.n;S1.old=P.old.slice();S1.neu=P.neu.slice();S1.extra=P.extra.slice();
+  S1.mode=P.mode;S1.share=P.share;S1.rank=P.rank;S1.hp=P.hp;
+  $('share').value=S1.share;$('hp').value=S1.hp;$('nRanks').value=S1.n;$('mode').value=S1.mode;
+  $('pnote').textContent=P.note;
+  document.querySelectorAll('#pre1 .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===p));
+  buildEditor();buildRankSeg();update1();
+}
+function extraDmg(r){return S1.mode==='pct'?S1.extra[r]/100*S1.hp:S1.extra[r];}
+function rows(){
+  const out=[];
+  for(let r=0;r<S1.n;r++){
+    const fo=S1.old[r],fn=S1.neu[r],x=extraDmg(r),o=fo+x,n=fn+x;
+    out.push({rank:r+1,fo,fn,x,o,n,dFlat:fo>0?fn/fo-1:NaN,d:o>0?n/o-1:NaN});
+  }
+  return out;
+}
+function buildEditor(){
+  const n=S1.n;
+  let h='<th scope="col">Rank</th>';for(let r=0;r<n;r++)h+=`<th scope="col">${r+1}</th>`;$('editHead').innerHTML=h;
+  const lab={old:'Old flat',neu:'New flat',extra:S1.mode==='pct'?'% max HP':'Bonus'};
+  let b='';
+  for(const k of ['old','neu','extra']){
+    b+=`<tr><th scope="row">${lab[k]}</th>`;
+    for(let r=0;r<n;r++) b+=`<td><input type="number" min="0" max="9999" step="${k==='extra'&&S1.mode==='pct'?0.5:1}" data-k="${k}" data-r="${r}" value="${S1[k][r]??0}" aria-label="${lab[k]}, rank ${r+1}"></td>`;
+    b+='</tr>';
+  }
+  $('editBody').innerHTML=b;
+  $('editBody').querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{
+    const v=parseFloat(i.value);S1[i.dataset.k][+i.dataset.r]=isFinite(v)&&v>=0?v:0;markCustom();update1();
+  }));
+}
+function markCustom(){document.querySelectorAll('#pre1 .chip').forEach(b=>b.setAttribute('aria-pressed','false'));$('pnote').textContent='Custom line. Presets restore the lecture values.';}
+function buildRankSeg(){
+  if(S1.rank>S1.n)S1.rank=S1.n;
+  let h='';for(let r=1;r<=S1.n;r++)h+=`<button class="chip" data-r="${r}" aria-pressed="${r===S1.rank}" aria-label="Rank ${r}">${r}</button>`;
+  $('rankSeg').innerHTML=h;
+  $('rankSeg').querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{S1.rank=+b.dataset.r;$('rankSeg').querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===b));update1();}));
+}
+function patchLine(){
+  const o=S1.old.slice(0,S1.n).join('/'),n=S1.neu.slice(0,S1.n).join('/');
+  const ex=S1.extra.slice(0,S1.n);
+  let tail='';
+  if(S1.mode==='pct'){ if(ex.some(v=>v>0)) tail=` (+${ex.map(v=>num(v,1)).join('/')}% max HP)`; }
+  else { const same=ex.every(v=>v===ex[0]); if(ex.some(v=>v>0)) tail=` (+${same?ex[0]:ex.join('/')} bonus)`; }
+  return `Damage: ${o} ⇒ ${n}${tail}`;
+}
+function drawNote(R){
+  const RR=svgRoot($('cNote'));if(!RR)return;const {s,w,h}=RR,pad={l:40,r:6,t:18,b:26};
+  const max=Math.max(1,...R.map(r=>Math.max(r.fo,r.fn)));
+  const step=niceStep(max,4),top=Math.ceil(max*1.08/step)*step;
+  const ih=h-pad.t-pad.b,iw=w-pad.l-pad.r,Y=v=>pad.t+ih*(1-v/top);
+  for(let v=0;v<=top+1e-9;v+=step){el(s,'line',{x1:pad.l,x2:w-pad.r,y1:Y(v),y2:Y(v),stroke:'var(--grid)'});el(s,'text',{x:pad.l-6,y:Y(v)+4,'text-anchor':'end'},fmt(v));}
+  const gw=iw/R.length,bw=Math.min(34,gw*0.34);
+  R.forEach((r,i)=>{
+    const cx=pad.l+gw*(i+.5),sel=r.rank===S1.rank;
+    if(sel)el(s,'rect',{x:pad.l+gw*i+2,y:pad.t-14,width:gw-4,height:ih+14,fill:'var(--paper)',opacity:.7,rx:6});
+    [[r.fo,'var(--steel)',-1],[r.fn,'var(--blood)',1]].forEach(([v,c,side])=>{
+      const x=side<0?cx-bw-1:cx+1;
+      el(s,'rect',{x,y:Y(v),width:bw,height:Math.max(0,Y(0)-Y(v)),fill:c,rx:2});
+      el(s,'text',{x:x+bw/2,y:Y(v)-4,'text-anchor':'middle',class:'val'},fmt(v));
+    });
+    el(s,'text',{x:cx,y:h-8,'text-anchor':'middle','font-weight':sel?700:400},'Rank '+r.rank);
+  });
+}
+function drawFeel(R){
+  const RR=svgRoot($('cFeel'));if(!RR)return;const {s,w,h}=RR,pad={l:40,r:6,t:20,b:26};
+  const vals=R.flatMap(r=>[r.dFlat,r.d]).filter(isFinite).map(v=>v*100);
+  const lo0=Math.min(0,...vals),hi0=Math.max(0,...vals);
+  const span=Math.max(5,hi0-lo0),step=niceStep(span,4);
+  const hi=Math.max(step,Math.ceil(hi0*1.15/step)*step),lo=Math.min(-step,Math.floor(lo0*1.15/step)*step);
+  const ih=h-pad.t-pad.b,iw=w-pad.l-pad.r,Y=v=>pad.t+ih*(hi-v)/(hi-lo);
+  for(let v=lo;v<=hi+1e-9;v+=step){el(s,'line',{x1:pad.l,x2:w-pad.r,y1:Y(v),y2:Y(v),stroke:'var(--grid)'});el(s,'text',{x:pad.l-6,y:Y(v)+4,'text-anchor':'end'},val(num(v,1))+'%');}
+  const gw=iw/R.length,bw=Math.min(34,gw*0.36);
+  R.forEach((r,i)=>{
+    const cx=pad.l+gw*(i+.5),sel=r.rank===S1.rank;
+    if(sel)el(s,'rect',{x:pad.l+gw*i+2,y:pad.t-16,width:gw-4,height:ih+16,fill:'var(--paper)',opacity:.7,rx:6});
+    [[r.dFlat,true,-1],[r.d,false,1]].forEach(([d,light,side])=>{
+      const x=side<0?cx-bw-1:cx+1;
+      if(!isFinite(d)){el(s,'text',{x:x+bw/2,y:Y(0)-4,'text-anchor':'middle'},'—');return;}
+      const v=d*100,c=v<0?'var(--blood)':'var(--ochre)',y0=Y(0),y1=Y(v);
+      const a={x,y:Math.min(y0,y1),width:bw,height:Math.abs(y1-y0),rx:2,fill:c};
+      if(light){a['fill-opacity']=.3;a.stroke=c;a['stroke-width']=1.5;}
+      el(s,'rect',a);
+      const lbl=sPct(d,1,false);
+      el(s,'text',{x:x+bw/2,y:v<0?y1+12:y1-4,'text-anchor':'middle',class:'val','font-size':gw<64?9.5:11},lbl);
+    });
+    el(s,'text',{x:cx,y:h-8,'text-anchor':'middle','font-weight':sel?700:400},'Rank '+r.rank);
+  });
+  el(s,'line',{x1:pad.l,x2:w-pad.r,y1:Y(0),y2:Y(0),stroke:'var(--ink)','stroke-width':1.5});
+}
+function update1(){
+  S1.hp=+$('hp').value;S1.share=+$('share').value;
+  $('oHp').textContent=fmt(S1.hp);$('oShare').textContent=S1.share.toFixed(2);
+  const R=rows(),c=R[S1.rank-1],hasExtra=S1.extra.slice(0,S1.n).some(v=>v>0);
+  $('pline').textContent=patchLine();
+  $('rOldL').textContent='old total, rank '+S1.rank;
+  $('rOld').textContent=num(c.o,1);$('rNew').textContent=num(c.n,1);
+  $('rD').textContent=sPct(c.d);$('rS').textContent=S1.share.toFixed(2);$('rT').textContent=sPct(S1.share*c.d);
+  $('hp').disabled=!(S1.mode==='pct'&&hasExtra);
+  $('hpHint').textContent=$('hp').disabled?'No max-health part in this line, so target health has no effect.':'Only the %HP part depends on this. Bigger targets dilute the flat change more.';
+  $('thExtra').textContent=S1.mode==='pct'?'%HP part':'Bonus part';
+  $('tb1').innerHTML=R.map(r=>`<tr class="${r.rank===S1.rank?'here':''}"><td>${r.rank}</td><td>${num(r.fo,1)} ⇒ ${num(r.fn,1)}</td><td class="${sgnClass(r.dFlat)}">${sPct(r.dFlat)}</td><td>${num(r.x,1)}</td><td>${num(r.o,1)} ⇒ ${num(r.n,1)}</td><td class="${sgnClass(r.d)}">${sPct(r.d)}</td><td class="${sgnClass(S1.share*r.d)}">${sPct(S1.share*r.d)}</td></tr>`).join('');
+  // insight
+  const last=R[R.length-1],first=R[0];
+  let t=`The note's last number moves <b>${sPct(last.dFlat)}</b>. `;
+  if(hasExtra) t+=`With the unchanged ${S1.mode==='pct'?'max-health':'bonus'} part added, a rank-${last.rank} player's ability changes <b>${sPct(last.d)}</b>`;
+  else t+=`There is no unchanged part, so a rank-${last.rank} player's ability also changes <b>${sPct(last.d)}</b>`;
+  t+=`, which is <b>${sPct(S1.share*last.d)}</b> of total damage at s = ${S1.share.toFixed(2)}. `;
+  if(isFinite(first.d)&&isFinite(last.d)&&Math.sign(+first.d.toFixed(4))!==Math.sign(+last.d.toFixed(4))&&Math.abs(first.d)>5e-4) t+=`At rank 1 the same line reads <b>${sPct(first.d)}</b>: the sign flips by rank.`;
+  else t+=`Every rank moves the same direction here.`;
+  $('ins1').innerHTML=t;
+  drawNote(R);drawFeel(R);
+}
+$('hp').addEventListener('input',update1);
+$('share').addEventListener('input',update1);
+document.querySelectorAll('#pre1 .chip').forEach(b=>b.addEventListener('click',()=>load(b.dataset.p)));
+$('nRanks').addEventListener('change',e=>{
+  const n=+e.target.value;
+  for(const k of ['old','neu','extra'])while(S1[k].length<n)S1[k].push(S1[k][S1[k].length-1]||0);
+  S1.n=n;markCustom();buildEditor();buildRankSeg();update1();
+});
+$('mode').addEventListener('change',e=>{S1.mode=e.target.value;markCustom();buildEditor();update1();});
+
+// ================= TAB 2 =================
+const PRE2={
+  hanzo:{dOld:120,dNew:125,th:250,hm:2,tOld:0.72,tNew:0.87,note:'Overwatch 2, September 17, 2024. Storm Bow maximum damage 120 ⇒ 125, full-draw time 0.72 ⇒ 0.87 s. The developer note tied it to one-shot headshots on 250-health heroes.'},
+  cy3:{dOld:110,dNew:113,th:225,hm:2,tOld:1,tNew:1,note:'Check yourself 3: an invented sniper. 225-health targets, draw time unchanged. The breakpoint for two body shots is 112.5.'}
+};
+function shots(H,d,m){return d>0?Math.ceil(H/(d*m)-1e-9):Infinity;}
+function g2(){return {dO:Math.max(1,+$('dOld').value||1),dN:Math.max(1,+$('dNew').value||1),H:+$('th').value,m:+$('hm').value,tO:Math.max(0.01,+$('tOld').value||0.01),tN:Math.max(0.01,+$('tNew').value||0.01)};}
+function load2(p){
+  const P=PRE2[p];$('dOld').value=P.dOld;$('dNew').value=P.dNew;$('th').value=P.th;$('hm').value=P.hm;$('tOld').value=P.tOld;$('tNew').value=P.tNew;
+  $('pnote2').textContent=P.note;
+  document.querySelectorAll('#pre2 .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===p));update2();
+}
+function domain(v){const lo=Math.min(80,Math.floor(Math.min(v.dO,v.dN)*0.9)),hi=Math.max(160,Math.ceil(Math.max(v.dO,v.dN)*1.1));return [Math.max(1,lo),hi];}
+function drawLine(v){
+  const RR=svgRoot($('cLine'));if(!RR)return;const {s,w,h}=RR,[lo,hi]=domain(v),pad={l:14,r:14};
+  const X=d=>pad.l+(w-pad.l-pad.r)*(d-lo)/(hi-lo),y=h*0.55;
+  el(s,'line',{x1:X(lo),x2:X(hi),y1:y,y2:y,stroke:'var(--ink-soft)','stroke-width':2});
+  const step=niceStep(hi-lo,w<360?4:8);
+  for(let d=Math.ceil(lo/step)*step;d<=hi+1e-9;d+=step){el(s,'line',{x1:X(d),x2:X(d),y1:y-5,y2:y+5,stroke:'var(--ink-soft)'});el(s,'text',{x:X(d),y:y+20,'text-anchor':'middle'},fmt(d));}
+  el(s,'rect',{x:Math.min(X(v.dO),X(v.dN)),y:y-8,width:Math.abs(X(v.dN)-X(v.dO)),height:16,fill:'var(--ochre)',opacity:.3});
+  const up=v.dN>=v.dO;
+  [[v.dO,'var(--steel)','old',up?'end':'start'],[v.dN,'var(--blood)','new',up?'start':'end']].forEach(([d,c,l,anc])=>{
+    el(s,'circle',{cx:X(d),cy:y,r:7,fill:c,stroke:'var(--paper)','stroke-width':2});
+    el(s,'text',{x:X(d)+(anc==='end'?-4:4),y:y-16,'text-anchor':anc,class:'val'},`${l} ${num(d,1)}`);
+  });
+}
+function counts(v){return {bO:shots(v.H,v.dO,1),bN:shots(v.H,v.dN,1),hO:shots(v.H,v.dO,v.m),hN:shots(v.H,v.dN,v.m)};}
+function drawStep(v){
+  const RR=svgRoot($('cStep'));if(!RR)return;const {s,w,h}=RR,[lo,hi]=domain(v),pad={l:34,r:8,t:24,b:30};
+  const ymax=Math.max(2,shots(v.H,lo,1))+0.5;
+  const iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  const X=d=>pad.l+iw*(d-lo)/(hi-lo),Y=k=>pad.t+ih*(1-k/ymax);
+  const ystep=Math.max(1,Math.ceil(ymax/8));
+  for(let k=0;k<=ymax;k+=ystep){el(s,'line',{x1:pad.l,x2:w-pad.r,y1:Y(k),y2:Y(k),stroke:'var(--grid)'});el(s,'text',{x:pad.l-6,y:Y(k)+4,'text-anchor':'end'},k);}
+  const xs=niceStep(hi-lo,w<360?4:6);
+  for(let d=Math.ceil(lo/xs)*xs;d<=hi+1e-9;d+=xs)el(s,'text',{x:X(d),y:h-12,'text-anchor':'middle'},fmt(d));
+  el(s,'text',{x:w-pad.r,y:h-0,'text-anchor':'end'},'damage per shot');
+  el(s,'text',{x:4,y:12,'text-anchor':'start'},'shots');
+  // shading
+  const a=Math.min(v.dO,v.dN),b=Math.max(v.dO,v.dN);
+  el(s,'rect',{x:X(a),y:pad.t,width:Math.max(1,X(b)-X(a)),height:ih,fill:'var(--ochre)',opacity:.25});
+  // step lines
+  const path=m=>{let p='',prev=null;const N=Math.max(200,Math.round(iw));for(let i=0;i<=N;i++){const d=lo+(hi-lo)*i/N,k=Math.min(shots(v.H,d,m),ymax);const x=X(d).toFixed(1),y=Y(k).toFixed(1);if(prev===null)p+=`M${x},${y}`;else if(k!==prev)p+=`L${x},${Y(prev).toFixed(1)}L${x},${y}`;prev=k;}return p+`L${X(hi).toFixed(1)},${Y(prev).toFixed(1)}`;};
+  el(s,'path',{d:path(1),fill:'none',stroke:'var(--steel)','stroke-width':2.5});
+  el(s,'path',{d:path(v.m),fill:'none',stroke:'var(--blood)','stroke-width':2.5,'stroke-dasharray':v.m===1?'6 4':null});
+  [[v.dO,'old'],[v.dN,'new']].forEach(([d,l])=>{el(s,'line',{x1:X(d),x2:X(d),y1:pad.t,y2:pad.t+ih,stroke:'var(--ink)','stroke-dasharray':'4 4',opacity:.6});});
+  // crossing labels
+  const labs=[];
+  const {bO,bN,hO,hN}=counts(v);
+  if(bO!==bN)labs.push(`${bO} ⇒ ${bN} body shots`);
+  if(hO!==hN)labs.push(`${hO} ⇒ ${hN} headshots`);
+  if(!labs.length)labs.push('no step');
+  $('cross').textContent='Shaded interval crosses '+labs.join(' and ')+'.';
+}
+function update2(){
+  const v=g2();$('oTh').textContent=fmt(v.H);$('oHm').textContent=v.m.toFixed(1)+'×';
+  drawLine(v);drawStep(v);const k=counts(v);
+  $('pline2').textContent=`Damage: ${num(v.dO,1)} ⇒ ${num(v.dN,1)} (${sPct(v.dN/v.dO-1)})`;
+  const kO=k.bO*v.tO,kN=k.bN*v.tN;
+  const rowsT=[
+    ['Damage per shot',num(v.dO,1),num(v.dN,1),v.dN/v.dO-1],
+    ['Headshots to kill',k.hO,k.hN,k.hN/k.hO-1],
+    ['Body shots to kill',k.bO,k.bN,k.bN/k.bO-1],
+    ['Draw time per shot',v.tO.toFixed(2)+' s',v.tN.toFixed(2)+' s',v.tN/v.tO-1],
+    ['Draw-only body kill time',kO.toFixed(2)+' s',kN.toFixed(2)+' s',kN/kO-1]
+  ];
+  $('thOut').textContent=`Outcome against a ${fmt(v.H)}-health target`;
+  $('tb2').innerHTML=rowsT.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="${sgnClass(r[0].includes('time')||r[0].includes('to kill')?-r[3]:r[3])}">${sPct(r[3])}</td></tr>`).join('');
+  // insight
+  const need=n=>v.H/(n*1);
+  let t=`The note moves damage <b>${sPct(v.dN/v.dO-1)}</b>. `;
+  if(k.bO!==k.bN||k.hO!==k.hN){
+    const parts=[];if(k.bO!==k.bN)parts.push(`body shots to kill ${k.bO} ⇒ ${k.bN} (<b>${sPct(k.bN/k.bO-1)}</b>)`);if(k.hO!==k.hN)parts.push(`headshots ${k.hO} ⇒ ${k.hN} (<b>${sPct(k.hN/k.hO-1)}</b>)`);
+    t+=`Against ${fmt(v.H)} health that is a breakpoint: ${parts.join(' and ')}. `;
+  } else t+=`Against ${fmt(v.H)} health it crosses no step, so kill counts stay at ${k.bO} body and ${k.hO} head. `;
+  const nb=k.bO!==k.bN?k.bN:Math.max(1,k.bN-1);t+=`${nb} body shot${nb>1?'s':''} ${k.bO!==k.bN?'need':'would need'} ${num(need(nb),1)} damage per shot. `;
+  t+=`Draw-only body kill time goes ${kO.toFixed(2)} ⇒ ${kN.toFixed(2)} s (<b>${sPct(kN/kO-1)}</b>).`;
+  $('ins2').innerHTML=t;
+}
+['dOld','dNew','tOld','tNew'].forEach(id=>$(id).addEventListener('input',()=>{document.querySelectorAll('#pre2 .chip').forEach(b=>b.setAttribute('aria-pressed','false'));update2();}));
+['th','hm'].forEach(id=>$(id).addEventListener('input',update2));
+document.querySelectorAll('#pre2 .chip').forEach(b=>b.addEventListener('click',()=>load2(b.dataset.p)));
+
+// ================= tabs, resize =================
+const tabs=[$('t1'),$('t2')];
+function sel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});if(focus)t.focus();redraw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t,true));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2],true);}else if(e.key==='Home'){sel(tabs[0],true);}else if(e.key==='End'){sel(tabs[1],true);}});});
+function redraw(){if($('p1').hidden)update2();else update1();}
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redraw,60);});
+load('zac');
+$('pnote2').textContent=PRE2.hanzo.note;
+update2();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+})();
+</script>
+</body>
+</html>

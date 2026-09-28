@@ -28,7 +28,7 @@ Cross-discipline teams build a small multiplayer RPG vertical slice — the brid
 | 12 | Sprint 4: polish | _todo_ | _todo_ |
 | 13 | Beta milestone | _todo_ | _todo_ |
 | 14 | Release candidate | _todo_ | _todo_ |
-| 15 | Final: showcase + post-mortem | _todo_ | _todo_ |
+| 15 | Final: showcase + post-mortem | [assessments](#assessment-materials) | — |
 
 ## Assessment
 

@@ -29,7 +29,7 @@ From Senet to MUDs to live-service worlds: how games evolved, and how to read th
 | 12 | Indie games and the auteur designer | _todo_ | _todo_ |
 | 13 | Critical frameworks: ludology vs narratology | _todo_ | _todo_ |
 | 14 | Games and representation | _todo_ | _todo_ |
-| 15 | Final: critical essay presentations | _todo_ | _todo_ |
+| 15 | Final: critical essay presentations | [assessments](#assessment-materials) | — |
 
 ## Signature worked examples
 

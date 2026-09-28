@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Breakpoint staircase · GD203 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cStair{height:320px}
+#cBar{height:240px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--ochre) 0 5px,transparent 5px 8px)!important}
+.legend i.hatch{height:10px;background:repeating-linear-gradient(45deg,var(--ochre) 0 2px,transparent 2px 5px)!important;border:1px solid var(--ochre)}
+.legend i.band{height:10px;background:var(--blood);opacity:.18}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.stat em{font-style:normal;font-size:.82rem;font-variant-numeric:tabular-nums;color:var(--ink)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.92rem;display:block}
+.row{display:flex;align-items:center;gap:10px}
+.row input[type=range]{flex:1;min-width:0}
+input[type=range]{accent-color:var(--blood);height:28px}
+input[type=number]{width:7.2em;font:600 .95rem var(--sans);font-variant-numeric:tabular-nums;padding:5px 6px;border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink)}
+.unit{font-size:.85rem;color:var(--ink-soft);min-width:1.2em}
+#m{accent-color:var(--steel)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.btn{font:600 .9rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.chip{font:600 .84rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--blood);background:transparent;color:var(--ink);cursor:pointer;line-height:1.25;text-align:left}
+.chip small{display:block;font-weight:400;font-size:.76rem;color:var(--ink-soft)}
+.chip[aria-pressed="true"]{background:var(--blood);color:var(--paper)}
+.chip[aria-pressed="true"] small{color:var(--paper)}
+.chip.same{border-color:var(--ochre);box-shadow:0 0 0 2px var(--ochre)}
+.chip.same small{color:var(--ink);font-weight:700}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-family:var(--serif);font-size:.95rem;margin:10px 0 0;max-width:70ch}
+.tables{display:grid;grid-template-columns:1fr;gap:18px;margin-top:16px}
+#bpWrap table{max-width:560px}
+.table-wrap{overflow-x:auto;min-width:0}
+.table-wrap h2{font-family:var(--serif);font-weight:600;font-size:1rem;margin:0 0 4px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-weight:600;color:var(--ink-soft)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD203 Combat and Progression Design · Week 4 · Worked example</p>
+  <h1>The breakpoint staircase</h1>
+  <p class="lede">Diamond and netherite: 14% more damage, same three swings.</p>
+</header>
+
+<section class="panel" aria-label="Breakpoint explorer">
+  <div class="charts">
+    <figure>
+      <figcaption>TTK vs damage per hit<small>Listed damage before mitigation. The shaded band is every damage value that kills in the same number of hits.</small></figcaption>
+      <canvas id="cStair" role="img" aria-label="Time to kill versus damage per hit: a smooth curve and a staircase"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood);height:4px"></i>Actual TTK = (hits &minus; 1) &times; &Delta;</span>
+        <span><i class="dash"></i>Smooth estimate H &times; &Delta; / d</span>
+        <span><i class="band"></i>Current step</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>The health bar, chopped into hits<small>Each segment is one hit after mitigation. The hatched block is overkill: damage past zero health.</small></figcaption>
+      <canvas id="cBar" role="img" aria-label="Health bar divided into hits, with overkill and a hit timeline"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood);height:10px"></i>Hits (alternating tints)</span>
+        <span><i class="hatch"></i>Overkill</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rEff">—</b><span>damage per hit after mitigation</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rHits">—</b><span>hits to kill</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rTtk">—</b><span>TTK, seconds</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSmooth">—</b><span>smooth estimate, seconds</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rGap">—</b><span>gap, (TTK &minus; smooth) / smooth</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rOver">—</b><span>overkill, HP wasted by the last hit</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rUp">—</b><span>listed damage for one fewer hit <em id="rUpPct"></em></span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rDown">—</b><span>below this you need one more hit <em id="rDownPct"></em></span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <span style="font-weight:600;font-size:.92rem">Preset</span>
+      <div class="presets" role="group" aria-label="Presets">
+        <button class="btn" data-preset="mc" aria-pressed="true">Minecraft zombie</button>
+        <button class="btn" data-preset="tf2" aria-pressed="false">TF2 rocket</button>
+        <button class="btn" data-preset="raid" aria-pressed="false">Raid boss</button>
+      </div>
+      <div class="presets" id="chips" role="group" aria-label="Quick picks" style="margin-top:10px"></div>
+      <p class="note" id="note"></p>
+    </div>
+    <div style="display:grid;gap:12px">
+      <div class="ctl">
+        <label for="d">Damage per hit, listed</label>
+        <div class="row"><input id="d" type="range" min="1" max="21" step="0.01" value="7" aria-describedby="dNum"><input id="dNum" type="number" min="0.01" step="0.01" value="7" aria-label="Damage per hit, listed, exact value"></div>
+      </div>
+      <div class="ctl">
+        <label for="h">Target health H <span style="font-weight:400;color:var(--ink-soft)">(log slider)</span></label>
+        <div class="row"><input id="h" type="range" min="0" max="1000" step="1" value="200"><input id="hNum" type="number" min="1" max="5000000" step="1" value="20" aria-label="Target health, exact value"></div>
+      </div>
+      <div class="ctl">
+        <label for="m">Mitigation m</label>
+        <div class="row"><input id="m" type="range" min="0" max="50" step="0.1" value="1.6"><input id="mNum" type="number" min="0" max="50" step="0.1" value="1.6" aria-label="Mitigation percent, exact value"><span class="unit">%</span></div>
+      </div>
+      <div class="ctl">
+        <label for="t">Attack interval &Delta;</label>
+        <div class="row"><input id="t" type="range" min="0.1" max="3" step="0.005" value="0.625"><input id="tNum" type="number" min="0.1" max="3" step="0.005" value="0.625" aria-label="Attack interval in seconds, exact value"><span class="unit">s</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tables">
+    <div class="table-wrap" id="chipTableWrap">
+      <h2 id="chipTableTitle">Quick picks at the current settings</h2>
+      <table aria-labelledby="chipTableTitle">
+        <thead id="chipHead"></thead>
+        <tbody id="chipBody"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap" id="bpWrap">
+      <h2 id="bpTitle">Nearby breakpoints</h2>
+      <table aria-labelledby="bpTitle">
+        <thead><tr><th>Hits</th><th>Min listed damage</th><th>After mitigation</th><th>TTK (s)</th></tr></thead>
+        <tbody id="bpBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Model: hits = ceil(H / (d &times; (1 &minus; m))), TTK = (hits &minus; 1) &times; &Delta;, because the first hit lands at time zero. Sources: Minecraft Wiki, "Sword", "Zombie" and "Armor" (Java Edition, 1.9 combat update onward); Official TF2 Wiki, "Rocket Launcher" and "Health"; Warcraft Wiki, "Patchwerk (Classic)" (patch 1.12). Base damage only: no crits, falloff or random spread.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const nf=(n,dp)=>n.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});
+const f3=n=>nf(n,3);
+const trim=(n,dp)=>{const s=nf(n,dp);return s.includes('.')?s.replace(/\.?0+$/,''):s;};
+const HMAX=5000000,LOGMAX=Math.log10(HMAX);
+
+const PRESETS={
+  mc:{H:20,m:1.6,t:0.625,d:7,kind:'d',
+    note:'Adult zombie, 20 health, 2 natural armor (1.6% off every sword hit). Swords swing every 0.625 s. Full-strength swings, no crits, no enchantments.',
+    chips:[['Wooden',4],['Stone',5],['Iron',6],['Diamond',7],['Netherite',8]]},
+  tf2:{H:200,m:0,t:0.8,d:90,kind:'H',
+    note:'Rocket launcher at base damage 90, one rocket every 0.8 s. Pick a target class. Real rockets vary with distance and spread; this is the base number.',
+    chips:[['Scout',125],['Medic',150],['Soldier',200],['Heavy',300]]},
+  raid:{H:3850000,m:0,t:1.5,d:3000,kind:null,
+    note:'A boss with about 3,850,000 health. One attacker takes over a thousand hits, so rounding up adds less than 0.1%. The staircase melts into the smooth curve.',
+    chips:[]}
+};
+const S={preset:'mc',H:20,m:1.6,t:0.625,d:7,lo:1,hi:21};
+
+function hitsFor(d){const e=d*(1-S.m/100);return Math.max(1,Math.ceil(S.H/e-1e-9));}
+function ttkHits(k){return (k-1)*S.t;}
+function smooth(d){return S.H*S.t/(d*(1-S.m/100));}
+function bp(k){return S.H/(k*(1-S.m/100));} // min listed damage for k hits
+
+function setDomain(d0){S.lo=Math.max(1,Math.floor(0.25*d0));S.hi=3*d0;const r=$('d');r.min=S.lo;r.max=S.hi;}
+
+// ---------- canvas helpers
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){if(v<=0)return 1;const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.6,2,2.4,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=v*1.0001)||v;}
+function tickFmt(v,span){const dp=span<5?2:span<50?1:0;return trim(v,dp);}
+
+function drawStair(){
+  const {g,w,h}=setup($('cStair'));
+  const pad={l:48,r:12,t:14,b:36},W=w-pad.l-pad.r,Hh=h-pad.t-pad.b;
+  const lo=S.lo,hi=S.hi,yMax=niceMax(Math.max(smooth(lo),S.t*0.5));
+  const X=d=>pad.l+W*(d-lo)/(hi-lo),Y=s=>pad.t+Hh*(1-Math.min(s,yMax*1.04)/yMax);
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),ochre=css('--ochre'),paper=css('--paper');
+  g.font='12px '+css('--sans');
+  // grid + axes
+  g.strokeStyle=grid;g.lineWidth=1;g.fillStyle=soft;
+  for(let i=0;i<=4;i++){const y=pad.t+Hh*(1-i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(tickFmt(yMax*i/4,yMax)+(i===4?' s':''),pad.l-6,y);}
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;g.textAlign=i===0?'left':i===4?'right':'center';g.textBaseline='top';g.fillText(tickFmt(v,hi-lo),X(v),h-pad.b+5);}
+  g.textAlign='center';g.fillText('listed damage per hit',pad.l+W/2,h-15);
+  const k=hitsFor(S.d);
+  // current step band
+  const bL=Math.max(lo,bp(k)),bR=k>1?Math.min(hi,bp(k-1)):hi;
+  g.fillStyle=blood;g.globalAlpha=.13;g.fillRect(X(bL),pad.t,X(bR)-X(bL),Hh);g.globalAlpha=1;
+  // smooth
+  g.strokeStyle=ochre;g.lineWidth=1.8;g.setLineDash([6,4]);g.beginPath();
+  for(let i=0;i<=240;i++){const d=lo+(hi-lo)*i/240,px=X(d),py=Y(smooth(d));i?g.lineTo(px,py):g.moveTo(px,py);}
+  g.stroke();g.setLineDash([]);
+  // staircase
+  const kHi=hitsFor(lo),kLo=hitsFor(hi),n=kHi-kLo+1;
+  g.strokeStyle=blood;g.lineWidth=3.2;g.lineJoin='miter';g.beginPath();
+  if(n<=W/3){
+    let first=true;
+    for(let j=kHi;j>=kLo;j--){
+      const x0=Math.max(lo,bp(j)),x1=j>1?Math.min(hi,bp(j-1)):hi,y=Y(ttkHits(j));
+      if(first){g.moveTo(X(x0),y);first=false;}else g.lineTo(X(x0),y);
+      g.lineTo(X(x1),y);
+    }
+    g.stroke();
+    // labels
+    g.fillStyle=ink;g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+    for(let j=kHi;j>=kLo;j--){
+      let a=X(Math.max(lo,bp(j))),b=X(j>1?Math.min(hi,bp(j-1)):hi);const lab=j+(j===1?' hit':' hits'),lw=g.measureText(lab).width+10;
+      if(j===k){const cx=X(S.d);if(b-(cx+10)>=lw)a=cx+10;else if((cx-10)-a>=lw)b=cx-10;else continue;}
+      if(b-a>=lw){let y=Y(ttkHits(j))-6;if(y<pad.t+12)y=Y(ttkHits(j))+18;g.fillText(lab,(a+b)/2,y);}
+    }
+  }else{
+    for(let px=0;px<=W;px++){const d=lo+(hi-lo)*px/W,y=Y(ttkHits(hitsFor(d)));px?g.lineTo(pad.l+px,y):g.moveTo(pad.l+px,y);}
+    g.stroke();
+    g.fillStyle=soft;g.textAlign='right';g.textBaseline='top';g.fillText(nf(n,0)+' steps, too fine to see',w-pad.r-4,pad.t+4);
+  }
+  // quick-pick ticks (damage chips)
+  const P=PRESETS[S.preset];
+  if(P.kind==='d'){
+    g.font='600 11px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+    P.chips.forEach(([name,v])=>{if(v<lo||v>hi)return;const px=X(v),py=Y(ttkHits(hitsFor(v)));
+      g.fillStyle=ink;g.beginPath();g.arc(px,py,3,0,Math.PI*2);g.fill();
+      g.fillStyle=soft;g.textBaseline='top';g.fillText(name[0],px,py+6);});
+  }
+  // cursor
+  const cx=X(S.d);
+  g.strokeStyle=ink;g.globalAlpha=.45;g.lineWidth=1;g.setLineDash([4,4]);g.beginPath();g.moveTo(cx,pad.t);g.lineTo(cx,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  [[smooth(S.d),ochre],[ttkHits(k),blood]].forEach(([v,c])=>{g.fillStyle=c;g.beginPath();g.arc(cx,Y(v),6,0,Math.PI*2);g.fill();g.strokeStyle=paper;g.lineWidth=2;g.stroke();});
+}
+
+function hatch(g,color){
+  const p=document.createElement('canvas');p.width=p.height=8;const q=p.getContext('2d');
+  q.strokeStyle=color;q.lineWidth=2;q.beginPath();q.moveTo(0,8);q.lineTo(8,0);q.moveTo(-2,2);q.lineTo(2,-2);q.moveTo(6,10);q.lineTo(10,6);q.stroke();
+  return g.createPattern(p,'repeat');
+}
+function drawBar(){
+  const {g,w,h}=setup($('cBar'));
+  const padL=10,padR=10,W=w-padL-padR;
+  const ink=css('--ink'),soft=css('--ink-soft'),blood=css('--blood'),ochre=css('--ochre'),paper=css('--paper');
+  const e=S.d*(1-S.m/100),k=hitsFor(S.d),total=k*e,sc=W/total,barY=44,barH=44,H=S.H;
+  const over=Math.max(0,total-H);
+  g.font='12px '+css('--sans');g.fillStyle=soft;g.textAlign='left';g.textBaseline='bottom';
+  g.fillText('health 0 → '+nf(H,H%1?2:0),padL,barY-6);
+  if(k<=W/3){
+    for(let i=0;i<k;i++){
+      const a=i*e,b=Math.min((i+1)*e,H);
+      g.fillStyle=blood;g.globalAlpha=i%2?0.55:0.95;g.fillRect(padL+a*sc,barY,(b-a)*sc,barH);g.globalAlpha=1;
+      const segW=(b-a)*sc,lab=String(i+1);
+      g.font='600 12px '+css('--sans');
+      if(segW>=g.measureText(lab).width+6){g.fillStyle=i%2?ink:paper;g.textAlign='center';g.textBaseline='middle';g.fillText(lab,padL+(a+b)/2*sc,barY+barH/2);}
+    }
+  }else{
+    g.fillStyle=blood;g.globalAlpha=.8;g.fillRect(padL,barY,H*sc,barH);g.globalAlpha=1;
+    g.fillStyle=paper;g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='middle';
+    g.fillText(nf(k,0)+' hits, too thin to draw one by one',padL+H*sc/2,barY+barH/2);
+  }
+  g.strokeStyle=ink;g.lineWidth=1.5;g.strokeRect(padL,barY,H*sc,barH);
+  if(over>1e-9){
+    const x0=padL+H*sc,ow=Math.max(over*sc,1.5);
+    g.fillStyle=hatch(g,ochre);g.fillRect(x0,barY,ow,barH);
+    g.strokeStyle=ochre;g.lineWidth=1.5;g.strokeRect(x0,barY,ow,barH);
+    g.fillStyle=ochre;g.font='600 12px '+css('--sans');g.textBaseline='top';
+    const lab='overkill '+fmtOver(over);const lw=g.measureText(lab).width;
+    let lx=x0+ow/2;g.textAlign='center';if(lx+lw/2>w-2){g.textAlign='right';lx=w-2;}
+    g.fillText(lab,lx,barY+barH+5);
+  }
+  // timeline
+  const ty=h-62,ttk=ttkHits(k);
+  g.strokeStyle=ink;g.lineWidth=1.5;g.beginPath();g.moveTo(padL,ty);g.lineTo(padL+W,ty);g.stroke();
+  g.font='12px '+css('--sans');g.fillStyle=soft;g.textAlign='left';g.textBaseline='bottom';
+  g.fillText('time, hit by hit',padL,ty-10);
+  const tX=s=>padL+(ttk>0?W*s/ttk:0);
+  if(k<=W/4){
+    g.strokeStyle=blood;g.lineWidth=2;
+    for(let i=0;i<k;i++){const x=tX(i*S.t);g.beginPath();g.moveTo(x,ty-7);g.lineTo(x,ty+7);g.stroke();}
+    g.fillStyle=ink;g.textBaseline='top';
+    const step=Math.max(1,Math.ceil(k/Math.floor(W/46)));
+    for(let i=0;i<k;i+=step){const x=tX(i*S.t);g.textAlign=i===0?'left':(i===k-1?'right':'center');g.fillText(trim(i*S.t,3)+' s',x,ty+10);}
+    if((k-1)%step){g.textAlign='right';g.fillText(trim(ttk,3)+' s',tX(ttk),ty+10);}
+  }else{
+    g.fillStyle=ink;g.textBaseline='top';g.textAlign='left';g.fillText('0 s',padL,ty+10);
+    g.textAlign='right';g.fillText(nf(ttk,1)+' s ('+nf(k,0)+' hits)',padL+W,ty+10);
+  }
+  if(k===1){g.fillStyle=ink;g.textAlign='left';g.textBaseline='top';g.fillText('one hit at 0 s: TTK is 0',padL+10,ty+10);}
+}
+function pc(v){return v.toFixed(Math.abs(v)<1?2:1);}
+function fmtOver(o){return Math.abs(o)<1e-9?'0.000':f3(o);}
+
+// ---------- readouts + tables
+function readouts(){
+  const mm=1-S.m/100,e=S.d*mm,k=hitsFor(S.d),ttk=ttkHits(k),sm=smooth(S.d),over=k*e-S.H;
+  $('rEff').textContent=f3(e);$('rHits').textContent=nf(k,0);$('rTtk').textContent=f3(ttk);$('rSmooth').textContent=f3(sm);
+  $('rGap').textContent=(sm>0?(ttk-sm)/sm*100:0).toFixed(2)+'%';
+  $('rOver').textContent=fmtOver(over);
+  if(k===1){$('rUp').textContent='already one-hit';$('rUpPct').textContent='';}
+  else{const up=bp(k-1);$('rUp').textContent=f3(up);$('rUpPct').textContent='(+'+pc((up/S.d-1)*100)+'%)';}
+  const dn=bp(k);$('rDown').textContent=f3(dn);$('rDownPct').textContent='(−'+pc((1-dn/S.d)*100)+'%)';
+  let s;
+  if(k===1) s=`One hit already kills, so TTK is 0 s. Every point of damage above ${f3(dn)} is overkill.`;
+  else{
+    const lo=bp(k),hiD=bp(k-1);
+    s=`Every listed damage from <b>${f3(lo)}</b> up to just under <b>${f3(hiD)}</b> kills in <b>${nf(k,0)} hits</b> and ${f3(ttk)} s. `+
+      `The smooth estimate says ${f3(sm)} s. Add ${pc((hiD/S.d-1)*100)}% damage and you save a whole ${trim(S.t,3)} s. Lose ${pc((1-lo/S.d)*100)}% and you pay one.`;
+    const P=PRESETS[S.preset];
+    if(P.kind==='d'){const same=P.chips.filter(([,v])=>v!==S.d&&hitsFor(v)===k).map(c=>c[0].toLowerCase());
+      if(same.length) s+=` Same TTK as ${same.join(' and ')}.`;}
+  }
+  $('insight').innerHTML=s;
+  // bp table
+  const rows=[];
+  for(let j=k+2;j>=Math.max(1,k-2);j--){
+    const d=bp(j);rows.push(`<tr class="${j===k?'here':''}"><td>${nf(j,0)}</td><td>${f3(d)}</td><td>${f3(d*mm)}</td><td>${f3(ttkHits(j))}</td></tr>`);
+  }
+  $('bpBody').innerHTML=rows.join('');
+  // chips + chip table
+  const P=PRESETS[S.preset];
+  $('chipTableWrap').hidden=!P.kind;
+  document.querySelectorAll('#chips .chip').forEach(c=>{
+    const v=+c.dataset.v;let kk,cur;
+    if(P.kind==='d'){kk=hitsFor(v);cur=Math.abs(v-S.d)<1e-9;}
+    else{const sH=S.H;S.H=v;kk=hitsFor(S.d);S.H=sH;cur=v===S.H;}
+    c.setAttribute('aria-pressed',cur);
+    const same=P.kind==='d'&&!cur&&kk===k;
+    c.classList.toggle('same',same);
+    c.querySelector('small').textContent=nf(kk,0)+(kk===1?' hit':' hits')+(same?' · same TTK':'');
+  });
+  if(P.kind==='d'){
+    $('chipHead').innerHTML='<tr><th>Weapon</th><th>Listed</th><th>After mitigation</th><th>Hits</th><th>TTK (s)</th><th>Paper DPS</th><th>Smooth (s)</th><th>Overkill</th></tr>';
+    $('chipBody').innerHTML=P.chips.map(([n,v])=>{const kk=hitsFor(v),ee=v*mm;return `<tr class="${Math.abs(v-S.d)<1e-9?'here':''}"><td>${n}</td><td>${trim(v,2)}</td><td>${f3(ee)}</td><td>${kk}</td><td>${f3(ttkHits(kk))}</td><td>${nf(v/S.t,1)}</td><td>${f3(smooth(v))}</td><td>${fmtOver(kk*ee-S.H)}</td></tr>`;}).join('');
+  }else if(P.kind==='H'){
+    const sH=S.H;
+    $('chipHead').innerHTML='<tr><th>Target</th><th>Health</th><th>Hits</th><th>TTK (s)</th><th>Smooth (s)</th><th>Overkill</th></tr>';
+    $('chipBody').innerHTML=P.chips.map(([n,v])=>{S.H=v;const kk=hitsFor(S.d),r=`<tr class="${v===sH?'here':''}"><td>${n}</td><td>${nf(v,0)}</td><td>${kk}</td><td>${f3(ttkHits(kk))}</td><td>${f3(smooth(S.d))}</td><td>${fmtOver(kk*S.d*mm-v)}</td></tr>`;return r;}).join('');
+    S.H=sH;
+  }
+}
+
+// ---------- sync controls
+function hToPos(H){return Math.round(Math.log10(Math.max(1,H))/LOGMAX*1000);}
+function posToH(p){const v=Math.pow(10,p/1000*LOGMAX);const mag=Math.pow(10,Math.max(0,Math.floor(Math.log10(v))-2));return Math.max(1,Math.min(HMAX,Math.round(v/mag)*mag));}
+function syncInputs(){
+  $('d').value=S.d;$('dNum').value=+S.d.toFixed(4);
+  $('h').value=hToPos(S.H);$('hNum').value=S.H;
+  $('m').value=S.m;$('mNum').value=S.m;
+  $('t').value=S.t;$('tNum').value=S.t;
+}
+function update(){readouts();drawStair();drawBar();}
+function setD(v){if(!(v>0))return;S.d=v;if(v<S.lo||v>S.hi)setDomain(v);}
+
+function loadPreset(key){
+  S.preset=key;const P=PRESETS[key];S.H=P.H;S.m=P.m;S.t=P.t;S.d=P.d;setDomain(P.d);
+  document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.preset===key));
+  $('note').textContent=P.note;
+  $('chips').innerHTML=P.chips.map(([n,v])=>`<button class="chip" data-v="${v}" aria-pressed="false">${n} ${nf(v,0)} <small></small></button>`).join('');
+  $('chips').hidden=!P.chips.length;
+  document.querySelectorAll('#chips .chip').forEach(c=>c.addEventListener('click',()=>{
+    const v=+c.dataset.v;if(P.kind==='d')setD(v);else S.H=v;syncInputs();update();}));
+  syncInputs();update();
+}
+
+// events
+$('d').addEventListener('input',e=>{S.d=+e.target.value;$('dNum').value=S.d;update();});
+$('dNum').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>0){setD(v);$('d').value=S.d;update();}});
+$('h').addEventListener('input',e=>{S.H=posToH(+e.target.value);$('hNum').value=S.H;update();});
+$('hNum').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>=1&&v<=HMAX){S.H=v;$('h').value=hToPos(v);update();}});
+$('m').addEventListener('input',e=>{S.m=+e.target.value;$('mNum').value=S.m;update();});
+$('mNum').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>=0&&v<=50){S.m=v;$('m').value=v;update();}});
+$('t').addEventListener('input',e=>{S.t=+e.target.value;$('tNum').value=S.t;update();});
+$('tNum').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>=0.1&&v<=3){S.t=v;$('t').value=v;update();}});
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>loadPreset(b.dataset.preset)));
+let rz;window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(()=>{drawStair();drawBar();});});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawStair();drawBar();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawStair();drawBar();});
+loadPreset('mc');
+})();
+</script>
+</body>
+</html>
