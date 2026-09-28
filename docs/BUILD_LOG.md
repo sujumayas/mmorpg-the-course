@@ -37,3 +37,14 @@
   - Still unverified (course REVIEW.md): Rules of Play chapter numbers and "Rules on Three Levels" title; Fullerton's eight-element list (secondary sources only); 1996 Blizzard-Condor acquisition date; flOw's 20 levels; Celeste speed steps.
 - MMO401 complete (2026-09-28): 14 lectures, 14 examples, 14 labs with starters and data, 4 assessment files (69-question bank, labs brief, final brief, scenario cards). Reviewer fixes: w08 deposit ceiling (δ > s means stealing pays at every size; exam Q35 ceiling 50 not 74), w10 stock-build wording, w12 5,901, w07 off-book trades (~36), w08 reserve ratio 80%. EVE 7.5% sales-tax base since 12 March 2025 (release 22.02) confirmed; 3.375% at Accounting V.
   - Still unverified: EverQuest II 2005 dupe primary article (cited via secondary source); Lehdonvirta & Castronova (2014) chapter titles (chapter mapping removed). CCP publishes no definitions for its MER money supply, velocity or price indices; the lectures say so.
+
+## Handoff (usage limit reached, 2026-09-28)
+- Complete and committed: MA101, MA102, GD203, MMO303 (wave 1); GD101, MMO304, MMO401 (wave 2).
+- GD102: reviewed; a fact-check agent was running. Next: `tools/finish_syllabus.py GD102`, check, commit.
+- GS101: all lectures, examples and assessments written; reviewer was running. Then finish and commit.
+- Wave 3 in progress: UX201 (weeks 4-6 author was running; then builders, assessments, review), MMO301 (weeks 7-9 author running), MMO305 (weeks 1-3 author running), MMO402 (weeks 4-14 authors running or queued).
+- Wave 4 started: CS101 and CS102 authors were running; CS202 weeks 1-3 running. Remaining author tasks are in `docs/handoff/queue.txt`.
+- Per-course reviewer notes (known number and wording fixes found by builders) are in `docs/handoff/notes-*.md`. Pass them to each course's reviewer.
+- Waves 5-7 not started.
+- Process per course: authors (5 batches) → one builder per Interactive spec → assessment writer → reviewer (fixes + reconciles assessments) → `tools/finish_syllabus.py` → `tools/check_course.py` must print OK → commit "<CODE>: complete".
+- Owner decisions pending: delete orphaned `courses/MMO303-*/examples/w10-counter-triangle.html`; confirm GD203 lab 10 has no late window.

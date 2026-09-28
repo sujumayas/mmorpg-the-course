@@ -1,0 +1,1 @@
+w01-03: CSM turnout/votes invented & labeled; nullsec dominance as model prediction; LambdaMOO 'Another Direction' date, pre-CSM8 voting method, 2011 summit omitted. Bank of EVE signature -> w4/5. MMO301 w6, MMO305 w1,4,5 syllabus links.
