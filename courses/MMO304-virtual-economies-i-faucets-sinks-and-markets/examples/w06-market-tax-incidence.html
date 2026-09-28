@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Who pays the market fee? · MMO304 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:3fr 2fr;gap:14px}
+@media (max-width:820px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:340px}
+@media (max-width:520px){canvas{height:300px}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:20px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.legend i.dash{border-top-style:dashed;opacity:.6}
+.legend i.box{height:11px;border:0;border-radius:2px}
+.sw-buyer{background:repeating-linear-gradient(135deg,var(--ochre) 0 5px,color-mix(in srgb,var(--ochre) 55%,var(--paper)) 5px 8px)}
+.sw-seller{background:var(--steel)}
+.sw-dwl{background:color-mix(in srgb,var(--blood) 40%,transparent)}
+.sw-npc{background:repeating-linear-gradient(90deg,var(--moss) 0 2px,color-mix(in srgb,var(--moss) 30%,transparent) 2px 6px)}
+/* who pays */
+.bar-scale{display:flex;justify-content:space-between;font-size:.75rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;margin-top:2px}
+.track{position:relative;height:46px;background:var(--paper);border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}
+.seg{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease}
+#segB{left:0}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 4px}
+.side{border-left:6px solid;padding:2px 0 2px 10px}
+.side.buyer{border-image:repeating-linear-gradient(180deg,var(--ochre) 0 5px,transparent 5px 8px) 6}
+.side.seller{border-color:var(--steel)}
+.side b{display:block;font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.side span{font-size:.84rem;color:var(--ink-soft)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.formula{font-size:.86rem;color:var(--ink-soft);margin:10px 0 0;font-variant-numeric:tabular-nums}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+/* controls */
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 22px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+.ctl.wide{grid-column:span 2}
+@media (max-width:520px){.ctl.wide{grid-column:auto}}
+.ctl .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctl label{font-weight:600;font-size:.9rem}
+.ctl label small{font-weight:400;color:var(--ink-soft)}
+input[type=number]{width:5.6em;font:600 .92rem var(--sans);font-variant-numeric:tabular-nums;padding:3px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);text-align:right}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+input:disabled{opacity:.45}
+.toggle{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.92rem;cursor:pointer;margin-top:4px}
+.toggle input{width:20px;height:20px;accent-color:var(--steel)}
+select{font:600 .92rem var(--sans);padding:6px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);width:100%}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+.hint.warn{color:var(--blood)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.group-title{font-weight:600;font-size:.92rem;margin:18px 0 0}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.tables{display:grid;grid-template-columns:1fr 1.6fr;gap:14px;margin-top:16px}
+@media (max-width:820px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.08rem;margin:0 0 6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+#feeTable{min-width:560px}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-weight:600;color:var(--ink-soft);font-size:.82rem}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO304 Virtual Economies I · Week 6 · Worked example</p>
+  <h1>Who pays the auction house fee?</h1>
+  <p class="lede">The game charges a 5% fee to sellers, yet buyers pay 44% of it through a higher price. Drag the fee: the wedge grows but the split never moves. Drag the slopes <i>b</i> and <i>d</i>: the split moves. Flip who gets charged: nothing moves.</p>
+</header>
+
+<section class="panel" aria-label="Market model">
+  <div class="views">
+    <figure>
+      <figcaption>The market<small>Flask price against trades per day. Axes run to price 250 and quantity 1,000.</small></figcaption>
+      <canvas id="cMarket" role="img" aria-label="Supply and demand chart"></canvas>
+      <div class="legend" id="legend">
+        <span><i style="border-color:var(--ochre)"></i>Demand</span>
+        <span><i style="border-color:var(--steel)"></i>Supply</span>
+        <span><i class="dash" id="lgFaded" style="border-color:var(--steel)"></i><span id="lgFadedTxt">Supply before fee</span></span>
+        <span><i class="box sw-buyer"></i>Buyer's part</span>
+        <span><i class="box sw-seller"></i>Seller's part</span>
+        <span><i class="box sw-dwl"></i>Lost trades (deadweight loss)</span>
+        <span id="lgNpc" hidden><i class="box sw-npc"></i><span id="lgNpcTxt">NPC quantity</span></span>
+      </div>
+    </figure>
+
+    <figure aria-live="polite">
+      <figcaption>Who pays<small id="whoSub">The wedge between what buyers pay and what sellers get, split by who bears it.</small></figcaption>
+      <div id="wedgeBlock">
+        <div class="track" role="img" id="track" aria-label="">
+          <div class="seg sw-buyer" id="segB"></div>
+          <div class="seg sw-seller" id="segS"></div>
+        </div>
+        <div class="bar-scale"><span>0</span><span id="scaleMid"></span><span id="scaleMax"></span></div>
+        <div class="split">
+          <div class="side buyer"><b id="rBuyPct">—</b><span>buyers pay <strong id="rBuyG">—</strong> more per flask</span></div>
+          <div class="side seller"><b id="rSellPct">—</b><span>sellers get <strong id="rSellG">—</strong> less per flask</span></div>
+        </div>
+        <p class="formula" id="formula"></p>
+      </div>
+      <div id="npcBlock" hidden>
+        <div class="stats" style="margin-top:0">
+          <div class="stat" style="--c:var(--ochre)"><b id="nQd">—</b><span>buyers want (Q<sub>d</sub>)</span></div>
+          <div class="stat" style="--c:var(--steel)"><b id="nQs">—</b><span>sellers offer (Q<sub>s</sub>)</span></div>
+          <div class="stat" style="--c:var(--moss)"><b id="nGap">—</b><span id="nGapLbl">NPC</span></div>
+          <div class="stat" style="--c:var(--blood)"><b id="nGold">—</b><span id="nGoldLbl">gold</span></div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat" style="--c:var(--ochre)"><b id="rSink">—</b><span>gold removed per day by the fee</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rDwl">—</b><span>deadweight loss per day</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rEd">—</b><span>demand elasticity e<sub>d</sub> = b·P/Q</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rEs">—</b><span>supply elasticity e<sub>s</sub> = d·P<sub>s</sub>/Q</span></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="insight" id="summary" aria-live="polite"></div>
+
+  <div class="controls">
+    <div class="ctl">
+      <div class="row"><label for="tR">Fee <i>t</i> <small>(%)</small></label><input type="number" id="tN" min="0" max="30" step="0.5" value="5" aria-label="Fee percent"></div>
+      <input type="range" id="tR" min="0" max="30" step="0.5" value="5">
+      <label class="toggle"><input type="checkbox" id="buyerSide"> Charge the fee to buyers instead</label>
+      <p class="hint" id="feeHint"></p>
+    </div>
+    <div class="ctl">
+      <div class="row"><label for="aR">Demand intercept <i>a</i></label><input type="number" id="aN" min="200" max="3000" step="10" value="1000" aria-label="a"></div>
+      <input type="range" id="aR" min="200" max="3000" step="10" value="1000">
+      <div class="row" style="margin-top:8px"><label for="bR">Demand slope <i>b</i> <small>(buyers' flexibility)</small></label><input type="number" id="bN" min="0.5" max="25" step="0.5" value="5" aria-label="b"></div>
+      <input type="range" id="bR" min="0.5" max="25" step="0.5" value="5">
+      <p class="hint">Q<sub>d</sub> = a − b × P</p>
+    </div>
+    <div class="ctl">
+      <div class="row"><label for="cR">Supply intercept <i>c</i></label><input type="number" id="cN" min="0" max="500" step="10" value="100" aria-label="c"></div>
+      <input type="range" id="cR" min="0" max="500" step="10" value="100">
+      <div class="row" style="margin-top:8px"><label for="dR">Supply slope <i>d</i> <small>(sellers' flexibility)</small></label><input type="number" id="dN" min="0.5" max="25" step="0.5" value="4" aria-label="d"></div>
+      <input type="range" id="dR" min="0.5" max="25" step="0.5" value="4">
+      <p class="hint">Q<sub>s</sub> = c + d × P<sub>s</sub></p>
+    </div>
+    <div class="ctl">
+      <label for="mode">NPC price or price rule</label>
+      <select id="mode" style="margin-top:4px">
+        <option value="none">None</option>
+        <option value="floor">NPC buyer at F (price floor)</option>
+        <option value="cap">Rule caps price at C (no NPC seller)</option>
+        <option value="npcsell">NPC seller at C (price ceiling)</option>
+      </select>
+      <div class="row" style="margin-top:8px"><label for="fN" id="fLbl">Price F or C</label><input type="number" id="fN" min="0" max="250" step="1" value="90"></div>
+      <p class="hint" id="modeHint"></p>
+    </div>
+    <div class="ctl wide">
+      <span style="font-weight:600;font-size:.92rem">Presets from the lecture</span>
+      <div class="presets" role="group" aria-label="Presets">
+        <button class="chip" data-p="base" aria-pressed="true">Baseline</button>
+        <button class="chip" data-p="flask" aria-pressed="false">Raid flask (b = 1, a = 600)</button>
+        <button class="chip" data-p="dye" aria-pressed="false">Cosmetic dye (b = 20, a = 2,500)</button>
+        <button class="chip" data-p="raid" aria-pressed="false">New raid (a = 1,180)</button>
+        <button class="chip" data-p="herb" aria-pressed="false">Herb buff (c = 280)</button>
+        <button class="chip" data-p="herbfloor" aria-pressed="false">Herb buff with NPC floor 90</button>
+        <button class="chip" data-p="cap" aria-pressed="false">Rule cap at 90</button>
+      </div>
+      <p class="hint">Baseline, flask and dye use a 5% fee. The patch presets set the fee to 0% to match the lecture's section 3 and 4 numbers.</p>
+    </div>
+  </div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <h2>Readout</h2>
+      <table aria-label="Current equilibrium values">
+        <tbody id="readout"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <h2>Fee ladder for these curves</h2>
+      <table id="feeTable" aria-label="Equilibrium at several fee rates">
+        <thead><tr><th>Fee t</th><th>Buyer pays P</th><th>Seller gets P<sub>s</sub></th><th>Trades Q</th><th>Buyer's part</th><th>Seller's part</th><th>Gold removed</th><th>DWL</th></tr></thead>
+        <tbody id="feeBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Model: straight-line demand Q<sub>d</sub> = a − bP and supply Q<sub>s</sub> = c + dP<sub>s</sub>, with a fee that opens a wedge P<sub>s</sub> = P(1 − t). Default curves are the flask market from the lecture (a = 1,000, b = 5, c = 100, d = 4). The fee cases in the lecture (World of Warcraft 5%, Old School RuneScape 2%, EVE Online 7.5%) are all charged to sellers. Everything here is drawn generically.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const f1=n=>n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const f0=n=>Math.round(n).toLocaleString('en-US');
+const pc=n=>(n*100).toFixed(1)+'%';
+const S={t:5,a:1000,b:5,c:100,d:4,buyer:false,mode:'none',F:90};
+const PMAX=250,QMAX=1000;
+
+function solve(a,b,c,d,t){
+  const P=(a-c)/(b+d*(1-t)),Ps=P*(1-t),Q=a-b*P,P0=(a-c)/(b+d),Q0=a-b*P0;
+  const wedge=P-Ps,buyerPart=P-P0,sellerPart=P0-Ps;
+  return {P,Ps,Q,P0,Q0,wedge,buyerPart,sellerPart,
+    buyerShare:wedge>1e-12?buyerPart/wedge:d/(b+d),theory:d/(b+d),
+    sink:t*P*Q,dwl:.5*wedge*(Q0-Q),ed:b*P/Q,es:d*Ps/Q,listed:0};
+}
+function model(){
+  const npc=S.mode!=='none';
+  const t=npc?0:S.t/100;
+  const r=solve(S.a,S.b,S.c,S.d,t);r.t=t;
+  r.listed=S.buyer?r.Ps:r.P;
+  r.npc=null;
+  if(npc){
+    const X=S.F,Qd=S.a-S.b*X,Qs=S.c+S.d*X;
+    if(S.mode==='floor'&&X>r.P) r.npc={kind:'floor',X,Qd,Qs,gap:Qs-Qd,gold:X*(Qs-Qd)};
+    else if((S.mode==='cap'||S.mode==='npcsell')&&X<r.P) r.npc={kind:S.mode,X,Qd,Qs,gap:Qd-Qs,gold:S.mode==='npcsell'?X*(Qd-Qs):0};
+    else r.npc={kind:'slack',X};
+  }
+  return r;
+}
+
+// ---------- canvas ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function alpha(col,a){const g=document.createElement('canvas').getContext('2d');g.fillStyle=col;const h=g.fillStyle;if(h[0]==='#'){const n=parseInt(h.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}return h;}
+function stripe(g,col){const p=document.createElement('canvas');p.width=p.height=8;const x=p.getContext('2d');x.fillStyle=alpha(col,.5);x.fillRect(0,0,8,8);x.strokeStyle=col;x.lineWidth=3;x.beginPath();x.moveTo(-2,10);x.lineTo(10,-2);x.moveTo(6,10);x.lineTo(10,6);x.moveTo(-2,2);x.lineTo(2,-2);x.stroke();return g.createPattern(p,'repeat');}
+function drawMarket(r){
+  const {g,w,h}=setup($('cMarket'));
+  const pad={l:44,r:14,t:12,b:34};
+  const X=q=>pad.l+(w-pad.l-pad.r)*q/QMAX,Y=p=>pad.t+(h-pad.t-pad.b)*(1-p/PMAX);
+  const ink=css('--ink'),soft=css('--ink-soft'),ochre=css('--ochre'),steel=css('--steel'),blood=css('--blood'),moss=css('--moss'),paper=css('--paper');
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=soft;
+  for(let i=0;i<=5;i++){const p=PMAX*i/5,y=Y(p);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(p,pad.l-6,y);}
+  const nx=w<420?4:5;
+  for(let i=0;i<=nx;i++){const q=QMAX*i/nx,x=X(q);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.textAlign=i===nx?'right':'center';g.textBaseline='top';g.fillText(f0(q),x,h-pad.b+6);}
+  g.textAlign='left';g.textBaseline='top';g.fillText('price',pad.l+4,pad.t+2);
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('trades per day',w-pad.r,h-pad.b-2);
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  // lines given as Q(p): draw by price
+  const line=(qOf,col,wd,dash,al)=>{g.globalAlpha=al||1;g.strokeStyle=col;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();g.moveTo(X(qOf(-20)),Y(-20));g.lineTo(X(qOf(PMAX+20)),Y(PMAX+20));g.stroke();g.setLineDash([]);g.globalAlpha=1;};
+  const t=r.t,{a,b,c,d}=S;
+  // DWL triangle
+  if(t>0&&!r.npc){
+    g.fillStyle=alpha(blood,.32);g.beginPath();g.moveTo(X(r.Q),Y(r.P));g.lineTo(X(r.Q),Y(r.Ps));g.lineTo(X(r.Q0),Y(r.P0));g.closePath();g.fill();
+  }
+  // NPC band
+  if(r.npc&&r.npc.kind!=='slack'){
+    const n=r.npc,q1=Math.min(n.Qd,n.Qs),q2=Math.max(n.Qd,n.Qs);
+    g.fillStyle=n.kind==='cap'?alpha(blood,.3):alpha(moss,.35);
+    g.fillRect(X(q1),Y(n.X)-9,X(q2)-X(q1),18);
+    g.strokeStyle=n.kind==='cap'?blood:moss;g.lineWidth=2;
+    [q1,q2].forEach(q=>{g.beginPath();g.moveTo(X(q),Y(n.X)-9);g.lineTo(X(q),Y(n.X)+9);g.stroke();});
+  }
+  if(r.npc){g.strokeStyle=r.npc.kind==='cap'?blood:moss;g.lineWidth=2;g.setLineDash([2,4]);g.beginPath();g.moveTo(pad.l,Y(r.npc.X));g.lineTo(w-pad.r,Y(r.npc.X));g.stroke();g.setLineDash([]);}
+  // curves
+  const tb=S.buyer&&t>0,ts=!S.buyer&&t>0;
+  line(p=>a-b*p,ochre,tb?2:3,tb?[7,5]:[],tb?.5:1);
+  if(tb) line(p=>a-b*p/(1-t),ochre,3);
+  line(p=>c+d*p,steel,ts?2:3,ts?[7,5]:[],ts?.5:1);
+  if(ts) line(p=>c+d*p*(1-t),steel,3);
+  // wedge bar at Q
+  if(t>0&&!r.npc){
+    const x=X(r.Q),bw=12;
+    g.fillStyle=stripe(g,ochre);g.fillRect(x-bw/2,Y(r.P),bw,Y(r.P0)-Y(r.P));
+    g.fillStyle=steel;g.fillRect(x-bw/2,Y(r.P0),bw,Y(r.Ps)-Y(r.P0));
+    g.strokeStyle=ink;g.lineWidth=1.5;g.strokeRect(x-bw/2,Y(r.P),bw,Y(r.Ps)-Y(r.P));
+    // no-fee point
+    g.fillStyle=paper;g.strokeStyle=ink;g.lineWidth=2;g.beginPath();g.arc(X(r.Q0),Y(r.P0),4.5,0,7);g.fill();g.stroke();
+  }else if(!r.npc||r.npc.kind==='slack'){
+    g.fillStyle=ink;g.beginPath();g.arc(X(r.Q),Y(r.P),5.5,0,7);g.fill();
+  }
+  g.restore();
+  // labels
+  g.font='600 12px '+css('--sans');g.textBaseline='middle';
+  const label=(txt,x,y,col,left)=>{g.textAlign=left?'left':'right';const tw=g.measureText(txt).width;g.fillStyle=alpha(css('--paper-2'),.85);g.fillRect(left?x-2:x-tw-2,y-8,tw+4,16);g.fillStyle=col;g.fillText(txt,x,y);};
+  if(t>0&&!r.npc){
+    const x=X(r.Q),left=x<w*.6;const lx=left?x+10:x-10;
+    let yp=Y(r.P),ys=Y(r.Ps);if(ys-yp<18){const m=(yp+ys)/2;yp=m-9;ys=m+9;}
+    label('P = '+f2(r.P),lx,yp,ink,left);
+    label('Ps = '+f2(r.Ps),lx,ys,ink,left);
+  }else if(!r.npc||r.npc.kind==='slack'){
+    label('P = '+f2(r.P)+', Q = '+f1(r.Q),X(r.Q)+9,Y(r.P)-14,ink,X(r.Q)<w*.6);
+  }
+  if(r.npc){
+    const n=r.npc,y=Y(n.X)+(n.X>PMAX*.2?18:-18);
+    const txt={floor:'NPC buys at F = ',cap:'Cap C = ',npcsell:'NPC sells at C = ',slack:'Not binding at '}[n.kind]+f0(n.X)+(n.kind==='slack'?'':(n.kind==='cap'?', shortage ':', NPC ')+f0(n.gap));
+    label(txt,w-pad.r-4,y,n.kind==='cap'?blood:(n.kind==='slack'?soft:moss),false);
+  }
+  $('cMarket').setAttribute('aria-label',marketAlt(r));
+}
+function marketAlt(r){
+  if(r.npc&&r.npc.kind!=='slack') return `Demand and supply lines with a horizontal price line at ${f0(r.npc.X)}. Buyers want ${f0(r.npc.Qd)}, sellers offer ${f0(r.npc.Qs)}.`;
+  if(r.t>0) return `Demand and supply with a ${f1(r.t*100)}% fee. The wedge at ${f1(r.Q)} trades runs from ${f2(r.Ps)} to ${f2(r.P)}. Without the fee the market clears at ${f2(r.P0)} and ${f1(r.Q0)}.`;
+  return `Demand and supply cross at price ${f2(r.P)} and ${f1(r.Q)} trades per day.`;
+}
+
+// ---------- panels ----------
+function niceMax(v){const steps=[10,20,40,60,80,100,150,200,300,400,600,800,1000];return steps.find(s=>s>=v*1.02)||Math.ceil(v/100)*100;}
+function render(){
+  const r=model(),npc=r.npc&&r.npc.kind!=='slack';
+  drawMarket(r);
+  // who pays bar
+  const max=niceMax(Math.max(r.wedge,30));
+  $('scaleMax').textContent=max+' gold';$('scaleMid').textContent=max/2;
+  const wB=100*r.buyerPart/max,wS=100*r.sellerPart/max;
+  $('segB').style.width=wB+'%';$('segS').style.left=wB+'%';$('segS').style.width=wS+'%';
+  const bs=r.t>0?r.buyerShare:r.theory;
+  $('rBuyPct').textContent=pc(bs);$('rSellPct').textContent=pc(1-bs);
+  $('rBuyG').textContent=f2(r.buyerPart);$('rSellG').textContent=f2(r.sellerPart);
+  $('track').setAttribute('aria-label',`Wedge of ${f2(r.wedge)} gold: buyers ${f2(r.buyerPart)} (${pc(bs)}), sellers ${f2(r.sellerPart)} (${pc(1-bs)}).`);
+  $('formula').innerHTML=`Wedge P − P<sub>s</sub> = ${f2(r.wedge)}. Measured buyer share ${r.t>0?pc(r.buyerShare):'n/a at 0%'}. Formula d / (b + d) = ${fmtN(S.d)} / ${fmtN(S.b+S.d)} = ${pc(r.theory)}.`;
+  $('wedgeBlock').hidden=!!r.npc;$('npcBlock').hidden=!r.npc;
+  if(r.npc){
+    const n=r.npc;
+    if(n.kind==='slack'){
+      $('nQd').textContent=f1(r.Q);$('nQs').textContent=f1(r.Q);$('nGap').textContent='0';$('nGold').textContent='0';
+      $('nGapLbl').textContent='NPC trades (not binding)';$('nGoldLbl').textContent='gold created or removed per day';
+    }else{
+      $('nQd').textContent=f0(n.Qd);$('nQs').textContent=f0(n.Qs);$('nGap').textContent=f0(n.gap);
+      $('nGapLbl').textContent={floor:'flasks the NPC buys per day',cap:'shortage per day (buyers left empty-handed)',npcsell:'flasks the NPC sells per day'}[n.kind];
+      $('nGold').textContent=n.kind==='cap'?'0':f0(n.gold);
+      $('nGoldLbl').textContent={floor:'gold created per day (faucet)',cap:'gold created or removed (no NPC)',npcsell:'gold removed per day (sink)'}[n.kind];
+    }
+  }
+  $('rSink').textContent=f0(r.sink);$('rDwl').textContent=f1(r.dwl);
+  $('rEd').textContent=(npc?S.b*r.npc.X/r.npc.Qd:r.ed).toFixed(2);$('rEs').textContent=(npc?S.d*r.npc.X/r.npc.Qs:r.es).toFixed(2);
+  // summary
+  $('summary').innerHTML=summary(r);
+  // readout
+  const rows=[['No-fee price P0',f2(r.P0)],['No-fee trades Q0',f2(r.Q0)],['Buyer pays P',f2(npc?r.npc.X:r.P)],['Seller gets Ps',f2(npc?r.npc.X:r.Ps)],['Trades between players Q',f2(npc?Math.min(r.npc.Qd,r.npc.Qs):r.Q)],
+    ['Listed price'+(S.buyer?' (fee added on top)':' (fee taken from seller)'),f2(npc?r.npc.X:r.listed)],
+    ['Buyer share of wedge',r.t>0?pc(r.buyerShare):'—'],['Gold removed by fee per day',f2(r.sink)],['Deadweight loss per day',f2(r.dwl)]];
+  if(npc) rows.push([{floor:'NPC buys per day',cap:'Shortage per day',npcsell:'NPC sells per day'}[r.npc.kind],f2(r.npc.gap)],[{floor:'Gold created per day',cap:'Gold created or removed (no NPC)',npcsell:'Gold removed by NPC per day'}[r.npc.kind],f2(r.npc.gold)]);
+  $('readout').innerHTML=rows.map(x=>`<tr><td>${x[0].replace('P0','P<sub>0</sub>').replace('Q0','Q<sub>0</sub>').replace(/Ps$/,'P<sub>s</sub>')}</td><td>${x[1]}</td></tr>`).join('');
+  // fee ladder
+  const ladder=[0,2,5,10,20,30];if(!npc&&!ladder.includes(S.t)){ladder.push(S.t);ladder.sort((x,y)=>x-y);}
+  $('feeBody').innerHTML=ladder.map(tp=>{const s=solve(S.a,S.b,S.c,S.d,tp/100);const here=!npc&&tp===S.t;
+    return `<tr class="${here?'here':''}"><td>${fmtN(tp)}%</td><td>${f2(s.P)}</td><td>${f2(s.Ps)}</td><td>${f1(s.Q)}</td><td>${tp?f2(s.buyerPart):'—'}</td><td>${tp?f2(s.sellerPart):'—'}</td><td>${f0(s.sink)}</td><td>${f1(s.dwl)}</td></tr>`;}).join('');
+  // hints
+  $('tR').disabled=$('tN').disabled=$('buyerSide').disabled=!!r.npc;
+  $('feeHint').textContent=r.npc?'Fee is off (0%) while an NPC price or price rule is on, to keep the numbers simple.':(S.buyer?'Buyers now pay the listed price plus the fee. The solid demand line drops by the fee; P, Ps and Q stay the same.':'Sellers pay: they receive the price minus the fee.');
+  $('feeHint').className='hint'+(r.npc?' warn':'');
+  $('fN').disabled=S.mode==='none';
+  $('fLbl').textContent=S.mode==='floor'?'NPC buy price F':(S.mode==='none'?'Price F or C':'Price cap C');
+  $('modeHint').textContent=r.npc&&r.npc.kind==='slack'?(S.mode==='floor'?`F = ${f0(S.F)} is at or below the market price ${f2(r.P)}, so the NPC never gets a sale.`:`C = ${f0(S.F)} is at or above the market price ${f2(r.P)}, so the cap never binds.`):'';
+  $('lgFadedTxt').textContent=S.buyer?'Demand before fee':'Supply before fee';
+  $('lgFaded').style.borderColor=S.buyer?'var(--ochre)':'var(--steel)';
+  $('lgNpc').hidden=!npc;$('lgNpcTxt').textContent=npc?(r.npc.kind==='cap'?'Shortage':'NPC quantity'):'';
+  $('whoSub').textContent=r.npc?'With the fee off there is no wedge. The NPC price or rule sets the price instead.':'The wedge between what buyers pay and what sellers get, split by who bears it.';
+}
+function fmtN(n){return (Math.round(n*100)/100).toLocaleString('en-US');}
+function summary(r){
+  if(r.npc){
+    const n=r.npc;
+    if(n.kind==='slack') return `The ${S.mode==='floor'?'NPC buy price':'cap'} of ${f0(n.X)} doesn't bind. The market clears at ${f2(r.P)} with ${f1(r.Q)} trades a day, and no gold is created or removed.`;
+    if(n.kind==='floor') return `The NPC holds the price at ${f0(n.X)}, above the market's ${f2(r.P)}. Sellers offer ${f0(n.Qs)} a day, players buy ${f0(n.Qd)}, and the NPC buys the other ${f0(n.gap)}. That prints <b>${f0(n.gold)} new gold a day</b>. An NPC buyer is a faucet.`;
+    if(n.kind==='cap') return `The rule holds the price at ${f0(n.X)}, below the market's ${f2(r.P)}. Buyers want ${f0(n.Qd)} a day but sellers list only ${f0(n.Qs)}. <b>${f0(n.gap)} buyers a day find nothing</b>, and sellers start trading off the exchange.`;
+    return `The NPC sells at ${f0(n.X)}, below the market's ${f2(r.P)}. Players sell ${f0(n.Qs)} a day and the NPC sells the other ${f0(n.gap)}, removing <b>${f0(n.gold)} gold a day</b>. An NPC seller is a sink.`;
+  }
+  if(r.t===0) return `With no fee the market clears at ${f2(r.P)} with ${f1(r.Q)} trades a day. Raise the fee to see who pays it. With these slopes buyers would pay ${pc(r.theory)} of any fee, because d / (b + d) = ${pc(r.theory)}.`;
+  const who=S.buyer?'buyers':'sellers',other=S.buyer?'sellers':'buyers';
+  return `A ${fmtN(S.t)}% fee charged to ${who} raises the price to ${f2(r.P)}. <b>Buyers pay ${Math.round(r.buyerShare*100)}% of it, sellers ${Math.round((1-r.buyerShare)*100)}%.</b> It removes ${f0(r.sink)} gold a day and prevents ${f0(r.Q0-r.Q)} trades. Charging ${other} instead would change none of these numbers.`;
+}
+
+// ---------- controls ----------
+function bind(key,rng,num,scale){
+  const set=v=>{v=Math.min(+rng.max,Math.max(+rng.min,v));S[key]=v;rng.value=v;num.value=v;clearPresets();render();};
+  rng.addEventListener('input',()=>set(+rng.value));
+  num.addEventListener('change',()=>{const v=parseFloat(num.value);if(isFinite(v))set(v);else num.value=S[key];});
+}
+bind('t',$('tR'),$('tN'));bind('a',$('aR'),$('aN'));bind('b',$('bR'),$('bN'));bind('c',$('cR'),$('cN'));bind('d',$('dR'),$('dN'));
+$('buyerSide').addEventListener('change',e=>{S.buyer=e.target.checked;render();});
+$('mode').addEventListener('change',e=>{S.mode=e.target.value;clearPresets();render();});
+$('fN').addEventListener('change',()=>{const v=parseFloat($('fN').value);if(isFinite(v)){S.F=Math.min(250,Math.max(0,v));$('fN').value=S.F;}clearPresets();render();});
+function clearPresets(){if(applying)return;document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));}
+let applying=false;
+const PRE={
+  base:{a:1000,b:5,c:100,d:4,t:5,mode:'none'},
+  flask:{a:600,b:1,c:100,d:4,t:5,mode:'none'},
+  dye:{a:2500,b:20,c:100,d:4,t:5,mode:'none'},
+  raid:{a:1180,b:5,c:100,d:4,t:0,mode:'none'},
+  herb:{a:1000,b:5,c:280,d:4,t:0,mode:'none'},
+  herbfloor:{a:1000,b:5,c:280,d:4,t:0,mode:'floor',F:90},
+  cap:{a:1000,b:5,c:100,d:4,t:0,mode:'cap',F:90}
+};
+function applyPreset(k){
+  const p=PRE[k];applying=true;
+  ['a','b','c','d','t'].forEach(x=>{S[x]=p[x];$(x+'R').value=p[x];$(x+'N').value=p[x];});
+  S.mode=p.mode;$('mode').value=p.mode;if(p.F!=null){S.F=p.F;$('fN').value=p.F;}
+  applying=false;
+  document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.p===k)));
+  render();
+}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.p)));
+window.__MMO304w06={S,model,applyPreset,render};
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+render();
+})();
+</script>
+</body>
+</html>

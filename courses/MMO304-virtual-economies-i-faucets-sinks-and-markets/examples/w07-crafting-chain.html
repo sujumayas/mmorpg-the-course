@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crafting chain cost and price · MMO304 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:900px){.panels{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;margin:0 0 2px}
+.sub{color:var(--ink-soft);font-size:.88rem;margin:0 0 12px}
+figure{margin:0 0 10px;background:var(--paper-2);border-radius:10px;padding:10px 10px 6px}
+figcaption{font-family:var(--serif);font-size:.98rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+canvas{display:block;width:100%}
+#cBar{height:120px}#cMkt{height:270px}#cPX{height:170px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 4px}
+.readout.five{grid-template-columns:repeat(3,1fr)}
+@media (max-width:520px){.readout,.readout.five{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 9px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+fieldset{border:1px solid var(--grid);border-radius:10px;padding:8px 12px 10px;margin:0;min-width:0}
+legend{font-weight:700;font-size:.9rem;padding:0 4px}
+label{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+.check{justify-content:flex-start;align-items:center;gap:8px;margin-top:10px}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.mctl{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+@media (max-width:520px){.mctl{grid-template-columns:1fr}}
+#mX{accent-color:var(--blood)}
+.live{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:.98rem}
+.live.loss{border-left:4px solid var(--blood)}.live.even{border-left:4px solid var(--moss)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend i.dot{border-top:3px dotted var(--ink-soft);height:0;background:none}
+.legend i.box{height:10px;opacity:.35}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.86rem;width:100%;min-width:360px}
+caption{text-align:left;font-size:.8rem;color:var(--ink-soft);padding-bottom:4px}
+th,td{padding:5px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink-soft)}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.insight{margin-top:18px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);max-width:80ch}
+footer{margin-top:18px;font-size:.84rem;color:var(--ink-soft);max-width:80ch}
+@media (max-width:520px){th,td{padding:5px 6px}table{font-size:.8rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO304 Virtual Economies I · Week 7 · Worked example</p>
+  <h1>The recipe card lies twice</h1>
+  <p class="lede">The card says 5 ore per platebody. Failed smelts make it 10. Then experience crafters flood the market and the price leaves the cost line, so cheaper recipes stop changing the price at all.</p>
+</header>
+
+<div class="panels">
+<section class="panel" aria-labelledby="h-cost">
+  <h2 id="h-cost">What it really costs</h2>
+  <p class="sub">Raw materials per finished item, after success chances and refunds.</p>
+  <div class="presets" role="group" aria-label="Chain presets">
+    <button class="chip" id="pOsrs" aria-pressed="true">OSRS iron platebody</button>
+    <button class="chip" id="pRing" aria-pressed="false">with ring of forging</button>
+    <button class="chip" id="pEve" aria-pressed="false">EVE-style refund</button>
+  </div>
+  <figure>
+    <figcaption>Raw units per finished item<small>Each block is one raw unit. Dashed outline is the recipe card, q<sub>1</sub> × q<sub>2</sub>.</small></figcaption>
+    <canvas id="cBar" role="img" aria-label="Bar of raw units per item compared with the recipe card outline"></canvas>
+  </figure>
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rE1">2</b><span>e<sub>1</sub> raw per intermediate</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rE2">5</b><span>e<sub>2</sub> intermediate per item</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rR">10</b><span>R raw per item (card <span id="rCard">5</span>)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rC">730</b><span>C cost per item</span></div>
+  </div>
+  <div class="stages">
+    <fieldset>
+      <legend>Stage 1, raw to intermediate</legend>
+      <label for="q1"><span>Recipe quantity q<sub>1</sub></span> <output id="oq1"></output></label>
+      <input id="q1" type="range" min="1" max="10" step="1" value="1">
+      <label for="s1"><span>Success chance s<sub>1</sub></span> <output id="os1"></output></label>
+      <input id="s1" type="range" min="0.1" max="1" step="0.05" value="0.5">
+      <label for="r1"><span>Refund r<sub>1</sub></span> <output id="or1"></output></label>
+      <input id="r1" type="range" min="0" max="0.5" step="0.01" value="0">
+    </fieldset>
+    <fieldset>
+      <legend>Stage 2, intermediate to finished</legend>
+      <label for="q2"><span>Recipe quantity q<sub>2</sub></span> <output id="oq2"></output></label>
+      <input id="q2" type="range" min="1" max="10" step="1" value="5">
+      <label for="s2"><span>Success chance s<sub>2</sub></span> <output id="os2"></output></label>
+      <input id="s2" type="range" min="0.1" max="1" step="0.05" value="1">
+      <label for="r2"><span>Refund r<sub>2</sub></span> <output id="or2"></output></label>
+      <input id="r2" type="range" min="0" max="0.5" step="0.01" value="0">
+    </fieldset>
+  </div>
+  <label for="p">Raw price p <output id="op"></output></label>
+  <input id="p" type="range" min="1" max="200" step="1" value="73">
+  <label class="check" for="rnd"><input id="rnd" type="checkbox"> Round up per craft (EVE rule)</label>
+  <div class="table-wrap">
+    <table>
+      <caption>e = q × (1 − r) / s, R = e<sub>1</sub> × e<sub>2</sub>, C = R × p</caption>
+      <thead><tr><th>Stage</th><th>q</th><th>s</th><th>r</th><th>q(1 − r)</th><th>e</th></tr></thead>
+      <tbody id="tStage"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="h-mkt">
+  <h2 id="h-mkt">What it sells for</h2>
+  <p class="sub">Daily market. Demand Q = a − b × P. The cost line comes from the left panel.</p>
+  <figure>
+    <figcaption>Price and quantity per day<small>Shaded area is X × (C − P), the value lost per day when price sits below cost.</small></figcaption>
+    <canvas id="cMkt" role="img" aria-label="Demand line, cost line, experience crafter output and floor, with the market price marked"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--steel)"></i>demand</span>
+      <span><i style="background:var(--ochre)"></i>cost C</span>
+      <span><i style="background:var(--blood)"></i>experience crafters X</span>
+      <span><i class="dot"></i>floor F</span>
+      <span><i class="box" style="background:var(--blood)"></i>value lost</span>
+    </div>
+  </figure>
+  <p class="live even" id="live" aria-live="polite"></p>
+  <div class="readout five">
+    <div class="stat" style="--c:var(--ink)"><b id="rThr">105</b><span>threshold a − bC</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rP">730</b><span>market price P</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rProf">105</b><span>profit-crafter output</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rLoss">0</b><span>value lost per item</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rDay">0</b><span>X × (C − P) per day</span></div>
+  </div>
+  <div class="mctl">
+    <div>
+      <label for="mX">Experience crafters X <output id="oX"></output></label>
+      <input id="mX" type="range" min="0" max="2000" step="10" value="0">
+    </div>
+    <div>
+      <label for="mF">Floor F <output id="oF"></output></label>
+      <input id="mF" type="range" min="0" max="300" step="5" value="60">
+    </div>
+    <div>
+      <label for="mA">Demand intercept a <output id="oA"></output></label>
+      <input id="mA" type="range" min="200" max="3000" step="50" value="1200">
+    </div>
+    <div>
+      <label for="mB">Slope b <output id="oB"></output></label>
+      <input id="mB" type="range" min="0.5" max="5" step="0.1" value="1.5">
+    </div>
+  </div>
+  <figure style="margin-top:12px">
+    <figcaption>Price as experience crafting grows<small>Flat at cost, a kink at the threshold, then falling until the floor holds it.</small></figcaption>
+    <canvas id="cPX" role="img" aria-label="Market price against experience crafter output from 0 to 2,000"></canvas>
+  </figure>
+  <div class="table-wrap">
+    <table>
+      <caption>Price at set values of X for the current cost</caption>
+      <thead><tr><th>X per day</th><th>P</th><th>Profit crafters</th><th>Lost per item</th><th>Lost per day</th></tr></thead>
+      <tbody id="tMkt"></tbody>
+    </table>
+  </div>
+</section>
+</div>
+
+<p class="insight" id="insight"></p>
+
+<footer>Recipes and ratios follow the lecture. OSRS iron smelting succeeds half the time without a ring of forging; EVE Online Material Efficiency cuts inputs by up to 10% and rounds up with a minimum of one unit. The market is invented (a = 1,200, b = 1.5, F = 60 by default) to show the mechanism. Prices, ores and bars are drawn as plain shapes.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const nf=d=>n=>(Math.abs(n)<1e-9?0:n).toLocaleString('en-US',{maximumFractionDigits:d});
+const f2=nf(2),f1=nf(1),f0=nf(0);
+const EPS=1e-9;
+
+const S={q:[1,5],s:[.5,1],r:[0,0],p:73,round:false,a:1200,b:1.5,X:0,F:60};
+
+function base(i){let v=S.q[i]*(1-S.r[i]);if(S.round)v=Math.max(1,Math.ceil(v-EPS));return v;}
+function eff(i){return base(i)/S.s[i];}
+function cost(){return eff(0)*eff(1)*S.p;}
+function market(C,X){
+  const thr=S.a-S.b*C;
+  if(X<thr) return {thr,P:C,prof:thr-X};
+  return {thr,P:Math.max(S.F,(S.a-X)/S.b),prof:0};
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};
+}
+function nice(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*m).find(x=>x>=v)||v;}
+function short(v){return v>=10000?f0(v/1000)+'k':f0(v);}
+
+// ---------- left: the bar ----------
+function drawBar(){
+  const {g,w,h}=setupCanvas($('cBar'));
+  const R=eff(0)*eff(1),card=S.q[0]*S.q[1];
+  const L=8,Rt=14,span=w-L-Rt,max=Math.max(R,card),k=span/max;
+  const y=40,bh=34;
+  g.font='600 12px '+css('--sans');g.textBaseline='alphabetic';
+  // blocks
+  const unit=k,gap=unit>=7?2:0;
+  g.fillStyle=css('--steel');
+  if(unit>=4){
+    const n=Math.ceil(R-EPS);
+    for(let i=0;i<n;i++){
+      const frac=Math.min(1,R-i);
+      const x=L+i*unit;const ww=Math.max(0,unit*frac-gap);
+      g.globalAlpha=frac<1?.55:1;
+      g.beginPath();g.roundRect?g.roundRect(x,y,ww,bh,Math.min(4,ww/3)):g.rect(x,y,ww,bh);g.fill();
+    }
+    g.globalAlpha=1;
+  }else{
+    g.fillRect(L,y,R*k,bh);
+  }
+  // recipe card outline
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.setLineDash([6,4]);
+  g.strokeRect(L-3,y-5,card*k+ (gap?1:0)+3,bh+10);g.setLineDash([]);
+  // labels
+  g.fillStyle=css('--ink');g.textAlign='left';
+  const cardX=L+card*k,realX=L+R*k;
+  g.fillText('recipe card: '+f2(card),Math.min(Math.max(L,cardX-110),w-130),y-12);
+  g.fillStyle=css('--steel');
+  const t='real: '+f2(R)+' raw';
+  g.fillText(t,Math.min(Math.max(L,realX-g.measureText(t).width),w-g.measureText(t).width-2),y+bh+26);
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  const ratio=R/card;
+  g.fillText(ratio>=1?f2(ratio)+'× the card':f2(ratio)+'× the card (refunds win)',L,h-6);
+}
+
+// ---------- right: market ----------
+const pad={l:48,r:14,t:14,b:32};
+function frame(g,w,h,xMax,yMax,xLabel,yLabel){
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');
+  for(let i=0;i<=4;i++){
+    const y=pad.t+(h-pad.t-pad.b)*(1-i/4);
+    g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(short(yMax*i/4),pad.l-6,y);
+  }
+  for(let i=0;i<=4;i++){
+    const x=pad.l+(w-pad.l-pad.r)*i/4;
+    g.textAlign='center';g.textBaseline='top';g.fillText(short(xMax*i/4),x,h-pad.b+5);
+  }
+  g.textAlign='right';g.textBaseline='bottom';g.fillText(xLabel,w-pad.r,h-1);
+  g.textAlign='left';g.textBaseline='top';g.fillText(yLabel,pad.l+4,1);
+  const X=v=>pad.l+(w-pad.l-pad.r)*v/xMax,Y=v=>pad.t+(h-pad.t-pad.b)*(1-Math.min(v,yMax*1.02)/yMax);
+  return {X,Y};
+}
+function line(g,x1,y1,x2,y2,color,wd,dash){g.strokeStyle=color;g.lineWidth=wd||2.5;g.setLineDash(dash||[]);g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();g.setLineDash([]);}
+function dot(g,x,y,color){g.fillStyle=color;g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+function yTop(C){const top=Math.max(S.a/S.b,S.F);return nice(Math.max(top,Math.min(C,2*top))*1.06);}
+
+function drawMkt(C,m){
+  const {g,w,h}=setupCanvas($('cMkt'));
+  const xMax=nice(Math.max(S.a,2000)),yMax=yTop(C);
+  const {X,Y}=frame(g,w,h,xMax,yMax,'quantity per day','price');
+  const x0=pad.l,x1=w-pad.r;
+  // loss shading
+  if(m.P<C-EPS&&S.X>0){
+    g.fillStyle=css('--blood');g.globalAlpha=.22;
+    const yt=Y(C),yb=Y(m.P);g.fillRect(X(0),yt,X(S.X)-X(0),yb-yt);g.globalAlpha=1;
+  }
+  // floor
+  line(g,x0,Y(S.F),x1,Y(S.F),css('--ink-soft'),2,[2,4]);
+  // demand
+  line(g,X(0),Y(S.a/S.b),X(Math.min(S.a,xMax)),Y(Math.max(0,(S.a-Math.min(S.a,xMax))/S.b)),css('--steel'));
+  // cost
+  if(C<=yMax) line(g,x0,Y(C),x1,Y(C),css('--ochre'));
+  else{g.fillStyle=css('--ochre');g.font='600 11px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText('cost '+f1(C)+' is above the chart ↑',x1,pad.t+2);}
+  // X
+  line(g,X(S.X),pad.t,X(S.X),h-pad.b,css('--blood'),2);
+  // equilibrium
+  const q=m.P>=C-EPS?Math.max(S.X,m.thr):S.X;
+  dot(g,X(Math.min(q,xMax)),Y(m.P),css('--ink'));
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textBaseline='bottom';
+  const lbl='P = '+f1(m.P);const lx=X(Math.min(q,xMax));
+  g.textAlign=lx>w*.7?'right':'left';g.fillText(lbl,lx+(lx>w*.7?-9:9),Y(m.P)-6);
+}
+function drawPX(C){
+  const {g,w,h}=setupCanvas($('cPX'));
+  const xMax=2000,yMax=yTop(C);
+  const {X,Y}=frame(g,w,h,xMax,yMax,'experience crafters X','price P');
+  if(C<=yMax) line(g,pad.l,Y(C),w-pad.r,Y(C),css('--ochre'),1.5,[6,4]);
+  line(g,pad.l,Y(S.F),w-pad.r,Y(S.F),css('--ink-soft'),1.5,[2,4]);
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  const n=400;
+  // include the kink exactly
+  const xs=[];for(let i=0;i<=n;i++)xs.push(xMax*i/n);
+  const thr=S.a-S.b*C,fl=S.a-S.b*S.F;[thr,fl].forEach(v=>{if(v>0&&v<xMax)xs.push(v);});
+  xs.sort((a,b)=>a-b);
+  xs.forEach((x,i)=>{const P=market(C,x).P;i?g.lineTo(X(x),Y(P)):g.moveTo(X(x),Y(P));});
+  g.stroke();
+  if(thr>0&&thr<=xMax){g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign=X(thr)>w*.7?'right':'left';g.textBaseline='bottom';
+    g.fillText('kink at X = '+f1(thr),X(thr)+(X(thr)>w*.7?-6:6),Y(Math.min(C,yMax))-4);}
+  dot(g,X(S.X),Y(market(C,S.X).P),css('--blood'));
+}
+
+// ---------- readouts ----------
+function render(){
+  const e1=eff(0),e2=eff(1),R=e1*e2,C=R*S.p,card=S.q[0]*S.q[1];
+  $('rE1').textContent=f2(e1);$('rE2').textContent=f2(e2);$('rR').textContent=f2(R);$('rCard').textContent=f0(card);$('rC').textContent=f1(C);
+  ['q','s','r'].forEach(k=>[0,1].forEach(i=>{$('o'+k+(i+1)).textContent=k==='q'?S.q[i]:S[k][i].toFixed(2);}));
+  $('op').textContent=S.p;
+  const rows=[0,1].map(i=>{
+    const raw=S.q[i]*(1-S.r[i]);const b=base(i);
+    const shown=S.round&&Math.abs(b-raw)>EPS?`ceil(${f2(raw)}) = ${f2(b)}`:f2(b);
+    return `<tr><td>${i?'2, intermediate to item':'1, raw to intermediate'}</td><td>${S.q[i]}</td><td>${S.s[i].toFixed(2)}</td><td>${S.r[i].toFixed(2)}</td><td>${shown}</td><td>${f2(eff(i))}</td></tr>`;
+  });
+  rows.push(`<tr class="here"><td>Whole chain</td><td>${card}</td><td colspan="4">R = ${f2(R)}, C = ${f1(C)}</td></tr>`);
+  $('tStage').innerHTML=rows.join('');
+
+  const m=market(C,S.X);
+  $('oX').textContent=f0(S.X);$('oF').textContent=f0(S.F);$('oA').textContent=f0(S.a);$('oB').textContent=S.b.toFixed(1);
+  $('rThr').textContent=f1(m.thr);$('rP').textContent=f1(m.P);$('rProf').textContent=f1(m.prof);
+  const loss=Math.max(0,C-m.P);$('rLoss').textContent=f1(loss);$('rDay').textContent=f0(S.X*loss);
+  const live=$('live');
+  if(loss<EPS){
+    live.className='live even';
+    live.textContent=`Price equals cost (${f1(C)}). Experience crafters make ${f0(S.X)} a day, below the kink at ${f1(Math.max(0,m.thr))}, so profit crafters fill the other ${f1(m.prof)}.`;
+  }else{
+    live.className='live loss';
+    const atF=m.P<=S.F+EPS&&(S.a-S.X)/S.b<=S.F;
+    live.textContent=`Price is ${f1(loss)} below cost. X = ${f0(S.X)} is past the kink at ${f1(Math.max(0,m.thr))}, so profit crafters make 0 and the price is set by demand${atF?', held up by the floor of '+f0(S.F):''}.`;
+  }
+  const xs=[0,100,500,1000,1200,2000];if(!xs.includes(S.X))xs.push(S.X);xs.sort((a,b)=>a-b);
+  $('tMkt').innerHTML=xs.map(x=>{const r=market(C,x),l=Math.max(0,C-r.P),fl=r.P<=S.F+EPS&&(S.a-x)/S.b<S.F+EPS&&l>0;
+    return `<tr class="${x===S.X?'here':''}"><td>${f0(x)}</td><td>${f1(r.P)}${fl?' (floor)':''}</td><td>${f1(r.prof)}</td><td>${f1(l)}</td><td>${f0(x*l)}</td></tr>`;}).join('');
+
+  let s=`The recipe card says ${f0(card)} raw per item. The chain really eats ${f2(R)}, so each item costs ${f1(C)}. `;
+  if(loss<EPS) s+=`Right now price tracks cost, so a cheaper recipe would lower the price. Drag X past ${f1(Math.max(0,m.thr))} and that link breaks.`;
+  else s+=`With ${f0(S.X)} experience crafters a day the price is ${f1(m.P)}, whatever the cost. Try the ring of forging preset: cost moves, the price does not.`;
+  $('insight').textContent=s;
+  drawBar();drawMkt(C,m);drawPX(C);
+}
+
+// ---------- events ----------
+const chips=[$('pOsrs'),$('pRing'),$('pEve')];
+function press(b){chips.forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));}
+function syncInputs(){
+  [0,1].forEach(i=>{$('q'+(i+1)).value=S.q[i];$('s'+(i+1)).value=S.s[i];$('r'+(i+1)).value=S.r[i];});
+  $('p').value=S.p;$('rnd').checked=S.round;
+}
+function preset(b,q,s,r,p,round){S.q=q;S.s=s;S.r=r;if(p!=null)S.p=p;S.round=round;syncInputs();press(b);render();}
+$('pOsrs').addEventListener('click',e=>preset(e.currentTarget,[1,5],[.5,1],[0,0],73,false));
+$('pRing').addEventListener('click',e=>preset(e.currentTarget,[1,5],[1,1],[0,0],73,false));
+$('pEve').addEventListener('click',e=>preset(e.currentTarget,[3,5],[1,1],[.1,0],null,true));
+[0,1].forEach(i=>{
+  $('q'+(i+1)).addEventListener('input',e=>{S.q[i]=+e.target.value;press(null);render();});
+  $('s'+(i+1)).addEventListener('input',e=>{S.s[i]=Math.round(+e.target.value*100)/100;press(null);render();});
+  $('r'+(i+1)).addEventListener('input',e=>{S.r[i]=Math.round(+e.target.value*100)/100;press(null);render();});
+});
+$('p').addEventListener('input',e=>{S.p=+e.target.value;press(null);render();});
+$('rnd').addEventListener('change',e=>{S.round=e.target.checked;render();});
+$('mX').addEventListener('input',e=>{S.X=+e.target.value;render();});
+$('mF').addEventListener('input',e=>{S.F=+e.target.value;render();});
+$('mA').addEventListener('input',e=>{S.a=+e.target.value;render();});
+$('mB').addEventListener('input',e=>{S.b=Math.round(+e.target.value*10)/10;render();});
+let raf=0;window.addEventListener('resize',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(render);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+syncInputs();render();
+})();
+</script>
+</body>
+</html>

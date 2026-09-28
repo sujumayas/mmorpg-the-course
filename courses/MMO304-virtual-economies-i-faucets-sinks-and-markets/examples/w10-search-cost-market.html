@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Search cost and the price spread · MMO304 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:260px}
+.sub{font-size:.9rem;margin:8px 0 0;font-variant-numeric:tabular-nums}
+.sub b{font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.86rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dot{width:9px;height:9px;border-radius:50%}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.group-label{font-weight:600;font-size:.92rem;display:block;margin:0 0 4px}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.chip,.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.simline{font-size:.92rem;margin:4px 0 0;font-variant-numeric:tabular-nums;min-height:1.5em}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.tables{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
+@media (max-width:900px){.tables{grid-template-columns:1fr}}
+.tables h2{font:600 .95rem var(--sans);margin:0 0 4px}
+.tables p{font-size:.82rem;color:var(--ink-soft);margin:0 0 6px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink-soft)}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO304 Virtual Economies I · Week 10 · Worked example</p>
+  <h1>The spread comes from search cost</h1>
+  <p class="lede">Forty sellers post asks for the same herb. Drop the buyer's search cost, then let sellers respond. The sellers never change their minds about the herb. Buyers just start checking more of them, and high asks stop selling.</p>
+</header>
+
+<section class="panel" aria-label="Search cost market">
+  <div class="charts">
+    <figure>
+      <figcaption>The market<small>40 seller asks. Blue rings: the sellers the last buyer checked.</small></figcaption>
+      <canvas id="cMkt" role="img" aria-label="Seller asks along a price axis"></canvas>
+      <p class="sub" id="spread" aria-live="polite"></p>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--ink-soft)"></i>Ask</span>
+        <span><i class="dot" style="background:var(--steel)"></i>Checked</span>
+        <span><i class="dot" style="background:var(--blood)"></i>Price paid</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>How far should a buyer look?<small>Expected cost for a buyer who checks k sellers, with asks spread evenly from L to H</small></figcaption>
+      <canvas id="cK" role="img" aria-label="Expected price, search spend and total cost versus sellers checked"></canvas>
+      <p class="sub" id="kNote"></p>
+      <div class="legend">
+        <span><i style="background:var(--ochre)"></i>Expected price L + (H − L)/(k + 1)</span>
+        <span><i style="background:var(--blood)"></i>Search spend k × c</span>
+        <span><i style="background:var(--ink);height:5px"></i>Total cost</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rK">—</b><span>best k (sellers to check)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rE">—</b><span>expected price at best k</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rT">—</b><span>total cost at best k</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rG">—</b><span>gain from one more check</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="c">Search cost c, gold per check <output id="oC">3</output></label>
+      <input id="c" type="range" min="0" max="10" step="0.5" value="3">
+      <span class="group-label" id="presetLbl">Market type</span>
+      <div class="row" role="group" aria-labelledby="presetLbl">
+        <button class="chip" data-c="6" aria-pressed="false">Barter-like (c = 6)</button>
+        <button class="chip" data-c="3" aria-pressed="true">Player vendors (c = 3)</button>
+        <button class="chip" data-c="0" aria-pressed="false">Auction house (c = 0)</button>
+      </div>
+      <label for="L">Low ask L <output id="oL">80</output></label>
+      <input id="L" type="range" min="10" max="200" step="1" value="80">
+      <label for="H">High ask H <output id="oH">120</output></label>
+      <input id="H" type="range" min="85" max="400" step="1" value="120">
+    </div>
+    <div>
+      <span class="group-label" id="simLbl">Simulate</span>
+      <div class="row" role="group" aria-labelledby="simLbl">
+        <button class="btn" id="b1">Simulate 1 buyer</button>
+        <button class="btn" id="b100">Simulate 100 buyers</button>
+        <button class="btn primary" id="bResp">Let sellers respond (10 rounds)</button>
+        <button class="btn" id="bReset">Reset asks</button>
+      </div>
+      <p class="simline" id="simLine" aria-live="polite"></p>
+      <p class="simline" id="roundLine" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="tables">
+    <div>
+      <h2>Expected price by sellers checked</h2>
+      <p>Current L and H. At L = 80, H = 120 this is the lecture's first table.</p>
+      <div class="table-wrap"><table aria-label="Expected price by k">
+        <thead><tr><th>k</th><th>Expected price</th><th>Gain from one more</th></tr></thead>
+        <tbody id="tbE"></tbody></table></div>
+    </div>
+    <div>
+      <h2>Best k by search cost</h2>
+      <p>First minimum of total cost over k = 1 to 40.</p>
+      <div class="table-wrap"><table aria-label="Best k by search cost">
+        <thead><tr><th>c</th><th>Best k</th><th>Price</th><th>Total</th></tr></thead>
+        <tbody id="tbC"></tbody></table></div>
+    </div>
+    <div>
+      <h2>Chance a checked seller sells</h2>
+      <p id="psNote">((H − p)/(H − L))^(k − 1) at the current best k</p>
+      <div class="table-wrap"><table aria-label="Chance of sale by ask">
+        <thead><tr><th>Ask p</th><th>Position</th><th>P(sale)</th></tr></thead>
+        <tbody id="tbP"></tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<footer>Model: Stigler (1961), "The Economics of Information", cut down to one good with asks spread evenly between L and H. The seller response rule is a teaching simplification, not any game's pricing logic. Asks start evenly spread, one random ask in each fortieth of the range (mulberry32, seed 10), so everyone in class sees the same market.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const N=40,KMAX=N;
+const f2=n=>n.toFixed(2);
+const fmtG=n=>(Math.round(n*100)/100).toFixed(2).replace(/\.00$/,'');
+function pctS(p){
+  if(p>=0.9999995) return '100%';
+  const v=p*100;
+  if(v===0) return '0%';
+  if(v<0.0001) return 'under 0.0001%';
+  if(v<0.01) return v.toPrecision(1)+'%';
+  return (Math.round(v*100)/100).toString()+'%';
+}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+let c=3,L=80,H=120;
+let asks=[],jit=[],lastChecked=[],lastPaid=null,lastIdx=-1,history=[];
+let buyerRng=mulberry32(2026);
+let timer=null;
+
+const E=k=>L+(H-L)/(k+1);
+const total=k=>E(k)+k*c;
+function bestK(cc){ // first minimum over 1..N; c = 0 means the buyer sees every listing
+  if(cc===0) return N;
+  let bk=1,bt=Infinity;
+  for(let k=1;k<=KMAX;k++){const t=E(k)+k*cc;if(t<bt-1e-9){bt=t;bk=k;}}
+  return bk;
+}
+const gain=k=>(H-L)/((k+1)*(k+2));
+const pSale=(p,k)=>Math.pow((H-p)/(H-L),k-1);
+
+function resetAsks(){
+  const r=mulberry32(10),rj=mulberry32(77);
+  asks=[];jit=[];
+  for(let i=0;i<N;i++){asks.push(L+(H-L)*(i+r())/N);} // one ask per 1/40 slice of the range, so the sample matches the even spread the formula assumes
+  for(let i=0;i<N;i++){jit.push(rj());}
+  lastChecked=[];lastPaid=null;lastIdx=-1;history=[spreadOf()];
+  $('simLine').textContent='';$('roundLine').textContent='';
+}
+function spreadOf(){let mn=Infinity,mx=-Infinity;for(const a of asks){mn=Math.min(mn,a);mx=Math.max(mx,a);}return {mn,mx,w:mx-mn};}
+
+// one buyer: check k distinct random sellers, buy from the cheapest (ties go to a random one)
+function buyer(k,rng){
+  const idx=[...Array(N).keys()];
+  for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(N-i));[idx[i],idx[j]]=[idx[j],idx[i]];}
+  const chk=idx.slice(0,k);
+  let best=chk[0];
+  for(const i of chk){if(asks[i]<asks[best]) best=i;}
+  return {chk,best};
+}
+
+function drawMarket(){
+  const cv=$('cMkt'),dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  const w=r.width,h=r.height,pl=18,pr=18,axisY=h-40,top=34;
+  const X=p=>pl+(w-pl-pr)*(p-L)/(H-L);
+  g.clearRect(0,0,w,h);
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--ink');g.lineWidth=1.5;
+  g.beginPath();g.moveTo(pl,axisY);g.lineTo(w-pr,axisY);g.stroke();
+  g.textAlign='center';g.textBaseline='top';
+  for(let i=0;i<=4;i++){
+    const p=L+(H-L)*i/4,x=X(p);
+    g.beginPath();g.moveTo(x,axisY);g.lineTo(x,axisY+5);g.stroke();
+    g.fillText(fmtG(p),Math.min(Math.max(x,14),w-14),axisY+8);
+  }
+  g.textAlign='right';g.fillText('ask, gold',w-pr,h-14);
+  const sp=spreadOf();
+  // spread band
+  g.fillStyle=css('--ochre');g.globalAlpha=.16;g.fillRect(X(sp.mn),top-6,Math.max(2,X(sp.mx)-X(sp.mn)),axisY-top+6);g.globalAlpha=1;
+  const Y=i=>top+8+(axisY-top-22)*jit[i];
+  const checked=new Set(lastChecked);
+  for(let i=0;i<N;i++){
+    if(checked.has(i)) continue;
+    g.fillStyle=css('--ink-soft');g.globalAlpha=.6;g.beginPath();g.arc(X(asks[i]),Y(i),3.5,0,Math.PI*2);g.fill();g.globalAlpha=1;
+  }
+  for(const i of lastChecked){
+    if(i===lastIdx) continue;
+    g.fillStyle=css('--steel');g.beginPath();g.arc(X(asks[i]),Y(i),5,0,Math.PI*2);g.fill();
+    g.strokeStyle=css('--steel');g.lineWidth=2;g.beginPath();g.arc(X(asks[i]),Y(i),8,0,Math.PI*2);g.stroke();
+  }
+  if(lastIdx>=0){
+    const x=X(asks[lastIdx]),y=Y(lastIdx);
+    g.fillStyle=css('--blood');g.beginPath();g.arc(x,y,8,0,Math.PI*2);g.fill();
+    g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.font='600 13px '+css('--sans');g.fillStyle=css('--blood');
+    const lbl='Paid: '+f2(lastPaid),tw=g.measureText(lbl).width;
+    g.textAlign='left';g.textBaseline='bottom';
+    g.fillText(lbl,Math.min(Math.max(x-tw/2,4),w-tw-4),Math.max(y-11,16));
+  }
+  $('spread').innerHTML=`Spread of asks: min <b>${f2(sp.mn)}</b>, max <b>${f2(sp.mx)}</b>, width <b>${f2(sp.w)}</b>`;
+  cv.setAttribute('aria-label',`40 seller asks from ${f2(sp.mn)} to ${f2(sp.mx)} gold`+(lastIdx>=0?`. Last buyer checked ${lastChecked.length} and paid ${f2(lastPaid)}.`:'.'));
+}
+
+function drawK(){
+  const cv=$('cK'),dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  const w=r.width,h=r.height,pad={l:46,r:12,t:26,b:34};
+  const ks=bestK(c),xMax=(c>0&&ks>17)?Math.min(N,ks+3):20;
+  let yMax=0;for(let k=1;k<=xMax;k++)yMax=Math.max(yMax,total(k));
+  const step=[1,2,5,10,20,25,50,100,200].find(s=>yMax/s<=5)||500;yMax=Math.ceil(yMax*1.04/step)*step;
+  const X=k=>pad.l+(w-pad.l-pad.r)*(k-1)/(xMax-1),Yp=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');
+  for(let v=0;v<=yMax+1e-9;v+=step){const y=Yp(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fmtG(v),pad.l-6,y);}
+  const xt=xMax<=20?[1,5,10,15,20]:[1,Math.round(xMax/4),Math.round(xMax/2),Math.round(3*xMax/4),xMax];
+  g.textAlign='center';g.textBaseline='top';for(const k of xt){g.fillText(k,X(k),h-pad.b+6);}
+  g.textAlign='right';g.fillText('k, sellers checked',w-pad.r,h-14);
+  const line=(fn,col,lw)=>{g.strokeStyle=col;g.lineWidth=lw;g.beginPath();for(let k=1;k<=xMax;k++){const x=X(k),y=Yp(fn(k));k===1?g.moveTo(x,y):g.lineTo(x,y);}g.stroke();};
+  line(E,css('--ochre'),2.5);
+  line(k=>k*c,css('--blood'),2.5);
+  line(total,css('--ink'),4.5);
+  const tk=total(ks),lbl=c===0?`Best k = ${N} (all), total = ${f2(tk)}`:`Best k = ${ks}, total = ${f2(tk)}`;
+  if(ks<=xMax){
+    const x=X(ks),y=Yp(tk);
+    g.fillStyle=css('--ink');g.beginPath();g.arc(x,y,7,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  }
+  g.font='600 13px '+css('--sans');g.fillStyle=css('--ink');g.textBaseline='top';
+  const tw=g.measureText(lbl).width,lx=ks<=xMax?X(ks):w-pad.r;
+  g.textAlign='left';g.fillText(lbl,Math.min(Math.max(lx-tw/2,pad.l),w-pad.r-tw),6);
+  $('kNote').textContent=c===0?`Central exchange: buyer sees all ${N} listings, so k* = ${N}. The chart stops at k = 20; the total keeps falling toward L.`:(ks>20?`k* is past 20, so the chart widens to k = ${xMax}.`:'');
+  cv.setAttribute('aria-label',`Total cost is lowest at k = ${ks}, total ${f2(tk)} gold`);
+}
+
+function readouts(){
+  const ks=bestK(c);
+  $('rK').textContent=c===0?`${N} (all)`:ks;
+  $('rE').textContent=f2(E(ks));
+  $('rT').textContent=f2(total(ks));
+  $('rG').textContent=f2(gain(ks));
+  $('oC').textContent=c;$('oL').textContent=L;$('oH').textContent=H;
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.c===c)));
+  // tables
+  const kRows=[1,2,3,4,5,9,39,200];
+  $('tbE').innerHTML=kRows.map(k=>`<tr class="${k===ks?'here':''}"><td>${k}</td><td>${f2(E(k))}</td><td>${k<=5?f2(gain(k)):'—'}</td></tr>`).join('');
+  const cRows=[0,1,3,6];if(!cRows.includes(c))cRows.push(c);cRows.sort((a,b)=>a-b);
+  $('tbC').innerHTML=cRows.map(cc=>{const k=bestK(cc),e=E(k),t=e+k*cc;return `<tr class="${cc===c?'here':''}"><td>${cc}</td><td>${cc===0?N+' (all)':k}</td><td>${f2(e)}</td><td>${f2(t)}</td></tr>`;}).join('');
+  $('psNote').textContent=`((H − p)/(H − L))^(k − 1) with k = ${ks}`;
+  const fr=[0,.25,.5,.75],names=['L','L + 25%','L + 50%','L + 75%'];
+  $('tbP').innerHTML=fr.map((q,i)=>{const p=L+q*(H-L);return `<tr><td>${fmtG(p)}</td><td>${names[i]}</td><td>${pctS(pSale(p,ks))}</td></tr>`;}).join('');
+  // insight
+  const sp=spreadOf(),hi=L+.75*(H-L),ps=pSale(hi,ks);
+  let s;
+  if(c===0) s=`With no search cost every buyer sees all ${N} listings and pays the lowest ask. A seller asking ${fmtG(hi)} sells to ${pctS(ps)} of buyers, so no one has a reason to post high.`;
+  else if(ks<=2) s=`At c = ${c} a buyer checks only ${ks} seller${ks>1?'s':''}. A seller asking ${fmtG(hi)} still wins ${pctS(ps)} of the buyers who check them, so high asks survive and the spread stays wide.`;
+  else s=`At c = ${c} the best buyer checks ${ks} sellers and expects to pay ${f2(E(ks))}. A seller asking ${fmtG(hi)} wins only ${pctS(ps)} of the buyers who check them.`;
+  s+=sp.w<0.1*(H-L)?` The spread of asks has closed to ${f2(sp.w)} gold. Press <b>Reset asks</b> and try a higher c to compare.`:` Current spread of asks is ${f2(sp.w)} gold wide. Press <b>Let sellers respond</b> to see what that chance of sale does to it.`;
+  $('insight').innerHTML=s;
+}
+function update(){readouts();drawMarket();drawK();}
+
+function sim(n){
+  const ks=bestK(c);let sum=0,res;
+  for(let i=0;i<n;i++){res=buyer(ks,buyerRng);sum+=asks[res.best];}
+  lastChecked=res.chk;lastIdx=res.best;lastPaid=asks[res.best];
+  const mean=sum/n;
+  $('simLine').innerHTML=n===1?`1 buyer checked ${ks} seller${ks>1?'s':''} and paid <b>${f2(lastPaid)}</b>. Formula: ${f2(E(ks))}.`:`Mean paid over ${n} buyers: <b>${f2(mean)}</b>. Formula E[min] at k = ${ks}: <b>${f2(E(ks))}</b>.`;
+  drawMarket();readouts();
+  return mean;
+}
+
+function round(){
+  const ks=bestK(c),sales=new Array(N).fill(0);
+  let res;
+  for(let b=0;b<200;b++){
+    res=buyer(ks,buyerRng);
+    // ties: pick uniformly among checked sellers sharing the lowest ask
+    const lo=asks[res.best],tied=res.chk.filter(i=>asks[i]===lo);
+    const who=tied.length>1?tied[Math.floor(buyerRng()*tied.length)]:res.best;
+    sales[who]++;
+  }
+  let sold=0;
+  for(let i=0;i<N;i++){if(sales[i]===0){asks[i]=Math.max(L,asks[i]-0.25*(asks[i]-L)-1);}else sold++;}
+  lastChecked=res.chk;lastIdx=-1;lastPaid=null;
+  history.push(spreadOf());
+  $('simLine').textContent=`Round ${history.length-1}: ${sold} of ${N} sellers made a sale; the other ${N-sold} cut their ask.`;
+  return sold;
+}
+function roundText(){
+  const ws=history.map(s=>s.w);
+  $('roundLine').innerHTML=`Spread width by round: `+ws.map((w,i)=>i===ws.length-1?`<b>${f2(w)}</b>`:f2(w)).join(' → ');
+}
+function respond(){
+  if(timer) return;
+  const btns=['bResp','b1','b100'].map($);
+  if(reduce.matches){for(let r=0;r<10;r++)round();roundText();update();return;}
+  btns.forEach(b=>b.disabled=true);
+  let r=0;
+  timer=setInterval(()=>{round();r++;roundText();update();if(r>=10){clearInterval(timer);timer=null;btns.forEach(b=>b.disabled=false);$('bResp').focus();}},320);
+}
+function stop(){if(timer){clearInterval(timer);timer=null;['bResp','b1','b100'].forEach(i=>$(i).disabled=false);}}
+
+// events
+$('c').addEventListener('input',e=>{c=+e.target.value;update();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{c=+b.dataset.c;$('c').value=c;update();}));
+$('L').addEventListener('input',e=>{
+  stop();L=+e.target.value;const hs=$('H');hs.min=L+5;if(H<L+5){H=L+5;}hs.value=H;resetAsks();update();
+});
+$('H').addEventListener('input',e=>{stop();H=Math.max(L+5,+e.target.value);resetAsks();update();});
+$('b1').addEventListener('click',()=>sim(1));
+$('b100').addEventListener('click',()=>sim(100));
+$('bResp').addEventListener('click',respond);
+$('bReset').addEventListener('click',()=>{stop();resetAsks();update();});
+window.addEventListener('resize',()=>{drawMarket();drawK();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawMarket();drawK();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawMarket();drawK();});
+
+// test hooks for the headless check
+window.__w10={E,total,bestK,gain,pSale,sim,round,resetAsks,setC:v=>{c=v;$('c').value=v;update();},get asks(){return asks.slice();}};
+
+resetAsks();update();sim(1);
+})();
+</script>
+</body>
+</html>

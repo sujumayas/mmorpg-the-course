@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hoards and sink targeting · MMO304 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--hatch:rgba(255,255,255,.42);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--hatch:rgba(23,32,49,.55)}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--hatch:rgba(23,32,49,.55)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.presets .lab{font-weight:600;font-size:.92rem;align-self:center;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 14px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 6px}
+.big b{font-size:2.1rem;line-height:1.05;font-variant-numeric:tabular-nums}
+.big span{font-size:.9rem;color:var(--ink-soft)}
+.big .delta{font-size:1.25rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.delta.up{color:var(--blood)}.delta.down{color:var(--moss)}
+.barrow{display:grid;grid-template-columns:3.6em 1fr;gap:8px;align-items:center;margin:8px 0}
+.barrow .rl{font-size:.8rem;color:var(--ink-soft);line-height:1.15}
+.track{position:relative;height:34px}
+.bar{position:absolute;left:0;top:0;bottom:0;display:flex}
+.seg{height:100%;flex:none;transition:width .25s ease}
+.outline .seg{border:2px dashed var(--c);background:transparent}
+.outline .seg+.seg{border-left-width:0}
+.ref{position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px solid var(--ink);opacity:.7}
+.ref span{position:absolute;top:-18px;left:0;transform:translateX(-50%);font-size:.72rem;white-space:nowrap;color:var(--ink-soft)}
+.val{font-size:.84rem;font-variant-numeric:tabular-nums;margin:-2px 0 0 calc(3.6em + 8px);color:var(--ink-soft)}
+.val b{color:var(--ink)}
+.ticks{position:relative;height:18px;margin-left:calc(3.6em + 8px);font-size:.72rem;color:var(--ink-soft);border-top:1px solid var(--grid)}
+.ticks span{position:absolute;top:2px;transform:translateX(-50%);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ticks span:first-child{transform:none}.ticks span:last-child{transform:translateX(-100%)}
+.spacer{height:2.1rem}
+/* group colours plus a pattern each, so bars read without colour */
+.g0{--c:var(--moss)}.g1{--c:var(--steel)}.g2{--c:var(--ochre)}.g3{--c:var(--blood)}
+.fill .g0,.sw.g0{background:repeating-linear-gradient(45deg,var(--hatch) 0 2px,transparent 2px 7px),var(--moss)}
+.fill .g1,.sw.g1{background:radial-gradient(circle,var(--hatch) 1.6px,transparent 2.1px) 0 0/7px 7px,var(--steel)}
+.fill .g2,.sw.g2{background:repeating-linear-gradient(45deg,var(--hatch) 0 1.5px,transparent 1.5px 6px),repeating-linear-gradient(-45deg,var(--hatch) 0 1.5px,transparent 1.5px 6px),var(--ochre)}
+.fill .g3,.sw.g3{background:repeating-linear-gradient(0deg,var(--hatch) 0 2px,transparent 2px 6px),var(--blood)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.86rem;margin:12px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:22px;height:14px;border-radius:3px}
+.sw.dash{background:transparent;border:2px dashed var(--ink-soft)}
+.summary{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;min-width:300px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.84rem;color:var(--ink-soft);font-weight:600}
+td.key{font-weight:700}
+.controls{margin-top:16px}
+.sinkrow{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}
+@media (max-width:760px){.sinkrow{grid-template-columns:1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:10px 12px 12px;margin:0;min-width:0}
+legend{font-weight:700;font-size:.95rem;padding:0 4px}
+.radios{display:flex;flex-direction:column;gap:4px}
+.radios label{display:flex;gap:8px;align-items:flex-start;font-size:.94rem;cursor:pointer}
+.radios input{margin-top:5px;accent-color:var(--steel);width:18px;height:18px}
+.field{margin:6px 0}
+.field .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:.9rem}
+.field .top>span{white-space:nowrap;flex:none}
+.field input[type=number]{width:5.6em;font:600 .92rem var(--sans);font-variant-numeric:tabular-nums;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);text-align:right}
+.field .unit{font-weight:400;color:var(--ink-soft);font-size:.85rem;margin-left:4px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.groups{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+@media (max-width:980px){.groups{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.groups{grid-template-columns:1fr}}
+.groups fieldset{border-color:var(--c);border-width:2px}
+.groups legend{display:flex;align-items:center;gap:6px}
+.fixed{font-size:.9rem;color:var(--ink-soft);margin:10px 0 0}
+.note{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO304 Virtual Economies I · Week 5 · Worked example</p>
+  <h1>Same gold removed, very different prices</h1>
+  <p class="lede">The left bar is the money supply. The right bar is the day's spending, and spending sets the potion price. Try the presets. A 200,000-gold flat fee cuts prices by a third. The same 200,000 taken from veterans barely moves them.</p>
+</header>
+
+<section class="panel" aria-label="Hoard and sink model">
+  <div class="presets" role="group" aria-label="Lecture presets">
+    <span class="lab">Lecture rows</span>
+    <button class="chip" data-p="base" aria-pressed="true">Base</button>
+    <button class="chip" data-p="a" aria-pressed="false">(a) New raid</button>
+    <button class="chip" data-p="b" aria-pressed="false">(b) Flat fee 200k</button>
+    <button class="chip" data-p="c" aria-pressed="false">(c) Luxury 200k</button>
+    <button class="chip" data-p="d" aria-pressed="false">(d) Luxury 600k</button>
+    <button class="chip" data-p="prop" aria-pressed="false">Proportional 600k</button>
+    <button class="chip" data-p="ret" aria-pressed="false">Returning 50</button>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Where the gold is<small>Money supply <i>M</i> by group, before and after the sink</small></figcaption>
+      <div class="big"><b id="bigM">—</b><span>gold on the server</span><span class="delta" id="dM"></span></div>
+      <div class="spacer" aria-hidden="true"></div>
+      <div id="mBars"></div>
+    </figure>
+    <figure>
+      <figcaption>Where the spending is<small>Spending per day <i>S</i> by group. Price <i>P</i> = <i>S</i> / <i>Q</i></small></figcaption>
+      <div class="big"><b id="bigP">—</b><span>gold per potion</span><span class="delta" id="dP"></span></div>
+      <div class="note" id="dPnote" style="margin:-4px 0 8px">vs Base price 76.0</div>
+      <div id="sBars"></div>
+    </figure>
+  </div>
+
+  <div class="legend" aria-label="Legend">
+    <span><i class="sw g0"></i>Newcomers</span>
+    <span><i class="sw g1"></i>Regulars</span>
+    <span><i class="sw g2"></i>Veterans</span>
+    <span id="lgRet"><i class="sw g3"></i>Returning veterans</span>
+    <span><i class="sw dash"></i>Before the sink (outline)</span>
+    <span><i style="display:inline-block;width:0;height:16px;border-left:2px solid var(--ink);opacity:.7"></i>Base scenario</span>
+  </div>
+
+  <p class="summary" id="summary" aria-live="polite"></p>
+
+  <div class="table-wrap">
+    <table aria-label="Exact values before and after the sink">
+      <thead><tr><th>Measure</th><th>Before sink</th><th>After sink</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div class="sinkrow">
+      <fieldset>
+        <legend>Sink</legend>
+        <div class="field">
+          <div class="top"><label for="xR">Sink size <i>X</i></label><span><input type="number" id="xN" min="0" max="1000000" step="10000" aria-label="Sink size in gold"><span class="unit">gold</span></span></div>
+          <input type="range" id="xR" min="0" max="1000000" step="10000" aria-label="Sink size slider">
+        </div>
+        <p class="fixed">Potions sold per day <i>Q</i> = 1,000 (fixed)</p>
+      </fieldset>
+      <fieldset>
+        <legend>Who pays</legend>
+        <div class="radios">
+          <label><input type="radio" name="mode" value="flat"><span>Flat per player: everyone pays <i>X</i> / players, or all they have</span></label>
+          <label><input type="radio" name="mode" value="prop"><span>Proportional to balance: every balance shrinks by <i>X</i> / <i>M</i></span></label>
+          <label><input type="radio" name="mode" value="vet"><span>Veterans only (luxury item): comes out of active veterans' gold</span></label>
+        </div>
+      </fieldset>
+    </div>
+    <div class="groups" id="groups"></div>
+  </div>
+</section>
+
+<footer>Model from the lecture: <i>B</i> = players &times; balance each, <i>M</i> = &Sigma;<i>B</i>, <i>S</i> = &Sigma;<i>B</i> &times; <i>v</i>, <i>V</i> = <i>S</i> / <i>M</i>, <i>P</i> = <i>S</i> / <i>Q</i>. It is a one-day snapshot. Flat-fee shortfalls are not passed to other players. Returning veterans hold the same balance each as active veterans and count as players for the flat fee. The veterans-only sink takes from active veterans only. Veterans' balance each after a luxury sink is an average across the group.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const Q=1000;
+const NAMES=['Newcomers','Regulars','Veterans','Returning veterans'];
+const BASE={g:[[500,400,20],[400,1500,5],[100,12000,0.5]],X:0,mode:'flat',R:0,vr:2.5};
+const PRESETS={
+  base:{},
+  a:{g2v:2.5},
+  b:{X:200000,mode:'flat'},
+  c:{X:200000,mode:'vet'},
+  d:{X:600000,mode:'vet'},
+  prop:{X:600000,mode:'prop'},
+  ret:{R:50,vr:2.5}
+};
+let st;
+function reset(){st=JSON.parse(JSON.stringify(BASE));}
+reset();
+
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const sgn=(n,d)=>{const r=n.toFixed(d);if(Math.abs(+r)===0)return '0.'+'0'.repeat(d)+'%';return (n>0?'+':'−')+Math.abs(n).toFixed(d)+'%';};
+
+// groups: returns arrays of {players, each, v}
+function groups(){
+  const g=st.g.map(x=>({players:x[0],each:x[1],v:x[2]/100}));
+  g.push({players:st.R,each:st.g[2][1],v:st.vr/100});
+  return g;
+}
+function compute(X,mode){
+  const g=groups();
+  const B=g.map(x=>x.players*x.each);
+  const M=B.reduce((a,b)=>a+b,0);
+  let after=B.slice(),paid=[0,0,0,0],short=0;
+  if(X>0){
+    if(mode==='flat'){
+      const N=g.reduce((a,x)=>a+x.players,0);
+      const share=N>0?X/N:0;
+      g.forEach((x,i)=>{const p=Math.min(x.each,share)*x.players;paid[i]=p;after[i]=B[i]-p;});
+      short=X-paid.reduce((a,b)=>a+b,0);
+    }else if(mode==='prop'){
+      const f=M>0?Math.max(0,1-X/M):0;
+      after=B.map(b=>b*f);paid=B.map((b,i)=>b-after[i]);
+      short=Math.max(0,X-M);
+    }else{
+      const p=Math.min(X,B[2]);paid[2]=p;after[2]=B[2]-p;short=X-p;
+    }
+  }
+  const out=bal=>{const S=bal.reduce((a,b,i)=>a+b*g[i].v,0),Mm=bal.reduce((a,b)=>a+b,0);
+    return {B:bal,Sg:bal.map((b,i)=>b*g[i].v),M:Mm,S,V:Mm>0?S/Mm:0,P:S/Q};};
+  return {g,before:out(B),after:out(after),paid,short:Math.max(0,short)};
+}
+const BASE_P=76; // lecture base: S = 76,000, Q = 1,000
+
+function niceMax(v){if(v<=0)return 1;const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(x=>x>=v*1.001)||v;}
+function short(v){return v>=1e6?(v/1e6).toFixed(v%1e6?1:0).replace(/\.0$/,'')+'M':v>=1000?Math.round(v/1000)+'k':fmt(v);}
+
+function bars(el,before,after,max,ref,refLabel,labelFmt){
+  const segs=(arr,cls)=>`<div class="bar ${cls}" style="width:${(arr.reduce((a,b)=>a+b,0)/max*100).toFixed(3)}%">`+
+    arr.map((v,i)=>v>0?`<div class="seg g${i}" style="width:${(v/Math.max(1e-9,arr.reduce((a,b)=>a+b,0))*100).toFixed(3)}%"></div>`:'').join('')+'</div>';
+  const refH=`<div class="ref" style="left:${(ref/max*100).toFixed(3)}%"><span>${refLabel}</span></div>`;
+  const tb=before.reduce((a,b)=>a+b,0),ta=after.reduce((a,b)=>a+b,0);
+  let ticks='';for(let i=0;i<=4;i++)ticks+=`<span style="left:${i*25}%">${short(max*i/4)}</span>`;
+  el.innerHTML=
+    `<div class="barrow"><span class="rl">Before</span><div class="track" role="img" aria-label="Before the sink: ${labelFmt(tb)}">${segs(before,'outline')}${refH}</div></div>`+
+    `<div class="barrow"><span class="rl">After</span><div class="track" role="img" aria-label="After the sink: ${labelFmt(ta)}">${segs(after,'fill')}</div></div>`+
+    `<div class="ticks" aria-hidden="true">${ticks}</div>`+
+    `<p class="val">Before <b>${labelFmt(tb)}</b> &middot; after <b>${labelFmt(ta)}</b></p>`;
+}
+
+function render(){
+  const X=st.X,mode=st.mode,r=compute(X,mode),b=r.before,a=r.after,g=r.g;
+  const hasR=st.R>0;
+  $('lgRet').hidden=!hasR;
+  // big numbers
+  $('bigM').textContent=fmt(a.M);
+  const dm=b.M>0?(a.M-b.M)/b.M*100:0;
+  $('dM').textContent=X>0?sgn(dm,1)+' from the sink':'';
+  $('dM').className='delta';
+  $('bigP').textContent=a.P.toFixed(1);
+  const dP=(a.P-BASE_P)/BASE_P*100;
+  $('dP').textContent=sgn(dP,1);
+  $('dP').className='delta '+(dP>0.05?'up':dP<-0.05?'down':'');
+  const sinkP=b.P>0?(a.P-b.P)/b.P*100:0;
+  $('dPnote').textContent='vs Base price 76.0'+(X>0&&Math.abs(sinkP-dP)>0.05?` (sink alone: ${sgn(sinkP,1)})`:'');
+  const mMax=niceMax(Math.max(b.M,2000000)),sMax=niceMax(Math.max(b.S,a.S,76000));
+  bars($('mBars'),b.B,a.B,mMax,2000000,'Base 2M',v=>fmt(v)+' gold');
+  bars($('sBars'),b.Sg,a.Sg,sMax,76000,'Base 76k',v=>fmt(v)+' gold/day');
+  // table
+  const pct2=v=>(v*100).toFixed(2)+'%';
+  let rows=[
+    ['Money supply <i>M</i>',fmt(b.M),fmt(a.M)],
+    ['Spending per day <i>S</i>',fmt(b.S),fmt(a.S)],
+    ['Velocity <i>V</i> = <i>S</i> / <i>M</i>',pct2(b.V),pct2(a.V)],
+    ['Price <i>P</i> = <i>S</i> / 1,000',b.P.toFixed(1),a.P.toFixed(1)],
+    ['Change in <i>P</i> vs Base (76.0)',sgn((b.P-BASE_P)/BASE_P*100,1),sgn(dP,1)]
+  ];
+  g.forEach((x,i)=>{if(i===3&&!hasR)return;
+    const eb=x.players>0?b.B[i]/x.players:0,ea=x.players>0?a.B[i]/x.players:0;
+    rows.push([`${NAMES[i]}, balance each`+(i===2&&mode==='vet'&&X>0?' (avg)':''),fmt(eb),fmt(ea)]);});
+  $('tbody').innerHTML=rows.map((r,i)=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="${i===3?'key':''}">${r[2]}</td></tr>`).join('');
+  // summary
+  const removed=X-r.short;
+  let s;
+  if(X<=0){
+    s=`No sink. ${fmt(a.M)} gold on the server, ${fmt(a.S)} of it spent per day, so the price is ${a.P.toFixed(1)}`+
+      (Math.abs(dP)>=0.05?`, ${sgn(dP,1)} against Base.`:', the same as Base.');
+    if(Math.abs(dP)>=0.05&&Math.abs(a.M-2000000)<1)s+=' The money supply is unchanged. Only the spending moved.';
+    else if(hasR)s+=` The ${fmt(st.R)} returning veterans add ${fmt(a.Sg[3])} gold of spending per day from gold that already existed.`;
+  }else{
+    const fallTxt=sinkP<-0.05?`Prices fell ${Math.abs(sinkP).toFixed(1)}%.`:sinkP>0.05?`Prices rose ${sinkP.toFixed(1)}%.`:'Prices did not move.';
+    const tot=removed||1;
+    const shares=r.paid.map((p,i)=>[NAMES[i],p/tot]).filter(x=>x[1]>0.0005);
+    let who;
+    if(shares.length===1)who=`${shares[0][0]} paid all of it.`;
+    else who='Paid by '+shares.map(x=>`${x[0].toLowerCase()} ${Math.round(x[1]*100)}%`).join(', ')+'.';
+    s=`Removed ${fmt(removed)} gold (${(b.M>0?removed/b.M*100:0).toFixed(1).replace(/\.0$/,'')}% of money). ${fallTxt} ${who}`;
+    if(r.short>0)s+=` Shortfall: ${fmt(r.short)} gold could not be collected because some players ran out.`;
+  }
+  $('summary').textContent=s;
+  syncControls();
+}
+
+// controls
+const specs=[
+  {k:'players',label:'Players',min:0,max:2000,step:10,unit:''},
+  {k:'each',label:'Balance each',min:0,max:50000,step:100,unit:'gold'},
+  {k:'v',label:'Spends per day',min:0,max:30,step:0.1,unit:'%'}
+];
+function buildGroups(){
+  let h='';
+  for(let i=0;i<3;i++){
+    h+=`<fieldset class="g${i}"><legend><i class="sw g${i}"></i>${NAMES[i]}</legend>`;
+    specs.forEach((sp,j)=>{const id=`g${i}${j}`;
+      h+=`<div class="field"><div class="top"><label for="${id}r">${sp.label}</label><span><input type="number" id="${id}n" min="${sp.min}" max="${sp.max}" step="${sp.step}" data-i="${i}" data-j="${j}" aria-label="${NAMES[i]} ${sp.label.toLowerCase()}"><span class="unit">${sp.unit}</span></span></div>`+
+         `<input type="range" id="${id}r" min="${sp.min}" max="${sp.max}" step="${sp.step}" data-i="${i}" data-j="${j}"></div>`;});
+    h+='</fieldset>';
+  }
+  h+=`<fieldset class="g3"><legend><i class="sw g3"></i>Returning veterans</legend>
+    <div class="field"><div class="top"><label for="rRr">Players <i>R</i></label><span><input type="number" id="rRn" min="0" max="200" step="1" aria-label="Returning veterans count"></span></div><input type="range" id="rRr" min="0" max="200" step="1"></div>
+    <div class="field"><div class="top"><label for="rVr">Spends per day</label><span><input type="number" id="rVn" min="0" max="5" step="0.1" aria-label="Returning veterans spending rate"><span class="unit">%</span></span></div><input type="range" id="rVr" min="0" max="5" step="0.1"></div>
+    <p class="note">Dormant players who log back in with the same balance each as active veterans (<span id="retEach">12,000</span> gold).</p></fieldset>`;
+  $('groups').innerHTML=h;
+}
+buildGroups();
+
+function syncControls(force){
+  const set=(id,v)=>{const e=$(id);if(force||document.activeElement!==e||e.type==='range')e.value=v;};
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){set(`g${i}${j}r`,st.g[i][j]);set(`g${i}${j}n`,st.g[i][j]);}
+  set('rRr',st.R);set('rRn',st.R);set('rVr',st.vr);set('rVn',st.vr);
+  set('xR',st.X);set('xN',st.X);
+  document.querySelectorAll('input[name=mode]').forEach(r=>r.checked=r.value===st.mode);
+  $('retEach').textContent=fmt(st.g[2][1]);
+}
+const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
+function clearPreset(){document.querySelectorAll('.presets .chip').forEach(c=>c.setAttribute('aria-pressed','false'));}
+function bindNum(el,apply){
+  el.addEventListener('input',()=>{const v=parseFloat(el.value);if(isNaN(v))return;apply(clamp(v,+el.min,+el.max));clearPreset();render();});
+  el.addEventListener('change',()=>syncControls(true));
+}
+document.querySelectorAll('#groups input[data-i]').forEach(el=>{
+  const i=+el.dataset.i,j=+el.dataset.j;
+  bindNum(el,v=>{st.g[i][j]=v;});
+});
+bindNum($('rRr'),v=>{st.R=Math.round(v);});bindNum($('rRn'),v=>{st.R=Math.round(v);});
+bindNum($('rVr'),v=>{st.vr=v;});bindNum($('rVn'),v=>{st.vr=v;});
+bindNum($('xR'),v=>{st.X=v;});bindNum($('xN'),v=>{st.X=v;});
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',()=>{st.mode=r.value;clearPreset();render();}));
+document.querySelectorAll('.presets .chip').forEach(c=>c.addEventListener('click',()=>{
+  reset();const p=PRESETS[c.dataset.p];
+  if(p.g2v!==undefined)st.g[2][2]=p.g2v;
+  if(p.X!==undefined)st.X=p.X;if(p.mode)st.mode=p.mode;
+  if(p.R!==undefined)st.R=p.R;if(p.vr!==undefined)st.vr=p.vr;
+  clearPreset();c.setAttribute('aria-pressed','true');render();syncControls(true);
+}));
+render();
+})();
+</script>
+</body>
+</html>

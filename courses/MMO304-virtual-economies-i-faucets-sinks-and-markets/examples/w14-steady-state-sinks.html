@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Steady-state sinks · MMO304 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+h1 code{font-family:var(--serif);font-style:italic;white-space:nowrap}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.insight{padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);margin:0 0 14px}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
+.bar .lbl{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.act{border-color:var(--ochre)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 20px;margin-bottom:14px}
+@media (max-width:860px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+.ctl label output{font-variant-numeric:tabular-nums;font-weight:700}
+.ctl small{display:block;color:var(--ink-soft);font-size:.78rem;line-height:1.3}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.warn{color:var(--blood);font-weight:600;font-size:.9rem;margin:0 0 10px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 0}
+.legend svg{vertical-align:middle;margin-right:5px}
+.caption{min-height:1.5em;font-weight:700;color:var(--moss);font-size:.9rem;margin:6px 0 0}
+.day{margin-top:14px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto;margin-top:6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:500px;width:100%}
+.tcap{font-family:var(--serif);font-size:1rem;margin:16px 0 0}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td.cur,th.cur{background:var(--paper-2);font-weight:700}
+.big{font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO304 Virtual Economies I · Week 14 · Worked example</p>
+  <h1>Wealth settles at <code>W* = N / s</code></h1>
+  <p class="lede">A sink that takes a share of what players hold grows with their wealth. Wealth stops rising on the day that sink catches up with net income. Faucets decide where it settles. The sink rate decides how fast.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Wealth and flows</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Server average</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <p class="insight" id="insight" aria-live="polite"></p>
+
+  <div class="bar" role="group" aria-label="Designs from the lecture">
+    <span class="lbl">Designs:</span>
+    <button class="chip preset" data-tau="0" data-l="0" aria-pressed="false">Design A (no proportional sink)</button>
+    <button class="chip preset" data-tau="3" data-l="0" aria-pressed="false">Design B (3% tax)</button>
+    <button class="chip preset" data-tau="3" data-l="1.1" aria-pressed="true">Design C (tax + 1.1% luxury)</button>
+    <button class="chip act" id="dbl">Double the faucet</button>
+  </div>
+
+  <div class="controls">
+    <div class="ctl"><label for="F">Faucets F <output id="oF"></output></label><input id="F" type="range" min="0" max="30000" step="500" value="10000"><small>gold per player per day</small></div>
+    <div class="ctl"><label for="S">Flat sinks S <output id="oS"></output></label><input id="S" type="range" min="0" max="20000" step="500" value="4000"><small>repairs, travel, vendor goods, per day</small></div>
+    <div class="ctl"><label for="tau">Market tax τ <output id="oTau"></output></label><input id="tau" type="range" min="0" max="20" step="0.5" value="3"><small>share of each sale removed</small></div>
+    <div class="ctl"><label for="v">Velocity v <output id="oV"></output></label><input id="v" type="range" min="0" max="1" step="0.05" value="0.3"><small>share of holdings sold through the market each day</small></div>
+    <div class="ctl"><label for="lux">Luxury sink ℓ <output id="oL"></output></label><input id="lux" type="range" min="0" max="5" step="0.1" value="1.1"><small>share of holdings spent on luxuries each day</small></div>
+  </div>
+  <p class="warn" id="warn" hidden>Net income is zero or negative, wealth never grows.</p>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Wealth held, W(t)<small>Gold per player after t days of play</small></figcaption>
+      <canvas id="cW" role="img" aria-label="Wealth over time with the steady-state ceiling"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--ochre)" stroke-width="3"/></svg>wealth W(t)</span>
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 4"/></svg>ceiling W*</span>
+        <span><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--steel)"/></svg>half-life</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Flows per day<small>Net income in, proportional sinks out</small></figcaption>
+      <canvas id="cF" role="img" aria-label="Net income and proportional sink outflow per day"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--moss)" stroke-width="3"/></svg>net income N</span>
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--blood)" stroke-width="3" stroke-dasharray="2 4"/></svg>proportional sinks s·W(t)</span>
+        <span><svg width="16" height="10"><rect width="16" height="10" fill="var(--moss)" opacity=".25"/></svg>daily growth of wealth</span>
+      </div>
+      <p class="caption" id="steady" aria-live="polite"></p>
+    </figure>
+  </div>
+
+  <div class="ctl day"><label for="t">Day marker t <output id="oT"></output></label><input id="t" type="range" min="0" max="365" step="1" value="90"></div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--moss)"><b id="rN"></b><span>net income N per day</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rS"></b><span>sink rate s = τ·v + ℓ</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rWs"></b><span>ceiling W* = N / s</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rH"></b><span>half-life ln 2 / s</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="r90"></b><span>days to 90%, ln 10 / s</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rW"></b><span id="rWl">wealth W(t)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rOut"></b><span>sink outflow s·W(t) per day</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rGap"></b><span>gap N − s·W(t) per day</span></div>
+  </div>
+
+  <p class="tcap" id="tcap">Wealth by day, F = 10,000 and S = 4,000 for A to C (the lecture's table), plus your settings</p>
+  <div class="table-wrap">
+    <table aria-labelledby="tcap">
+      <thead><tr><th>Day</th><th>A: s = 0</th><th>B: s = 0.009</th><th>C: s = 0.02</th><th class="cur">Yours</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <p class="insight" id="avgNote" aria-live="polite"></p>
+  <div class="ctl"><label for="L">Typical stay L <output id="oLen"></output></label><input id="L" type="range" min="7" max="365" step="1" value="90"><small>days a typical player has been on the server. Uses the sink and faucet settings from the first tab.</small></div>
+  <div class="readout">
+    <div class="stat" style="--c:var(--ink)"><b id="aWs"></b><span>ceiling W*</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="aAvg"></b><span>server average</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="aShare"></b><span>average as a share of W*</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="aSL"></b><span>s·L</span></div>
+  </div>
+  <figure style="margin-top:12px">
+    <figcaption>Server average wealth against typical stay<small>W* × (1 − (1 − e<sup>−sL</sup>) / (sL)): the average of W(t) over a player's first L days</small></figcaption>
+    <canvas id="cA" role="img" aria-label="Server average wealth as a function of typical stay"></canvas>
+  </figure>
+</section>
+
+<footer>Model from the week 14 lecture: W(t) = W* (1 − e<sup>−st</sup>), with N = F − S and s = τ·v + ℓ. All numbers are illustrative design values, not taken from a live game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const short=v=>v>=1e6?(v/1e6).toFixed(v%1e6?1:0).replace(/\.0$/,'')+'M':v>=1e5?Math.round(v/1e3)+'k':v>=1e3?(v/1e3).toFixed(2).replace(/\.?0+$/,'')+'k':fmt(v);
+
+const st={F:10000,S:4000,tau:3,v:0.3,lux:1.1,t:90,L:90};
+// s from slider units: tau in %, lux in %; round to kill float noise
+const sOf=(tau,v,lux)=>Math.round((tau/100*v+lux/100)*1e10)/1e10;
+function model(){
+  const N=Math.max(0,st.F-st.S),s=sOf(st.tau,st.v,st.lux);
+  const W=t=>s>0?N/s*(1-Math.exp(-s*t)):N*t;
+  return {N,s,W,Ws:s>0?N/s:Infinity,h:s>0?Math.LN2/s:Infinity,t90:s>0?Math.LN10/s:Infinity};
+}
+function nice(raw){
+  if(!(raw>0))return 1;
+  const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(v=>v>=raw*0.9999)||10*mag;
+}
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:48,r:12,t:14,b:34};
+function frame(c,xMax,yMax,xLabel){
+  const {g,w,h}=c;g.clearRect(0,0,w,h);
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/xMax,Y=y=>pad.t+(h-pad.t-pad.b)*(1-y/yMax);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=Y(yMax*i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(short(yMax*i/4),pad.l-6,y);}
+  const ticks=xMax===365?[0,90,180,270,365]:[0,Math.round(xMax/4),Math.round(xMax/2),Math.round(3*xMax/4),xMax];
+  ticks.forEach(x=>{g.textAlign='center';g.textBaseline='top';g.fillText(x,X(x),h-pad.b+6);});
+  g.textAlign='right';g.fillText(xLabel,w-pad.r,h-14);
+  return {X,Y};
+}
+function curve(g,X,Y,xMax,yMax,f,color,width,dash){
+  g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash||[]);g.beginPath();
+  for(let i=0;i<=300;i++){const x=xMax*i/300,y=Math.min(f(x),yMax*1.02);i?g.lineTo(X(x),Y(y)):g.moveTo(X(x),Y(y));}
+  g.stroke();g.setLineDash([]);
+}
+function dot(g,x,y,color){g.fillStyle=color;g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+function vmark(g,X,Y,x,yMax,label){
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.lineWidth=1;g.setLineDash([3,4]);
+  g.beginPath();g.moveTo(X(x),Y(yMax));g.lineTo(X(x),Y(0));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+}
+function tag(g,text,x,y,color,align,w){
+  g.font='600 12px '+css('--sans');g.fillStyle=color;g.textBaseline='bottom';
+  const tw=g.measureText(text).width;let a=align||'left';
+  if(a==='left'&&x+tw>w-pad.r)a='right';
+  g.textAlign=a;g.fillText(text,x,y);
+}
+
+function drawW(m){
+  const c=setupCanvas($('cW')),{g,w}=c,xM=365;
+  const yMax=nice(Math.max(m.W(365),m.s>0?m.Ws:0));
+  const {X,Y}=frame(c,xM,yMax,'days');
+  if(m.s>0&&m.N>0){
+    g.strokeStyle=css('--ink');g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();g.moveTo(X(0),Y(m.Ws));g.lineTo(X(xM),Y(m.Ws));g.stroke();g.setLineDash([]);
+    tag(g,'W* = '+fmt(m.Ws),X(8),Y(m.Ws)-3,css('--ink'),'left',w);
+  }else if(m.N>0){
+    tag(g,'no ceiling',X(8),Y(yMax)+16,css('--ink'),'left',w);
+  }
+  curve(g,X,Y,xM,yMax,m.W,css('--ochre'),3);
+  vmark(g,X,Y,st.t,yMax);
+  if(m.s>0&&m.N>0&&m.h<=xM){const hx=X(m.h),hy=Y(m.W(m.h));dot(g,hx,hy,css('--steel'));tag(g,'half-life',hx+9,hy+18,css('--steel'),'left',w);}
+  dot(g,X(st.t),Y(m.W(st.t)),css('--ochre'));
+}
+function drawF(m){
+  const c=setupCanvas($('cF')),{g,w}=c,xM=365,yMax=m.N>0?1.1*m.N:1;
+  const {X,Y}=frame(c,xM,yMax,'days');
+  const out=t=>m.s*m.W(t);
+  if(m.N>0){
+    g.fillStyle=css('--moss');g.globalAlpha=.22;g.beginPath();g.moveTo(X(0),Y(m.N));
+    for(let i=0;i<=300;i++){const x=xM*i/300;g.lineTo(X(x),Y(m.N));}
+    for(let i=300;i>=0;i--){const x=xM*i/300;g.lineTo(X(x),Y(out(x)));}
+    g.closePath();g.fill();g.globalAlpha=1;
+  }
+  curve(g,X,Y,xM,yMax,()=>m.N,css('--moss'),3);
+  curve(g,X,Y,xM,yMax,out,css('--blood'),3,[2,4]);
+  tag(g,'net income '+fmt(m.N),X(xM),Y(m.N)-4,css('--moss'),'right',w);
+  vmark(g,X,Y,st.t,yMax);
+  dot(g,X(st.t),Y(out(st.t)),css('--blood'));
+}
+function drawA(m){
+  const c=setupCanvas($('cA')),{g,w}=c,xM=365;
+  const avg=L=>m.s>0?m.Ws*(1-(1-Math.exp(-m.s*L))/(m.s*L)):m.N*L/2;
+  const yMax=nice(Math.max(avg(365),m.s>0?m.Ws:0));
+  const {X,Y}=frame(c,xM,yMax,'typical stay, days');
+  if(m.s>0&&m.N>0){g.strokeStyle=css('--ink');g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();g.moveTo(X(0),Y(m.Ws));g.lineTo(X(xM),Y(m.Ws));g.stroke();g.setLineDash([]);tag(g,'W* = '+fmt(m.Ws),X(8),Y(m.Ws)-3,css('--ink'),'left',w);}
+  curve(g,X,Y,xM,yMax,avg,css('--ochre'),3);
+  vmark(g,X,Y,st.L,yMax);dot(g,X(st.L),Y(avg(st.L)),css('--ochre'));
+  return avg;
+}
+
+function update(){
+  const m=model();
+  $('oF').textContent=fmt(st.F);$('oS').textContent=fmt(st.S);$('oTau').textContent=st.tau.toFixed(1)+'%';
+  $('oV').textContent=st.v.toFixed(2);$('oL').textContent=st.lux.toFixed(1)+'%';$('oT').textContent='day '+st.t;$('oLen').textContent=st.L+' days';
+  $('warn').hidden=st.S<st.F;
+  document.querySelectorAll('.preset').forEach(b=>b.setAttribute('aria-pressed',String(st.F===10000&&st.S===4000&&st.v===0.3&&st.tau===+b.dataset.tau&&st.lux===+b.dataset.l)));
+  const Wt=m.W(st.t),out=m.s*Wt,gap=m.N-out,has=m.s>0;
+  $('rN').textContent=fmt(m.N);$('rS').textContent=m.s.toFixed(4);
+  $('rWs').textContent=has?(m.N>0?fmt(m.Ws):'0'):'no ceiling';
+  $('rH').textContent=has?m.h.toFixed(1)+' days':'none';
+  $('r90').textContent=has?m.t90.toFixed(1)+' days':'none';
+  $('rW').textContent=fmt(Wt);$('rWl').textContent='wealth W('+st.t+')';
+  $('rOut').textContent=fmt(out);$('rGap').textContent=fmt(gap);
+  $('steady').textContent=(m.N>0&&gap<0.01*m.N)?'sinks ≈ faucets: steady state':'';
+  let s;
+  if(m.N<=0)s='Flat sinks eat the whole faucet. Nothing is left to accumulate, so the proportional sinks have nothing to act on.';
+  else if(!has)s=`With no proportional sink, wealth grows by ${fmt(m.N)} gold every day forever: ${fmt(m.W(30))} at day 30, ${fmt(m.W(365))} at day 365. There is no ceiling.`;
+  else{
+    const pct=(Wt/m.Ws*100).toFixed(1);
+    s=`Wealth settles at <b>${fmt(m.Ws)}</b>. At day ${st.t} a player holds ${fmt(Wt)} (${pct}% of the ceiling) and the sinks already remove ${fmt(out)} of the ${fmt(m.N)} earned each day. `;
+    const d=Math.min(2*st.F,30000),N2=Math.max(0,d-st.S);
+    if(d!==st.F&&N2>0)s+=`Doubling the faucet to ${fmt(d)} moves the ceiling to ${fmt(N2/m.s)}, and the half-life stays at ${m.h.toFixed(1)} days.`;
+    else s+=`The half-life of ${m.h.toFixed(1)} days depends only on s.`;
+  }
+  $('insight').innerHTML=s;
+  // table
+  const col=s0=>t=>s0>0?6000/s0*(1-Math.exp(-s0*t)):6000*t;
+  const A=col(0),B=col(0.009),C=col(0.02),rows=[0,30,60,90,180,365].map(t=>`<tr><td>${t}</td><td>${fmt(A(t))}</td><td>${fmt(B(t))}</td><td>${fmt(C(t))}</td><td class="cur">${fmt(m.W(t))}</td></tr>`);
+  rows.push(`<tr><td>Steady state W*</td><td>none</td><td>${fmt(6000/0.009)}</td><td>${fmt(300000)}</td><td class="cur">${has?fmt(m.Ws):'none'}</td></tr>`);
+  rows.push(`<tr><td>Half-life</td><td>none</td><td>${(Math.LN2/0.009).toFixed(1)} days</td><td>${(Math.LN2/0.02).toFixed(1)} days</td><td class="cur">${has?m.h.toFixed(1)+' days':'none'}</td></tr>`);
+  $('tbody').innerHTML=rows.join('');
+  // server average
+  const avgV=m.s>0?m.Ws*(1-(1-Math.exp(-m.s*st.L))/(m.s*st.L)):m.N*st.L/2;
+  $('aWs').textContent=has?fmt(m.Ws):'no ceiling';$('aAvg').textContent=fmt(avgV);
+  $('aShare').textContent=has&&m.N>0?(avgV/m.Ws*100).toFixed(1)+'%':'—';$('aSL').textContent=(m.s*st.L).toFixed(2);
+  $('avgNote').innerHTML=has&&m.N>0?`If a typical player has been here ${st.L} days, the server average is <b>${fmt(avgV)}</b>, only ${(avgV/m.Ws*100).toFixed(1)}% of the ${fmt(m.Ws)} ceiling. New players pull the average down, so watch the veteran segment to see W*.`:'Without a proportional sink there is no ceiling, so the server average keeps rising with the typical stay.';
+  draw(m);
+}
+function draw(m){m=m||model();if($('p1').hidden)drawA(m);else{drawW(m);drawF(m);}}
+
+const bind=(id,key)=>$(id).addEventListener('input',e=>{st[key]=+e.target.value;update();});
+bind('F','F');bind('S','S');bind('tau','tau');bind('v','v');bind('lux','lux');bind('t','t');bind('L','L');
+document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>{
+  Object.assign(st,{F:10000,S:4000,v:0.3,tau:+b.dataset.tau,lux:+b.dataset.l});
+  $('F').value=st.F;$('S').value=st.S;$('v').value=st.v;$('tau').value=st.tau;$('lux').value=st.lux;update();
+}));
+$('dbl').addEventListener('click',()=>{st.F=Math.min(30000,2*st.F);$('F').value=st.F;update();});
+const tabs=[$('t1'),$('t2')];
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();draw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2]);}});});
+window.addEventListener('resize',()=>draw());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>draw());
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>draw());
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Real value drift, MMO304 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.summary{font-family:var(--serif);font-size:1.05rem;margin:0 0 12px;padding:10px 14px;border-radius:10px;background:var(--paper-2)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px;touch-action:pan-y;cursor:ew-resize}
+.under{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.86rem;margin:6px 0 0;font-variant-numeric:tabular-nums}
+.under i{display:inline-block;width:20px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.dayrow{margin-top:14px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:0}
+.warn{margin:10px 0 0;padding:8px 12px;border-left:4px solid var(--blood);background:var(--paper-2);font-weight:600}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink-soft);font-size:.84rem}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.readout{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:14px 0 0}
+@media (max-width:900px){.readout{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;align-items:center}
+.presets .lbl{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;justify-content:flex-start;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:20px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+footer code,.hint code{font-size:.9em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO304 Virtual Economies I · Week 4 · Worked example</p>
+  <h1>The inflation rate calms down. Your gold keeps shrinking.</h1>
+  <p class="lede">Faucets add a fixed amount of gold per player each day, so the daily price rise gets smaller in percent. Look right, though. Every fixed gold number (a newcomer's income, a mount price) keeps losing real value. Only a stock sink stops the slide.</p>
+</header>
+
+<section class="panel" aria-label="Real value drift simulator">
+  <p class="summary" id="summary" aria-live="polite"></p>
+
+  <div class="charts">
+    <figure>
+      <figcaption>What the price tag says<small>Potion price <code>P</code> in gold. Dashed line is the steady-state price when there is a stock sink.</small></figcaption>
+      <canvas id="cPrice" role="img" aria-label="Potion price against day"></canvas>
+      <div class="under" id="underL"></div>
+    </figure>
+    <figure>
+      <figcaption>What it means<small>Each line divided by its first value, so 1.0 means "same as launch"</small></figcaption>
+      <canvas id="cReal" role="img" aria-label="Normalised inflation rate, real wage and mount weight against day"></canvas>
+      <div class="under" id="underR"></div>
+    </figure>
+  </div>
+
+  <div class="dayrow">
+    <label for="day">Selected day <output id="oDay">365</output></label>
+    <input id="day" type="range" min="0" max="730" step="1" value="365" aria-describedby="dayHint">
+    <p class="hint" id="dayHint">Drag on either chart or use this slider. Arrow keys move 1 day, Page Up and Page Down move 30.</p>
+  </div>
+
+  <p class="warn" id="warn" hidden>Sinks exceed faucets: money per player falls.</p>
+
+  <div class="readout" aria-label="Values at the selected day">
+    <div class="stat" style="--c:var(--ink)"><b id="rM">&mdash;</b><span><code>m</code> gold per player</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rP">&mdash;</b><span>potion price <code>P</code></span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rPi">&mdash;</b><span>daily inflation <code>&pi;</code></span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rW">&mdash;</b><span>potions per newcomer day</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rL">&mdash;</b><span>mount price <code>L</code></span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rMW">&mdash;</b><span>mount price &divide; <code>m</code></span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rMs">&mdash;</b><span>steady state <code>m*</code></span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="presets" role="group" aria-label="Presets">
+    <span class="lbl">Presets</span>
+    <button class="chip" data-preset="none" aria-pressed="false">No stock sink</button>
+    <button class="chip" data-preset="sink" aria-pressed="true">1% stock sink</button>
+    <button class="chip" data-preset="index" aria-pressed="false">Indexed mount</button>
+  </div>
+
+  <div class="controls">
+    <div><label for="m0"><span>Starting gold per player <code>m0</code></span> <output id="om0"></output></label><input id="m0" type="range" min="500" max="10000" step="100" value="2000"></div>
+    <div><label for="n"><span>Net inflow <code>n</code> (gold per player-day)</span> <output id="on"></output></label><input id="n" type="range" min="-40" max="200" step="5" value="40"></div>
+    <div><label for="sig"><span>Stock sink <code>&sigma;</code> (share of balance per day)</span> <output id="osig"></output></label><input id="sig" type="range" min="0" max="3" step="0.05" value="1"></div>
+    <div><label for="V"><span>Velocity <code>V</code></span> <output id="oV"></output></label><input id="V" type="range" min="0.01" max="0.2" step="0.01" value="0.05"></div>
+    <div><label for="W"><span>Newcomer income <code>W</code> (gold per day)</span> <output id="oW"></output></label><input id="W" type="range" min="10" max="500" step="10" value="100"></div>
+    <div><label for="L0"><span>Mount price <code>L0</code></span> <output id="oL0"></output></label><input id="L0" type="range" min="1000" max="100000" step="1000" value="20000"></div>
+    <div><label class="toggle" for="idx"><input id="idx" type="checkbox"> Index the mount price to <code>m</code></label>
+      <p class="hint">On: <code>L(t) = k &times; m(t)</code> with <code>k = L0 / m0</code>.</p></div>
+  </div>
+
+  <h2>Milestone days</h2>
+  <div class="table-wrap">
+    <table aria-label="Values at milestone days">
+      <thead><tr><th>Day</th><th><code>m</code></th><th>Potion <code>P</code></th><th>Daily <code>&pi;</code></th><th>Newcomer's day buys</th><th>Mount price</th><th>Mount &divide; <code>m</code></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 4 lecture, built on week 3's stock-and-flow update: <code>m(t+1) = m(t) + n &minus; &sigma;&middot;m(t)</code>, <code>P = m&middot;V/q</code> with <code>q = 1</code>, <code>&pi;(t) = P(t)/P(t&minus;1) &minus; 1</code>, steady state <code>m* = n/&sigma;</code>. All numbers are invented teaching values, not data from any game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DAYS=730;
+const num=(x,d)=>Number.isFinite(x)?x.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:d}):'—';
+const fixed=(x,d)=>Number.isFinite(x)?(+x.toFixed(d)).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const mFmt=x=>Number.isFinite(x)&&!Number.isInteger(+x.toFixed(6))?fixed(x,1):num(x,1);
+const pFmt=x=>Number.isFinite(x)&&!Number.isInteger(+x.toFixed(6))?fixed(x,2):num(x,2);
+const pctS=x=>Number.isFinite(x)?(x*100).toFixed(2)+'%':'—';
+
+const S={m0:2000,n:40,sig:1,V:0.05,W:100,L0:20000,idx:false,day:365};
+let R=null;
+
+function simulate(){
+  const m=new Array(DAYS+1),P=[],pi=[],rw=[],L=[],mw=[];
+  const s=S.sig/100;
+  m[0]=S.m0;
+  for(let t=0;t<DAYS;t++){let x=m[t]+S.n-s*m[t];if(x<0)x=0;m[t+1]=x;}
+  const k=S.L0/S.m0;
+  for(let t=0;t<=DAYS;t++){
+    P[t]=m[t]*S.V/1;
+    pi[t]=(t===0||P[t-1]<=0)?NaN:P[t]/P[t-1]-1;
+    rw[t]=P[t]>0?S.W/P[t]:NaN;
+    L[t]=S.idx?k*m[t]:S.L0;
+    mw[t]=m[t]>0?L[t]/m[t]:NaN;
+  }
+  const mstar=s>0?S.n/s:NaN;
+  const nPi=pi[1],nPiOk=Number.isFinite(nPi)&&Math.abs(nPi)>1e-12;
+  const piN=pi.map(v=>nPiOk&&Number.isFinite(v)?v/nPi:NaN);
+  const rwN=rw.map(v=>Number.isFinite(v)&&Number.isFinite(rw[0])?v/rw[0]:NaN);
+  const mwN=mw.map(v=>Number.isFinite(v)&&Number.isFinite(mw[0])?v/mw[0]:NaN);
+  let firstLow=null;for(let t=1;t<=DAYS;t++){if(Number.isFinite(pi[t])&&pi[t]<0.005-1e-12){firstLow=t;break;}}
+  R={m,P,pi,rw,L,mw,mstar,piN,rwN,mwN,nPiOk,firstLow};
+}
+
+// ---------- drawing ----------
+const pad={l:54,r:14,t:14,b:34};
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){if(!(v>0))return 1;const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.6,2,2.4,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=v*1.02)||v;}
+function X(c,t){return pad.l+(c.w-pad.l-pad.r)*t/DAYS;}
+function Y(c,v,yMax){return pad.t+(c.h-pad.t-pad.b)*(1-v/yMax);}
+function axes(c,yMax,yFmt){
+  const g=c.g;g.clearRect(0,0,c.w,c.h);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=Y(c,yMax*i/4,yMax);g.beginPath();g.moveTo(pad.l,y);g.lineTo(c.w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(yMax*i/4),pad.l-6,y);}
+  [0,180,365,545,730].forEach(d=>{g.textAlign='center';g.textBaseline='top';g.fillText(d,X(c,d),c.h-pad.b+6);});
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('day',c.w-pad.r,c.h-2);
+}
+function line(c,arr,yMax,color,width,dash,alpha){
+  const g=c.g;g.save();g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash||[]);g.globalAlpha=alpha||1;
+  g.beginPath();let on=false;
+  g.rect(pad.l,pad.t-2,c.w-pad.l-pad.r,c.h-pad.t-pad.b+4);g.clip();g.beginPath();
+  for(let t=0;t<=DAYS;t++){const v=arr[t];if(!Number.isFinite(v)){on=false;continue;}
+    const px=X(c,t),py=Y(c,Math.min(v,yMax*1.2),yMax);on?g.lineTo(px,py):g.moveTo(px,py);on=true;}
+  g.stroke();g.restore();
+}
+function dayMarker(c){
+  const g=c.g,px=X(c,S.day);g.save();g.strokeStyle=css('--ink');g.globalAlpha=.45;g.setLineDash([4,4]);g.lineWidth=1.5;
+  g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,c.h-pad.b);g.stroke();g.restore();
+}
+function dot(c,v,yMax,color){
+  if(!Number.isFinite(v)||v>yMax*1.2)return;const g=c.g;
+  g.fillStyle=color;g.beginPath();g.arc(X(c,S.day),Y(c,v,yMax),5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();
+}
+function drawPrice(){
+  const c=setup($('cPrice'));
+  const pStar=Number.isFinite(R.mstar)&&R.mstar>0?R.mstar*S.V:NaN;
+  let top=Math.max(...R.P);if(Number.isFinite(pStar))top=Math.max(top,pStar);
+  const yMax=niceMax(top);
+  axes(c,yMax,v=>v>=10000?Math.round(v/1000)+'k':num(v,v<10?1:0));
+  if(Number.isFinite(pStar)){
+    const g=c.g,y=Y(c,pStar,yMax);g.save();g.strokeStyle=css('--moss');g.lineWidth=2;g.setLineDash([7,5]);
+    g.beginPath();g.moveTo(pad.l,y);g.lineTo(c.w-pad.r,y);g.stroke();g.restore();
+    g.fillStyle=css('--moss');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';
+    g.fillText('steady state '+num(pStar,2),pad.l+6,y-3);
+  }
+  dayMarker(c);
+  line(c,R.P,yMax,css('--ink'),2.5);
+  dot(c,R.P[S.day],yMax,css('--ink'));
+  $('underL').innerHTML=`<span>Day ${S.day}: <b>${num(R.P[S.day],2)}</b> gold per potion</span>`+
+    (Number.isFinite(pStar)?`<span><i style="border-color:var(--moss);border-top-style:dashed"></i>steady state ${num(pStar,2)}</span>`:'');
+}
+const SERIES=[
+  {key:'piN',raw:'pi',label:'inflation rate',color:'--blood',dash:[7,5],w:2.5},
+  {key:'rwN',raw:'rw',label:'real wage',color:'--ochre',dash:[],w:2.5},
+  {key:'mwN',raw:'mw',label:'mount weight',color:'--steel',dash:[2,4],w:3.5}
+];
+function drawReal(){
+  const c=setup($('cReal'));
+  let top=1;SERIES.forEach(s=>R[s.key].forEach(v=>{if(Number.isFinite(v))top=Math.max(top,v);}));
+  top=Math.min(top,6);const yMax=niceMax(top);
+  axes(c,yMax,v=>v.toFixed(yMax<=2?2:1).replace(/0$/,''));
+  // reference line at 1.0
+  const g=c.g,y1=Y(c,1,yMax);g.save();g.strokeStyle=css('--ink-soft');g.globalAlpha=.6;g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y1);g.lineTo(c.w-pad.r,y1);g.stroke();g.restore();
+  dayMarker(c);
+  // mount weight drawn first and wider so it stays visible when it coincides with real wage
+  [SERIES[2],SERIES[1],SERIES[0]].forEach(s=>line(c,R[s.key],yMax,css(s.color),s.w,s.dash));
+  SERIES.forEach(s=>dot(c,R[s.key][S.day],yMax,css(s.color)));
+  // direct labels near the right end, nudged apart
+  const labs=[];
+  SERIES.forEach(s=>{let t=DAYS;while(t>0&&!Number.isFinite(R[s.key][t]))t--;const v=R[s.key][t];
+    if(Number.isFinite(v))labs.push({s,y:Y(c,Math.min(v,yMax*1.2),yMax)});});
+  labs.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<labs.length;i++)if(labs[i].y-labs[i-1].y<15)labs[i].y=labs[i-1].y+15;
+  const bottom=c.h-pad.b-4;if(labs.length&&labs[labs.length-1].y>bottom){const sh=labs[labs.length-1].y-bottom;labs.forEach(l=>l.y-=sh);}
+  labs.forEach(l=>{l.y=Math.max(pad.t+6,l.y);g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';
+    const txt=l.s.label,wid=g.measureText(txt).width;
+    g.fillStyle=css('--paper-2');g.globalAlpha=.85;g.fillRect(c.w-pad.r-wid-6,l.y-14,wid+6,15);g.globalAlpha=1;
+    g.fillStyle=css(l.s.color);g.fillText(txt,c.w-pad.r-3,l.y);});
+  const d=S.day;
+  $('underR').innerHTML=
+    `<span><i style="border-color:var(--blood);border-top-style:dashed"></i>inflation rate ${pctS(R.pi[d])}/day</span>`+
+    `<span><i style="border-color:var(--ochre)"></i>real wage ${fixed(R.rw[d],2)} potions</span>`+
+    `<span><i style="border-color:var(--steel);border-top-style:dotted"></i>mount weight ${fixed(R.mw[d],1)} balances</span>`+
+    (R.nPiOk?'':'<span>Inflation line hidden: day 1 inflation is 0 or undefined.</span>')+
+    (d>0&&R.nPiOk&&Number.isFinite(R.rwN[d])&&Math.abs(R.piN[d]-R.rwN[d])<0.05*Math.max(R.rwN[d],0.01)&&S.n>0?'<span>The lines nearly overlap: the daily rate falls exactly as fast as real value does. A calmer rate is not a recovery. Compare the 1% stock sink preset.</span>':'');
+}
+
+// ---------- text ----------
+function texts(){
+  const d=S.day,m=R.m[d],P=R.P[d],pi=R.pi[d],rw=R.rw[d],L=R.L[d],mw=R.mw[d];
+  $('rM').textContent=mFmt(m);$('rP').textContent=pFmt(P);$('rPi').textContent=pctS(pi);
+  $('rW').textContent=fixed(rw,2);$('rL').textContent=num(L,0);$('rMW').textContent=fixed(mw,1);
+  $('rMs').textContent=S.sig>0?(R.mstar>0?mFmt(R.mstar):'0 (drains)'):'none (σ = 0)';
+  let s=`Day ${d}: potions cost ${pFmt(P)} gold. `;
+  if(d===0)s+='No price change yet on day 0. ';
+  else if(Number.isFinite(pi))s+=`Prices ${pi>=0?'rose':'fell'} ${pctS(Math.abs(pi))} today. `;
+  else s+='Prices are undefined because money has run out. ';
+  s+=Number.isFinite(rw)?`A newcomer's day buys ${fixed(rw,2)} potions. `:'';
+  s+=Number.isFinite(mw)?`The mount costs ${fixed(mw,1)} average balances.`:'';
+  $('summary').textContent=s;
+  $('warn').hidden=!(S.n<0);
+
+  // insight
+  let ins='';
+  if(d<1||!Number.isFinite(pi)||!R.nPiOk||!Number.isFinite(R.rwN[d])){
+    ins=`Move the day marker right to compare today with launch. First day with inflation under 0.5%: ${R.firstLow===null?'never in 730 days':'day '+R.firstLow}.`;
+  }else{
+    const piShare=R.piN[d],rwShare=R.rwN[d],mwShare=R.mwN[d];
+    ins=`On day ${d} the daily inflation rate is <b>${Math.round(piShare*100)}%</b> of day 1's rate, so the dashboard looks calmer. `+
+      `A newcomer's fixed income buys <b>${Math.round(rwShare*100)}%</b> of what it bought on day 0`+
+      (S.idx?`, while the indexed mount still costs <b>${fixed(mw,1)}</b> balances, the same as launch.`:`, and the mount weighs <b>${Math.round(mwShare*100)}%</b> of its launch weight.`)+' ';
+    if(S.sig>0&&R.mstar>0) ins+=`With a ${S.sig.toFixed(2)}% stock sink, money per player levels off near m* = ${num(R.mstar,1)}, so real values stop falling.`;
+    else if(S.n>0) ins+=`With no stock sink, m grows by ${num(S.n,0)} every day forever. The percent shrinks only because the base grows.`;
+    else if(S.n<0) ins+='Here sinks beat faucets, so prices fall and fixed gold numbers gain value.';
+    if(R.firstLow!==null) ins+=` Inflation first drops under 0.5% on day ${R.firstLow}.`;
+  }
+  $('insight').innerHTML=ins;
+
+  // milestone table
+  const days=[0,1,30,60,180,365,730];
+  if(!days.includes(d)){days.push(d);days.sort((a,b)=>a-b);}
+  $('tbody').innerHTML=days.map(t=>`<tr class="${t===d?'here':''}"><td>${t}</td><td>${mFmt(R.m[t])}</td><td>${pFmt(R.P[t])}</td><td>${pctS(R.pi[t])}</td><td>${fixed(R.rw[t],2)}</td><td>${num(R.L[t],0)}</td><td>${fixed(R.mw[t],1)}</td></tr>`).join('');
+
+  $('om0').textContent=num(S.m0,0);$('on').textContent=num(S.n,0);$('osig').textContent=S.sig.toFixed(2)+'%';
+  $('oV').textContent=S.V.toFixed(2);$('oW').textContent=num(S.W,0);$('oL0').textContent=num(S.L0,0);$('oDay').textContent=d;
+}
+
+function draw(){drawPrice();drawReal();}
+function all(){simulate();texts();draw();}
+function setDay(d){S.day=Math.max(0,Math.min(DAYS,Math.round(d)));$('day').value=S.day;texts();draw();}
+
+// ---------- controls ----------
+const keys=['m0','n','sig','V','W','L0'];
+function syncInputs(){keys.forEach(k=>$(k).value=S[k]);$('idx').checked=S.idx;}
+function markPreset(){
+  const def=S.m0===2000&&S.n===40&&S.V===0.05&&S.W===100&&S.L0===20000;
+  const which=def&&S.sig===0&&!S.idx?'none':def&&Math.abs(S.sig-1)<1e-9&&!S.idx?'sink':def&&S.sig===0&&S.idx?'index':'';
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.preset===which));
+}
+keys.forEach(k=>$(k).addEventListener('input',e=>{S[k]=+(+e.target.value).toFixed(4);markPreset();all();}));
+$('idx').addEventListener('change',e=>{S.idx=e.target.checked;markPreset();all();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  Object.assign(S,{m0:2000,n:40,sig:0,V:0.05,W:100,L0:20000,idx:false});
+  if(b.dataset.preset==='sink')S.sig=1;
+  if(b.dataset.preset==='index')S.idx=true;
+  syncInputs();markPreset();all();
+}));
+const dayIn=$('day');
+dayIn.addEventListener('input',e=>setDay(+e.target.value));
+dayIn.addEventListener('keydown',e=>{
+  if(e.key==='PageUp'){e.preventDefault();setDay(S.day+30);}
+  else if(e.key==='PageDown'){e.preventDefault();setDay(S.day-30);}
+});
+['cPrice','cReal'].forEach(id=>{
+  const c=$(id);let drag=false;
+  const at=e=>{const r=c.getBoundingClientRect();const x=e.clientX-r.left;setDay((x-pad.l)/(r.width-pad.l-pad.r)*DAYS);};
+  c.addEventListener('pointerdown',e=>{drag=true;c.setPointerCapture(e.pointerId);at(e);});
+  c.addEventListener('pointermove',e=>{if(drag)at(e);});
+  c.addEventListener('pointerup',()=>{drag=false;});
+  c.addEventListener('pointercancel',()=>{drag=false;});
+});
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+syncInputs();markPreset();all();
+})();
+</script>
+</body>
+</html>

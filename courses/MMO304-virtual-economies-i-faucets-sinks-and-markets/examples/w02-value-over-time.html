@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Value over time — MMO304 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.items{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 14px}
+.item{font:inherit;color:var(--ink);text-align:left;background:var(--paper);border:1.5px solid var(--ink);border-left:6px solid var(--c);border-radius:10px;padding:8px 10px;cursor:pointer;min-width:0}
+.item[aria-pressed="true"]{background:var(--paper-2);box-shadow:inset 0 0 0 2px var(--c)}
+.item .nm{display:block;font-weight:700;font-size:.9rem}
+.item .v{display:block;font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.item .d{display:block;font-size:.8rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+@media (max-width:520px){.item{padding:6px 8px}.item .nm{font-size:.78rem}.item .v{font-size:1.05rem}.item .d{font-size:.72rem}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:14px}
+figure{margin:0 0 10px;background:var(--paper-2);border-radius:10px;padding:10px 10px 4px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;touch-action:pan-y;cursor:crosshair}
+#cOwn{height:230px}#cVal{height:260px}
+.scrub{margin:4px 0 12px}
+label{font-weight:600;font-size:.92rem;display:flex;align-items:baseline;gap:6px}
+label output{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--ink);height:28px;margin:2px 0 8px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 2px}
+.legend i{display:inline-block;width:22px;height:12px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.line{height:0;border-top:3px solid var(--c);border-radius:0}
+.sw-F{background:repeating-linear-gradient(135deg,var(--steel) 0 2px,transparent 2px 6px),color-mix(in srgb,var(--steel) 30%,transparent);border:1px solid var(--steel)}
+.sw-H{background:color-mix(in srgb,var(--moss) 55%,transparent);border:1px solid var(--moss)}
+.sw-S{background:radial-gradient(var(--ochre) 1.2px,transparent 1.6px) 0 0/5px 5px,color-mix(in srgb,var(--ochre) 30%,transparent);border:1px solid var(--ochre)}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:600px;width:100%}
+caption{text-align:left;font-weight:600;padding-bottom:4px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.sel td{font-weight:700;background:var(--paper-2)}
+td .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-right:6px}
+.controls{display:grid;grid-template-columns:1fr 1.6fr;gap:18px;margin-top:16px}
+.controls .per{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+@media (max-width:520px){.controls .per{grid-template-columns:1fr}}
+h2{font-size:1rem;margin:0 0 6px;font-family:var(--sans)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ochre);border-color:var(--ochre);color:var(--paper)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+code{font-size:.92em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO304 Virtual Economies I · Week 2 · Worked example</p>
+  <h1>Three items, three reasons their value moves</h1>
+  <p class="lede">The sword loses 82% of its value between weeks 13 and 26 because the developer ships the next tier. The store mount slides toward a floor as more players buy it. The retired mount gains value every week, and nothing about it changes.</p>
+</header>
+
+<div class="items" role="group" aria-label="Selected item">
+  <button class="item" data-i="0" aria-pressed="true" style="--c:var(--steel)"><span class="nm">Tier sword</span><span class="v" id="v0">—</span><span class="d" id="d0">—</span></button>
+  <button class="item" data-i="1" aria-pressed="false" style="--c:var(--moss)"><span class="nm">Store mount</span><span class="v" id="v1">—</span><span class="d" id="d1">—</span></button>
+  <button class="item" data-i="2" aria-pressed="false" style="--c:var(--ochre)"><span class="nm">Retired mount</span><span class="v" id="v2">—</span><span class="d" id="d2">—</span></button>
+</div>
+
+<section class="panel">
+  <div class="scrub">
+    <label for="week">Week <output id="oWeek">52</output></label>
+    <input id="week" type="range" min="0" max="104" step="1" value="52">
+  </div>
+
+  <figure>
+    <figcaption>Who owns it<small>Share of active players who own each item, log scale. Each gridline is ten times the one below.</small></figcaption>
+    <canvas id="cOwn" role="img" aria-label="Ownership share over 104 weeks for the three items, log scale"></canvas>
+    <div class="legend" aria-hidden="true">
+      <span><i class="line" style="--c:var(--steel)"></i>Tier sword (solid)</span>
+      <span><i class="line" style="--c:var(--moss);border-top-style:dashed"></i>Store mount (dashed)</span>
+      <span><i class="line" style="--c:var(--ochre);border-top-style:dotted"></i>Retired mount (dotted)</span>
+      <span><i class="line" style="--c:var(--ink-soft);border-top-width:1px;border-top-style:dashed"></i>Long-run share q / (q + c)</span>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>What it is worth: <span id="selName">Tier sword</span><small>Stacked value in gold. Functional on the bottom, hedonic in the middle, social on top.</small></figcaption>
+    <canvas id="cVal" role="img" aria-label="Stacked functional, hedonic and social value over 104 weeks for the selected item"></canvas>
+    <div class="legend" aria-hidden="true">
+      <span><i class="sw-F"></i>F functional (hatched)</span>
+      <span><i class="sw-H"></i>H hedonic (solid)</span>
+      <span><i class="sw-S"></i>S social (dotted)</span>
+    </div>
+  </figure>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>All three items at week <span id="tWeek">52</span> (gold rounded to whole numbers)</caption>
+      <thead><tr><th>Item</th><th><code>f</code> share</th><th><code>F</code></th><th><code>H</code></th><th><code>S</code></th><th><code>V</code></th><th>V vs week 0</th><th>Where the share heads</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div>
+      <h2>Shared</h2>
+      <label for="s">Gold per halving <code>s</code> <output id="oS"></output></label>
+      <input id="s" type="range" min="0" max="3000" step="50" value="1000">
+      <label for="c">Churn <code>c</code> per week <output id="oC"></output></label>
+      <input id="c" type="range" min="0" max="10" step="0.1" value="2">
+      <div class="btns">
+        <button class="chip" id="rerelease" aria-pressed="false">Re-release retired mount at week 52</button>
+        <button class="chip" id="reset">Reset all</button>
+      </div>
+    </div>
+    <div>
+      <h2>Tuning: <span id="tuneName">Tier sword</span></h2>
+      <div class="per">
+        <div>
+          <label for="F0">Functional <code>F0</code> <output id="oF0"></output></label>
+          <input id="F0" type="range" min="0" max="40000" step="500">
+          <label for="r">Share kept after next tier <code>r</code> <output id="oR"></output></label>
+          <input id="r" type="range" min="0" max="1" step="0.05">
+          <label for="tR">Next tier week <code>t_R</code> <output id="oTR"></output></label>
+          <input id="tR" type="range" min="0" max="104" step="1">
+        </div>
+        <div>
+          <label for="H">Hedonic <code>H</code> <output id="oH"></output></label>
+          <input id="H" type="range" min="0" max="10000" step="100">
+          <label for="f0">Starting share <code>f0</code> <output id="oF0s"></output></label>
+          <input id="f0" type="range" min="-4" max="-0.30103" step="0.01" aria-describedby="f0hint">
+          <label for="q">Weekly acquire rate <code>q</code> <output id="oQ"></output></label>
+          <input id="q" type="range" min="0" max="10" step="0.1">
+        </div>
+      </div>
+      <p class="course" id="f0hint" style="margin:0">The starting-share slider is logarithmic: each step multiplies the share.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Model from the week 2 lecture: <code>V(t) = F(t) + H + S(t)</code>, <code>S = s × log2(1/f)</code>, <code>f(t+1) = f + q(1 − f) − c·f</code>. The items are generic examples, not taken from any one game. The <code>log2</code> form for social value is a modelling choice, not a measured law.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const WEEKS=104,RE_WEEK=52,RE_Q=0.03,FMIN=1e-6;
+const DEF=[
+  {name:'Tier sword',short:'Sword',col:'--steel',dash:[],F0:20000,r:0.1,tR:26,H:500,f0:0.01,q:0.02},
+  {name:'Store mount',short:'Store',col:'--moss',dash:[9,5],F0:0,r:0.1,tR:26,H:3000,f0:0.01,q:0.03},
+  {name:'Retired mount',short:'Retired',col:'--ochre',dash:[2,4],F0:0,r:0.1,tR:26,H:3000,f0:0.001,q:0}
+];
+let items,s,c,re,sel,week;
+function reset(){items=DEF.map(o=>Object.assign({},o));s=1000;c=0.02;re=false;sel=0;week=52;}
+reset();
+
+function fmtF(f){const p=f*100;if(p>=10)return p.toFixed(1)+'%';if(p>=1)return p.toFixed(2)+'%';if(p>=0.001)return p.toFixed(3)+'%';return p.toPrecision(2)+'%';}
+function qAt(i,t){return (i===2&&re&&t>=RE_WEEK)?RE_Q:items[i].q;}
+function qEnd(i){return qAt(i,WEEKS);}
+function series(i){
+  const it=items[i],d={f:[],F:[],H:[],S:[],V:[]};let f=Math.max(it.f0,FMIN);
+  for(let t=0;t<=WEEKS;t++){
+    const F=t<it.tR?it.F0:it.F0*it.r,S=s*Math.log2(1/Math.max(f,FMIN));
+    d.f.push(f);d.F.push(F);d.H.push(it.H);d.S.push(S);d.V.push(F+it.H+S);
+    const q=qAt(i,t);f=Math.min(1,Math.max(FMIN,f+q*(1-f)-c*f));
+  }
+  return d;
+}
+function heads(i){
+  const q=qEnd(i);
+  if(q===0&&c===0)return 'share never changes';
+  if(q===0)return 'halves every '+(Math.LN2/-Math.log(1-c)).toFixed(1)+' wk';
+  return 'long run '+fmtF(q/(q+c));
+}
+
+// canvas helpers
+function setup(cv){
+  const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};
+}
+function padFor(w){return {l:w<480?46:56,r:w<480?54:66,t:12,b:28};}
+function X(p,w,t){return p.l+(w-p.l-p.r)*t/WEEKS;}
+function xAxis(g,w,h,p){
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  const step=w<480?26:13;
+  for(let t=0;t<=WEEKS;t+=step){g.fillText(t,X(p,w,t),h-p.b+6);}
+  g.textAlign='right';g.fillText('week',w-4,h-p.b+6);
+}
+function cursor(g,w,h,p){
+  const x=X(p,w,week);g.strokeStyle=css('--ink');g.globalAlpha=.55;g.lineWidth=1.5;g.setLineDash([4,4]);
+  g.beginPath();g.moveTo(x,p.t);g.lineTo(x,h-p.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+}
+function pattern(g,kind,color){
+  const pc=document.createElement('canvas');pc.width=pc.height=8;const x=pc.getContext('2d');
+  x.globalAlpha=.3;x.fillStyle=color;x.fillRect(0,0,8,8);x.globalAlpha=1;
+  if(kind==='F'){x.strokeStyle=color;x.lineWidth=1.6;x.beginPath();x.moveTo(-2,10);x.lineTo(10,-2);x.moveTo(-2,2);x.lineTo(2,-2);x.moveTo(6,10);x.lineTo(10,6);x.stroke();}
+  else if(kind==='S'){x.fillStyle=color;x.beginPath();x.arc(4,4,1.4,0,Math.PI*2);x.fill();}
+  else {x.globalAlpha=.3;x.fillStyle=color;x.fillRect(0,0,8,8);}
+  return g.createPattern(pc,'repeat');
+}
+
+let D=[];
+function drawOwn(){
+  const {g,w,h}=setup($('cOwn')),p=padFor(w),lo=-4,hi=0;
+  const Y=f=>p.t+(h-p.t-p.b)*(hi-Math.log10(Math.max(f,1e-4)))/(hi-lo);
+  g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';
+  ['0.01%','0.1%','1%','10%','100%'].forEach((lab,k)=>{const y=Y(Math.pow(10,lo+k));g.beginPath();g.moveTo(p.l,y);g.lineTo(w-p.r,y);g.stroke();g.fillText(lab,p.l-6,y);});
+  xAxis(g,w,h,p);
+  // long-run share lines
+  D.forEach((d,i)=>{const q=qEnd(i);if(q>0){const L=q/(q+c),y=Y(L);g.strokeStyle=css(items[i].col);g.globalAlpha=i===sel?.8:.4;g.lineWidth=1;g.setLineDash([3,4]);g.beginPath();g.moveTo(p.l,y);g.lineTo(w-p.r,y);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    if(i===sel){g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='bottom';g.fillText('long run '+fmtF(L),p.l+4,y-2);}}});
+  // lines, selected last
+  const order=[0,1,2].filter(i=>i!==sel).concat(sel);
+  order.forEach(i=>{const d=D[i];g.strokeStyle=css(items[i].col);g.lineWidth=i===sel?3.2:2.2;g.globalAlpha=i===sel?1:.7;g.setLineDash(items[i].dash);g.beginPath();
+    for(let t=0;t<=WEEKS;t++){const x=X(p,w,t),y=Y(d.f[t]);t?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();g.setLineDash([]);g.globalAlpha=1;});
+  cursor(g,w,h,p);
+  order.forEach(i=>{const x=X(p,w,week),y=Y(D[i].f[week]);g.fillStyle=css(items[i].col);g.beginPath();g.arc(x,y,4.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=1.5;g.stroke();});
+  // right-end labels with collision avoidance
+  const labs=[0,1,2].map(i=>({i,y:Y(D[i].f[WEEKS])})).sort((a,b)=>a.y-b.y);
+  for(let k=1;k<labs.length;k++)if(labs[k].y-labs[k-1].y<14)labs[k].y=labs[k-1].y+14;
+  const over=labs[labs.length-1].y-(h-p.b);if(over>0)labs.forEach(l=>l.y-=over);
+  g.textAlign='left';g.textBaseline='middle';g.font='600 12px '+css('--sans');
+  labs.forEach(l=>{g.fillStyle=css(items[l.i].col);g.fillText(items[l.i].short,w-p.r+6,l.y);});
+}
+function nice(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*m).find(x=>x>=v*1.04)||v;}
+function drawVal(){
+  const {g,w,h}=setup($('cVal')),p=padFor(w),d=D[sel];
+  const yMax=nice(Math.max(1000,...d.V));
+  const Y=v=>p.t+(h-p.t-p.b)*(1-v/yMax);
+  g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';
+  for(let k=0;k<=4;k++){const v=yMax*k/4,y=Y(v);g.beginPath();g.moveTo(p.l,y);g.lineTo(w-p.r,y);g.stroke();g.fillText(v>=10000?(v/1000).toFixed(v%1000?1:0)+'k':fmt(v),p.l-6,y);}
+  xAxis(g,w,h,p);
+  // stacked bands, step shape (weekly model)
+  const bands=[['F','--steel',t=>0,t=>d.F[t]],['H','--moss',t=>d.F[t],t=>d.F[t]+d.H[t]],['S','--ochre',t=>d.F[t]+d.H[t],t=>d.V[t]]];
+  bands.forEach(([k,col,lo,hi])=>{
+    const color=css(col);g.beginPath();
+    for(let t=0;t<=WEEKS;t++){const x=X(p,w,t),y=Y(hi(t));t?g.lineTo(x,y):g.moveTo(x,y);}
+    for(let t=WEEKS;t>=0;t--){g.lineTo(X(p,w,t),Y(lo(t)));}
+    g.closePath();g.fillStyle=pattern(g,k,color);g.fill();
+    g.strokeStyle=color;g.lineWidth=1.5;g.beginPath();for(let t=0;t<=WEEKS;t++){const x=X(p,w,t),y=Y(hi(t));t?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();
+    // band letter at right end if tall enough
+    const top=Y(hi(WEEKS)),bot=Y(lo(WEEKS));
+    if(bot-top>13){g.fillStyle=color;g.font='700 12px '+css('--sans');g.textAlign='left';g.textBaseline='middle';g.fillText(k+' '+fmt(hi(WEEKS)-lo(WEEKS)),w-p.r+6,(top+bot)/2);}
+  });
+  // total line
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();for(let t=0;t<=WEEKS;t++){const x=X(p,w,t),y=Y(d.V[t]);t?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();
+  cursor(g,w,h,p);
+  const x=X(p,w,week),y=Y(d.V[week]);
+  g.fillStyle=css('--ink');g.beginPath();g.arc(x,y,5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  const txt='V = '+fmt(d.V[week]);g.font='700 13px '+css('--sans');const tw=g.measureText(txt).width;
+  let tx=x+8;if(tx+tw+8>w-p.r)tx=x-8-tw-8;let ty=Math.max(p.t+2,y-26);
+  g.fillStyle=css('--paper');g.globalAlpha=.9;g.fillRect(tx,ty,tw+8,20);g.globalAlpha=1;g.strokeStyle=css('--ink');g.lineWidth=1;g.strokeRect(tx+.5,ty+.5,tw+7,19);
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='middle';g.fillText(txt,tx+4,ty+10);
+}
+
+function insight(){
+  const it=items[sel],d=D[sel],W=week,parts=[];
+  parts.push(`<b>${it.name}, week ${W}:</b> worth ${fmt(d.V[W])} gold (F ${fmt(d.F[W])} + H ${fmt(d.H[W])} + S ${fmt(d.S[W])}).`);
+  if(it.F0>0&&it.r<1&&it.tR>=1&&it.tR<=WEEKS){
+    const a=d.V[it.tR-1],b=d.V[it.tR];
+    parts.push(`In week ${it.tR} the next tier ships and functional value falls from ${fmt(it.F0)} to ${fmt(it.F0*it.r)}, so the item drops from ${fmt(a)} to ${fmt(b)} in one week (${b<a?"\u2212":"+"}${Math.abs(Math.round((b/a-1)*100))}%). Nothing about the item changed. The patch calendar did.`);
+  }
+  const q=qEnd(sel);
+  if(sel===2&&re){
+    parts.push(`Re-released at week ${RE_WEEK} with <code>q</code> = 3%: value was ${fmt(d.V[RE_WEEK])} at week ${RE_WEEK} and is ${fmt(d.V[WEEKS])} by week ${WEEKS}. The share climbs toward ${fmtF(RE_QEnd())} and the prestige built up over a year drains in weeks.`);
+  } else if(q===0&&c===0){
+    parts.push(`With <code>q</code> = 0 and <code>c</code> = 0 the share never changes, so social value stays at ${fmt(d.S[0])}.`);
+  } else if(q===0){
+    const hl=Math.LN2/-Math.log(1-c);
+    parts.push(`Nobody new can get it and owners quit at ${(c*100).toFixed(1)}% a week, so the share halves every ${hl.toFixed(1)} weeks and each halving adds ${fmt(s)} gold. Since week 0 it has gained ${fmt(d.V[W]-d.V[0])} gold without anything about it changing.`);
+  } else {
+    const L=q/(q+c),SL=s*Math.log2(1/L);
+    parts.push(`Ownership went from ${fmtF(d.f[0])} to ${fmtF(d.f[W])}, which cut social value from ${fmt(d.S[0])} to ${fmt(d.S[W])}. The share heads to <code>q/(q+c)</code> = ${fmtF(L)}, where social value is ${fmt(SL)}, so the item settles near ${fmt(d.F[WEEKS]+it.H+SL)}.`);
+  }
+  $('insight').innerHTML=parts.join(' ');
+}
+function RE_QEnd(){return RE_Q/(RE_Q+c);}
+
+function readouts(){
+  $('oWeek').textContent=week;$('tWeek').textContent=week;
+  const rows=[];
+  D.forEach((d,i)=>{
+    const ch=d.V[week]-d.V[0],pc=d.V[0]?Math.round(ch/d.V[0]*100):0;
+    $('v'+i).textContent=fmt(d.V[week]);
+    $('d'+i).textContent=(ch>=0?'+':'−')+fmt(Math.abs(ch))+' ('+(pc>=0?'+':'−')+Math.abs(pc)+'%) vs wk 0';
+    rows.push(`<tr class="${i===sel?'sel':''}"><td><span class="dot" style="--c:var(${items[i].col})"></span>${items[i].name}</td><td>${fmtF(d.f[week])}</td><td>${fmt(d.F[week])}</td><td>${fmt(d.H[week])}</td><td>${fmt(d.S[week])}</td><td><b>${fmt(d.V[week])}</b></td><td>${(ch>=0?'+':'−')+fmt(Math.abs(ch))}</td><td>${heads(i)}</td></tr>`);
+  });
+  $('tbody').innerHTML=rows.join('');
+}
+function syncControls(){
+  const it=items[sel];
+  $('selName').textContent=it.name;$('tuneName').textContent=it.name;
+  $('F0').value=it.F0;$('r').value=it.r;$('tR').value=it.tR;$('H').value=it.H;$('f0').value=Math.log10(it.f0);$('q').value=it.q*100;
+  $('s').value=s;$('c').value=c*100;$('week').value=week;
+  document.querySelectorAll('.item').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===sel));
+  $('rerelease').setAttribute('aria-pressed',re);
+  outputs();
+}
+function outputs(){
+  const it=items[sel];
+  $('oF0').textContent=fmt(it.F0);$('oR').textContent=it.r.toFixed(2);$('oTR').textContent=it.tR;$('oH').textContent=fmt(it.H);
+  $('oF0s').textContent=fmtF(it.f0);$('oQ').textContent=(it.q*100).toFixed(1)+'%';$('oS').textContent=fmt(s);$('oC').textContent=(c*100).toFixed(1)+'%';
+}
+function update(){D=[0,1,2].map(series);outputs();readouts();drawOwn();drawVal();insight();}
+
+// events
+$('week').addEventListener('input',e=>{week=+e.target.value;update();});
+document.querySelectorAll('.item').forEach(b=>b.addEventListener('click',()=>{sel=+b.dataset.i;syncControls();update();}));
+const num=(id,fn)=>$(id).addEventListener('input',e=>{fn(+e.target.value);update();});
+num('F0',v=>items[sel].F0=v);num('r',v=>items[sel].r=v);num('tR',v=>items[sel].tR=v);num('H',v=>items[sel].H=v);
+num('f0',v=>items[sel].f0=Math.pow(10,Math.round(v*100)/100));num('q',v=>items[sel].q=Math.round(v*10)/1000);
+num('s',v=>s=v);num('c',v=>c=Math.round(v*10)/1000);
+$('rerelease').addEventListener('click',()=>{re=!re;if(re)sel=2;syncControls();update();});
+$('reset').addEventListener('click',()=>{reset();syncControls();update();});
+// click or drag on either chart to move the week
+['cOwn','cVal'].forEach(id=>{const cv=$(id);
+  const pick=e=>{const r=cv.getBoundingClientRect(),p=padFor(r.width),t=Math.round((e.clientX-r.left-p.l)/(r.width-p.l-p.r)*WEEKS);week=Math.max(0,Math.min(WEEKS,t));$('week').value=week;update();};
+  cv.addEventListener('pointerdown',e=>{pick(e);cv.setPointerCapture(e.pointerId);});
+  cv.addEventListener('pointermove',e=>{if(e.buttons)pick(e);});
+});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+syncControls();update();
+})();
+</script>
+</body>
+</html>

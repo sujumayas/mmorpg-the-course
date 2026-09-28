@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Faucet and sink simulator — MMO304 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.presets .lbl{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin:14px 0;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.charts .wide{grid-column:1/-1}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:250px}
+#cTop{height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0;color:var(--ink)}
+.legend svg{vertical-align:middle;margin-right:5px}
+.flows{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:4px 10px;margin:6px 0 0;font-size:.82rem;font-variant-numeric:tabular-nums}
+.flows div{border-left:3px solid var(--c);padding-left:6px}
+.flows b{display:block;font-size:.95rem}
+.scrub{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin:14px 0 4px}
+.play{font:700 .95rem var(--sans);padding:8px 16px;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;min-width:84px}
+.scrub output{font-variant-numeric:tabular-nums;font-weight:700;min-width:6.5ch;text-align:right}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+.controls h2{grid-column:1/-1;font:600 1.05rem var(--serif);margin:4px 0 -4px}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+label small{font-weight:400;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;min-width:0}
+@media (max-width:560px){th,td{padding:6px 5px;font-size:.84rem}}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+code{font-size:.92em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO304 Virtual Economies I · Week 3 · Worked example</p>
+  <h1>Repairs slow the drift. Taxes stop it.</h1>
+  <p class="lede">A repair bill scales with hours played, so it only trims the faucet. A trade tax scales with the money people hold, so it puts a ceiling on gold per player. While new players keep arriving with empty pockets, both look like they work. The dotted line shows the same rules once new players stop.</p>
+</header>
+
+<section class="panel" aria-label="Simulator">
+  <div class="presets" role="group" aria-label="Lecture scenarios">
+    <span class="lbl">Scenario</span>
+    <button class="chip" data-p="A" aria-pressed="true">A. Base</button>
+    <button class="chip" data-p="B" aria-pressed="false">B. 5% tax</button>
+    <button class="chip" data-p="C" aria-pressed="false">C. Repair 80</button>
+    <button class="chip" data-p="D" aria-pressed="false">D. No new players</button>
+    <button class="chip" data-p="E" aria-pressed="false">E. No new players, 5% tax</button>
+  </div>
+
+  <p class="insight" id="insight" aria-live="polite"></p>
+
+  <div class="charts">
+    <figure class="wide">
+      <figcaption>Players and gold per player<small>Left axis: players <code>N</code>. Right axis: gold per player <code>m = M / N</code>.</small></figcaption>
+      <canvas id="cTop" role="img" aria-label="Players and gold per player over 730 days"></canvas>
+      <div class="legend" id="legTop"></div>
+    </figure>
+    <figure>
+      <figcaption>Price index<small>Price of a reference item, 100 gold on day 0. <code>P = 100 × m / 1,000</code></small></figcaption>
+      <canvas id="cPrice" role="img" aria-label="Price index over 730 days"></canvas>
+      <div class="legend" id="legPrice"></div>
+    </figure>
+    <figure>
+      <figcaption>Today's flows, gold per day<small>Up is money created, down is money destroyed</small></figcaption>
+      <canvas id="cFlow" role="img" aria-label="Bar chart of today's money flows"></canvas>
+      <div class="flows" id="flowList"></div>
+    </figure>
+  </div>
+
+  <div class="scrub">
+    <button class="play" id="play" type="button">Play</button>
+    <input id="day" type="range" min="0" max="730" step="1" value="365" aria-label="Day">
+    <output id="oDay" for="day">day 365</output>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--ochre)"><b id="rM">—</b><span>gold per player <code>m</code></span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rP">—</b><span>price index <code>P</code></span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rN">—</b><span>players <code>N</code></span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rStar">—</b><span>steady state <code>m*</code></span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rHalf">—</b><span>days to get halfway to <code>m*</code></span></div>
+  </div>
+
+  <div class="controls">
+    <h2>Population</h2>
+    <div><label for="J"><span>New players per day <code>J</code></span> <output id="oJ"></output></label><input id="J" type="range" min="0" max="20" step="1"></div>
+    <div><label for="c"><span>Churn per day <code>c</code></span> <output id="oc"></output></label><input id="c" type="range" min="0" max="2" step="0.1"></div>
+    <div><label for="h"><span>Hours played per day <code>h</code></span> <output id="oh"></output></label><input id="h" type="range" min="0.5" max="6" step="0.5"></div>
+    <h2>Faucet and sinks</h2>
+    <div><label for="g"><span>Faucet gold per hour <code>g</code></span> <output id="og"></output></label><input id="g" type="range" min="0" max="400" step="10"></div>
+    <div><label for="r"><span>Repair cost per hour <code>r</code></span> <output id="or"></output></label><input id="r" type="range" min="0" max="400" step="10"></div>
+    <div><label for="t"><span>Trade tax <code>τ</code></span> <output id="ot"></output></label><input id="t" type="range" min="0" max="25" step="1"></div>
+    <div><label for="v"><span>Money traded per day <code>v</code></span> <output id="ov"></output></label><input id="v" type="range" min="0" max="20" step="1"></div>
+    <div style="align-self:end"><label style="justify-content:flex-start;gap:10px;font-weight:600"><input type="checkbox" id="ghost" checked style="width:20px;height:20px;accent-color:var(--steel)"> Show the same rules with <code>J = 0</code></label></div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Values to copy into the lecture table</caption>
+      <thead><tr><th>Day</th><th>Players <code>N</code></th><th>Gold per player <code>m</code></th><th>Price <code>P</code></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model: <code>M(d+1) = M + N·h·(g − r) − τ·v·M − c·M</code>, then <code>N(d+1) = N + J − c·N</code>, starting from 1,000 players with 1,000 gold each. Steady state: <code>h(g − r) / (c + τv)</code> when the population is constant, <code>h(g − r) / (τv)</code> when nobody joins. All numbers are generic teaching values, not taken from any game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const fmt1=n=>n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const short=n=>{const a=Math.abs(n);return a>=1e6?(n/1e6).toFixed(a>=1e7?0:1).replace(/\.0$/,'')+'M':a>=1e4?Math.round(n/1e3)+'k':a>=1e3?(n/1e3).toFixed(1).replace(/\.0$/,'')+'k':fmt(n);};
+const DAYS=730,N0=1000,m0=1000,CHECK=[30,90,180,365,730];
+const PRESETS={
+  A:{J:5,c:.5,h:2,g:100,r:60,t:0,v:5},
+  B:{J:5,c:.5,h:2,g:100,r:60,t:5,v:5},
+  C:{J:5,c:.5,h:2,g:100,r:80,t:0,v:5},
+  D:{J:0,c:.5,h:2,g:100,r:60,t:0,v:5},
+  E:{J:0,c:.5,h:2,g:100,r:60,t:5,v:5}
+};
+const KEYS=['J','c','h','g','r','t','v'];
+let S=Object.assign({},PRESETS.A),day=365,sim,ghost,star;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+function params(s){return {J:s.J,c:s.c/100,h:s.h,g:s.g,r:s.r,t:s.t/100,v:s.v/100};}
+function run(p){
+  const M=new Float64Array(DAYS+1),N=new Float64Array(DAYS+1);
+  M[0]=N0*m0;N[0]=N0;
+  for(let d=0;d<DAYS;d++){
+    M[d+1]=M[d]+N[d]*p.h*(p.g-p.r)-p.t*p.v*M[d]-p.c*M[d];
+    N[d+1]=N[d]+p.J-p.c*N[d];
+  }
+  const m=Array.from(M,(x,i)=>x/N[i]);
+  return {M,N,m};
+}
+function steady(p){
+  const net=p.h*(p.g-p.r),tv=p.t*p.v;
+  if(Math.abs(p.J-p.c*N0)<1e-9){
+    if(p.c+tv>0) return {v:net/(p.c+tv),k:1-p.c-tv,kind:'constant'};
+    return {v:null,kind:net===0?'flat':'none'};
+  }
+  if(p.J===0){
+    if(tv>0) return {v:net/tv,k:(1-p.c-tv)/(1-p.c),kind:'closed'};
+    return {v:null,kind:'none'};
+  }
+  return {v:null,kind:'open'};
+}
+function halfDays(st){
+  if(st.v===null) return null;
+  if(Math.abs(st.v-m0)<1e-9) return 0;
+  if(!(st.k>0&&st.k<1)) return null;
+  return Math.log(.5)/Math.log(st.k);
+}
+
+// ---------- canvas helpers ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};
+}
+function nice(raw){
+  if(!(raw>0)) return 1;
+  const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  return [1,1.2,1.6,2,2.4,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=raw*1.02)||raw;
+}
+function frame(g,w,h,pad,yMax,yFmt,side,color){
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+(h-pad.t-pad.b)*(1-i/4);
+    if(side!=='right'){g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();}
+    g.fillStyle=color||css('--ink-soft');g.textBaseline='middle';
+    if(side==='right'){g.textAlign='left';g.fillText(yFmt(yMax*i/4),w-pad.r+6,y);}
+    else{g.textAlign='right';g.fillText(yFmt(yMax*i/4),pad.l-6,y);}
+  }
+}
+function xAxis(g,w,h,pad){
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.font='12px '+css('--sans');
+  [0,180,365,545,730].forEach(d=>{const x=X(d,w,pad);g.fillText(d,x,h-pad.b+6);});
+  g.textAlign='right';g.fillText('day',w-pad.r,h-14);
+}
+const X=(d,w,pad)=>pad.l+(w-pad.l-pad.r)*d/DAYS;
+const Y=(v,yMax,h,pad)=>pad.t+(h-pad.t-pad.b)*(1-Math.min(v,yMax*1.04)/yMax);
+function line(g,w,h,pad,arr,yMax,color,dash,width,upto,alpha){
+  const draw=(from,to,a)=>{
+    g.globalAlpha=a;g.strokeStyle=color;g.lineWidth=width||2.5;g.setLineDash(dash||[]);g.beginPath();
+    for(let d=from;d<=to;d++){const px=X(d,w,pad),py=Y(arr[d],yMax,h,pad);d===from?g.moveTo(px,py):g.lineTo(px,py);}
+    g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  };
+  if(upto===undefined){draw(0,DAYS,alpha||1);return;}
+  draw(upto,DAYS,.22*(alpha||1));draw(0,upto,alpha||1);
+}
+function tag(g,text,x,y,color,align){
+  g.font='600 12px '+css('--sans');g.textAlign=align||'right';g.textBaseline='bottom';
+  const w=g.measureText(text).width,x0=align==='left'?x:x-w;
+  g.fillStyle=css('--paper-2');g.globalAlpha=.85;g.fillRect(x0-3,y-15,w+6,15);g.globalAlpha=1;
+  g.fillStyle=color;g.fillText(text,x,y-1);
+}
+function dayLine(g,w,h,pad){
+  const x=X(day,w,pad);
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+}
+function dot(g,x,y,color){g.fillStyle=color;g.beginPath();g.arc(x,y,5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+function sw(color,dash){return `<svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="${color}" stroke-width="3" ${dash?`stroke-dasharray="${dash}"`:''}/></svg>`;}
+
+function drawTop(){
+  const c=setup($('cTop')),{g,w,h}=c,narrow=w<500,pad={l:narrow?40:52,r:narrow?44:58,t:14,b:34};
+  const showG=ghost&&$('ghost').checked;
+  const nMax=nice(Math.max(...sim.N,1));
+  let mTop=Math.max(...sim.m,star.v||0);if(showG)mTop=Math.max(mTop,...ghost.m);
+  const mMax=nice(mTop);
+  frame(g,w,h,pad,nMax,v=>short(v),'left',css('--steel'));
+  frame(g,w,h,pad,mMax,v=>short(v),'right',css('--ochre'));
+  xAxis(g,w,h,pad);
+  const ink=css('--ink'),och=css('--ochre'),stl=css('--steel');
+  if(star.v!==null&&star.v>0){
+    const y=Y(star.v,mMax,h,pad);g.strokeStyle=ink;g.lineWidth=1.5;g.setLineDash([8,6]);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.setLineDash([]);
+    tag(g,'m* = '+fmt(star.v),pad.l+6,y-2,ink,'left');
+  }
+  if(showG){line(g,w,h,pad,ghost.m,mMax,och,[2,4],2,undefined,.8);
+    const d=DAYS;tag(g,'if J = 0: '+short(ghost.m[d]),X(d,w,pad)-4,Y(ghost.m[d],mMax,h,pad)-4,och);}
+  line(g,w,h,pad,sim.N,nMax,stl,[10,5],2.5,day);
+  line(g,w,h,pad,sim.m,mMax,och,[],3,day);
+  dayLine(g,w,h,pad);
+  dot(g,X(day,w,pad),Y(sim.N[day],nMax,h,pad),stl);
+  dot(g,X(day,w,pad),Y(sim.m[day],mMax,h,pad),och);
+  // direct labels near day 730 ends
+  const yN=Y(sim.N[DAYS],nMax,h,pad),yM=Y(sim.m[DAYS],mMax,h,pad);
+  tag(g,'players',X(DAYS,w,pad)-4,(Math.abs(yN-yM)<18?yN+18:yN)-4,stl);
+  tag(g,'gold per player',X(DAYS,w,pad)-4,yM+(showG&&Math.abs(yM-Y(ghost.m[DAYS],mMax,h,pad))<18?20:-4),och);
+  $('legTop').innerHTML=`<span>${sw(stl,'8 4')}players <code>N</code> (left)</span><span>${sw(och)}gold per player <code>m</code> (right)</span>`+
+    (star.v!==null?`<span>${sw(ink,'6 4')}steady state <code>m*</code></span>`:'')+(showG?`<span>${sw(och,'2 4')}same rules, no new players</span>`:'');
+  $('cTop').setAttribute('aria-label',`Players and gold per player. Day ${day}: ${fmt1(sim.N[day])} players, ${fmt(sim.m[day])} gold each.`);
+}
+function drawPrice(){
+  const c=setup($('cPrice')),{g,w,h}=c,pad={l:48,r:14,t:14,b:34};
+  const showG=ghost&&$('ghost').checked,P=sim.m.map(x=>x/10),PG=showG?ghost.m.map(x=>x/10):null;
+  const yMax=nice(Math.max(...P,100,showG?Math.max(...PG):0));
+  frame(g,w,h,pad,yMax,v=>short(v));xAxis(g,w,h,pad);
+  const ink=css('--ink'),bl=css('--blood');
+  const y0=Y(100,yMax,h,pad);g.strokeStyle=ink;g.globalAlpha=.55;g.lineWidth=1.2;g.setLineDash([3,3]);g.beginPath();g.moveTo(pad.l,y0);g.lineTo(w-pad.r,y0);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  dot(g,X(0,w,pad),y0,ink);tag(g,'day 0 = 100',pad.l+10,y0-3,ink,'left');
+  if(showG)line(g,w,h,pad,PG,yMax,bl,[2,4],2,undefined,.8);
+  line(g,w,h,pad,P,yMax,bl,[],3,day);
+  dayLine(g,w,h,pad);dot(g,X(day,w,pad),Y(P[day],yMax,h,pad),bl);
+  tag(g,'P = '+fmt(P[day]),Math.min(X(day,w,pad)+8,w-pad.r-70),Y(P[day],yMax,h,pad)-8,bl,'left');
+  $('legPrice').innerHTML=`<span>${sw(bl)}this server</span>`+(showG?`<span>${sw(bl,'2 4')}same rules, no new players</span>`:'')+`<span>${sw(ink,'3 3')}day-0 price, 100</span>`;
+  $('cPrice').setAttribute('aria-label',`Price index on day ${day}: ${fmt(P[day])}, against 100 on day 0.`);
+}
+function flows(){
+  const p=params(S),N=sim.N[day],M=sim.M[day];
+  const f=[
+    {k:'Faucet',v:N*p.h*p.g,c:'--moss'},
+    {k:'Repairs',v:-N*p.h*p.r,c:'--steel'},
+    {k:'Tax',v:-p.t*p.v*M,c:'--blood'},
+    {k:'Quitters',v:-p.c*M,c:'--ink-soft'}
+  ];
+  f.push({k:'Net',v:f.reduce((a,b)=>a+b.v,0),c:'--ochre'});
+  return f;
+}
+function drawFlow(){
+  const c=setup($('cFlow')),{g,w,h}=c,pad={l:48,r:10,t:22,b:30},F=flows();
+  const up=F[0].v,down=-(F[1].v+F[2].v+F[3].v);
+  const lim=nice(Math.max(up,down,Math.abs(F[4].v),1));
+  const H=h-pad.t-pad.b,zero=pad.t+H/2,sc=v=>zero-(v/lim)*(H/2);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  [-1,-.5,0,.5,1].forEach(i=>{const y=sc(i*lim);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText((i>0?'+':'')+short(i*lim),pad.l-6,y);});
+  const n=F.length,slot=(w-pad.l-pad.r)/n,bw=Math.min(46,slot*.6);
+  // dashed guide at the faucet height mirrored below: the down bars should sum to it at steady state
+  F.forEach((b,i)=>{
+    const x=pad.l+slot*i+(slot-bw)/2,y1=sc(Math.max(b.v,0)),y2=sc(Math.min(b.v,0));
+    g.fillStyle=css(b.c);g.fillRect(x,y1,bw,Math.max(1,y2-y1));
+    if(i===4){g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(x,y1,bw,Math.max(1,y2-y1));}
+    g.fillStyle=css('--ink');g.font='600 11px '+css('--sans');g.textAlign='center';
+    g.textBaseline=b.v>=0?'bottom':'top';
+    g.fillText((b.v>0?'+':b.v<0?'−':'')+short(Math.abs(b.v)),x+bw/2,b.v>=0?y1-2:y2+2);
+    g.textBaseline='top';g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.fillText(b.k,x+bw/2,h-pad.b+8);
+  });
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,zero);g.lineTo(w-pad.r,zero);g.stroke();
+  $('flowList').innerHTML=F.map(b=>`<div style="--c:var(${b.c})"><span>${b.k}</span><b>${b.v>0?'+':b.v<0?'−':''}${fmt(Math.abs(b.v))}</b></div>`).join('');
+  $('cFlow').setAttribute('aria-label','Flows on day '+day+': '+F.map(b=>b.k+' '+fmt(b.v)).join(', ')+' gold per day.');
+}
+
+// ---------- readouts ----------
+function insight(){
+  const p=params(S),net=p.h*(p.g-p.r),m730=sim.m[DAYS];
+  let s='';
+  if(net<=0) s=`Net income per player is ${fmt(net)} gold a day, so the faucet never beats the repair bill. Gold per player can only fall (or hold at 1,000 with no churn and no tax).`;
+  else if(star.kind==='constant') s=`Steady population, ${fmt(net)} gold a day of net income per player: <b>m* = ${fmt(net)} / ${p.t*p.v>0?`(${fmt1(p.c*100)}% + ${(p.t*p.v*100).toFixed(2)}%)`:fmt1(p.c*100)+"%"} = ${fmt(star.v)}</b>. `+
+    (p.t*p.v>0?`The tax term comes from money held, so this ceiling survives even if churn and new players stop.`:`The only thing in the denominator is churn: new players arriving broke. Repairs only shrink the numerator.`)+
+    (ghost&&$('ghost').checked?` The dotted line keeps the same faucet and sinks but stops new players: day 730 lands at ${fmt(ghost.m[DAYS])} ${steady(Object.assign({},p,{J:0})).v===null?'and is still climbing with no ceiling.':'and levels off at '+fmt(steady(Object.assign({},p,{J:0})).v)+'.'}`:'');
+  else if(star.kind==='closed') s=`No new players, but the trade tax still scales with the money people hold, so <b>m* = ${fmt(net)} / ${(p.t*p.v*100).toFixed(2)}% = ${fmt(star.v)}</b>. Churn cancels out: quitters take money and headcount in the same proportion.`;
+  else if(star.kind==='none') s=`No stock sink and nobody new to dilute the money. Gold per player climbs about ${fmt(net/(1-p.c))} a day forever and reaches ${fmt(m730)} by day 730. <b>No steady state.</b> Raise the trade tax to bend the ramp.`;
+  else if(star.kind==='flat') s=`No churn, no tax and zero net income: gold per player stays at 1,000.`;
+  else s=`The population is ${p.J>p.c*N0?'growing':'shrinking'} (J is not c × 1,000), so there is no closed form. The simulation shows ${fmt(m730)} gold per player on day 730.`;
+  $('insight').innerHTML=s;
+}
+function readouts(){
+  $('oDay').textContent='day '+day;
+  $('rM').textContent=fmt(sim.m[day]);$('rP').textContent=fmt(sim.m[day]/10);$('rN').textContent=fmt1(sim.N[day]);
+  $('rStar').textContent=star.v!==null?fmt(star.v):(star.kind==='open'?'no closed form':'none');
+  const hd=halfDays(star);$('rHalf').textContent=hd===null?'—':fmt1(hd);
+  const rows=[0,...CHECK];if(!rows.includes(day))rows.push(day);rows.sort((a,b)=>a-b);
+  $('tbody').innerHTML=rows.map(d=>`<tr class="${d===day?'here':''}"><td>${d}${d===day?' (scrubber)':''}</td><td>${fmt1(sim.N[d])}</td><td>${fmt(sim.m[d])}</td><td>${fmt(sim.m[d]/10)}</td></tr>`).join('')+
+    `<tr><td>Total money <code>M</code> on day ${day}</td><td colspan="3">${fmt(sim.M[day])}</td></tr>`;
+}
+function drawAll(){drawTop();drawPrice();drawFlow();readouts();}
+function recompute(){
+  const p=params(S);sim=run(p);star=steady(p);ghost=S.J>0?run(Object.assign({},p,{J:0})):null;
+  $('ghost').disabled=!ghost;
+  insight();drawAll();
+}
+function syncInputs(){
+  KEYS.forEach(k=>{$(k).value=S[k];});labels();
+  const match=Object.keys(PRESETS).find(n=>KEYS.every(k=>PRESETS[n][k]===S[k]));
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===match?'true':'false'));
+}
+function labels(){
+  $('oJ').textContent=S.J+' / day';$('oc').textContent=fmt1(S.c)+'%';$('oh').textContent=S.h+' h';
+  $('og').textContent=S.g+' g/h';$('or').textContent=S.r+' g/h';$('ot').textContent=S.t+'%';$('ov').textContent=S.v+'% of M';
+}
+
+// ---------- events ----------
+KEYS.forEach(k=>$(k).addEventListener('input',e=>{S[k]=+e.target.value;syncInputs();recompute();}));
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{S=Object.assign({},PRESETS[b.dataset.p]);syncInputs();recompute();}));
+$('ghost').addEventListener('change',()=>{insight();drawAll();});
+$('day').addEventListener('input',e=>{stop();day=+e.target.value;drawAll();});
+let timer=null,last=0;
+function stop(){if(timer){cancelAnimationFrame(timer);timer=null;}$('play').textContent='Play';}
+function tick(ts){
+  if(ts-last>=14){last=ts;day=Math.min(DAYS,day+2);$('day').value=day;drawAll();}
+  if(day>=DAYS){stop();return;}
+  timer=requestAnimationFrame(tick);
+}
+$('play').addEventListener('click',()=>{
+  if(timer){stop();return;}
+  if(reduce.matches){day=DAYS;$('day').value=day;drawAll();return;}
+  if(day>=DAYS)day=0;
+  $('play').textContent='Pause';last=0;timer=requestAnimationFrame(tick);
+});
+window.addEventListener('resize',drawAll);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+syncInputs();recompute();
+})();
+</script>
+</body>
+</html>
