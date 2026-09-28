@@ -244,7 +244,7 @@ Expected output: the two crit chances, the N you used, and one sentence on why t
 - Pokémon Showdown damage calculator (calc.pokemonshowdown.com) and its Smogon forum development thread. Reports knockout chances per number of hits, such as "X% chance to 2HKO", computed from the combinations of damage rolls (current as of 2026).
 - SimulationCraft project (simulationcraft.org) and Warcraft Wiki, "SimulationCraft". An event-driven World of Warcraft combat simulator; its documentation gives proc-based effects and class synergy as the reason closed-form calculators became inaccurate (retail World of Warcraft, ongoing).
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press.
-- Schreiber, I. (2010). *Game Balance Concepts*, level 10, "Final Boss" (spreadsheet tutorial) (online course). https://gamebalanceconcepts.wordpress.com/
+- Schreiber, I. (2010). *Game Balance Concepts*, level 10, "Final Boss", 8 September 2010, which has the course's Excel tutorial section. https://gamebalanceconcepts.wordpress.com/2010/09/08/level-10-final-boss/
 
 ## Interactive spec: examples/w12-duel-simulator.html
 

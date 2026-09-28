@@ -1,4 +1,3 @@
-<!-- generated-stub: safe to overwrite -->
 # GD203 — Combat and Progression Design
 
 Year 2, semester 4 · 4 credits · Prerequisites: GD102, MA102
@@ -37,6 +36,31 @@ The numbers behind RPGs: stats, damage formulas, time-to-kill, XP and power curv
 - Subtractive armor (damage - armor) makes weak attacks useless; divisive A/(A+K) never does — interactive comparison
 - Effective HP is linear in armor: every point is worth the same, the 'diminishing returns' is an illusion of the percent view
 - Item budget: price every stat in 'points' and see which item is secretly overbudget
+
+## Labs
+
+- [GD203 · Lab 01: Stat sheet in a spreadsheet](labs/lab01.md)
+- [GD203 · Lab 02: Three damage formulas in one sheet](labs/lab02.md)
+- [GD203 · Lab 03: Effective HP and the defensive budget](labs/lab03.md)
+- [GD203 · Lab 04: The breakpoint table](labs/lab04.md)
+- [GD203 · Lab 05: Burst, sustain and the crossover](labs/lab05.md)
+- [GD203 · Lab 06: Crits, breakpoints and Monte Carlo](labs/lab06.md)
+- [GD203 · Lab 07: XP curve and 40-hour pacing sheet](labs/lab07.md)
+- [GD203 · Lab 08: Power curves and scaling bands](labs/lab08.md)
+- [GD203 · Lab 09: Item budget audit](labs/lab09.md)
+- [GD203 · Lab 10 reference sheet](labs/lab10-reference.md)
+- [GD203 · Lab 10: Enemy roster from player units](labs/lab10.md)
+- [GD203 · Lab 11: The level-sweep balance sheet](labs/lab11.md)
+- [GD203 · Lab 12: Duel simulator](labs/lab12.md)
+- [GD203 · Lab 13: Difficulty ladder](labs/lab13.md)
+- [GD203 · Lab 14: Progression audit](labs/lab14.md)
+
+## Assessment materials
+
+- [GD203 · Exam bank: practice, quiz and viva questions](assessments/exam-bank.md)
+- [GD203 · Final spec brief: combat system spec and balance workbook](assessments/final-spec-brief.md)
+- [GD203 · Simulation brief](assessments/simulation-brief.md)
+- [GD203 · Spreadsheet labs brief](assessments/spreadsheet-labs-brief.md)
 
 ## Readings
 

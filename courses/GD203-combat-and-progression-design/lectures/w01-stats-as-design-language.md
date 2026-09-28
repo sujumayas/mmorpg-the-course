@@ -34,7 +34,7 @@ Look at how three real games answer the question "what is one point worth?"
 
 In Diablo II, spending one point of Vitality raises a Barbarian's maximum life by 4, but a Sorceress's by only 2. One point of Energy gives the Sorceress 2 mana and the Barbarian 1. The word "Vitality" on the level-up screen is identical for both classes. What it says is different. The game is using the same vocabulary to speak two dialects. The Barbarian's points lean toward survival, the Sorceress's toward spellcasting.
 
-In classic World of Warcraft (the 2004-2006 era, and the 2019 Classic re-release), one point of Stamina gives 10 health at level 60. Warriors and Paladins turn one point of Strength into 2 melee attack power, while Mages turn it into 1. Then attack power itself has an exchange rate. Every 14 attack power adds 1 to the weapon's damage per second. Follow the chain and one point of Strength is worth 2/14 ≈ 0.14 DPS to a Warrior. To a Mage, who rarely swings a weapon, it is worth close to nothing.
+In World of Warcraft before the Cataclysm expansion (2004-2010, which covers the classic era), Warriors and Paladins turn one point of Strength into 2 melee attack power, while Mages turn it into 1. Stamina converts into maximum health at a fixed rate per point. Then attack power itself has an exchange rate. Every 14 attack power adds 1 to the weapon's damage per second. Follow the chain and one point of Strength is worth 2/14 ≈ 0.14 DPS to a Warrior. To a Mage, who rarely swings a weapon, it is worth close to nothing.
 
 In Diablo III, each class has one **main stat**. Strength for Barbarians and Crusaders, Dexterity for Demon Hunters and Monks, Intelligence for Wizards, Witch Doctors and Necromancers. Every point of your main stat raises all your damage by 1%. The other two attributes do almost nothing for you. The designers cut the vocabulary down so each class hears one word for "hit harder."
 
@@ -50,7 +50,7 @@ Draw your stat sheet as a graph before you write any formulas. Put primary stats
 
 ```
 Strength --x2--> Attack power --÷14--> +DPS -----> Damage per second
-Stamina  --x10-> Max health ----------------------> Seconds survived
+Stamina  --xk--> Max health ----------------------> Seconds survived
 Armor    --(formula, week 3)--> % mitigation ------> Seconds survived
 ```
 
@@ -235,9 +235,9 @@ Work in pairs. You are designing the stat sheet for a small action RPG with thre
 ## Sources
 
 - Blizzard, Diablo II: Lord of Destruction class pages, classic.battle.net/diablo2exp/classes/barbarian.shtml and sorceress.shtml: life per Vitality point (4 and 2) and mana per Energy point (1 and 2). Values are the same in Diablo II: Resurrected.
-- Warcraft Wiki, "Attack power" (warcraft.wiki.gg), and Wowhead, "Stats and Attributes for WoW Classic": 1 DPS per 14 attack power; 2 melee AP per Strength for Warriors, Paladins, Shamans and Druids, 1 for other classes; 10 health per Stamina at level 60. Classic era (patch 1.x, 2004-2006, and the 2019 Classic re-release).
-- Diablo Wiki (Fandom), "Primary stat": each point of main stat increases damage by 1%; class-to-main-stat mapping. Diablo III after the Reaper of Souls era (2014 onward).
-- Path of Exile Wiki (poewiki.net), "Modifier" and "Damage": "increased" modifiers are summed into one multiplier, "more" modifiers multiply separately. The 1,000-damage example is our own illustration of those rules. Path of Exile 1, current mechanics as of 2025.
+- Warcraft Wiki, "Attack power" (warcraft.wiki.gg, accessed September 2026): 1 DPS per 14 attack power until patch 6.0.2 (2014) changed it to 1 per 3.5. WoWWiki archive, "Attack power" (wowwiki-archive.fandom.com), class table for the game before patch 4.0.1 (Cataclysm, 2010): melee attack power is Strength x 2 plus level terms for Warriors and Paladins, and Strength - 10 for Mages. The stamina-to-health rate is left as `k` because the sources checked give later-era values only.
+- Diablo Wiki (Fandom), "Primary stat" (accessed September 2026): each primary stat grants "a direct 1% increased damage per attribute point" to classes that use it; Strength for Barbarian and Crusader, Dexterity for Demon Hunter and Monk, Intelligence for Necromancer, Witch Doctor and Wizard. Diablo III with all classes through the Necromancer (2017 onward).
+- Path of Exile Wiki (pathofexile.fandom.com), "Stat" (accessed September 2026): "increased" and "reduced" effects are added into a single multiplier, and each "more" or "less" effect multiplies the base in turn. Path of Building Community, `src/Classes/ModDB.lua` (dev branch, 2026), implements the same rule, summing INC mods and multiplying MORE mods. The 1,000-damage example is our own illustration. Path of Exile 1, rules unchanged since launch.
 - Fire Emblem Wiki, "Damage": damage is attack minus defense or resistance across most titles.
 - Schreiber, I. (2010). *Game Balance Concepts*, Levels 1-2. gamebalanceconcepts.wordpress.com.
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press. Chapter 9.

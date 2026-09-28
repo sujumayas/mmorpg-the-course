@@ -2,17 +2,19 @@
 
 Reviewer pass against `ORCHESTRATION.md` §4, September 2026. Small issues were fixed in place. The items below are still open.
 
-## Unverified facts
+## Unverified facts (closed September 2026)
 
-The web search budget ran out before these could be checked. Each is cited to a wiki, but no reviewer has opened the page.
+All six groups were checked on 28 September 2026. Sources are cited with era in each lecture's Sources section.
 
-| File | Claim | Proposed fix |
+| File | Claim | Status |
 |---|---|---|
-| lectures/w01-stats-as-design-language.md | WoW Classic gives Warriors and Paladins 2 attack power per Strength, Mages 1, and 10 health per Stamina | Check Warcraft Wiki "Strength" and "Stamina" (classic era). If it doesn't match, correct the numbers or drop the class split |
-| lectures/w01-stats-as-design-language.md | Diablo III gives 1% damage per point of main stat | Check the Diablo Wiki "Main stat" page and state the patch era |
-| lectures/w01-stats-as-design-language.md | Path of Exile's "increased" versus "more" rules | Check poewiki.net "Modifier" |
-| lectures/w11, w12 | *Game Balance Concepts* spreadsheet material cited as level 10, "Final Boss". Level 6 is confirmed as "Situational Balance", so the old citation was wrong. The level 10 attribution rests on the site's front page, which shows the Excel tutorial in the final post | Open the level 10 post and confirm it holds the spreadsheet tutorial |
-| lectures/w13-difficulty-modes-and-scaling.md | Guild Wars 2 ascended gear is about 5% stronger than exotic, the Oblivion difficulty slider description, and the FFXIV Armoury citation | Check the GW2 Wiki "Ascended equipment", UESP "Oblivion:Difficulty" and the FFXIV Lodestone or wiki |
+| lectures/w01-stats-as-design-language.md | WoW Strength and Stamina rates | Partly rewritten. 2 AP per Strength for Warriors and Paladins, 1 for Mages, and 1 DPS per 14 AP are confirmed (WoWWiki archive table before patch 4.0.1; Warcraft Wiki "Attack power"). The Sources line wrongly listed Shamans and Druids at 2 and was fixed. No source for 10 health per Stamina in the classic era was found, so the text and graph now use a generic rate `k` |
+| lectures/w01-stats-as-design-language.md | Diablo III gives 1% damage per point of main stat | Resolved. Diablo Wiki "Primary stat" confirms the 1% rule and the class mapping |
+| lectures/w01-stats-as-design-language.md | Path of Exile "increased" versus "more" | Resolved. poewiki.net blocks automated reads, so the citation is now the Path of Exile Wiki (Fandom) "Stat" page plus Path of Building's `ModDB.lua` |
+| lectures/w11, w12 | *Game Balance Concepts* level 10 holds the spreadsheet tutorial | Resolved. The level 10 post ("Final Boss", 8 September 2010) has an "Excel" section. The citation now links the post itself |
+| lectures/w14-horizontal-vs-vertical-progression.md | GW2 ascended gear is 5% stronger than exotic | Resolved. Guild Wars 2 Wiki "Ascended equipment" quotes the 5% figure. The claim is in w14, not w13 |
+| lectures/w13-difficulty-modes-and-scaling.md | Oblivion difficulty slider | Resolved. UESP confirms that the slider changes only damage, from 6x dealt and 1/6 taken at the easy end to the reverse at the hard end. The text now gives the factor, and the Construction Set Wiki citation (site down) was replaced |
+| lectures/w14-horizontal-vs-vertical-progression.md | FFXIV Armoury citation | Resolved. Final Fantasy XIV Online Wiki "Job" confirms that a character switches jobs by equipping that job's weapon. The Massively Overpowered and Gamer Escape citations (not opened) were replaced |
 
 ## Changes that affect other agents
 

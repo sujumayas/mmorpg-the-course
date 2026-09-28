@@ -33,6 +33,7 @@
 
 - Verify every real-game number with web search and cite it with version or era. Prefer official sources, then maintained wikis.
 - If a fact cannot be verified, redesign the example so it does not need it. List it in your report so it goes to `docs/BUILD_LOG.md`.
+- If WebSearch is unavailable or rate-limited, verify with WebFetch on known pages instead: official sites, wiki API endpoints (for example `https://<wiki>/api.php?action=parse&page=<Page>&format=json`), or source code on GitHub. Never skip verification because search failed.
 - No invented quotes. At most one short quoted phrase per source.
 
 ## Parallel work

@@ -118,7 +118,7 @@ The skill here is rewriting any game's difficulty settings into `(p, e, h)` and 
 
 **World of Warcraft, Mythic+ (Legion, patch 7.2.5, 2017).** Patch 7.2.5 set each keystone level to raise enemy health and damage by 10%, up from 8%. Here `h = e = s` for a step factor `s`, and `p = 1` until the group gears up. So each level divides safety ratio by `s²` and multiplies fight length by `s`. One level at 10% divides safety ratio by `1.1² = 1.21`. From +2 to +10 is eight steps, so `s = 1.1⁸ ≈ 2.14`. Safety ratio falls by `2.14² ≈ 4.59`, and every pull lasts more than twice as long. Blizzard has changed the per-level rate several times since, which is why you always name the patch or season when you quote these.
 
-**The Elder Scrolls IV: Oblivion (2006).** Oblivion uses a slider instead of named steps. According to the Construction Set documentation for the game setting that controls it, the slider raises the damage you deal and divides the damage you take by the same factor, and the hard end inverts this. That is `p = 1/e` everywhere on the slider. Plug it in and safety ratio scales by `1/e²` while fight length scales by `e`. Oblivion's slider is the Skyrim ladder made continuous, and it has the same compounding. A slider position that doubles damage taken quarters the safety ratio.
+**The Elder Scrolls IV: Oblivion (2006).** Oblivion uses a slider instead of named steps. According to the Unofficial Elder Scrolls Pages, the slider changes only damage. At the easy end you deal 6 times normal damage and take 1/6 of it, and the hard end inverts this. That is `p = 1/e` everywhere on the slider. Plug it in and safety ratio scales by `1/e²` while fight length scales by `e`. Oblivion's slider is the Skyrim ladder made continuous, and it has the same compounding. A slider position that doubles damage taken quarters the safety ratio.
 
 Four games, one form. Once you have `p`, `e` and `h`, danger is `p / (h × e)` and duration is `h / p`. Everything else on the menu (ammo, enemy count, aggression) is a lever outside this pair, and you should name it separately.
 
@@ -264,7 +264,7 @@ Expected output: two tables and a one-paragraph recommendation. Most pairs disco
 ## Sources
 
 - The Unofficial Elder Scrolls Pages (UESP), "Skyrim:Difficulty". Damage multipliers for the six difficulty settings; Legendary added in patch 1.9 (Skyrim, 2011, with later patches).
-- The Elder Scrolls Construction Set Wiki, "FDifficultyDamageMultiplier". Oblivion's difficulty slider scales damage dealt up and damage received down by one factor, inverted at the hard end (Oblivion, 2006). Sources disagree on the size of the extreme factor, so this lecture does not use it.
+- UESP, "Oblivion:The Hardest Difficulty Strategy Guide" and "Oblivion:Increasing Skills" (accessed September 2026). The slider affects only damage dealt and received; the easiest position gives 6 times damage dealt and 1/6 damage taken, and the hardest reverses both (Oblivion, 2006, original release).
 - UESP, "Oblivion:Leveling". Opponent strength and enemy and loot equipment quality rise with player level (Oblivion, 2006).
 - LevelSkip, "The Well-Appointed Bandit: The Case for Level Scaling in The Elder Scrolls". Player reception of Oblivion's gear-scaled bandits.
 - Doom Wiki (Fandom), "Skill level", and the Steam guide "DOOM Engine - Difficulty Levels". On "I'm Too Young to Die" the player takes half damage and ammo pickups are doubled (Doom, 1993, and Doom II).

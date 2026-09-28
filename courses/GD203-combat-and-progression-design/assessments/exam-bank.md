@@ -168,7 +168,7 @@ Hits to die: `3,750 / 300 = 12.5`, so the 13th hit kills.
 <details>
 <summary>Answer and worked solution</summary>
 
-**Answer:** ×1.43 for 30% to 50%, and ×1.80 for 55% to 75%. Linear percent has increasing returns in EHP.
+**Answer:** ×1.40 for 30% to 50%, and ×1.80 for 55% to 75%. Linear percent has increasing returns in EHP.
 
 The EHP multiplier is `1 / (1 − resistance)`. At 30% it is 1.43, at 50% it is 2.00, so the factor is 1.40 (2.00 / 1.43). At 55% it is 2.22 and at 75% it is 4.00, a factor of 1.80.
 
@@ -402,7 +402,7 @@ Equal when `0.04 × 0.6 = 0.08 × c`, so `c = 0.30`.
 <details>
 <summary>Answer and worked solution</summary>
 
-**Answer:** (5%, 3) gives a 3-hit CV of 0.23, too swingy. (30%, 1.33) gives 0.08, too flat. (10%, 2) gives 0.16 and meets the goal. In a 100-hit raid its CV is 0.027, almost no variance.
+**Answer:** (5%, 3) gives a 3-hit CV of 0.23, too swingy. (30%, 1.33) gives 0.08, too flat. Read 1.33 as 4/3, so that its expected multiplier is exactly 1.10. (10%, 2) gives 0.16 and meets the goal. In a 100-hit raid its CV is 0.027, almost no variance.
 
 All three have expected multiplier `1 + c(m − 1) = 1.10`.
 
@@ -414,7 +414,7 @@ Per-hit CV is `(m − 1) × sqrt(c(1 − c)) / 1.10`, and the 3-hit CV divides i
 | 0.30, 1.33 | 0.139 | 0.080 | 0.014 |
 | 0.10, 2 | 0.273 | 0.157 | 0.027 |
 
-The goal needs per-hit CV between `0.10 × sqrt(3) = 0.173` and `0.20 × sqrt(3) = 0.346`. (20%, 1.5) also qualifies at 0.105, near the low edge. The raid result shows crits cannot add tension to long fights.
+The goal needs per-hit CV between `0.10 × sqrt(3) = 0.173` and `0.20 × sqrt(3) = 0.346`. (20%, 1.5) also qualifies, with a per-hit CV of 0.182 and a 3-hit CV of 0.105, near the low edge. The raid result shows crits cannot add tension to long fights.
 </details>
 
 ## Week 7: XP curves

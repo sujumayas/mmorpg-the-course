@@ -219,7 +219,7 @@ Expected output: a screenshot of each of the three charts (broken, fixed by rati
 - Bulbapedia, "Damage" and "Stat" (main-series games). Damage formula with the `(2 × Level / 5 + 2)` level term, `A/D`, `/50 + 2`, and the random factor of 85% to 100%; stat formulas for HP and other stats from generation III onward. Checked against Smogon University, "The Complete Damage Formula for Black & White" (generation V), which gives the truncated-division form and the 16-value random roll.
 - Warcraft Wiki, "Armor". `armor / (armor + 400 + 85 × level)` for attacker levels 1-59, classic era.
 - The Amazon Basin (Diablo II), "Technical Formulas". Chance to hit including the `alvl / (alvl + dlvl)` level factor.
-- Schreiber, I. (2010). *Game Balance Concepts*, level 10, "Final Boss" (spreadsheet tutorial) (online course). https://gamebalanceconcepts.wordpress.com/
+- Schreiber, I. (2010). *Game Balance Concepts*, level 10, "Final Boss", 8 September 2010, which has the course's Excel tutorial section. https://gamebalanceconcepts.wordpress.com/2010/09/08/level-10-final-boss/
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press.
 
 ## Interactive spec: examples/w11-level-sweep.html

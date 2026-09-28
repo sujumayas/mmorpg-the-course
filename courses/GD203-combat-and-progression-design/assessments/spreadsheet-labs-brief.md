@@ -66,7 +66,8 @@ A spot check is not graded on its own. If you cannot explain how a number in you
 
 - You have two free 48-hour extensions for the semester. Tell the course team before the deadline. No reason needed.
 - Beyond that, late work loses 10 points per 24 hours, up to 72 hours.
-- After 72 hours the course team releases a reference sheet for labs that others build on (02, 04, 07 and 10), so late submissions for those labs are not accepted after the release. Using a reference sheet as the starting point for the next lab costs nothing on that next lab.
+- After 72 hours the course team releases a reference sheet for labs that others build on (02, 04 and 07), so late submissions for those labs are not accepted after the release. Using a reference sheet as the starting point for the next lab costs nothing on that next lab.
+- Lab 10 is the exception. Its [reference sheet](../labs/lab10-reference.md) comes out at the start of week 11, when lab 10 is due, so that everyone can start lab 11 on time. Lab 10 therefore cannot be submitted late or use a free extension.
 - Lab 14 is due with the final spec and cannot use a free extension, because the final deadline is fixed.
 
 ## Rubric

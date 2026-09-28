@@ -245,11 +245,11 @@ Expected output: one table of gaps and shelf lives, one table of tools with expe
 
 - Warcraft Wiki, "Stat squish". WoW stat squishes in patch 6.0.2 (2014) and 8.0.1 (2018); level, item level and stat squish in patch 9.0.1, with level 120 characters becoming level 50; level cap history from 60 (2004) to 120 (Battle for Azeroth).
 - Wikipedia, "World of Warcraft: Shadowlands", and Blizzard Watch, "We finally know exactly what level your character will be in Shadowlands" (September 2020). Pre-patch 9.0.1 released October 2020; new cap of 60.
-- Guild Wars 2 Wiki, "Ascended equipment". Introduced from The Lost Shores (16 November 2012) onward; 5% stronger stats than exotic, equal to legendary.
+- Guild Wars 2 Wiki, "Ascended equipment" (accessed September 2026). Rings and back items from 16 November 2012, the full set by December 2013; "5% stronger stats than Exotic quality equipment and equal to Legendary equipment" (current live game).
 - Guild Wars 2 Wiki, "Level". Maximum character level 80 (current live game).
 - ArenaNet, "Reimagining Progression: The Mastery System" (guildwars2.com, 2015), and Guild Wars 2 Wiki, "Mastery". Heart of Thorns kept the level cap at 80 and added account-wide masteries.
 - Guild Wars 2 Wiki, "Dynamic level adjustment". Downscaling keeps skills, traits and gear.
-- Massively Overpowered, "Wisdom of Nym: Classes, job, and the Armoury System in Final Fantasy XIV" (2017), and Gamer Escape FFXIV wiki, "Armoury". One character can change class or job by changing equipped weapon or tool (A Realm Reborn onward).
+- Final Fantasy XIV Online Wiki (ffxiv.consolegameswiki.com), "Job" and "Armory Chest" (accessed September 2026). To switch jobs, a character equips that job's weapon; gear for unused classes and jobs sits in the Armory Chest (A Realm Reborn, 2013, onward; current live game).
 - Schreiber, I. (2010). *Game Balance Concepts*, Level 6, "Situational Balance". Expected value of situational options weighted by encounter frequency.
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press. Chapters "Progression in PvE Games" and "Progression in PvP Games".
 

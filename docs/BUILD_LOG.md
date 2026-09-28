@@ -19,3 +19,9 @@
 - Decision: prose follows the owner's plain-writing rules (no em dashes). The template title line keeps its `—`.
 - The exemplar (MMO303 w02) was 2,159 words, lacked the prerequisites line and used em dashes. The MMO303 reviewer brings it to standard.
 - Wave 1 started: MA101, MA102, GD203, MMO303 (20 author agents).
+- MA101 complete (2026-09-28): 14 lectures, 14 examples, 14 labs with starter code in `labs/starter/`, 5 assessment files. Reviewer fixes: w03 cubic value, w04 halfway level (90 not 89), w06 Dota armor dated 7.20-7.26, w07 ability-haste cap (500) corrected. RuneScape XP totals verified: 6,517,253 at 92, 13,034,431 at 99.
+- Tooling: `tools/finish_syllabus.py` finishes a syllabus (links, labs, assessments, removes stub marker). The example checker blocks Google Fonts so it cannot hang offline. Week 15 rows link the assessments.
+- Environment: the Mac slept once mid-run and killed four builders; they were resumed. `caffeinate` now keeps it awake.
+- GD203 complete (2026-09-28): 14 lectures, 14 examples, labs incl. `lab10-reference.md`, 4 assessment files. Reviewer + fact-check fixed the Doom single-roll figure (about 65%), w10/w11 wording, Minecraft armor (checked on minecraft.wiki), Mythic+ scaling (10% per key level, patch 7.2.5), Oblivion slider (6x / 1/6, UESP), WoW Classic stat rates (unsourced Stamina rate replaced by a generic k).
+  - Open question for the owner: `spreadsheet-labs-brief.md` gives lab 10 no late window, because its reference sheet is released at the lab 10 deadline. Confirm or change.
+- Note: WebSearch hit a session-wide limit partway through. Agents now fall back to WebFetch on known pages and wiki APIs (added to BUILD_CONVENTIONS).
