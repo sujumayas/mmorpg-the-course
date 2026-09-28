@@ -114,13 +114,13 @@ Using the sample-size formula:
 |---|---|---|
 | 2.67 DPS | 3.2% | 18 |
 | 0.83 DPS | 1% | 183 |
-| 0.083 DPS | 0.1% | 18,220 |
+| 0.083 DPS | 0.1% | about 18,200 |
 
 Ten times the precision costs a hundred times the fights. And if you want the Duelist's own average pinned to within 0.2% of its value, about SimulationCraft's default target, you need `(1.96 × 4.56 / 0.167)² ≈ 2,880` fights. The SimulationCraft documentation does not spell out which confidence level its error target uses, so treat this as the same order of magnitude, not the same setting.
 
 ### The visual
 
-Open `examples/w13-monte-carlo-dps.html`. The left panel shows two histograms of single-fight DPS, one per class, drawn on the same axis. They overlap heavily. The right panel shows the running average of each class as the number of fights grows, with a shaded 95% band around each line. Press "Run 1 fight" a few times and watch the ranking flip. Then drag the fights slider up. The histograms on the left keep the same width no matter how many fights you run, because one fight is always that noisy. The bands on the right shrink as `1 / sqrt(N)` and separate somewhere around 15 to 20 fights. The spread of fights never goes down. Only your uncertainty about the average does.
+Open the [Monte Carlo DPS interactive](../examples/w13-monte-carlo-dps.html). The left panel shows two histograms of single-fight DPS, one per class, drawn on the same axis. They overlap heavily. The right panel shows the running average of each class as the number of fights grows, with a shaded 95% band around each line. Press "Run 1 fight" a few times and watch the ranking flip. Then drag the fights slider up. The histograms on the left keep the same width no matter how many fights you run, because one fight is always that noisy. The bands on the right shrink as `1 / sqrt(N)` and eventually separate for good. Where they part depends on the seed. Across 200 seeds the median is about 40 fights, and one run in ten parts before about 15 or after about 90. That is later than the 18 fights from the sample-size formula, because the formula asks only that the interval of the *difference* clear zero, while two separate bands each 1.96 SE wide must clear each other, a stricter test: `(1.96 × (σ_A + σ_B) / gap)² = (1.96 × 8.04 / 2.67)² ≈ 35` fights on average. The spread of fights never goes down. Only your uncertainty about the average does.
 
 Then set both classes to the same expected damage per hit, for example the Marksman to `D = 113.6`, and watch the bands refuse to separate however far you push the slider. That is what "these classes are balanced, as far as the sim can tell" looks like.
 
@@ -130,7 +130,7 @@ Then set both classes to the same expected damage per hit, for example the Marks
 
 **Path of Exile, Path of Building.** Path of Building, the community build planner, takes the other route. It computes DPS as average hit times attack rate times a crit factor, which is our `μ` formula with more terms. It does not play out fights. That is fast and exact for the average, and it needs no iterations at all. It is also blind to spread and to state. It cannot tell you how often you fail to kill a pack before it reaches you. In our terms, Path of Building computes `μ` exactly and never estimates `σ`. For linear, stateless damage this is the right call, and you should use the same shortcut when your model allows it.
 
-**Magic: The Gathering, Frank Karsten's mana-base tables.** Karsten, a professional player and writer, built widely used tables of how many lands of each color a deck needs to cast its spells on time. The basic probability comes from the hypergeometric distribution, a closed form. But mulligan decisions, where a player redraws a bad opening hand, depend on what the hand looks like. That is state and decision, so Karsten used simulation code to play out opening hands and mulligans, and later authors adapted that code for new mulligan rules. Same structure as SimulationCraft: a closed form for the simple part, simulation where a policy enters, and many repetitions because a single game tells you almost nothing.
+**Magic: The Gathering, Frank Karsten's mana-base tables.** Karsten, a professional player and writer, built widely used tables of how many lands of each color a deck needs to cast its spells on time. The basic probability comes from the hypergeometric distribution, a closed form. But mulligan decisions, where a player redraws a bad opening hand, depend on what the hand looks like. That is state and decision, and a closed form stops being practical. Karsten computed his tables by simulation instead, with a mulligan rule built into the code. His 2018 update throws back seven-card hands with 0, 1, 6 or 7 lands. A later public guide by teryror adapts his simulation code to the London mulligan rule. Same structure as SimulationCraft: a closed form for the simple part, simulation where a policy enters, and many repetitions because a single game tells you almost nothing.
 
 In all three, the question is the same. Can I write `μ` down? If yes, compute it. If a policy or state gets in the way, simulate, and then report `μ̂ ± 1.96 σ / sqrt(N)`, never `μ̂` alone.
 
@@ -218,7 +218,7 @@ For a DPS role, build a table with classes as rows and **fight styles** as colum
 - Five or more targets (area damage).
 - Short fight (60 seconds, where cooldowns dominate) and long fight (300 seconds, where sustained rotation dominates).
 
-Each cell holds `μ̂ ± 1.96 SE` for that class in that style. Now you can see not only who is strongest but where each class is strongest. Week 1's idea of **viability** becomes concrete. A class is viable if it is within your tolerance band in at least one style the content actually asks for. Week 9's **counters** become concrete too. You want each class to have a column it wins and a column it loses.
+Each cell holds `μ̂ ± 1.96 SE` for that class in that style. Now you can see where each class is strongest, as well as who is strongest overall. Week 1's idea of **viability** becomes concrete. A class is viable if it is within your tolerance band in at least one style the content actually asks for. Week 9's **counters** become concrete too. You want each class to have a column it wins and a column it loses.
 
 ### Tolerance bands
 
@@ -288,7 +288,8 @@ In groups of three, you will play simulator by hand and then compare with the fo
 - Warcraft Logs (https://www.warcraftlogs.com/), combat-log ranking site for World of Warcraft, current.
 - Raidbots, Top Gear and Droptimizer pages and support article "Droptimizer: How Does It Work?" (The War Within era). Raidbots runs SimulationCraft in the cloud. https://www.raidbots.com/ and https://support.raidbots.com/article/59-droptimizer-how-does-it-work
 - Path of Building Community, "PathOfBuilding" repository (offline build planner for Path of Exile, current releases). Computes average DPS from average hit, rate and crit factor. https://github.com/PathOfBuildingCommunity/PathOfBuilding
-- Karsten, F., "How Many Colored Mana Sources Do You Need to Consistently Cast Your Spells? A Guilds of Ravnica Update," ChannelFireball (2018), as referenced by dchiu30, "Karsten-Mana-Calculator" (GitHub). The statement that Karsten's tables come from simulation code that handles mulligans is from teryror, "An updated and expanded guide on building mana bases in Magic: the Gathering" (GitHub gist), which adapts Karsten's simulation code for the London mulligan. https://gist.github.com/teryror/881d60e08480a56043895d3bbb83c374
+- Karsten, F., "How Many Colored Mana Sources Do You Need to Consistently Cast Your Spells? A Guilds of Ravnica Update," ChannelFireball (October 2018), archived copy. Tables computed with his simulation code, "taking into account mulligans"; mulligan rule for seven-card hands with 0, 1, 6 or 7 lands. https://web.archive.org/web/20181011120856/https://www.channelfireball.com/articles/how-many-colored-mana-sources-do-you-need-to-consistently-cast-your-spells-a-guilds-of-ravnica-update/
+- teryror, "An updated and expanded guide on building mana bases in Magic: the Gathering" (GitHub gist). Adapts Karsten's simulation code to the London mulligan. https://gist.github.com/teryror/881d60e08480a56043895d3bbb83c374
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press.
 - The Duelist and Marksman classes, their numbers, and all derived tables are invented for this lecture. The exact single-fight win shares were computed by enumerating all binomial outcomes.
 

@@ -10,7 +10,11 @@ Build a spreadsheet that turns a healer's mana pool, regeneration and spell list
 
 ## Starter materials
 
-- `mana-budget-template.xlsx` (or the Google Sheets copy on the course page). Tabs: `Spells`, `Frontier`, `Curve`, `Encounter`. Headers only.
+- The template in [`lab07-starter/`](lab07-starter/): one CSV per tab. Import each as a sheet in any spreadsheet tool.
+  - [`Spells.csv`](lab07-starter/Spells.csv): `spell, heal, mana_cost, cast_time_s, HPS, MPS, HPM, time_to_oom_s, overheal, effective_HPS, frontier_status`. The Tidecaller inputs and step 6 overheal factors are filled in; the rest is yours.
+  - [`Frontier.csv`](lab07-starter/Frontier.csv): `segment, from_spell, to_spell, MPS_from, MPS_to, HPS_from, HPS_to, marginal_HPM`, starting at the origin.
+  - [`Curve.csv`](lab07-starter/Curve.csv): `T_s, budget_MPS, region, sustainable_HPS, enrage_check_750`, with `T_s` filled from 10 to 600 in steps of 10.
+  - [`Encounter.csv`](lab07-starter/Encounter.csv): `parameter, value, unit, note`, holding the pool, regeneration, boss DTPS and fight length, plus the Mend and Surge check values.
 - The lecture's Mend and Surge healer for checking: `M = 10,000`, `r = 20`, Mend 2,000 / 250 / 2.5 s, Surge 1,500 / 375 / 1.5 s.
 - The "Tidecaller" healer kit to analyse:
 

@@ -11,9 +11,10 @@ Measure stat weights the way SimulationCraft does, by running a randomized fight
 
 ## Starter materials
 
-- `lab12-starter.py` (provided on the course site): a 50-line Python skeleton for a single-target fight. It defines a character with power, crit rating and haste rating, a `fight(char, seconds, rng)` function stub, and a helper for mean and standard error.
+- [`lab12-starter.py`](lab12-starter.py): a Python 3 skeleton (standard library only) for a single-target fight. It defines a `Char` with power, crit rating, haste rating, crit multiplier and an optional crit cap, the lecture's closed-form `expected_dps`, a `fight(char, seconds, rng)` stub, a `run` helper that reuses a seed for common random numbers, and a helper for mean and standard error. Run it first: it prints the exact weights (0.192 and 0.238) you will compare against.
+- The [stat weights interactive](../examples/w12-stat-weights.html) for checking the peak.
 - The lecture's class rules: 5% base crit, 0% base haste, 40 rating per 1%, crits deal `m` times damage, base damage per second equals power.
-- Python 3 with `numpy` (or a spreadsheet using `RAND()`; slower but accepted).
+- Python 3 (`numpy` optional), or a spreadsheet using `RAND()` (slower but accepted).
 
 ## Steps
 

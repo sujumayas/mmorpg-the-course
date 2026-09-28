@@ -10,9 +10,11 @@ Write a solver that enumerates every group composition of a given size, applies 
 
 ## Starter materials
 
-- `composition_solver.py` skeleton with a `Role` dataclass, an `Encounter` dataclass and an empty `check(group, encounter)` function. A spreadsheet version, `composition-solver.xlsx`, is provided for students who prefer it.
-- `roles.csv` with the lecture's three roles (tank, healer, DPS) and their `p`, `q`, `m`, `HP`.
-- `test_solver.py` with the lecture's test values: for the default encounter only (1,1,3) passes; with `B = 500, S = 3,500` both (1,1,3) and (0,1,4) pass; with `B = 1,500` nothing passes.
+All in [`lab05-starter/`](lab05-starter/). Standard-library Python.
+
+- [`composition_solver.py`](lab05-starter/composition_solver.py), a skeleton with a `Role` dataclass, an `Encounter` dataclass, a CSV loader and empty `compositions`, `target` and `check(group, encounter, roles)` functions. If you prefer a spreadsheet, build one row per composition with the same columns as the lecture's table; the tests below still define correct.
+- [`roles.csv`](lab05-starter/roles.csv) with the lecture's three roles (tank, healer, DPS) and their `p`, `q`, `m`, `HP`.
+- [`test_solver.py`](lab05-starter/test_solver.py) with the lecture's test values: for the default encounter only (1,1,3) passes; with `B = 500, S = 3,500` both (1,1,3) and (0,1,4) pass; with `B = 1,500` nothing passes. It also checks that the spike rule is strict (`HP > S(1 − m)`): a DPS target survives `S = 3,749` and dies at exactly 3,750.
 - The [interactive](../examples/w05-role-composition.html) for spot checks.
 
 ## Steps

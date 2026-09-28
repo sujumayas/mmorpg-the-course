@@ -11,7 +11,9 @@ Build a discrete group-combat simulator, confirm it against Lanchester's square 
 
 ## Starter materials
 
-- `lab11-starter.py` (provided on the course site): a 60-line Python skeleton with a `Unit` class (HP, DPS, HPS, role), a `simulate(side_a, side_b, rules)` function stub and a CSV writer. A spreadsheet version, `lab11-starter.xlsx`, is available for students who prefer it; it runs the simulation row by row at `dt = 0.1` s.
+- [`lab11-starter.py`](lab11-starter.py): a Python 3 skeleton (standard library only) with a `Unit` class (HP, DPS, HPS, role), a `make_side` helper, a `simulate(side_a, side_b, rules)` stub, a CSV writer, and a check that compares your Part A results with the lecture table. Run it before you start; every check reports "not run yet" until you write `simulate`.
+- Spreadsheet option: one row per time step at `dt = 0.1` s, one column per unit's health, and a column per side for living damage dealers. Expect survivors to match the lecture and times to run up to about 0.5 s longer because of the coarser step (10.8 s instead of 10.5 s for focus against focus), so the 0.2 s tolerance in step 2 applies only to the Python version.
+- The [Lanchester battle interactive](../examples/w11-lanchester-battle.html) for spot checks.
 - The reference results from the lecture tables (10 against 8, targeting modes, healers).
 - Python 3 with `matplotlib`, or any spreadsheet with charts.
 
@@ -20,7 +22,7 @@ Build a discrete group-combat simulator, confirm it against Lanchester's square 
 ### Part A: build and verify (45 min)
 
 1. Implement `simulate` with these rules from the lecture: time step 0.01 s; each side's damage per step is the sum of its living damage dealers' DPS × `dt`; "focus" puts all of it on the first living enemy in list order; "spread" divides it equally among living enemies; overkill is lost; deaths are simultaneous within a step; the fight ends when a side is empty or at 300 s.
-2. Run the four targeting combinations for 10 against 8 (1,000 HP, 100 DPS). Your survivors must match the lecture table exactly and your times must be within 0.2 s.
+2. Run the four targeting combinations for 10 against 8 (1,000 HP, 100 DPS). Your survivors must match the lecture table exactly and your times must be within 0.2 s (the starter's check does this for you).
 3. Add the continuous square-law prediction `sqrt(A₀² − B₀²)` as a column and compare it with your focus/focus survivors for `A₀` from 9 to 20 against `B₀ = 8`. Plot both.
 
 ### Part B: measure the exponent (40 min)

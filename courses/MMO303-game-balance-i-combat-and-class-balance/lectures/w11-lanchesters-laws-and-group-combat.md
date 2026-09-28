@@ -115,9 +115,9 @@ Now compare with a discrete simulation. In the reference simulation for this lec
 
 ### A visual you can move
 
-Open `examples/w11-lanchester-battle.html`. The top panel is a battlefield of two groups of dots. The bottom-left panel plots each side's alive count over time, with the continuous square-law curve drawn as a thin line behind the discrete simulation. The bottom-right panel shows two bars for fighting strength, `N² × DPS × HP`, so you can see 100 against 64 before the fight starts.
+Open the [Lanchester battle interactive](../examples/w11-lanchester-battle.html). The top panel is a battlefield of two groups of dots. The bottom-left panel plots each side's alive count over time, with the continuous square-law curve drawn as a thin line behind the discrete simulation. The bottom-right panel shows two bars for fighting strength, `N² × DPS × HP`, so you can see 100 against 64 before the fight starts.
 
-Start at 10 against 8 and press Fight. Watch the curves. For the first few seconds both sides lose players at similar speed, then the smaller side's losses accelerate while the bigger side's slow down. Now drag side B's DPS up by 25% and HP up by 25%. The strength bars become equal and the fight ends in a mutual wipe. Drag only DPS up by 56%: same result. That is the insight made visible. A group's power is quadratic in its size, and per-player quality has to grow as the square to keep up.
+Start at 10 against 8 and press Fight. Watch the curves. For the first few seconds both sides lose players at similar speed, then the smaller side's losses accelerate while the bigger side's slow down. Now drag side B's DPS up by 25% (to 125) and HP up by 25% (to 1,250). The strength bars become equal and the fight ends in a near mutual wipe: side B wins with 1 player left. Reset, then raise only side B's DPS. The slider moves in steps of 5, so you cannot hit the exact 56% (156). At 150 side A still wins with 2 survivors. At 155 side B wins with 1. The tipping point sits where the square law puts it. That is the insight made visible. A group's power is quadratic in its size, and per-player quality has to grow as the square to keep up.
 
 ### Cross-game recognition
 

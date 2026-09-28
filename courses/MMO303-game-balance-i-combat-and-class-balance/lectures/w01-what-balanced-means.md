@@ -151,7 +151,7 @@ Look at B again. It is uneven, and one class takes almost a third of picks. It s
 
 ### A visual you can move
 
-Open `examples/w01-effective-classes.html`. The left panel shows the roster as the player sees it, eight class cards, all present. The right panel shows the same roster redrawn with each card's area proportional to its pick share, beside a large `N_eff` readout. Drag the "concentration" slider from even toward dominant and watch the left panel do nothing while the right panel collapses. Then press the "B: healthy lean" preset and confirm the readout says 5.56. (Building B by hand with the share sliders is slow, because each slider rescales the other seven.)
+Open the [effective classes interactive](../examples/w01-effective-classes.html). The left panel shows the roster as the player sees it, eight class cards, all present. The right panel shows the same roster redrawn with each card's area proportional to its pick share, beside a large `N_eff` readout. Drag the "concentration" slider from even toward dominant and watch the left panel do nothing while the right panel collapses. Then press the "B: healthy lean" preset and confirm the readout says 5.56. (Building B by hand with the share sliders is slow, because each slider rescales the other seven.)
 
 Try one experiment in particular. Start at distribution A and move 30 percentage points to class 1, taken evenly from the other seven. By hand, class 1 has 42.5% and each other class has 57.5 / 7 = 8.21%, so `Σ p² = 0.1806 + 7 × 0.0067 = 0.2279` and `N_eff` falls from 8 to 4.39. The share sliders move in whole percents, so in the interactive drag class 1 to 42% (readout 4.46) and then 43% (readout 4.32). The exact 42.5% sits between them. The left panel is unchanged throughout. The per-class table in the interactive shows that almost all of the loss comes from class 1's growth. The seven other classes each lost only about 4 points.
 
@@ -303,10 +303,12 @@ Expected output: one index card per pair with `N_eff`, the corrected Guardian wi
 - Wikipedia, "Super Street Fighter II Turbo HD Remix." Sirlin as lead designer (Backbone Entertainment for Capcom, 2008).
 - Wikipedia, "First-move advantage in chess." White's score of 52-56% in most collections; *New In Chess* Yearbook 2000 database of 731,740 games with White at 54.8%.
 - Wikipedia, "Komi (Go)." Standard komi of 6.5 under Japanese and Korean rules, 7.5 under Chinese, Ing and AGA rules.
-- Hearthstone Wiki (hearthstone.wiki.gg), "The Coin." Player going second receives 4 starting cards and The Coin; player going first receives 3. Current rules, 2014 onward.
+- Hearthstone Wiki (hearthstone.wiki.gg), "The Coin," and Hearthstone Wiki (Fandom), "Mulligan." Player going second receives 4 starting cards and The Coin; player going first receives 3. Current rules, 2014 onward.
+- HearthstoneJSON card data (latest build, checked 2026), card GAME_005 "The Coin": cost 0, gain 1 Mana Crystal this turn only. https://api.hearthstonejson.com/v1/latest/enUS/cards.json
 - Wizards of the Coast, *Magic: The Gathering Comprehensive Rules* (April 4, 2025 edition), rule 103.8a. The first player in a two-player game skips the draw step of their first turn.
 - Riot Games (May 30, 2019). "/dev: Champion Balance Framework." leagueoflegends.com. Segments, win-rate and ban-rate thresholds, professional presence thresholds.
 - Shacknews (2019), "Overwatch Role Queue kills GOATS forever with 2-2-2 lineups," and PCGamesN (2019) on Role Queue. GOATS as three tanks and three supports; Role Queue in Overwatch League 2019 Stage 4 and on the live game at the start of competitive Season 18, September 2019.
+- Overwatch Wiki, "Competitive Play" (Season 18, September 3 to November 7, 2019, the first with Role Queue) and Wikipedia, "2019 Overwatch League season" (2-2-2 enforced from Stage 4). https://overwatch.fandom.com/wiki/Competitive_Play
 - U.S. Department of Justice and Federal Trade Commission (December 2023). *Merger Guidelines*. HHI above 1,800 is highly concentrated.
 - Laakso, M. & Taagepera, R. (1979). "'Effective' Number of Parties: A Measure with Application to West Europe." *Comparative Political Studies* 12(1), 3-27.
 - Hill, M. O. (1973). "Diversity and Evenness: A Unifying Notation and Its Consequences." *Ecology* 54(2), 427-432.

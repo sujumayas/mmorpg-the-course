@@ -9,8 +9,28 @@ Use your Lab 13 simulator to bring four classes inside a ±3% band of the role a
 ## Starter materials
 
 - Your Lab 13 `sim.py`, balance matrix and report.
-- `patch_template.md` from the instructor, with the five-part entry checklist from lecture section 3 (target, old ⇒ new, context, intended effect, what did not change).
-- `blind_read_sheet.md`, a one-page form with a row per patch line and three columns: "buff or nerf", "for whom", "total damage change (estimate)".
+- The patch entry template below. It is the five-part checklist from lecture section 3. Copy it into `patch-notes.md` once per changed class.
+- The blind-read sheet below. Copy it into `blind_read_sheet.md` and give it to your classmate with one row per patch line.
+
+**Patch entry template.** Fill every part. Write "unchanged" rather than leaving a part out.
+
+```
+<Class name>
+  <Ability or stat, by its in-game name>
+  - <Value name>: <old> ⇒ <new>   (game units; ranks as a/b/c if they differ)
+  - <Related value players may assume changed>: unchanged (<value>)
+  Context: <1 to 3 sentences. What the data showed, for which audience.>
+  Intended effect: <outcome in plain words>. Simulated total damage change
+  <+x.x% ± y.y%> (95% interval) at <fight length> s, <+x.x% ± y.y%> at <fight length> s.
+```
+
+The five parts map to the lines as follows: target (class and ability lines), old ⇒ new (the value lines), context, intended effect, and what did not change (the "unchanged" line).
+
+**Blind-read sheet.** One row per patch line. The reader fills the last three columns using only your notes and a calculator.
+
+| Patch line (copied verbatim) | Buff or nerf | For whom (class, and fight length if it matters) | Total damage change for that class (estimate, %) |
+|---|---|---|---|
+| | | | |
 - The week 14 interactive, [`examples/w14-patch-line-translator.html`](../examples/w14-patch-line-translator.html), for checking per-rank and breakpoint effects.
 
 If your Lab 13 matrix had errors, the instructor will provide a reference matrix. Use it and say so in your report.
@@ -23,7 +43,7 @@ If your Lab 13 matrix had errors, the instructor will provide a reference matrix
 4. **Verify with the simulator (45 min).** Rerun the full matrix with your changes. Use common random numbers against the old version so each class's change has a tight error bar. Every cell must now have its 95% interval inside ±3%, or you must explain why it cannot be.
 5. **Check for breakpoints (15 min).** Add a target with 500 health to your simulator and compute hits to kill per class before and after. Flag any change that crosses a hits-to-kill threshold.
 6. **Write the notes (45 min).** One entry per changed class, following the checklist. Every percentage stat is written old ⇒ new. Every intended-effect line gives the simulated total change with its 95% interval and the fight length it applies to.
-7. **Blind read (30 min, in the lab session).** Swap notes with a classmate. They fill in `blind_read_sheet.md` using only your notes and a calculator. Collect their sheet.
+7. **Blind read (30 min, in the lab session).** Swap notes with a classmate. They fill in their copy of the blind-read sheet (`blind_read_sheet.md`) using only your notes and a calculator. Collect their sheet.
 8. **Score the mismatch (20 min).** For each line, compare their "buff or nerf" and "for whom" with the truth, and their estimated total change with your simulated value. Rewrite any line where they got the direction wrong or were off by more than 1 percentage point.
 
 ## Deliverable

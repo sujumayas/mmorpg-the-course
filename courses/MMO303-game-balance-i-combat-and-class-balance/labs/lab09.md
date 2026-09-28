@@ -10,13 +10,13 @@ Simulate how a player population responds to balance patches in a counter-based 
 
 ## Starter materials
 
-- `counter-sim-template.xlsx` or `counter_sim.py` (starter Python with `margins_from_winrates`, `step` and `run` stubs and tests). Choose one.
+- [`lab09-starter/counter_sim.py`](lab09-starter/counter_sim.py), standard-library Python with `margins_from_winrates`, `expected_margins`, `stable_mix3`, `step` and `run` stubs, and [`test_counter_sim.py`](lab09-starter/test_counter_sim.py) with the Knight-buff checks from step 2. If you prefer a spreadsheet, put the margin matrix on one tab and one row per week on another, and check it against the same values.
 - The three-class arena from the lecture: Knight, Mage, Ranger, starting at 60% on every favorable link.
 - Three proposed patches:
   - Patch 1: Knight over Ranger becomes 70%.
   - Patch 2: Ranger over Mage becomes 52%.
   - Patch 3: Mage over Knight becomes 66% and Knight over Ranger becomes 66%.
-- A five-class extension (Knight, Mage, Ranger, Cleric, Rogue) as a 5 × 5 win-rate matrix on the `Five` tab. Each class beats two others at 60% and loses to two at 40%.
+- A five-class extension (Knight, Ranger, Cleric, Mage, Rogue) as a 5 × 5 win-rate matrix in [`lab09-starter/five-class.csv`](lab09-starter/five-class.csv). Each class beats the next two in that order at 60% and loses to the two before it at 40%. The triangle's links are kept: Knight beats Ranger, Ranger beats Mage, Mage beats Knight.
 - The [counter triangle interactive](../examples/w09-counter-triangle.html), for checking three-class results.
 
 ## Steps

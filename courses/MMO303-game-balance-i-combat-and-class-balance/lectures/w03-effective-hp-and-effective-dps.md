@@ -110,7 +110,7 @@ Look at how flat the top of this table is. The proportional 160/40 split is only
 
 ### A visual you can move
 
-Open `examples/w03-resist-split.html`. The left panel shows the percent view players see, two bars for "physical reduction" and "magic reduction." The right panel shows the survival view, EHP plotted against the armor share of your budget, with a dot for your current split and a marker at the optimum.
+Open the [resist split explorer](../examples/w03-resist-split.html). The left panel shows the percent view players see, two bars for "physical reduction" and "magic reduction." The right panel shows the survival view, EHP plotted against the armor share of your budget, with a dot for your current split and a marker at the optimum.
 
 Set physical share to 50% and drag the split slider from all-armor to all-MR. The left panel always looks like a decent build, since one bar is always high. The right panel shows a hill with its peak in the middle and 25% lower EHP at both ends. Below the plot, a stacked bar shows damage taken by type. At the ends, one colour fills most of the bar. That colour is your weak link, the damage type that is doing most of the killing.
 

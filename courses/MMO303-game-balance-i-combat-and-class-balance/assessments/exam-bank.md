@@ -248,7 +248,7 @@ All game settings are fictional unless the question names a shipped game, and th
     <details>
     <summary>Answer</summary>
 
-    Two numbers must move. The spike must be survivable by a 3,000 HP, 20% character, so `S ≤ 3,000 / 0.8 = 3,750`. One healer must cover the untanked boss, so `0.8B + 200 ≤ 700`, which gives `B ≤ 625`. 0-1-4 then deals 4,100 against 3,333 and passes. Lowering only one of the two leaves 0-1-4 failing the other check. 0-2-3 is not an alternative, since it deals 3,200 and fails damage.
+    Two numbers must move. The spike must be survivable by a 3,000 HP, 20% character, so `3,000 > 0.8 S`, which gives `S < 3,750`. The spike check is strict, so a hit of exactly 3,750 leaves the DPS at 0 health and fails; 3,700 is a safe choice. One healer must cover the untanked boss, so `0.8B + 200 ≤ 700`, which gives `B ≤ 625`. 0-1-4 then deals 4,100 against 3,333 and passes. Lowering only one of the two leaves 0-1-4 failing the other check. 0-2-3 is not an alternative, since it deals 3,200 and fails damage.
 
     </details>
 
@@ -424,7 +424,7 @@ All game settings are fictional unless the question names a shipped game, and th
 
 ## Week 10: Payoff matrices and Nash equilibria
 
-44. **[W10 · compute]** Four classes have this doubled-margin matrix (row against column).
+44. **[W10 · compute]** Four classes have this margin matrix (`2w − 1`) (row against column).
 
     | | A | B | C | D |
     |---|---|---|---|---|
@@ -438,7 +438,7 @@ All game settings are fictional unless the question names a shipped game, and th
     <details>
     <summary>Answer</summary>
 
-    Compare A and D column by column: 0 > −0.10, +0.30 > +0.05, −0.20 > −0.25, +0.10 > 0. A dominates D. The rest is a triangle with A over B `a = 0.3`, B over C `b = 0.2`, C over A `c = 0.2`. Shares follow `(b, c, a) / 0.7`: A 28.6%, B 28.6%, C 42.9%. Against this mix A, B and C each earn 0, and D earns `−0.10 × 0.286 + 0.05 × 0.286 − 0.25 × 0.429 = −0.121`. D stays out.
+    Compare A and D column by column: 0 > −0.10, +0.30 > +0.05, −0.20 > −0.25, +0.10 > 0. A dominates D. The rest is a triangle: A beats B by 0.3, B beats C by 0.2, C beats A by 0.2, total 0.7. By week 9's rule each class's share is the margin of the link it is not in, over the total. A gets B-over-C, `0.2 / 0.7 = 28.6%`. B gets C-over-A, `0.2 / 0.7 = 28.6%`. C gets A-over-B, `0.3 / 0.7 = 42.9%`. Against this mix A, B and C each earn 0, and D earns `−0.10 × 0.286 + 0.05 × 0.286 − 0.25 × 0.429 = −0.121`. D stays out.
 
     </details>
 
@@ -465,7 +465,7 @@ All game settings are fictional unless the question names a shipped game, and th
     <details>
     <summary>Answer</summary>
 
-    `a = 0.12`, `b = c = 0.2`, total 0.52. Knight `b / 0.52 = 38.5%`, Ranger `c / 0.52 = 38.5%`, Mage `a / 0.52 = 23.1%`. Nerfing the Knight's winning edge raised its share, because fewer Mages are needed to hold it at break-even.
+    In week 9's letters, `a = 0.12` (Knight over Ranger), `b = 0.2` (Mage over Knight), `c = 0.2` (Ranger over Mage), `S = 0.52`. Knight `c / S = 38.5%`, Mage `a / S = 23.1%`, Ranger `b / S = 38.5%`. Nerfing the Knight's winning edge raised its share, because fewer Mages are needed to hold it at break-even.
 
     </details>
 
@@ -494,7 +494,7 @@ All game settings are fictional unless the question names a shipped game, and th
     <details>
     <summary>Answer</summary>
 
-    Strength ratio `144 / 81 = 1.778`. Equal DPS and HP buffs must each be `sqrt(1.778) = 1.333`, so +33.3% to both. DPS alone must be +77.8%. A flat 20% damage bonus would close less than a quarter of the gap.
+    Strength ratio `144 / 81 = 1.778`. Equal DPS and HP buffs must each be `sqrt(1.778) = 1.333`, so +33.3% to both. DPS alone must be +77.8%. A flat 20% damage bonus would close less than a quarter of the gap. (At exact parity the continuous model ends in a draw. The lecture's step simulation, which applies deaths at the same moment, ends such a fight in a near mutual wipe.)
 
     </details>
 

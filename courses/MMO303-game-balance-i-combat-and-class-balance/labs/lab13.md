@@ -1,6 +1,6 @@
 # MMO303 · Lab 13: Build a combat simulator
 
-**Assigned:** week 13 ([lecture](../lectures/w13-combat-simulators.md)). **Due:** start of week 14 class. **Feeds:** the simulator assessment (30%) and [Lab 14](lab14.md).
+**Assigned:** week 13 ([lecture](../lectures/w13-combat-simulators.md), [interactive](../examples/w13-monte-carlo-dps.html)). **Due:** start of week 14 class. **Feeds:** the simulator assessment (30%) and [Lab 14](lab14.md).
 
 ## Objective
 
@@ -8,12 +8,12 @@ Write a small event-driven Monte Carlo combat simulator, prove it is correct on 
 
 ## Starter materials
 
-Your instructor provides a folder `lab13-starter/` with:
+The folder [`lab13-starter/`](lab13-starter/) contains:
 
-- `sim.py`, a skeleton with an event queue (Python's `heapq`), an `Actor` class, and empty functions `choose_action`, `apply_action` and `run_fight`. It runs, but every class deals zero damage.
-- `classes.yaml`, the four class definitions you will simulate (below).
-- `test_sim.py`, two example tests using `pytest`, one of which fails until you implement hits.
-- `report_template.md`, the headings for your write-up.
+- [`sim.py`](lab13-starter/sim.py), a skeleton with an event queue (Python's `heapq`), an `Actor` class, a `run_fight` loop, a `simulate` driver that reports mean, SD and SE, and stub `choose_action` and `apply_action` functions. It runs with `python3 sim.py --class Duelist --seed 1 --iterations 1000`, but every class deals zero damage.
+- [`classes.yaml`](lab13-starter/classes.yaml), the four class definitions you will simulate (below). It is written in JSON-style YAML, so `sim.py` reads it with the standard library.
+- [`test_sim.py`](lab13-starter/test_sim.py), two example tests that run under `pytest` or plain Python. One fails until you implement hits.
+- [`report_template.md`](lab13-starter/report_template.md), the headings for your write-up.
 
 If you prefer another language, you may port the skeleton, but your simulator must accept a seed and a number of iterations from the command line.
 

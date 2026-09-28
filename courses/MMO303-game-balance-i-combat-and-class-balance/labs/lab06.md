@@ -10,8 +10,10 @@ Build a tick-based threat simulator for one or more enemies and a 5-player group
 
 ## Starter materials
 
-- `threat_sim.py` skeleton with a 0.1-second tick loop, a `Combatant` class (damage per second, threat modifier, melee or ranged, healing per second) and an empty `ThreatTable` class.
-- `test_threat.py` with the lecture's test values: `τT = 500`, `L = 1,500`, melee 700 pulls at 11.0 s, ranged 700 at 39.0 s, melee 550 never; taunt at first pull gives a second pull at 16.13 s.
+All in [`lab06-starter/`](lab06-starter/). Standard-library Python.
+
+- [`threat_sim.py`](lab06-starter/threat_sim.py), a skeleton with the 0.1-second tick constant, a `Combatant` class (damage per second, threat modifier, melee or ranged, healing per second), a `ThreatTable` class with empty methods, and empty `pull_time_closed_form` and `simulate` functions.
+- [`test_threat.py`](lab06-starter/test_threat.py) with the lecture's test values: `τT = 500`, `L = 1,500`, melee 700 pulls at 11.0 s, ranged 700 at 39.0 s, melee 550 never. A taunt at the first pull gives a second pull at 16.13 s in the closed form. The tick simulation lands within two ticks of that, because the first pull is detected one tick late and the taunt copies a slightly larger threat.
 - The [interactive](../examples/w06-threat-race.html) for spot checks.
 
 ## Steps

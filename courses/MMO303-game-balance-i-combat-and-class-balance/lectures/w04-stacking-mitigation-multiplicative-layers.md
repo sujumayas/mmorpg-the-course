@@ -123,7 +123,7 @@ The same idea shows up on the damage side of many games. There it is written as 
 
 **Path of Exile.** The game's modifier text uses two families of words on purpose. Modifiers that say "increased" or "reduced" are added together into one pool. Modifiers that say "more" or "less" each multiply the result separately. The official wiki's worked case uses 100% increased damage from gear, 100% increased from passives, and a support gem with 100% more damage. The increased values sum to 200%, giving a factor of 3, and the more modifier doubles it, so a 1,000 base becomes 6,000. The two increased sources sit in one additive pool, and the more source is a separate multiplicative layer.
 
-**Diablo IV.** Item and skill text marks additive bonuses with `[+]` and multiplicative ones with `[x]`. All the `[+]` damage bonuses sum into one pool, often called the additive bucket, and each `[x]` multiplier applies on its own. Community damage guides for the game's seasonal era advise stacking across several buckets rather than piling into one, which is the doublings argument in plain words.
+**Diablo IV (2023 to 2024 seasons).** Item and skill text marks additive bonuses with `[+]` and multiplicative ones with `[x]`. All the `[+]` damage bonuses sum into one pool, often called the additive bucket, and each `[x]` multiplier applies on its own. (By Season 13, in 2026, some `[x]` bonuses sum with each other before multiplying, so later seasons have fewer separate layers.) Community damage guides for the game's seasonal era advise stacking across several buckets rather than piling into one, which is the doublings argument in plain words.
 
 **Classic WoW, the hook.** Armor and Shield Wall are two separate layers that multiply. The 75% armor cap limits armor alone to 2 doublings. The cap does not stop other layers from adding their own doublings on top.
 
@@ -254,7 +254,7 @@ Expected output: a half-page table per pair with reductions, doublings, `M`, and
 - Wowhead Classic database, "Shield Wall" (spell 871). Classic WoW: reduces damage taken from melee, ranged and spells by 75% for 10 seconds. https://www.wowhead.com/classic/spell=871/shield-wall
 - Path of Exile Wiki, "Stat" and "Modifier". Path of Exile 1 (current live rules): increased/reduced modifiers add, more/less modifiers multiply; the 100% + 100% increased with 100% more example. https://pathofexile.fandom.com/wiki/Stat
 - League of Legends Wiki, "Armor". Current live formula `100 / (100 + armor)`, used for the 1-doubling-per-100-armor conversion. https://leagueoflegends.fandom.com/wiki/Armor
-- Maxroll, "In-Depth Damage Guide in Diablo 4", and Mobalytics, "Diablo 4 Damage Buckets Explained (updated Season 2)". Diablo IV 2023 to 2024 seasonal era: `[+]` bonuses sum into one additive bucket, `[x]` bonuses multiply separately. https://maxroll.gg/d4/resources/in-depth-damage-guide
+- Maxroll, "In-Depth Damage Guide in Diablo 4", and Mobalytics, "Diablo 4 Damage Buckets Explained (updated Season 2)". Diablo IV 2023 to 2024 seasonal era: `[+]` bonuses sum into one additive bucket, `[x]` bonuses multiply separately. The Maxroll guide as updated for Season 13 (June 2026) adds summed multipliers. https://maxroll.gg/d4/resources/in-depth-damage-guide
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press.
 
 ## Interactive spec: examples/w04-mitigation-layers.html

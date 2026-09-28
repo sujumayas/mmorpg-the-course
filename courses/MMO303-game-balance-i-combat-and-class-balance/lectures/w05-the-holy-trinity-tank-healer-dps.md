@@ -224,10 +224,10 @@ Expected output: one page per group with the encounter numbers, the composition 
 - Warcraft Wiki, "Call to Arms (dungeon)". Added in WoW patch 4.1.0 (April 26, 2011, Cataclysm era); detects the least represented role and awards a bonus bag for completing a random level-85 heroic; stated goal was shorter DPS queues caused by too few tanks and healers. https://warcraft.wiki.gg/wiki/Call_to_Arms_(dungeon)
 - Blizzard Entertainment, "4.1 Preview: Dungeon Finder: Call to Arms" (2011). https://worldofwarcraft.blizzard.com/en-gb/news/10002882/41-preview-dungeon-finder-call-to-arms
 - Final Fantasy XIV Online Wiki (consolegameswiki), "Party". Current era: light party 1 tank, 1 healer, 2 DPS for dungeons; full party 2 tanks, 2 healers, 4 DPS for trials. https://ffxiv.consolegameswiki.com/wiki/Party
-- Dexerto, "Overwatch role queue: everything you need to know" (2019). Role Queue with 2-2-2 went live August 13, 2019. https://www.dexerto.com/overwatch/overwatch-role-queue-release-date-details-892791/
+- Overwatch Wiki, "August 13, 2019 Patch" (patch 1.39.1.0.60993). Role Queue with 2-2-2 went live. https://overwatch.fandom.com/wiki/August_13,_2019_Patch
 - PC Gamer, "Overwatch 2 PvP will be 5v5 with only one Tank per team" (2021), and Wikipedia, "Overwatch 2" (release October 4, 2022). https://www.pcgamer.com/overwatch-2-pvp-will-be-5v5-with-only-one-tank-per-team/
-- Ten Ton Hammer, "Guild Wars 2: No More Healers" (pre-launch coverage), and Wikipedia, "Guild Wars 2" (release August 28, 2012). No dedicated healing profession; each profession has a healing skill slot. https://www.tentonhammer.com/articles/guild-wars-2-no-more-healers
-- ArenaNet, "Spirit Vale" release notes (November 17, 2015). First raid wing, with Heart of Thorns. https://www.guildwars2.com/en/the-game/releases/november-17-2015/
+- Ten Ton Hammer, "Guild Wars 2: No More Healers" (pre-launch coverage), and Guild Wars 2 Wiki, "Guild Wars 2" (release August 28, 2012). https://wiki.guildwars2.com/wiki/Guild_Wars_2 No dedicated healing profession; each profession has a healing skill slot. https://www.tentonhammer.com/articles/guild-wars-2-no-more-healers
+- Guild Wars 2 Wiki, "Spirit Vale" and "Guild Wars 2: Heart of Thorns". Spirit Vale, the first raid wing, released November 17, 2015; Heart of Thorns released October 23, 2015. https://wiki.guildwars2.com/wiki/Spirit_Vale
 - Guild Wars 2 Wiki, "Aggro". Several raid and strike bosses (Vale Guardian, Gorseval and others) target the player with the highest toughness. https://wiki.guildwars2.com/wiki/Aggro
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press.
 - Sirlin, D. (2009). "Balancing Multiplayer Competitive Games." Game Developers Conference.

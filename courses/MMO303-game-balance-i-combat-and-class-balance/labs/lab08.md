@@ -10,7 +10,7 @@ Build a tool that applies a diminishing-returns rule to a list of crowd control 
 
 ## Starter materials
 
-- `cc-planner-template.xlsx` or `cc_planner.py` (starter Python with an empty `simulate(chain, rule)` function and a test file). Choose one.
+- [`lab08-starter/cc_planner.py`](lab08-starter/cc_planner.py), standard-library Python with the three rules and the ability table as data, an empty `simulate(chain, rule)` DR engine, an empty `uptime_ceiling`, and helpers to build back-to-back chains. [`test_cc_planner.py`](lab08-starter/test_cc_planner.py) holds the lecture checks: three 6-second stuns give 10.5 s, a fourth is immune, 6-4-3 gives 8.75 s and 3-4-6 gives 6.5 s, the counter resets 18 s after the last effect ends, and the 6-second ceiling is 36.8%. If you prefer a spreadsheet, use one row per cast with columns `time, ability, category, base, step, multiplier, start, end`, and check it against the same values.
 - A 2v2 arena team with these abilities. All are invented for this lab.
 
 | Ability | Owner | Category | Base duration | Cooldown |

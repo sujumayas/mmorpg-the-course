@@ -104,7 +104,7 @@ The formula rarely appears in its clean form. Learning to rewrite it is the skil
 
 **World of Warcraft (classic era, attacker levels 1-59).** Armor reduces physical damage by `armor / (armor + 400 + 85 × attacker level)`, capped at 75%. Here `K = 400 + 85 × level`, so a level-50 attacker has `K = 4,650`. Making K grow with level is how the game stops armor from old gear trivializing new enemies. The same armor is worth less against a stronger attacker. The 75% cap limits the EHP multiplier to 4×, reached at `A = 3K`.
 
-**Path of Exile 2 (early access, from the December 2024 launch).** Armour reduces a hit by `armour / (armour + 10 × damage)`, capped at 90%. Here **K depends on the size of the hit**. Armor is superb against many small hits and weak against one huge slam. With 1,000 armour, a 100-damage hit is halved, but a 1,000-damage hit is reduced by only about 9%. The first Path of Exile uses the same shape with a different multiplier, which has changed across patches. That's a reminder to always cite a formula's version.
+**Path of Exile 2 (early access, December 2024 launch through the 0.5 patches of 2026).** Armour reduces a hit by `armour / (armour + 10 × damage)`, capped at 90% for players (75% for monsters). Here **K depends on the size of the hit**. Armor is superb against many small hits and weak against one huge slam. With 1,000 armour, a 100-damage hit is halved, but a 1,000-damage hit is reduced by only about 9%. The first Path of Exile uses the same shape with a different multiplier, which has changed across patches. That's a reminder to always cite a formula's version.
 
 Four games, four presentations, one idea. When you meet a new game's armor formula, your first move should be to try rewriting it as `A / (A + K)` and ask: *what is K here, and what does it depend on?*
 
@@ -233,4 +233,5 @@ Expected output: a one-paragraph rule, the armor number from step 2, and the wea
 - The Amazon Basin (Diablo II), "Technical Formulas", and Mann M., "Come and Get It: Attack and Defense Ratings" (d2library, mannm.org). Chance-to-hit formula for Diablo II and Lord of Destruction, with the hard 5%/95% limits.
 - Warcraft Wiki, "Armor" and "Damage reduction". `armor / (armor + 400 + 85 × level)` for attacker levels 1-59 in the classic era; 75% cap.
 - Path of Exile 2 Wiki, "Armour" (early access). `armour / (armour + 10 × damage)`, 90% cap, rules of thumb.
+- Path of Building Community, PathOfBuilding-PoE2, `src/Modules/CalcDefence.lua` and `src/Modules/Data.lua` (dev branch, release v0.23.1, July 2026, passive trees up to 0.5). Armour ratio 10 in `armour / (armour + raw × ratio)`; player physical reduction cap 90%. https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press.

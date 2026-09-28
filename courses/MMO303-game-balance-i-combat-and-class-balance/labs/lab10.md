@@ -1,6 +1,6 @@
 # MMO303 · Lab 10: Solving a class meta
 
-**Week:** 10 ([lecture](../lectures/w10-game-theory-payoff-matrices-and-nash-equilibria.md))
+**Week:** 10 ([lecture](../lectures/w10-game-theory-payoff-matrices-and-nash-equilibria.md), [week 9 counter triangle interactive](../examples/w09-counter-triangle.html))
 **Time:** 2 hours in the lab, plus up to 2 hours to finish the memo.
 **Work mode:** individual, discussion allowed.
 **Counts toward:** problem sets (30% of the course grade).
@@ -11,15 +11,15 @@ Build a spreadsheet that turns a table of class matchup win rates into a predict
 
 ## Starter materials
 
-- `lab10-matchups.csv` (provided on the course site): a five-class duel win-rate table for a fictional MMO (Knight, Ranger, Mage, Bard, Warden). Each cell is the row class's win rate against the column class, from 10,000 simulated duels between equally skilled players.
+- [`lab10-matchups.csv`](lab10-matchups.csv): a five-class duel win-rate table for a fictional MMO (Knight, Ranger, Mage, Bard, Warden). Each cell is the row class's win rate against the column class, from 10,000 simulated duels between equally skilled players.
 - A spreadsheet tool with a linear-programming solver: Excel Solver, LibreOffice Calc Solver, or Google Sheets with the "Solver" add-on. Python with `scipy.optimize.linprog` is an accepted alternative.
-- The lecture's three-class formula `p ∝ (b, c, a)` to check your solver.
+- Week 9's three-class stable mix to check your solver: with `a` = Knight over Ranger, `b` = Mage over Knight and `c` = Ranger over Mage (all margins `2w − 1`), Knight `c / S`, Mage `a / S`, Ranger `b / S`, where `S = a + b + c`.
 
 ## Steps
 
 ### Part A: check the solver on a triangle you can solve by hand (20 min)
 
-1. Enter the three-class launch table from the lecture (all favored matchups 60/40). Convert win rates to doubled margins with `=2*(W - 0.5)`.
+1. Enter the three-class launch table from the lecture (all favored matchups 60/40). Convert win rates to margins with `=2*W - 1` (week 9).
 2. Set up the linear program for the row player of a zero-sum game:
    - Variables: shares `p1 ... pn` and the game value `v`.
    - Maximize `v`.
@@ -63,3 +63,14 @@ Submit one spreadsheet (or notebook) and one memo of 300 to 400 words.
 | Recommendation (Part D) | Meets the 12% / 30% goal or argues clearly why none can, with solved shares | Recommendation given without full evidence | No recommendation | 15 |
 | Memo | Plain, specific, under 400 words, names one real limit of the model | Clear but generic, or over length | Missing | 15 |
 | **Total** | | | | **100** |
+
+<details>
+<summary>Instructor check values</summary>
+
+- Part A: 33.3% each, then Knight 25%, Ranger 25%, Mage 50%, value 0.
+- Part B: the table is zero-sum as provided. The Bard is strictly dominated by the Knight (Knight is better in all five columns). After removing it, nothing else is dominated. The equilibrium is Knight 52.4%, Ranger 38.1%, Mage 9.5%, Warden 0%, value 0. It matches week 9's triangle formula with `a = 0.04` (Knight over Ranger), `b = 0.16` (Mage over Knight), `c = 0.22` (Ranger over Mage), `S = 0.42`: Knight `0.22 / 0.42`, Mage `0.04 / 0.42`, Ranger `0.16 / 0.42`. The Warden is not dominated but earns −0.021 against the mix, so it stays out. A symmetric zero-sum game usually has an odd number of classes in its equilibrium, which is why four-class support does not appear.
+- Option 1: the Knight now wins or ties every matchup, so 100% Knight is an equilibrium. The worst option.
+- Option 2: the Knight drops out (Warden now dominates it); Ranger 28.1%, Mage 37.5%, Warden 34.4%.
+- Option 3: the Bard is no longer dominated and all five classes appear: Knight 30.2%, Ranger 40.5%, Mage 10.2%, Bard 10.7%, Warden 8.3%. Closest to the goal, but three classes are under 12% and the Ranger is over 30%, so no option meets it. Accept any fourth change whose solved shares meet the goal.
+
+</details>

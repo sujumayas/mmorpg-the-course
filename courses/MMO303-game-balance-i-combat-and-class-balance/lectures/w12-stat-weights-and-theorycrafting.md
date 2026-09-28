@@ -102,7 +102,7 @@ Three things stand out.
 
 ### A visual you can move
 
-Open `examples/w12-stat-weights.html`. The left panel plots DPS against the crit/haste split as you slide 1,200 rating from all haste to all crit. It is a gentle hill. The right panel shows the two stat weights as bars at the current split. Drag the split slider. As you move left of the peak, the crit bar grows taller than the haste bar; move right of it and haste wins. At the top of the hill, the bars are exactly level.
+Open the [stat weights interactive](../examples/w12-stat-weights.html). The left panel plots DPS against the crit/haste split as you slide 1,200 rating from all haste to all crit. It is a gentle hill. The right panel shows the two stat weights as bars at the current split. Drag the split slider. As you move left of the peak, the crit bar grows taller than the haste bar; move right of it and haste wins. At the top of the hill, the bars are exactly level.
 
 Now flip the "Crit damage talent" switch, which sets `m = 2.5`. The hill tilts, the peak slides almost all the way to crit, and the bars at your old split are no longer level. Same gear, same class, different talent, different weights. That is the whole Raidbots warning in one click.
 
@@ -118,7 +118,7 @@ damage = base × (1 + sum of increased) × (1 + more₁) × (1 + more₂) × ...
 
 That is our DPS formula with more terms. Its consequence is the same dilution we saw for crit. With 100% increased damage already, another 50% increased takes you from 2.0× to 2.5×, a 25% gain. A 50% more modifier is a 50% gain regardless. Path of Exile players value "more" modifiers highly for exactly this reason, and a build with a huge increased total and no more modifiers is poorly balanced in the same way as our all-crit character.
 
-**Diablo IV's damage buckets.** At its 2023 launch, Diablo IV's advanced tooltips marked damage bonuses as additive `[+]` or multiplicative `[x]`. Additive bonuses of the same kind pool into one bucket; buckets multiply with each other. Community guides from that era advise spreading investment across buckets instead of stacking one. Rewritten into our form, each bucket is a factor `(1 + bucket total)`, and the advice is our equal-factor rule. (Blizzard reworked Diablo IV's damage calculation in Season 4, in 2024, so check the current version before you quote specifics.)
+**Diablo IV's damage buckets.** At its 2023 launch, Diablo IV's advanced tooltips marked damage bonuses as additive `[+]` or multiplicative `[x]`. Additive bonuses of the same kind pool into one bucket; buckets multiply with each other. Community guides from that era advise spreading investment across buckets instead of stacking one. Rewritten into our form, each bucket is a factor `(1 + bucket total)`, and the advice is our equal-factor rule. (The rules have moved since launch. Maxroll's guide for Season 13, in 2026, keeps the `[+]` and `[x]` markers but lets some `[x]` bonuses sum with each other before they multiply. Check the current version before you quote specifics.)
 
 **Armor versus health in week 2.** In week 2 you found that effective health is `EHP = HP × (1 + A/K)`, and that the best defensive split satisfies `HP × c_H = (A + K) × c_A`. That is the equal-weights rule applied to survival. With equal prices it says `HP = A + K` in the right units: the two factors of the product should be the same size. Armor and health are two buckets in a product, exactly like crit and haste.
 
@@ -241,7 +241,7 @@ Expected output: three numbers per step (crit rating, haste rating, DPS at the p
 - Raidbots Support, "Beware of Stat Weights" (checked 2026). Stat weights as a coarse approximation of one moment; direct item sims preferred. https://support.raidbots.com/article/66-beware-of-stat-weights
 - Warcraft Wiki, "ElitistJerks," and Vice, "An Oral History of Azeroth's Most Influential Guild." Forum history, the site going offline around 2016, and Ion Hazzikostas's later role at Blizzard. https://warcraft.wiki.gg/wiki/ElitistJerks
 - Path of Exile Wiki (Fandom), "Stat," and Maxroll, "Damage Scaling" (Path of Exile 2 guide, checked 2026). Increased modifiers are additive with each other; more modifiers multiply separately. https://pathofexile.fandom.com/wiki/Stat
-- Mobalytics, "Diablo 4 Damage Buckets Explained" and Maxroll, "In-Depth Damage Guide" (Diablo IV, 2023 launch through Season 3). Additive `[+]` and multiplicative `[x]` tooltip markers; buckets multiply; advice to spread across buckets. Damage calculation reworked in Season 4 (2024). https://maxroll.gg/d4/resources/in-depth-damage-guide
+- Mobalytics, "Diablo 4 Damage Buckets Explained" and Maxroll, "In-Depth Damage Guide" (Diablo IV, 2023 launch through Season 3). Additive `[+]` and multiplicative `[x]` tooltip markers; buckets multiply; advice to spread across buckets. Maxroll's guide as updated for Season 13 (June 2026) adds summed multipliers, where some `[x]` bonuses add together first. https://maxroll.gg/d4/resources/in-depth-damage-guide
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press. Transitive mechanics, cost curves and item pricing.
 - The crit/haste class, its conversion rates and all tables in this lecture are fictional teaching values, not data from a shipped game.
 
