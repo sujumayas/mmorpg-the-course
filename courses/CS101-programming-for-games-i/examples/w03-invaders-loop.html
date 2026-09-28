@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>One alien per frame · CS101 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 2px}
+.sub{color:var(--ink-soft);font-size:.88rem;margin:0 0 10px}
+.stage{display:grid;grid-template-columns:1fr;gap:10px}
+.field{position:relative;width:100%;aspect-ratio:224/112;background:var(--paper-2);border-radius:10px;overflow:hidden}
+.alien{position:absolute;left:0;top:0;padding:0;border:0;border-radius:4px;background:var(--steel);cursor:crosshair;will-change:transform}
+.alien.row0{background:var(--ochre)}
+.alien.now{outline:3px solid var(--blood);outline-offset:1px}
+.alien.dead{visibility:hidden}
+.alien:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.instr{background:var(--paper-2);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px 14px;font-size:.82rem;line-height:1.3}
+.instr b{display:block;font-family:var(--mono);font-size:1.15rem;line-height:1.2}
+.instr span{color:var(--ink-soft)}
+.work{display:flex;align-items:flex-end;gap:8px}
+.bar{width:22px;height:40px;background:var(--blood);border-radius:3px}
+.readout{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0 4px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-family:var(--mono);font-size:1.3rem;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+canvas{display:block;width:100%;height:280px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+.lbl{font-weight:600;font-size:.9rem;margin-right:4px}
+.seg{display:inline-flex;border:1.5px solid var(--steel);border-radius:8px;overflow:hidden}
+.seg button{font:600 .9rem var(--sans);padding:7px 12px;border:0;background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.seg button+button{border-left:1.5px solid var(--steel)}
+.seg button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:600 .9rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:12px}
+label output{font-family:var(--mono);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.78rem;color:var(--ink-soft);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 3 · Worked example</p>
+  <h1>One alien per frame</h1>
+  <p class="lede">The loop moves exactly one alien each frame, no matter how many are left. With 55 alive a formation step takes 55 frames, so the march crawls at 2.18 px/s. Remove aliens and the same loop makes the survivors race.</p>
+</header>
+
+<div class="cols">
+<section class="panel" aria-labelledby="hA">
+  <h2 id="hA">The loop</h2>
+  <p class="sub">Red outline: the alien moved this frame. Click an alien, or focus it and press Enter, to remove it. Arrow keys move between aliens.</p>
+  <div class="stage">
+    <div class="field" id="field" role="group" aria-label="Alien formation, 5 rows of 11"></div>
+    <div class="instr">
+      <div><b id="iFrame">0</b><span>frame</span></div>
+      <div class="work"><div class="bar" aria-hidden="true"></div><div><b>1</b><span>alien moved this frame</span></div></div>
+      <div><b id="iFps">55</b><span>frames per formation step</span></div>
+      <div><b id="iSteps">0</b><span>formation steps done</span></div>
+      <div><b id="iMeas">—</b><span>measured frames per step</span></div>
+    </div>
+  </div>
+  <div class="row">
+    <button type="button" class="btn primary" id="bPlay" aria-pressed="true">Pause</button>
+    <button type="button" class="btn" id="bFrame">Step 1 frame</button>
+    <button type="button" class="btn" id="bStep">Step 1 formation step</button>
+    <button type="button" class="btn" id="bReset">Reset to 55</button>
+  </div>
+  <label for="nIn">Aliens alive <output id="oN">55</output></label>
+  <input id="nIn" type="range" min="1" max="55" step="1" value="55">
+  <p class="hint">The slider removes aliens from the bottom right, in reverse reading order.</p>
+  <div class="row" role="group" aria-label="Loop rate F">
+    <span class="lbl">Loop rate F</span>
+    <span class="seg" id="fSeg"><button type="button" data-f="30" aria-pressed="false">30</button><button type="button" data-f="60" aria-pressed="true">60</button><button type="button" data-f="120" aria-pressed="false">120</button></span>
+    <span class="hint" style="margin:0">passes per second</span>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="hB">
+  <h2 id="hB">The result</h2>
+  <p class="sub">Formation speed s(N) = d &times; F / N with d = 2 px. Read left to right as aliens die.</p>
+  <figure>
+    <canvas id="curve" role="img" aria-label="Formation speed against aliens alive, from 55 on the left to 1 on the right"></canvas>
+    <div class="legend"><span><i style="background:var(--blood)"></i>F = <span id="lgF">60</span> (current)</span><span><i style="background:var(--ink-soft);opacity:.45"></i>other loop rates</span></div>
+  </figure>
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rN">55</b><span>aliens alive N (= frames per step)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSps">1.09</b><span>steps per second, F / N</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rSpd">2.18</b><span>speed, 2F / N px/s</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rTps">0.917</b><span>time per step, N / F s</span></div>
+  </div>
+  <div class="table-wrap">
+    <table aria-label="Speed at the lecture's alien counts for the current loop rate">
+      <thead><tr><th>Aliens N</th><th>Frames per step</th><th>Steps/s</th><th>Speed px/s</th><th>Time/step s</th></tr></thead>
+      <tbody id="tbl"></tbody>
+    </table>
+  </div>
+</section>
+</div>
+
+<div class="insight" id="insight"></div>
+<p class="sr" id="live" aria-live="polite"></p>
+
+<footer>Loop structure after Computer Archeology's annotated disassembly of the Space Invaders arcade code (Taito, 1978): one alien moves per mid-screen interrupt, 60 per second, 2 px sideways per step. The disassembly's special step size for the last alien is left out, as in the lecture. Aliens are drawn as plain blocks.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+const ROWS=5,COLS=11,TOTAL=55,W=224,H=112,AW=12,AH=9,SX=16,SY=14,D=2,DROP=8;
+const trim=(v,dp)=>{const s=v.toFixed(dp);return s.replace(/\.0+$/,'');};
+let F=60,alive=new Array(TOTAL).fill(true),cursor=0,frame=0,steps=0;
+let ox=8,oy=8,mx=D,my=0,dir=1,playing=!reduced.matches,acc=0,last=null;
+let stepFrames=[],lastStepFrame=0,focusIdx=0,skipStep=false;
+
+/* ---------- formation ---------- */
+const field=$('field'),els=[];
+for(let i=0;i<TOTAL;i++){
+  const b=document.createElement('button');b.type='button';
+  b.className='alien'+(Math.floor(i/COLS)===0?' row0':'');
+  b.tabIndex=i===0?0:-1;
+  b.setAttribute('aria-label',`Alien row ${Math.floor(i/COLS)+1}, column ${i%COLS+1}. Press Enter to remove.`);
+  b.onclick=()=>kill(i);
+  b.onkeydown=e=>nav(e,i);
+  field.appendChild(b);els.push(b);
+}
+const nAlive=()=>alive.reduce((a,v)=>a+v,0);
+function scale(){return field.clientWidth/W;}
+function place(i){
+  const k=scale(),r=Math.floor(i/COLS),c=i%COLS,moved=i<cursor;
+  const x=ox+c*SX+(moved?mx:0),y=oy+r*SY+(moved?my:0);
+  els[i].style.width=(AW*k)+'px';els[i].style.height=(AH*k)+'px';
+  els[i].style.transform=`translate(${x*k}px,${y*k}px)`;
+}
+function placeAll(){for(let i=0;i<TOTAL;i++)place(i);}
+function firstAliveFrom(i){for(;i<TOTAL;i++)if(alive[i])return i;return -1;}
+function planStep(){
+  // decide the move for the next formation step: sideways, or down and reverse at an edge
+  let minC=COLS,maxC=-1;
+  for(let i=0;i<TOTAL;i++)if(alive[i]){const c=i%COLS;minC=Math.min(minC,c);maxC=Math.max(maxC,c);}
+  const left=ox+minC*SX+dir*D,right=ox+maxC*SX+AW+dir*D;
+  if(left<2||right>W-2){dir=-dir;mx=0;my=DROP;}else{mx=dir*D;my=0;}
+  if(oy+ROWS*SY+my>H-6){oy=8;my=0;mx=dir*D;} // keep the demo on screen: return to the top
+}
+let nowIdx=-1;
+function tick(){
+  // one pass of the game loop: move one living alien
+  let i=firstAliveFrom(cursor);
+  if(i<0){i=firstAliveFrom(0);cursor=0;}
+  if(nowIdx>=0)els[nowIdx].classList.remove('now');
+  cursor=i+1;place(i);nowIdx=i;els[i].classList.add('now');
+  frame++;
+  if(firstAliveFrom(cursor)<0){           // that was the last living alien: formation step done
+    steps++;ox+=mx;oy+=my;cursor=0;
+    if(skipStep)skipStep=false;else stepFrames.push(frame-lastStepFrame);lastStepFrame=frame;if(stepFrames.length>3)stepFrames.shift();
+    planStep();placeAll();
+  }
+}
+function renderInstr(){
+  $('iFrame').textContent=frame.toLocaleString('en-US');
+  $('iSteps').textContent=steps.toLocaleString('en-US');
+  $('iMeas').textContent=stepFrames.length?trim(stepFrames.reduce((a,b)=>a+b,0)/stepFrames.length,1):'—';
+}
+function resetMeasure(){stepFrames=[];lastStepFrame=frame;skipStep=cursor!==0;}
+function kill(i){
+  if(!alive[i]||nAlive()<=1)return;
+  alive[i]=false;els[i].classList.add('dead');els[i].classList.remove('now');els[i].setAttribute('aria-hidden','true');
+  if(document.activeElement===els[i]||focusIdx===i){const j=nearest(i);if(j>=0){setFocus(j,document.activeElement===els[i]);}}
+  // a kill in the middle of a step: the partial step is thrown away from the measurement
+  resetMeasure();syncN();
+}
+function setAliveCount(n){
+  let cur=nAlive();
+  for(let i=TOTAL-1;i>=0&&cur>n;i--)if(alive[i]){alive[i]=false;cur--;}
+  for(let i=0;i<TOTAL&&cur<n;i++)if(!alive[i]){alive[i]=true;cur++;}
+  els.forEach((e,i)=>{e.classList.toggle('dead',!alive[i]);if(alive[i])e.removeAttribute('aria-hidden');else e.setAttribute('aria-hidden','true');});
+  if(!alive[focusIdx])setFocus(firstAliveFrom(0),false);
+  placeAll();resetMeasure();syncN();
+}
+function nearest(i){for(let d=1;d<TOTAL;d++){if(i+d<TOTAL&&alive[i+d])return i+d;if(i-d>=0&&alive[i-d])return i-d;}return -1;}
+function setFocus(j,move){els[focusIdx].tabIndex=-1;focusIdx=j;els[j].tabIndex=0;if(move)els[j].focus();}
+function nav(e,i){
+  const r=Math.floor(i/COLS),c=i%COLS;let dr=0,dc=0;
+  if(e.key==='ArrowRight')dc=1;else if(e.key==='ArrowLeft')dc=-1;else if(e.key==='ArrowDown')dr=1;else if(e.key==='ArrowUp')dr=-1;else return;
+  e.preventDefault();
+  let rr=r+dr,cc=c+dc;
+  while(rr>=0&&rr<ROWS&&cc>=0&&cc<COLS){const j=rr*COLS+cc;if(alive[j]){setFocus(j,true);return;}rr+=dr;cc+=dc;}
+}
+
+/* ---------- curve ---------- */
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function drawCurve(){
+  const {g,w,h}=setupCanvas($('curve')),pad={l:44,r:14,t:24,b:34},YM=240,N=nAlive();
+  const X=n=>pad.l+(w-pad.l-pad.r)*(55-n)/54,Y=s=>pad.t+(h-pad.t-pad.b)*(1-Math.min(s,YM*1.02)/YM);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let v=0;v<=YM;v+=60){g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,Y(v));}
+  g.textAlign='center';g.textBaseline='top';
+  [55,44,28,11,1].forEach(n=>g.fillText(n,X(n),h-pad.b+6));
+  g.textAlign='left';g.textBaseline='top';g.fillText('speed, px/s',4,2);g.textBaseline='top';g.textAlign='right';g.fillText('aliens alive →',w-pad.r,h-14);
+  const curve=(f,col,wd,alpha)=>{
+    g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+    g.globalAlpha=alpha;g.strokeStyle=col;g.lineWidth=wd;g.beginPath();
+    for(let n=55;n>=1;n-=0.25){const x=X(n),y=Y(D*f/n);n===55?g.moveTo(x,y):g.lineTo(x,y);}
+    g.stroke();g.restore();
+  };
+  [30,60,120].filter(f=>f!==F).forEach(f=>{curve(f,css('--ink-soft'),1.5,.4);});
+  curve(F,css('--blood'),2.5,1);
+  // faint labels for the other curves near N = 3
+  g.globalAlpha=.7;g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='bottom';
+  [30,60,120].forEach(f=>{const s=D*f/2;if(s<YM)g.fillText('F='+f,X(2)-6,Y(s)-2);});
+  g.globalAlpha=1;
+  const s=D*F/N,cx=X(N),cy=Y(s);
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(cx,pad.t);g.lineTo(cx,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--blood');g.beginPath();g.arc(cx,cy,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+}
+
+/* ---------- readouts ---------- */
+let liveTimer=null,livePending=false;
+function announce(){
+  if(liveTimer){livePending=true;return;}
+  const N=nAlive();
+  $('live').textContent=`${N} aliens, F ${F}: ${trim(F/N,2)} steps per second, ${trim(D*F/N,2)} pixels per second, ${(N/F).toFixed(3)} seconds per step.`;
+  liveTimer=setTimeout(()=>{liveTimer=null;if(livePending){livePending=false;announce();}},1000);
+}
+function syncN(){
+  const N=nAlive();
+  $('nIn').value=N;$('oN').textContent=N;$('iFps').textContent=N;
+  $('rN').textContent=N;$('rSps').textContent=trim(F/N,2);$('rSpd').textContent=trim(D*F/N,2);$('rTps').textContent=(N/F).toFixed(3);
+  $('lgF').textContent=F;
+  const rows=[55,44,28,11,5,2,1];if(!rows.includes(N)){rows.push(N);rows.sort((a,b)=>b-a);}
+  $('tbl').innerHTML=rows.map(n=>`<tr class="${n===N?'here':''}"><td>${n}</td><td>${n}</td><td>${trim(F/n,2)}</td><td>${trim(D*F/n,2)}</td><td>${(n/F).toFixed(3)}</td></tr>`).join('');
+  const s55=D*F/55,s=D*F/N;
+  $('insight').innerHTML=`Every frame the loop moves <b>1</b> alien, at every alien count. With ${N} alive a formation step needs ${N} frames, so the march runs at <b>${trim(s,2)} px/s</b>${N===55?'':`, ${trim(s/s55,2)}&times; the speed at 55 aliens`}. `+
+    (F!==60?`At F = ${F} the whole curve is ${F>60?'':'only '}${trim(F/60,2)}&times; the arcade's: the same code on a ${F>60?'faster':'slower'} loop changes the game's difficulty. That is the turbo-button problem.`:`Try F = 120 to see the same code run on a faster machine.`);
+  drawCurve();renderInstr();announce();
+}
+
+/* ---------- loop driver: fixed step accumulator ---------- */
+function loop(t){
+  if(last===null)last=t;
+  let dt=Math.min(.25,(t-last)/1000);last=t;
+  if(playing){acc+=dt;const stepT=1/F;let n=0;while(acc>=stepT&&n<50){tick();acc-=stepT;n++;}if(n)renderInstr();}
+  requestAnimationFrame(loop);
+}
+function setPlaying(p){playing=p;acc=0;$('bPlay').setAttribute('aria-pressed',p?'true':'false');$('bPlay').textContent=p?'Pause':'Play';}
+$('bPlay').onclick=()=>setPlaying(!playing);
+$('bFrame').onclick=()=>{setPlaying(false);tick();renderInstr();};
+$('bStep').onclick=()=>{setPlaying(false);const s=steps;let g=0;while(steps===s&&g++<TOTAL+1)tick();renderInstr();};
+$('bReset').onclick=()=>{alive.fill(true);cursor=0;frame=0;steps=0;ox=8;oy=8;dir=1;mx=D;my=0;
+  if(nowIdx>=0)els[nowIdx].classList.remove('now');nowIdx=-1;setAliveCount(55);resetMeasure();placeAll();syncN();};
+$('nIn').addEventListener('input',e=>setAliveCount(+e.target.value));
+$('fSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  F=+b.dataset.f;$('fSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));acc=0;syncN();
+});
+reduced.addEventListener('change',()=>{if(reduced.matches)setPlaying(false);});
+window.addEventListener('resize',()=>{placeAll();drawCurve();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawCurve);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawCurve);
+setPlaying(playing);placeAll();syncN();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Who wins the tie? · CS101 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.verdict{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:baseline;margin:0 0 16px;padding:12px 16px;border-radius:10px;background:var(--paper-2);border-left:6px solid var(--c,var(--ink))}
+.verdict b{font-family:var(--serif);font-size:1.35rem}
+.verdict span{color:var(--ink-soft)}
+.cols{display:grid;grid-template-columns:1fr 1.15fr;gap:16px;align-items:start}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 2px}
+.sub{color:var(--ink-soft);font-size:.88rem;margin:0 0 10px}
+.defs{font-family:var(--mono);font-size:.9rem;background:var(--paper-2);border-radius:var(--radius-sm);padding:8px 10px;margin:0 0 10px;overflow-wrap:anywhere}
+.defs div{white-space:pre-wrap}
+.defs .val{color:var(--ink-soft)}
+ol.chain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:8px 8px 8px 6px;border:1.5px solid var(--ink-soft);border-radius:10px;background:var(--paper);touch-action:none;user-select:none;-webkit-user-select:none}
+.card:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.card.fixed{border-style:dashed;padding-left:12px;grid-template-columns:1fr auto}
+.card.dragging{box-shadow:0 6px 18px rgba(0,0,0,.25);border-color:var(--focus);position:relative;z-index:2}
+.grip{cursor:grab;color:var(--ink-soft);font-size:1.1rem;padding:6px 4px;line-height:1}
+.code{font-family:var(--mono);font-size:.92rem;overflow-wrap:anywhere;min-width:0}
+.kw{color:var(--steel);font-weight:700}
+.str{color:var(--ochre)}
+.state{display:block;font-family:var(--sans);font-size:.8rem;font-weight:700;letter-spacing:.03em;margin-top:2px}
+.card.fired{border-color:var(--moss);background:color-mix(in srgb,var(--moss) 14%,var(--paper));border-width:2.5px}
+.card.fired .state{color:var(--moss)}
+.card.checked .state{color:var(--ink-soft)}
+.card.skipped{opacity:.5}
+.card.skipped .state{color:var(--ink-soft)}
+.moves{display:flex;gap:4px}
+.moves button{font:700 .95rem var(--sans);width:36px;height:36px;border-radius:8px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);cursor:pointer}
+.moves button:disabled{opacity:.3;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:480px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-family:var(--mono);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+.lbl{font-weight:600;font-size:.9rem;margin-right:4px}
+.seg{display:inline-flex;border:1.5px solid var(--steel);border-radius:8px;overflow:hidden}
+.seg button{font:600 .92rem var(--mono);padding:7px 14px;border:0;background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.seg button+button{border-left:1.5px solid var(--steel)}
+.seg button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip{font:600 .84rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--grid);vertical-align:middle}
+th{font-size:.82rem;color:var(--ink-soft);font-weight:600}
+td.num{font-family:var(--mono);white-space:nowrap}
+td button{font:600 .9rem var(--sans);background:none;border:0;color:var(--ink);text-decoration:underline;text-decoration-color:var(--ink-soft);cursor:pointer;padding:2px 0;text-align:left}
+tr.here td{background:var(--paper-2)}
+tr.here td:first-child{box-shadow:inset 4px 0 0 var(--focus)}
+.mark{font-weight:700;white-space:nowrap}
+.mark.ok{color:var(--moss)}
+.mark.bad{color:var(--blood)}
+tr.wrong td.res{color:var(--blood);font-weight:700}
+.m2{display:none}
+@media (max-width:560px){th:last-child,td:last-child{display:none}.m2{display:block;font-size:.8rem}th,td{padding:6px 5px}table{font-size:.86rem}.defs .val{display:block;padding-left:1.5em}}
+.summary{margin:12px 0 0;font-family:var(--serif);font-size:1.08rem}
+.summary b{font-family:var(--sans)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.fixes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 2 · Worked example</p>
+  <h1>Who wins the tie?</h1>
+  <p class="lede">Both players hit 0 health on the same frame. The chain on the left looks fine, and it answers "P1 wins". The case grid on the right shows why that is wrong. Drag the <code>and</code> branch to the top and watch the red cells turn.</p>
+</header>
+
+<div class="verdict" id="verdict" aria-live="polite"></div>
+
+<div class="cols">
+<section class="panel" aria-labelledby="hA">
+  <h2 id="hA">The chain</h2>
+  <p class="sub">Python checks the branches from the top and runs only the first true one.</p>
+  <div class="defs" id="defs"></div>
+  <ol class="chain" id="chain" aria-label="Branches of the if/elif chain, in order"></ol>
+  <p class="hint">Drag a card by its handle, or focus it and press Alt+Up or Alt+Down. The else card stays last.</p>
+  <div class="fixes" role="group" aria-label="Order presets">
+    <button type="button" class="chip" id="oNaive">Naive order</button>
+    <button type="button" class="chip" id="oRight">Most specific first</button>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="h1">p1_hp <output id="o1">0</output></label>
+      <input id="h1" type="range" min="-20" max="50" step="1" value="0">
+    </div>
+    <div>
+      <label for="h2">p2_hp <output id="o2">0</output></label>
+      <input id="h2" type="range" min="-20" max="50" step="1" value="0">
+    </div>
+  </div>
+  <div class="row" role="group" aria-label="Comparison used in every test">
+    <span class="lbl">Test</span>
+    <span class="seg" id="cmpSeg"><button type="button" data-c="le" aria-pressed="true">&lt;=</button><button type="button" data-c="eq" aria-pressed="false">==</button></span>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="hB">
+  <h2 id="hB">The cases</h2>
+  <p class="sub">The six frames from the lecture. Intended result is the most-specific-first chain with <code>&lt;=</code>. Click a case to load it.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Case</th><th>p1, p2</th><th>Intended</th><th>This chain</th><th></th></tr></thead>
+      <tbody id="grid"></tbody>
+    </table>
+  </div>
+  <p class="summary" id="summary" aria-live="polite"></p>
+  <div class="insight" id="insight"></div>
+</section>
+</div>
+<p class="sr" id="announce" aria-live="polite"></p>
+
+<footer>Tie rule after SmashWiki, "Sudden Death" (Super Smash Bros. series, 1999 to 2018): fighters who lose their last stock on the same frame go to Sudden Death. The cases and results match the table in CS101 week 2, section 3.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const BR={
+  both:{cond:'p1_out and p2_out',res:'sudden death',test:(a,b)=>a&&b},
+  p2:{cond:'p2_out',res:'P1 wins',test:(a,b)=>b},
+  p1:{cond:'p1_out',res:'P2 wins',test:(a,b)=>a}
+};
+const NAIVE=['p2','p1','both'],RIGHT=['both','p2','p1'];
+const CASES=[
+  ['neither out',30,20],['P2 out',30,0],['P1 out',0,20],
+  ['both out',0,0],['both out, overkill',-5,-12],['P2 out, overkill',30,-4]
+];
+let order=NAIVE.slice(),cmp='le',H1=0,H2=0;
+const out=(hp,c)=>c==='le'?hp<=0:hp===0;
+function run(ord,c,h1,h2){
+  const a=out(h1,c),b=out(h2,c),trace=[];let result=null;
+  ord.forEach(k=>{
+    if(result!==null){trace.push('skipped');return;}
+    if(BR[k].test(a,b)){result=BR[k].res;trace.push('fired');}else trace.push('checked');
+  });
+  trace.push(result===null?'fired':'skipped');
+  return {result:result===null?'keep playing':result,trace,a,b};
+}
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+function buildChain(){
+  const ol=$('chain');ol.innerHTML='';
+  order.forEach((k,i)=>{
+    const li=document.createElement('li');
+    li.className='card';li.tabIndex=0;li.dataset.k=k;
+    li.innerHTML=`<span class="grip" aria-hidden="true">&#8942;&#8942;</span>
+      <div class="code"><span class="kw">${i?'elif':'if'}</span> ${esc(BR[k].cond)}: result = <span class="str">"${BR[k].res}"</span><span class="state"></span></div>
+      <span class="moves"><button type="button" data-d="-1" aria-label="Move up" ${i===0?'disabled':''}>&uarr;</button><button type="button" data-d="1" aria-label="Move down" ${i===order.length-1?'disabled':''}>&darr;</button></span>`;
+    li.setAttribute('aria-label',`Branch ${i+1}: ${i?'elif':'if'} ${BR[k].cond}, result ${BR[k].res}`);
+    ol.appendChild(li);
+  });
+  const e=document.createElement('li');
+  e.className='card fixed';e.dataset.k='else';
+  e.innerHTML=`<div class="code"><span class="kw">else</span>: result = <span class="str">"keep playing"</span><span class="state"></span></div><span class="hint" style="margin:0">fixed</span>`;
+  ol.appendChild(e);
+  ol.querySelectorAll('.moves button').forEach(b=>b.onclick=ev=>{
+    const k=b.closest('.card').dataset.k;move(k,+b.dataset.d,true);
+  });
+  ol.querySelectorAll('.card:not(.fixed)').forEach(c=>{
+    c.addEventListener('keydown',ev=>{
+      if(ev.altKey&&(ev.key==='ArrowUp'||ev.key==='ArrowDown')){ev.preventDefault();move(c.dataset.k,ev.key==='ArrowUp'?-1:1,false);}
+    });
+    c.querySelector('.grip').addEventListener('pointerdown',ev=>startDrag(ev,c));
+  });
+}
+function move(k,d,fromButton){
+  const i=order.indexOf(k),j=i+d;
+  if(j<0||j>=order.length)return;
+  order.splice(i,1);order.splice(j,0,k);
+  render(true);
+  const card=$('chain').querySelector(`[data-k="${k}"]`);
+  if(fromButton){const b=card.querySelector(`[data-d="${d}"]`);(b&&!b.disabled?b:card).focus();}
+  else card.focus();
+  $('announce').textContent=`${BR[k].cond} moved to position ${j+1} of 3.`;
+}
+// pointer drag: reorder live as the card crosses a neighbour's midpoint
+function startDrag(ev,card){
+  ev.preventDefault();
+  const k=card.dataset.k;let lastY=ev.clientY;
+  card.classList.add('dragging');card.setPointerCapture&&card.setPointerCapture(ev.pointerId);
+  const onMove=e=>{
+    lastY=e.clientY;
+    const cards=[...$('chain').querySelectorAll('.card:not(.fixed)')];
+    let target=cards.length-1;
+    for(let i=0;i<cards.length;i++){const r=cards[i].getBoundingClientRect();if(lastY<r.top+r.height/2){target=i;break;}}
+    const cur=order.indexOf(k);
+    if(target!==cur){order.splice(cur,1);order.splice(target,0,k);render(true);
+      const nc=$('chain').querySelector(`[data-k="${k}"]`);nc.classList.add('dragging');}
+  };
+  const onUp=()=>{
+    window.removeEventListener('pointermove',onMove);window.removeEventListener('pointerup',onUp);window.removeEventListener('pointercancel',onUp);
+    const nc=$('chain').querySelector(`[data-k="${k}"]`);nc.classList.remove('dragging');nc.focus();
+    $('announce').textContent=`${BR[k].cond} is now at position ${order.indexOf(k)+1} of 3.`;
+  };
+  window.addEventListener('pointermove',onMove);window.addEventListener('pointerup',onUp);window.addEventListener('pointercancel',onUp);
+}
+
+function render(rebuild){
+  if(rebuild)buildChain();
+  const op=cmp==='le'?'<=':'==';
+  const r=run(order,cmp,H1,H2);
+  $('defs').innerHTML=`<div>p1_out = p1_hp ${esc(op)} 0 <span class="val"># ${H1} ${esc(op)} 0 → ${r.a?'True':'False'}</span></div><div>p2_out = p2_hp ${esc(op)} 0 <span class="val"># ${H2} ${esc(op)} 0 → ${r.b?'True':'False'}</span></div>`;
+  [...$('chain').children].forEach((c,i)=>{
+    const s=r.trace[i];c.classList.remove('fired','checked','skipped');c.classList.add(s);
+    c.querySelector('.state').textContent=s==='fired'?'fired':s==='checked'?'checked: False':'skipped';
+  });
+  $('o1').textContent=H1;$('o2').textContent=H2;
+  // case grid
+  let wrong=0;
+  $('grid').innerHTML=CASES.map(([name,a,b],i)=>{
+    const want=run(RIGHT,'le',a,b).result,got=run(order,cmp,a,b).result,ok=want===got;
+    if(!ok)wrong++;
+    const here=a===H1&&b===H2;
+    return `<tr class="${here?'here':''} ${ok?'':'wrong'}" data-i="${i}"><td><button type="button" data-case="${i}" aria-label="Load case ${i+1}, ${name}">${i+1}. ${name}</button></td><td class="num">${a}, ${b}</td><td>${want}</td><td class="res">${got}<span class="mark m2 ${ok?'ok':'bad'}">${ok?'&#10003; matches':'&#10007; wrong'}</span></td><td><span class="mark ${ok?'ok':'bad'}">${ok?'&#10003; matches':'&#10007; wrong'}</span></td></tr>`;
+  }).join('');
+  $('grid').querySelectorAll('[data-case]').forEach(b=>b.onclick=()=>{const c=CASES[+b.dataset.case];setHp(c[1],c[2]);});
+  $('summary').innerHTML=`This chain is wrong in <b>${wrong} of 6</b> cases.`;
+  // verdict for the current frame
+  const want=run(RIGHT,'le',H1,H2).result,ok=want===r.result;
+  $('verdict').style.setProperty('--c',ok?'var(--moss)':'var(--blood)');
+  $('verdict').innerHTML=`<b>This chain says: "${r.result}"</b><span>p1_hp = ${H1}, p2_hp = ${H2}. Intended: "${want}". ${ok?'&#10003; Matches.':'&#10007; Wrong.'}</span>`;
+  // insight
+  const bothIdx=order.indexOf('both'),naiveOrder=bothIdx!==0;
+  let msg;
+  if(wrong===0) msg='Every case reaches its branch. The <code>and</code> branch sits above the two single conditions, and <code>&lt;=</code> catches overkill.';
+  else{
+    const parts=[];
+    if(naiveOrder) parts.push(`The <code>and</code> branch is at position ${bothIdx+1}, so when both players are out an earlier single-condition branch fires first and the <code>and</code> branch never gets a turn.`);
+    if(cmp==='eq') parts.push('With <code>==</code>, a player on &minus;4 health is not "out", so overkill frames fall through to <code>else</code> and the match keeps going with a zombie player.');
+    msg=parts.join(' ');
+  }
+  $('insight').innerHTML=msg;
+  $('oNaive').setAttribute('aria-pressed',order.join()===NAIVE.join());
+  $('oRight').setAttribute('aria-pressed',order.join()===RIGHT.join());
+}
+function setHp(a,b){H1=a;H2=b;$('h1').value=a;$('h2').value=b;render(false);}
+$('h1').addEventListener('input',e=>{H1=+e.target.value;render(false);});
+$('h2').addEventListener('input',e=>{H2=+e.target.value;render(false);});
+$('cmpSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  cmp=b.dataset.c;$('cmpSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));render(false);
+});
+$('oNaive').onclick=()=>{order=NAIVE.slice();render(true);};
+$('oRight').onclick=()=>{order=RIGHT.slice();render(true);};
+render(true);
+})();
+</script>
+</body>
+</html>

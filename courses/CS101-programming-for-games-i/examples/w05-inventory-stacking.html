@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inventory full? CS101 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+--radius-sm:6px;--radius-lg:14px;--hl:#f3d98b;--hl2:#bfe0bb;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--hl:#5a4a1c;--hl2:#2e4d33}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--hl:#5a4a1c;--hl2:#2e4d33}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.views{grid-template-columns:minmax(0,1fr)}}
+h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:0 0 8px}
+h2 small{font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem;margin-left:6px}
+.inv{display:grid;grid-template-columns:repeat(9,minmax(36px,1fr));gap:3px}
+.hotlabel{margin-top:10px!important;padding-top:8px;border-top:2px dashed var(--grid)}
+.rowlabel{font-size:.78rem;color:var(--ink-soft);margin:6px 0 4px}
+.slot{position:relative;aspect-ratio:1;min-width:0;padding:0;border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);background:var(--paper-2);color:var(--ink);cursor:pointer;font:inherit;display:flex;align-items:center;justify-content:center}
+.slot svg{width:62%;height:62%}
+.slot .n{position:absolute;right:2px;bottom:0;font:700 .72rem/1.1 var(--sans);font-variant-numeric:tabular-nums;text-shadow:0 0 2px var(--paper),0 0 2px var(--paper)}
+.slot .idx{position:absolute;left:2px;top:0;font:600 .62rem/1.1 var(--sans);color:var(--ink-soft);opacity:0}
+.slot:hover .idx,.slot:focus-visible .idx{opacity:1}
+.slot.off{opacity:.28;border-style:dashed;cursor:not-allowed}
+.slot.p1{background:var(--hl);border-color:var(--ochre)}
+.slot.p2{background:var(--hl2);border-color:var(--moss)}
+.slot.now{outline:3px solid var(--ink);outline-offset:1px}
+.slot:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.status{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:var(--paper-2);font-variant-numeric:tabular-nums;font-size:1.02rem}
+.status b{font-size:1.15rem}
+.status .sep{color:var(--ink-soft);margin:0 6px}
+.ground{margin-top:10px;border:1.5px dashed var(--ochre);border-radius:10px;padding:8px 10px;font-size:.92rem;min-height:44px}
+.ground strong{font-weight:700}
+.listview{font:500 .82rem/1.45 var(--mono);background:var(--paper-2);border-radius:10px;padding:10px 0;margin:0;max-height:470px;overflow:auto;white-space:pre;font-variant-numeric:tabular-nums}
+@media (max-width:860px){.listview{max-height:320px}}
+.listview span{display:block;padding:0 12px}
+.listview span.p1{background:var(--hl)}
+.listview span.p2{background:var(--hl2)}
+.listview .c{color:var(--ink-soft)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+@media (max-width:860px){.controls{grid-template-columns:minmax(0,1fr)}}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend,.lab{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip svg{width:14px;height:14px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip small{font-weight:400;opacity:.85}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=number]{font:600 1rem var(--sans);width:6.5em;padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+select{font:600 .9rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);max-width:100%}
+.go{font:700 1rem var(--sans);padding:9px 18px;border-radius:999px;border:0;background:var(--ink);color:var(--paper);cursor:pointer}
+.go:disabled{opacity:.5;cursor:wait}
+.check{display:flex;gap:6px;align-items:center;font-size:.9rem;margin-top:8px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:600 .84rem var(--sans);padding:7px 11px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (max-width:480px){main{padding:20px 12px 40px}.panel{padding:10px}.inv{gap:2px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 5 · Worked example</p>
+  <h1>&ldquo;Inventory full&rdquo; has two meanings</h1>
+  <p class="lede">This inventory has no empty slot, yet 14 more cobblestone fit because slot 35 still has room. Dirt fits nowhere. Press &ldquo;Pick up&rdquo; and watch the two passes of <code>add_item</code> run on the grid and on the Python list.</p>
+</header>
+
+<section class="panel" aria-label="Inventory simulator">
+  <div class="views">
+    <div>
+      <h2>Slot grid <small>click a slot to empty it</small></h2>
+      <div class="rowlabel">Storage, slots 9-35</div>
+      <div class="inv" id="storage" role="group" aria-label="Storage slots 9 to 35"></div>
+      <div class="rowlabel hotlabel">Hotbar, slots 0-8 (<code>hotbar = slots[0:9]</code>)</div>
+      <div class="inv hot" id="hotbar" role="group" aria-label="Hotbar slots 0 to 8"></div>
+      <p class="status" id="status" aria-live="polite"></p>
+      <div class="ground" id="ground" aria-live="polite"></div>
+    </div>
+    <div>
+      <h2>The same list in Python <small>what <code>print(inventory)</code> shows</small></h2>
+      <pre class="listview" id="listview" tabindex="0" aria-label="Inventory as a Python list"></pre>
+    </div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ochre)"><b id="rP1">—</b><span>pass 1 moved (top up)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rP2">—</b><span>pass 2 moved (empty slots)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rLeft">—</b><span>leftover to ground</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rPartial">—</b><span id="rPartialL">partial stacks</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <fieldset>
+        <legend>Item (stack size)</legend>
+        <div class="chips" id="items"></div>
+      </fieldset>
+      <div class="row" style="margin-top:12px">
+        <label class="lab" for="count" style="margin:0">Count</label>
+        <input id="count" type="number" min="1" max="500" step="1" value="20">
+        <button class="go" id="pick">Pick up</button>
+      </div>
+      <label class="check"><input type="checkbox" id="skip"> Skip animation</label>
+    </div>
+    <div>
+      <span class="lab" id="foL">Fill order (next pickup)</span>
+      <div class="seg" role="group" aria-labelledby="foL">
+        <button data-fo="partial" aria-pressed="true">partial stacks first</button>
+        <button data-fo="empty" aria-pressed="false">empty slots first</button>
+      </div>
+      <label class="lab" for="p2order" style="margin-top:12px">Pass 2 order</label>
+      <select id="p2order">
+        <option value="asc">0 → 35</option>
+        <option value="storage">storage first (9 → 35, then 0 → 8)</option>
+      </select>
+    </div>
+    <div>
+      <span class="lab" id="prL">Presets</span>
+      <div class="chips" role="group" aria-labelledby="prL">
+        <button class="chip" data-preset="empty" aria-pressed="false">Empty</button>
+        <button class="chip" data-preset="arrow" aria-pressed="false">Arrow trace</button>
+        <button class="chip" data-preset="full" aria-pressed="true">No empty slots</button>
+        <button class="chip" data-preset="reset">Reset</button>
+      </div>
+      <div class="table-wrap">
+        <table aria-label="Room for each item type">
+          <thead><tr><th>Room for</th><th>stack</th><th>room</th></tr></thead>
+          <tbody id="roomBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model: the two-pass <code>add_item</code> from lecture section 2, run on a 36-slot list (Minecraft Java Edition main inventory: 27 storage and 9 hotbar slots; stack sizes 64, 16 or 1, per the Minecraft Wiki). Shapes are generic stand-ins for item types. Room for an item = free space in matching stacks + empty slots × stack size.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('en-US');
+const ITEMS={
+  cobblestone:{stack:64,label:'cobblestone',shape:"square",color:"--ink"},
+  dirt:{stack:64,label:'dirt',shape:'circle',color:'--ochre'},
+  arrow:{stack:64,label:'arrow',shape:'triangle',color:'--blood'},
+  pearl:{stack:16,label:'pearl',shape:'diamond',color:'--moss'},
+  pickaxe:{stack:1,label:'pickaxe',shape:'bar',color:'--steel'}
+};
+const ORDER=['cobblestone','dirt','arrow','pearl','pickaxe'];
+function shape(item){
+  const it=ITEMS[item],c=`var(${it.color})`;
+  const p={square:`<rect x="3" y="3" width="18" height="18" rx="2" fill="${c}"/>`,
+    circle:`<circle cx="12" cy="12" r="9.5" fill="${c}"/>`,
+    triangle:`<path d="M12 2 L22 21 L2 21 Z" fill="${c}"/>`,
+    diamond:`<path d="M12 1 L23 12 L12 23 L1 12 Z" fill="${c}"/>`,
+    bar:`<rect x="2" y="9" width="20" height="6" rx="2" fill="${c}"/><rect x="9" y="3" width="6" height="18" rx="2" fill="${c}" opacity=".55"/>`}[it.shape];
+  return `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+}
+
+let slots=new Array(36).fill(null), nEnabled=36, ground={}, preset='full', item='cobblestone', fillOrder='partial', busy=false;
+let touched={}; // slot -> 'p1'|'p2'
+let last=null;  // {p1,p2,left,item}
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+function presetState(name){
+  const s=new Array(36).fill(null);let n=36;
+  if(name==='arrow'){n=5;s[1]=['arrow',60];s[3]=['arrow',10];}
+  if(name==='full'){for(let i=0;i<35;i++)s[i]=i%2===0?['dirt',64]:['pickaxe',1];s[35]=['cobblestone',50];}
+  return {s,n};
+}
+function load(name){
+  const st=presetState(name);slots=st.s;nEnabled=st.n;ground={};touched={};last=null;preset=name;
+  if(name==='arrow'){setItem('arrow');$('count').value=70;}
+  if(name==='full'){setItem('cobblestone');$('count').value=20;}
+  document.querySelectorAll('[data-preset]').forEach(b=>{if(b.dataset.preset!=='reset')b.setAttribute('aria-pressed',b.dataset.preset===name);});
+  render();
+}
+function room(it){
+  const ss=ITEMS[it].stack;let r=0;
+  for(let i=0;i<nEnabled;i++){const s=slots[i];if(s===null)r+=ss;else if(s[0]===it&&s[1]<ss)r+=ss-s[1];}
+  return r;
+}
+function empties(){let e=0;for(let i=0;i<nEnabled;i++)if(slots[i]===null)e++;return e;}
+function partials(it){const ss=ITEMS[it].stack;let p=0;for(let i=0;i<nEnabled;i++){const s=slots[i];if(s&&s[0]===it&&s[1]<ss)p++;}return p;}
+
+// Build the ordered list of steps add_item would take. Each step: {pass, i, moved}
+function plan(it,count){
+  const ss=ITEMS[it].stack,sim=slots.map(s=>s&&s.slice()),steps=[];
+  const p2idx=[];
+  if($('p2order').value==='storage'){for(let i=9;i<nEnabled;i++)p2idx.push(i);for(let i=0;i<Math.min(9,nEnabled);i++)p2idx.push(i);}
+  else for(let i=0;i<nEnabled;i++)p2idx.push(i);
+  const pass1=()=>{for(let i=0;i<nEnabled&&count>0;i++){const s=sim[i];if(s&&s[0]===it&&s[1]<ss){const m=Math.min(ss-s[1],count);sim[i]=[it,s[1]+m];count-=m;steps.push({pass:1,i,moved:m});}}};
+  const pass2=()=>{for(const i of p2idx){if(count<=0)break;if(sim[i]===null){const m=Math.min(ss,count);sim[i]=[it,m];count-=m;steps.push({pass:2,i,moved:m});}}};
+  if(fillOrder==='partial'){pass1();pass2();}else{pass2();pass1();}
+  return {steps,left:count};
+}
+function applyStep(st,it){
+  const s=slots[st.i];slots[st.i]=[it,(s?s[1]:0)+st.moved];touched[st.i]='p'+st.pass;
+}
+async function pickUp(){
+  if(busy)return;
+  let count=Math.round(+$('count').value);if(!(count>=1))count=1;if(count>500)count=500;$('count').value=count;
+  const it=item,{steps,left}=plan(it,count);
+  touched={};last={p1:0,p2:0,left:0,item:it,count,order:fillOrder,running:true};
+  const animate=!($('skip').checked||reduce.matches);
+  busy=true;$('pick').disabled=true;
+  for(const st of steps){
+    applyStep(st,it);last['p'+st.pass]+=st.moved;
+    if(animate){render(st.i);await new Promise(r=>setTimeout(r,150));}
+  }
+  last.left=left;last.running=false;
+  if(left>0)ground[it]=(ground[it]||0)+left;
+  busy=false;$('pick').disabled=false;render();
+}
+function slotLabel(i){
+  if(i>=nEnabled)return `Slot ${i}, disabled in this preset`;
+  const s=slots[i];return s?`Slot ${i}, ${ITEMS[s[0]].label}, ${s[1]} of ${ITEMS[s[0]].stack}`:`Slot ${i}, empty`;
+}
+function buildGrid(){
+  const mk=i=>{const b=document.createElement('button');b.className='slot';b.id='s'+i;b.dataset.i=i;
+    b.addEventListener('click',()=>{if(busy||i>=nEnabled||!slots[i])return;slots[i]=null;touched={};render();});return b;};
+  for(let r=0;r<3;r++)for(let c=0;c<9;c++)$('storage').appendChild(mk(9+r*9+c));
+  for(let i=0;i<9;i++)$('hotbar').appendChild(mk(i));
+}
+function render(now){
+  for(let i=0;i<36;i++){
+    const b=$('s'+i),s=slots[i],off=i>=nEnabled;
+    b.className='slot'+(off?' off':'')+(touched[i]?' '+touched[i]:'')+(now===i?' now':'');
+    b.setAttribute('aria-label',slotLabel(i));b.title=slotLabel(i);
+    b.setAttribute('aria-disabled',off?'true':'false');
+    b.innerHTML=`<span class="idx" aria-hidden="true">${i}</span>`+(s?shape(s[0])+`<span class="n" aria-hidden="true">${s[1]}</span>`:'');
+  }
+  // list view
+  const lines=['inventory = ['];let firstTouched=null;
+  for(let i=0;i<nEnabled;i++){
+    const s=slots[i],body=s?`('${s[0]}', ${s[1]}),`:'None,';
+    const pad=' '.repeat(Math.max(1,22-body.length));
+    lines.push(`<span class="${touched[i]||''}" id="L${i}">  ${body}${pad}<span class="c" style="display:inline;padding:0"># ${i}</span></span>`);
+    if(touched[i]&&firstTouched===null)firstTouched=i;
+  }
+  lines.push(']');
+  const lv=$('listview');lv.innerHTML=lines.map(l=>l.startsWith('<span')?l:`<span>${l}</span>`).join('');
+  const focusLine=now!==undefined?now:firstTouched;
+  if(focusLine!==null&&focusLine!==undefined){const el=$('L'+focusLine);if(el){const top=el.offsetTop-lv.clientHeight/2;lv.scrollTop=Math.max(0,top);}}
+  // status
+  $('status').innerHTML=`Empty slots: <b>${empties()}</b> <span class="sep">·</span> Room for ${ITEMS[item].label}: <b>${fmt(room(item))}</b>`;
+  const g=Object.keys(ground).filter(k=>ground[k]>0);
+  $('ground').innerHTML='<strong>Ground:</strong> '+(g.length?g.map(k=>`${ITEMS[k].label} × ${ground[k]}`).join(', '):'nothing left behind');
+  // room table
+  $('roomBody').innerHTML=ORDER.map(k=>`<tr class="${k===item?'here':''}"><td>${ITEMS[k].label}</td><td>${ITEMS[k].stack}</td><td>${fmt(room(k))}</td></tr>`).join('');
+  // readouts
+  if(last){$('rP1').textContent=last.p1;$('rP2').textContent=last.p2;$('rLeft').textContent=last.running?'…':last.left;}
+  else{$('rP1').textContent='—';$('rP2').textContent='—';$('rLeft').textContent='—';}
+  const pit=last?last.item:item;
+  $('rPartial').textContent=partials(pit);$('rPartialL').textContent=`partial stacks of ${ITEMS[pit].label}`;
+  insight();
+}
+function insight(){
+  const e=empties(),r=room(item),lbl=ITEMS[item].label;let s='';
+  if(last&&!last.running){
+    const p=partials(last.item),L=ITEMS[last.item].label;
+    s=`Picked up ${last.count} × ${L} (${last.order==='partial'?'partial stacks first':'empty slots first'}): pass 1 topped up ${last.p1}, pass 2 started ${last.p2} in empty slots, ${last.left} went to the ground. `;
+    if(p>1)s+=`<b>${p===3?'Three':p} partial stacks of ${L} remain.</b> Topping up first would have left at most one.`;
+    else if(last.left>0&&last.p1+last.p2===0)s+=`Nothing fit: no ${L} stack has room and no slot is empty.`;
+    else s+=`${p} partial stack${p===1?'':'s'} of ${L} remain${p===1?'s':''}.`;
+  } else if(e===0&&r>0){
+    s=`<b>Empty slots: 0</b>, but room for ${lbl}: <b>${fmt(r)}</b>. "No empty slots" and "can't pick this up" are different checks. Pick up 20 and ${Math.min(20,r)} go in.`;
+  } else if(r===0){
+    s=`No room for ${lbl}: every ${lbl} stack is full and no slot is empty.`;
+  } else {
+    s=`Room for ${lbl}: ${fmt(r)} = ${e} empty slot${e===1?'':'s'} × ${ITEMS[item].stack}${r>e*ITEMS[item].stack?` + ${fmt(r-e*ITEMS[item].stack)} free in partial stacks`:''}.`;
+  }
+  $('insight').innerHTML=s;
+}
+function setItem(k){item=k;document.querySelectorAll('#items .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.item===k));}
+
+// item chips
+ORDER.forEach(k=>{const b=document.createElement('button');b.className='chip';b.dataset.item=k;b.setAttribute('aria-pressed','false');
+  b.innerHTML=`${shape(k)}${ITEMS[k].label} <small>(${ITEMS[k].stack})</small>`;
+  b.addEventListener('click',()=>{if(busy)return;setItem(k);last=null;render();});$('items').appendChild(b);});
+buildGrid();
+$('pick').addEventListener('click',pickUp);
+$('count').addEventListener('keydown',e=>{if(e.key==='Enter')pickUp();});
+document.querySelectorAll('[data-fo]').forEach(b=>b.addEventListener('click',()=>{fillOrder=b.dataset.fo;document.querySelectorAll('[data-fo]').forEach(x=>x.setAttribute('aria-pressed',x===b));}));
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{if(busy)return;load(b.dataset.preset==='reset'?preset:b.dataset.preset);}));
+setItem('cobblestone');
+load('full');
+})();
+</script>
+</body>
+</html>

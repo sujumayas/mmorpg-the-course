@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fixed-timestep accumulator — CS101 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+figure{margin:0 0 14px;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.tl{display:grid;grid-template-columns:1fr 92px;gap:10px;align-items:stretch}
+#cTl{display:block;width:100%;height:190px}
+#cAcc{display:block;width:100%;height:190px}
+#cJump{display:block;width:100%;height:300px}
+@media (max-width:760px){#cJump{height:250px}#cTl,#cAcc{height:170px}.tl{grid-template-columns:1fr 74px}}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block;line-height:1.3}
+.stat em{font-style:normal;font-weight:600;color:var(--ink);font-size:.84rem;display:block}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0 0}
+@media (max-width:760px){.nums{grid-template-columns:repeat(2,1fr)}}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:6px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label.sl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 4px}
+.ticks{display:flex;justify-content:space-between;font-size:.74rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;margin:-4px 2px 8px}
+.switch{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer;margin:4px 0 10px}
+.switch input{width:22px;height:22px;accent-color:var(--moss)}
+.buttons,.chips{display:flex;flex-wrap:wrap;gap:8px}
+.btn,.chip{font:600 .9rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.warn{border-color:var(--blood);color:var(--blood)}
+.chip{border-color:var(--steel);padding:6px 10px;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.group-label{font-weight:600;font-size:.92rem;display:block;margin:10px 0 6px}
+.insight{margin:14px 0 0;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:100%}
+caption{text-align:left;font-family:var(--serif);font-weight:600;padding-bottom:6px}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.step td:nth-child(3){color:var(--steel);font-weight:700}
+tr.hitch td{background:var(--paper-2);font-weight:700}
+@media (max-width:480px){th,td{padding:5px 5px;font-size:.86rem}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 9 · Worked example</p>
+  <h1>One 60 Hz simulation inside any screen</h1>
+  <p class="lede">The screen deposits real time into the accumulator every frame. The simulation withdraws it in fixed 1/60 s chunks. Balls B and C reach the same height on every display rate. Ball A, which uses the screen's own <code>dt</code>, does not.</p>
+</header>
+
+<section class="panel" aria-label="Accumulator">
+  <figure>
+    <figcaption>Timeline, last 250 ms of real time<small>Render frames above the line, simulation steps below. The green diamond is the moment C draws: <code>lerp(previous, current, alpha)</code>.</small></figcaption>
+    <div class="tl">
+      <canvas id="cTl" role="img" aria-label="Timeline of render frames and simulation steps"></canvas>
+      <canvas id="cAcc" role="img" aria-label="Accumulator level"></canvas>
+    </div>
+    <div class="nums" aria-live="off">
+      <div class="stat" style="--c:var(--ochre)"><b id="nDep">—</b><span>last deposit (ms)</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nSteps">—</b><span>steps this frame</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="nLeft">—</b><span>leftover (ms)</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="nAlpha">—</b><span>alpha</span></div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>The same jump, drawn three ways<small><code>v0 = 400</code> px/s, <code>g = 1000</code> px/s², semi-implicit Euler. Dashed line: exact apex 80 px. Each trace shows the drawn height over the last second.</small></figcaption>
+    <canvas id="cJump" role="img" aria-label="Three bouncing balls: variable timestep, fixed step, fixed step with interpolation"></canvas>
+    <div class="cols" aria-live="polite">
+      <div class="stat" style="--c:var(--blood)"><em>A · variable dt</em><b id="pA">—</b><span>peak height (px)</span></div>
+      <div class="stat" style="--c:var(--steel)"><em>B · fixed, latest state</em><b id="pB">—</b><span>peak height (px)</span></div>
+      <div class="stat" style="--c:var(--moss)"><em>C · fixed, interpolated</em><b id="pC">—</b><span>peak height (px)</span></div>
+    </div>
+  </figure>
+
+  <div class="controls">
+    <div>
+      <label class="sl" for="disp">Display rate <output id="oDisp">144 fps</output></label>
+      <input id="disp" type="range" min="0" max="6" step="1" value="5">
+      <div class="ticks" aria-hidden="true"><span>30</span><span>50</span><span>60</span><span>90</span><span>120</span><span>144</span><span>240</span></div>
+      <label class="sl" for="sim">Simulation rate <output id="oSim">60 Hz</output></label>
+      <input id="sim" type="range" min="0" max="5" step="1" value="4">
+      <div class="ticks" aria-hidden="true"><span>10</span><span>20</span><span>30</span><span>50</span><span>60</span><span>120</span></div>
+    </div>
+    <div>
+      <label class="switch"><input type="checkbox" id="clamp" checked> Clamp frame time at 0.25 s</label>
+      <div class="buttons">
+        <button class="btn warn" id="hitch">Hitch (300 ms frame)</button>
+        <button class="btn" id="pause" aria-pressed="false">Pause</button>
+        <button class="btn" id="step">Step one frame</button>
+        <button class="btn" id="restart">Restart</button>
+      </div>
+      <span class="group-label" id="spdLabel">Playback speed</span>
+      <div class="chips" role="group" aria-labelledby="spdLabel">
+        <button class="chip" data-speed="1" aria-pressed="false">1×</button>
+        <button class="chip" data-speed="0.25" aria-pressed="true">0.25×</button>
+        <button class="chip" data-speed="0.05" aria-pressed="false">0.05×</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Last 12 display frames</caption>
+      <thead><tr><th>Frame</th><th>Deposit</th><th>Steps run</th><th>Leftover</th><th>alpha</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model, per display frame: <code>ft = min(frame time, 0.25)</code> if the clamp is on; <code>acc += ft</code>; while <code>acc ≥ SIM_DT − 1e-9</code>, run one step and subtract <code>SIM_DT</code>; <code>alpha = acc / SIM_DT</code>. The tiny tolerance absorbs floating-point error so twelve 144 Hz frames give exactly five 60 Hz steps. The display is simulated, so the numbers do not depend on your real monitor. After Glenn Fiedler, "Fix Your Timestep!" (2004).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DISP=[30,50,60,90,120,144,240],SIMS=[10,20,30,50,60,120];
+const V0=400,G=1000,EPS=1e-9,WIN=0.25;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let disp=144,simHz=60,SIM_DT=1/60,clamp=true,speed=0.25,paused=reduce,hitchNext=false;
+let T,acc,frameN,simClock,lost,A,B,prevB,frames,steps,lostSpans,rows,trace,last;
+
+function ball(){return {y:0,v:V0,max:0,peak:null,done:false};}
+function step(s,dt){ // semi-implicit Euler, relaunch on landing
+  const n={y:s.y,v:s.v-G*dt,max:s.max,peak:s.peak,done:s.done};
+  n.y=s.y+n.v*dt;
+  if(n.y>n.max)n.max=n.y;
+  if(!n.done&&n.v<=0){n.peak=n.max;n.done=true;}
+  if(n.y<=EPS&&n.v<0){n.y=0;n.v=V0;n.max=0;n.done=false;}
+  return n;
+}
+function cleanPeak(dt){let s=ball();for(let i=0;i<100000&&!s.done;i++)s=step(s,dt);return s.peak;}
+function reset(){
+  T=0;acc=0;frameN=0;simClock=0;lost=0;A=ball();B=ball();prevB=B;frames=[];steps=[];lostSpans=[];rows=[];trace=[];last=null;
+  // the peak readout starts from a headless run of one clean jump, then follows the live simulation
+  A.peak=cleanPeak(1/disp);B.peak=cleanPeak(SIM_DT);prevB=B;
+}
+function displayFrame(){
+  const raw=hitchNext?0.3:1/disp;hitchNext=false;
+  const ft=clamp?Math.min(raw,0.25):raw;
+  const t0=T;T+=raw;frameN++;
+  if(raw>ft){lostSpans.push([t0+ft,T]);lost+=raw-ft;}
+  const peakA=A.peak;A=step(A,ft);if(A.peak===null)A.peak=peakA;
+  const before=acc+ft;acc+=ft;let n=0;
+  while(acc>=SIM_DT-EPS){
+    const keep=B.peak;prevB=B;B=step(B,SIM_DT);if(B.peak===null)B.peak=keep;
+    acc-=SIM_DT;simClock+=SIM_DT;n++;
+    steps.push({t:simClock+lost,n:Math.round(simClock/SIM_DT)});
+  }
+  if(Math.abs(acc)<EPS)acc=0;
+  const alpha=acc/SIM_DT;
+  frames.push({t:T,n:frameN});
+  last={ft,raw,before,steps:n,left:acc,alpha};
+  rows.push({n:frameN,ft,steps:n,left:acc,alpha,hitch:raw>0.1});if(rows.length>12)rows.shift();
+  const yC=prevB.y+(B.y-prevB.y)*alpha;
+  trace.push({t:T,a:A.y,b:B.y,c:yC});
+  const cut=T-1.2;
+  while(trace.length&&trace[0].t<cut)trace.shift();
+  while(frames.length&&frames[0].t<T-0.6)frames.shift();
+  while(steps.length&&steps[0].t<T-0.6)steps.shift();
+  while(lostSpans.length&&lostSpans[0][1]<T-0.6)lostSpans.shift();
+}
+const f2=n=>n.toFixed(2),ms=n=>(n*1000).toFixed(2);
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function drawTimeline(){
+  const {g,w,h}=setup($('cTl')),L=8,R=w-8,mid=h*.5,X=t=>R-(T-t)/WIN*(R-L);
+  g.clearRect(0,0,w,h);g.font='11px '+css('--sans');
+  // clamped-away time
+  lostSpans.forEach(([a,b])=>{const xa=Math.max(L,X(a)),xb=Math.min(R,X(b));if(xb<=L)return;g.fillStyle=css('--blood');g.globalAlpha=.14;g.fillRect(xa,10,xb-xa,h-30);g.globalAlpha=1;g.fillStyle=css('--blood');g.textAlign='center';g.textBaseline='top';if(xb-xa>60)g.fillText('clamped away',(xa+xb)/2,12);});
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(L,mid);g.lineTo(R,mid);g.stroke();
+  g.fillStyle=css('--ink-soft');g.textBaseline='bottom';
+  for(let k=0;k<=5;k++){if(w<520&&k%5!==0&&k!==3)continue;const x=L+(R-L)*k/5;g.textAlign=k===0?'left':k===5?'right':'center';g.fillText(k===5?'now':'−'+(250-50*k)+' ms',x,h-2);}
+  g.textAlign='left';g.textBaseline='top';g.fillText('render frames',L,2);g.textBaseline='bottom';g.fillText('simulation steps',L,h-16);
+  const fx=frames.filter(f=>X(f.t)>=L-1),spF=fx.length>1?(R-L)/fx.length:99,everyF=Math.max(1,Math.ceil(22/spF));
+  g.strokeStyle=css('--ochre');g.fillStyle=css('--ink');g.lineWidth=2;g.textAlign='center';g.textBaseline='bottom';
+  fx.forEach(f=>{const x=X(f.t);g.beginPath();g.moveTo(x,mid);g.lineTo(x,mid-34);g.stroke();if(f.n%everyF===0)g.fillText(f.n,x,mid-36);});
+  const sx=steps.filter(s=>X(s.t)>=L-1),spS=sx.length>1?(R-L)/sx.length:99,everyS=Math.max(1,Math.ceil(22/spS));
+  g.strokeStyle=css('--steel');g.textBaseline='top';
+  sx.forEach(s=>{const x=X(s.t);g.beginPath();g.moveTo(x,mid);g.lineTo(x,mid+34);g.stroke();if(s.n%everyS===0)g.fillText(s.n,x,mid+36);});
+  // alpha marker: C draws the state alpha of the way from the previous step to the latest one
+  if(steps.length&&last){
+    const tLast=simClock+lost,tDraw=tLast-SIM_DT+last.alpha*SIM_DT,x=X(tDraw),x1=X(tLast-SIM_DT),x2=X(tLast);
+    g.strokeStyle=css('--moss');g.lineWidth=2;g.beginPath();g.moveTo(Math.max(L,x1),mid+8);g.lineTo(x2,mid+8);g.stroke();
+    g.fillStyle=css('--moss');g.beginPath();g.moveTo(x,mid-7);g.lineTo(x+7,mid);g.lineTo(x,mid+7);g.lineTo(x-7,mid);g.closePath();g.fill();
+    g.strokeStyle=css('--paper');g.lineWidth=1.5;g.stroke();
+  }
+}
+function drawAcc(){
+  const {g,w,h}=setup($('cAcc'));g.clearRect(0,0,w,h);
+  const top=16,bot=h-22,bx=4,bw=Math.min(56,w-8);
+  const before=last?last.before:0,left=last?last.left:0,scale=Math.max(2*SIM_DT,before)*1.08,Y=v=>bot-(bot-top)*v/scale;
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(bx,top,bw,bot-top);
+  g.fillStyle=css('--ochre');g.globalAlpha=.3;g.fillRect(bx,Y(before),bw,bot-Y(before));g.globalAlpha=1;
+  g.fillStyle=css('--ochre');g.fillRect(bx,Y(left),bw,bot-Y(left));
+  const ys=Y(SIM_DT);g.strokeStyle=css('--steel');g.lineWidth=2;g.setLineDash([4,3]);g.beginPath();g.moveTo(bx-4,ys);g.lineTo(bx+bw+4,ys);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--steel');g.font='600 10px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText('SIM_DT',bx+3,Math.max(top+12,ys-3));
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='top';g.font='600 11px '+css('--sans');g.fillText('accumulator',0,0);
+  g.textBaseline='bottom';g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');g.fillText(ms(left)+' ms',0,h-2);
+}
+function drawJump(){
+  const {g,w,h}=setup($('cJump'));g.clearRect(0,0,w,h);
+  const top=14,ground=h-18,Y=y=>ground-(ground-top)*y/100,cw=w/3;
+  const cols=[['a','--blood',A.y],['b','--steel',B.y],['c','--moss',last?prevB.y+(B.y-prevB.y)*last.alpha:B.y]];
+  cols.forEach(([k,col,y],i)=>{
+    const x0=i*cw+6,x1=(i+1)*cw-6,bx=x1-18,tx0=x0,tx1=bx-16;
+    g.fillStyle=css('--paper');g.globalAlpha=.55;g.fillRect(x0,top-6,x1-x0,ground-top+6);g.globalAlpha=1;
+    g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(x0,ground);g.lineTo(x1,ground);g.stroke();
+    g.strokeStyle=css('--ink-soft');g.setLineDash([5,4]);g.lineWidth=1;g.beginPath();g.moveTo(x0,Y(80));g.lineTo(x1,Y(80));g.stroke();g.setLineDash([]);
+    if(i===0){g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText('80 px',x0+2,Y(80)-2);}
+    // trace of drawn height over the last second (step-shaped: held between display frames)
+    g.strokeStyle=css(col);g.lineWidth=1.8;g.globalAlpha=.75;g.beginPath();
+    let first=true,py=0;
+    trace.forEach(p=>{const x=tx1-(T-p.t)/1.0*(tx1-tx0);if(x<tx0)return;const yy=Y(p[k]);if(first){g.moveTo(x,yy);first=false;}else{g.lineTo(x,py);g.lineTo(x,yy);}py=yy;});
+    if(!first)g.lineTo(tx1,py);g.stroke();g.globalAlpha=1;
+    g.fillStyle=css(col);g.beginPath();g.arc(bx,Y(y)-8,8,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.fillStyle=css('--ink');g.font='700 13px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText(k.toUpperCase(),x0+4,top-4);
+  });
+}
+function readouts(){
+  $('pA').textContent=A.peak===null?'—':f2(A.peak);
+  $('pB').textContent=B.peak===null?'—':f2(B.peak);
+  $('pC').textContent=B.peak===null?'—':f2(B.peak);
+  if(last){$('nDep').textContent=ms(last.ft);$('nSteps').textContent=last.steps;$('nLeft').textContent=ms(last.left);$('nAlpha').textContent=last.alpha.toFixed(3);}
+  else['nDep','nSteps','nLeft','nAlpha'].forEach(id=>$(id).textContent='—');
+  $('tbody').innerHTML=rows.map(r=>`<tr class="${r.steps?'step':''} ${r.hitch?'hitch':''}"><td>${r.n}</td><td>${ms(r.ft)} ms</td><td>${r.steps}</td><td>${ms(r.left)} ms</td><td>${r.alpha.toFixed(3)}</td></tr>`).join('')||'<tr><td colspan="5">Press Step to run the first frame.</td></tr>';
+  $('oDisp').textContent=disp+' fps';$('oSim').textContent=simHz+' Hz';
+  $('disp').setAttribute('aria-valuetext',disp+' frames per second');$('sim').setAttribute('aria-valuetext',simHz+' hertz');
+  $('pause').textContent=paused?'Play':'Pause';$('pause').setAttribute('aria-pressed',paused);
+  const pa=A.peak,pb=B.peak;
+  let s=`One display frame is ${ms(1/disp)} ms and one simulation step is ${ms(SIM_DT)} ms, so the screen runs ${f2(simHz/disp)} steps per frame on average. `;
+  s+=`B and C peak at <b>${f2(pb)} px</b> because they only ever step by ${ms(SIM_DT)} ms. A peaks at <b>${f2(pa)} px</b> because its step is the display's frame time.`;
+  if(simHz<=20)s+=' At this simulation rate, look at the traces: B holds each state for several frames and moves in stairs, while C slides between the same states.';
+  if(last&&last.raw>0.1)s+=` The last hitch lasted 300 ms. ${clamp?'The clamp deposited only 250 ms':'With no clamp all 300 ms went in'}, so that frame ran ${last.steps>0?last.steps:''} steps.`;
+  $('insight').innerHTML=s;
+}
+function render(){drawTimeline();drawAcc();drawJump();readouts();}
+
+let wall=0,prevNow=null;
+function loop(now){
+  if(prevNow===null)prevNow=now;
+  const d=Math.min(0.1,(now-prevNow)/1000);prevNow=now;
+  if(!paused){
+    wall+=d*speed;let n=0;
+    while(n<500){const need=hitchNext?0.3:1/disp;if(wall<need)break;wall-=need;displayFrame();n++;}
+    render();
+  }
+  requestAnimationFrame(loop);
+}
+function restart(){reset();wall=0;if(paused)for(let i=0;i<12;i++)displayFrame();render();}
+
+$('disp').addEventListener('input',e=>{disp=DISP[+e.target.value];restart();});
+$('sim').addEventListener('input',e=>{simHz=SIMS[+e.target.value];SIM_DT=1/simHz;restart();});
+$('clamp').addEventListener('change',e=>{clamp=e.target.checked;render();});
+$('hitch').addEventListener('click',()=>{hitchNext=true;wall=0;if(paused){displayFrame();render();}});
+$('pause').addEventListener('click',()=>{paused=!paused;wall=0;render();});
+$('step').addEventListener('click',()=>{paused=true;displayFrame();render();});
+$('restart').addEventListener('click',()=>{reset();wall=0;render();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');speed=+b.dataset.speed;}));
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+
+reset();
+if(reduce){for(let i=0;i<12;i++)displayFrame();}
+render();
+requestAnimationFrame(loop);
+window.__acc={set:(d,s)=>{disp=d;simHz=s;SIM_DT=1/s;$('disp').value=DISP.indexOf(d);$('sim').value=SIMS.indexOf(s);reset();render();},frame:()=>{displayFrame();render();},hitch:()=>{hitchNext=true;displayFrame();render();},rows:()=>rows,peaks:()=>[A.peak,B.peak],pause:()=>{paused=true;render();},run:(n)=>{for(let i=0;i<n;i++)displayFrame();render();},clamp:v=>{clamp=v;$('clamp').checked=v;}};
+})();
+</script>
+</body>
+</html>

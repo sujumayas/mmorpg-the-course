@@ -88,7 +88,7 @@ flowchart LR
 | Course | Syllabus | Lectures written | Examples built (signature) | Labs | Assessments |
 |---|---|---|---|---|---|
 | GD101 | finished | 14/14 | 14 (3) | 14 | 5 |
-| CS101 | stub | 14/14 | 15 (3) | 14 | 4 |
+| CS101 | finished | 14/14 | 15 (3) | 14 | 4 |
 | MA101 | finished | 14/14 | 14 (4) | 14 | 5 |
 | GS101 | finished | 14/14 | 14 (2) | 13 | 4 |
 | AR101 | stub | 0/14 | 0 (2) | 0 | 0 |
@@ -102,25 +102,25 @@ flowchart LR
 | GD201 | stub | 0/14 | 0 (2) | 0 | 0 |
 | GD202 | stub | 0/14 | 0 (1) | 0 | 0 |
 | UX201 | finished | 14/14 | 14 (2) | 14 | 4 |
-| CS202 | stub | 14/14 | 0 (2) | 13 | 0 |
+| CS202 | stub | 14/14 | 10 (2) | 13 | 3 |
 | CS203 | stub | 0/14 | 0 (2) | 0 | 0 |
 | GD203 | finished | 14/14 | 14 (3) | 15 | 4 |
-| DB201 | stub | 13/14 | 0 (1) | 10 | 0 |
+| DB201 | stub | 14/14 | 4 (1) | 14 | 0 |
 | PR201 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO301 | finished | 14/14 | 14 (2) | 13 | 4 |
-| MMO302 | stub | 5/14 | 0 (2) | 3 | 0 |
+| MMO302 | stub | 14/14 | 0 (2) | 13 | 0 |
 | MMO303 | finished | 14/14 | 15 (3) | 14 | 4 |
 | MMO304 | finished | 14/14 | 14 (3) | 12 | 4 |
 | MMO305 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO306 | stub | 0/14 | 0 (2) | 0 | 0 |
 | MMO307 | stub | 0/14 | 0 (3) | 0 | 0 |
 | MMO308 | stub | 0/14 | 0 (2) | 0 | 0 |
-| MMO309 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO309 | stub | 12/14 | 0 (2) | 2 | 0 |
 | PR301 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO401 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO402 | finished | 14/14 | 14 (1) | 13 | 4 |
 | MMO403 | stub | 0/14 | 0 (2) | 0 | 0 |
-| MMO404 | stub | 0/14 | 0 (1) | 0 | 0 |
+| MMO404 | stub | 4/14 | 0 (1) | 3 | 0 |
 | PR401 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO405 | stub | 0/14 | 0 (1) | 0 | 0 |
 | MMO406 | stub | 0/14 | 0 (0) | 0 | 0 |

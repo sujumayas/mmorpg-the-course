@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Every box has an edge · CS101 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 2px}
+.sub{color:var(--ink-soft);font-size:.88rem;margin:0 0 10px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px}
+canvas{display:block;width:100%}
+#ring{height:300px}
+#line{height:170px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 4px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-family:var(--mono);font-size:1.35rem;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.stat.wrapped{--c:var(--blood)}
+.small .stat b{font-size:1.1rem}
+.stat.wrapped b{color:var(--blood)}
+.flag{display:inline-block;font:700 .78rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--paper);background:var(--blood);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.code{font-family:var(--mono);font-size:.9rem;background:var(--paper-2);border-radius:var(--radius-sm);padding:8px 10px;margin:8px 0 0;overflow-wrap:anywhere}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.lbl{font-weight:600;font-size:.9rem;margin-right:4px}
+.seg{display:inline-flex;border:1.5px solid var(--steel);border-radius:8px;overflow:hidden}
+.seg button{font:600 .88rem var(--sans);padding:7px 12px;border:0;background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.seg button+button{border-left:1.5px solid var(--steel)}
+.seg button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:600 .9rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn[aria-pressed="true"]{background:var(--blood);border-color:var(--blood);color:var(--paper)}
+.chip{font:600 .82rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:34px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+input[type=number]{font:1rem var(--mono);width:10.5em;max-width:100%;padding:6px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+label.inl{font-weight:600;font-size:.9rem;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.loop{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--paper-2)}
+.loop p{margin:6px 0 0;font-size:.92rem}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td button{font:inherit;background:none;border:0;color:var(--steel);text-decoration:underline;cursor:pointer;padding:2px 0}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 1 · Worked example</p>
+  <h1>Every box has an edge</h1>
+  <p class="lede">An 8-bit level counter sits at 254. Two presses of +1 and level 256 is stored as 0. On the right, a character at 16,777,216.3 lands on 16,777,216, because a 32-bit float that large has no fractions left. Integers wrap at a hard edge. Floats blur gradually.</p>
+</header>
+
+<div class="cols">
+<section class="panel" aria-labelledby="hA">
+  <h2 id="hA">A. Integer counter</h2>
+  <p class="sub">Every value the box can hold, drawn as a ring. The red notch is the edge where the next step wraps.</p>
+  <figure><canvas id="ring" role="img" aria-label="Ring of every value the counter can hold, with a pointer at the stored value"></canvas></figure>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" id="sTrue" style="--c:var(--ochre)"><b id="rTrue">254</b><span>true level (what the maths says)</span></div>
+    <div class="stat" id="sStored" style="--c:var(--steel)"><b id="rStored">254</b><span>stored in <span id="rBitsTxt">8</span> bits <span id="wrapFlag" class="flag" hidden>wrapped</span></span></div>
+  </div>
+  <p class="code" id="pyLine" aria-live="polite"></p>
+  <p class="hint">Bits in the box: <span class="mono" id="rBin"></span></p>
+
+  <div class="row" role="group" aria-label="Bit width">
+    <span class="lbl">Width</span>
+    <span class="seg" id="widthSeg">
+      <button type="button" data-n="4" aria-pressed="false">4 bits</button><button type="button" data-n="8" aria-pressed="true">8 bits</button><button type="button" data-n="16" aria-pressed="false">16 bits</button>
+    </span>
+  </div>
+  <div class="row" role="group" aria-label="Signed or unsigned">
+    <span class="lbl">Kind</span>
+    <span class="seg" id="signSeg">
+      <button type="button" data-s="0" aria-pressed="true">unsigned</button><button type="button" data-s="1" aria-pressed="false">signed</button>
+    </span>
+  </div>
+  <div class="row" role="group" aria-label="Change the counter">
+    <button type="button" class="btn primary" id="bInc">+1</button>
+    <button type="button" class="btn" id="bInc10">+10</button>
+    <button type="button" class="btn" id="bDec">&minus;1</button>
+    <button type="button" class="btn" id="bRun" aria-pressed="false">Run</button>
+    <button type="button" class="btn" id="bInc50" hidden>+50</button>
+    <button type="button" class="btn" id="bReset">Reset to 2<sup>n</sup>&minus;2</button>
+  </div>
+  <div class="row">
+    <label class="inl" for="trueIn">Set true value <input id="trueIn" type="number" step="1" value="254"></label>
+  </div>
+
+  <div class="loop">
+    <div class="row" style="margin-top:0">
+      <button type="button" class="btn" id="bLoop">Decrement from 0</button>
+      <span class="lbl" style="font-weight:400">The Pac-Man fruit loop, unsigned</span>
+    </div>
+    <p class="mono" id="loopSeq" aria-live="polite">count: 0</p>
+    <p id="loopRuns" aria-live="polite">Press the button. The loop subtracts 1 until the count is back at 0.</p>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Recent values of the counter">
+      <thead><tr><th>Step</th><th>True value</th><th>Stored</th><th></th></tr></thead>
+      <tbody id="hist"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="hB">
+  <h2 id="hB">B. 32-bit float gaps</h2>
+  <p class="sub">A window 10 gaps wide around position x. Every tick is a number a 32-bit float can hold. Nothing in between exists.</p>
+  <figure><canvas id="line" role="img" aria-label="Number line with a tick at every representable 32-bit float near x"></canvas></figure>
+
+  <div class="readout small" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rLog">9</b><span>floor(log2 x)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rGap">—</b><span id="rGapF">gap to next float</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rP">—</b><span>character position p (a 64-bit number)</span></div>
+    <div class="stat" id="sFr" style="--c:var(--moss)"><b id="rFr">—</b><span>Math.fround(p), where it lands <span id="snapFlag" class="flag" hidden>snapped</span></span></div>
+  </div>
+  <p class="code" id="frLine" aria-live="polite"></p>
+
+  <div style="margin-top:12px">
+    <label class="inl" for="xSlider">Position x (log scale) <output class="mono" id="oX">16,777,216</output></label>
+    <input id="xSlider" type="range" min="0" max="26.575424759" step="0.001" value="24" aria-describedby="xHint">
+    <p class="hint" id="xHint">Arrow keys move one power of 2. Shift plus arrow moves in fine steps.</p>
+  </div>
+  <div class="row" role="group" aria-label="Position presets" id="xPresets">
+    <button type="button" class="chip" data-x="1">1</button>
+    <button type="button" class="chip" data-x="1000">1,000</button>
+    <button type="button" class="chip" data-x="1000000">1,000,000</button>
+    <button type="button" class="chip" data-x="8388608">8,388,608</button>
+    <button type="button" class="chip" data-x="16777216">16,777,216</button>
+    <button type="button" class="chip" data-x="100000000">100,000,000</button>
+  </div>
+  <div class="row">
+    <label class="inl" for="xIn">x <input id="xIn" type="number" min="1" max="100000000" step="any" value="16777216"></label>
+    <label class="inl" for="pIn">Character position p <input id="pIn" type="number" step="any" value="16777216.3"></label>
+  </div>
+  <div class="row" role="group" aria-label="Character presets">
+    <span class="lbl">Try p =</span>
+    <button type="button" class="chip" data-p="16777217">16,777,217</button>
+    <button type="button" class="chip" data-p="1000000.3">1,000,000.3</button>
+    <button type="button" class="chip" data-p="3000000.25">3,000,000.25</button>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Gap between 32-bit floats at the lecture's positions">
+      <thead><tr><th>Position x</th><th>floor(log2 x)</th><th>Gap to next float</th></tr></thead>
+      <tbody id="gapTable"></tbody>
+    </table>
+  </div>
+</section>
+</div>
+
+<div class="insight" id="insight" aria-live="polite"></div>
+
+<footer>Pac-Man level 256 and the fruit loop: Jamey Pittman, The Pac-Man Dossier, section on level 256. Float gaps are computed live with JavaScript's Math.fround, which rounds to the nearest 32-bit float, the same type Godot 4 uses for Vector2 and Vector3 positions.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>n.toLocaleString('en-US',{maximumFractionDigits:6});
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+
+/* ---------- Panel A: integer counter ---------- */
+let N=8,signed=false,T=254,step=0,hist=[],runTimer=null,loopAnim=null;
+const pmod=(a,m)=>((a%m)+m)%m;            // Python-style modulo, result in [0, m)
+const size=()=>2**N;
+const pattern=v=>pmod(v,size());            // bit pattern 0..2^n-1
+const stored=v=>signed?pmod(v+2**(N-1),size())-2**(N-1):pmod(v,size());
+const interp=p=>signed&&p>=2**(N-1)?p-size():p;
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+
+function drawRing(){
+  const {g,w,h}=setupCanvas($('ring'));
+  g.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,R=Math.min(w,h)/2-34,M=size();
+  const ang=p=>p/M*Math.PI*2-Math.PI/2;
+  g.font='12px '+css('--sans');
+  // ticks
+  g.strokeStyle=css('--ink-soft');
+  if(M<=256){
+    for(let p=0;p<M;p++){
+      const a=ang(p),major=p%(M/4)===0,len=major?12:(M<=16?9:5);
+      g.lineWidth=major?2:1;g.beginPath();
+      g.moveTo(cx+Math.cos(a)*(R-len),cy+Math.sin(a)*(R-len));g.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);g.stroke();
+    }
+  }else{
+    g.lineWidth=5;g.globalAlpha=.55;g.beginPath();g.arc(cx,cy,R-3,0,Math.PI*2);g.stroke();g.globalAlpha=1;
+    g.lineWidth=2;
+    for(let q=0;q<4;q++){const a=ang(q*M/4);g.beginPath();g.moveTo(cx+Math.cos(a)*(R-12),cy+Math.sin(a)*(R-12));g.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);g.stroke();}
+  }
+  // edge (seam where the stored value jumps)
+  const seam=signed?M/2:0,sa=ang(seam)-Math.PI/M;
+  g.strokeStyle=css('--blood');g.lineWidth=4;g.beginPath();
+  g.moveTo(cx+Math.cos(sa)*(R-20),cy+Math.sin(sa)*(R-20));g.lineTo(cx+Math.cos(sa)*(R+6),cy+Math.sin(sa)*(R+6));g.stroke();
+  // quarter labels
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='middle';
+  for(let q=0;q<4;q++){
+    const p=q*M/4,a=ang(p);
+    g.fillText(fmt(interp(p)),cx+Math.cos(a)*(R+18),cy+Math.sin(a)*(R+18));
+  }
+  // pointer
+  const pp=pattern(T),a=ang(pp),wrapped=stored(T)!==T;
+  const col=wrapped?css('--blood'):css('--steel');
+  g.strokeStyle=col;g.lineWidth=3;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(a)*(R-16),cy+Math.sin(a)*(R-16));g.stroke();
+  g.fillStyle=col;g.beginPath();g.arc(cx+Math.cos(a)*(R-16),cy+Math.sin(a)*(R-16),6,0,Math.PI*2);g.fill();
+  g.beginPath();g.arc(cx,cy,5,0,Math.PI*2);g.fill();
+  // centre label
+  g.fillStyle=css('--ink');g.font='600 '+(N===16?20:26)+'px '+css('--mono');
+  g.fillText(fmt(stored(T)),cx,cy+(Math.sin(a)>0?-26:26));
+}
+
+function renderA(){
+  const s=stored(T),wrapped=s!==T,M=size();
+  $('rTrue').textContent=fmt(T);$('rStored').textContent=fmt(s);$('rBitsTxt').textContent=N;
+  $('sTrue').classList.toggle('wrapped',wrapped);$('sStored').classList.toggle('wrapped',wrapped);
+  $('wrapFlag').hidden=!wrapped;
+  $('pyLine').textContent=signed
+    ?`stored = ((${T} + 2**${N-1}) % 2**${N}) - 2**${N-1} = ${s}`
+    :`stored = ${T} % 2**${N} = ${s}`;
+  $('rBin').textContent=pattern(T).toString(2).padStart(N,'0').replace(/(\d{4})(?=\d)/g,'$1 ');
+  if(document.activeElement!==$('trueIn'))$('trueIn').value=T;
+  $('hist').innerHTML=hist.slice(-5).map(r=>`<tr class="${r===hist[hist.length-1]?'here':''}"><td>${r.step}</td><td>${fmt(r.t)}</td><td>${fmt(r.s)}</td><td>${r.s!==r.t?'wrapped':''}</td></tr>`).join('');
+  const lo=signed?-(2**(N-1)):0,hi=signed?2**(N-1)-1:M-1;
+  let msg=`A ${N}-bit ${signed?'signed':'unsigned'} box holds ${fmt(lo)} to ${fmt(hi)}. `;
+  if(wrapped) msg+=`The maths says ${fmt(T)}, the box says ${fmt(s)}. The extra bits fell off the top. `;
+  else if(T===hi) msg+=`This is the last value before the edge. One more step and it wraps to ${fmt(lo)}. `;
+  else msg+=`${fmt(hi-T+1)} more step${hi-T+1===1?'':'s'} of +1 and it wraps to ${fmt(lo)}. `;
+  $('insight').dataset.a=msg;renderInsight();
+  drawRing();
+}
+function push(){step++;hist.push({step,t:T,s:stored(T)});if(hist.length>50)hist.shift();}
+function setT(v){T=v;push();renderA();}
+function resetHist(){hist=[];step=0;push();}
+$('bInc').onclick=()=>setT(T+1);
+$('bInc10').onclick=()=>setT(T+10);
+$('bInc50').onclick=()=>setT(T+50);
+$('bDec').onclick=()=>setT(T-1);
+$('bReset').onclick=()=>{T=2**N-2;resetHist();renderA();};
+$('trueIn').addEventListener('change',e=>{const v=Math.round(+e.target.value);if(Number.isFinite(v)&&Math.abs(v)<=1e12)setT(v);});
+function stopRun(){if(runTimer){clearInterval(runTimer);runTimer=null;}$('bRun').setAttribute('aria-pressed','false');$('bRun').textContent='Run';}
+$('bRun').onclick=()=>{
+  if(runTimer){stopRun();return;}
+  $('bRun').setAttribute('aria-pressed','true');$('bRun').textContent='Stop';
+  runTimer=setInterval(()=>setT(T+1),150);
+};
+function applyMotion(){
+  const r=reduced.matches;$('bRun').hidden=r;$('bInc50').hidden=!r;if(r)stopRun();
+}
+reduced.addEventListener('change',applyMotion);
+function segSelect(seg,btn){seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===btn?'true':'false'));}
+$('widthSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{segSelect($('widthSeg'),b);N=+b.dataset.n;T=2**N-2;resetHist();resetLoop();renderA();});
+$('signSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{segSelect($('signSeg'),b);signed=b.dataset.s==='1';hist.forEach(r=>r.s=stored(r.t));renderA();});
+
+/* fruit loop */
+function resetLoop(){if(loopAnim){cancelAnimationFrame(loopAnim);loopAnim=null;}$('loopSeq').textContent='count: 0';$('loopRuns').textContent='Press the button. The loop subtracts 1 until the count is back at 0.';}
+function loopText(seq,runs,done){
+  const head=seq.slice(0,3),tail=seq.slice(-3);
+  const s=seq.length<=7?seq.join(' → '):head.join(' → ')+' → … → '+tail.join(' → ');
+  $('loopSeq').textContent='count: '+s;
+  $('loopRuns').innerHTML=done
+    ?`<b>${fmt(runs)} runs</b> for ${N} bits. A loop meant for a handful of fruit ran 2<sup>${N}</sup> times, because 0 minus 1 wrapped to ${fmt(2**N-1)}.`
+    :`runs so far: ${fmt(runs)}`;
+}
+$('bLoop').onclick=()=>{
+  resetLoop();
+  const M=2**N,wrap=v=>pmod(v,M);
+  // run the loop exactly as the lecture's Python does
+  let count=0,runs=0;const seq=[0];
+  while(true){count=wrap(count-1);runs++;seq.push(count);if(count===0)break;}
+  if(N===16||reduced.matches){loopText(seq,runs,true);return;}
+  let i=1;const per=Math.max(1,Math.round(M/90));
+  const tick=()=>{i=Math.min(seq.length,i+per);loopText(seq.slice(0,i),i-1,i===seq.length);if(i<seq.length)loopAnim=requestAnimationFrame(tick);else loopAnim=null;};
+  $('loopRuns').textContent='runs so far: 0';
+  loopAnim=requestAnimationFrame(tick);
+};
+
+/* ---------- Panel B: float32 gaps ---------- */
+const XMAX=1e8,VMAX=Math.log2(XMAX);
+let X=16777216,P=16777216.3;
+const f32=new Float32Array(1),u32=new Uint32Array(f32.buffer);
+function nextUp(v){f32[0]=v;u32[0]+=1;return f32[0];}      // v must be a positive float32
+function nextDown(v){f32[0]=v;u32[0]-=1;return f32[0];}
+function flog2(x){let e=Math.floor(Math.log2(x));if(2**e>x)e--;if(2**(e+1)<=x)e++;return e;}
+const gapOf=x=>2**(flog2(x)-23);
+function gapStr(g){
+  if(g>=1/1024)return fmt(g);
+  return g.toExponential(7).replace(/\.?0+e/,'e');
+}
+function numStr(v){ // exact enough to copy into Python
+  if(Number.isInteger(v))return fmt(v);
+  const s=String(v);return s.includes('e')?s:(Math.abs(v)>=1000?fmt(Math.trunc(v))+s.slice(s.indexOf('.')):s);
+}
+
+function drawLine(){
+  const {g,w,h}=setupCanvas($('line'));
+  g.clearRect(0,0,w,h);
+  const gap=gapOf(X),lo=X-5*gap,hi=X+5*gap,padX=18,axisY=78;
+  const px=v=>padX+(w-2*padX)*(v-lo)/(hi-lo);
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(padX-8,axisY);g.lineTo(w-padX+8,axisY);g.stroke();
+  // representable floats in the window
+  let v=Math.fround(lo);if(v<lo)v=nextUp(v);
+  const ticks=[];let guard=0;
+  while(v<=hi&&guard++<200){ticks.push(v);v=nextUp(v);}
+  g.strokeStyle=css('--steel');g.lineWidth=2;
+  ticks.forEach(t=>{const x=px(t);g.beginPath();g.moveTo(x,axisY-14);g.lineTo(x,axisY+14);g.stroke();});
+  // x marker
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--mono');g.textAlign='center';g.textBaseline='top';
+  const xp=px(X);
+  g.setLineDash([3,3]);g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.beginPath();g.moveTo(xp,axisY+16);g.lineTo(xp,axisY+30);g.stroke();g.setLineDash([]);
+  const xl='x = '+numStr(X);g.textAlign=xp<w*0.25?'left':xp>w*0.75?'right':'center';g.fillText(xl,xp,axisY+32);
+  // gap bracket between the tick at/below x and the next
+  let a=Math.fround(X);if(a>X)a=nextDown(a);const b=nextUp(a);
+  if(a>=lo&&b<=hi){
+    const ax=px(a),bx=px(b);g.strokeStyle=css('--ochre');g.lineWidth=2;
+    g.beginPath();g.moveTo(ax,axisY+52);g.lineTo(ax,axisY+58);g.lineTo(bx,axisY+58);g.lineTo(bx,axisY+52);g.stroke();
+    g.fillStyle=css('--ochre');g.textAlign='center';g.fillText('gap '+gapStr(gap),Math.min(Math.max((ax+bx)/2,60),w-60),axisY+62);
+  }
+  // character: ghost at p, solid at fround(p)
+  const fr=Math.fround(P);
+  const drawPawn=(x,col,ghost)=>{
+    g.globalAlpha=ghost?.45:1;g.fillStyle=col;g.strokeStyle=col;g.lineWidth=2;
+    g.beginPath();g.arc(x,axisY-44,7,0,Math.PI*2);ghost?g.stroke():g.fill();
+    g.beginPath();g.moveTo(x-9,axisY-18);g.lineTo(x,axisY-36);g.lineTo(x+9,axisY-18);g.closePath();ghost?g.stroke():g.fill();
+    g.globalAlpha=1;
+  };
+  g.font='12px '+css('--sans');g.textBaseline='middle';
+  const inWin=t=>t>=lo-gap*0.02&&t<=hi+gap*0.02;
+  if(inWin(P)&&inWin(fr)){
+    if(P!==fr)drawPawn(px(P),css('--ink-soft'),true);
+    drawPawn(px(fr),css('--moss'),false);
+    if(P!==fr){g.strokeStyle=css('--moss');g.lineWidth=1.5;g.beginPath();g.moveTo(px(P),axisY-8);g.lineTo(px(fr),axisY-8);g.stroke();}
+  }else{
+    const right=P>hi,n=Math.abs(P-X)/gap;
+    const ex=right?w-padX:padX;
+    g.fillStyle=css('--moss');g.beginPath();
+    if(right){g.moveTo(ex,axisY-40);g.lineTo(ex-12,axisY-48);g.lineTo(ex-12,axisY-32);}
+    else{g.moveTo(ex,axisY-40);g.lineTo(ex+12,axisY-48);g.lineTo(ex+12,axisY-32);}
+    g.fill();g.fillStyle=css('--ink');g.textAlign=right?'right':'left';
+    g.fillText(`p is ${fmt(Math.round(n))} gaps ${right?'right':'left'} of x`,right?ex-16:ex+16,axisY-40);
+  }
+}
+
+function renderB(){
+  const e=flog2(X),gap=gapOf(X),fr=Math.fround(P),snapped=fr!==P;
+  $('rLog').textContent=e;
+  $('rGap').textContent=gapStr(gap);
+  $('rGapF').textContent=`gap = 2^(${e} - 23) = 2^${e-23}`;
+  $('rP').textContent=numStr(P);
+  $('rFr').textContent=numStr(fr);
+  $('snapFlag').hidden=!snapped;$('sFr').classList.toggle('wrapped',snapped);
+  $('frLine').textContent=`Math.fround(${String(P)}) = ${String(fr)}`+(snapped?`   (moved ${String(Number((fr-P).toPrecision(4)))})`:'   (exact)');
+  $('oX').textContent=numStr(X);
+  if(document.activeElement!==$('xIn'))$('xIn').value=X;
+  if(document.activeElement!==$('pIn'))$('pIn').value=P;
+  $('xSlider').value=Math.log2(X);
+  document.querySelectorAll('#xPresets .chip').forEach(c=>c.setAttribute('aria-pressed',+c.dataset.x===X?'true':'false'));
+  document.querySelectorAll('#gapTable tr').forEach(r=>r.classList.toggle('here',flog2(+r.dataset.x)===e));
+  let msg;
+  if(gap>=2) msg=`Near ${numStr(X)} floats are ${fmt(gap)} apart. Not every whole number exists here, so a character can only stand on every ${gap===2?'second':gap+'th'} unit.`;
+  else if(gap===1) msg=`Near ${numStr(X)} the gap is exactly 1. Whole numbers survive, but every fraction is gone.`;
+  else msg=`Near ${numStr(X)} the gap is ${gapStr(gap)}, which is ${fmt(Math.round(1/gap))} floats per unit. Fine for movement. The gap doubles every time x passes a power of 2.`;
+  if(snapped) msg+=` Your character asked for ${String(P)} and landed on ${String(fr)}.`;
+  $('insight').dataset.b=msg;renderInsight();
+  drawLine();
+}
+function renderInsight(){$('insight').innerHTML=`<b>Counter.</b> ${$('insight').dataset.a||''}<br><b>Float.</b> ${$('insight').dataset.b||''}`;}
+function setX(x,keepP){
+  X=Math.min(XMAX,Math.max(1,x));
+  if(!keepP)P=Number((X+0.3).toPrecision(15));
+  renderB();
+}
+function sliderToX(v){
+  if(Math.abs(v-Math.round(v))<1e-6)return 2**Math.round(v);
+  const x=2**v;return x<10?Number(x.toPrecision(4)):Math.round(x);
+}
+$('xSlider').addEventListener('input',e=>setX(sliderToX(+e.target.value)));
+$('xSlider').addEventListener('keydown',e=>{
+  const k=e.key,up=k==='ArrowRight'||k==='ArrowUp',down=k==='ArrowLeft'||k==='ArrowDown';
+  if(!up&&!down)return;
+  e.preventDefault();
+  let v=Math.log2(X);
+  if(e.shiftKey)v+=up?0.02:-0.02;
+  else v=up?Math.floor(v+1e-9)+1:Math.ceil(v-1e-9)-1;
+  setX(sliderToX(Math.min(VMAX,Math.max(0,v))));
+});
+$('xIn').addEventListener('change',e=>{const v=+e.target.value;if(Number.isFinite(v)&&v>=1)setX(v);});
+$('pIn').addEventListener('change',e=>{const v=+e.target.value;if(Number.isFinite(v)){P=v;renderB();}});
+document.querySelectorAll('#xPresets .chip').forEach(c=>c.onclick=()=>setX(+c.dataset.x));
+document.querySelectorAll('[data-p]').forEach(c=>c.onclick=()=>{P=+c.dataset.p;X=Math.max(1,P);renderB();});
+// gap table from the lecture
+$('gapTable').innerHTML=[1,1000,1e6,8388608,16777216,1e8].map(x=>
+  `<tr data-x="${x}"><td><button type="button" data-gx="${x}">${fmt(x)}</button></td><td>${flog2(x)}</td><td class="mono">${gapStr(gapOf(x))}</td></tr>`).join('');
+document.querySelectorAll('[data-gx]').forEach(b=>b.onclick=()=>setX(+b.dataset.gx));
+
+/* ---------- boot ---------- */
+function redraw(){drawRing();drawLine();}
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+applyMotion();resetHist();renderA();renderB();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+})();
+</script>
+</body>
+</html>

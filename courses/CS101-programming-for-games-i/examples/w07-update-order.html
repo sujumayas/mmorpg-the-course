@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Update order lag, CS101 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+--radius-sm:6px;--radius-lg:14px;--hl:#f3d98b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--hl:#5a4a1c}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--hl:#5a4a1c}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+code{font-family:var(--mono);font-size:.92em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px}
+@media (max-width:899px){.views{grid-template-columns:minmax(0,1fr)}}
+h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:0 0 8px}
+h2 small{font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem;margin-left:6px}
+.tree{list-style:none;margin:0;padding:0}
+.node{display:flex;align-items:center;gap:6px;padding:6px 6px;border-radius:8px;border:1.5px solid transparent;margin-bottom:4px;background:var(--paper-2);transition:background .12s}
+.node.active{background:var(--hl);border-color:var(--ochre)}
+.badge{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 .85rem var(--sans);background:var(--ink);color:var(--paper)}
+.nm{font-family:var(--mono);font-weight:600;font-size:.9rem;flex:1;min-width:0;display:flex;align-items:center;gap:6px}
+.nm .sw{width:10px;height:10px;border-radius:2px;flex:none}
+.nm .elbow{color:var(--ink-soft)}
+.ib{font:600 .8rem var(--sans);min-width:32px;height:32px;padding:0 6px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);cursor:pointer}
+.ib[aria-pressed="true"]{background:var(--steel);border-color:var(--steel);color:var(--paper)}
+.ib:disabled{opacity:.3;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.log{font:500 .78rem/1.5 var(--mono);background:var(--paper-2);border-radius:8px;padding:8px 10px;margin:10px 0 0;white-space:pre-wrap;min-height:6.4em}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px}
+canvas{display:block;width:100%;aspect-ratio:600/220;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;margin:6px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td b{font-size:1.05rem;white-space:nowrap}
+th{white-space:nowrap}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+@media (max-width:899px){.controls{grid-template-columns:minmax(0,1fr)}}
+.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:600 .86rem var(--sans);padding:7px 13px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:600 .9rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.dark{background:var(--ink);color:var(--paper)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (max-width:480px){main{padding:20px 12px 40px}.panel{padding:10px}th,td{padding:5px 4px;font-size:.84rem}td b{font-size:.92rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 7 · Worked example</p>
+  <h1>The health bar is 20 px behind because of its turn</h1>
+  <p class="lede">Both scripts are correct. The bar runs before the enemy in tree order, so every frame it copies where the enemy <em>was</em>. At 1,200 px/s and 60 fps that is 20 px. Press &ldquo;Correct order&rdquo; and the gap drops to 0.</p>
+</header>
+
+<section class="panel" aria-label="Update order simulator">
+  <div class="views">
+    <div>
+      <h2>Scene tree <small>turn number = pre-order position</small></h2>
+      <ul class="tree" id="tree"></ul>
+      <div class="log" id="log" aria-live="polite"></div>
+    </div>
+    <div>
+      <h2>World <small>simulated at the selected frame rate</small></h2>
+      <figure>
+        <canvas id="world" role="img" aria-label="Enemy square moving left and right with a health bar and name label following; rulers show each gap in pixels"></canvas>
+        <div class="legend"><span><i style="background:var(--blood)"></i>Enemy</span><span><i style="background:var(--ochre)"></i>HealthBar</span><span><i style="background:var(--steel)"></i>NameLabel</span></div>
+      </figure>
+      <div class="table-wrap">
+        <table aria-label="Gap readouts">
+          <thead><tr><th>Follower</th><th><code>lag</code><span class="sr">_frames</span></th><th>predicted</th><th>measured</th></tr></thead>
+          <tbody>
+            <tr><td>HealthBar</td><td id="lagB"></td><td><b id="preB"></b></td><td><b id="meaB"></b></td></tr>
+            <tr><td>NameLabel</td><td id="lagL"></td><td><b id="preL"></b></td><td><b id="meaL"></b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="sr" id="announce" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label class="lab" for="v"><span>Enemy speed <code>v</code></span> <output id="oV">1,200 px/s</output></label>
+      <input id="v" type="range" min="0" max="1500" step="50" value="1200">
+      <span class="lab" id="fpsL" style="margin-top:8px">Frame rate</span>
+      <div class="seg" role="group" aria-labelledby="fpsL">
+        <button data-fps="30" aria-pressed="false">30 fps</button>
+        <button data-fps="60" aria-pressed="true">60 fps</button>
+        <button data-fps="144" aria-pressed="false">144 fps</button>
+      </div>
+    </div>
+    <div>
+      <span class="lab" id="prL">Presets</span>
+      <div class="chips" role="group" aria-labelledby="prL">
+        <button class="chip" data-preset="before" aria-pressed="true">Bar before enemy</button>
+        <button class="chip" data-preset="correct" aria-pressed="false">Correct order</button>
+        <button class="chip" data-preset="worst" aria-pressed="false">Worst chain</button>
+        <button class="chip" data-preset="parented" aria-pressed="false">Parented</button>
+      </div>
+    </div>
+    <div>
+      <span class="lab">Time</span>
+      <div class="row">
+        <button class="btn dark" id="play" aria-pressed="false">Pause</button>
+        <button class="btn" id="step">Step one frame</button>
+      </div>
+      <p style="font-size:.84rem;color:var(--ink-soft);margin:8px 0 0">Step walks the tree once and shows each node's turn.</p>
+    </div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model: Godot calls <code>_process</code> in tree order, a pre-order walk (Godot docs, Node). A follower that runs before the node it copies sees last frame's position, so gap = <code>lag_frames × v / fps</code>. A parented node copies nothing; its position comes from its parent at draw time. Measured gaps skip the frames around a bounce. Shapes are generic.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2=n=>n.toFixed(2);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const COL={Enemy:'--blood',HealthBar:'--ochre',NameLabel:'--steel'};
+const PARENT_OK={HealthBar:'Enemy',NameLabel:'HealthBar'};
+let top=[],kids={Enemy:[],HealthBar:[],NameLabel:[]},parent={};
+let v=1200,fps=60,running=!reduce,preset='before';
+const S={ex:40,dir:1,bx:40,lx:40,since:0,frame:0,measB:null,measL:null};
+
+function setPreset(p){
+  preset=p;kids={Enemy:[],HealthBar:[],NameLabel:[]};parent={Enemy:'Main',HealthBar:'Main',NameLabel:'Main'};
+  if(p==='before')top=['HealthBar','Enemy','NameLabel'];
+  if(p==='correct')top=['Enemy','HealthBar','NameLabel'];
+  if(p==='worst')top=['NameLabel','HealthBar','Enemy'];
+  if(p==='parented'){top=['Enemy'];kids.Enemy=['HealthBar'];kids.HealthBar=['NameLabel'];parent.HealthBar='Enemy';parent.NameLabel='HealthBar';}
+  document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.preset===p));
+  changed();
+}
+function matchPreset(){
+  const o=preorder().join(',');const t={'Main,HealthBar,Enemy,NameLabel':'before','Main,Enemy,HealthBar,NameLabel':'correct','Main,NameLabel,HealthBar,Enemy':'worst'};
+  let p=null;if(parent.HealthBar==='Enemy'&&parent.NameLabel==='HealthBar')p='parented';else if(parent.HealthBar==='Main'&&parent.NameLabel==='Main')p=t[o]||null;
+  preset=p;document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.preset===p));
+}
+function preorder(){const out=['Main'];const walk=n=>{out.push(n);kids[n].forEach(walk);};top.forEach(walk);return out;}
+function depth(n){let d=1,p=parent[n];while(p!=='Main'){d++;p=parent[p];}return d;}
+function siblings(n){return parent[n]==='Main'?top:kids[parent[n]];}
+function move(n,delta){const s=siblings(n),i=s.indexOf(n),j=i+delta;if(j<0||j>=s.length)return;[s[i],s[j]]=[s[j],s[i]];matchPreset();changed();}
+function canIndent(n){
+  if(parent[n]!=='Main')return true; // can always un-indent
+  const po=preorder(),i=po.indexOf(n);return po[i-1]===PARENT_OK[n];
+}
+function toggleIndent(n){
+  if(parent[n]!=='Main'){ // un-indent: becomes a top-level sibling right after its top-level ancestor
+    const p=parent[n];kids[p].splice(kids[p].indexOf(n),1);
+    let anc=p;while(parent[anc]!=='Main')anc=parent[anc];
+    top.splice(top.indexOf(anc)+1,0,n);parent[n]='Main';
+  } else {
+    if(!canIndent(n))return;
+    top.splice(top.indexOf(n),1);kids[PARENT_OK[n]].push(n);parent[n]=PARENT_OK[n];
+  }
+  matchPreset();changed();
+}
+function lags(){
+  const po=preorder(),pos=n=>po.indexOf(n);
+  const bar=parent.HealthBar!=='Main'?0:(pos('HealthBar')<pos('Enemy')?1:0);
+  let lab;
+  if(parent.NameLabel!=='Main')lab=bar;
+  else if(parent.HealthBar!=='Main')lab=pos('NameLabel')<pos('Enemy')?1:0; // label reads the bar's global x = enemy x at that moment
+  else lab=bar+(pos('NameLabel')<pos('HealthBar')?1:0);
+  return {bar,lab};
+}
+// --- simulation ---
+const barX=()=>parent.HealthBar!=='Main'?S.ex:S.bx;
+const labX=()=>parent.NameLabel!=='Main'?barX():S.lx;
+function processNode(n,dt,log){
+  if(n==='Enemy'){const was=S.ex;S.ex+=S.dir*v*dt;let b=false;if(S.ex>560){S.ex=560;S.dir=-1;b=true;}if(S.ex<40){S.ex=40;S.dir=1;b=true;}if(b)S.since=0;
+    if(log)return `Enemy: x ${f2(was)} → ${f2(S.ex)}${b?' (bounce)':''}`;}
+  if(n==='HealthBar'){if(parent.HealthBar!=='Main')return log&&'HealthBar: child of Enemy, copies nothing';S.bx=S.ex;if(log)return `HealthBar: bar.x = enemy.x = ${f2(S.bx)}`;}
+  if(n==='NameLabel'){if(parent.NameLabel!=='Main')return log&&'NameLabel: child of HealthBar, copies nothing';S.lx=barX();if(log)return `NameLabel: label.x = bar.x = ${f2(S.lx)}`;}
+  if(n==='Main'&&log)return 'Main: nothing to do';
+}
+function simFrame(log){
+  const dt=1/fps,lines=[];S.since++;S.frame++;
+  for(const n of preorder()){const l=processNode(n,dt,log);if(log)lines.push(l);}
+  if(S.since>2){S.measB=Math.abs(S.ex-barX());S.measL=Math.abs(S.ex-labX());}
+  return lines;
+}
+function changed(){S.since=0;S.measB=null;S.measL=null;if(!running){for(let i=0;i<3;i++)simFrame(false);}renderTree();readouts();draw();}
+
+// --- UI ---
+function renderTree(active){
+  const po=preorder(),ul=$('tree');ul.innerHTML='';
+  po.forEach((n,i)=>{
+    const li=document.createElement('li');li.className='node'+(active===n?' active':'');li.id='row-'+n;
+    const d=n==='Main'?0:depth(n);li.style.marginLeft=(d*18)+'px';
+    let h=`<span class="badge" aria-hidden="true">${i+1}</span><span class="sr">Turn ${i+1}: </span><span class="nm">${d>1?'<span class="elbow" aria-hidden="true">└</span>':''}${n!=='Main'?`<span class="sw" style="background:var(${COL[n]})"></span>`:''}${n}${d>1?`<span class="sr">, child of ${parent[n]}</span>`:''}</span>`;
+    if(n!=='Main'){
+      const s=siblings(n),k=s.indexOf(n);
+      h+=`<button class="ib" data-mv="-1" data-n="${n}" aria-label="Move ${n} up" ${k===0?'disabled':''}>▲</button>`;
+      h+=`<button class="ib" data-mv="1" data-n="${n}" aria-label="Move ${n} down" ${k===s.length-1?'disabled':''}>▼</button>`;
+      if(PARENT_OK[n]){const on=parent[n]!=='Main';h+=`<button class="ib" data-ind="${n}" aria-pressed="${on}" aria-label="Indent ${n} under ${PARENT_OK[n]}" title="Indent under ${PARENT_OK[n]}" ${canIndent(n)?'':'disabled'}>⇥</button>`;}
+      else h+='<span style="width:32px;flex:none"></span>';
+    }
+    li.innerHTML=h;ul.appendChild(li);
+  });
+  ul.querySelectorAll('[data-mv]').forEach(b=>b.addEventListener('click',()=>{const n=b.dataset.n;move(n,+b.dataset.mv);const nb=document.querySelector(`[data-n="${n}"][data-mv="${b.dataset.mv}"]`);if(nb&&!nb.disabled)nb.focus();else{const o=document.querySelector(`[data-n="${n}"]:not(:disabled)`);o&&o.focus();}}));
+  ul.querySelectorAll('[data-ind]').forEach(b=>b.addEventListener('click',()=>{const n=b.dataset.ind;toggleIndent(n);const nb=document.querySelector(`[data-ind="${n}"]`);nb&&nb.focus();}));
+}
+let lastAnn='';
+function readouts(){
+  const L=lags();
+  $('lagB').textContent=L.bar;$('lagL').textContent=L.lab;
+  $('preB').textContent=f2(L.bar*v/fps)+' px';$('preL').textContent=f2(L.lab*v/fps)+' px';
+  $('meaB').textContent=S.measB===null?'settling…':f2(S.measB)+' px';
+  $('meaL').textContent=S.measL===null?'settling…':f2(S.measL)+' px';
+  $('oV').textContent=v.toLocaleString('en-US')+' px/s';
+  const order=preorder().join(' → ');
+  let s;
+  if(L.bar===0&&L.lab===0)s=`Order ${order}: every follower runs after what it copies${parent.HealthBar!=='Main'?' or is a child that copies nothing':''}. Gap 0.00 px at any speed and frame rate.`;
+  else s=`Order ${order}: HealthBar lags ${L.bar} frame${L.bar===1?'':'s'} (${f2(L.bar*v/fps)} px), NameLabel lags ${L.lab} (${f2(L.lab*v/fps)} px). Same code, different turn. Gap = lag_frames × ${v.toLocaleString('en-US')} / ${fps}.`;
+  $('insight').textContent=s;
+  const ann=`HealthBar gap ${f2(L.bar*v/fps)} pixels, NameLabel gap ${f2(L.lab*v/fps)} pixels.`;
+  if(ann!==lastAnn){$('announce').textContent=ann;lastAnn=ann;}
+}
+function draw(){
+  const c=$('world'),dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d'),k=r.width/600;g.setTransform(dpr*k,0,0,dpr*k,0,0);
+  g.clearRect(0,0,600,220);
+  const ex=S.ex,bx=barX(),lx=labX(),top=112;
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(24,top+32.5);g.lineTo(576,top+32.5);g.stroke();
+  const fs=Math.min(22,Math.max(11,11/k));g.fillStyle=css("--ink-soft");g.font=fs+"px "+css("--sans");g.textAlign='center';g.fillText('x = 40',40,top+48);g.fillText('x = 560',560,top+48);
+  // follower shapes
+  g.fillStyle=css('--steel');rr(g,lx-20,top-32-10,40,10,4);g.fill();
+  g.fillStyle=css('--ochre');g.fillRect(bx-20,top-20-6,40,6);
+  g.fillStyle=css('--blood');g.fillRect(ex-16,top,32,32);
+  // enemy x guide
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([3,3]);g.beginPath();g.moveTo(ex,top-50);g.lineTo(ex,214);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  ruler(g,bx,ex,176,css('--ochre'),'bar');ruler(g,lx,ex,202,css('--steel'),'label');
+}
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function ruler(g,fx,ex,y,col,name){
+  const gap=Math.abs(ex-fx);g.strokeStyle=col;g.fillStyle=col;g.lineWidth=2;
+  g.beginPath();g.moveTo(fx,y-6);g.lineTo(fx,y+6);g.moveTo(ex,y-6);g.lineTo(ex,y+6);g.moveTo(fx,y);g.lineTo(ex,y);g.stroke();
+  const k=$("world").getBoundingClientRect().width/600,fs=Math.min(24,Math.max(12,12/k));g.font="600 "+fs+"px "+css("--sans");const txt=`${name} gap ${f2(gap)} px`;const right=Math.max(fx,ex)+8;
+  if(right+g.measureText(txt).width<596){g.textAlign='left';g.fillText(txt,right,y+4);}else{g.textAlign='right';g.fillText(txt,Math.min(fx,ex)-8,y+4);}
+}
+// --- loop ---
+let acc=0,lastT=null;
+function loop(t){
+  if(running){
+    if(lastT!==null){acc+=Math.min(.25,(t-lastT)/1000);const dt=1/fps;let n=0;while(acc>=dt&&n<40){simFrame(false);acc-=dt;n++;}}
+    lastT=t;readouts();draw();
+  } else lastT=null;
+  requestAnimationFrame(loop);
+}
+let stepping=false;
+async function step(){
+  if(stepping)return;
+  if(running)setRunning(false);
+  stepping=true;
+  const lines=simFrame(true),po=preorder();
+  const text=`Frame ${S.frame}:\n`+lines.map((l,i)=>`${i+1}. ${l}`).join('\n');
+  if(!reduce){for(const n of po){renderTree(n);await new Promise(r=>setTimeout(r,160));}}
+  renderTree();$('log').textContent=text;readouts();draw();stepping=false;
+}
+function setRunning(on){running=on;$('play').textContent=on?'Pause':'Play';$('play').setAttribute('aria-pressed',!on);}
+$('play').addEventListener('click',()=>setRunning(!running));
+$('step').addEventListener('click',step);
+$('v').addEventListener('input',e=>{v=+e.target.value;changed();});
+document.querySelectorAll('[data-fps]').forEach(b=>b.addEventListener('click',()=>{fps=+b.dataset.fps;document.querySelectorAll('[data-fps]').forEach(x=>x.setAttribute('aria-pressed',x===b));changed();}));
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.preset)));
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+// start: warm up so the gap is visible on the first screen
+setPreset('before');for(let i=0;i<12;i++)simFrame(false);
+setRunning(running);
+$('log').textContent=reduce?'Reduced motion: paused. Press "Step one frame" to watch each turn.':'Press "Step one frame" to pause and watch each node take its turn.';
+readouts();draw();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

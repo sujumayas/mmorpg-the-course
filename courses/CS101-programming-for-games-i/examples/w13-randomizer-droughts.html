@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Randomizer droughts — CS101 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;margin-bottom:14px}
+.seed label{display:block;font-weight:600;font-size:.92rem}
+.seed input{font:600 1rem var(--sans);width:7.5em;padding:6px 8px;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font:600 .9rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:progress}
+.toggle{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem}
+.toggle input{width:20px;height:20px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1fr 1.1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.lane{margin:0 0 14px}
+.lane h3{margin:0 0 4px;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.lane h3 span{font-weight:400;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.lane h3 b{color:var(--ink)}
+.cells{display:grid;grid-template-columns:repeat(35,1fr);gap:2px}
+@media (max-width:560px),(min-width:900px){.cells{grid-template-columns:repeat(14,1fr)}}
+@media (min-width:900px){.cells i{font-size:13px}}
+.cells i{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font:700 clamp(8px,1.1vw,11px)/1 var(--mono);font-style:normal;border:1px solid var(--ink-soft);border-radius:2px;color:var(--ink-soft);background:var(--paper);min-width:0}
+@media (max-width:560px){.cells i{font-size:11px}}
+.cells i.I{background:var(--ochre);border-color:var(--ochre);color:var(--paper)}
+.cells i.empty{border-style:dashed;opacity:.35}
+.cells i.new{animation:pop .25s ease-out}
+@keyframes pop{from{transform:translateX(6px);opacity:.2}to{transform:none;opacity:1}}
+canvas{display:block;width:100%;height:360px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.78rem;color:var(--ink-soft);white-space:normal;vertical-align:bottom}
+@media (max-width:560px){.thc{display:none}}
+.thnote{display:none;font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+@media (max-width:560px){.thnote{display:block}}
+td.th{color:var(--ink-soft);font-style:italic;white-space:normal;font-size:.8rem}
+tbody th{text-align:left;font-weight:600;font-size:.84rem;white-space:normal}
+td.wall{color:var(--moss);font-weight:700}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 13 · Worked example</p>
+  <h1>Same rate, different worst case</h1>
+  <p class="lede">All three randomizers deal the I piece once in seven, and the lanes look equally random. The histogram below shows what differs. Only the 7-bag has a wall: it never makes you wait more than 12 pieces.</p>
+</header>
+
+<section class="panel">
+  <div class="controls">
+    <div class="seed"><label for="seed">Seed</label><input id="seed" type="number" value="13" step="1" inputmode="numeric"></div>
+    <div class="btns" role="group" aria-label="Deal pieces">
+      <button class="btn" data-n="1">Deal 1</button>
+      <button class="btn" data-n="100">Deal 100</button>
+      <button class="btn" data-n="1000">Deal 1,000</button>
+      <button class="btn primary" data-n="100000">Deal 100,000</button>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="theory"> Show theory</label>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>What the player sees<small>Last 70 pieces per lane, newest at the end. I pieces are filled and lettered I.</small></figcaption>
+      <div id="lanes"></div>
+    </figure>
+    <figure>
+      <figcaption>What the player remembers<small>Share of droughts by length (pieces between two I pieces). Last bin is 60 or more. Any nonzero bar is at least a hairline tall.</small></figcaption>
+      <canvas id="hist" role="img" aria-label="Histograms of drought lengths for the three randomizers"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--steel)"></i>Share of droughts</span>
+        <span><i style="border-color:var(--blood)"></i>Longest drought seen</span>
+        <span><i style="border-color:var(--moss);border-top-style:dashed"></i>Bag limit, 12</span>
+        <span id="thLeg" hidden><i style="border-color:var(--ochre)"></i>Theory, (6/7)<sup>g</sup> × 1/7</span>
+      </div>
+      <div class="table-wrap">
+        <table aria-label="Readout per randomizer">
+          <thead><tr><th scope="col">Measure</th><th scope="col">Pure random</th><th scope="col">NES style</th><th scope="col">7-bag</th><th scope="col" class="thc">Theory</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="thnote">Theory: share of I 0.1429, mean drought 6.00, bag longest 12, pure droughts 20+ 4.58%, repeat rates 14.29%, 3.57% and 2.04%.</p>
+    </figure>
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+</section>
+
+<footer>Algorithms follow the lecture: pure 1-in-7, the NES-style reroll rule as documented on the Tetris Wiki, and a Fisher-Yates 7-bag. Each randomizer has its own mulberry32 generator seeded with the seed above. JavaScript cannot reproduce Python's Mersenne Twister, so the exact longest droughts differ from the lecture's Python table for seed 13. The averages, rates and the bag's 12-piece wall match. Pieces are drawn as plain lettered squares.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const PIECES='IJLOSTZ',BINS=61,LANE=70;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const makers={
+  pure:r=>()=>PIECES[Math.floor(r()*7)],
+  nes:r=>{let prev=null;return()=>{let roll=Math.floor(r()*8);if(roll===7||PIECES[roll]===prev)roll=Math.floor(r()*7);prev=PIECES[roll];return prev;};},
+  bag:r=>{let bag=[];return()=>{if(!bag.length){bag=PIECES.split('');for(let i=6;i>0;i--){const j=Math.floor(r()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}}return bag.shift();};}
+};
+const NAMES={pure:'Pure random',nes:'NES style',bag:'7-bag'};
+const KEYS=['pure','nes','bag'];
+let R={},busy=false;
+
+function reset(){
+  const seed=parseInt($('seed').value,10)||0;
+  KEYS.forEach(k=>{R[k]={next:makers[k](mulberry32(seed)),n:0,nI:0,hist:new Array(BINS).fill(0),droughts:0,sum:0,max:0,over20:0,repeats:0,prev:null,run:0,seenI:false,last:[]};});
+  renderAll(0);
+}
+function dealOne(s){
+  const p=s.next();s.n++;
+  if(p===s.prev)s.repeats++;s.prev=p;
+  if(p==='I'){
+    s.nI++;
+    if(s.seenI){const g=s.run;s.hist[Math.min(g,BINS-1)]++;s.droughts++;s.sum+=g;if(g>s.max)s.max=g;if(g>=20)s.over20++;}
+    s.seenI=true;s.run=0;
+  }else s.run++;
+  s.last.push(p);if(s.last.length>LANE)s.last.shift();
+}
+function deal(n){KEYS.forEach(k=>{const s=R[k];for(let i=0;i<n;i++)dealOne(s);});}
+
+function dealAnimated(n){
+  if(busy)return;
+  if(n>=100000||reduce.matches||n===1){deal(n);renderAll(n===1?1:0);return;}
+  busy=true;setBusy(true);
+  const perSec=n<=100?50:250;let left=n,last=performance.now(),acc=0;
+  const tick=now=>{
+    acc+=(now-last)/1000*perSec;last=now;
+    const k=Math.min(left,Math.floor(acc));
+    if(k>0){deal(k);left-=k;acc-=k;renderAll(Math.min(k,LANE));}
+    if(left>0)requestAnimationFrame(tick);else{busy=false;setBusy(false);}
+  };
+  requestAnimationFrame(tick);
+}
+function setBusy(b){document.querySelectorAll('.btn[data-n]').forEach(x=>x.disabled=b);}
+
+// lanes
+function buildLanes(){
+  $('lanes').innerHTML=KEYS.map(k=>`<div class="lane"><h3>${NAMES[k]} <span>waiting for I: <b id="w-${k}">0</b></span></h3><div class="cells" id="c-${k}" aria-label="Last pieces dealt by ${NAMES[k]}" role="img">${'<i class="empty"></i>'.repeat(LANE)}</div></div>`).join('');
+}
+function renderLanes(fresh){
+  KEYS.forEach(k=>{
+    const s=R[k],el=$('c-'+k),kids=el.children,pad=LANE-s.last.length;
+    for(let i=0;i<LANE;i++){
+      const c=kids[i];
+      if(i<pad){c.className='empty';c.textContent='';continue;}
+      const p=s.last[i-pad];c.textContent=p;c.className=(p==='I'?'I':'')+(fresh&&i>=LANE-fresh?' new':'');
+    }
+    el.setAttribute('aria-label',`${NAMES[k]}, last ${s.last.length} pieces: ${s.last.slice(-14).join(' ')}`);
+    $('w-'+k).textContent=s.run;
+  });
+}
+
+// histogram
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.height};}
+function drawHist(){
+  const {g,w,h}=setupCanvas($('hist'));g.clearRect(0,0,w,h);
+  const pad={l:40,r:10,t:18,b:26},rowGap=26,rowH=(h-pad.t-pad.b-rowGap*2)/3,pw=w-pad.l-pad.r,bw=pw/BINS;
+  const theory=$('theory').checked;
+  let yMax=0.05;KEYS.forEach(k=>{const s=R[k];if(s.droughts)s.hist.forEach(v=>{yMax=Math.max(yMax,v/s.droughts);});});
+  yMax=Math.ceil(yMax*1.1*50)/50;
+  const x=b=>pad.l+b*bw;
+  g.font='11px '+css('--sans');
+  KEYS.forEach((k,ri)=>{
+    const s=R[k],top=pad.t+ri*(rowH+rowGap),base=top+rowH;
+    g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,base+.5);g.lineTo(w-pad.r,base+.5);g.moveTo(pad.l,top+.5);g.lineTo(w-pad.r,top+.5);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';
+    g.fillText(Math.round(yMax*100)+'%',pad.l-5,top+5);g.fillText('0',pad.l-5,base-2);
+    g.fillStyle=css('--ink');g.textAlign='right';g.textBaseline='bottom';g.font='600 12px '+css('--sans');g.fillText(NAMES[k],w-pad.r,top-3);g.font='11px '+css('--sans');
+    g.fillStyle=css('--steel');
+    if(s.droughts)s.hist.forEach((v,b)=>{if(!v)return;const hh=Math.max(1.5,v/s.droughts/yMax*rowH);g.fillRect(x(b)+.5,base-hh,Math.max(1,bw-1),hh);});
+    if(theory&&k==='pure'){
+      g.strokeStyle=css('--ochre');g.lineWidth=2;g.beginPath();
+      for(let b=0;b<BINS;b++){const p=b<BINS-1?Math.pow(6/7,b)/7:Math.pow(6/7,BINS-1);const px=x(b)+bw/2,py=base-p/yMax*rowH;b?g.lineTo(px,py):g.moveTo(px,py);}
+      g.stroke();
+    }
+    // bag limit
+    const lx=x(13);g.strokeStyle=css('--moss');g.lineWidth=1.5;g.setLineDash([5,4]);g.beginPath();g.moveTo(lx,top);g.lineTo(lx,base);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--moss');g.textAlign='left';g.textBaseline='bottom';g.fillText('bag limit',lx+3,top-3);
+    // longest
+    if(s.droughts){
+      const mb=Math.min(s.max,BINS-1),mx=x(mb)+bw/2;g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(mx,top+30);g.lineTo(mx,base);g.stroke();
+      g.fillStyle=css('--blood');g.font='700 12px '+css('--sans');const lab='longest '+s.max;const tw=g.measureText(lab).width;
+      g.textAlign=mx+tw+4>w-pad.r?'right':'left';g.fillText(lab,g.textAlign==='right'?mx-4:mx+4,top+30);g.font='11px '+css('--sans');
+    }
+  });
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  [0,12,20,30,40,50].forEach(v=>g.fillText(v,x(v)+bw/2,h-pad.b+6));g.fillText('60+',x(60)+bw/2,h-pad.b+6);
+}
+
+// readouts
+const f4=v=>v.toFixed(4),f2=v=>v.toFixed(2),pc=(v,d)=>(v*100).toFixed(d)+'%',fmt=n=>n.toLocaleString('en-US');
+function renderTable(){
+  const TH={n:'any',share:'0.1429',mean:'6.00',max:'bag 12',over20:'4.58% pure',rep:'14.29 / 3.57 / 2.04%'};
+  const M=[['n','Pieces dealt',s=>fmt(s.n)],['share','Share of I',s=>s.n?f4(s.nI/s.n):'—'],['mean','Mean drought',s=>s.droughts?f2(s.sum/s.droughts):'—'],
+    ['max','Longest drought',s=>s.droughts?s.max:'—'],['over20','Droughts 20+',s=>s.droughts?pc(s.over20/s.droughts,2):'—'],['rep','Repeat rate',s=>s.n>1?pc(s.repeats/(s.n-1),2):'—']];
+  $('tbody').innerHTML=M.map(m=>`<tr><th scope="row">${m[1]}</th>${KEYS.map(k=>`<td data-k="${k}" data-c="${m[0]}" class="${m[0]==='max'&&k==='bag'?'wall':''}">${m[2](R[k])}</td>`).join('')}<td class="th thc">${TH[m[0]]}</td></tr>`).join('');
+}
+function renderInsight(){
+  const p=R.pure,n=R.nes,b=R.bag;
+  if(!p.droughts){$('insight').textContent='Deal some pieces. The lanes will look alike; watch the histogram.';return;}
+  $('insight').innerHTML=`After ${fmt(p.n)} pieces each, the mean drought is ${f2(p.sum/p.droughts)}, ${f2(n.sum/n.droughts)} and ${f2(b.sum/b.droughts)}. Nearly the same. The longest waits are <b>${p.max}</b> (pure), <b>${n.max}</b> (NES) and <b>${b.max}</b> (bag). Change the seed: the first two move, the bag never passes 12.`;
+}
+function renderAll(fresh){renderLanes(fresh);renderTable();drawHist();renderInsight();}
+
+document.querySelectorAll('.btn[data-n]').forEach(b=>b.addEventListener('click',()=>dealAnimated(+b.dataset.n)));
+$('reset').addEventListener('click',()=>{if(!busy)reset();});
+$('seed').addEventListener('change',()=>{if(!busy){reset();}});
+$('theory').addEventListener('change',e=>{$('thLeg').hidden=!e.target.checked;drawHist();});
+window.addEventListener('resize',drawHist);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawHist);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawHist);
+buildLanes();reset();
+// open on the insight: 100,000 pieces already dealt
+deal(100000);renderAll(0);
+})();
+</script>
+</body>
+</html>

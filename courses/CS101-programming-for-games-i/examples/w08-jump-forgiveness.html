@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jump forgiveness, CS101 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+code{font-family:var(--mono);font-size:.92em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.verdict{font-family:var(--serif);font-size:clamp(1.15rem,2.6vw,1.45rem);font-weight:600;margin:0 0 10px;padding:8px 12px;border-left:5px solid var(--c,var(--ink));background:var(--paper-2);border-radius:0 10px 10px 0}
+figure{margin:0 0 12px;background:var(--paper-2);border-radius:10px;padding:10px}
+figcaption{font-family:var(--serif);font-size:.98rem;margin:0 0 6px}
+figcaption small{font-family:var(--sans);color:var(--ink-soft);font-size:.8rem;margin-left:6px}
+#world{display:block;width:100%;aspect-ratio:640/200;height:auto}
+@media (max-width:600px){#world{aspect-ratio:400/200}}
+.tlwrap{position:relative;touch-action:none;user-select:none;cursor:ew-resize}
+#tl{display:block;width:100%;height:120px}
+#marker{position:absolute;top:0;width:28px;height:120px;margin-left:-14px;outline:none;cursor:grab}
+#marker::before{content:"";position:absolute;left:13px;top:10px;bottom:22px;width:2px;background:var(--blood)}
+#marker::after{content:"press";position:absolute;left:50%;transform:translateX(-50%);top:-2px;font:700 .72rem var(--sans);color:var(--paper);background:var(--blood);padding:0 5px;border-radius:4px}
+#marker:focus-visible{outline:3px solid var(--focus);outline-offset:0;border-radius:6px}
+.readout{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:12px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px}
+@media (max-width:760px){.controls{grid-template-columns:minmax(0,1fr)}}
+.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin:0 0 6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;margin-bottom:10px;max-width:100%}
+.seg button{font:600 .85rem var(--sans);padding:7px 12px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn{font:700 .95rem var(--sans);padding:9px 18px;border-radius:999px;border:0;background:var(--ink);color:var(--paper);cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:8px 0 0}
+kbd{font:600 .8rem var(--mono);border:1.5px solid var(--ink-soft);border-radius:4px;padding:0 4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (max-width:480px){main{padding:20px 12px 40px}.panel{padding:10px}.seg button{padding:7px 9px;font-size:.8rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 8 · Worked example</p>
+  <h1>Coyote time and the jump buffer</h1>
+  <p class="lede">The square runs off the ledge at 90 px/s. Jump is pressed 0.08 s after the edge, but the coyote window is still open, so it jumps from mid-air and clears the pit. Drag the red press marker on the timeline, or change the window, the frame rate and the timer unit.</p>
+</header>
+
+<section class="panel" aria-label="Jump forgiveness simulator">
+  <p class="verdict" id="verdict" aria-live="polite"></p>
+  <figure>
+    <figcaption id="worldCap">World<small>ledge ends at x = 320, platform starts at x = 370</small></figcaption>
+    <canvas id="world" role="img" aria-label="Side view of a ledge, a pit and a landing platform with the character's path"></canvas>
+  </figure>
+  <figure>
+    <figcaption>Timeline<small id="tlCap">one tick per simulated frame; drag the marker or use arrow keys (Shift = 10 ms)</small></figcaption>
+    <div class="tlwrap" id="tlwrap">
+      <canvas id="tl" aria-hidden="true"></canvas>
+      <div id="marker" role="slider" tabindex="0" aria-label="Jump press time" aria-valuemin="-300" aria-valuemax="300"></div>
+    </div>
+  </figure>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--blood)"><b id="rPress"></b><span>press time</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rReg"></b><span>registered on frame</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rFire"></b><span>jump fires on frame</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rDist"></b><span id="rDistL">past the edge at fire time</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rWin"></b><span id="rWinL">window length</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <span class="lab" id="modeL">Mode</span>
+      <div class="seg" role="group" aria-labelledby="modeL">
+        <button data-mode="coyote" aria-pressed="true">Late press (coyote)</button>
+        <button data-mode="buffer" aria-pressed="false">Early press (buffer)</button>
+      </div>
+      <div class="row"><button class="btn" id="play">Play</button></div>
+      <p class="hint">During playback press <kbd>Space</kbd> to jump live.</p>
+    </div>
+    <div>
+      <label class="lab" for="cS"><span>Coyote window <code>C</code></span><output id="oC"></output></label>
+      <input id="cS" type="range">
+      <label class="lab" for="bS" style="margin-top:8px"><span>Buffer window <code>B</code></span><output id="oB"></output></label>
+      <input id="bS" type="range">
+    </div>
+    <div>
+      <span class="lab" id="fpsL">Frame rate</span>
+      <div class="seg" role="group" aria-labelledby="fpsL">
+        <button data-fps="30" aria-pressed="false">30</button>
+        <button data-fps="60" aria-pressed="true">60</button>
+        <button data-fps="144" aria-pressed="false">144 fps</button>
+      </div>
+      <span class="lab" id="unitL">Timer unit</span>
+      <div class="seg" role="group" aria-labelledby="unitL">
+        <button data-unit="s" aria-pressed="true">seconds</button>
+        <button data-unit="f" aria-pressed="false">frames</button>
+      </div>
+    </div>
+  </div>
+  <p class="sr" id="live" aria-live="polite"></p>
+</section>
+
+<footer>Model: per frame, <code>just_pressed = held and not was_held</code>; <code>since_ground</code> and <code>since_press</code> reset to 0 or grow by <code>dt</code>; jump if <code>since_ground ≤ C</code> and <code>since_press ≤ B</code>, then both timers reset. A press at time <code>p</code> registers on the first frame with <code>k × dt ≥ p</code>. Run speed 90 px/s (<code>MaxRun</code>) and gravity 900 px/s² (<code>Gravity</code>) are from Celeste's published <code>Player.cs</code> (2018); the 300 px/s jump speed is chosen for this picture. The character is a plain square.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const RUN=90,G=900,JV=300,EPS=1e-9;
+const st={mode:'coyote',fps:60,unit:'s',Cs:10,Bs:10,Cf:6,Bf:6,press:80}; // Cs,Bs in hundredths of a second; press in ms
+const tfmt=s=>{let t=(Math.round(s*1000)/1000).toFixed(3).replace(/0+$/,'').replace(/\.$/,'.0');if(/\.\d$/.test(t))t+='0';return t;};
+const km=k=>String(k).replace("-","−");
+const dpx=d=>(d<0?"−":"")+Math.abs(d).toFixed(2)+" px";
+const sgn=s=>(s>0?'+':s<0?'−':'')+tfmt(Math.abs(s));
+
+// ---- the model ----
+function model(){
+  const fps=st.fps,p=st.press/1000,kReg=Math.ceil(p*fps-EPS);
+  const k0=Math.floor(-0.4*fps),k1=Math.ceil(0.5*fps);
+  const grounded=k=>st.mode==='coyote'?k<=0:k>=0;
+  const BIG=1e6;
+  let sg=st.mode==='coyote'?0:BIG,sp=BIG,fire=null;
+  const Cok=n=>st.unit==='s'?n/fps<=st.Cs/100+EPS:n<=st.Cf;
+  const Bok=n=>st.unit==='s'?n/fps<=st.Bs/100+EPS:n<=st.Bf;
+  for(let k=k0;k<=k1;k++){
+    sg=grounded(k)?0:sg+1;
+    sp=(k===kReg)?0:sp+1;
+    if(Cok(sg)&&Bok(sp)){fire=k;break;}
+  }
+  return {kReg,tReg:kReg/fps,fire,tFire:fire===null?null:fire/fps};
+}
+// ---- trajectory for the world view ----
+function trajectory(m){
+  const pts=[],coy=st.mode==='coyote',x0=coy?320:450,t0=coy?-1.0:-0.5;
+  let t=t0,x=x0+RUN*t0,y=coy?0:0.5*G*t0*t0,vy=coy?0:G*t0; // height above ground, up positive; G*t0 < 0 means descending
+  let onGround=coy,jumped=false,fellIn=false,landT=null;const dt=1/1000;
+  for(let i=0;i<2200;i++){
+    const tf=m.tFire;
+    if(!jumped&&tf!==null&&t>=tf-EPS){vy=JV;onGround=false;jumped=true;}
+    if(onGround){
+      const supported=(x<=320+EPS)||(x>=370);
+      if(!supported){onGround=false;vy=0;}
+    }
+    if(!onGround){vy-=G*dt;y+=vy*dt;}
+    x+=RUN*dt;t+=dt;
+    if(!onGround&&y<=0&&vy<0){
+      const overGround=(x<=320)||(x>=370);
+      if(overGround&&y>-8){y=0;vy=0;onGround=true;if(landT===null&&t>0.05)landT=t;}
+      else if(!overGround) fellIn=y<-2;
+    }
+    pts.push({t,x,y});
+    if(y<-140)break;
+    if(landT!==null&&t>landT+0.25)break;
+    if(x>630)break;
+  }
+  const fell=pts[pts.length-1].y<-100;
+  return {pts,fell};
+}
+function posAt(tr,t){const p=tr.pts;if(t<=p[0].t)return p[0];for(let i=1;i<p.length;i++)if(p[i].t>=t)return p[i];return p[p.length-1];}
+
+// ---- drawing ----
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');return {g,dpr,w:r.width,h:r.height};}
+const GY=140; // ground surface in logical px
+function drawWorld(m,tr,tNow){
+  const {g,dpr,w}=setup($("world")),narrow=w<560,vx0=narrow?170:0,vw=narrow?400:640,k=w/vw;g.setTransform(dpr*k,0,0,dpr*k,-vx0*dpr*k,0);g.clearRect(vx0,0,vw,200);
+  const fs=Math.min(24,Math.max(11,12/k));
+  g.fillStyle=css('--ink-soft');g.globalAlpha=.35;g.fillRect(0,GY,320,60);g.fillRect(370,GY,270,60);g.globalAlpha=1;
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(0,GY);g.lineTo(320,GY);g.lineTo(320,200);g.moveTo(370,200);g.lineTo(370,GY);g.lineTo(640,GY);g.stroke();
+  const coy=st.mode==='coyote',ref=coy?320:450;
+  // edge / landing reference line
+  g.strokeStyle=css('--ink-soft');g.setLineDash([3,3]);g.lineWidth=1;g.beginPath();g.moveTo(ref,20);g.lineTo(ref,GY);g.stroke();g.setLineDash([]);
+  // path
+  g.strokeStyle=css('--steel');g.globalAlpha=.55;g.lineWidth=2;g.setLineDash([4,4]);g.beginPath();
+  tr.pts.forEach((p,i)=>{const X=p.x,Y=GY-p.y-8;i?g.lineTo(X,Y):g.moveTo(X,Y);});g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // markers
+  g.font='600 '+fs+'px '+css('--sans');
+  const mark=(t,col,label,up)=>{const p=posAt(tr,t),X=p.x,Y=GY-p.y-8;g.strokeStyle=col;g.fillStyle=col;g.lineWidth=2;g.beginPath();g.arc(X,Y,6,0,7);g.stroke();
+    g.beginPath();g.moveTo(X,Y+(up?-8:8));g.lineTo(X,up?Y-22:Y+22);g.stroke();
+    const tw=g.measureText(label).width;let left=up;if(!up&&X+8+tw>vx0+vw-4)left=true;if(up&&X-8-tw<vx0+4)left=false;g.textAlign=left?"right":"left";g.fillText(label,left?X-8:X+8,up?Y-12:Y+14+fs*.7);};
+  const p=st.press/1000;
+  const past=t=>RUN*t;const pxs=d=>(d<0?"−":"")+Math.abs(d).toFixed(2);
+  const refName=coy?'edge':'landing point';
+  mark(p,css("--blood"),`pressed at ${pxs(past(p))} px`,true);
+  if(m.fire!==null)mark(m.tFire,css('--moss'),`jumped at ${pxs(past(m.tFire))} px`,false);
+  // character
+  const tt=tNow===undefined?null:tNow;
+  let cp;
+  if(tt===null){cp=tr.pts[tr.pts.length-1];}else{cp=posAt(tr,Math.floor(tt*st.fps+EPS)/st.fps);}
+  const cy=Math.min(200-16,GY-cp.y-16);
+  g.fillStyle=css('--ink');g.fillRect(cp.x-8,cy,16,16);
+  g.fillStyle=css('--ink-soft');g.textAlign='left';g.font=fs+'px '+css('--sans');
+  const lt=coy?"edge x = 320":"lands at x = 450";const lw=g.measureText(lt).width,lx=ref+6+lw>vx0+vw-4?ref-6-lw:ref+6;g.fillText(lt,lx,20+fs*0.2);
+}
+const TL={l:14,r:14};
+function tx(t,w){return TL.l+(t+0.3)/0.6*(w-TL.l-TL.r);}
+function drawTL(m){
+  const {g,dpr,w,h}=setup($('tl'));g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  const fps=st.fps,axisY=70,coy=st.mode==='coyote';
+  // window shading
+  const win=coy?(st.unit==='s'?st.Cs/100:st.Cf/fps):(st.unit==='s'?st.Bs/100:st.Bf/fps);
+  const a=coy?0:-win,b=coy?win:0;
+  g.fillStyle=css('--moss');g.globalAlpha=.22;g.fillRect(tx(Math.max(-0.3,a),w),22,Math.max(0,tx(Math.min(0.3,b),w)-tx(Math.max(-0.3,a),w)),60);g.globalAlpha=1;
+  // axis + frame ticks
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.beginPath();g.moveTo(TL.l,axisY);g.lineTo(w-TL.r,axisY);g.stroke();
+  const kMin=Math.ceil(-0.3*fps-EPS),kMax=Math.floor(0.3*fps+EPS);
+  for(let k=kMin;k<=kMax;k++){const X=tx(k/fps,w);g.beginPath();g.moveTo(X,axisY-5);g.lineTo(X,axisY+5);g.stroke();}
+  // zero line
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(tx(0,w),22);g.lineTo(tx(0,w),axisY+8);g.stroke();
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textBaseline='top';
+  [-0.3,-0.2,-0.1,0,0.1,0.2,0.3].forEach(t=>{g.textAlign=t===-0.3?'left':t===0.3?'right':'center';g.fillText((t>0?"+":t<0?"−":"")+Math.abs(t).toFixed(1)+(w<600?"":" s"),tx(t,w),axisY+22);});
+  g.textAlign='center';g.fillStyle=css('--ink');g.font='600 11px '+css('--sans');
+  g.fillText(coy?'left ground':'lands',tx(0,w),axisY+36);
+  g.fillStyle=css('--moss');g.textAlign=coy?'left':'right';g.fillText(coy?'coyote window':'buffer window',tx(coy?0:0,w)+(coy?4:-4),26);
+  // registered frame
+  if(m.kReg>=kMin&&m.kReg<=kMax){const X=tx(m.tReg,w);g.fillStyle=css('--blood');g.fillRect(X-2,axisY-12,4,24);}
+  // fire dot or lost
+  if(m.fire!==null){const X=tx(m.tFire,w);g.fillStyle=css('--moss');g.beginPath();g.arc(X,axisY,7,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+  else{g.fillStyle=css('--blood');g.font='700 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('press lost',w-TL.r,axisY-8);}
+  // marker position
+  const mk=$('marker');mk.style.left=tx(st.press/1000,w)+'px';
+}
+// ---- readouts ----
+let lastAnn='';
+function update(tNow){
+  const m=model(),tr=trajectory(m),coy=st.mode==='coyote',p=st.press/1000,fps=st.fps;
+  $('rPress').textContent=sgn(p)+' s';
+  $('rReg').textContent=`${km(m.kReg)} (${sgn(m.tReg)} s)`;
+  $('rFire').textContent=m.fire===null?'lost':`${km(m.fire)} (${sgn(m.tFire)} s)`;
+  $('rDist').textContent=m.fire===null?'—':dpx(RUN*m.tFire);
+  $('rDistL').textContent=coy?'past the edge at fire time':'past the landing point at fire time';
+  const winS=coy?(st.unit==='s'?st.Cs/100:st.Cf/fps):(st.unit==='s'?st.Bs/100:st.Bf/fps);
+  const winF=coy?(st.unit==='s'?st.Cs/100*fps:st.Cf):(st.unit==='s'?st.Bs/100*fps:st.Bf);
+  $('rWin').textContent=st.unit==='s'?`${winS.toFixed(3)} s`:`${winF} frames`;
+  $('rWinL').textContent=(coy?'coyote':'buffer')+' window = '+(st.unit==='s'?`${(+winF.toFixed(2))} frames`:`${winS.toFixed(3)} s`)+` at ${fps} fps`;
+  // verdict
+  let v,col;
+  const late=Math.abs(p).toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
+  if(coy){
+    if(m.fire===null){v=`Pressed ${late} s late. Fell.`;col='--blood';}
+    else if(p>0){v=`Pressed ${late} s late. Jumped anyway${tr.fell?', but fell short':''}.`;col=tr.fell?'--ochre':'--moss';}
+    else {v=p===0?'Pressed on the edge frame. Jumped.':`Pressed ${late} s early, on the ground. Jumped ${tr.fell?'too soon and fell short':'normally'}.`;col=tr.fell?'--ochre':'--moss';}
+  } else {
+    if(m.fire===null){v=`Pressed ${late} s before landing. Press lost.`;col='--blood';}
+    else if(p<0){v=`Pressed ${late} s before landing. Jumped on landing frame ${m.fire}.`;col='--moss';}
+    else {v=p===0?'Pressed on the landing frame. Jumped.':`Pressed ${late} s after landing. Jumped on frame ${m.fire}.`;col='--moss';}
+  }
+  $('verdict').textContent=v;$('verdict').style.setProperty('--c',`var(${col})`);
+  const mk=$('marker');mk.setAttribute('aria-valuenow',st.press);
+  mk.setAttribute('aria-valuetext',`press at ${tfmt(Math.abs(p))} seconds ${p<0?'before':'after'} ${coy?'the edge':'landing'}`);
+  const ann=v+(m.fire===null?'':` Fired on frame ${m.fire}, ${(RUN*m.tFire).toFixed(2)} pixels.`);
+  if(ann!==lastAnn&&!playing){$('live').textContent=ann;lastAnn=ann;}
+  drawWorld(m,tr,tNow);drawTL(m);
+  return {m,tr};
+}
+// ---- sliders ----
+function syncSliders(){
+  const c=$('cS'),b=$('bS');
+  if(st.unit==='s'){[c,b].forEach(s=>{s.min=0;s.max=25;s.step=1;});c.value=st.Cs;b.value=st.Bs;$('oC').textContent=(st.Cs/100).toFixed(2)+' s';$('oB').textContent=(st.Bs/100).toFixed(2)+' s';
+    c.setAttribute('aria-valuetext',(st.Cs/100).toFixed(2)+' seconds');b.setAttribute('aria-valuetext',(st.Bs/100).toFixed(2)+' seconds');}
+  else{[c,b].forEach(s=>{s.min=0;s.max=15;s.step=1;});c.value=st.Cf;b.value=st.Bf;$('oC').textContent=st.Cf+' frames';$('oB').textContent=st.Bf+' frames';
+    c.setAttribute('aria-valuetext',st.Cf+' frames');b.setAttribute('aria-valuetext',st.Bf+' frames');}
+}
+$('cS').addEventListener('input',e=>{if(st.unit==='s')st.Cs=+e.target.value;else st.Cf=+e.target.value;syncSliders();update();});
+$('bS').addEventListener('input',e=>{if(st.unit==='s')st.Bs=+e.target.value;else st.Bf=+e.target.value;syncSliders();update();});
+const seg=(attr,fn)=>document.querySelectorAll(`[data-${attr}]`).forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll(`[data-${attr}]`).forEach(x=>x.setAttribute('aria-pressed',x===b));fn(b.dataset[attr]);syncSliders();update();}));
+seg('mode',v=>{st.mode=v;st.press=v==='coyote'?80:-50;});
+seg('fps',v=>{st.fps=+v;});
+seg('unit',v=>{st.unit=v;});
+// ---- marker: drag + keys ----
+function setPress(ms){st.press=Math.max(-300,Math.min(300,Math.round(ms)));update();}
+const wrap=$('tlwrap');let dragging=false;
+function fromEvent(e){const r=wrap.getBoundingClientRect(),w=r.width;const t=((e.clientX-r.left)-TL.l)/(w-TL.l-TL.r)*0.6-0.3;setPress(t*1000);}
+wrap.addEventListener('pointerdown',e=>{dragging=true;wrap.setPointerCapture(e.pointerId);fromEvent(e);$('marker').focus();});
+wrap.addEventListener('pointermove',e=>{if(dragging)fromEvent(e);});
+wrap.addEventListener('pointerup',()=>{dragging=false;});
+$('marker').addEventListener('keydown',e=>{
+  const d=e.shiftKey?10:1;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp'){setPress(st.press+d);e.preventDefault();}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){setPress(st.press-d);e.preventDefault();}
+  else if(e.key==='PageUp'){setPress(st.press+10);e.preventDefault();}
+  else if(e.key==='PageDown'){setPress(st.press-10);e.preventDefault();}
+  else if(e.key==='Home'){setPress(-300);e.preventDefault();}
+  else if(e.key==='End'){setPress(300);e.preventDefault();}
+});
+// ---- playback ----
+let playing=false,t0=null,raf=null;
+function startT(){return st.mode==='coyote'?-1.0:-0.5;}
+function play(){
+  if(reduce){update();$('live').textContent='Showing the final frame. '+$('verdict').textContent;return;}
+  playing=true;t0=null;$('play').textContent='Replay';
+  const tick=ts=>{
+    if(t0===null)t0=ts;
+    const t=startT()+(ts-t0)/1000;
+    const {tr}=update(t);
+    const end=tr.pts[tr.pts.length-1].t;
+    if(t<end){raf=requestAnimationFrame(tick);}else{playing=false;update();}
+  };
+  cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
+}
+$('play').addEventListener('click',play);
+document.addEventListener('keydown',e=>{
+  if(!playing||e.code!=='Space')return;
+  e.preventDefault();
+  const t=startT()+(performance.now()-t0)/1000;
+  st.press=Math.max(-300,Math.min(300,Math.round(t*1000)));
+});
+window.addEventListener('resize',()=>update());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>update());
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>update());
+syncSliders();update();
+})();
+</script>
+</body>
+</html>

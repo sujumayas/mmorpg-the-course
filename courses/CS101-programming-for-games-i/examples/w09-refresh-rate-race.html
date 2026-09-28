@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Refresh-rate race — CS101 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:62ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.caption{font-family:var(--serif);font-size:clamp(1.15rem,3vw,1.45rem);font-weight:600;margin:0 0 12px;min-height:1.5em}
+.lane{background:var(--paper-2);border-radius:10px;padding:10px 12px 8px;margin-bottom:12px}
+.lane-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;font-weight:600}
+.lane-head .hz{font-variant-numeric:tabular-nums}
+canvas{display:block;width:100%;height:80px}
+@media (min-width:761px){canvas{height:120px}}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 2px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.group-label{font-weight:600;font-size:.92rem;display:block;margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip,.btn{font:600 .9rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.switch{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer;margin:0 0 12px}
+.switch input{width:22px;height:22px;accent-color:var(--moss)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field label{display:block;font-weight:600;font-size:.88rem}
+.field input{width:100%;font:600 1rem var(--sans);padding:7px 9px;border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.field.off{opacity:.45}
+.field small{display:block;color:var(--ink-soft);font-size:.8rem}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:100%}
+caption{text-align:left;font-family:var(--serif);font-weight:600;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+@media (max-width:480px){th,td{padding:6px 5px;font-size:.86rem}}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 9 · Worked example</p>
+  <h1>Same code, two monitors</h1>
+  <p class="lede">Both runners execute <code>x = x + 5</code> once per frame. The bottom screen draws more frames per second, so its runner is faster. Turn on delta time and race again.</p>
+</header>
+
+<section class="panel" aria-label="Race">
+  <p class="caption" id="caption">Same code. Twice the frames, twice the speed.</p>
+
+  <div class="lane">
+    <div class="lane-head"><span>Top screen</span><span class="hz">60 Hz</span></div>
+    <canvas id="c0" role="img" aria-label="Top lane, 60 Hz runner"></canvas>
+    <div class="readout">
+      <div class="stat" style="--c:var(--steel)"><b id="f0">0</b><span>frames so far</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="x0">0.00</b><span>x (px)</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="v0">300</b><span>px per second</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="t0">—</b><span>finish time (s)</span></div>
+    </div>
+  </div>
+
+  <div class="lane">
+    <div class="lane-head"><span>Bottom screen</span><span class="hz" id="hz1">120 Hz</span></div>
+    <canvas id="c1" role="img" aria-label="Bottom lane runner"></canvas>
+    <div class="readout">
+      <div class="stat" style="--c:var(--ochre)"><b id="f1">0</b><span>frames so far</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="x1">0.00</b><span>x (px)</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="v1">600</b><span>px per second</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="t1">—</b><span>finish time (s)</span></div>
+    </div>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="controls">
+    <div>
+      <span class="group-label" id="rateLabel">Bottom screen refresh rate</span>
+      <div class="chips" role="group" aria-labelledby="rateLabel">
+        <button class="chip" data-rate="30" aria-pressed="false">30 Hz</button>
+        <button class="chip" data-rate="120" aria-pressed="true">120 Hz</button>
+        <button class="chip" data-rate="144" aria-pressed="false">144 Hz</button>
+        <button class="chip" data-rate="240" aria-pressed="false">240 Hz</button>
+      </div>
+      <div class="buttons" style="margin-top:14px">
+        <button class="btn primary" id="race">Race</button>
+        <button class="btn" id="pause" aria-pressed="false">Pause</button>
+        <button class="btn" id="step">Step 1/240 s</button>
+        <button class="btn" id="skip">Skip to end</button>
+      </div>
+      <p style="margin:8px 0 0;font-size:.88rem;color:var(--ink-soft)">Clock: <b id="clock" style="font-variant-numeric:tabular-nums;color:var(--ink)">0.000 s</b> of simulated wall time, in 1/240 s ticks.</p>
+    </div>
+    <div>
+      <label class="switch"><input type="checkbox" id="dt"> Use delta time</label>
+      <div class="fields">
+        <div class="field" id="fS"><label for="s">Per-frame step <code>s</code></label><input id="s" type="number" min="1" max="20" step="1" value="5"><small>px per frame, used when off</small></div>
+        <div class="field off" id="fV"><label for="v">Speed <code>v</code></label><input id="v" type="number" min="50" max="1000" step="10" value="300"><small>px per second, used when on</small></div>
+      </div>
+      <p style="margin:10px 0 0;font-size:.95rem">Code each frame: <code id="code">x = x + s</code></p>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Crossing 1,920 px at every refresh rate, with the current <code>s</code> and <code>v</code>. Finish times in seconds.</caption>
+      <thead><tr><th>Rate</th><th>Off px/s</th><th>Off finish</th><th>On px/s</th><th>On finish</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>The lanes are 1,920 logical px long. One simulated wall clock drives both lanes in 1/240 s ticks. A lane runs a frame whenever its own elapsed time reaches another 1/rate, so the 144 Hz lane gets frames at uneven tick counts, as a real 144 Hz screen would against a 240 Hz clock. Each runner is drawn only on its own frames. Faint dots show the last positions where a frame happened.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const TICK=240,GOAL=1920;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let rate1=120,useDt=false,S=5,V=300;
+let tick=0,running=false,paused=false,last=0,acc=0,snap=null;
+let lanes=[];
+
+function perFrame(rate){return useDt?V/rate:S;}
+function newLane(rate){return {rate,frames:0,x:0,finish:null,trail:[]};}
+function reset(){tick=0;snap=null;lanes=[newLane(60),newLane(rate1)];}
+// integer tick math: a lane's frame count at tick t is floor(t*rate/240)
+function advance(){
+  tick++;
+  lanes.forEach(L=>{
+    if(L.finish!==null)return;
+    const target=Math.floor(tick*L.rate/TICK);
+    while(L.frames<target){
+      L.frames++;L.x+=perFrame(L.rate);
+      L.trail.push(L.x);if(L.trail.length>10)L.trail.shift();
+      if(L.x>=GOAL-1e-9){L.finish=tick/TICK;break;}
+    }
+  });
+  if(!snap){const f=lanes.find(L=>L.finish!==null);if(f){const o=lanes.find(L=>L!==f);snap={lane:f,other:o,t:f.finish,ox:o.x,tie:o.finish!==null};}}
+  if(lanes.every(L=>L.finish!==null)){running=false;announce();}
+}
+function simulate(rate,dt){ // headless run for the table
+  const save=useDt;useDt=dt;let L=newLane(rate),t=0;
+  while(L.finish===null&&t<TICK*100){t++;const target=Math.floor(t*rate/TICK);while(L.frames<target){L.frames++;L.x+=perFrame(rate);if(L.x>=GOAL-1e-9){L.finish=t/TICK;break;}}}
+  useDt=save;return L.finish;
+}
+const f2=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const f0=n=>Math.round(n).toLocaleString('en-US');
+const fs=n=>{const r=Math.round(n*100)/100;return Number.isInteger(r)?r.toLocaleString('en-US'):f2(r);};
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function drawLane(i){
+  const L=lanes[i],{g,w,h}=setupCanvas($('c'+i)),col=css(i?'--ochre':'--steel');
+  const x0=w*.05,x1=w*.95,X=x=>x0+(x1-x0)*Math.min(x,GOAL)/GOAL,mid=h*.58;
+  g.clearRect(0,0,w,h);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+  for(let p=0;p<=GOAL;p+=480){const px=X(p);g.beginPath();g.moveTo(px,mid+10);g.lineTo(px,mid+16);g.stroke();if(w>420||p%960===0)g.fillText(f0(p),px,h-1);}
+  g.strokeStyle=css('--ink-soft');g.beginPath();g.moveTo(x0,mid+10);g.lineTo(x1,mid+10);g.stroke();
+  // start line and finish flag
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(x0,8);g.lineTo(x0,mid+16);g.stroke();
+  g.beginPath();g.moveTo(x1,6);g.lineTo(x1,mid+16);g.stroke();
+  const fw=Math.min(18,w*.04);g.fillStyle=css('--ink');
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++)if((r+c)%2===0)g.fillRect(x1+c*fw/3,6+r*fw/4.5,fw/3,fw/4.5);
+  g.strokeRect(x1,6,fw,fw*2/3);
+  // snapshot ghost on the slower lane
+  if(snap&&!snap.tie&&snap.other===L){
+    const gx=X(snap.ox);g.setLineDash([4,4]);g.strokeStyle=css('--ink-soft');g.lineWidth=1.5;g.beginPath();g.moveTo(gx,8);g.lineTo(gx,mid+10);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ink-soft');g.textAlign=gx>w*.7?'right':'left';g.textBaseline='top';g.font='600 11px '+css('--sans');
+    g.fillText(' '+f0(snap.ox)+' px at '+f2(snap.t)+' s ',gx,6);
+  }
+  // trail dots: positions where recent frames happened
+  g.fillStyle=col;L.trail.forEach((tx,k)=>{g.globalAlpha=.15+.04*k;g.beginPath();g.arc(X(tx),mid,3,0,7);g.fill();});g.globalAlpha=1;
+  const r=Math.max(8,Math.min(14,h*.12)),px=X(L.x);
+  g.fillStyle=col;g.beginPath();g.arc(px,mid-2,r,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+}
+function render(){
+  lanes.forEach((L,i)=>{
+    drawLane(i);
+    $('f'+i).textContent=L.frames.toLocaleString('en-US');
+    $('x'+i).textContent=f2(Math.min(L.x,99999));
+    $('v'+i).textContent=fs(useDt?V:S*L.rate);
+    $('t'+i).textContent=L.finish===null?'—':f2(L.finish);
+  });
+  $('hz1').textContent=rate1+' Hz';
+  $('clock').textContent=(tick/TICK).toFixed(3)+' s';
+  const ratio=rate1/60;
+  let cap;
+  if(useDt) cap='Same code with dt. '+(rate1>60?'More':'Fewer')+' frames, same speed.';
+  else if(rate1===120) cap='Same code. Twice the frames, twice the speed.';
+  else if(rate1===30) cap='Same code. Half the frames, half the speed.';
+  else cap='Same code. '+fs(ratio)+'× the frames, '+fs(ratio)+'× the speed.';
+  $('caption').textContent=cap;
+  let s='';
+  if(snap&&!snap.tie){
+    s=`When the ${snap.lane.rate} Hz runner finished at <b>${f2(snap.t)} s</b>, the ${snap.other.rate} Hz runner was at <b>${f2(snap.ox)} px</b>. `;
+  }else if(snap&&snap.tie){s=`Both runners finished within one frame of each other: 60 Hz at <b>${f2(lanes[0].finish)} s</b>, ${rate1} Hz at <b>${f2(lanes[1].finish)} s</b>. `;}
+  if(useDt) s+=`Each frame moves <code>v × dt</code>: ${fs(V/60)} px at 60 Hz, ${fs(V/rate1)} px at ${rate1} Hz. Frames × step = ${fs(V)} px every second on both screens.`;
+  else s+=`Each frame moves ${fs(S)} px on both screens. 60 frames × ${fs(S)} = ${fs(60*S)} px per second on top, ${rate1} × ${fs(S)} = ${fs(rate1*S)} px per second below.`;
+  $('insight').innerHTML=s;
+  $('pause').textContent=paused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',paused);
+}
+function table(){
+  const rows=[30,60,120,144,240].map(r=>{
+    const here=r===60||r===rate1;
+    return `<tr class="${here?'here':''}"><td>${r} Hz</td><td>${fs(S*r)}</td><td>${f2(simulate(r,false))}</td><td>${fs(V)}</td><td>${f2(simulate(r,true))}</td></tr>`;
+  });
+  $('tbody').innerHTML=rows.join('');
+}
+function announce(){$('live').textContent=`Finished. 60 Hz: ${f2(lanes[0].finish)} seconds. ${rate1} Hz: ${f2(lanes[1].finish)} seconds.`;}
+function finishNow(){while(lanes.some(L=>L.finish===null)&&tick<TICK*200)advance();running=false;paused=false;render();}
+function loop(now){
+  if(running&&!paused){
+    const d=Math.min(.1,(now-last)/1000);acc+=d;
+    while(acc>=1/TICK&&running){acc-=1/TICK;advance();}
+    render();
+  }
+  last=now;requestAnimationFrame(loop);
+}
+function race(){reset();acc=0;paused=false;$('live').textContent='';if(reduce){finishNow();return;}running=true;render();}
+
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');
+  rate1=+b.dataset.rate;table();race();
+}));
+$('dt').addEventListener('change',e=>{useDt=e.target.checked;$('fS').classList.toggle('off',useDt);$('fV').classList.toggle('off',!useDt);$('code').textContent=useDt?'x = x + v × dt':'x = x + s';reset();running=false;paused=false;render();});
+function num(el,lo,hi,def){let n=+el.value;if(!isFinite(n)||n<lo)n=lo;if(n>hi)n=hi;return n||def;}
+$('s').addEventListener('change',e=>{S=num(e.target,1,20,5);e.target.value=S;table();reset();running=false;render();});
+$('v').addEventListener('change',e=>{V=num(e.target,50,1000,300);e.target.value=V;table();reset();running=false;render();});
+$('race').addEventListener('click',race);
+$('pause').addEventListener('click',()=>{if(!running)return;paused=!paused;render();});
+$('step').addEventListener('click',()=>{if(lanes.every(L=>L.finish!==null))reset();if(!running)running=true;paused=true;advance();render();});
+$('skip').addEventListener('click',()=>{if(!running&&lanes.every(L=>L.finish!==null))reset();finishNow();});
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+
+reset();table();
+if(reduce){finishNow();}else{running=true;}
+render();
+requestAnimationFrame(t=>{last=t;requestAnimationFrame(loop);});
+window.__race={lanes:()=>lanes,finishNow,reset,snap:()=>snap};
+})();
+</script>
+</body>
+</html>

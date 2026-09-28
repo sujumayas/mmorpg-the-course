@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Level 256 debugger — CS101 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,'SFMono-Regular',Menlo,Consolas,'Liberation Mono',monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+code,.mono{font-family:var(--mono);font-size:.9em}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 16px}
+.card{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:12px 14px}
+.card.bad{border-color:var(--blood)}
+.card h3{margin:0 0 4px;font-size:.95rem}
+.card .big{font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.card .big.red{color:var(--blood)}
+.card p{margin:4px 0 0;font-size:.86rem;color:var(--ink-soft)}
+@media (max-width:560px){.compare{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;margin-bottom:14px}
+.lvl{flex:1 1 260px;min-width:0}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip,.btn{font:600 .9rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+kbd{font-family:var(--mono);font-size:.78em;border:1px solid var(--ink-soft);border-radius:4px;padding:0 4px;margin-left:4px;color:var(--ink-soft)}
+.btn.primary kbd{color:var(--paper);border-color:var(--paper)}
+.toggle{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem}
+.toggle input{width:20px;height:20px;accent-color:var(--steel)}
+.panes{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.panes{grid-template-columns:1.15fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.src{font-family:var(--mono);font-size:.84rem;line-height:1.55;overflow-x:auto;background:var(--paper);border-radius:8px;padding:6px 0}
+.ln{display:flex;align-items:stretch;white-space:pre;min-width:max-content}
+.ln .gut{flex:0 0 auto;width:52px;display:flex;align-items:center;gap:4px;padding:0 6px 0 4px;border:0;background:transparent;color:var(--ink-soft);font:inherit;cursor:pointer;text-align:right;justify-content:flex-end}
+.ln .gut .dot{width:10px;height:10px;border-radius:50%;border:1.5px solid transparent;flex:0 0 auto}
+.ln .gut[aria-pressed="true"] .dot{background:var(--blood);border-color:var(--blood)}
+.ln .gut:hover .dot{border-color:var(--blood)}
+.ln .code{padding:0 12px 0 6px;flex:1}
+.ln.cur{background:color-mix(in srgb,var(--ochre) 26%,transparent)}
+.ln.cur .code::before{content:"\25B6 ";color:var(--ochre)}
+.ln:not(.cur) .code::before{content:"  "}
+.ln .cm{color:var(--ink-soft)}
+@media (max-width:560px){table.bt{font-size:.82rem}table.bt th,table.bt td{padding:5px 5px}.src{font-size:.7rem}.ln .gut{width:36px;padding:0 4px 0 2px}.ln .code{padding:0 8px 0 2px}.ln .cm{display:none}figure{padding:10px 8px}}
+.ln .kw{color:var(--steel);font-weight:700}
+.watch{width:100%;border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums}
+.watch th,.watch td{padding:5px 6px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:top}
+.watch th{font-family:var(--mono);font-weight:600;font-size:.82rem;overflow-wrap:normal;min-width:9ch}
+.watch td.v{font-weight:700;text-align:right;white-space:nowrap}
+.watch td.b{font-family:var(--mono);font-size:.82rem;white-space:nowrap}
+.bits .drop{color:var(--ink-soft);opacity:.55;text-decoration:line-through}
+.bits .drop.one{color:var(--blood);opacity:1}
+.bitnote{display:block;font-family:var(--sans);font-size:.74rem;color:var(--ink-soft);white-space:normal}
+tr.chg td,tr.chg th{background:color-mix(in srgb,var(--moss) 22%,transparent);transition:background .6s}
+.status{margin:10px 0 0;font-family:var(--serif);font-size:.98rem}
+.status b{font-family:var(--sans)}
+.pic{margin-top:14px}
+.mazegrid{display:grid;grid-template-columns:repeat(28,1fr);gap:1px;background:var(--grid);border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;max-width:760px}
+.mazegrid span{aspect-ratio:1;background:var(--paper);display:flex;align-items:center;justify-content:center;font:700 clamp(7px,1.7vw,13px)/1 var(--mono);color:var(--ink);min-width:0}
+.mazegrid span.left::after{content:"";width:3px;height:3px;border-radius:50%;background:var(--ink-soft);opacity:.45}
+.mazegrid span.fruit{background:color-mix(in srgb,var(--ochre) 18%,var(--paper));box-shadow:inset 0 0 0 1px var(--ochre)}
+.mazegrid span.sym{color:var(--ochre)}
+.mazegrid span.over{color:var(--blood);background:color-mix(in srgb,var(--blood) 10%,var(--paper))}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:2px}
+.bisect{margin-top:16px}
+@media (max-width:560px){.bisect.panel{padding:12px 8px}}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table.bt{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}
+table.bt th,table.bt td{padding:5px 8px;white-space:nowrap;border-bottom:1px solid var(--grid);text-align:right}
+table.bt th:first-child,table.bt td:first-child{text-align:left}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 12 · Worked example</p>
+  <h1>Level 256: one dropped bit, 256 loops</h1>
+  <p class="lede">The fruit routine stores <code>level_counter + 1</code> in a byte. At level 256 that sum is <code>1 0000 0000</code>. The ninth bit falls off, <code>count</code> becomes 0, and a loop that should run at most 7 times runs 256 times.</p>
+</header>
+
+<div class="compare" aria-label="Level 255 compared with level 256">
+  <div class="card">
+    <h3>Level 255</h3>
+    <div class="big"><span class="mono">count = 255</span> → 7 symbols</div>
+    <p><code>level_counter + 1 = 1111 1111</code> fits in 8 bits. Full branch, returns 7.</p>
+  </div>
+  <div class="card bad">
+    <h3>Level 256</h3>
+    <div class="big red"><span class="mono">count = 0</span> → 256 symbols</div>
+    <p><code>level_counter + 1 = 1 0000 0000</code> needs 9 bits. Early branch, loop runs 256 times.</p>
+  </div>
+</div>
+
+<section class="panel" aria-label="Step-through debugger">
+  <div class="toolbar">
+    <div class="lvl">
+      <label for="level">Level on screen <output id="oLevel">255</output></label>
+      <input id="level" type="range" min="1" max="256" step="1" value="255" aria-describedby="lvlHelp">
+      <div class="chips" role="group" aria-label="Quick levels">
+        <button class="chip" data-l="1">1</button><button class="chip" data-l="6">6</button><button class="chip" data-l="7">7</button><button class="chip" data-l="255">255</button><button class="chip" data-l="256">256</button>
+      </div>
+      <span id="lvlHelp" class="sr">level_counter equals level minus 1</span>
+    </div>
+    <div class="chips" role="group" aria-label="Execution">
+      <button class="btn" id="bStep">Step<kbd>N</kbd></button>
+      <button class="btn primary" id="bRun">Run<kbd>C</kbd></button>
+      <button class="btn" id="bReset">Reset<kbd>R</kbd></button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="fixed"> Fixed version</label>
+  </div>
+
+  <div class="panes">
+    <figure>
+      <figcaption>Source<small>Click a line number to toggle a breakpoint. The arrow marks the line that runs next.</small></figcaption>
+      <div class="src" id="src" role="group" aria-label="Source code"></div>
+    </figure>
+    <figure>
+      <figcaption>Watch<small>Decimal and bits. <code>byte()</code> keeps only the low 8 bits.</small></figcaption>
+      <table class="watch" aria-label="Watched values">
+        <tbody id="watch"></tbody>
+      </table>
+    </figure>
+  </div>
+  <p class="status" id="status" aria-live="polite"></p>
+
+  <figure class="pic">
+    <figcaption>Picture: 28 × 12 grid<small>Bottom row, right 7 cells = fruit row. Each drawn symbol fills the next cell leftward, then spills into the maze above, right half first.</small></figcaption>
+    <div class="mazegrid" id="grid" role="img" aria-label="Maze grid with drawn symbols"></div>
+    <div class="legend">
+      <span><i style="background:var(--ochre)"></i>Symbol in the fruit row</span>
+      <span><i style="background:var(--blood)"></i>Symbol drawn over the maze</span>
+      <span id="picCount"></span>
+    </div>
+  </figure>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<section class="panel bisect" aria-labelledby="bisH">
+  <h2 id="bisH">Bisect levels 1 to 256</h2>
+  <p style="margin:0 0 8px;font-family:var(--serif)">Pretend each test run takes a minute. Probe the middle level, keep the half that still contains the change from good to bad. "Good" means <code>symbols_to_draw</code> returns 7 or fewer.</p>
+  <button class="btn primary" id="bBis">Next probe</button>
+  <button class="btn" id="bBisReset">Reset bisect</button>
+  <div class="table-wrap">
+    <table class="bt" aria-label="Bisect probes">
+      <thead><tr><th>Probe</th><th>Level</th><th>Symbols</th><th>Result</th><th>Still in doubt</th></tr></thead>
+      <tbody id="bisBody"></tbody>
+    </table>
+  </div>
+  <p class="status" id="bisStatus" aria-live="polite"></p>
+</section>
+
+<footer>A teaching model of the fruit routine's logic as described in Jamey Pittman, <i>The Pac-Man Dossier</i> (2009). It is Python-style pseudocode, not the original Z80 code. The grid is a plain stand-in, not the arcade maze. Keys: <kbd>N</kbd> step, <kbd>C</kbd> run or pause, <kbd>R</kbd> reset.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const SRC={
+  bug:[
+    ['<span class="kw">def</span> symbols_to_draw(level_counter):',''],
+    ['    count = byte(level_counter + 1)',''],
+    ['    <span class="kw">if</span> count &lt; 7:','# early levels'],
+    ['        drawn = 0',''],
+    ['        <span class="kw">while</span> True:',''],
+    ['        drawn += 1','# draw one symbol'],
+    ['        count = byte(count - 1)',''],
+    ['        <span class="kw">if</span> count == 0:',''],
+    ['            <span class="kw">break</span>',''],
+    ['        <span class="kw">return</span> drawn',''],
+    ['    <span class="kw">return</span> 7','# row is full']
+  ],
+  fix:[
+    ['<span class="kw">def</span> symbols_to_draw_fixed(level_counter):',''],
+    ['    <span class="kw">if</span> level_counter &gt;= 6:','# level 7 and later'],
+    ['        <span class="kw">return</span> 7',''],
+    ['    <span class="kw">return</span> level_counter + 1','# levels 1-6']
+  ]
+};
+// the loop body lines are indented one step deeper inside while
+SRC.bug[5][0]='            drawn += 1';SRC.bug[6][0]='            count = byte(count - 1)';SRC.bug[7][0]='            <span class="kw">if</span> count == 0:';SRC.bug[8][0]='                <span class="kw">break</span>';
+const bps={bug:new Set([2]),fix:new Set()};
+let mode='bug',level=255,S,timer=null,prevVals={};
+
+function reset(){
+  stop();
+  S={pc:1,lc:null,plus:null,count:null,drawn:null,branch:null,iters:0,ret:null,done:false,symbols:0};
+  clearGrid();render([]);
+  setStatus(`Ready at line 1. level_counter will be ${level-1}.`);
+}
+function step(){
+  if(S.done)return [];
+  const ch=[];const L=S.pc;
+  if(mode==='bug'){
+    switch(L){
+      case 1:S.lc=level-1;ch.push('level_counter');S.pc=2;break;
+      case 2:S.plus=S.lc+1;S.count=S.plus%256;ch.push('plus','count');S.pc=3;break;
+      case 3:S.branch=S.count<7?'early':'full';ch.push('branch');S.pc=S.branch==='early'?4:11;break;
+      case 4:S.drawn=0;ch.push('drawn');S.pc=5;break;
+      case 5:S.pc=6;break;
+      case 6:S.drawn++;S.iters++;drawSymbol(S.drawn);ch.push('drawn','iters');S.pc=7;break;
+      case 7:S.count=((S.count-1)%256+256)%256;ch.push('count');S.pc=8;break;
+      case 8:S.pc=S.count===0?9:5;break;
+      case 9:S.pc=10;break;
+      case 10:S.ret=S.drawn;S.done=true;ch.push('ret');break;
+      case 11:S.ret=7;S.done=true;for(let i=1;i<=7;i++)drawSymbol(i);S.drawn=7;ch.push('ret','drawn');break;
+    }
+  }else{
+    switch(L){
+      case 1:S.lc=level-1;ch.push('level_counter');S.pc=2;break;
+      case 2:S.branch=S.lc>=6?'full':'early';ch.push('branch');S.pc=S.branch==='full'?3:4;break;
+      case 3:S.ret=7;S.done=true;break;
+      case 4:S.ret=S.lc+1;S.done=true;break;
+    }
+    if(S.done){for(let i=1;i<=S.ret;i++)drawSymbol(i);S.drawn=S.ret;ch.push('ret','drawn');}
+  }
+  return {line:L,ch};
+}
+function stepUI(){
+  if(S.done)return;
+  const r=step();render(r.ch);announce(r);
+}
+function announce(r){
+  const parts=[];
+  const nm={level_counter:'level_counter',plus:'level_counter + 1',count:'count',drawn:'drawn',iters:'loop iterations',branch:'branch',ret:'return value'};
+  const val={level_counter:S.lc,plus:S.plus,count:S.count,drawn:S.drawn,iters:S.iters,branch:S.branch,ret:S.ret};
+  [...new Set(r.ch)].forEach(k=>parts.push(`${nm[k]} = ${val[k]}`));
+  if(S.done)setStatus(`Returned <b>${S.ret}</b> after ${S.iters} loop iteration${S.iters===1?'':'s'}. ${parts.filter(p=>!p.startsWith('return')).join(', ')}`.trim());
+  else setStatus(`Ran line ${r.line}. Next: line ${S.pc}.${parts.length?' '+parts.join(', ')+'.':''}`);
+}
+function setStatus(h){$('status').innerHTML=h;}
+
+// run: continue to next breakpoint or end
+function run(){
+  if(timer){stop();setStatus(`Paused before line ${S.pc}.`);return;}
+  if(S.done)return;
+  const bp=bps[mode];
+  const hitBp=()=>!S.done&&bp.has(S.pc);
+  if(reduce.matches){
+    let r=step(),all=[...r.ch];
+    while(!S.done&&!hitBp()){r=step();all.push(...r.ch);}
+    render(all);finishMsg(r);return;
+  }
+  $('bRun').firstChild.textContent='Pause';
+  let last=performance.now(),acc=0;const rate=120; // lines per second = about 30 symbols per second
+  let r=step();render(r.ch);
+  if(S.done||hitBp()){stop();finishMsg(r);return;}
+  const tick=now=>{
+    acc+=(now-last)/1000*rate;last=now;let ch=[];
+    while(acc>=1&&!S.done&&!hitBp()){r=step();ch.push(...r.ch);acc-=1;}
+    if(ch.length)render(ch);
+    if(S.done||hitBp()){stop();finishMsg(r);return;}
+    timer=requestAnimationFrame(tick);
+  };
+  timer=requestAnimationFrame(tick);
+}
+function finishMsg(r){
+  if(S.done)announce(r);
+  else setStatus(`Stopped at breakpoint, line ${S.pc}. Press Step to run it.`);
+}
+function stop(){if(timer){cancelAnimationFrame(timer);timer=null;}$('bRun').firstChild.textContent='Run';}
+
+// source pane
+function buildSrc(){
+  const lines=SRC[mode];
+  $('src').innerHTML=lines.map((l,i)=>{
+    const n=i+1,on=bps[mode].has(n);
+    return `<div class="ln" data-n="${n}"><button class="gut" data-n="${n}" aria-pressed="${on}" aria-label="Breakpoint on line ${n}"><span class="dot"></span>${n}</button><span class="code">${l[0]}${l[1]?'  <span class="cm">'+l[1]+'</span>':''}</span></div>`;
+  }).join('');
+  $('src').querySelectorAll('.gut').forEach(b=>b.addEventListener('click',()=>{
+    const n=+b.dataset.n,s=bps[mode];s.has(n)?s.delete(n):s.add(n);b.setAttribute('aria-pressed',s.has(n));
+  }));
+}
+function bits(n,w){
+  const s=n.toString(2).padStart(w,'0');
+  if(w===9){
+    const d=s[0];
+    return `<span class="drop${d==='1'?' one':''}" title="dropped by byte()">${d}</span> ${s.slice(1,5)} ${s.slice(5)}`;
+  }
+  return s.slice(0,4)+' '+s.slice(4);
+}
+function render(changed){
+  const ch=new Set(changed);
+  document.querySelectorAll('.ln').forEach(el=>el.classList.toggle('cur',!S.done&&+el.dataset.n===S.pc));
+  const d=v=>v===null?'—':v;
+  const rows=[];
+  rows.push(['level_counter','level_counter',d(S.lc),S.lc===null?'':bits(S.lc,8)]);
+  if(mode==='bug'){
+    rows.push(['plus','level_counter + 1',d(S.plus),S.plus===null?'':bits(S.plus,9)+`<span class="bitnote">${S.plus>=256?'9th bit dropped by byte()':'9th bit (dropped by byte()) is 0'}</span>`]);
+    rows.push(['count','count',d(S.count),S.count===null?'':bits(S.count,8)]);
+  }
+  rows.push(['drawn','drawn',d(S.drawn),'']);
+  rows.push(['branch','branch taken',S.branch===null?'—':S.branch,S.branch===null?'':(mode==='bug'?(S.branch==='early'?'count &lt; 7':'count ≥ 7'):(S.branch==='full'?'level_counter ≥ 6':'level_counter &lt; 6'))]);
+  if(mode==='bug')rows.push(['iters','loop iterations so far',S.iters,'']);
+  rows.push(['ret','return value',d(S.ret),'']);
+  $('watch').innerHTML=rows.map(r=>`<tr class="${ch.has(r[0])?'chg':''}" data-k="${r[0]}"><th scope="row">${r[1]}</th><td class="v" data-v="${r[0]}">${r[2]}</td><td class="b bits">${r[3]}</td></tr>`).join('');
+  $('bStep').disabled=S.done;$('bRun').disabled=S.done;
+  $('picCount').textContent=`${S.symbols} symbol${S.symbols===1?'':'s'} drawn`+(S.symbols>7?`, ${S.symbols-7} outside the fruit row`:'');
+  insight();
+}
+function insight(){
+  let s;
+  if(!S.done){
+    if(mode==='bug')s=`Level ${level}: <code>level_counter + 1 = ${level}</code>, which ${level>=256?'<b>does not fit in 8 bits</b>. Step past line 2 and watch <code>count</code>.':'fits in 8 bits.'}`;
+    else s=`The fixed version checks for the full row before any arithmetic, so no byte can wrap.`;
+  }else if(mode==='bug'&&S.ret>7){
+    s=`<b>${S.ret} symbols</b> from a routine meant to draw at most 7. The byte wrapped to 0, 0 is less than 7, and the loop counted 0, 255, 254 … 1, 0.`;
+  }else{
+    s=`Returned <b>${S.ret}</b>. ${mode==='fix'&&level===256?'The fix holds at level 256.':S.ret===7?'The row is full and stays full.':'One symbol per level on early levels.'}`;
+  }
+  $('insight').innerHTML=s;
+}
+
+// grid
+const COLS=28,ROWS=12;const cells=[];const GLYPHS=['A','7','■','▲','K','3','◆','Z','#','○','5','Q','+','R','9','×'];
+function buildGrid(){
+  const g=$('grid');g.innerHTML='';
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const s=document.createElement('span');cells.push(s);g.appendChild(s);}
+}
+// fill order: fruit row (bottom, cols 27..21), then rows 10..0 cols 27..14, then bottom cols 20..14; then wraps
+const ORDER=[];
+for(let c=27;c>=21;c--)ORDER.push([11,c]);
+for(let r=10;r>=0;r--)for(let c=27;c>=14;c--)ORDER.push([r,c]);
+for(let c=20;c>=14;c--)ORDER.push([11,c]);
+function cellAt(r,c){return cells[r*COLS+c];}
+function clearGrid(){
+  cells.forEach((s,i)=>{const r=Math.floor(i/COLS),c=i%COLS;s.className='';s.textContent='';if(c<14)s.classList.add('left');if(r===11&&c>=21)s.classList.add('fruit');});
+  if(S)S.symbols=0;
+}
+function drawSymbol(k){
+  S.symbols=k;
+  const [r,c]=ORDER[(k-1)%ORDER.length];const s=cellAt(r,c);
+  s.textContent=k<=7?'●':GLYPHS[(k*7)%GLYPHS.length];
+  s.classList.remove('sym','over');s.classList.add(k<=7?'sym':'over');
+}
+
+// level controls
+function setLevel(l){level=l;$('level').value=l;$('oLevel').textContent=l;
+  document.querySelectorAll('.chip[data-l]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.l===l));reset();}
+$('level').addEventListener('input',e=>setLevel(+e.target.value));
+document.querySelectorAll('.chip[data-l]').forEach(b=>b.addEventListener('click',()=>setLevel(+b.dataset.l)));
+$('bStep').addEventListener('click',()=>{stop();stepUI();});
+$('bRun').addEventListener('click',run);
+$('bReset').addEventListener('click',reset);
+$('fixed').addEventListener('change',e=>{mode=e.target.checked?'fix':'bug';buildSrc();reset();run();});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const t=e.target;if(t&&(t.tagName==='TEXTAREA'||(t.tagName==='INPUT'&&!['range','checkbox'].includes(t.type))))return;
+  const k=e.key.toLowerCase();
+  if(k==='n'){e.preventDefault();stop();stepUI();}
+  else if(k==='c'){e.preventDefault();run();}
+  else if(k==='r'){e.preventDefault();reset();}
+});
+
+// bisect
+const symbols=lc=>{let count=(lc+1)%256;if(count<7){let d=0;do{d++;count=(count+255)%256;}while(count!==0);return d;}return 7;};
+let B;
+function bisReset(){B={lo:1,hi:256,n:0,done:false};$('bisBody').innerHTML='<tr><td>—</td><td>—</td><td>—</td><td>—</td><td>1 to 256</td></tr>';$('bBis').disabled=false;$('bisStatus').textContent='';}
+function bisNext(){
+  if(B.done)return;
+  const mid=Math.floor((B.lo+B.hi)/2),sym=symbols(mid-1),good=sym<=7;B.n++;
+  if(good)B.lo=mid+1;else B.hi=mid;
+  const range=B.lo===B.hi?`${B.lo}`:`${B.lo} to ${B.hi}`;
+  $('bisBody').insertAdjacentHTML('beforeend',`<tr><td>${B.n}</td><td>${mid}</td><td>${sym}</td><td>${good?'good':'bad'}</td><td>${range}</td></tr>`);
+  if(B.lo===B.hi){B.done=true;$('bBis').disabled=true;
+    $('bisStatus').innerHTML=`First bad level: <b>${B.lo}</b>, found in <b>${B.n}</b> probes. Each probe halves the range, and 2<sup>8</sup> = 256.`;}
+  else $('bisStatus').textContent=`Probe ${B.n}: level ${mid} is ${good?'good':'bad'}. ${B.hi-B.lo+1} levels still in doubt.`;
+}
+$('bBis').addEventListener('click',bisNext);
+$('bBisReset').addEventListener('click',bisReset);
+
+buildSrc();buildGrid();setLevel(255);bisReset();
+// open on the breakpoint so the first screen shows where the value is born
+run();
+})();
+</script>
+</body>
+</html>

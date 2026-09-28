@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>One function, many callers · CS101 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.src{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:6px 24px}
+@media (max-width:760px){.src{grid-template-columns:1fr}}
+pre{margin:0;font-family:var(--mono);font-size:.95rem;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.kw{color:var(--steel);font-weight:700}
+.cm{color:var(--ink-soft)}
+.tog{font:700 .95rem var(--mono);padding:1px 8px;margin:0 1px;border-radius:6px;border:2px solid var(--ochre);background:color-mix(in srgb,var(--ochre) 14%,transparent);color:var(--ink);cursor:pointer;min-height:30px}
+.tog[aria-pressed="true"]{background:var(--ochre);color:var(--paper)}
+.src .hint{grid-column:1/-1}
+.cols{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:16px;align-items:start}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 2px}
+.sub{color:var(--ink-soft);font-size:.88rem;margin:0 0 10px}
+.headline{font-family:var(--mono);font-size:1.02rem;font-weight:700;margin:0 0 10px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--paper-2);border-left:5px solid var(--c,var(--moss))}
+.rolls{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;max-width:460px;margin:0 auto;touch-action:manipulation}
+.cell{aspect-ratio:1;border-radius:2px;background:var(--moss);position:relative;display:flex;align-items:center;justify-content:center;font:9px var(--mono);color:transparent;cursor:default}
+.cell.miss{background-color:var(--blood);background-image:repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,255,255,.55) 3px 5px)}
+.cell.last{outline:3px solid var(--ink);outline-offset:1px;z-index:1}
+.cell.flash{animation:cellflash .2s ease-out}
+@keyframes cellflash{from{transform:scale(1.35)}to{transform:scale(1)}}
+@media (min-width:900px){.cell{color:color-mix(in srgb,var(--paper) 88%,transparent)}}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:10px 0 0;justify-content:center}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:-2px;margin-right:6px}
+.legend .h{background:var(--moss)}
+.legend .m{background-color:var(--blood);background-image:repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,255,255,.55) 3px 5px)}
+.legend .l{background:transparent;outline:3px solid var(--ink);outline-offset:-3px}
+.probe{font-family:var(--mono);font-size:.88rem;text-align:center;min-height:1.5em;margin:8px 0 0;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--grid);vertical-align:middle}
+th{font-size:.78rem;color:var(--ink-soft);font-weight:600;line-height:1.25}
+th:first-child,td:first-child{text-align:left}
+td.mono{font-family:var(--mono)}
+.pick{font:600 .9rem var(--sans);background:none;border:1.5px solid transparent;border-radius:6px;color:var(--ink);cursor:pointer;padding:4px 6px;text-align:left;text-decoration:underline;text-decoration-color:var(--ink-soft)}
+tr.sel td{background:var(--paper-2)}
+tr.sel td:first-child{box-shadow:inset 4px 0 0 var(--focus)}
+tr.sel .pick{text-decoration:none;border-color:var(--focus)}
+tr.bypass td{color:var(--ink-soft);font-style:italic}
+.neg{color:var(--blood)}
+.pos{color:var(--moss)}
+.flashv{animation:valflash .2s ease-out}
+@keyframes valflash{from{background:color-mix(in srgb,var(--ochre) 45%,transparent)}to{background:transparent}}
+input[type=number]{font:.95rem var(--mono);width:4.6em;padding:4px 6px;border-radius:var(--radius-sm);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:560px){th,td{padding:6px 4px}table{font-size:.84rem}.hide-sm{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS101 Programming for Games I · Week 4 · Worked example</p>
+  <h1>One function, many callers</h1>
+  <p class="lede">A 100% move checks 256 possible rolls and misses on exactly one of them, roll 255, because <code>255 &lt; 255</code> is false. Every move shares this one function, so every move carries the bug. Flip the <code>&lt;</code> and watch every caller change at once.</p>
+</header>
+
+<section class="src" aria-label="The shared functions">
+<pre><span class="kw">def</span> percent_to_byte(percent):
+    <span class="kw">return</span> <span id="scaleCode">percent * <button type="button" class="tog" id="tScale" aria-pressed="false" aria-label="Scale: times 255, original. Press to switch to times 256, capped at 256">255</button> // 100</span></pre>
+<pre><span class="kw">def</span> hits(accuracy_byte, roll):
+    <span class="kw">return</span> roll <button type="button" class="tog" id="tCmp" aria-pressed="false" aria-label="Comparison: less than. Press to switch to less than or equal">&lt;</button> accuracy_byte</pre>
+<p class="hint">The orange boxes are toggles. Change one character and every row of the table below recomputes.</p>
+</section>
+
+<div class="cols">
+<section class="panel" aria-labelledby="hA">
+  <h2 id="hA">All 256 rolls</h2>
+  <p class="sub">One cell per possible roll, 0 at the top left, 255 at the bottom right.</p>
+  <p class="headline" id="headline" aria-live="polite"></p>
+  <div class="rolls" id="rolls" aria-hidden="true"></div>
+  <p class="probe" id="probe" aria-hidden="true">Hover or tap a cell to see its roll.</p>
+  <div class="legend" aria-hidden="true"><span><i class="h"></i>hit</span><span><i class="m"></i>miss (hatched)</span><span><i class="l"></i>roll 255</span></div>
+</section>
+
+<section class="panel" aria-labelledby="hB">
+  <h2 id="hB">Every caller of <code>hits()</code></h2>
+  <p class="sub">Select a move to show its rolls on the left.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Move</th><th>Listed</th><th>Byte</th><th class="hide-sm">Rolls that hit</th><th>Real chance</th><th>vs listed</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+</section>
+</div>
+
+<footer>Move accuracies and the <code>* $ff / 100</code> conversion: pret, pokered disassembly (Pokémon Red and Blue, English release, 1998). The strict less-than check on a roll from 0 to 255, and Swift skipping the check in Western releases: Bulbapedia, "Accuracy" and "List of battle glitches in Generation I". Accuracy and evasion stat changes are left out, as in the lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+const MOVES=[{name:'Pound',pct:100},{name:'Fire Blast',pct:85},{name:'Hydro Pump',pct:80},{name:'Thunder',pct:70},{name:'Custom',pct:95,custom:true}];
+let scale256=false,le=false,sel=0,prev={};
+
+const toByte=p=>scale256?Math.min(256,Math.floor(p*256/100)):Math.floor(p*255/100);
+const hits=(b,roll)=>le?roll<=b:roll<b;
+function count(b){let w=0;for(let r=0;r<256;r++)if(hits(b,r))w++;return w;}
+const pct2=x=>(x*100).toFixed(2)+'%';
+const signed=x=>(x>0?'+':x<0?'−':'±')+Math.abs(x).toFixed(2);
+
+// build grid
+const cells=[];
+for(let r=0;r<256;r++){const c=document.createElement('div');c.className='cell'+(r===255?' last':'');c.textContent=r;c.dataset.r=r;$('rolls').appendChild(c);cells.push(c);}
+$('rolls').addEventListener('pointerover',e=>probe(e.target));
+$('rolls').addEventListener('pointerdown',e=>probe(e.target));
+function probe(t){
+  if(!t.dataset||t.dataset.r===undefined)return;
+  const r=+t.dataset.r,b=toByte(MOVES[sel].pct),h=hits(b,r);
+  $('probe').textContent=`roll ${r}: ${r} ${le?'<=':'<'} ${b} is ${h?'True, hit':'False, miss'}`;
+}
+
+// build table
+function buildTable(){
+  $('tbody').innerHTML=MOVES.map((m,i)=>`<tr data-i="${i}">
+    <td>${m.custom?`<button type="button" class="pick" data-i="${i}" aria-label="Show Custom on the grid">Custom</button> <input type="number" id="cIn" min="0" max="100" step="1" value="${m.pct}" aria-label="Custom listed accuracy, 0 to 100">`:`<button type="button" class="pick" data-i="${i}">${m.name}</button>`}</td>
+    <td class="mono">${m.custom?'':m.pct+'%'}</td><td class="mono" data-f="byte"></td><td class="mono hide-sm" data-f="rolls"></td><td class="mono" data-f="chance"></td><td class="mono" data-f="diff"></td></tr>`).join('')+
+    `<tr class="bypass"><td>Swift <span style="font-size:.8rem">(skips hits())</span></td><td class="mono">100%</td><td class="mono">—</td><td class="mono hide-sm">all 256</td><td class="mono">100.00%</td><td class="mono">±0.00</td></tr>
+     <tr class="bypass"><td colspan="6" style="text-align:left;font-size:.82rem">Swift does not call the function, so neither the bug nor the fix reaches it.</td></tr>`;
+  $('tbody').querySelectorAll('.pick').forEach(b=>b.onclick=()=>{sel=+b.dataset.i;render(false);});
+  $('cIn').addEventListener('input',e=>{let v=Math.round(+e.target.value);if(!Number.isFinite(v))return;v=Math.max(0,Math.min(100,v));MOVES[4].pct=v;render(true);});
+  $('cIn').addEventListener('change',e=>{e.target.value=MOVES[4].pct;});
+}
+
+function flash(el){
+  if(reduced.matches)return;
+  el.classList.remove('flashv');void el.offsetWidth;el.classList.add('flashv');
+}
+function render(animate){
+  const rows=$('tbody').querySelectorAll('tr[data-i]');
+  MOVES.forEach((m,i)=>{
+    const b=toByte(m.pct),w=count(b),ch=w/256,diff=ch*100-m.pct;
+    const vals={byte:String(b),rolls:w===0?'none':(w===256?'0 to 255':`0 to ${w-1}`)+` (${w})`,chance:pct2(ch),diff:signed(diff)};
+    const tr=rows[i];tr.classList.toggle('sel',i===sel);
+    Object.entries(vals).forEach(([k,v])=>{
+      const td=tr.querySelector(`[data-f="${k}"]`);
+      if(td.textContent!==v){td.textContent=v;if(animate&&prev[i+k]!==undefined)flash(td);}
+      prev[i+k]=v;
+      if(k==='diff'){td.classList.toggle('neg',diff<-0.005);td.classList.toggle('pos',diff>0.005);}
+    });
+    const pk=tr.querySelector('.pick');pk.setAttribute('aria-pressed',i===sel?'true':'false');
+  });
+  // grid for the selected move
+  const m=MOVES[sel],b=toByte(m.pct),w=count(b);
+  cells.forEach((c,r)=>{
+    const miss=!hits(b,r);
+    if(c.classList.contains('miss')!==miss){c.classList.toggle('miss',miss);if(animate&&!reduced.matches){c.classList.remove('flash');void c.offsetWidth;c.classList.add('flash');}}
+  });
+  const name=m.custom?`Custom ${m.pct}%`:m.name;
+  $('headline').textContent=`${name}: ${w} of 256 rolls hit (${pct2(w/256)})`;
+  $('headline').style.setProperty('--c',w===256?'var(--moss)':'var(--blood)');
+  // code and toggle state
+  $('tCmp').textContent=le?'<=':'<';$('tCmp').setAttribute('aria-pressed',le?'true':'false');
+  $('tCmp').setAttribute('aria-label',le?'Comparison: less than or equal. Press to switch to less than':'Comparison: less than. Press to switch to less than or equal');
+  $('tScale').setAttribute('aria-pressed',scale256?'true':'false');
+  $('tScale').setAttribute('aria-label',scale256?'Scale: times 256, capped at 256. Press to switch back to times 255':'Scale: times 255, original. Press to switch to times 256, capped at 256');
+  // insight
+  const r255=hits(b,255);
+  let s;
+  if(!le&&!scale256) s=`Roll 255 misses for every move that calls <code>hits()</code>: the biggest roll is 255 and the biggest byte is 255, and <code>255 &lt; 255</code> is False. Each caller lands a little under its listed accuracy.`;
+  else if(le&&!scale256) s=`With <code>&lt;=</code>, roll 255 now hits a 100% move, and every other caller gained exactly one roll (+0.39 points). Hydro Pump now sits above its listing at 80.08%. One character, one function, every caller changed.`;
+  else if(!le&&scale256) s=`With the &times;256 scale a 100% move stores 256, one more than a byte can hold, so <code>roll &lt; 256</code> is always True. Fire Blast becomes 217 of 256 (84.77%). The comparison stayed the same. The fix moved into the other function.`;
+  else s=`Both changes at once: a 100% move still hits every roll, but Fire Blast, Hydro Pump and Thunder all land above their listings, for example Fire Blast at 218 of 256 (85.16%). Two fixes to the same bug overcorrect.`;
+  s+=` ${name} ${r255?'hits':'misses'} on roll 255.`;
+  $('insight').innerHTML=s;
+}
+$('tCmp').onclick=()=>{le=!le;render(true);};
+$('tScale').onclick=()=>{
+  scale256=!scale256;
+  $('scaleCode').firstChild.textContent=scale256?'min(256, percent * ':'percent * ';
+  $('scaleCode').lastChild.textContent=scale256?' // 100)':' // 100';
+  $('tScale').textContent=scale256?'256':'255';
+  render(true);
+};
+buildTable();render(false);
+})();
+</script>
+</body>
+</html>
