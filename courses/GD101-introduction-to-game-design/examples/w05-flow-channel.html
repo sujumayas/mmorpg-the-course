@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The flow channel — GD101 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin:0 0 8px}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:290px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.sw{display:inline-block;width:16px;height:12px;vertical-align:-1px;margin-right:6px;border:1px solid var(--ink-soft);border-radius:2px}
+.sw.bored{background-color:color-mix(in srgb,var(--steel) 18%,transparent);background-image:radial-gradient(var(--steel) 1.2px,transparent 1.4px);background-size:5px 5px}
+.sw.flow{background:color-mix(in srgb,var(--moss) 35%,transparent)}
+.sw.anx{background-color:color-mix(in srgb,var(--blood) 14%,transparent);background-image:repeating-linear-gradient(45deg,var(--blood) 0 1.2px,transparent 1.2px 5px)}
+.scrub{margin-top:14px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 6px}
+select{font:600 .95rem var(--sans);padding:8px 10px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);width:100%;margin:4px 0 10px}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+@media (max-width:480px){th,td{padding:6px 5px;font-size:.85rem}}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.big{border-color:var(--ink);border-radius:999px;padding:9px 14px;font-size:.92rem}
+.chip.big[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.grp-title{font-weight:600;font-size:.92rem;display:block}
+.check{display:flex;align-items:center;gap:8px;justify-content:flex-start;margin:4px 0 10px}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+details{margin-top:8px}
+summary{cursor:pointer;font-weight:600;font-size:.92rem}
+.note{font-family:var(--serif);font-size:.98rem;margin:6px 0 0;color:var(--ink)}
+.zone-bored{color:var(--steel)}.zone-flow{color:var(--moss)}.zone-anx{color:var(--blood)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD101 Introduction to Game Design · Week 5 · Worked example</p>
+  <h1>One ramp, three players</h1>
+  <p class="lede">On the left, skill and challenge climb together and look fine. On the right, the same rounds plotted as challenge against skill leave the shaded flow band. The ratio <i>R</i>&nbsp;=&nbsp;<i>C</i>&nbsp;/&nbsp;<i>S</i> decides the feeling, and the time chart hides it.</p>
+</header>
+
+<div class="presets" role="group" aria-label="Scenarios">
+  <button class="chip big" data-preset="three" aria-pressed="true">One ramp, three players</button>
+  <button class="chip big" data-preset="shape" aria-pressed="false">Shape the ramp</button>
+  <button class="chip big" data-preset="tetris" aria-pressed="false">Tetris level select</button>
+  <button class="chip big" data-preset="l4d" aria-pressed="false">Left 4 Dead rhythm</button>
+</div>
+
+<section class="panel" aria-label="Flow channel model">
+  <div class="charts">
+    <figure>
+      <figcaption>Over time<small>Skill S(n) and challenge C(n) for the selected learner. Columns are tinted by zone.</small></figcaption>
+      <canvas id="cTime" role="img" aria-label="Skill and challenge over 30 rounds"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>Skill S</span>
+        <span><i style="background:var(--blood)"></i>Challenge C</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>The flow channel<small>Each dot is one round at (S, C). Hollow marker is round 0; the boxed marker is round 29; the ring is round n.</small></figcaption>
+      <canvas id="cFlow" role="img" aria-label="Challenge against skill with the flow band shaded"></canvas>
+      <div class="legend" id="flowLegend">
+        <span><span class="sw bored"></span>Boredom, R &lt; <span class="lo">0.8</span></span>
+        <span><span class="sw flow"></span>Flow</span>
+        <span><span class="sw anx"></span>Anxiety, R &gt; <span class="hi">1.25</span></span>
+      </div>
+      <div class="legend" id="learnerLegend"></div>
+    </figure>
+  </div>
+
+  <div class="scrub">
+    <label for="round">Round n <output id="oRound">10</output></label>
+    <input id="round" type="range" min="0" max="29" step="1" value="10">
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rS">—</b><span>skill S(n)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rC">—</b><span>challenge C(n)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rR">—</b><span>ratio R = C / S</span></div>
+    <div class="stat" id="zoneStat" style="--c:var(--moss)"><b id="rZ">—</b><span>zone at round n</span></div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Zone counts over rounds 0 to 29">
+      <thead><tr><th>Learner</th><th>g</th><th>Bored</th><th>Flow</th><th>Anxious</th><th>S(n)</th><th>C(n)</th><th>R(n)</th></tr></thead>
+      <tbody id="counts"></tbody>
+    </table>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <span class="grp-title" id="lgLbl">Learner</span>
+      <div class="presets" role="group" aria-labelledby="lgLbl">
+        <button class="chip" data-g="0.8" aria-pressed="false">Fast (g = 0.8)</button>
+        <button class="chip" data-g="0.9" aria-pressed="true">Average (0.9)</button>
+        <button class="chip" data-g="0.95" aria-pressed="false">Slow (0.95)</button>
+        <button class="chip" data-g="custom" aria-pressed="false">Custom</button>
+      </div>
+      <div id="gWrap" hidden>
+        <label for="g">Learning rate g <output id="oG">0.90</output></label>
+        <input id="g" type="range" min="0.70" max="0.99" step="0.01" value="0.9">
+      </div>
+      <label for="s0">Starting skill S0 <output id="oS0">2</output></label>
+      <input id="s0" type="range" min="1" max="9" step="0.5" value="2">
+      <label class="check" for="cmp"><input type="checkbox" id="cmp" checked> Show all three learners</label>
+      <p class="note">Skill: S(n) = 10 − (10 − S0) × g<sup>n</sup>. Smaller g learns faster. Everyone plateaus at 10.</p>
+    </div>
+    <div>
+      <label for="ramp">Difficulty ramp</label>
+      <select id="ramp">
+        <option value="linear">Linear: C = a + b × (n + k)</option>
+        <option value="shaped">Shaped: C = 10 − 8 × g_d^n</option>
+        <option value="adaptive">Adaptive: C = t × S</option>
+        <option value="rhythm">Adaptive with rhythm</option>
+      </select>
+      <div data-ramp="linear">
+        <label for="a">Start challenge a <output id="oA">2</output></label>
+        <input id="a" type="range" min="0" max="6" step="0.5" value="2">
+        <label for="b">Slope b <output id="oB">0.5</output></label>
+        <input id="b" type="range" min="0" max="1" step="0.05" value="0.5">
+        <label for="k">Start-level offset k <output id="oK">0</output></label>
+        <input id="k" type="range" min="0" max="20" step="1" value="0">
+      </div>
+      <div data-ramp="shaped" hidden>
+        <label for="gd">Designer's g_d <output id="oGd">0.90</output></label>
+        <input id="gd" type="range" min="0.70" max="0.99" step="0.01" value="0.9">
+      </div>
+      <div data-ramp="adaptive" hidden>
+        <label for="t">Target ratio t <output id="oT">1.10</output></label>
+        <input id="t" type="range" min="0.5" max="1.5" step="0.05" value="1.1">
+      </div>
+      <div data-ramp="rhythm" hidden>
+        <p class="note">C = S × (0.9 + 0.4 × ((n mod 5) / 4)). R cycles 0.9, 1.0, 1.1, 1.2, 1.3 every five rounds.</p>
+      </div>
+      <details>
+        <summary>Advanced: band edges</summary>
+        <label for="lo">Boredom below <output id="oLo">0.80</output></label>
+        <input id="lo" type="range" min="0.5" max="1" step="0.05" value="0.8">
+        <label for="hi">Anxiety above <output id="oHi">1.25</output></label>
+        <input id="hi" type="range" min="1" max="2" step="0.05" value="1.25">
+      </details>
+    </div>
+  </div>
+
+  <details>
+    <summary>All 30 rounds for the selected learner</summary>
+    <div class="table-wrap">
+      <table aria-label="Every round for the selected learner">
+        <thead><tr><th>n</th><th>S</th><th>C</th><th>R</th><th>Zone</th></tr></thead>
+        <tbody id="rounds"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<footer>Model from the GD101 week 5 lecture. Flow as the match of challenge and skill after Csikszentmihalyi (1990); the flow-zone framing after Jenova Chen, <i>Flow in Games</i> (2006). The 0.8 and 1.25 band edges are a teaching choice, not measured constants. Games are named in text only; nothing here is drawn from them.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2=x=>x.toFixed(2);
+const N=30;
+const LEARNERS=[{name:'Fast',g:0.8,shape:'tri',col:'--ochre',sym:'▲'},{name:'Average',g:0.9,shape:'circle',col:'--ink',sym:'●'},{name:'Slow',g:0.95,shape:'square',col:'--steel',sym:'■'}];
+const st={g:0.9,custom:false,s0:2,ramp:'linear',a:2,b:0.5,k:0,gd:0.9,t:1.1,lo:0.8,hi:1.25,cmp:true,n:10};
+
+function skill(g,n){return 10-(10-st.s0)*Math.pow(g,n);}
+function chall(n,S){
+  switch(st.ramp){
+    case 'linear':return st.a+st.b*(n+st.k);
+    case 'shaped':return 10-8*Math.pow(st.gd,n);
+    case 'adaptive':return st.t*S;
+    default:return S*(0.9+0.4*((n%5)/4));
+  }
+}
+function zone(R){R=Math.round(R*1e9)/1e9;return R<st.lo?0:(R<=st.hi?1:2);}
+const ZN=['bored','flow','anxious'],ZC=['--steel','--moss','--blood'];
+function session(g){
+  const rows=[],z=[0,0,0];
+  for(let n=0;n<N;n++){const S=skill(g,n),C=chall(n,S),R=C/S,zz=zone(R);z[zz]++;rows.push({n,S,C,R,z:zz});}
+  return {rows,z};
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function pattern(g,kind,color){
+  const p=document.createElement('canvas');p.width=p.height=8;const x=p.getContext('2d');
+  x.fillStyle=color;x.strokeStyle=color;
+  if(kind==='dots'){x.beginPath();x.arc(2,2,1.1,0,7);x.fill();x.beginPath();x.arc(6,6,1.1,0,7);x.fill();}
+  else{x.lineWidth=1.2;x.beginPath();x.moveTo(-2,10);x.lineTo(10,-2);x.moveTo(-2,2);x.lineTo(2,-2);x.moveTo(6,10);x.lineTo(10,6);x.stroke();}
+  return g.createPattern(p,'repeat');
+}
+function zoneFill(g,z,rect){
+  // rect: function that adds path; fill tint then pattern
+  const col=css(ZC[z]);
+  g.save();g.globalAlpha=z===1?0.28:0.14;g.fillStyle=col;rect();g.fill();g.restore();
+  if(z!==1){g.save();g.globalAlpha=0.45;g.fillStyle=pattern(g,z===0?'dots':'hatch',col);rect();g.fill();g.restore();}
+}
+function axes(g,w,h,pad,xMax,yMax,xTicks,yTicks,xLabel,yLabel){
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  yTicks.forEach(v=>{const y=pad.t+(h-pad.t-pad.b)*(1-v/yMax);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(String(v),pad.l-6,y);});
+  xTicks.forEach(v=>{const x=pad.l+(w-pad.l-pad.r)*v/xMax;g.textAlign='center';g.textBaseline='top';g.fillText(String(v),x,h-pad.b+6);});
+  g.textAlign='right';g.textBaseline='bottom';g.fillText(xLabel,w-pad.r,h-2);
+  g.save();g.translate(12,pad.t);g.rotate(-Math.PI/2);g.textAlign='right';g.textBaseline='middle';g.fillText(yLabel,0,0);g.restore();
+}
+function shape(g,kind,x,y,r,fill,stroke,hollow){
+  g.beginPath();
+  if(kind==='circle')g.arc(x,y,r,0,Math.PI*2);
+  else if(kind==='square')g.rect(x-r*.9,y-r*.9,r*1.8,r*1.8);
+  else{g.moveTo(x,y-r*1.15);g.lineTo(x+r*1.05,y+r*.8);g.lineTo(x-r*1.05,y+r*.8);g.closePath();}
+  if(hollow){g.fillStyle=css('--paper-2');g.fill();g.strokeStyle=fill;g.lineWidth=2;g.stroke();}
+  else{g.fillStyle=fill;g.fill();g.strokeStyle=stroke;g.lineWidth=1.2;g.stroke();}
+}
+
+function drawTime(sess){
+  const c=setupCanvas($('cTime')),g=c.g,w=c.w,h=c.h,pad={l:40,r:10,t:10,b:34};
+  g.clearRect(0,0,w,h);
+  const X=n=>pad.l+(w-pad.l-pad.r)*(n+0.5)/N,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/20);
+  const colW=(w-pad.l-pad.r)/N;
+  sess.rows.forEach(r=>zoneFill(g,r.z,()=>{g.beginPath();g.rect(X(r.n)-colW/2,pad.t,colW,h-pad.t-pad.b);}));
+  axes(g,w,h,pad,N,20,[],[0,5,10,15,20],'round n','value');
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  [0,5,10,15,20,25,29].forEach(n=>g.fillText(String(n),X(n),h-pad.b+6));
+  // round marker
+  g.save();g.strokeStyle=css('--ink');g.globalAlpha=.5;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(st.n),pad.t);g.lineTo(X(st.n),h-pad.b);g.stroke();g.restore();
+  g.save();g.beginPath();g.rect(pad.l,pad.t-2,w-pad.l-pad.r,h-pad.t-pad.b+2);g.clip();
+  [['S','--steel'],['C','--blood']].forEach(([k,col])=>{
+    g.strokeStyle=css(col);g.lineWidth=2.5;g.beginPath();
+    sess.rows.forEach((r,i)=>{i?g.lineTo(X(r.n),Y(r[k])):g.moveTo(X(r.n),Y(r[k]));});g.stroke();
+  });
+  g.restore();
+  const r=sess.rows[st.n];
+  if(r.C<=20.001)shape(g,'circle',X(st.n),Y(r.S),5.5,css('--steel'),css('--paper'));
+  shape(g,'circle',X(st.n),Y(r.C),5.5,css('--blood'),css('--paper'));
+  $('cTime').setAttribute('aria-label',`Skill and challenge over 30 rounds. At round ${st.n}, skill ${f2(r.S)}, challenge ${f2(r.C)}.`);
+}
+
+function drawFlow(list){
+  const c=setupCanvas($('cFlow')),g=c.g,w=c.w,h=c.h,pad={l:40,r:10,t:10,b:34};
+  g.clearRect(0,0,w,h);
+  const X=v=>pad.l+(w-pad.l-pad.r)*v/10,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/20);
+  const clipY=v=>Math.min(v,20);
+  const clipPlot=()=>{g.beginPath();g.rect(pad.l-8,pad.t-8,w-pad.l-pad.r+16,h-pad.t-pad.b+16);g.clip();};
+  // boredom: below y=lo*x
+  zoneFill(g,0,()=>{g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(10),Y(0));g.lineTo(X(10),Y(st.lo*10));g.closePath();});
+  zoneFill(g,1,()=>{g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(10),Y(st.lo*10));g.lineTo(X(10),Y(clipY(st.hi*10)));
+    if(st.hi*10>20)g.lineTo(X(20/st.hi),Y(20));g.closePath();});
+  zoneFill(g,2,()=>{g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(Math.min(10,20/st.hi)),Y(clipY(st.hi*10)));if(st.hi*10<20)g.lineTo(X(10),Y(20));else g.lineTo(X(20/st.hi),Y(20));g.lineTo(X(0),Y(20));g.closePath();});
+  axes(g,w,h,pad,10,20,[0,2,4,6,8,10],[0,5,10,15,20],'skill S','challenge C');
+  g.save();g.strokeStyle=css('--moss');g.lineWidth=1.5;
+  [st.lo,st.hi].forEach(m=>{g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(Math.min(10,20/m)),Y(Math.min(20,m*10)));g.stroke();});g.restore();
+  g.font='600 13px '+css('--sans');g.textBaseline='middle';
+  g.fillStyle=css('--blood');g.textAlign='left';g.fillText('anxiety',X(0.6),Y(17.5));
+  g.fillStyle=css('--steel');g.textAlign='right';g.fillText('boredom',X(9.7),Y(2));
+  g.save();g.translate(X(4.6),Y(4.6*(st.lo+st.hi)/2));g.rotate(-Math.atan2((h-pad.t-pad.b)/20*(st.lo+st.hi)/2,(w-pad.l-pad.r)/10));g.textAlign='center';g.lineWidth=3;g.strokeStyle=css('--paper-2');g.strokeText('flow',0,-1);g.fillStyle=css('--moss');g.fillText('flow',0,-1);g.restore();
+  // paths: non-selected first
+  list.slice().sort((a,b)=>a.sel-b.sel).forEach(L=>{
+    const col=css(L.col),rows=L.sess.rows;
+    g.save();clipPlot();g.globalAlpha=L.sel?1:0.75;g.strokeStyle=col;g.lineWidth=L.sel?2:1.4;g.beginPath();
+    rows.forEach((r,i)=>{const x=X(r.S),y=Y(r.C);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+    rows.forEach((r,i)=>{if(r.C>20.001)return;const last=i===rows.length-1;shape(g,L.shape,X(r.S),Y(r.C),last?5.5:(L.sel?3.8:3.2),col,css('--paper-2'),i===0);
+      if(last){g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(X(r.S)-8,Y(r.C)-8,16,16);}});
+    const cur=rows[st.n];
+    if(cur.C<=20.001){g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();g.arc(X(cur.S),Y(cur.C),L.sel?10:8,0,Math.PI*2);g.stroke();}
+    g.restore();
+  });
+  const off=list.some(L=>L.sess.rows.some(r=>r.C>20.001));
+  if(off){g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='left';g.textBaseline='middle';g.fillText('path exits the top',X(0.6),Y(15.4));}
+  const sel=list.find(L=>L.sel),r=sel.sess.rows[st.n];
+  $('cFlow').setAttribute('aria-label',`Flow channel. Round ${st.n} of the ${sel.name.toLowerCase()} learner sits at skill ${f2(r.S)}, challenge ${f2(r.C)}, ratio ${f2(r.R)}, ${ZN[r.z]}.`);
+}
+
+function selName(){
+  if(st.custom)return 'Custom';
+  const L=LEARNERS.find(l=>Math.abs(l.g-st.g)<1e-9);return L?L.name:'Custom';
+}
+function render(){
+  const main={name:selName(),g:st.g,shape:'circle',col:'--ink',sym:'●',sel:true};
+  const known=LEARNERS.find(l=>l.name===main.name);
+  if(known)Object.assign(main,{shape:known.shape,col:known.col,sym:known.sym});
+  main.sess=session(st.g);
+  const list=[main];
+  if(st.cmp)LEARNERS.forEach(l=>{if(l.name!==main.name)list.push(Object.assign({},l,{sel:false,sess:session(l.g)}));});
+  drawTime(main.sess);drawFlow(list);
+  const r=main.sess.rows[st.n];
+  $('rS').textContent=f2(r.S);$('rC').textContent=f2(r.C);$('rR').textContent=f2(r.R);
+  $('rZ').textContent=ZN[r.z];$('zoneStat').style.setProperty('--c',`var(${ZC[r.z]})`);
+  $('oRound').textContent=st.n;
+  // counts table, fixed learner order
+  const order=st.cmp?LEARNERS.map(l=>list.find(x=>x.name===l.name)):[];
+  if(!order.includes(main))order.push(main);
+  const rowsHtml=order.map(L=>{const rr=L.sess.rows[st.n];
+    return `<tr class="${L.sel?'here':''}"><td><span style="color:var(${L.col})" aria-hidden="true">${L.sym}</span> ${L.name}</td><td>${L.g.toFixed(2)}</td><td>${L.sess.z[0]}</td><td>${L.sess.z[1]}</td><td>${L.sess.z[2]}</td><td>${f2(rr.S)}</td><td>${f2(rr.C)}</td><td class="zone-${['bored','flow','anx'][rr.z]}">${f2(rr.R)} ${ZN[rr.z]}</td></tr>`;});
+  $('counts').innerHTML=rowsHtml.join('');
+  $('learnerLegend').innerHTML=st.cmp?order.map(L=>`<span><span style="color:var(${L.col})" aria-hidden="true">${L.sym}</span> ${L.name}${L.sel?' (selected)':''}</span>`).join(''):'';
+  $('rounds').innerHTML=main.sess.rows.map(x=>`<tr class="${x.n===st.n?'here':''}"><td>${x.n}</td><td>${f2(x.S)}</td><td>${f2(x.C)}</td><td>${f2(x.R)}</td><td class="zone-${['bored','flow','anx'][x.z]}">${ZN[x.z]}</td></tr>`).join('');
+  $('insight').innerHTML=insight(main,list);
+}
+function insight(main,list){
+  const z=main.sess.z,rows=main.sess.rows;
+  let maxGap=0;rows.slice(0,20).forEach(r=>maxGap=Math.max(maxGap,Math.abs(r.C-r.S)));
+  let s=`${main.name} learner: <b>${z[1]} of 30</b> rounds in flow, ${z[0]} bored, ${z[2]} anxious. `;
+  if(st.cmp&&list.length>1){
+    const parts=LEARNERS.map(l=>{const L=list.find(x=>x.name===l.name);return L?`${l.name.toLowerCase()} ${L.sess.z[1]}`:null;}).filter(Boolean);
+    const spread=new Set(list.map(L=>L.sess.z.join())).size>1;
+    s+=spread?`Flow rounds by learner: ${parts.join(', ')}. Same ramp, different sessions. `:`Every learner gets the same counts (${parts.join(', ')}), because this ramp follows each player's own skill. `;
+  }
+  if(st.ramp==='linear'){
+    if(z[2]>0&&rows[N-1].z===2)s+=`Skill flattens toward 10 while the straight ramp keeps rising to ${f2(rows[N-1].C)}, so the late rounds leave the band. Changing k moves where you join the ramp, not its shape.`;
+    else if(z[0]>0)s+=`The ramp sits below this player's skill for ${z[0]} rounds. Raise a or k to meet them sooner.`;
+    else s+=`This ramp holds. Check it against the other learners before you trust it.`;
+  }else if(st.ramp==='shaped')s+=`The ramp bends like a learning curve now. It fits the learner it was shaped for (g = ${st.gd.toFixed(2)}) and drifts for anyone faster or slower.`;
+  else if(st.ramp==='adaptive')s+=`R is held at ${st.t.toFixed(2)} every round. Comfortable, and flat: there are no peaks.`;
+  else s+=`R cycles 0.9, 1.0, 1.1, 1.2, 1.3. Every fifth round goes over the top on purpose, then the next one relaxes.`;
+  return s;
+}
+
+// controls
+function syncOutputs(){
+  $('oS0').textContent=st.s0;$('oG').textContent=st.g.toFixed(2);$('oA').textContent=st.a;$('oB').textContent=st.b.toFixed(2).replace(/0$/,'');
+  $('oK').textContent=st.k;$('oGd').textContent=st.gd.toFixed(2);$('oT').textContent=st.t.toFixed(2);
+  $('oLo').textContent=st.lo.toFixed(2);$('oHi').textContent=st.hi.toFixed(2);
+  document.querySelectorAll('.lo').forEach(e=>e.textContent=st.lo.toFixed(2).replace(/0$/,''));
+  document.querySelectorAll('.hi').forEach(e=>e.textContent=st.hi.toFixed(2).replace(/0$/,''));
+  document.querySelectorAll('[data-ramp]').forEach(d=>d.hidden=d.dataset.ramp!==st.ramp);
+  document.querySelectorAll('[data-g]').forEach(b=>{const on=b.dataset.g==='custom'?st.custom:(!st.custom&&Math.abs(+b.dataset.g-st.g)<1e-9);b.setAttribute('aria-pressed',on);});
+  $('gWrap').hidden=!st.custom;
+  ['s0','a','b','k','gd','t','lo','hi'].forEach(id=>$(id).value=st[id]);$('g').value=st.g;$('ramp').value=st.ramp;$('cmp').checked=st.cmp;$('round').value=st.n;
+}
+function update(){syncOutputs();render();}
+function clearPreset(){document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed','false'));}
+const num=(id,key)=>$(id).addEventListener('input',e=>{st[key]=+e.target.value;clearPreset();update();});
+[['s0','s0'],['a','a'],['b','b'],['k','k'],['gd','gd'],['t','t'],['lo','lo'],['hi','hi']].forEach(p=>num(...p));
+$('g').addEventListener('input',e=>{st.g=+e.target.value;clearPreset();update();});
+$('round').addEventListener('input',e=>{st.n=+e.target.value;update();});
+$('ramp').addEventListener('change',e=>{st.ramp=e.target.value;clearPreset();update();});
+$('cmp').addEventListener('change',e=>{st.cmp=e.target.checked;clearPreset();update();});
+document.querySelectorAll('[data-g]').forEach(b=>b.addEventListener('click',()=>{
+  if(b.dataset.g==='custom'){st.custom=true;st.g=+$('g').value;}else{st.custom=false;st.g=+b.dataset.g;}
+  clearPreset();update();}));
+const PRESETS={
+  three:{ramp:'linear',a:2,b:0.5,k:0,s0:2,g:0.9,cmp:true,n:10},
+  shape:{ramp:'shaped',gd:0.9,s0:2,g:0.9,cmp:true,n:10},
+  tetris:{ramp:'linear',a:2,b:0.5,k:14,s0:9,g:0.9,cmp:false,n:0},
+  l4d:{ramp:'rhythm',s0:2,g:0.9,cmp:false,n:4}
+};
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+  Object.assign(st,{lo:0.8,hi:1.25,custom:false},PRESETS[b.dataset.preset]);
+  document.querySelectorAll('[data-preset]').forEach(x=>x.setAttribute('aria-pressed',x===b));update();}));
+
+let raf=0;const redraw=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(render);};
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+window.__flowModel={st,session,update};
+update();
+})();
+</script>
+</body>
+</html>

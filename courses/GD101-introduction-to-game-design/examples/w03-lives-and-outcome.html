@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lives and the win curve · GD101 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:24px 16px 48px}
+header{max-width:68ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;align-items:start}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (max-width:900px){.layout{display:flex;flex-direction:column}.col{display:contents}.pB{order:1}.pC{order:2}.pS{order:3}.pA{order:4}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:14px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.08rem;margin:0 0 2px}
+.sub{display:block;font-size:.82rem;color:var(--ink-soft);margin:0 0 8px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:8px 8px 4px}
+canvas{display:block;width:100%;height:320px}
+@media (max-width:600px){canvas{height:270px}}
+.insight{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1rem}
+.readout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;margin:12px 0 0}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.formula{font-size:.9rem;margin:10px 0 0;font-variant-numeric:tabular-nums}
+.formula b{font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font:600 .8rem var(--sans);padding:6px 9px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.oneup{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-weight:600;font-size:.92rem}
+.oneup label{display:inline-flex;gap:6px;align-items:center}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--moss)}
+select{font:600 .92rem var(--sans);color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-sm);padding:4px 6px}
+select:disabled,input:disabled+span{opacity:.5}
+.btn{font:700 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,td:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.dots{display:grid;grid-template-columns:repeat(25,1fr);gap:2px;margin:10px 0 6px;max-width:420px}
+.dots i{display:block;aspect-ratio:1;border-radius:2px;background:var(--grid)}
+.dots i.w{background:var(--moss)}
+.dots i.l{background:var(--blood);opacity:.75}
+.simout{font-size:.92rem;margin:0;font-variant-numeric:tabular-nums}
+.stale{opacity:.45}
+.tablewrap{overflow-x:auto;margin-top:4px}
+table.heat{border-collapse:separate;border-spacing:2px;font-variant-numeric:tabular-nums;font-size:.8rem;width:100%}
+@media (max-width:600px){table.heat{border-spacing:1px;font-size:.66rem;letter-spacing:-.02em}.heat td{padding:4px 0}.heat th{padding:2px 1px}}
+.heat th{font-weight:600;color:var(--ink-soft);padding:2px 3px;font-size:.76rem}
+.heat thead th{text-align:center}
+.heat tbody th{text-align:right;white-space:nowrap}
+.heat td{text-align:center;padding:5px 1px;border-radius:4px;cursor:pointer;outline:2px solid transparent;outline-offset:-2px;position:relative}
+.heat td.src{outline:2.5px dashed var(--ink);outline-offset:-2.5px}
+.heat td.hot{outline:2.5px solid var(--ink);outline-offset:-2.5px}
+.heat td.cur{box-shadow:0 0 0 3px var(--blood);z-index:1}
+.calc{min-height:3.2em;font-size:.92rem;margin:10px 0 0;padding:8px 10px;border-radius:8px;background:var(--paper-2);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 2px 2px;color:var(--ink)}
+.legend svg{vertical-align:middle;margin-right:4px}
+footer{margin-top:20px;font-size:.84rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD101 Introduction to Game Design · Week 3 · Worked example</p>
+  <h1>Lives slide the win curve along the skill axis</h1>
+  <p class="lede">Each curve is one starting-lives setting. Add lives and the curve keeps its S shape and moves left. Lives decide which players get a close finish, not how hard the game is.</p>
+</header>
+
+<div class="layout">
+<div class="col">
+<section class="panel pA" aria-labelledby="hA">
+  <h2 id="hA">The table W(n, L), built cell by cell</h2>
+  <span class="sub">Rows: stages left <i>n</i>. Columns: lives <i>L</i>. No 1-up. Each cell is <i>p</i> × the cell above + (1 − <i>p</i>) × the cell to its left. Hover or focus a cell (arrow keys move); click or press Enter to set L. The red ring is your current setting.</span>
+  <div class="tablewrap">
+    <table class="heat" id="heat" aria-describedby="calc"></table>
+  </div>
+  <p class="calc" id="calc" aria-live="polite"></p>
+</section>
+<section class="panel pS" aria-labelledby="hS">
+  <h2 id="hS">Check the model by playing</h2>
+  <span class="sub">Each square is one run with the current settings. Green means the run finished, red means it ran out of lives.</span>
+      <button class="btn" id="bSim" type="button">Simulate 200 runs</button>
+      <div class="dots" id="dots" aria-hidden="true"></div>
+      <p class="simout" id="simOut" aria-live="polite">Press the button to play 200 runs with these settings and compare the count with the model.</p>
+</section>
+</div>
+<div class="col">
+<section class="panel pB" aria-labelledby="hB">
+  <h2 id="hB">Win chance vs skill</h2>
+  <span class="sub">Skill <i>p</i> is the chance of clearing one stage. The shaded band is 20% to 80%, where the outcome is uncertain.</span>
+  <figure>
+    <canvas id="chart" role="img" aria-label="Win chance against skill for several starting lives"></canvas>
+    <div class="legend" aria-hidden="true">
+      <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--steel)" stroke-width="3.5"/></svg><span id="lgSel">Selected lives</span></span>
+      <span id="lgUp" hidden><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--moss)" stroke-width="3.5" stroke-dasharray="7 4"/></svg>With 1-up</span>
+      <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--ink-soft)" stroke-width="1.5" stroke-dasharray="2 3"/></svg>1 life</span>
+      <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--ink-soft)" stroke-width="1.5" stroke-dasharray="6 4"/></svg>3 lives</span>
+      <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--ink-soft)" stroke-width="1.5" stroke-dasharray="12 3 2 3"/></svg>5 lives</span>
+    </div>
+  </figure>
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rW">—</b><span id="rWl">win chance W(n, L)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rUp">—</b><span id="rUpl">with 1-up</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rBand">—</b><span id="rBandl">uncertain band (20% to 80%)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rMid">—</b><span>skill p at 50% win</span></div>
+  </div>
+  <p class="formula" id="rFail"></p>
+</section>
+
+<section class="panel pC" aria-label="Controls">
+  <div class="controls">
+    <div>
+      <label for="sP">Skill p <output id="oP">0.80</output></label>
+      <input id="sP" type="range" min="0.40" max="0.99" step="0.01" value="0.80">
+      <div class="chips" role="group" aria-label="Two-dice skill presets (roll at least the target)">
+        <button class="chip" data-num="30" aria-pressed="false">Dice 5+ (30/36)</button>
+        <button class="chip" data-num="26" aria-pressed="false">Dice 6+ (26/36)</button>
+        <button class="chip" data-num="21" aria-pressed="false">Dice 7+ (21/36)</button>
+        <button class="chip" data-num="15" aria-pressed="false">Dice 8+ (15/36)</button>
+      </div>
+    </div>
+    <div>
+      <label for="sL">Starting lives L <output id="oL">3</output></label>
+      <input id="sL" type="range" min="1" max="8" step="1" value="3">
+      <label for="sN" style="margin-top:8px">Stages n <output id="oN">8</output></label>
+      <input id="sN" type="range" min="1" max="12" step="1" value="8">
+    </div>
+    <div class="oneup">
+      <label><input type="checkbox" id="cUp"><span>1-up after stage</span></label>
+      <select id="sK" aria-label="Stage that gives the extra life" disabled></select>
+    </div>
+  </div>
+</section>
+</div>
+</div>
+
+<footer>Model from the lecture: W(0, L) = 1, W(n, 0) = 0, W(n, L) = p·W(n − 1, L) + (1 − p)·W(n, L − 1). Every stage has the same p and players do not improve during a run. Crossings are found by bisection on p. Dice presets match the in-class activity: two dice, clear a stage by rolling at least the target.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const S={p:0.8,pLabel:null,n:8,L:3,up:false,k:4,kWant:4,hover:null};
+
+// ---------- model ----------
+// f(cleared, lives): 1 if cleared = n; 0 if lives = 0; else p·f(cleared+1, lives+bonus) + (1−p)·f(cleared, lives−1)
+function win(p,n,L,k){ // k = stage whose clearing adds a life, or 0 for none
+  const memo=new Map();
+  function f(c,l){
+    if(c===n) return 1;
+    if(l===0) return 0;
+    const key=c*64+l;
+    if(memo.has(key)) return memo.get(key);
+    const bonus=(k&&c+1===k)?1:0;
+    const v=p*f(c+1,l+bonus)+(1-p)*f(c,l-1);
+    memo.set(key,v);return v;
+  }
+  return f(0,L);
+}
+function table(p,N,Lmax){ // T[n][L] without 1-up
+  const T=[];
+  for(let n=0;n<=N;n++){T.push([]);for(let L=0;L<=Lmax;L++){
+    T[n][L]= n===0?1 : L===0?0 : p*T[n-1][L]+(1-p)*T[n][L-1];
+  }}
+  return T;
+}
+function cross(n,L,k,target){ // W rises with p; bisection on (0,1)
+  let lo=1e-6,hi=1;
+  for(let i=0;i<60;i++){const m=(lo+hi)/2;if(win(m,n,L,k)<target)lo=m;else hi=m;}
+  return (lo+hi)/2;
+}
+const f3=v=>v.toFixed(3), f4=v=>v.toFixed(4), pc=v=>(v*100).toFixed(1)+'%';
+const pTxt=()=>S.pLabel?S.pLabel+' ≈ '+S.p.toFixed(3):S.p.toFixed(2);
+const pShort=p=>{const t=+p.toFixed(2);return Math.abs(t-p)<1e-9?String(t):p.toFixed(3);};
+const kEff=()=>S.up&&S.n>1?S.k:0;
+const lives=L=>L===1?'1 life':L+' lives';
+
+// ---------- color helpers ----------
+function hex(c){c=c.replace('#','');if(c.length===3)c=c.split('').map(x=>x+x).join('');return [0,2,4].map(i=>parseInt(c.slice(i,i+2),16));}
+function lum(rgb){const a=rgb.map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});return .2126*a[0]+.7152*a[1]+.0722*a[2];}
+function contrast(a,b){const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+
+// ---------- heat table ----------
+let T=null, focusCell={n:8,L:3};
+const LMAX=8;
+function buildTable(){
+  T=table(S.p,S.n,LMAX);
+  const ochre=hex(css('--ochre')),base=hex(css('--paper-2')),ink=hex(css('--ink')),paper=hex(css('--paper'));
+  let h='<caption class="sr">Win chance W(n, L) at p = '+pTxt()+'</caption><thead><tr><th scope="col"><span aria-hidden="true">n\\L</span><span class="sr">stages left n, lives L</span></th>';
+  for(let L=0;L<=LMAX;L++)h+='<th scope="col">'+L+'</th>';
+  h+='</tr></thead><tbody>';
+  for(let n=0;n<=S.n;n++){
+    h+='<tr><th scope="row">'+n+'</th>';
+    for(let L=0;L<=LMAX;L++){
+      const v=T[n][L],t=.08+.72*v;
+      const bg=base.map((b,i)=>Math.round(b*(1-t)+ochre[i]*t));
+      const fg=contrast(bg,ink)>=contrast(bg,paper)?'var(--ink)':'var(--paper)';
+      const cls=(n===S.n&&L===S.L)?' cur':'';
+      h+=`<td data-n="${n}" data-l="${L}" tabindex="-1" class="${cls.trim()}" style="background:rgb(${bg});color:${fg}" aria-label="W(${n}, ${L}) = ${f3(v)}">${f3(v)}</td>`;
+    }
+    h+='</tr>';
+  }
+  $('heat').innerHTML=h+'</tbody>';
+  if(focusCell.n>S.n)focusCell.n=S.n;
+  const fc=cell(focusCell.n,focusCell.L);if(fc)fc.tabIndex=0;
+  showCalc(S.hover||{n:S.n,L:S.L},!!S.hover);
+}
+function cell(n,L){return $('heat').querySelector(`td[data-n="${n}"][data-l="${L}"]`);}
+function showCalc(c,mark){
+  $('heat').querySelectorAll('td.src,td.hot').forEach(x=>x.classList.remove('src','hot'));
+  const {n,L}=c,v=T[n][L];let s;
+  if(n===0) s=`<b>W(0, ${L}) = 1</b>. No stages left, so you have already won.`;
+  else if(L===0) s=`<b>W(${n}, 0) = 0</b>. Stages left and no lives, so the run is lost.`;
+  else{
+    const a=T[n-1][L],b=T[n][L-1];
+    s=`<b>W(${n}, ${L})</b> = ${pShort(S.p)} × ${f3(a)} + ${pShort(1-S.p)} × ${f3(b)} = <b>${f3(v)}</b><br><span style="color:var(--ink-soft)">clear the stage: W(${n-1}, ${L}) above · fail and lose a life: W(${n}, ${L-1}) left</span>`;
+    if(mark){cell(n-1,L)?.classList.add('src');cell(n,L-1)?.classList.add('src');}
+  }
+  if(mark)cell(n,L)?.classList.add('hot');
+  $('calc').innerHTML=s;
+}
+$('heat').addEventListener('mouseover',e=>{const td=e.target.closest('td');if(!td)return;S.hover={n:+td.dataset.n,L:+td.dataset.l};showCalc(S.hover,true);});
+$('heat').addEventListener('mouseleave',()=>{if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#heat'))return;S.hover=null;showCalc({n:S.n,L:S.L},false);});
+$('heat').addEventListener('focusin',e=>{const td=e.target.closest('td');if(!td)return;S.hover={n:+td.dataset.n,L:+td.dataset.l};showCalc(S.hover,true);});
+$('heat').addEventListener('focusout',e=>{if(e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('#heat'))return;S.hover=null;showCalc({n:S.n,L:S.L},false);});
+function pickCell(td){const L=+td.dataset.l;if(L>=1){S.L=L;$('sL').value=L;focusCell={n:+td.dataset.n,L};update();cell(focusCell.n,focusCell.L)?.focus();}}
+$('heat').addEventListener('click',e=>{const td=e.target.closest('td');if(td)pickCell(td);});
+$('heat').addEventListener('keydown',e=>{
+  const td=e.target.closest('td');if(!td)return;
+  let n=+td.dataset.n,L=+td.dataset.l;
+  const mv={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[e.key];
+  if(mv){e.preventDefault();n=Math.max(0,Math.min(S.n,n+mv[0]));L=Math.max(0,Math.min(LMAX,L+mv[1]));
+    td.tabIndex=-1;const nx=cell(n,L);nx.tabIndex=0;focusCell={n,L};nx.focus();}
+  else if(e.key==='Enter'||e.key===' '){e.preventDefault();pickCell(td);}
+});
+
+// ---------- chart ----------
+const P0=0.4,P1=1.0;
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function draw(){
+  const {g,w,h}=setup($('chart'));
+  const pad={l:44,r:14,t:26,b:36};
+  const X=p=>pad.l+(w-pad.l-pad.r)*(p-P0)/(P1-P0), Y=v=>pad.t+(h-pad.t-pad.b)*(1-v);
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),paper2=css('--paper-2'),font=css('--sans');
+  g.clearRect(0,0,w,h);
+  // band
+  g.fillStyle=css('--ochre');g.globalAlpha=.16;g.fillRect(pad.l,Y(.8),w-pad.l-pad.r,Y(.2)-Y(.8));g.globalAlpha=1;
+  // grid + ticks
+  g.font='12px '+font;g.lineWidth=1;
+  for(let i=0;i<=5;i++){const v=i/5,y=Y(v);g.strokeStyle=grid;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(v*100)+'%',pad.l-6,y);}
+  for(let i=0;i<=6;i++){const p=P0+i*.1,x=X(p);g.strokeStyle=grid;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText(p.toFixed(1),x,h-pad.b+5);}
+  g.textAlign='right';g.textBaseline='bottom';g.fillStyle=soft;g.fillText('skill p →',w-pad.r,h-2);
+  g.textAlign='left';g.textBaseline='bottom';g.fillText('uncertain band',pad.l+4,Y(.8)-2);
+  const halo=(t,x,y,col,al,bl,bold)=>{g.font=(bold?'700 ':'600 ')+'12px '+font;g.textAlign=al;g.textBaseline=bl||'middle';g.lineWidth=4;g.strokeStyle=paper2;g.lineJoin='round';g.strokeText(t,x,y);g.fillStyle=col;g.fillText(t,x,y);};
+  const curve=(fn,col,lw,dash)=>{g.strokeStyle=col;g.lineWidth=lw;g.setLineDash(dash);g.beginPath();
+    for(let i=0;i<=240;i++){const p=P0+(P1-P0)*i/240,x=X(p),y=Y(fn(p));i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();g.setLineDash([]);};
+  const inR=p=>p>=P0&&p<=P1;
+  // thin reference curves
+  const dashes={1:[2,3],3:[6,4],5:[12,3,2,3]};
+  [1,3,5].filter(L=>L!==S.L).forEach(L=>{
+    curve(p=>win(p,S.n,L,0),soft,1.5,dashes[L]);
+    const pc35=cross(S.n,L,0,.35);if(inR(pc35)&&X(pc35)-6>pad.l+30)halo(lives(L),X(pc35)-6,Y(.35),soft,'right');
+  });
+  // selected + 1-up
+  const k=kEff(),steel=css('--steel'),moss=css('--moss');
+  if(k){curve(p=>win(p,S.n,S.L,k),moss,3,[8,5]);const c=cross(S.n,S.L,k,.93);if(inR(c))halo('with 1-up',X(c)-8,Y(.93),moss,'right',null,true);}
+  curve(p=>win(p,S.n,S.L,0),steel,3.5,[]);
+  const cs=cross(S.n,S.L,0,.93);if(inR(cs)&&!k)halo(lives(S.L),X(cs)-8,Y(.93),steel,'right',null,true);
+  else if(inR(cs)&&k)halo(lives(S.L),X(cs)+8,Y(.93),steel,'left',null,true);
+  // band crossings
+  [.2,.5,.8].forEach(t=>{const c=cross(S.n,S.L,0,t);if(!inR(c))return;const x=X(c),y=Y(t);
+    g.fillStyle=steel;g.beginPath();g.arc(x,y,5,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    halo(c.toFixed(3),x+8,y+(t===.5?0:t===.2?-8:8),ink,'left');});
+  // cursor
+  const x=X(S.p);g.strokeStyle=ink;g.globalAlpha=.5;g.setLineDash([4,4]);g.lineWidth=1.2;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  const v=win(S.p,S.n,S.L,0);
+  g.fillStyle=ink;g.beginPath();g.arc(x,Y(v),4.5,0,7);g.fill();
+  let lab='p = '+S.p.toFixed(S.pLabel?3:2)+' · '+pc(v);
+  if(k){const vu=win(S.p,S.n,S.L,k);g.fillStyle=moss;g.beginPath();g.arc(x,Y(vu),4.5,0,7);g.fill();lab+=' · 1-up '+pc(vu);}
+  const right=x>w*.62;halo(lab,right?x-6:x+6,pad.t-12,ink,right?'right':'left',null,true);
+  $('chart').setAttribute('aria-label',`Win chance against skill p from 0.40 to 1.00 for ${S.n} stages. Selected: ${lives(S.L)}, ${pc(v)} at p = ${pTxt()}. Reference curves for 1, 3 and 5 lives.`);
+}
+
+// ---------- readouts ----------
+function readouts(){
+  const W=win(S.p,S.n,S.L,0),k=kEff();
+  $('oP').textContent=pTxt();$('oL').textContent=S.L;$('oN').textContent=S.n;
+  $('rW').textContent=f4(W)+' ('+pc(W)+')';
+  $('rWl').textContent=`win chance W(${S.n}, ${S.L}) at p = ${pTxt()}`;
+  if(k){const Wu=win(S.p,S.n,S.L,k);$('rUp').textContent=f4(Wu)+' ('+pc(Wu)+')';$('rUpl').textContent=`with 1-up after stage ${k} (+${((Wu-W)*100).toFixed(1)} points)`;}
+  else{$('rUp').textContent='off';$('rUpl').textContent='with 1-up (switch it on below)';}
+  const a=cross(S.n,S.L,0,.2),m=cross(S.n,S.L,0,.5),b=cross(S.n,S.L,0,.8);
+  $('rBand').textContent=f3(a)+' to '+f3(b);$('rBandl').textContent=`uncertain band (20% to 80%), width ${f3(b-a)}`;
+  $('rMid').textContent=f3(m);
+  const fail=S.n*(1-S.p)/S.p;
+  $('rFail').innerHTML=`Average failures in a finished run: n(1 − p)/p = <b>${fail.toFixed(2)}</b>`;
+  const lo=cross(S.n,1,0,.2);
+  let s=`With ${lives(S.L)} and ${S.n} stage${S.n>1?'s':''}, the close finishes go to players with p from <b>${f3(a)}</b> to <b>${f3(b)}</b>. Below that they lose at least 4 runs in 5. Above it they win at least 4 in 5.`;
+  if(S.L>1)s+=` With 1 life the band starts at ${f3(lo)}, so ${S.L-1} extra ${S.L>2?'lives':'life'} moved it down by ${f3(lo-a)}.`;
+  else s+=' Only near-experts ever face an uncertain ending. Drag lives up and watch the curve slide left.';
+  $('insight').innerHTML=s;
+  $('lgSel').textContent=lives(S.L)+' (selected)';$('lgUp').hidden=!k;
+}
+function fillK(){
+  const sel=$('sK');const max=Math.max(1,S.n-1);
+  S.k=Math.min(S.kWant,max);
+  sel.innerHTML='';for(let i=1;i<=max;i++){const o=document.createElement('option');o.value=i;o.textContent=i;sel.appendChild(o);}
+  sel.value=S.k;
+  const ok=S.n>1;$('cUp').disabled=!ok;sel.disabled=!ok||!S.up;
+}
+let simTimer=null;
+function staleSim(){if(simTimer){cancelAnimationFrame(simTimer);simTimer=null;}$('dots').classList.add('stale');$('simOut').classList.add('stale');}
+function update(){readouts();buildTable();draw();staleSim();}
+
+// ---------- simulation ----------
+function oneRun(){let c=0,l=S.L;const k=kEff();while(c<S.n&&l>0){if(Math.random()<S.p){c++;if(k&&c===k)l++;}else l--;}return c===S.n;}
+function initDots(){let h='';for(let i=0;i<200;i++)h+='<i></i>';$('dots').innerHTML=h;}
+$('bSim').addEventListener('click',()=>{
+  staleSim();$('dots').classList.remove('stale');$('simOut').classList.remove('stale');
+  const res=[];for(let i=0;i<200;i++)res.push(oneRun());
+  const wins=res.filter(Boolean).length,k=kEff(),model=win(S.p,S.n,S.L,k),se=Math.sqrt(model*(1-model)/200);
+  const dots=$('dots').children;
+  const done=()=>{$('simOut').innerHTML=`Observed <b>${wins} wins in 200 runs = ${pc(wins/200)}</b>. Model: ${pc(model)}${k?' (with 1-up after stage '+k+')':''}. With 200 runs, results usually land within ±${(2*se*100).toFixed(1)} points of the model.`;};
+  for(const d of dots)d.className='';
+  if(reduce.matches){res.forEach((r,i)=>dots[i].className=r?'w':'l');done();return;}
+  $('simOut').textContent='Playing runs…';
+  let i=0;const step=()=>{const to=Math.min(200,i+6);for(;i<to;i++)dots[i].className=res[i]?'w':'l';if(i<200)simTimer=requestAnimationFrame(step);else{simTimer=null;done();}};
+  simTimer=requestAnimationFrame(step);
+});
+
+// ---------- controls ----------
+const chips=[...document.querySelectorAll('.chip')];
+function setChip(b){chips.forEach(x=>x.setAttribute('aria-pressed',String(x===b)));}
+$('sP').addEventListener('input',e=>{S.p=+e.target.value;S.pLabel=null;setChip(null);update();});
+chips.forEach(b=>b.addEventListener('click',()=>{const num=+b.dataset.num;S.p=num/36;S.pLabel=num+'/36';$('sP').value=S.p.toFixed(2);setChip(b);update();}));
+$('sL').addEventListener('input',e=>{S.L=+e.target.value;update();});
+$('sN').addEventListener('input',e=>{S.n=+e.target.value;focusCell.n=Math.min(focusCell.n,S.n);fillK();update();});
+$('cUp').addEventListener('change',e=>{S.up=e.target.checked;fillK();update();});
+$('sK').addEventListener('change',e=>{S.k=S.kWant=+e.target.value;update();});
+let rT=null;window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(draw,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{buildTable();draw();});
+initDots();fillK();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+$('dots').classList.remove('stale');$('simOut').classList.remove('stale');
+})();
+</script>
+</body>
+</html>

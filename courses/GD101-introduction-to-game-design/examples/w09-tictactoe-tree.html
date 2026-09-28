@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tic-tac-toe game tree · GD101 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 10px}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-top:16px}
+.panel:first-of-type{margin-top:0}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin-bottom:14px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+legend{font-weight:600;font-size:.9rem;float:left;margin-right:6px}
+.seg{position:relative}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg span{display:inline-block;font:600 .9rem var(--sans);padding:7px 12px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer;user-select:none}
+.seg input:checked+span{background:var(--ink);color:var(--paper)}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.btn{font:600 .9rem var(--sans);padding:7px 13px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--paper-2)}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn.primary{background:var(--steel);color:var(--paper)}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.9rem;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.status{font-size:.95rem;margin:0 0 10px;color:var(--ink-soft)}
+.status b{color:var(--ink)}
+.boards{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:800px){.boards{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 10px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.84rem}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;max-width:340px;margin:0 auto}
+.cell{position:relative;aspect-ratio:1/1;border-radius:8px;border:1.5px solid var(--grid);background:var(--paper);color:var(--ink);display:flex;align-items:center;justify-content:center;padding:0;font:inherit;min-width:0}
+button.cell{cursor:pointer}
+button.cell:hover:not([aria-disabled="true"]){border-color:var(--ink)}
+button.cell[aria-disabled="true"]{cursor:default}
+.cell .idx{position:absolute;top:4px;left:7px;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.cell svg{width:62%;height:62%}
+.cell svg *{fill:none;stroke-width:9;stroke-linecap:round}
+.mX{stroke:var(--ink)}
+.mO{stroke:var(--steel)}
+.cell.win-line{border-color:var(--ochre);border-width:3px}
+.cell.linked{box-shadow:0 0 0 3px var(--focus)}
+.res{display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:700;font-size:clamp(.95rem,3.8vw,1.15rem);line-height:1.1}
+.res i{font-style:normal;font-size:1.3em;line-height:1}
+.cell.W{background:color-mix(in srgb,var(--moss) 22%,var(--paper));border-color:var(--moss);color:var(--moss)}
+.cell.D{background:color-mix(in srgb,var(--ink-soft) 12%,var(--paper));border-color:var(--ink-soft);color:var(--ink-soft)}
+.cell.L{background:color-mix(in srgb,var(--blood) 16%,var(--paper));border-color:var(--blood);color:var(--blood)}
+.cell.hidden-res{background:var(--paper)}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;font-size:.84rem;margin:10px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend b{display:inline-block;padding:0 6px;border-radius:4px;border:1.5px solid currentColor}
+.cW{color:var(--moss)}.cD{color:var(--ink-soft)}.cL{color:var(--blood)}
+.meter{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+@media (min-width:800px){.meter{grid-template-columns:1.1fr 1fr}}
+.reading{border-left:4px solid var(--ochre);padding:4px 0 4px 12px}
+.reading .big{font-size:1.45rem;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums;margin:0}
+.reading .sub{margin:2px 0 0;color:var(--ink-soft);font-size:.92rem}
+.dist{display:flex;height:30px;border-radius:6px;overflow:hidden;border:1.5px solid var(--ink);margin-top:4px}
+.dist div{display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--paper);min-width:0;overflow:hidden;white-space:nowrap}
+.dist .W{background:var(--moss)}.dist .D{background:var(--ink-soft)}.dist .L{background:var(--blood)}
+.distcap{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0;font-variant-numeric:tabular-nums}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
+.chip:hover{background:var(--paper-2)}
+.small{font-size:.86rem;color:var(--ink-soft);margin:6px 0 0}
+.two{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:800px){.two{grid-template-columns:1fr 1.2fr}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink-soft);font-size:.84rem}
+td.gap{color:var(--ink-soft)}
+@media (max-width:520px){th,td{padding:6px 4px;font-size:.84rem}th{font-size:.76rem}}
+details.panel>summary{cursor:pointer;font-family:var(--serif);font-weight:600;font-size:1.3rem}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+@media (min-width:800px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.bars{display:grid;gap:6px;margin-top:8px}
+.bar{display:grid;grid-template-columns:4.6em 1fr 8.6em;gap:8px;align-items:center;font-size:.86rem;font-variant-numeric:tabular-nums}
+.bar .track{height:18px;position:relative}
+.bar .tot{position:absolute;inset:0 auto 0 0;background:var(--grid);border-radius:3px}
+.bar .stk{position:absolute;inset:0 auto 0 0;background:var(--ochre);border-radius:3px}
+.bar .num{text-align:right}
+.check-line{font-size:.88rem;margin:12px 0 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD101 Introduction to Game Design · Week 9 · Worked example</p>
+  <h1>The decision was already made</h1>
+  <p class="lede">The left board is tic-tac-toe as a player sees it. The right board is the same position with every empty square already solved by minimax. On the empty board all nine squares say Draw. Put X in a corner and seven of O&rsquo;s eight squares turn to Loss.</p>
+</header>
+
+<section class="panel" aria-labelledby="hPlay">
+  <h2 id="hPlay" class="sr">Play and compare</h2>
+  <div class="toolbar">
+    <fieldset>
+      <legend>You play</legend>
+      <label class="seg"><input type="radio" name="side" value="X" checked><span>X (first)</span></label>
+      <label class="seg"><input type="radio" name="side" value="O"><span>O</span></label>
+    </fieldset>
+    <fieldset>
+      <legend>Opponent</legend>
+      <label class="seg"><input type="radio" name="opp" value="R" checked><span>Random</span></label>
+      <label class="seg"><input type="radio" name="opp" value="P"><span>Perfect</span></label>
+    </fieldset>
+    <button class="btn primary" id="newGame" type="button">New game</button>
+    <button class="btn" id="undo" type="button">Undo</button>
+    <label class="check"><input type="checkbox" id="hide"> Hide the solution</label>
+  </div>
+  <p class="status" id="status"></p>
+
+  <div class="boards">
+    <figure>
+      <figcaption>What the player sees<small>Click a square, or Tab to it and press Enter or Space.</small></figcaption>
+      <div class="board" id="bL" role="group" aria-label="Playable board"></div>
+    </figure>
+    <figure>
+      <figcaption>What the tree knows<small id="rightCap"></small></figcaption>
+      <div class="board" id="bR" role="group" aria-label="Solved board, read only"></div>
+      <div class="legend" aria-hidden="true">
+        <span class="cW"><b>&#10003; Win</b></span>
+        <span class="cD"><b>= Draw</b></span>
+        <span class="cL"><b>&#10005; Loss</b></span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="meter">
+    <div class="reading">
+      <p class="sub" style="margin:0">Decision meter</p>
+      <p class="big" id="meterBig"></p>
+      <p class="sub" id="meterSub"></p>
+    </div>
+    <div id="distWrap">
+      <div class="dist" id="dist" aria-hidden="true"></div>
+      <p class="distcap" id="distCap"></p>
+    </div>
+  </div>
+  <div class="insight" id="insight"></div>
+
+  <div style="margin-top:14px">
+    <span style="font-weight:600;font-size:.92rem">Load a position from the lecture</span>
+    <div class="presets" id="presets">
+      <button class="chip" type="button" data-b=".........">Empty board (both sides)</button>
+      <button class="chip" type="button" data-b="X........">X takes a corner</button>
+      <button class="chip" type="button" data-b="....X....">X takes the center</button>
+      <button class="chip" type="button" data-b=".X.......">X takes an edge</button>
+      <button class="chip" type="button" data-b="..OXO.XOX">Section 2 tree, X to move</button>
+      <button class="chip" type="button" data-b="XOX.O..X.">Check yourself 1, O to move</button>
+    </div>
+    <p class="small">A loaded position is a study position. You place the marks for both sides and the computer waits. New game goes back to playing the computer.</p>
+  </div>
+  <div class="sr" aria-live="polite" id="live"></div>
+</section>
+
+<section class="panel" aria-labelledby="hRes">
+  <h2 id="hRes">Results</h2>
+  <div class="two">
+    <div>
+      <h3 style="font-size:1rem;margin:0 0 6px">Your games</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Opponent</th><th>Won</th><th>Lost</th><th>Drawn</th><th>Games</th></tr></thead>
+          <tbody id="tally"></tbody>
+        </table>
+      </div>
+      <p class="small">Play five games against each. Against Perfect you can never win; the best you can do is draw.</p>
+    </div>
+    <div>
+      <h3 style="font-size:1rem;margin:0 0 6px">Computer against computer</h3>
+      <fieldset style="margin-bottom:8px" id="pairing">
+        <legend class="sr">Pairing</legend>
+        <label class="seg"><input type="radio" name="pair" value="RR" checked><span>Random vs Random</span></label>
+        <label class="seg"><input type="radio" name="pair" value="PR"><span>Perfect X vs Random O</span></label>
+        <label class="seg"><input type="radio" name="pair" value="RP"><span>Random X vs Perfect O</span></label>
+        <label class="seg"><input type="radio" name="pair" value="PP"><span>Perfect vs Perfect</span></label>
+      </fieldset>
+      <button class="btn primary" id="sim" type="button">Simulate 1,000 games</button>
+      <div class="table-wrap" style="margin-top:10px">
+        <table>
+          <thead><tr><th>Outcome</th><th>Simulated</th><th>Simulated %</th><th>Exact %</th><th>Gap</th></tr></thead>
+          <tbody id="simBody"></tbody>
+        </table>
+      </div>
+      <p class="small" id="simNote"></p>
+    </div>
+  </div>
+</section>
+
+<details class="panel" id="tree">
+  <summary>The whole game in numbers</summary>
+  <div class="stats">
+    <div class="stat" style="--c:var(--ink)"><b id="sGames"></b><span>complete games</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="sPos"></b><span>legal positions</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="sSym"></b><span>up to rotation and reflection</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="sUnf"></b><span>unfinished positions</span></div>
+  </div>
+  <div class="two">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Games won by</th><th>Count</th><th>Share</th></tr></thead>
+        <tbody id="gamesBody"></tbody>
+      </table>
+      <table style="margin-top:12px">
+        <thead><tr><th>Kind of position</th><th>Count</th><th>Share</th></tr></thead>
+        <tbody id="classBody"></tbody>
+      </table>
+    </div>
+    <div>
+      <h3 style="font-size:1rem;margin:0">Stakes positions by marks on the board</h3>
+      <p class="small" style="margin-top:2px">Grey is every unfinished position with that many marks. Ochre is the part where one move is worse than another.</p>
+      <div class="bars" id="bars"></div>
+    </div>
+  </div>
+  <p class="check-line" id="checkLine"></p>
+</details>
+
+<footer>All numbers are computed in your browser by exhaustive minimax over the tic-tac-toe tree, then checked against the values printed in the lecture. Opponent moves use a seeded generator (mulberry32, seed 9 plus the game number), so a game replays the same way. The formulas are in lab 09.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('en-US');
+const pct=(x,d)=>(x*100).toFixed(d===undefined?1:d)+'%';
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+
+/* ---------- rules and minimax ---------- */
+const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const EMPTY='.........';
+function winLine(b){for(const l of LINES){const c=b[l[0]];if(c!=='.'&&c===b[l[1]]&&c===b[l[2]])return l;}return null;}
+function winner(b){const l=winLine(b);return l?b[l[0]]:null;}
+function over(b){return !!winner(b)||b.indexOf('.')<0;}
+function toMove(b){let x=0,o=0;for(const c of b){if(c==='X')x++;else if(c==='O')o++;}return x===o?'X':'O';}
+function legal(b){const m=[];for(let i=0;i<9;i++)if(b[i]==='.')m.push(i);return m;}
+function put(b,i,t){return b.slice(0,i)+t+b.slice(i+1);}
+const memo=new Map();
+function value(b){ // +1 X wins, -1 O wins, 0 draw, with perfect play
+  let v=memo.get(b);if(v!==undefined)return v;
+  const w=winner(b);
+  if(w)v=w==='X'?1:-1;
+  else if(b.indexOf('.')<0)v=0;
+  else{const t=toMove(b);v=t==='X'?-2:2;for(const i of legal(b)){const c=value(put(b,i,t));v=t==='X'?Math.max(v,c):Math.min(v,c);}}
+  memo.set(b,v);return v;
+}
+const REL={1:'W',0:'D','-1':'L'};
+const WORD={W:'Win',D:'Draw',L:'Loss'};
+const GLYPH={W:'✓',D:'=',L:'✕'};
+function analyse(b){
+  const t=toMove(b),s=t==='X'?1:-1;
+  const moves=legal(b).map(i=>({i,v:value(put(b,i,t))}));
+  moves.forEach(m=>m.r=REL[m.v*s]);
+  const m=moves.length;
+  const bestV=m?(t==='X'?Math.max(...moves.map(x=>x.v)):Math.min(...moves.map(x=>x.v))):0;
+  const k=moves.filter(x=>x.v===bestV).length;
+  const kind=m===1?'Forced':(new Set(moves.map(x=>x.v)).size===1?'No-stakes':'Stakes');
+  return {t,moves,m,k,bestV,bestR:REL[bestV*s],kind,value:value(b)};
+}
+
+/* ---------- seeded PRNG ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const SEED=9;
+function pickMove(b,policy,rng){
+  let ms=legal(b);
+  if(policy==='P'){const t=toMove(b),vs=ms.map(i=>value(put(b,i,t))),best=t==='X'?Math.max(...vs):Math.min(...vs);ms=ms.filter((_,j)=>vs[j]===best);}
+  return ms[Math.floor(rng()*ms.length)];
+}
+
+/* ---------- whole tree (computed, then checked) ---------- */
+const STATIC={games:255168,xWins:131184,oWins:77904,draws:46080,positions:5478,sym:765,unfinished:4520,forced:222,noStakes:1107,stakes:3191,
+  byMarks:[[0,1],[9,9],[60,72],[186,252],[640,756],[768,1140],[1032,1372],[496,696],[0,222]],
+  exact:{RR:[.5849,.2881,.1270],PR:[.9678,0,.0322],RP:[0,.7775,.2225],PP:[0,0,1]}};
+function computeTree(){
+  const g={x:0,o:0,d:0},seen=new Set();
+  (function walk(b){
+    seen.add(b);const w=winner(b);
+    if(w){w==='X'?g.x++:g.o++;return;}
+    if(b.indexOf('.')<0){g.d++;return;}
+    const t=toMove(b);for(let i=0;i<9;i++)if(b[i]==='.')walk(put(b,i,t));
+  })(EMPTY);
+  const cls={Forced:0,'No-stakes':0,Stakes:0},by=Array.from({length:9},()=>[0,0]);
+  const R=[6,3,0,7,4,1,8,5,2],M=[2,1,0,5,4,3,8,7,6],canon=new Set();
+  const perm=(b,p)=>p.map(j=>b[j]).join('');
+  for(const b of seen){
+    let x=b,best=null;
+    for(let r=0;r<4;r++){x=perm(x,R);const y=perm(x,M);for(const z of [x,y])if(best===null||z<best)best=z;}
+    canon.add(best);
+    if(over(b))continue;
+    const a=analyse(b),n=9-legal(b).length;
+    cls[a.kind]++;by[n][1]++;if(a.kind==='Stakes')by[n][0]++;
+  }
+  const unf=cls.Forced+cls['No-stakes']+cls.Stakes;
+  return {games:g.x+g.o+g.d,xWins:g.x,oWins:g.o,draws:g.d,positions:seen.size,sym:canon.size,unfinished:unf,forced:cls.Forced,noStakes:cls['No-stakes'],stakes:cls.Stakes,byMarks:by};
+}
+const pmemo=new Map();
+function outcomeProb(b,px,po){ // exact [P(X wins),P(O wins),P(draw)]
+  const key=b+px+po;let r=pmemo.get(key);if(r)return r;
+  const w=winner(b);
+  if(w)r=w==='X'?[1,0,0]:[0,1,0];
+  else if(b.indexOf('.')<0)r=[0,0,1];
+  else{
+    const t=toMove(b),pol=t==='X'?px:po;let ms=legal(b);
+    if(pol==='P'){const vs=ms.map(i=>value(put(b,i,t))),best=t==='X'?Math.max(...vs):Math.min(...vs);ms=ms.filter((_,j)=>vs[j]===best);}
+    r=[0,0,0];for(const i of ms){const c=outcomeProb(put(b,i,t),px,po);for(let j=0;j<3;j++)r[j]+=c[j]/ms.length;}
+  }
+  pmemo.set(key,r);return r;
+}
+const TREE=computeTree();
+const EXACT={};for(const p of ['RR','PR','RP','PP'])EXACT[p]=outcomeProb(EMPTY,p[0],p[1]);
+(function verify(){
+  const bad=[];
+  for(const k of Object.keys(STATIC)){
+    if(k==='byMarks'){STATIC.byMarks.forEach((v,i)=>{if(v[0]!==TREE.byMarks[i][0]||v[1]!==TREE.byMarks[i][1])bad.push('byMarks['+i+']');});}
+    else if(k==='exact'){for(const p in STATIC.exact)STATIC.exact[p].forEach((v,j)=>{if(Math.abs(v-EXACT[p][j])>0.00006)bad.push('exact '+p+'['+j+']');});}
+    else if(STATIC[k]!==TREE[k])bad.push(k);
+  }
+  if(value(EMPTY)!==0)bad.push('empty-board value');
+  if(bad.length)console.warn('Tic-tac-toe tree does not match the lecture numbers:',bad.join(', '));
+  $('checkLine').textContent=bad.length?'Warning: recomputed values differ from the lecture for '+bad.join(', ')+'.':'Recomputed at load in your browser: every number above matches the lecture.';
+})();
+
+/* ---------- game state ---------- */
+const state={board:EMPTY,history:[],human:'X',opp:'R',gameNo:0,rng:null,counted:true,busy:false,timer:0,recorded:false,study:false};
+const tally={R:{w:0,l:0,d:0},P:{w:0,l:0,d:0}};
+const RC=i=>'row '+(Math.floor(i/3)+1)+', column '+(i%3+1);
+const SVGX='<svg viewBox="0 0 100 100" aria-hidden="true"><path class="mX" d="M27 27L73 73M73 27L27 73"/></svg>';
+const SVGO='<svg viewBox="0 0 100 100" aria-hidden="true"><circle class="mO" cx="50" cy="50" r="25"/></svg>';
+
+const bL=$('bL'),bR=$('bR'),cellsL=[],cellsR=[];
+for(let i=0;i<9;i++){
+  const b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;
+  b.addEventListener('click',()=>humanMove(i));
+  const link=on=>cellsR[i].classList.toggle('linked',on);
+  b.addEventListener('pointerenter',()=>link(true));b.addEventListener('pointerleave',()=>link(false));
+  b.addEventListener('focus',()=>link(true));b.addEventListener('blur',()=>link(false));
+  bL.appendChild(b);cellsL.push(b);
+  const r=document.createElement('div');r.className='cell';bR.appendChild(r);cellsR.push(r);
+}
+
+function newGame(board){
+  clearTimeout(state.timer);
+  state.gameNo++;state.rng=mulberry32(SEED+state.gameNo);
+  state.board=board||EMPTY;state.history=[];state.busy=false;state.recorded=false;
+  state.study=board!==undefined;state.counted=!state.study;
+  render();
+  announce((state.study?'Study position loaded. You move for both sides. ':'New game '+state.gameNo+'. You play '+state.human+'. ')+meterText(state.board));
+  maybeComputer();
+}
+function humanMove(i){
+  const b=state.board;
+  if(state.busy||over(b)||b[i]!=='.'||(!state.study&&toMove(b)!==state.human))return;
+  play(i);
+  maybeComputer();
+}
+function play(i){
+  const t=toMove(state.board);
+  state.history.push(state.board);state.board=put(state.board,i,t);
+  render();
+  announce(t+' plays square '+i+', '+RC(i)+'. '+meterText(state.board));
+  if(over(state.board))finish();
+}
+function maybeComputer(){
+  const b=state.board;
+  if(state.study||over(b)||toMove(b)===state.human)return;
+  state.busy=true;render();
+  const go=()=>{state.busy=false;play(pickMove(state.board,state.opp,state.rng));};
+  if(reduced.matches)go();else state.timer=setTimeout(go,420);
+}
+function finish(){
+  if(state.recorded||!state.counted)return;
+  state.recorded=true;
+  const w=winner(state.board),t=tally[state.opp];
+  if(!w)t.d++;else if(w===state.human)t.w++;else t.l++;
+  renderTally();
+}
+function undo(){
+  if(state.busy||!state.history.length)return;
+  clearTimeout(state.timer);
+  state.counted=false;
+  // step back to the last position where it was the human's turn
+  do{state.board=state.history.pop();}while(!state.study&&state.history.length&&toMove(state.board)!==state.human);
+  render();announce('Undone. '+meterText(state.board));
+  maybeComputer();
+}
+
+/* ---------- rendering ---------- */
+function meterText(b){
+  if(over(b)){const w=winner(b);return 'Game over. '+(w?w+' wins.':'Draw.');}
+  const a=analyse(b);
+  let s=a.t+' to move: '+a.m+' legal move'+(a.m===1?'':'s')+', '+a.kind;
+  if(a.kind==='Stakes')s+=', '+a.k+' of '+a.m+' moves keep'+(a.k===1?'s':'')+' the best result';
+  return s+'.';
+}
+function render(){
+  const b=state.board,hide=$('hide').checked,done=over(b),line=winLine(b);
+  const a=done?null:analyse(b);
+  const res={};if(a)a.moves.forEach(m=>res[m.i]=m.r);
+  const humanTurn=!done&&!state.busy&&(state.study||toMove(b)===state.human);
+  for(let i=0;i<9;i++){
+    const c=b[i],L=cellsL[i],R=cellsR[i],mark=c==='X'?SVGX:c==='O'?SVGO:'';
+    const idx='<span class="idx" aria-hidden="true">'+i+'</span>';
+    L.innerHTML=idx+mark;
+    const playable=humanTurn&&c==='.';
+    L.setAttribute('aria-disabled',playable?'false':'true');
+    let lab=RC(i).replace(/^r/,'R')+', '+(c==='.'?'empty':c);
+    if(c==='.'&&a&&!hide)lab+=', result for '+a.t+': '+WORD[res[i]];
+    L.setAttribute('aria-label',lab+'.');
+    L.classList.toggle('win-line',!!line&&line.includes(i));
+    R.className='cell'+(line&&line.includes(i)?' win-line':'');
+    if(c!=='.'){R.innerHTML=idx+mark;R.setAttribute('aria-label',RC(i)+': '+c);}
+    else if(!a){R.innerHTML=idx;R.setAttribute('aria-label',RC(i)+': empty');}
+    else if(hide){R.classList.add('hidden-res');R.innerHTML=idx+'<span class="res" style="color:var(--ink-soft)">?</span>';R.setAttribute('aria-label',RC(i)+': hidden');}
+    else{const r=res[i];R.classList.add(r);R.innerHTML=idx+'<span class="res"><i aria-hidden="true">'+GLYPH[r]+'</i>'+WORD[r]+'</span>';R.setAttribute('aria-label',RC(i)+': '+WORD[r]+' for '+a.t);}
+    R.setAttribute('role','img');
+  }
+  // captions and status
+  const t=done?null:toMove(b);
+  $('rightCap').textContent=done?'Game over. The tree has nothing left to say.':'Result for '+t+' if '+t+' plays each square and both sides play perfectly after.';
+  let st=state.study?'Study position · <b>you move for both sides</b> · ':'Game '+state.gameNo+' · you are <b>'+state.human+'</b> · opponent <b>'+(state.opp==='R'?'Random':'Perfect')+'</b> · ';
+  if(done){const w=winner(b);st+='<b>'+(!w?'Draw':state.study?w+' wins':(w===state.human?'You win':'You lose'))+'</b>';}
+  else st+=state.busy?'<b>'+t+'</b> is thinking':(t===state.human?'<b>your move</b> ('+t+')':'<b>'+t+'</b> to move');
+  if(!state.counted&&!state.study)st+=' · not counted';
+  $('status').innerHTML=st;
+  // meter
+  if(done){
+    const w=winner(b);
+    $('meterBig').textContent='0 legal moves';
+    $('meterSub').textContent='Game over. '+(w?w+' wins.':'Draw.')+' Value '+(w==='X'?'+1':w==='O'?'−1':'0')+'.';
+    $('distWrap').hidden=true;
+  }else{
+    $('meterBig').textContent=a.m+' legal move'+(a.m===1?'':'s')+', '+a.kind;
+    let sub=a.t+' to move. ';
+    if(a.kind==='Stakes')sub+=a.k+' of '+a.m+' moves keep'+(a.k===1?'s':'')+' the best result'+(hide?'.':' ('+WORD[a.bestR]+').');
+    else if(a.kind==='No-stakes')sub+='Every move gives the same result'+(hide?'.':': '+WORD[a.bestR]+'.');
+    else sub+='Only one square is left.';
+    if(!hide)sub+=' Position value '+(a.value>0?'+1':a.value<0?'−1':'0')+'.';
+    $('meterSub').textContent=sub;
+    $('distWrap').hidden=hide;
+    const cnt={W:0,D:0,L:0};a.moves.forEach(m=>cnt[m.r]++);
+    $('dist').innerHTML=['W','D','L'].filter(k=>cnt[k]).map(k=>'<div class="'+k+'" style="flex:'+cnt[k]+'">'+cnt[k]+(cnt[k]/a.m>=.3?' '+WORD[k]:'')+'</div>').join('');
+    $('distCap').textContent=['W','D','L'].map(k=>WORD[k]+' '+cnt[k]+(cnt[k]?' (squares '+a.moves.filter(m=>m.r===k).map(m=>m.i).join(', ')+')':'')).join(' · ');
+  }
+  $('insight').textContent=insight(b,a,hide);
+  $('undo').disabled=!state.history.length||state.busy;
+}
+function insight(b,a,hide){
+  if(!a){
+    const w=winner(b);
+    if(!w)return 'A draw. With both sides playing perfectly this is the only possible ending, which is why adults stop playing.';
+    if(state.study)return w+' won. Undo to step back and see which move lost it.';
+    return w===state.human?'You won, so the opponent made a mistake somewhere. Undo a few moves and look for the square that turned red for them.':'You lost. Undo and look at the right board at the move you chose. Was it red?';
+  }
+  if(hide)return 'Solution hidden. Pick your move, then untick "Hide the solution" and check whether you found it.';
+  if(a.kind==='Forced')return 'One legal move. There is no decision here at all.';
+  if(a.kind==='No-stakes')return 'Every square gives the same result. The choice feels open, but nothing you pick changes the outcome with perfect play.';
+  if(a.k===1)return 'Only one square keeps the best result. Once a player knows which, this is a lookup, not a decision.';
+  const frac=a.k/a.m;
+  return a.k+' of '+a.m+' squares keep the best result. '+(frac>=.5?'Most moves are safe, so a careless player still gets through.':'Most moves are mistakes, but a player who knows the rule of thumb avoids them without thinking.');
+}
+function renderTally(){
+  $('tally').innerHTML=['R','P'].map(k=>{const t=tally[k],n=t.w+t.l+t.d;return '<tr><td>'+(k==='R'?'Random':'Perfect')+'</td><td>'+t.w+'</td><td>'+t.l+'</td><td>'+t.d+'</td><td>'+n+'</td></tr>';}).join('');
+}
+let liveTimer=0;
+function announce(s){clearTimeout(liveTimer);liveTimer=setTimeout(()=>{$('live').textContent=s;},30);}
+
+/* ---------- simulation ---------- */
+let simRun=0;
+function simulate(){
+  const p=document.querySelector('input[name=pair]:checked').value;
+  simRun++;const rng=mulberry32(SEED+10000*simRun);
+  const c=[0,0,0],N=1000;
+  for(let g=0;g<N;g++){
+    let b=EMPTY;
+    while(!over(b)){const t=toMove(b);b=put(b,pickMove(b,t==='X'?p[0]:p[1],rng),t);}
+    const w=winner(b);c[w==='X'?0:w==='O'?1:2]++;
+  }
+  const ex=EXACT[p],names=['X wins','O wins','Draw'];
+  $('simBody').innerHTML=names.map((n,j)=>{const s=c[j]/N,gap=(s-ex[j])*100;return '<tr><td>'+n+'</td><td>'+fmt(c[j])+'</td><td>'+pct(s)+'</td><td>'+pct(ex[j],2)+'</td><td class="gap">'+(gap>=0?'+':'−')+Math.abs(gap).toFixed(1)+'</td></tr>';}).join('');
+  const label=document.querySelector('input[name=pair]:checked').nextElementSibling.textContent;
+  $('simNote').textContent='Run '+simRun+': '+label+', 1,000 games, seed '+(SEED+10000*simRun)+'. Exact % is the probability over every possible game, from the lecture table. Gap is in percentage points.';
+  announce(label+': X won '+pct(c[0]/N)+', O won '+pct(c[1]/N)+', draws '+pct(c[2]/N)+'.');
+}
+function showExact(){
+  const p=document.querySelector('input[name=pair]:checked').value,ex=EXACT[p];
+  $('simBody').innerHTML=['X wins','O wins','Draw'].map((n,j)=>'<tr><td>'+n+'</td><td>—</td><td>—</td><td>'+pct(ex[j],2)+'</td><td class="gap">—</td></tr>').join('');
+  $('simNote').textContent='Press the button to play 1,000 games with this pairing.';
+}
+
+/* ---------- whole-tree panel ---------- */
+function renderTree(){
+  $('sGames').textContent=fmt(TREE.games);$('sPos').textContent=fmt(TREE.positions);$('sSym').textContent=fmt(TREE.sym);$('sUnf').textContent=fmt(TREE.unfinished);
+  $('gamesBody').innerHTML=[['X (first player)',TREE.xWins],['O',TREE.oWins],['Drawn',TREE.draws]].map(r=>'<tr><td>'+r[0]+'</td><td>'+fmt(r[1])+'</td><td>'+pct(r[1]/TREE.games)+'</td></tr>').join('');
+  $('classBody').innerHTML=[['Forced',TREE.forced],['No-stakes',TREE.noStakes],['Stakes',TREE.stakes]].map(r=>'<tr><td>'+r[0]+'</td><td>'+fmt(r[1])+'</td><td>'+pct(r[1]/TREE.unfinished)+'</td></tr>').join('');
+  const max=Math.max(...TREE.byMarks.map(x=>x[1]));
+  $('bars').innerHTML=TREE.byMarks.map((x,n)=>'<div class="bar"><span>'+n+' mark'+(n===1?'':'s')+'</span><span class="track" aria-hidden="true"><span class="tot" style="width:'+(x[1]/max*100)+'%"></span><span class="stk" style="width:'+(x[0]/max*100)+'%"></span></span><span class="num">'+fmt(x[0])+' of '+fmt(x[1])+'</span></div>').join('');
+}
+
+/* ---------- events ---------- */
+document.querySelectorAll('input[name=side]').forEach(r=>r.addEventListener('change',()=>{state.human=r.value;newGame();}));
+document.querySelectorAll('input[name=opp]').forEach(r=>r.addEventListener('change',()=>{state.opp=r.value;newGame();}));
+document.querySelectorAll('input[name=pair]').forEach(r=>r.addEventListener('change',showExact));
+$('newGame').addEventListener('click',()=>newGame());
+$('undo').addEventListener('click',undo);
+$('hide').addEventListener('change',render);
+$('sim').addEventListener('click',simulate);
+document.querySelectorAll('#presets .chip').forEach(c=>c.addEventListener('click',()=>newGame(c.dataset.b)));
+
+renderTree();renderTally();showExact();newGame();
+window.__ttt={analyse,value,state,EXACT,TREE,newGame,simulate};
+})();
+</script>
+</body>
+</html>

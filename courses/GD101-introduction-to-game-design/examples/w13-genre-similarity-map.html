@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Genre similarity map · GD101 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.12rem;margin:0 0 2px}
+h2 small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:14px}
+@media (max-width:820px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+.insight{margin:14px 0 0;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);border-left:4px solid var(--blood)}
+/* shelf */
+.shelf{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.bin{border:1.5px dashed var(--ink-soft);border-radius:10px;padding:8px 10px 10px;background:var(--paper)}
+.bin h3{margin:0 0 6px;font-size:.84rem;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-soft)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.gchip{font:600 .9rem var(--sans);display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;border:1.5px solid var(--ink);background:var(--paper-2);color:var(--ink);cursor:default}
+.gchip .dot{width:11px;height:11px;border-radius:50%;background:var(--c,transparent);border:1.5px solid var(--ink)}
+.gchip.hi{background:var(--ink);color:var(--paper)}
+.gchip.hi .dot{border-color:var(--paper)}
+.shelf-cap{font-size:.84rem;color:var(--ink-soft);margin:8px 0 0}
+/* map */
+svg.map{display:block;width:100%;height:auto;max-height:420px;overflow:visible}
+.edge{stroke:var(--ink-soft);stroke-width:1.4;opacity:.75}
+.elabel{font:600 11px var(--sans);fill:var(--ink);paint-order:stroke;stroke:var(--paper-2);stroke-width:4px;stroke-linejoin:round}
+.nn{fill:none;stroke:var(--ink);stroke-width:2.6}
+.node circle{stroke:var(--ink);stroke-width:1.6}
+.node text{font:600 12px var(--sans);fill:var(--ink);paint-order:stroke;stroke:var(--paper-2);stroke-width:4px;stroke-linejoin:round}
+.node.hi circle{stroke-width:4}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:var(--ink-soft);margin-top:6px}
+.legend i{display:inline-block;width:20px;height:0;border-top:1.5px solid var(--ink-soft);vertical-align:middle;margin-right:5px}
+.legend i.thick{border-top:3px solid var(--ink)}
+/* controls */
+.controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.controls{grid-template-columns:minmax(0,1fr)}}
+label.slider{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.clist{font-size:.92rem;margin:4px 0 0;font-variant-numeric:tabular-nums}
+.clist span{display:inline-block;margin:2px 6px 2px 0;padding:1px 8px;border-radius:6px;border-left:5px solid var(--c,var(--ink-soft));background:var(--paper-2)}
+.toggles{display:flex;flex-wrap:wrap;gap:8px 18px;margin:12px 0 6px}
+.toggles label{display:flex;align-items:center;gap:7px;font-weight:600;font-size:.92rem;cursor:pointer}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--steel);margin:0}
+.group-label{font-weight:600;font-size:.92rem}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.reset{border-color:var(--ink-soft)}
+.note{font-family:var(--serif);font-size:.96rem;margin:10px 0 0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* grid */
+.table-wrap{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}
+th,td{padding:5px 6px;text-align:center;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left;white-space:nowrap}
+.mech th abbr{text-decoration:none;cursor:help;font-size:1rem}
+.mech thead label{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.7rem;color:var(--ink-soft);font-weight:400}
+.mech input[type=number]{width:44px;font:inherit;padding:3px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);text-align:center}
+.cell{width:34px;height:34px;border-radius:6px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);font:700 1rem var(--sans);cursor:pointer;padding:0}
+.cell[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.off .cell{opacity:.3}
+th.off,td.off{background:repeating-linear-gradient(45deg,transparent 0 5px,var(--grid) 5px 7px)}
+.mlegend{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px 14px;font-size:.84rem;margin:10px 0 0;padding:0;list-style:none}
+.mlegend b{display:inline-block;width:1.3em}
+/* readout */
+.readout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.readout{grid-template-columns:minmax(0,1fr)}}
+.sim td,.sim th{text-align:right;white-space:nowrap;font-size:.86rem}
+.sim th:first-child,.sim td:first-child{text-align:left}
+.sim tr.sts td,.sim td.sts{background:color-mix(in srgb,var(--blood) 14%,transparent)}
+.sim tr.sts td:first-child{font-weight:700}
+.sim td.diag{color:var(--ink-soft)}
+.sim td.edge-on{font-weight:700}
+.small{width:100%}
+.small td,.small th{text-align:left;font-size:.88rem}
+.small td.n{text-align:right}
+.small tr.sts td{background:color-mix(in srgb,var(--blood) 14%,transparent);font-weight:700}
+.muted{color:var(--ink-soft);font-size:.84rem;margin:6px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:18px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD101 Introduction to Game Design · Week 13 · Worked example</p>
+  <h1>Same shelf, different neighbours</h1>
+  <p class="lede">A store files Slay the Spire under roguelike. Count its mechanics and its closest match is Dominion, a tabletop card game. Untick column D and it swings back to Rogue. The shelf never moves. The map does.</p>
+</header>
+
+<section class="panel" aria-label="Shelf and map">
+  <div class="views">
+    <figure>
+      <h2>The shop shelf<small>Where a store puts each game</small></h2>
+      <div class="shelf" id="shelf"></div>
+      <p class="shelf-cap">Labels ignore the grid. The dot on each chip is the game's cluster colour on the map.</p>
+    </figure>
+    <figure>
+      <h2>The mechanic map<small>Closer means more shared mechanics (distance = 1 &minus; J)</small></h2>
+      <svg class="map" id="map" viewBox="0 0 420 330" role="img" aria-label="Mechanic similarity map"></svg>
+      <div class="legend"><span><i></i>J &ge; t, labelled</span><span><i class="thick"></i>&rarr; nearest neighbour</span><span>Filled colour = cluster; pale = alone</span></div>
+    </figure>
+  </div>
+  <p class="insight" id="insight" aria-live="polite"></p>
+</section>
+
+<section class="panel" aria-label="Controls">
+  <div class="controls">
+    <div>
+      <label class="slider" for="thr">Threshold t <output id="oThr">0.55</output></label>
+      <input id="thr" type="range" min="0" max="1" step="0.01" value="0.55">
+      <p class="clist" id="clist" aria-live="polite"></p>
+      <div class="toggles">
+        <label><input type="checkbox" id="useW"> Use weights</label>
+        <label><input type="checkbox" id="chains" checked> Chains allowed</label>
+      </div>
+    </div>
+    <div>
+      <span class="group-label" id="presetsLbl">Presets</span>
+      <div class="presets" role="group" aria-labelledby="presetsLbl">
+        <button class="chip" data-p="defaults" aria-pressed="true">Lecture defaults</button>
+        <button class="chip" data-p="dropD" aria-pressed="false">Drop deck-building</button>
+        <button class="chip" data-p="dropU" aria-pressed="false">Drop unlocks</button>
+        <button class="chip" data-p="mvw" aria-pressed="false">Metroidvania weight</button>
+        <button class="chip" data-p="hub" aria-pressed="false">Add hub column</button>
+        <button class="chip reset" id="reset">Reset</button>
+      </div>
+      <p class="note" id="pnote"></p>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="gridH">
+  <h2 id="gridH">Mechanics grid<small>Click a cell or use arrow keys and Space. Untick a column to leave it out of every J.</small></h2>
+  <div class="table-wrap">
+    <table class="mech" id="mech"></table>
+  </div>
+  <ul class="mlegend" id="mlegend"></ul>
+</section>
+
+<section class="panel" aria-labelledby="numH">
+  <h2 id="numH">The numbers<small>Exact values. The map squeezes six games onto a flat page, so its distances are approximate. Trust this table.</small></h2>
+  <div class="readout">
+    <div class="table-wrap">
+      <table class="sim" id="sim" aria-label="Pairwise similarity J"></table>
+    </div>
+    <div>
+      <table class="small" id="nnT" aria-label="Nearest neighbours"></table>
+      <table class="small" id="coreT" aria-label="Roguelike core score" style="margin-top:14px"></table>
+      <p class="muted">Core score = how many of {P, R, T} the game has, out of the core columns still included.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Mechanic coding and eras follow the lecture table: Rogue (1980), Spelunky (2008 original), Hades (2020 release), Slay the Spire (2019 release), Dominion (2008 base set), Super Metroid (1994). Game names appear as text only. Map layout is classical multidimensional scaling on 1 &minus; J, flipped so Rogue sits upper left.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const EPS=1e-9;
+const GAMES=[
+  {id:'rogue',name:'Rogue',shelf:0,set:'PRTM'},
+  {id:'spel',name:'Spelunky',shelf:0,set:'PRAMJU'},
+  {id:'hades',name:'Hades',shelf:0,set:'PRAMU'},
+  {id:'sts',name:'Slay the Spire',shelf:0,set:'PRTDU'},
+  {id:'dom',name:'Dominion',shelf:1,set:'RTD'},
+  {id:'sm',name:'Super Metroid',shelf:2,set:'AMJG'}
+];
+const STS=3,ROGUE=0;
+const SHELVES=['Roguelike / roguelite','Deck-builder / card game','Metroidvania / platformer'];
+const COLNAMES={P:'Permadeath runs',R:'Randomized content each play',T:'Turn-based',A:'Real-time action',M:'Avatar movement',J:'Platforming',D:'Deck-building',U:'Unlocks between runs',G:'Ability-gated map',H:'Hub area between runs'};
+const BASE=['P','R','T','A','M','J','D','U','G'];
+const CORE=['P','R','T'];
+const PAL=['var(--steel)','var(--ochre)','var(--moss)','var(--blood)'];
+const NOTES={
+  defaults:'The lecture table from section 2. Slay the Spire: 0.60 to Dominion, 0.50 to Rogue.',
+  dropD:'Column D left out. Slay the Spire loses the mechanic it shares only with Dominion, so Rogue (0.60) overtakes Dominion (0.50).',
+  dropU:'Column U left out. Slay the Spire and Dominion rise to 0.75, and Spelunky and Hades fall to 0.80.',
+  mvw:'Weights on, G = 5. Only Super Metroid has G, so every pair with Super Metroid gets 4 more points of union and drops.',
+  hub:'Adds column H, a hub area between runs. Only Hades has it, so Hades moves away from everyone: Spelunky 5/7 = 0.71, Rogue 3/7 = 0.43.'
+};
+let S; // state
+function fresh(){
+  return {cols:BASE.slice(),has:GAMES.map(g=>{const o={};BASE.forEach(c=>o[c]=g.set.includes(c));return o;}),
+    inc:Object.fromEntries(BASE.map(c=>[c,true])),w:Object.fromEntries(BASE.map(c=>[c,1])),
+    useW:false,chains:true,t:0.55,preset:'defaults'};
+}
+
+// ---------- math ----------
+function sim(a,b){
+  let i=0,u=0;
+  for(const c of S.cols){ if(!S.inc[c]) continue;
+    const w=S.useW?S.w[c]:1, x=S.has[a][c], y=S.has[b][c];
+    if(x&&y) i+=w; if(x||y) u+=w; }
+  return {i,u,j:u>0?i/u:0};
+}
+function matrix(){const n=GAMES.length,M=[];for(let a=0;a<n;a++){M[a]=[];for(let b=0;b<n;b++)M[a][b]=a===b?{i:0,u:0,j:1}:sim(a,b);}return M;}
+function neighbours(M){
+  return GAMES.map((g,a)=>{let best=-1;GAMES.forEach((h,b)=>{if(b!==a&&M[a][b].j>best)best=M[a][b].j;});
+    if(best<=EPS) return {j:0,list:[]};
+    return {j:best,list:GAMES.map((h,b)=>b).filter(b=>b!==a&&Math.abs(M[a][b].j-best)<EPS)};});
+}
+function clusters(M,t){
+  const n=GAMES.length,p=[...Array(n).keys()],f=x=>p[x]===x?x:(p[x]=f(p[x]));
+  for(let a=0;a<n;a++)for(let b=a+1;b<n;b++)if(M[a][b].j>=t-EPS)p[f(a)]=f(b);
+  const g={};for(let a=0;a<n;a++)(g[f(a)]=g[f(a)]||[]).push(a);
+  return Object.values(g).sort((x,y)=>y.length-x.length||x[0]-y[0]);
+}
+function jacobi(A0){
+  const n=A0.length,A=A0.map(r=>r.slice()),V=A.map((r,i)=>r.map((_,j)=>i===j?1:0));
+  for(let sweep=0;sweep<60;sweep++){
+    let off=0;for(let p=0;p<n;p++)for(let q=p+1;q<n;q++)off+=A[p][q]*A[p][q];
+    if(off<1e-20)break;
+    for(let p=0;p<n;p++)for(let q=p+1;q<n;q++){
+      if(Math.abs(A[p][q])<1e-15)continue;
+      const th=0.5*Math.atan2(2*A[p][q],A[q][q]-A[p][p]),c=Math.cos(th),s=Math.sin(th);
+      for(let k=0;k<n;k++){const akp=A[k][p],akq=A[k][q];A[k][p]=c*akp-s*akq;A[k][q]=s*akp+c*akq;}
+      for(let k=0;k<n;k++){const apk=A[p][k],aqk=A[q][k];A[p][k]=c*apk-s*aqk;A[q][k]=s*apk+c*aqk;}
+      for(let k=0;k<n;k++){const vkp=V[k][p],vkq=V[k][q];V[k][p]=c*vkp-s*vkq;V[k][q]=s*vkp+c*vkq;}
+    }
+  }
+  return {vals:A.map((r,i)=>r[i]),vecs:V};
+}
+function mds(M){
+  const n=GAMES.length,D2=M.map((r,a)=>r.map((c,b)=>a===b?0:(1-c.j)**2));
+  const rm=D2.map(r=>r.reduce((s,x)=>s+x,0)/n),gm=rm.reduce((s,x)=>s+x,0)/n;
+  const B=D2.map((r,a)=>r.map((x,b)=>-0.5*(x-rm[a]-rm[b]+gm)));
+  const {vals,vecs}=jacobi(B),ord=vals.map((v,i)=>i).sort((x,y)=>vals[y]-vals[x]);
+  const P=GAMES.map((g,a)=>[0,1].map(k=>{const e=ord[k];return vecs[a][e]*Math.sqrt(Math.max(0,vals[e]));}));
+  // orientation: Rogue upper-left (x<0, y>0 in math coords)
+  [0,1].forEach(k=>{const ref=P[ROGUE][k],want=k===0?-1:1;
+    if(Math.abs(ref)>1e-6&&ref*want<0)P.forEach(p=>p[k]=-p[k]);});
+  return P;
+}
+
+// ---------- formatting ----------
+function dec(v){if(v<EPS)return '0';if(v>1-EPS)return '1';const r3=Math.round(v*1000);
+  if(Math.abs(v*1000-r3)<1e-6&&r3%10!==0)return (r3/1000).toFixed(3);return v.toFixed(2);}
+const two=v=>(Math.round(v*100+1e-9)/100).toFixed(2);
+const frac=c=>`${c.i}/${c.u} = ${dec(c.j)}`;
+const names=l=>l.map(b=>GAMES[b].name).join(' and ');
+
+// ---------- map rendering ----------
+let W=420,H=330;
+function sizeMap(){const w=$('map').getBoundingClientRect().width||420;W=Math.round(Math.max(300,Math.min(420,w)));H=Math.round(W*0.8);$('map').setAttribute('viewBox',`0 0 ${W} ${H}`);}
+let cur=null,anim=null;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+function toScreen(P){
+  const mx=Math.max(1e-6,...P.map(p=>Math.abs(p[0]))),my=Math.max(1e-6,...P.map(p=>Math.abs(p[1])));
+  const s=Math.min((W/2-46)/mx,(H/2-26)/my,420);
+  return P.map(p=>[W/2+p[0]*s,H/2-p[1]*s]);
+}
+function colourOf(C){
+  const col=Array(GAMES.length).fill(null);let k=0;
+  if(S.chains) C.forEach(g=>{if(g.length>1){const c=PAL[k++%PAL.length];g.forEach(a=>col[a]=c);}});
+  return col;
+}
+let view={};
+function placeLabels(pos,R){
+  // greedy: try below, above, right, left; pick the box that hits the fewest nodes and earlier labels
+  const boxes=[],out=[];
+  const hit=(b,c)=>!(b.x2<c.x1||c.x2<b.x1||b.y2<c.y1||c.y2<b.y1);
+  GAMES.forEach((g,a)=>{const [x,y]=pos[a],w=g.name.length*6.9,h=13;
+    const cand=[[x-w/2,y+R+3],[x-w/2,y-R-3-h],[x+R+4,y-h/2],[x-R-4-w,y-h/2]];
+    let best=null,bc=1e9;
+    cand.forEach(([bx,by],i)=>{bx=Math.max(2,Math.min(W-2-w,bx));by=Math.max(2,Math.min(H-2-h,by));
+      const b={x1:bx,y1:by,x2:bx+w,y2:by+h};let cost=i*0.1;
+      pos.forEach((p,k)=>{if(hit(b,{x1:p[0]-R,y1:p[1]-R,x2:p[0]+R,y2:p[1]+R}))cost+=k===a?5:3;});
+      boxes.forEach(o=>{if(hit(b,o))cost+=4;});
+      if(cost<bc){bc=cost;best=b;}});
+    boxes.push(best);out[a]={x:best.x1,y:best.y1+h-2};});
+  return out;
+}
+function drawMap(pos){
+  const {M,NN,col}=view,svg=$('map'),R=W<400?10:13;
+  let h=`<defs><marker id="ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/></marker></defs><g>`;
+  const n=GAMES.length;
+  for(let a=0;a<n;a++)for(let b=a+1;b<n;b++){ if(M[a][b].j<S.t-EPS)continue;
+    const [x1,y1]=pos[a],[x2,y2]=pos[b];
+    h+=`<line class="edge" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  }
+  NN.forEach((nn,a)=>nn.list.forEach(b=>{
+    const [x1,y1]=pos[a],[x2,y2]=pos[b],dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
+    if(L<1)return;
+    // close pairs: leave each circle at an angle and bow the arrow out, so both directions stay visible
+    const close=L<2*R+30,th=close?1.1:0,co=Math.cos(th),si=Math.sin(th),ux=dx/L,uy=dy/L;
+    const sx=x1+(ux*co-uy*si)*(R+3),sy=y1+(ux*si+uy*co)*(R+3);
+    const ex=x2+(-ux*co-uy*si)*(R+5),ey=y2+(ux*si-uy*co)*(R+5);
+    const off=close?R+10:Math.min(14,L*.12),cx=(x1+x2)/2-uy*off,cy=(y1+y2)/2+ux*off;
+    h+=`<path class="nn" d="M${sx.toFixed(1)},${sy.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}" marker-end="url(#ah)"/>`;
+  }));
+  for(let a=0;a<n;a++)for(let b=a+1;b<n;b++){ if(M[a][b].j<S.t-EPS)continue;
+    const [x1,y1]=pos[a],[x2,y2]=pos[b];
+    const L=Math.hypot(x2-x1,y2-y1)||1,o=L<80?18:0,lx=(x1+x2)/2+(y1-y2)/L*o,ly=(y1+y2)/2+(x2-x1)/L*o;
+    h+=`<text class="elabel" x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" text-anchor="middle">${two(M[a][b].j)}</text>`;
+  }
+  h+='</g>';
+  const placed=[],lab=placeLabels(pos,R,placed);
+  GAMES.forEach((g,a)=>{const [x,y]=pos[a],c=col[a],l=lab[a];
+    h+=`<g class="node" data-g="${a}"><circle cx="${x}" cy="${y}" r="${R}" style="fill:${c||'var(--paper)'}"/><text x="${l.x.toFixed(1)}" y="${l.y.toFixed(1)}" text-anchor="start">${g.name}</text></g>`;
+  });
+  svg.innerHTML=h;
+  svg.querySelectorAll('.node').forEach(el=>{const a=+el.dataset.g;
+    el.addEventListener('mouseenter',()=>hi(a,true));el.addEventListener('mouseleave',()=>hi(a,false));});
+}
+function animateTo(target){
+  if(anim)cancelAnimationFrame(anim);
+  if(!cur||reduce.matches){cur=target;drawMap(cur);return;}
+  const from=cur.map(p=>p.slice()),t0=performance.now();
+  const step=now=>{const k=Math.min(1,(now-t0)/300),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    cur=from.map((p,i)=>[p[0]+(target[i][0]-p[0])*e,p[1]+(target[i][1]-p[1])*e]);drawMap(cur);
+    if(k<1)anim=requestAnimationFrame(step);};
+  anim=requestAnimationFrame(step);
+}
+function hi(a,on){
+  document.querySelectorAll(`.gchip[data-g="${a}"]`).forEach(e=>e.classList.toggle('hi',on));
+  document.querySelectorAll(`#map .node[data-g="${a}"]`).forEach(e=>e.classList.toggle('hi',on));
+}
+
+// ---------- shelf ----------
+function buildShelf(){
+  $('shelf').innerHTML=SHELVES.map((s,i)=>`<div class="bin"><h3>${s}</h3><div class="chips">${
+    GAMES.map((g,a)=>g.shelf===i?`<button type="button" class="gchip" data-g="${a}"><span class="dot"></span>${g.name}</button>`:'').join('')}</div></div>`).join('');
+  document.querySelectorAll('.gchip').forEach(el=>{const a=+el.dataset.g;
+    ['mouseenter','focus'].forEach(ev=>el.addEventListener(ev,()=>hi(a,true)));
+    ['mouseleave','blur'].forEach(ev=>el.addEventListener(ev,()=>hi(a,false)));});
+}
+
+// ---------- grid ----------
+let focusRC=[0,0];
+function buildGrid(){
+  const cols=S.cols;
+  let h='<thead><tr><th scope="col">Game</th>'+cols.map(c=>`<th scope="col" class="${S.inc[c]?'':'off'}"><label title="${COLNAMES[c]}"><abbr title="${COLNAMES[c]}">${c}</abbr><input type="checkbox" data-inc="${c}" ${S.inc[c]?'checked':''} aria-label="Include column ${c}, ${COLNAMES[c]}"></label></th>`).join('')+'<th scope="col">Size</th></tr>';
+  h+=`<tr id="wrow" ${S.useW?'':'hidden'}><th scope="row">Weight</th>`+cols.map(c=>`<td class="${S.inc[c]?'':'off'}"><input type="number" min="0" max="5" step="1" value="${S.w[c]}" data-w="${c}" aria-label="Weight of column ${c}"></td>`).join('')+'<td></td></tr></thead><tbody>';
+  GAMES.forEach((g,r)=>{
+    const size=cols.filter(c=>S.inc[c]&&S.has[r][c]).length;
+    h+=`<tr><th scope="row">${g.name}</th>`+cols.map((c,ci)=>{const on=S.has[r][c],tab=(focusRC[0]===r&&focusRC[1]===ci)?0:-1;
+      return `<td class="${S.inc[c]?'':'off'}"><button type="button" class="cell" data-r="${r}" data-c="${ci}" aria-pressed="${on}" tabindex="${tab}" aria-label="${g.name}, ${COLNAMES[c]}">${on?'&#10003;':''}</button></td>`;}).join('')+`<td>${size}</td></tr>`;
+  });
+  $('mech').innerHTML=h+'</tbody>';
+  $('mlegend').innerHTML=cols.map(c=>`<li><b>${c}</b>${COLNAMES[c]}</li>`).join('');
+}
+$('mech').addEventListener('click',e=>{const b=e.target.closest('.cell');if(!b)return;
+  const r=+b.dataset.r,ci=+b.dataset.c,c=S.cols[ci];S.has[r][c]=!S.has[r][c];focusRC=[r,ci];custom();refresh(true,[r,ci]);});
+$('mech').addEventListener('keydown',e=>{const b=e.target.closest('.cell');if(!b)return;
+  let r=+b.dataset.r,c=+b.dataset.c;const nr=GAMES.length,nc=S.cols.length;
+  const k={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[e.key];
+  if(k){e.preventDefault();r=(r+k[0]+nr)%nr;c=(c+k[1]+nc)%nc;}
+  else if(e.key==='Home'){e.preventDefault();c=0;} else if(e.key==='End'){e.preventDefault();c=nc-1;} else return;
+  focusCell(r,c);
+});
+function focusCell(r,c){focusRC=[r,c];document.querySelectorAll('.cell').forEach(x=>x.tabIndex=-1);
+  const t=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);if(t){t.tabIndex=0;t.focus();}}
+$('mech').addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.inc){S.inc[t.dataset.inc]=t.checked;custom();refresh(true,null,t.dataset.inc);}
+  if(t.dataset.w){let v=Math.round(+t.value);if(!isFinite(v))v=1;v=Math.max(0,Math.min(5,v));t.value=v;S.w[t.dataset.w]=v;custom();refresh(false);}});
+$('mech').addEventListener('input',e=>{const t=e.target;if(t.dataset.w&&t.value!==''){let v=Math.max(0,Math.min(5,Math.round(+t.value)));if(isFinite(v)){S.w[t.dataset.w]=v;refresh(false);}}});
+
+// ---------- readout ----------
+function renderNumbers(M,NN,C,col){
+  const n=GAMES.length;
+  let h='<thead><tr><th scope="col"></th>'+GAMES.map((g,b)=>`<th scope="col">${g.name}</th>`).join('')+'</tr></thead><tbody>';
+  for(let a=0;a<n;a++){
+    h+=`<tr class="${a===STS?'sts':''}"><th scope="row">${GAMES[a].name}</th>`;
+    for(let b=0;b<n;b++){
+      if(b<a)h+='<td></td>';
+      else if(b===a)h+='<td class="diag">1</td>';
+      else{const on=M[a][b].j>=S.t-EPS;h+=`<td class="${b===STS?'sts ':''}${on?'edge-on':''}">${frac(M[a][b])}</td>`;}
+    }
+    h+='</tr>';
+  }
+  $('sim').innerHTML=h+'</tbody>';
+  $('nnT').innerHTML='<thead><tr><th scope="col">Game</th><th scope="col">Nearest neighbour</th><th scope="col" class="n">J</th></tr></thead><tbody>'+
+    NN.map((nn,a)=>`<tr class="${a===STS?'sts':''}"><td>${GAMES[a].name}</td><td>${nn.list.length?names(nn.list)+(nn.list.length>1?' (tie)':''):'none (shares nothing)'}</td><td class="n">${dec(nn.j)}</td></tr>`).join('')+'</tbody>';
+  const core=CORE.filter(c=>S.cols.includes(c)&&S.inc[c]);
+  $('coreT').innerHTML='<thead><tr><th scope="col">Game</th><th scope="col" class="n">Roguelike core score</th></tr></thead><tbody>'+
+    GAMES.map((g,a)=>`<tr class="${a===STS?'sts':''}"><td>${g.name}</td><td class="n">${core.filter(c=>S.has[a][c]).length}/${core.length}</td></tr>`).join('')+'</tbody>';
+}
+function renderClusters(M,C,col){
+  if(!S.chains){
+    const L=[];for(let a=0;a<GAMES.length;a++)for(let b=a+1;b<GAMES.length;b++)if(M[a][b].j>=S.t-EPS)L.push(`<span>${GAMES[a].name} + ${GAMES[b].name} ${dec(M[a][b].j)}</span>`);
+    $('clist').innerHTML='Direct links only: '+(L.length?L.join(''):'none at this threshold');return;
+  }
+  $('clist').innerHTML='Clusters: '+C.map(g=>`<span style="--c:${g.length>1?col[g[0]]:'var(--grid)'}">{${g.map(a=>GAMES[a].name).join(', ')}}</span>`).join('');
+}
+function renderInsight(M,NN){
+  const nn=NN[STS],jr=M[STS][ROGUE];
+  let s=`Shelf: Slay the Spire sits under "Roguelike / roguelite". Map: its nearest neighbour is `;
+  s+=nn.list.length?`<b>${names(nn.list)}</b> at J = ${dec(nn.j)}`:'<b>nobody</b> (it shares no included mechanic)';
+  if(!nn.list.includes(ROGUE))s+=`, while Rogue is at ${dec(jr.j)}.`;
+  else s+=nn.list.length>1?'.':`. Dominion is at ${dec(M[STS][4].j)}.`;
+  s+=' The shelf did not move.';
+  $('insight').innerHTML=s;
+}
+
+// ---------- refresh ----------
+function refresh(rebuild,focus,incCol){
+  if(rebuild)buildGrid();
+  if(focus)focusCell(focus[0],focus[1]);
+  if(incCol){const el=document.querySelector(`[data-inc="${incCol}"]`);if(el)el.focus();}
+  const M=matrix(),NN=neighbours(M),C=clusters(M,S.t),col=colourOf(C);
+  view={M,NN,col};
+  document.querySelectorAll('.gchip').forEach(el=>{const a=+el.dataset.g;el.style.setProperty('--c',col[a]||'transparent');});
+  renderClusters(M,C,col);renderNumbers(M,NN,C,col);renderInsight(M,NN);
+  sizeMap();animateTo(toScreen(mds(M)));
+  const nnS=NN[STS];
+  $('map').setAttribute('aria-label',`Mechanic map at threshold ${S.t.toFixed(2)}. Slay the Spire's nearest neighbour: ${nnS.list.length?names(nnS.list):'none'}.`);
+  $('oThr').textContent=S.t.toFixed(2);$('thr').value=S.t;
+  $('useW').checked=S.useW;$('chains').checked=S.chains;
+  document.querySelectorAll('.presets .chip[data-p]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===S.preset));
+  $('pnote').textContent=S.preset?NOTES[S.preset]:'Custom grid. Press a preset or Reset to return to the lecture table.';
+}
+function custom(){S.preset=null;}
+function applyPreset(p){
+  const keep={t:S.t,chains:S.chains};S=fresh();S.t=keep.t;S.chains=keep.chains;S.preset=p;
+  if(p==='dropD')S.inc.D=false;
+  if(p==='dropU')S.inc.U=false;
+  if(p==='mvw'){S.useW=true;S.w.G=5;}
+  if(p==='hub'){S.cols.push('H');S.inc.H=true;S.w.H=1;S.has.forEach((o,a)=>o.H=GAMES[a].id==='hades');}
+  focusRC=[0,0];refresh(true);
+}
+document.querySelectorAll('.presets .chip[data-p]').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.p)));
+$('reset').addEventListener('click',()=>{S=fresh();focusRC=[0,0];refresh(true);});
+$('thr').addEventListener('input',e=>{S.t=+e.target.value;refresh(false);});
+$('useW').addEventListener('change',e=>{S.useW=e.target.checked;custom();$('wrow').hidden=!S.useW;refresh(false);});
+$('chains').addEventListener('change',e=>{S.chains=e.target.checked;refresh(false);});
+
+S=fresh();buildShelf();refresh(true);
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{cur=null;refresh(false);},120);});
+// test hook for automated checks
+window.__GD101w13={get:()=>{const M=matrix();return {M:M.map(r=>r.map(c=>c.j)),NN:neighbours(M).map(x=>x.list),C:clusters(M,S.t)};},
+  set:f=>{f(S);refresh(true);},preset:applyPreset,reset:()=>{S=fresh();refresh(true);}};
+})();
+</script>
+</body>
+</html>

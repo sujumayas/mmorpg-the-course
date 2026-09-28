@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dice vs deck · GD101 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;min-width:0}
+.stack{display:grid;gap:14px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:240px}
+#cHist{height:260px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.86rem;margin:8px 0 0}
+.sw{display:inline-block;width:16px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:2px}
+.sw.dice{background:var(--blood)}
+.sw.deck{border:1.5px solid var(--steel);background:repeating-linear-gradient(135deg,var(--steel) 0 2px,transparent 2px 5px)}
+.sw.tick{height:0;border-top:2.5px solid var(--ink);width:18px;vertical-align:4px;border-radius:0}
+.sw.prod{background:color-mix(in srgb,var(--ochre) 38%,var(--paper));border:1.5px solid var(--ochre)}
+.sw.dryk{height:0;border-top:3px solid var(--ink);vertical-align:3px;border-radius:0}
+.sw.shufk{width:4px;background:var(--steel);border-radius:0}
+.insight{padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);margin:0}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:620px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.tabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+.tab{font:600 .9rem var(--sans);padding:7px 13px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+aside h2,.panel h2{font-family:var(--serif);font-size:1.15rem;font-weight:600;margin:0 0 10px}
+.ctl{margin-bottom:16px}
+.ctl:last-child{margin-bottom:0}
+.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-bottom:4px}
+.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:2px 0 0}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.targets{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.chip{font:600 .9rem var(--sans);padding:7px 0;min-height:36px;border-radius:8px;border:1.5px solid var(--ochre);background:transparent;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--ochre);color:var(--paper)}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{color:#172031}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#172031}}
+.seg{display:flex;gap:5px}
+.seg .chip{flex:1;border-color:var(--steel)}
+.seg .chip[aria-pressed="true"]{background:var(--steel)}
+.stepper{display:flex;gap:6px;align-items:center}
+.stepper button{font:700 1.1rem var(--sans);width:40px;height:38px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.stepper input{width:80px;height:38px;font:600 1rem var(--sans);text-align:center;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.btn{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.84rem;color:var(--ink-soft)}
+td.dice{color:var(--blood);font-weight:600}
+td.deck{color:var(--steel);font-weight:600}
+.strip-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.row{margin-top:12px}
+.row p{margin:0 0 6px;font-size:.9rem}
+.row p b{font-variant-numeric:tabular-nums}
+.cells{display:flex;flex-wrap:wrap;gap:3px}
+.cell{position:relative;width:26px;height:28px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-variant-numeric:tabular-nums;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--grid);border-radius:4px}
+.cell.prod{background:color-mix(in srgb,var(--ochre) 38%,var(--paper));border:1.5px solid var(--ochre);color:var(--ink);font-weight:700}
+.cell.shuf{box-shadow:-4px 0 0 -1px var(--steel)}
+.cell.dry::after{content:"";position:absolute;left:-1px;right:-5px;bottom:-5px;height:3px;background:var(--ink)}
+.cell.dry.dry-end::after{right:-1px}
+.cell.dry.dry-start::before{content:"";position:absolute;left:-1px;bottom:-5px;width:3px;height:10px;background:var(--ink)}
+.cell.dry.dry-end:not(.dry-start)::before{content:"";position:absolute;right:-1px;bottom:-5px;width:3px;height:10px;background:var(--ink)}
+.cell.dry.dry-start.dry-end::before{box-shadow:23px 0 0 var(--ink)}
+.exact{margin-top:12px;font-size:.92rem}
+details{margin-top:12px;font-size:.9rem}
+summary{cursor:pointer;font-weight:600}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD101 Introduction to Game Design · Week 6 · Worked example</p>
+  <h1>Same odds, different games</h1>
+  <p class="lede">Two dice and a 36-card deck built with the same odds. Draw by draw you cannot tell them apart. Count a player's good turns over a whole game and the deck squeezes the luck out.</p>
+</header>
+
+<div class="layout">
+<div class="stack">
+  <p class="insight" id="insight" aria-live="polite"></p>
+
+  <section class="panel stack" aria-label="Charts">
+    <figure>
+      <figcaption>Every draw: how often each sum comes up<small>Share of all <span id="nDraws">120,000</span> draws. The black ticks are the exact odds, ways out of 36.</small></figcaption>
+      <canvas id="cFreq" role="img" aria-label="Per-draw frequency of sums 2 to 12 for dice and deck. Both match the exact odds."></canvas>
+      <div class="legend"><span><i class="sw dice"></i>Two dice</span><span><i class="sw deck"></i>36-card deck</span><span><i class="sw tick"></i>Exact odds, ways/36</span></div>
+      <details>
+        <summary>Exact per-draw numbers</summary>
+        <div class="table-wrap"><table aria-label="Per-draw frequency by sum"><thead><tr><th>Sum</th><th>Ways/36</th><th>Dice</th><th>Deck</th></tr></thead><tbody id="freqBody"></tbody></table></div>
+      </details>
+    </figure>
+
+    <figure>
+      <div class="tabs" role="tablist" aria-label="Per-game measure">
+        <button class="tab" role="tab" id="tProd" aria-selected="true" aria-controls="histFig">Production turns</button>
+        <button class="tab" role="tab" id="tDry" aria-selected="false" aria-controls="histFig" tabindex="-1">Longest dry spell</button>
+      </div>
+      <div id="histFig" role="tabpanel" aria-labelledby="tProd">
+        <figcaption id="histCap">Every game: how many turns produced<small id="histSub"></small></figcaption>
+        <canvas id="cHist" role="img" aria-label="Histogram of games for dice and deck"></canvas>
+        <div class="legend"><span><i class="sw dice"></i>Two dice</span><span><i class="sw deck"></i>36-card deck</span><span>&#9650; the seed shown below</span></div>
+      </div>
+    </figure>
+
+    <div class="readout" aria-live="polite">
+      <div class="stat" style="--c:var(--blood)"><b id="rDiceSd">—</b><span>dice spread (SD)</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rDeckSd">—</b><span>deck spread (SD)</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rDiceMid">—</b><span>dice middle 90%</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rDeckMid">—</b><span>deck middle 90%</span></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="numH">
+    <h2 id="numH">Numbers</h2>
+    <div class="table-wrap">
+      <table aria-describedby="numH">
+        <thead><tr><th>Per game, <span id="gLabel">2,000</span> games</th><th>Dice</th><th>Deck</th></tr></thead>
+        <tbody id="numBody"></tbody>
+      </table>
+    </div>
+    <div class="exact">
+      <div class="table-wrap">
+        <table aria-label="Exact drought chances">
+          <thead><tr><th>Exact chance, <span id="kLabel">k = 10</span></th><th>Dice</th><th>Fresh deck</th></tr></thead>
+          <tbody id="exactBody"></tbody>
+        </table>
+      </div>
+      <p class="hint">Dice multiply (1 − k/36) each turn. The deck multiplies (36 − k − i)/(36 − i), so every miss makes the next hit more likely. k is the number of cards in the target set.</p>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="oneH">
+    <div class="strip-head">
+      <div><h2 id="oneH" style="margin:0">One game, seed <span id="seedLabel">1</span></h2><p class="hint" id="playHint" style="margin:0">Each press plays the next seed.</p></div>
+      <button class="btn" id="play" aria-describedby="playHint">Play one game</button>
+    </div>
+    <div class="legend" style="margin:0"><span><i class="sw prod"></i>Target number, player produces</span><span><i class="sw dryk"></i>Longest dry spell</span><span><i class="sw shufk"></i>Deck reshuffled</span></div>
+    <div class="row"><p><span style="color:var(--blood);font-weight:700">Dice</span> <span id="diceSum"></span></p><div class="cells" id="diceCells" role="list" aria-label="Dice results, one cell per turn"></div></div>
+    <div class="row"><p><span style="color:var(--steel);font-weight:700">Deck</span> <span id="deckSum"></span></p><div class="cells" id="deckCells" role="list" aria-label="Deck results, one cell per turn"></div></div>
+  </section>
+</div>
+
+<aside class="panel" aria-labelledby="ctlH">
+  <h2 id="ctlH">Controls</h2>
+  <div class="ctl">
+    <div class="lbl" id="tgtLbl">Target numbers <output id="oK">k = 10 of 36</output></div>
+    <div class="targets" role="group" aria-labelledby="tgtLbl" id="targets"></div>
+    <p class="hint">The sums that pay this player, like a settlement next to a 6 and an 8.</p>
+  </div>
+  <div class="ctl">
+    <label class="lbl" for="T">Game length <output id="oT">60 turns</output></label>
+    <input id="T" type="range" min="10" max="120" step="1" value="60">
+  </div>
+  <div class="ctl">
+    <label class="lbl" for="h">Cards left under the New Year card <output id="oH">5</output></label>
+    <input id="h" type="range" min="0" max="10" step="1" value="5">
+    <p class="hint" id="hHint">The deck reshuffles after 31 draws, so 5 cards go unseen each time.</p>
+  </div>
+  <div class="ctl">
+    <div class="lbl" id="gLbl">Games simulated</div>
+    <div class="seg" role="group" aria-labelledby="gLbl">
+      <button class="chip" data-g="500" aria-pressed="false">500</button>
+      <button class="chip" data-g="2000" aria-pressed="true">2,000</button>
+      <button class="chip" data-g="5000" aria-pressed="false">5,000</button>
+    </div>
+  </div>
+  <div class="ctl">
+    <label class="lbl" for="seed">Seed for one game</label>
+    <div class="stepper">
+      <button id="seedDown" aria-label="Previous seed">&minus;</button>
+      <input id="seed" type="number" min="1" max="99999" step="1" value="1" inputmode="numeric">
+      <button id="seedUp" aria-label="Next seed">+</button>
+    </div>
+    <p class="hint">Game s uses mulberry32(s), once for the dice and once for the deck.</p>
+  </div>
+</aside>
+</div>
+
+<footer>Model from the week 6 lecture. Dice roll two d6 per turn. The deck holds one card per way to roll each sum, is shuffled with Fisher-Yates and reshuffles when h cards remain. Games are seeded 1 to G with mulberry32, so every number here is reproducible. The deck follows the Catan Event Cards variant (Traders &amp; Barbarians rulebook, 2025 printing). The cards per sum are this course's model, since the rulebook does not list them. No game art is used.</footer>
+</main>
+
+<script>
+(function(){
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const WAYS=[0,0,1,2,3,4,5,6,5,4,3,2,1];
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f2=n=>n.toFixed(2);
+const pct1=n=>(n*100).toFixed(1)+'%';
+
+let targets=new Set([6,8]),T=60,H=5,G=2000,seed=1,view='prod';
+let sim=null;
+
+function diceGame(s,T){const r=mulberry32(s),o=new Int8Array(T);for(let t=0;t<T;t++){const a=1+Math.floor(r()*6),b=1+Math.floor(r()*6);o[t]=a+b;}return {seq:o,shuf:[]};}
+function newDeck(r){const d=[];for(let v=2;v<=12;v++)for(let k=0;k<WAYS[v];k++)d.push(v);
+  for(let i=35;i>=1;i--){const j=Math.floor(r()*(i+1));const x=d[i];d[i]=d[j];d[j]=x;}return d;}
+function deckGame(s,T,h){const r=mulberry32(s),o=new Int8Array(T),shuf=[];let d=null,p=0;const lim=36-h;
+  for(let t=0;t<T;t++){if(d===null||p>=lim){d=newDeck(r);p=0;if(t>0)shuf.push(t);}o[t]=d[p++];}return {seq:o,shuf};}
+function score(seq,tg){let c=0,run=0,best=0,bs=-1,cs=0;
+  for(let i=0;i<seq.length;i++){if(tg.has(seq[i])){c++;run=0;}else{if(run===0)cs=i;run++;if(run>best){best=run;bs=cs;}}}
+  return {prod:c,dry:best,dryStart:bs};}
+function summarize(arr){const n=arr.length,m=arr.reduce((a,b)=>a+b,0)/n;let v=0;for(const x of arr)v+=(x-m)*(x-m);
+  const s=Array.from(arr).sort((a,b)=>a-b);
+  return {mean:m,sd:Math.sqrt(v/n),p5:s[Math.floor(.05*n)],p95:s[Math.floor(.95*n)],min:s[0],max:s[n-1]};}
+
+function simulate(){
+  const out={dice:{prod:new Int16Array(G),dry:new Int16Array(G),freq:new Array(13).fill(0)},deck:{prod:new Int16Array(G),dry:new Int16Array(G),freq:new Array(13).fill(0)}};
+  for(let s=1;s<=G;s++){
+    for(const [key,g] of [['dice',diceGame(s,T)],['deck',deckGame(s,T,H)]]){
+      const o=out[key];for(let t=0;t<T;t++)o.freq[g.seq[t]]++;
+      const sc=score(g.seq,targets);o.prod[s-1]=sc.prod;o.dry[s-1]=sc.dry;
+    }
+  }
+  for(const key of ['dice','deck']){out[key].P=summarize(out[key].prod);out[key].D=summarize(out[key].dry);}
+  return out;
+}
+function kOf(){let k=0;targets.forEach(v=>k+=WAYS[v]);return k;}
+function exact(k,n){let d=Math.pow(1-k/36,n),q=1;for(let i=0;i<n;i++)q*=Math.max(0,36-k-i)/(36-i);return [d,q];}
+
+/* ---------- canvas ---------- */
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function hatch(g,color){const p=document.createElement('canvas');p.width=p.height=6;const q=p.getContext('2d');
+  q.strokeStyle=color;q.lineWidth=1.6;q.beginPath();q.moveTo(-1,7);q.lineTo(7,-1);q.moveTo(-1,1);q.lineTo(1,-1);q.moveTo(5,7);q.lineTo(7,5);q.stroke();
+  return g.createPattern(p,'repeat');}
+function yAxis(g,w,h,pad,yMax,n,fmtY){
+  g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=n;i++){const y=pad.t+(h-pad.t-pad.b)*(1-i/n);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(fmtY(yMax*i/n),pad.l-6,y);}
+}
+function bars(g,x,y,bw,bh,kind,base){
+  if(bh<=0)return;
+  if(kind==='dice'){g.fillStyle=css('--blood');g.fillRect(x,y,bw,bh);}
+  else{g.fillStyle=hatch(g,css('--steel'));g.fillRect(x,y,bw,bh);g.strokeStyle=css('--steel');g.lineWidth=1.3;g.strokeRect(x+.65,y+.65,Math.max(0,bw-1.3),Math.max(0,bh-1.3));}
+}
+function drawFreq(){
+  const c=setup($('cFreq')),g=c.g,w=c.w,h=c.h,pad={l:46,r:8,t:10,b:30};
+  g.clearRect(0,0,w,h);
+  const tot=G*T,yMax=.2;
+  yAxis(g,w,h,pad,yMax,4,v=>Math.round(v*100)+'%');
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,gw=pw/11;
+  for(let v=2;v<=12;v++){
+    const x0=pad.l+gw*(v-2),bw=gw*.36;
+    const yd=sim.dice.freq[v]/tot,yk=sim.deck.freq[v]/tot;
+    bars(g,x0+gw*.12,pad.t+ph*(1-yd/yMax),bw,ph*yd/yMax,'dice');
+    bars(g,x0+gw*.52,pad.t+ph*(1-yk/yMax),bw,ph*yk/yMax,'deck');
+    const ye=pad.t+ph*(1-WAYS[v]/36/yMax);
+    g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();g.moveTo(x0+gw*.05,ye);g.lineTo(x0+gw*.95,ye);g.stroke();
+    g.fillStyle=targets.has(v)?css('--ink'):css('--ink-soft');g.font=(targets.has(v)?'700 ':'')+'12px '+css('--sans');
+    g.textAlign='center';g.textBaseline='top';g.fillText(String(v),x0+gw/2,h-pad.b+6);
+  }
+}
+function drawHist(){
+  const c=setup($('cHist')),g=c.g,w=c.w,h=c.h,pad={l:46,r:8,t:14,b:34};
+  g.clearRect(0,0,w,h);
+  const key=view==='prod'?'prod':'dry';
+  const a=sim.dice[key],b=sim.deck[key];
+  let lo=Infinity,hi=-Infinity;for(const x of a){lo=Math.min(lo,x);hi=Math.max(hi,x);}for(const x of b){lo=Math.min(lo,x);hi=Math.max(hi,x);}
+  const one=oneGame();const mk=[one.dice[key],one.deck[key]];lo=Math.min(lo,...mk);hi=Math.max(hi,...mk);
+  lo=Math.max(0,lo-1);hi=hi+1;const n=hi-lo+1;
+  const ca=new Array(n).fill(0),cb=new Array(n).fill(0);for(const x of a)ca[x-lo]++;for(const x of b)cb[x-lo]++;
+  const mx=Math.max(...ca,...cb)/G*1.05,st=[.01,.02,.025,.05,.1,.2].find(x=>mx/x<=5)||.2,nT=Math.max(1,Math.ceil(mx/st)),yMax=st*nT;
+  yAxis(g,w,h,pad,yMax,nT,v=>(Math.round(v*1000)/10)+'%');
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,bw=pw/n;
+  for(let i=0;i<n;i++){const x0=pad.l+bw*i;
+    bars(g,x0+bw*.08,pad.t+ph*(1-ca[i]/G/yMax),bw*.42,ph*ca[i]/G/yMax,'dice');
+    bars(g,x0+bw*.5,pad.t+ph*(1-cb[i]/G/yMax),bw*.42,ph*cb[i]/G/yMax,'deck');}
+  const step=[1,2,5,10,20,25,50].find(s=>n/s<=Math.max(5,Math.floor(pw/42)))||50;
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)g.fillText(String(v),pad.l+bw*(v-lo+.5),h-pad.b+14);
+  g.textAlign='right';g.fillText(view==='prod'?'turns that produced':'turns in a row with nothing',w-pad.r,2);
+  [['--blood',mk[0],.29],['--steel',mk[1],.71]].forEach(([col,v,off])=>{const x=pad.l+bw*(v-lo+off),y=h-pad.b+1;
+    g.fillStyle=css(col);g.beginPath();g.moveTo(x,y);g.lineTo(x-5,y+10);g.lineTo(x+5,y+10);g.closePath();g.fill();});
+}
+
+/* ---------- one game ---------- */
+let oneCache=null;
+function oneGame(){
+  const k=[seed,T,H,[...targets].join()].join('|');
+  if(oneCache&&oneCache.k===k)return oneCache;
+  const dg=diceGame(seed,T),kg=deckGame(seed,T,H);
+  oneCache={k,dg,kg,dice:score(dg.seq,targets),deck:score(kg.seq,targets)};return oneCache;
+}
+function renderStrip(){
+  const o=oneGame();$('seedLabel').textContent=fmt(seed);
+  [['dice',o.dg,o.dice],['deck',o.kg,o.deck]].forEach(([key,g,sc])=>{
+    const box=$(key+'Cells');const frag=document.createDocumentFragment();const sh=new Set(g.shuf);
+    for(let t=0;t<g.seq.length;t++){const v=g.seq[t],d=document.createElement('span');d.setAttribute('role','listitem');
+      d.className='cell'+(targets.has(v)?' prod':'')+(sh.has(t)?' shuf':'');
+      if(sc.dry>0&&t>=sc.dryStart&&t<sc.dryStart+sc.dry){d.classList.add('dry');if(t===sc.dryStart)d.classList.add('dry-start');if(t===sc.dryStart+sc.dry-1)d.classList.add('dry-end');}
+      d.textContent=v;d.title='Turn '+(t+1)+': '+v+(sh.has(t)?' (after reshuffle)':'');
+      d.setAttribute('aria-label','Turn '+(t+1)+', '+v+(targets.has(v)?', produces':'')+(sh.has(t)?', after reshuffle':''));
+      frag.appendChild(d);}
+    box.replaceChildren(frag);
+    const spell=sc.dry>0?`longest dry spell <b>${sc.dry}</b> (turns ${sc.dryStart+1} to ${sc.dryStart+sc.dry})`:'no dry turns';
+    $(key+'Sum').innerHTML=`<b>${sc.prod}</b> production turns, ${spell}`+(key==='deck'&&g.shuf.length?`, ${g.shuf.length} reshuffle${g.shuf.length>1?'s':''}`:'');
+  });
+}
+
+/* ---------- text and tables ---------- */
+function renderNumbers(){
+  const d=sim.dice,k=sim.deck;
+  $('rDiceSd').textContent=f2(d.P.sd);$('rDeckSd').textContent=f2(k.P.sd);
+  $('rDiceMid').textContent=d.P.p5+' to '+d.P.p95;$('rDeckMid').textContent=k.P.p5+' to '+k.P.p95;
+  $('gLabel').textContent=fmt(G);
+  const rows=[['Production turns, mean',f2(d.P.mean),f2(k.P.mean)],['Standard deviation',f2(d.P.sd),f2(k.P.sd)],
+    ['5th to 95th percentile',d.P.p5+' to '+d.P.p95,k.P.p5+' to '+k.P.p95],['Min and max',d.P.min+' and '+d.P.max,k.P.min+' and '+k.P.max],
+    ['Longest dry spell, mean',f2(d.D.mean),f2(k.D.mean)],['Longest dry spell, 95th percentile',d.D.p95,k.D.p95]];
+  $('numBody').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td class="dice">${r[1]}</td><td class="deck">${r[2]}</td></tr>`).join('');
+  const K=kOf();$('kLabel').textContent='k = '+K;
+  const e10=exact(K,10),e5=exact(K,5);
+  $('exactBody').innerHTML=[['No target in first 5 turns',e5],['No target in first 10 turns',e10]].map(r=>
+    `<tr><td>${r[0]}</td><td class="dice">${r[1][0].toFixed(4)}</td><td class="deck">${r[1][1].toFixed(4)}</td></tr>`).join('');
+  const tot=G*T;$('nDraws').textContent=fmt(tot);
+  $('freqBody').innerHTML=[2,3,4,5,6,7,8,9,10,11,12].map(v=>`<tr><td>${v}</td><td>${(WAYS[v]/36*100).toFixed(2)}%</td><td class="dice">${(sim.dice.freq[v]/tot*100).toFixed(2)}%</td><td class="deck">${(sim.deck.freq[v]/tot*100).toFixed(2)}%</td></tr>`).join('');
+  // insight
+  let gap=0;for(let v=2;v<=12;v++)for(const key of ['dice','deck'])gap=Math.max(gap,Math.abs(sim[key].freq[v]/tot-WAYS[v]/36));
+  const tl=[...targets].sort((a,b)=>a-b).join(' and ');
+  if(!targets.size){$('insight').textContent='Pick at least one target number to count production turns.';}
+  else if(K===36){$('insight').textContent='Every sum is a target, so every turn produces with either randomizer. Drop a few targets to see the difference.';}
+  else{
+    const ratio=d.P.sd/k.P.sd;
+    $('insight').innerHTML=`Per draw the two randomizers match. Every sum lands within ${(gap*100).toFixed(1)} points of its exact odds. Per game they do not. A player on ${tl} over ${T} turns averages ${f2(d.P.mean)} good turns with dice and ${f2(k.P.mean)} with the deck, but the dice spread is <b>${f2(d.P.sd)}</b> against <b>${f2(k.P.sd)}</b>, ${ratio.toFixed(1)} times wider. The unluckiest dice game in ${fmt(G)} produced ${d.P.min} times. The unluckiest deck game produced ${k.P.min}.`;
+  }
+  $('oK').textContent='k = '+K+' of 36';
+}
+function renderHistText(){
+  const prod=view==='prod';
+  $('histCap').firstChild.textContent=prod?'Every game: how many turns produced':'Every game: the longest run of turns with nothing';
+  $('histSub').textContent=`Share of ${fmt(G)} games, seeds 1 to ${fmt(G)}, ${T} turns each.`;
+  $('cHist').setAttribute('aria-label',prod?'Histogram of production turns per game. Dice are spread wide, the deck is a narrow spike.':'Histogram of longest dry spell per game for dice and deck.');
+}
+
+function recompute(){sim=simulate();oneCache=null;renderAll();}
+function renderAll(){renderNumbers();renderHistText();renderStrip();drawAll();}
+function drawAll(){drawFreq();drawHist();}
+
+/* ---------- controls ---------- */
+const tg=$('targets');
+for(let v=2;v<=12;v++){const b=document.createElement('button');b.className='chip';b.textContent=v;b.dataset.v=v;
+  b.setAttribute('aria-pressed',targets.has(v));b.setAttribute('aria-label','Target '+v+', '+WAYS[v]+' of 36');
+  b.addEventListener('click',()=>{targets.has(v)?targets.delete(v):targets.add(v);b.setAttribute('aria-pressed',targets.has(v));recompute();});tg.appendChild(b);}
+$('T').addEventListener('input',e=>{T=+e.target.value;$('oT').textContent=T+' turns';recompute();});
+$('h').addEventListener('input',e=>{H=+e.target.value;$('oH').textContent=H;
+  $('hHint').textContent=`The deck reshuffles after ${36-H} draws, so ${H} card${H===1?'':'s'} go${H===1?'es':''} unseen each time.`;recompute();});
+document.querySelectorAll('.seg .chip').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.seg .chip').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');G=+b.dataset.g;recompute();}));
+function setSeed(s){seed=Math.min(99999,Math.max(1,Math.round(s)||1));$('seed').value=seed;renderStrip();drawHist();}
+$('seedDown').addEventListener('click',()=>setSeed(seed-1));
+$('seedUp').addEventListener('click',()=>setSeed(seed+1));
+$('play').addEventListener('click',()=>setSeed(seed+1));
+$('seed').addEventListener('change',e=>setSeed(+e.target.value));
+const tabs=[$('tProd'),$('tDry')];
+function sel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;});
+  $('histFig').setAttribute('aria-labelledby',t.id);view=t.id==='tProd'?'prod':'dry';if(focus)t.focus();renderHistText();drawHist();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2],true);}});});
+let rz;window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(drawAll);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+recompute();
+window.__GD101w06={mulberry32,diceGame,deckGame,score,get sim(){return sim;}};
+})();
+</script>
+</body>
+</html>

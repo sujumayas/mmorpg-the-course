@@ -8,11 +8,11 @@
 - Run a 30-minute playtest session from a written script, using neutral prompts and a separate observation log.
 - Turn raw observation notes into a findings list ranked by frequency and severity.
 
-**Before class:** Fullerton, *Game Design Workshop* (4th ed.), the chapter on playtesting (read it in full; it is the practical companion to this lecture). Jakob Nielsen, "Why You Only Need to Test with 5 Users" (Nielsen Norman Group, 2000), a short web article. Ken Birdwell, "The Cabal: Valve's Design Process for Creating Half-Life" (Game Developer, 1999), the section on playtesting.
+**Before class:** Fullerton, *Game Design Workshop* (4th ed.), chapter 9, "Playtesting" (read it in full; it is the practical companion to this lecture). Jakob Nielsen, "Why You Only Need to Test with 5 Users" (Nielsen Norman Group, 2000), a short web article. Ken Birdwell, "The Cabal: Valve's Design Process for Creating Half-Life" (Game Developer, 1999), the section on playtesting.
 
-**Prerequisites from earlier courses:** GD101 week 6, paper prototyping, which gives you the prototype you test this week (see the [GD101 syllabus](../syllabus.md)). Exponents and logarithms from [MA101 week 4](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md) and [MA101 week 5](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w05-logarithms-how-many-levels-until.md). No probability course is assumed; the one rule you need is taught here.
+**Prerequisites from earlier courses:** [GD101 week 6, paper prototyping](w06-paper-prototyping-cards-dice-boards.md), which gives you the prototype you test this week. Exponents and logarithms from [MA101 week 4](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md) and [MA101 week 5](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w05-logarithms-how-many-levels-until.md). No probability course is assumed; the one rule you need is taught here.
 
-**Interactive:** `examples/w07-discovery-curve.html` (built from the spec at the end of this lecture). Keep it open during section 2.
+**Interactive:** [Discovery curve](../examples/w07-discovery-curve.html). Keep it open during section 2.
 
 ---
 
@@ -80,6 +80,8 @@ You can also run the formula backwards. How many testers do you need for a 90% c
 n ≥ ln(1 − 0.9) / ln(1 − p)
 ```
 
+You don't need to derive this line. Type the two logarithms into a calculator (the `ln` key), divide, and round up to the next whole tester.
+
 | Problem frequency p | Testers for 90% chance | Testers for 95% chance |
 |---|---|---|
 | 0.31 | 7 (6.21 rounded up) | 9 (8.07) |
@@ -121,7 +123,7 @@ This is the week's core idea in one sentence. **An explanation hides a problem f
 
 ### The visual
 
-Open `examples/w07-discovery-curve.html`. The left chart plots `P(seen)` against the number of testers for each of the eight problems, one curve each. The right chart shows two bars per problem: "in your report" and "at launch." Drag the tester slider and watch the common problems saturate by five testers while the rare ones crawl. Then tick "Explain the onboarding rules." The three onboarding curves on the left drop flat to zero. On the right, their "at launch" bars do not move at all. The report looks cleaner. The game got no better.
+Open [`examples/w07-discovery-curve.html`](../examples/w07-discovery-curve.html). The left chart plots `P(seen)` against the number of testers for each of the eight problems, one curve each. The right chart shows two bars per problem: "in your report" and "at launch." Drag the tester slider and watch the common problems saturate by five testers while the rare ones crawl. Then tick "Explain the onboarding rules." The three onboarding curves on the left drop flat to zero. On the right, their "at launch" bars do not move at all. The report looks cleaner. The game got no better.
 
 ### Cross-game recognition
 
@@ -257,7 +259,7 @@ Work in groups of three with a paper prototype from week 6 (yours or one the ins
 - Nielsen, J. (2000, March 18). "Why You Only Need to Test with 5 Users." Nielsen Norman Group. Source for the formula, the average L of 31%, the 85% at five users, and the three-rounds-of-five recommendation. https://www.nngroup.com/articles/why-you-only-need-to-test-with-5-users/
 - Nielsen, J. & Landauer, T. K. (1993). "A mathematical model of the finding of usability problems." *Proceedings of ACM INTERCHI '93*, pp. 206-213. Original model.
 - Medlock, M., Wixon, D., Terrano, M., Romero, R. & Fulton, B. (2002). "Using the RITE method to improve products: a definition and a case study." Usability Professionals Association annual conference. Summary via Wikipedia, "RITE Method" (accessed September 2026). https://en.wikipedia.org/wiki/RITE_Method
-- Fullerton, T. (2018). *Game Design Workshop* (4th ed.). CRC Press. Playtesting chapter.
+- Fullerton, T. (2018). *Game Design Workshop* (4th ed.). CRC Press. Chapter 9, "Playtesting".
 - The trading-post prototype and its problem frequencies are fictional, built for this lecture.
 
 ## Interactive spec: examples/w07-discovery-curve.html

@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dominant Strategy Hunt · GD101 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.bar-top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:16px 0 14px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:600 .95rem var(--sans);padding:9px 14px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,summary:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px}
+@media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#tri{display:block;width:100%;aspect-ratio:1/0.93;touch-action:none;cursor:crosshair;border-radius:6px}
+.verdict{font-family:var(--serif);font-size:1.12rem;margin:10px 0 2px;font-weight:600}
+.verdict small{display:block;font-family:var(--sans);font-weight:400;font-size:.88rem;color:var(--ink-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.86rem;margin:8px 0 0}
+.sw{display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:-3px;margin-right:6px;border:1px solid var(--ink-soft)}
+.side h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:0 0 6px}
+.side section+section{margin-top:18px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.95rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child{text-align:left}
+thead th{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+td.chg{font-weight:700;background:color-mix(in srgb,var(--moss) 22%,transparent);box-shadow:inset 0 0 0 2px var(--moss)}
+.tnote{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+.bars{display:grid;gap:8px}
+.brow{display:grid;grid-template-columns:4.2em minmax(0,1fr) 3.6em 2.8em;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.brow .nm{font-weight:600}
+.track{position:relative;height:18px;background:var(--paper-2);border-radius:4px}
+.track::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:var(--ink-soft)}
+.fill{position:absolute;top:2px;bottom:2px;border-radius:3px}
+.val{text-align:right;font-weight:700}
+.tag{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--moss)}
+.mixline{font-size:.9rem;color:var(--ink-soft);margin:0 0 8px}
+.mixin{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.mixin label{display:flex;flex-direction:column;font-weight:600;font-size:.85rem;gap:2px}
+input[type=number]{font:600 1rem var(--sans);width:100%;padding:7px 8px;border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip.ghost{border-color:var(--ink-soft)}
+.dom{margin:0;padding-left:1.1em}
+.dom li{margin:2px 0}
+details{margin-top:16px;border-top:1px solid var(--grid);padding-top:10px}
+summary{font-weight:700;cursor:pointer}
+.adv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.adv label{display:flex;flex-direction:column;font-weight:600;font-size:.85rem;gap:2px}
+.check{display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:600;font-size:.92rem}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.fill{transition:left .15s,width .15s}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD101 Introduction to Game Design · Week 11 · Worked example</p>
+  <h1>One color means one answer</h1>
+  <p class="lede">Every point in the triangle is an opponent who mixes Strike, Guard and Bash in some proportion. Each point is colored by your best reply. In Skirmish v1 the whole triangle is Bash. Switch to v2 and it splits into three regions that meet at 4 : 2 : 1.</p>
+</header>
+
+<div class="bar-top">
+  <div class="seg" role="group" aria-label="Rules version">
+    <button id="v1" aria-pressed="true">v1 as written</button>
+    <button id="v2" aria-pressed="false">v2 with interrupt rule</button>
+  </div>
+  <button class="chip ghost" id="reset">Reset</button>
+</div>
+
+<section class="panel">
+  <div class="layout">
+    <div>
+      <figure>
+        <figcaption>Best card against every opponent mix<small>Corners are opponents who always play one card. Drag the dot, or focus the triangle and use arrow keys.</small></figcaption>
+        <canvas id="tri" tabindex="0" role="img" aria-label="Ternary plot of opponent mixes colored by best reply"></canvas>
+        <p class="verdict" id="verdict" aria-live="polite">—</p>
+        <div class="legend" aria-hidden="true">
+          <span><i class="sw" style="background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--blood) 80%,var(--paper-2)) 0 2px,color-mix(in srgb,var(--blood) 36%,var(--paper-2)) 2px 6px)"></i>Strike best (hatched)</span>
+          <span><i class="sw" style="background:radial-gradient(circle,color-mix(in srgb,var(--steel) 80%,var(--paper-2)) 1.3px,transparent 1.6px) 0 0/6px 6px,color-mix(in srgb,var(--steel) 36%,var(--paper-2))"></i>Guard best (dotted)</span>
+          <span><i class="sw" style="background:color-mix(in srgb,var(--ochre) 36%,var(--paper-2))"></i>Bash best (solid)</span>
+          <span><i class="sw" style="background:var(--ink)"></i>tie border</span>
+        </div>
+      </figure>
+      <div class="mixin" role="group" aria-label="Opponent mix in percent">
+        <label for="inS">Strike %<input id="inS" type="number" min="0" max="100" step="1" inputmode="numeric"></label>
+        <label for="inG">Guard %<input id="inG" type="number" min="0" max="100" step="1" inputmode="numeric"></label>
+        <label for="inB">Bash %<input id="inB" type="number" min="0" max="100" step="1" inputmode="numeric"></label>
+      </div>
+      <div class="presets" role="group" aria-label="Mix presets">
+        <button class="chip" data-mix="1,1,1">1 : 1 : 1</button>
+        <button class="chip" data-mix="4,2,1">4 : 2 : 1</button>
+        <button class="chip" data-mix="6,3,1">Strike-heavy (6 : 3 : 1)</button>
+        <button class="chip" data-mix="2,4,1">Guard-heavy (2 : 4 : 1)</button>
+      </div>
+    </div>
+
+    <div class="side">
+      <section>
+        <h2 id="tblTitle">Payoff table</h2>
+        <table aria-labelledby="tblTitle">
+          <thead><tr><th scope="col">You \ Opponent</th><th scope="col">Strike</th><th scope="col">Guard</th><th scope="col">Bash</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <p class="tnote" id="tnote">Your net damage per round: damage dealt minus damage taken.</p>
+      </section>
+      <section>
+        <h2>Your average against this mix</h2>
+        <p class="mixline" id="mixline">—</p>
+        <div class="bars" id="bars" aria-live="polite"></div>
+      </section>
+      <section>
+        <h2>Row test</h2>
+        <ul class="dom" id="dom"></ul>
+      </section>
+      <details id="advBox">
+        <summary>Advanced: change the numbers</summary>
+        <div class="adv">
+          <label for="kIn">Strike damage<input id="kIn" type="number" min="0" max="20" step="1" value="2"></label>
+          <label for="cIn">Guard counter<input id="cIn" type="number" min="0" max="20" step="1" value="1"></label>
+          <label for="hIn">Bash damage<input id="hIn" type="number" min="0" max="20" step="1" value="4"></label>
+        </div>
+        <label class="check"><input type="checkbox" id="iIn"> Strike interrupts Bash</label>
+      </details>
+    </div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Skirmish is the lecture's own three-card game; no real game is modeled. Row test and mixed-strategy framing follow Ian Schreiber, <i>Game Balance Concepts</i> (2010), Level 1. The point where all three regions meet is the game's mixed-strategy equilibrium, covered in MMO303 week 10.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NAMES=['Strike','Guard','Bash'];
+const EPS=1e-9;
+const DEF={k:2,c:1,h:4};
+let k=2,c=1,h=4,I=0;
+let mix=[1/3,1/3,1/3];
+
+function matrix(iOn){
+  const i=iOn===undefined?I:iOn;
+  return [
+    [0,-c,i?k:k-h],
+    [c,0,-h],
+    [i?-k:h-k,h,0]
+  ];
+}
+const dot=(r,p)=>r[0]*p[0]+r[1]*p[1]+r[2]*p[2];
+function num(v){ // table cell: sign, unicode minus, up to 2 decimals
+  if(Math.abs(v)<EPS) return '0';
+  const s=(Math.round(Math.abs(v)*100)/100).toString();
+  return (v>0?'+':'−')+s;
+}
+function f2(v){
+  if(Math.abs(v)<0.005) return '0.00';
+  return (v>0?'+':'−')+Math.abs(v).toFixed(2);
+}
+function pctTxt(v,d){return (v*100).toFixed(d)+'%';}
+
+// ---- dominance ----
+function dominance(M){
+  const out=[];
+  for(let x=0;x<3;x++)for(let y=0;y<3;y++){
+    if(x===y)continue;
+    let ge=true,gt=true,any=false;
+    for(let j=0;j<3;j++){
+      if(M[x][j]<M[y][j]-EPS){ge=false;gt=false;}
+      else if(M[x][j]<=M[y][j]+EPS){gt=false;} else any=true;
+    }
+    if(gt) out.push({x,y,kind:'strict'});
+    else if(ge&&any) out.push({x,y,kind:'weak'});
+  }
+  return out;
+}
+function dominantCard(M){ // best at every mix: weakly-or-better above both others in every column
+  for(let x=0;x<3;x++){
+    let ok=true;
+    for(let y=0;y<3;y++){if(y===x)continue;for(let j=0;j<3;j++)if(M[x][j]<M[y][j]-EPS)ok=false;}
+    if(ok){
+      // exclude the case where rows are identical everywhere
+      let strictSomewhere=[0,1,2].filter(y=>y!==x).every(y=>[0,1,2].some(j=>M[x][j]>M[y][j]+EPS));
+      if(strictSomewhere) return x;
+    }
+  }
+  return -1;
+}
+function bestAt(M,p){
+  const a=M.map(r=>dot(r,p)),mx=Math.max(...a);
+  return {a,best:[0,1,2].filter(i=>a[i]>=mx-EPS)};
+}
+// point where all three averages are equal (inside triangle), or null
+function equalPoint(M){
+  // unknowns s,g,b,v: M p - v = 0 (3 eqs), s+g+b=1
+  const A=[[...M[0],-1,0],[...M[1],-1,0],[...M[2],-1,0],[1,1,1,0,1]];
+  for(let col=0;col<4;col++){
+    let piv=col;for(let r=col+1;r<4;r++)if(Math.abs(A[r][col])>Math.abs(A[piv][col]))piv=r;
+    if(Math.abs(A[piv][col])<1e-12)return null;
+    [A[col],A[piv]]=[A[piv],A[col]];
+    for(let r=0;r<4;r++){if(r===col)continue;const f=A[r][col]/A[col][col];for(let j=col;j<5;j++)A[r][j]-=f*A[col][j];}
+  }
+  const p=[0,1,2].map(i=>A[i][4]/A[i][i]);
+  if(p.some(x=>x<-1e-9))return null;
+  return p;
+}
+
+// ---- colors ----
+function rgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');return [0,2,4].map(i=>parseInt(hex.substr(i,2),16));}
+function mixc(a,b,t){return [0,1,2].map(i=>Math.round(a[i]*(1-t)+b[i]*t));}
+function cardColorVars(){return ['--blood','--steel','--ochre'];}
+
+// ---- triangle geometry ----
+const cv=$('tri');let geo=null,fillCache=null,fillKey='';
+function layout(){
+  const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));
+  const w=r.width,hh=r.height,mx=16,top=26,bot=30;
+  const L=Math.min(w-2*mx,(hh-top-bot)/0.8660254);
+  const x0=(w-L)/2,yb=top+L*0.8660254;
+  geo={dpr,w,h:hh,L,S:[x0,yb],G:[x0+L,yb],B:[x0+L/2,top]};
+}
+function toXY(p){const {S,G,B}=geo;return [p[0]*S[0]+p[1]*G[0]+p[2]*B[0],p[0]*S[1]+p[1]*G[1]+p[2]*B[1]];}
+function toBary(x,y){
+  const {S,G,B}=geo;
+  const d=(G[1]-B[1])*(S[0]-B[0])+(B[0]-G[0])*(S[1]-B[1]);
+  const s=((G[1]-B[1])*(x-B[0])+(B[0]-G[0])*(y-B[1]))/d;
+  const g=((B[1]-S[1])*(x-B[0])+(S[0]-B[0])*(y-B[1]))/d;
+  return [s,g,1-s-g];
+}
+
+function buildFill(M){
+  const W=cv.width,H=cv.height,dpr=geo.dpr;
+  const off=document.createElement('canvas');off.width=W;off.height=H;
+  const og=off.getContext('2d');const img=og.createImageData(W,H);const d=img.data;
+  const paper2=rgb(css('--paper-2')),ink=rgb(css('--ink'));
+  const cols=cardColorVars().map(v=>rgb(css(v)));
+  const dark=(0.299*paper2[0]+0.587*paper2[1]+0.114*paper2[2])<128;
+  const base=cols.map(c=>mixc(paper2,c,dark?0.42:0.34));
+  const patt=cols.map(c=>mixc(paper2,c,dark?0.85:0.78));
+  const win=new Int8Array(W*H).fill(-2); // -2 outside, -1 tie
+  const sums=[[0,0,0],[0,0,0],[0,0,0]];
+  const step=Math.max(1,Math.round(dpr));
+  for(let py=0;py<H;py++){
+    for(let px=0;px<W;px++){
+      const p=toBary((px+.5)/dpr,(py+.5)/dpr);
+      if(p[0]<-1e-6||p[1]<-1e-6||p[2]<-1e-6)continue;
+      const a0=dot(M[0],p),a1=dot(M[1],p),a2=dot(M[2],p);
+      const mx=Math.max(a0,a1,a2);
+      let n=0,wi=-1;
+      if(a0>=mx-EPS){n++;wi=0;} if(a1>=mx-EPS){n++;wi=1;} if(a2>=mx-EPS){n++;wi=2;}
+      const idx=py*W+px;
+      win[idx]=n>1?-1:wi;
+      if(n===1){sums[wi][0]+=px;sums[wi][1]+=py;sums[wi][2]++;}
+    }
+  }
+  const t=step*1;
+  for(let py=0;py<H;py++){
+    for(let px=0;px<W;px++){
+      const idx=py*W+px,wi=win[idx];if(wi===-2)continue;
+      let col;
+      let edge=wi===-1;
+      if(!edge){
+        const nb=[[t,0],[-t,0],[0,t],[0,-t]];
+        for(const [dx,dy] of nb){const qx=px+dx,qy=py+dy;if(qx<0||qy<0||qx>=W||qy>=H)continue;const q=win[qy*W+qx];if(q!==-2&&q!==wi){edge=true;break;}}
+      }
+      if(edge) col=ink;
+      else{
+        const u=px/dpr,v=py/dpr;
+        let on=false;
+        if(wi===0) on=((u+v)%9)<2.2;              // diagonal hatch
+        else if(wi===1) on=((u%9)<2.4&&(v%9)<2.4); // dots
+        col=on?patt[wi]:base[wi];
+      }
+      const o=idx*4;d[o]=col[0];d[o+1]=col[1];d[o+2]=col[2];d[o+3]=255;
+    }
+  }
+  og.putImageData(img,0,0);
+  const labels=sums.map((s,i)=>s[2]>0?{i,x:s[0]/s[2]/dpr,y:s[1]/s[2]/dpr,n:s[2]}:null).filter(Boolean);
+  return {off,labels};
+}
+
+function draw(){
+  if(!geo)layout();
+  const M=matrix();
+  const key=[cv.width,cv.height,k,c,h,I,css('--paper-2'),css('--ink')].join('|');
+  if(key!==fillKey){fillCache=buildFill(M);fillKey=key;}
+  const g=cv.getContext('2d'),dpr=geo.dpr;
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);
+  g.drawImage(fillCache.off,0,0);
+  g.setTransform(dpr,0,0,dpr,0,0);
+  const {S,G,B}=geo;
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(...S);g.lineTo(...G);g.lineTo(...B);g.closePath();g.stroke();
+  // corner labels
+  g.fillStyle=css('--ink');g.font='600 13px '+css('--sans');
+  g.textBaseline='top';g.textAlign='left';g.fillText('Always Strike',S[0],S[1]+8);
+  g.textAlign='right';g.fillText('Always Guard',G[0],G[1]+8);
+  g.textAlign='center';g.textBaseline='bottom';g.fillText('Always Bash',B[0],B[1]-6);
+  // region labels
+  const small=geo.w<420;
+  g.font='700 '+(small?12:14)+'px '+css('--sans');g.textBaseline='middle';g.textAlign='center';
+  const minPix=(geo.L*geo.L*0.43*dpr*dpr)*0.02;
+  fillCache.labels.forEach(l=>{
+    if(l.n<minPix)return;
+    const txt=NAMES[l.i]+' best';
+    const tw=g.measureText(txt).width;
+    const [dx,dy]=toXY(mix);
+    l={...l};
+    if(Math.abs(l.y-dy)<30&&Math.abs(l.x-dx)<tw/2+50){l.y=dy+(dy+46<geo.S[1]-8?40:-40);}
+    g.fillStyle=css('--paper');g.globalAlpha=.88;
+    g.beginPath();g.roundRect?g.roundRect(l.x-tw/2-6,l.y-11,tw+12,22,5):g.rect(l.x-tw/2-6,l.y-11,tw+12,22);g.fill();g.globalAlpha=1;
+    g.fillStyle=css('--ink');g.fillText(txt,l.x,l.y);
+  });
+  // equal-average point
+  const eq=equalPoint(M);
+  if(eq&&dominantCard(M)<0){
+    const [ex,ey]=toXY(eq);
+    g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.arc(ex,ey,7,0,Math.PI*2);g.stroke();
+  }
+  // mix point
+  const [mx,my]=toXY(mix);
+  g.fillStyle=css('--ink');g.beginPath();g.arc(mx,my,8,0,Math.PI*2);g.fill();
+  g.strokeStyle=css('--paper');g.lineWidth=2.5;g.stroke();
+  const lab=mix.map(v=>Math.round(v*100)+'%').join(' : ');
+  g.font='700 13px '+css('--sans');const tw=g.measureText(lab).width;
+  let lx=mx+12,ly=my-22;
+  if(lx+tw+10>geo.w-4)lx=mx-12-tw-10;
+  if(ly<2)ly=my+12;
+  g.fillStyle=css('--ink');g.beginPath();g.roundRect?g.roundRect(lx,ly,tw+10,20,4):g.rect(lx,ly,tw+10,20);g.fill();
+  g.fillStyle=css('--paper');g.textAlign='left';g.textBaseline='middle';g.fillText(lab,lx+5,ly+10);
+}
+
+// ---- side panel ----
+function renderPanel(){
+  const M=matrix(),M0=matrix(0);
+  const isDef=k===DEF.k&&c===DEF.c&&h===DEF.h;
+  $('tblTitle').textContent='Payoff table, '+(I?'v2 with interrupt rule':'v1 as written')+(isDef?'':' (your numbers)');
+  let rows='';
+  for(let r=0;r<3;r++){
+    rows+='<tr><th scope="row">'+NAMES[r]+'</th>';
+    for(let j=0;j<3;j++){
+      const chg=I&&Math.abs(M[r][j]-M0[r][j])>EPS;
+      rows+='<td'+(chg?' class="chg" title="changed by the interrupt rule"':'')+'>'+num(M[r][j])+'</td>';
+    }
+    rows+='</tr>';
+  }
+  $('tbody').innerHTML=rows;
+  $('tnote').textContent=I?'Outlined cells changed from v1: Strike now interrupts Bash, so Bash deals nothing against a Strike.':'Your net damage per round: damage dealt minus damage taken.';
+
+  const {a,best}=bestAt(M,mix);
+  $('mixline').textContent='Opponent plays Strike '+pctTxt(mix[0],1)+', Guard '+pctTxt(mix[1],1)+', Bash '+pctTxt(mix[2],1)+'.';
+  let scale=1;M.forEach(r=>r.forEach(v=>scale=Math.max(scale,Math.abs(v))));
+  const colv=cardColorVars();
+  $('bars').innerHTML=a.map((v,i)=>{
+    const w=Math.min(50,Math.abs(v)/scale*50),left=v>=0?50:50-w;
+    const isBest=best.includes(i);
+    return '<div class="brow" data-card="'+NAMES[i]+'"><span class="nm">'+NAMES[i]+'</span><span class="track"><span class="fill" style="left:'+left+'%;width:'+w+'%;background:var('+colv[i]+')"></span></span><span class="val">'+f2(v)+'</span><span class="tag">'+(isBest?'best':'')+'</span></div>';
+  }).join('');
+
+  const dom=dominance(M);
+  $('dom').innerHTML=dom.length?dom.map(d=>'<li>'+NAMES[d.x]+' '+(d.kind==='strict'?'strictly':'weakly')+' dominates '+NAMES[d.y]+'</li>').join(''):'<li>No dominated cards</li>';
+
+  const dc=dominantCard(M);
+  const bestTxt=best.length===3?'tie (all three)':best.length===2?'tie ('+best.map(i=>NAMES[i]).join(' and ')+')':NAMES[best[0]];
+  if(dc>=0){
+    $('verdict').innerHTML=NAMES[dc]+' is best at every mix: dominant<small>Drag the dot anywhere. The color never changes.</small>';
+  }else{
+    $('verdict').innerHTML='Best card depends on the mix<small>Best here: '+bestTxt+'</small>';
+  }
+  cv.setAttribute('aria-label','Opponent mix Strike '+pctTxt(mix[0],0)+', Guard '+pctTxt(mix[1],0)+', Bash '+pctTxt(mix[2],0)+'. '+(dc>=0?NAMES[dc]+' is best everywhere.':'Best card here: '+bestTxt+'.'));
+
+  let ins;
+  const eq=equalPoint(M);
+  if(dc>=0){
+    ins='A card that wins every column of the table also wins every weighted average of those columns. That is why the triangle is one color: '+NAMES[dc]+' beats the others against every possible opponent, so a player never has to read their opponent.';
+  }else if(eq){
+    ins='No card wins every column, so the best reply changes as the opponent shifts. The ring marks where all three averages are equal: Strike '+pctTxt(eq[0],1)+', Guard '+pctTxt(eq[1],1)+', Bash '+pctTxt(eq[2],1)+'. Against that mix nothing you do gains on average.';
+  }else{
+    ins='No card is dominant everywhere, but the regions do not meet at a single interior point with these numbers. Check the row test to see which card is squeezed out.';
+  }
+  $('insight').textContent=ins;
+}
+
+function syncInputs(except){
+  ['inS','inG','inB'].forEach((id,i)=>{if(id!==except)$(id).value=Math.round(mix[i]*100);});
+}
+function update(except){renderPanel();draw();syncInputs(except);}
+
+// ---- events ----
+function setVersion(v){
+  I=v;$('v1').setAttribute('aria-pressed',String(!v));$('v2').setAttribute('aria-pressed',String(!!v));$('iIn').checked=!!v;update();
+}
+$('v1').addEventListener('click',()=>setVersion(0));
+$('v2').addEventListener('click',()=>setVersion(1));
+$('iIn').addEventListener('change',e=>setVersion(e.target.checked?1:0));
+[['kIn','k'],['cIn','c'],['hIn','h']].forEach(([id,name])=>{
+  $(id).addEventListener('input',e=>{
+    const v=parseFloat(e.target.value);if(!isFinite(v)||v<0)return;
+    if(name==='k')k=v;else if(name==='c')c=v;else h=v;update();
+  });
+});
+['inS','inG','inB'].forEach((id,i)=>{
+  $(id).addEventListener('input',e=>{
+    let v=parseFloat(e.target.value);if(!isFinite(v))return;
+    v=Math.min(100,Math.max(0,v))/100;
+    const o=[0,1,2].filter(j=>j!==i),rest=mix[o[0]]+mix[o[1]];
+    const n=[0,0,0];n[i]=v;
+    if(rest>1e-12){n[o[0]]=mix[o[0]]/rest*(1-v);n[o[1]]=mix[o[1]]/rest*(1-v);}
+    else{n[o[0]]=(1-v)/2;n[o[1]]=(1-v)/2;}
+    mix=n;update(id);
+  });
+  $(id).addEventListener('change',()=>syncInputs());
+});
+document.querySelectorAll('[data-mix]').forEach(b=>b.addEventListener('click',()=>{
+  const m=b.dataset.mix.split(',').map(Number),t=m[0]+m[1]+m[2];mix=m.map(x=>x/t);update();
+}));
+$('reset').addEventListener('click',()=>{
+  k=DEF.k;c=DEF.c;h=DEF.h;$('kIn').value=k;$('cIn').value=c;$('hIn').value=h;mix=[1/3,1/3,1/3];setVersion(0);
+});
+// pointer drag
+function clampBary(p){
+  let q=p.map(v=>Math.max(0,v));const t=q[0]+q[1]+q[2];return t>0?q.map(v=>v/t):[1/3,1/3,1/3];
+}
+function fromEvent(e){const r=cv.getBoundingClientRect();mix=clampBary(toBary(e.clientX-r.left,e.clientY-r.top));update();}
+let dragging=false;
+cv.addEventListener('pointerdown',e=>{dragging=true;cv.setPointerCapture(e.pointerId);fromEvent(e);});
+cv.addEventListener('pointermove',e=>{if(dragging)fromEvent(e);});
+cv.addEventListener('pointerup',()=>{dragging=false;});
+cv.addEventListener('pointercancel',()=>{dragging=false;});
+// keyboard on the triangle: left/right trade Strike and Guard, up/down move toward/away from Bash
+cv.addEventListener('keydown',e=>{
+  const d=0.01;let n=mix.slice();
+  if(e.key==='ArrowLeft'){n[0]+=d;n[1]-=d;}
+  else if(e.key==='ArrowRight'){n[0]-=d;n[1]+=d;}
+  else if(e.key==='ArrowUp'){n[2]+=d;const r=n[0]+n[1];if(r>0){n[0]-=d*n[0]/r;n[1]-=d*n[1]/r;}}
+  else if(e.key==='ArrowDown'){if(n[2]>0){const dd=Math.min(d,n[2]);n[2]-=dd;const r=n[0]+n[1];if(r>0){n[0]+=dd*n[0]/r;n[1]+=dd*n[1]/r;}else{n[0]+=dd/2;n[1]+=dd/2;}}}
+  else return;
+  e.preventDefault();
+  if(n.some(v=>v<-1e-12))return;
+  mix=clampBary(n);update();
+});
+window.addEventListener('resize',()=>{geo=null;layout();draw();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{fillKey='';draw();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>draw());
+layout();syncInputs();update();
+// test hook
+window.__hunt={set:(opts)=>{if('I' in opts)setVersion(opts.I);if(opts.mix){const t=opts.mix.reduce((a,b)=>a+b,0);mix=opts.mix.map(x=>x/t);}if('k' in opts){k=opts.k;$('kIn').value=k;}if('c' in opts){c=opts.c;$('cIn').value=c;}if('h' in opts){h=opts.h;$('hIn').value=h;}update();}};
+})();
+</script>
+</body>
+</html>

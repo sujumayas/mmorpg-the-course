@@ -10,9 +10,9 @@
 
 **Before class:** Fullerton, *Game Design Workshop* (4th ed.), chapter 3 (formal elements) and chapter 4 (dramatic elements), skimmed for the difference between rules and theme. Read the RogueBasin page "Berlin Interpretation" (about 10 minutes). Bring a list of the five games you played most this year.
 
-**Prerequisites from earlier courses:** none outside this course. You need the formal elements from GD101 weeks 2 and 3, MDA from GD101 week 4 and interesting decisions from GD101 week 9 (see the [GD101 syllabus](../syllabus.md)). The set operations used here (intersection and union) are taught again with probabilities in [MA102 week 1](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w01-sample-spaces-and-events.md) next semester.
+**Prerequisites from earlier courses:** none outside this course. You need the formal elements from GD101 [week 2](w02-players-objectives-procedures-rules.md) and [week 3](w03-resources-conflict-boundaries-outcome.md), MDA from [GD101 week 4](w04-mda-mechanics-dynamics-aesthetics.md) and interesting decisions from [GD101 week 9](w09-choice-and-meaningful-decisions.md). The set operations used here (intersection and union) are taught again with probabilities in [MA102 week 1](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w01-sample-spaces-and-events.md) next semester.
 
-**Interactive:** `examples/w13-genre-similarity-map.html` (to be built from the spec at the end of this lecture). Keep it open during section 2.
+**Interactive:** [Genre similarity map](../examples/w13-genre-similarity-map.html). Keep it open during section 2.
 
 ---
 
@@ -22,7 +22,7 @@ In film and books, a genre mostly names a mood or a setting. A western has horse
 
 That is this week's claim. **A game genre is a cluster of mechanics that tend to show up together.** A mechanic here means what it meant in week 4 under MDA: a rule or procedure the game runs, such as "when you die, you start over from the beginning" or "you draw five cards each turn." Mechanics are the part of a game you could write down as rules. Dynamics are what happens when players meet those rules. Aesthetics are the feelings that result.
 
-Genre names do leak into aesthetics. "Survival horror" names a feeling as well as a set of rules. But when two designers argue about whether a game "counts" as a roguelike, they almost never argue about the mood. They argue about a list: does it have permadeath, is the map random, is it turn-based. That list is the thing you can measure.
+Genre names do leak into aesthetics. "Survival horror" names a feeling as well as a set of rules. But when two designers argue about whether a game "counts" as a roguelike, they almost never argue about the mood. They argue about a list. Does it have permadeath? Is the map random? Is it turn-based? That list is the thing you can measure.
 
 ### Why designers need more than the label
 
@@ -71,7 +71,7 @@ Two more ideas complete the model.
 
 ### The data
 
-Here are eight mechanics, each written so you could check it by playing the game. The letters are just short names.
+Here are nine mechanics, each written so you could check it by playing the game. The letters are just short names.
 
 - **P, permadeath runs.** When you die, the run ends and you start again from the beginning.
 - **R, randomized content each play.** The map, rooms or available cards change from one play to the next.
@@ -83,7 +83,7 @@ Here are eight mechanics, each written so you could check it by playing the game
 - **U, unlocks between runs.** Something you earn in one play stays for the next.
 - **G, ability-gated map.** New abilities open areas you already saw but could not reach, so you backtrack.
 
-That is nine, not eight. Count again whenever someone hands you a list. Now the six games. The eras matter, because later versions and remakes change some of these.
+Now the six games. The eras matter, because later versions and remakes change some of these.
 
 | Game (version) | P | R | T | A | M | J | D | U | G | Size |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -96,7 +96,7 @@ That is nine, not eight. Count again whenever someone hands you a list. Now the 
 
 A few coding decisions, so you can argue with them:
 
-- Spelunky's U is the Tunnel Man shortcut system, which persists between runs.
+- Spelunky's U is the Tunnel Man, an unlockable that persists between runs.
 - Hades's U is the Mirror of Night and other permanent upgrades bought in the House of Hades between escape attempts.
 - Slay the Spire's U covers new characters, cards and relics unlocked by finishing or failing runs.
 - Dominion's R is its setup. Each game uses a different selection of 10 kingdom card piles from the 25 in the first-edition base set, so the cards on offer change every time you play.
@@ -164,7 +164,7 @@ Notice that at 0.45 Dominion is in the roguelike cluster. It gets there through 
 
 ### The visual
 
-Open `examples/w13-genre-similarity-map.html`. The left panel shows the "shop shelf," with each game sitting under the genre label a store would use. The right panel shows the same six games placed by their mechanics, with a line between every pair whose J is above the threshold slider.
+Open [`examples/w13-genre-similarity-map.html`](../examples/w13-genre-similarity-map.html). The left panel shows the "shop shelf," with each game sitting under the genre label a store would use. The right panel shows the same six games placed by their mechanics, with a line between every pair whose J is above the threshold slider.
 
 Drag the threshold from 0.90 down to 0.40 and watch the clusters on the right merge while the shelf on the left stays fixed. Then click a cell in the mechanics grid. Remove D from Slay the Spire, for example, and its nearest neighbour flips from Dominion to Rogue. The shelf does not change at all. The label is stable because it ignores the mechanics. The map moves because it is made of them.
 
@@ -172,7 +172,7 @@ Drag the threshold from 0.90 down to 0.40 and watch the clusters on the right me
 
 You have already met this model in other clothes.
 
-**The Berlin Interpretation (roguelike community, 2008).** At the International Roguelike Development Conference in Berlin in 2008, developers wrote a list of "high-value factors" for a roguelike, including random environment generation, permadeath, turn-based play, grid-based movement, resource management and exploration, plus a shorter list of "low-value factors" such as an ASCII display. That is our model with one change. Instead of comparing two games, you compare every game against one ideal set, often called a **prototype**. A game's genre score is how much of the prototype it matches. The document itself says a game can be a roguelike without every factor, so it is a similarity threshold, not a hard rule. Rewrite it as `J(game, prototype) ≥ t` and it is this week's formula.
+**The Berlin Interpretation (roguelike community, 2008).** At the International Roguelike Development Conference in Berlin in 2008, developers wrote a list of "high-value factors" for a roguelike, including random environment generation, permadeath, turn-based play, grid-based movement, resource management and exploration, plus a shorter list of "low-value factors" such as an ASCII display. That is our model with one change. Instead of comparing two games, you compare every game against one ideal set, often called a **prototype**. A game's genre score is how much of the prototype it matches. The page says plainly that missing some factors does not rule a game out, and having some does not rule it in. So it is a similarity threshold, not a hard rule. Rewrite it as `J(game, prototype) ≥ t` and it is this week's formula.
 
 **Metroidvania (Super Metroid, 1994, and Castlevania: Symphony of the Night, 1997).** This genre label is named after two games, and it is defined almost entirely by one mechanic, our G. The world is one connected map, and new abilities open areas you saw earlier but could not reach. Some genres are clusters of many weak signals. Others hang on a single mechanic that carries most of the weight. In set terms, G gets such a high weight that any game with it lands in the cluster. The interactive's "weight" option lets you try this.
 
@@ -203,7 +203,7 @@ This is the practical reason to understand genres as mechanic clusters. Each mec
 | Turn-based | Time to think before each action | Players who came to plan are rushed; reviews say "too hard" |
 | Unlocks between runs | A failed run still moved something forward | Early deaths feel wasted and players quit sooner |
 
-None of this means you must keep every expectation. Many good games break one on purpose. Diablo's move from turns to real time broke the "time to think" expectation of its roguelike parents and found a larger audience. The point is to break expectations deliberately and to say so in your pitch. You will write that sentence next week.
+None of this means you must keep every expectation. Many good games break one on purpose. Diablo's move from turns to real time broke the "time to think" expectation of its roguelike parents, and Blizzard asked for that break on purpose. The point is to break expectations deliberately and to say so in your pitch. You will write that sentence next week.
 
 ### Genre blends are unions with subtractions
 
@@ -227,7 +227,7 @@ Two warnings before you start using this.
 
 First, a genre cluster tells you what is common, not what is good. Plenty of games in the roguelike cluster are dull. The mechanics are the entry ticket. The interesting decisions you studied in week 9 are still yours to design.
 
-Second, genre maps drift over time. A mechanic that was rare becomes standard, and then the columns that used to separate games stop separating anything. Unlocks between runs were unusual among early roguelikes. In the 2010s they became common enough that players coined "roguelite" for games that have them. When a column becomes a near-universal yes, it stops carrying information. Swap it for a column that still splits games.
+Second, genre maps drift over time. A mechanic that was rare becomes standard, and then the columns that used to separate games stop separating anything. Rogue had no unlocks between runs. Spelunky, Hades and Slay the Spire all do, and players now use the label "roguelite" for this branch of the family, with Spelunky often named as one of its founders. When a column becomes a near-universal yes, it stops carrying information. Swap it for a column that still splits games.
 
 ## 4. Using a genre map in your own project
 
@@ -247,7 +247,7 @@ Work in groups of three.
 
 1. **(5 min)** Each person names two games they played this year. Write the six games on the board.
 2. **(8 min)** As a group, agree on 8 mechanic columns that split these six games. Each column must be checkable by play ("you can jump," not "it feels floaty"). Fill in the yes/no grid.
-3. **(7 min)** Compute J for every pair (15 pairs). Split the work: five pairs each. Find each game's nearest neighbour.
+3. **(7 min)** Compute J for every pair (15 pairs). Split the work, five pairs each. Find each game's nearest neighbour.
 4. **(5 min)** Cluster at t = 0.5. Compare your clusters with the genre labels a store would put on these games. Write down the one pair where the label and the map disagree most, and the column that causes it.
 
 **Expected output:** one photo of the grid, the 15 J values, a cluster list, and a two-sentence note on the biggest disagreement. Keep the grid. It is the starting point for Lab 13.
@@ -284,7 +284,7 @@ Work in groups of three.
 
 - Rogue: Wikipedia, "Rogue (video game)." Release in 1980 by Michael Toy and Glenn Wichman; turn-based, grid-based ASCII play, procedurally generated dungeons, permadeath; the source of the name "roguelike"; followed by Hack (1982) and Moria (1983).
 - RogueBasin, "Berlin Interpretation." Drafted at the International Roguelike Development Conference, Berlin, 2008; lists of high-value and low-value factors.
-- Spelunky: Wikipedia, "Spelunky." Original freeware release by Derek Yu, December 2008; enhanced remake 2012; procedurally generated levels, restart from the beginning on death, unlockables such as the Tunnel Man that persist between runs.
+- Spelunky: Wikipedia, "Spelunky." Original freeware release by Derek Yu, December 2008; HD remake 2012; procedurally generated levels, restart from the beginning on death, unlockables such as the Tunnel Man that persist between runs.
 - Hades: Wikipedia, "Hades (video game)." Supergiant Games; early access December 2018, full release September 2020; randomized arrangement of pre-built rooms; return to the House of Hades on death; permanent upgrades such as the Mirror of Night.
 - Slay the Spire: Wikipedia, "Slay the Spire." Mega Crit; early access November 2017, full release January 2019; procedurally generated spire, restart on death, unlocks of characters, cards and relics; developers' stated aim to combine a roguelike with deck-building games like Dominion.
 - Dominion: Wikipedia, "Dominion (card game)." Designed by Donald X. Vaccarino, published by Rio Grande Games in 2008; 25 kingdom card piles in the first-edition base set (26 in the second edition) with a different selection used each game; Spiel des Jahres 2009; widely credited as the first deck-building game.
@@ -330,6 +330,5 @@ Work in groups of three.
 - "Drop deck-building": J(Slay the Spire, Rogue) = 0.60, J(Slay the Spire, Dominion) = 0.50; Slay the Spire's nearest neighbour becomes Rogue.
 - "Drop unlocks": J(Slay the Spire, Dominion) = 0.75; J(Spelunky, Hades) = 0.80.
 - "Add hub column": J(Spelunky, Hades) = 5/7 = 0.71; J(Rogue, Hades) = 3/7 = 0.43.
-- Roguelike core score: Rogue 1.00 (3/3... computed as J with {P,R,T} = 3/4 = 0.75), see note below.
 
 **Note on the core score:** compute it as the share of the prototype matched, `|game ∩ {P, R, T}| / 3`, not as J, so the readout matches the lecture's "2 out of 3" wording. Test values: Rogue 3/3, Slay the Spire 3/3, Spelunky 2/3, Hades 2/3, Dominion 2/3, Super Metroid 0/3.

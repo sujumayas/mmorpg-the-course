@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Definition tester — GD101 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1240px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 4px}
+.sub{font-size:.84rem;color:var(--ink-soft);margin:0 0 10px}
+button,input{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* summary strip */
+.summary{background:var(--ink);color:var(--paper);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:14px;display:grid;gap:4px}
+.summary .big{font-family:var(--serif);font-size:clamp(1.15rem,2.6vw,1.45rem);margin:0}
+.summary .big b{font-variant-numeric:tabular-nums}
+.summary p{margin:0;font-size:.95rem}
+.banner{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.banner span{background:var(--ochre);color:var(--ink);font-weight:700;font-size:.85rem;padding:3px 10px;border-radius:999px}
+:root[data-theme="dark"] .banner span{color:var(--paper)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .banner span{color:var(--paper)}}
+
+.layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:14px;align-items:start}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}#panelB{order:-1}}
+
+/* Panel A: feature grid */
+.scroll{overflow-x:auto;margin:0 -4px;padding:0 4px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+.fgrid{width:100%;font-size:.9rem}
+.fgrid th,.fgrid td{padding:3px 2px;border-bottom:1px solid var(--grid);text-align:center;vertical-align:middle}
+.fgrid td.name,.fgrid th.name{text-align:left;padding-left:4px;padding-right:8px}
+.fgrid td.num{color:var(--ink-soft);width:1.6em;text-align:right;padding-right:4px}
+.fgrid td.name{min-width:9.5em;line-height:1.25}
+.fgrid td.jc{white-space:nowrap;padding-left:8px;font-weight:600}
+.fgrid td.jc small{font-weight:400;color:var(--ink-soft)}
+.fgrid tbody tr:hover td,.fgrid tbody tr.hl td{background:var(--paper-2)}
+.fgrid tr.disputed td.num{color:var(--blood);font-weight:700}
+.colh{border:1.5px solid var(--ink);background:transparent;border-radius:var(--radius-sm);cursor:pointer;padding:6px 2px;width:100%;min-width:34px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:700;font-size:.9rem}
+.colh .full{writing-mode:vertical-rl;transform:rotate(180deg);font-weight:400;font-size:.78rem;color:var(--ink-soft);white-space:nowrap}
+.colh[aria-pressed="true"]{background:var(--paper-2);border-style:dashed}
+.colh[aria-pressed="true"] .code{text-decoration:line-through;color:var(--blood)}
+.colh:hover{background:var(--paper-2)}
+.cell{width:34px;height:32px;border:1.5px solid var(--grid);border-radius:var(--radius-sm);background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0;font-weight:700;font-size:.82rem}
+.cell i{display:inline-block;width:11px;height:11px;border:2px solid var(--ink);border-radius:2px}
+.cell[aria-pressed="true"] i{background:var(--ink)}
+.cell[aria-pressed="false"]{color:var(--ink-soft)}
+.cell[aria-pressed="false"] i{border-color:var(--ink-soft)}
+.cell.changed{border-color:var(--blood);border-width:2px}
+.cell:hover{background:var(--paper-2)}
+.namein{width:100%;min-width:8em;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);background:var(--paper)}
+.rm{border:none;background:transparent;cursor:pointer;color:var(--blood);font-weight:700;padding:2px 6px;border-radius:4px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{font-weight:600;font-size:.9rem;padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;cursor:pointer}
+.btn:hover{background:var(--paper-2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.key{font-size:.82rem;color:var(--ink-soft);margin:10px 0 0}
+.key b{color:var(--ink)}
+.legendA{display:none;font-size:.8rem;color:var(--ink-soft);margin:8px 0 0;columns:2;column-gap:14px}
+.legendA span{display:block}
+@media (max-width:560px){.colh .full{display:none}.legendA{display:block}
+.fgrid td.name{min-width:6.6em;max-width:6.6em;font-size:.8rem;position:sticky;left:0;background:var(--paper);z-index:1}
+.fgrid th.name{position:sticky;left:0;background:var(--paper);z-index:1}
+.fgrid td.num,.fgrid th.num{display:none}
+.cell{width:28px;gap:2px}.cell i{width:9px;height:9px}.colh{min-width:28px}.namein{min-width:0;font-size:.8rem;padding:3px 4px}}
+
+/* Panel B: verdicts */
+.vgrid{width:100%;font-size:.88rem;table-layout:fixed}
+.vgrid th{font-family:var(--serif);font-weight:600;font-size:.98rem;text-align:left;padding:0 3px 8px;vertical-align:bottom}
+.vgrid th small{display:block;font-family:var(--sans);font-weight:400;font-size:.78rem;color:var(--ink-soft)}
+.vgrid th.act{width:36%}
+.vgrid td{padding:2px 3px;vertical-align:middle}
+.vgrid td.act{line-height:1.2;font-size:.84rem}
+.vgrid td.act .n{color:var(--ink-soft);font-variant-numeric:tabular-nums;margin-right:4px}
+.vgrid tr.disputed td.act{font-weight:700}
+.vgrid tr.disputed td.act .n{color:var(--blood)}
+.vgrid tr.hl td{background:var(--paper-2)}
+.chip{display:block;border-radius:8px;padding:5px 7px;line-height:1.15;min-height:30px;font-size:.8rem;border:1.5px solid var(--ink);transition:background-color .25s,color .25s,border-color .25s}
+.chip.game{background:var(--ink);color:var(--paper);font-weight:700}
+.chip.not{background:transparent;color:var(--ink-soft);border:1.5px dashed var(--ink-soft)}
+.chip.flip{animation:pulse .6s ease-out}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--focus)}100%{box-shadow:0 0 0 7px transparent}}
+.totals td{padding-top:10px;border-top:1.5px solid var(--ink);font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem}
+.totals td.act{font-weight:600}
+.tot{font-size:1.2rem;display:block;line-height:1.1}
+
+details{margin-top:14px;border-top:1px solid var(--grid);padding-top:10px}
+summary{cursor:pointer;font-weight:600}
+.dmat{margin-top:8px;font-size:.88rem}
+.dmat th,.dmat td{padding:4px 5px;text-align:center;border-bottom:1px solid var(--grid)}
+.dmat th:first-child,.dmat td:first-child{text-align:left}
+.dmat input{width:20px;height:20px;accent-color:var(--steel);cursor:pointer}
+.defs{font-size:.84rem;color:var(--ink-soft);margin:8px 0 0}
+
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD101 Introduction to Game Design · Week 1 · Worked example</p>
+  <h1>Is it a game? Find the column.</h1>
+  <p class="lede">Each definition is a set of required features. The three agree on most activities. Where they split, one column decides it. Click the <b>F2</b> header and watch the castle challenge change sides.</p>
+</header>
+
+<section class="summary" aria-live="polite" aria-atomic="true">
+  <p class="big" id="agree"></p>
+  <p id="disputes"></p>
+  <div class="banner" id="banner"></div>
+</section>
+
+<div class="layout">
+  <section class="panel" id="panelA" aria-labelledby="hA">
+    <h2 id="hA">Feature grid</h2>
+    <p class="sub">1 = the activity has the feature. Click a cell to flip it. Click a column header to stop requiring that feature in all three definitions.</p>
+    <div class="scroll">
+      <table class="fgrid" id="fgrid">
+        <thead><tr id="fhead"><th class="num" scope="col"><span class="sr">Row</span></th><th class="name" scope="col">Activity</th></tr></thead>
+        <tbody id="fbody"></tbody>
+      </table>
+    </div>
+    <div class="legendA" id="legendA"></div>
+    <p class="key">Arrow keys move between cells, Space or Enter flips one. A <b style="color:var(--blood)">red border</b> marks a cell you changed from the lecture table.</p>
+    <div class="actions">
+      <button class="btn" id="reset" type="button">Reset to lecture values</button>
+      <button class="btn" id="add" type="button">Add activity</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panelB" aria-labelledby="hB">
+    <h2 id="hB">Verdicts</h2>
+    <p class="sub">A chip reads "game" when the row has every feature the definition requires. Otherwise it lists what is missing.</p>
+    <table class="vgrid" id="vgrid">
+      <thead><tr id="vhead"><th class="act" scope="col">Activity</th></tr></thead>
+      <tbody id="vbody"></tbody>
+      <tfoot><tr class="totals" id="vtot"><td class="act">Games</td></tr></tfoot>
+    </table>
+    <details id="edit">
+      <summary>Edit definitions</summary>
+      <p class="defs">Tick the features each definition requires. The lecture's mapping is the default.</p>
+      <div class="scroll">
+        <table class="dmat"><thead><tr id="mhead"><th scope="col">Definition</th></tr></thead><tbody id="mbody"></tbody></table>
+      </div>
+    </details>
+  </section>
+</div>
+
+<footer>Definitions: Bernard Suits, <i>The Grasshopper</i> (1978); Katie Salen and Eric Zimmerman, <i>Rules of Play</i> (2003), ch. 7; Jesper Juul, "The Game, the Player, the World" (2003). The feature mapping and the ten scored rows are the lecture's class simplification, meant to be argued with. Activities are text only; no game art is used.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const FEATS=[
+  {k:'F1',s:'rules',f:'F1 · rules: fixed, well-defined rules'},
+  {k:'F2',s:'measurable outcome',f:'F2 · variable, quantifiable outcome'},
+  {k:'F3',s:'valued outcome (goal)',f:'F3 · some outcomes valued above others'},
+  {k:'F4',s:'effort matters',f:'F4 · player effort affects the outcome'},
+  {k:'F5',s:'player attached',f:'F5 · player attached to the outcome'},
+  {k:'F6',s:'negotiable consequences',f:'F6 · negotiable consequences (voluntary, separable from life)'},
+  {k:'S',s:'inefficient means',f:'S · rules forbid a more efficient way (Suits)'}
+];
+const NF=FEATS.length;
+const ROWS0=[
+  ['Chess',[1,1,1,1,1,1,1]],
+  ['WoW raid attempt',[1,1,1,1,1,1,1]],
+  ['Snakes and Ladders',[1,1,1,0,1,1,1]],
+  ['Roulette for money',[1,1,1,0,1,0,1]],
+  ['Traffic',[1,1,1,1,1,0,0]],
+  ['Minecraft Creative, free',[1,0,0,1,0,1,0]],
+  ['Creative castle challenge',[1,0,1,1,1,1,1]],
+  ['Minecraft Survival (dragon)',[1,1,1,1,1,1,1]],
+  ["Ring-a-ring o' roses",[1,0,0,0,0,1,0]],
+  ['Expert tic-tac-toe',[1,1,1,1,1,1,1]]
+];
+const DEFS0=[
+  {k:'suits',name:'Suits',short:'Suits',req:['F1','F3','F4','F6','S']},
+  {k:'sz',name:'Salen & Zimmerman',short:'S&Z',req:['F1','F2','F3','F6']},
+  {k:'juul',name:'Juul',short:'Juul',req:['F1','F2','F3','F4','F5','F6']}
+];
+let rows,defs,memo,prevVerdict={};
+function init(){
+  rows=ROWS0.map(r=>({name:r[0],v:r[1].slice(),base:r[1].slice()}));
+  defs=DEFS0.map(d=>({...d,req:new Set(d.req)}));
+  memo={};
+}
+init();
+
+const verdict=(row,d)=>{const miss=FEATS.filter((f,i)=>d.req.has(f.k)&&!row.v[i]).map(f=>f.k);return miss;};
+const juulCount=row=>row.v.slice(0,6).reduce((a,b)=>a+b,0);
+const reqCount=k=>defs.filter(d=>d.req.has(k)).length;
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---------- headers (built once) ----------
+FEATS.forEach((f,i)=>{
+  const th=document.createElement('th');th.scope='col';
+  th.innerHTML=`<button type="button" class="colh" data-f="${f.k}" title="${esc(f.f)}. Click to drop or restore this requirement in all three definitions."><span class="code">${f.k}</span><span class="full" aria-hidden="true">${esc(f.s)}</span></button>`;
+  $('fhead').appendChild(th);
+  const mh=document.createElement('th');mh.scope='col';mh.textContent=f.k;mh.title=f.f;$('mhead').appendChild(mh);
+});
+{const th=document.createElement('th');th.scope='col';th.innerHTML='Juul<br><small style="font-weight:400">features</small>';th.className='jch';$('fhead').appendChild(th);}
+$('legendA').innerHTML=FEATS.map(f=>`<span><b>${f.k}</b> ${esc(f.s)}</span>`).join('');
+DEFS0.forEach(d=>{
+  const th=document.createElement('th');th.scope='col';th.innerHTML=`${esc(d.short)}<small id="req-${d.k}"></small>`;th.title=d.name;$('vhead').appendChild(th);
+  const td=document.createElement('td');td.innerHTML=`<span class="tot" id="tot-${d.k}"></span><small id="totof-${d.k}" style="font-weight:400;color:var(--ink-soft)"></small>`;$('vtot').appendChild(td);
+});
+defs.forEach((d,di)=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<th scope="row">${esc(d.name)}</th>`+FEATS.map((f,fi)=>`<td><input type="checkbox" data-d="${di}" data-f="${f.k}" aria-label="${esc(d.name)} requires ${esc(f.f)}"></td>`).join('');
+  $('mbody').appendChild(tr);
+});
+
+// ---------- grid body (rebuilt when rows change) ----------
+let focusR=0,focusC=0;
+function buildGrid(){
+  const fb=$('fbody');fb.innerHTML='';
+  const vb=$('vbody');vb.innerHTML='';
+  rows.forEach((r,ri)=>{
+    const tr=document.createElement('tr');tr.dataset.r=ri;
+    const nameCell=r.extra
+      ?`<td class="name"><input class="namein" id="extraName" maxlength="32" value="${esc(r.name)}" aria-label="Name of added activity"></td>`
+      :`<td class="name" id="rn${ri}">${esc(r.name)}</td>`;
+    tr.innerHTML=`<td class="num">${ri+1}</td>${nameCell}`+
+      FEATS.map((f,ci)=>`<td><button type="button" class="cell" data-r="${ri}" data-c="${ci}" tabindex="-1"><i aria-hidden="true"></i><span aria-hidden="true"></span></button></td>`).join('')+
+      `<td class="jc"><span></span><small>/6</small>${r.extra?' <button type="button" class="rm" id="rm" aria-label="Remove added activity" title="Remove">×</button>':''}</td>`;
+    fb.appendChild(tr);
+    const vr=document.createElement('tr');vr.dataset.r=ri;
+    vr.innerHTML=`<td class="act"><span class="n">${ri+1}</span><span class="vname"></span></td>`+defs.map(d=>`<td><span class="chip" data-d="${d.k}"></span></td>`).join('');
+    vb.appendChild(vr);
+  });
+  if(focusR>=rows.length)focusR=rows.length-1;
+  const nm=$('extraName');
+  if(nm)nm.addEventListener('input',e=>{rows[rows.length-1].name=e.target.value||'Your activity';update(false);});
+  if($('rm'))$('rm').addEventListener('click',()=>{rows.pop();prevVerdict={};buildGrid();update(false);$('add').focus();});
+  $('add').disabled=rows.length>ROWS0.length;
+}
+function cellBtn(r,c){return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);}
+
+function update(animate=true){
+  // grid cells
+  rows.forEach((r,ri)=>{
+    FEATS.forEach((f,ci)=>{
+      const b=cellBtn(ri,ci),on=!!r.v[ci];
+      b.setAttribute('aria-pressed',on);
+      b.querySelector('span').textContent=on?'1':'0';
+      b.classList.toggle('changed',r.base&&r.base[ci]!==r.v[ci]);
+      b.setAttribute('aria-label',`${r.name}, ${f.f}: ${on?1:0}`);
+      b.tabIndex=(ri===focusR&&ci===focusC)?0:-1;
+    });
+    const tr=$('fbody').children[ri];
+    tr.querySelector('.jc span').textContent=juulCount(r);
+  });
+  // headers
+  document.querySelectorAll('.colh').forEach(b=>{
+    const k=b.dataset.f,n=reqCount(k),f=FEATS.find(x=>x.k===k);
+    b.setAttribute('aria-pressed',n===0);
+    b.setAttribute('aria-label',`${f.f}. Required by ${n} of 3 definitions. ${n?'Activate to drop it from all three.':'Activate to restore it.'}`);
+  });
+  // matrix
+  document.querySelectorAll('#mbody input').forEach(cb=>{cb.checked=defs[+cb.dataset.d].req.has(cb.dataset.f);});
+  // verdicts
+  const N=rows.length,tot={};defs.forEach(d=>tot[d.k]=0);
+  const disputed=[];
+  rows.forEach((r,ri)=>{
+    const vr=$('vbody').children[ri];
+    vr.querySelector('.vname').textContent=r.name;
+    const res=defs.map(d=>verdict(r,d));
+    res.forEach((miss,di)=>{
+      const d=defs[di],chip=vr.querySelector(`.chip[data-d="${d.k}"]`),game=miss.length===0;
+      if(game)tot[d.k]++;
+      chip.className='chip '+(game?'game':'not');
+      chip.textContent=game?'game':'not: '+miss.join(', ');
+      chip.setAttribute('aria-label',`${r.name} under ${d.name}: ${game?'game':'not a game, missing '+miss.join(', ')}`);
+      const key=ri+d.k;
+      if(animate&&prevVerdict[key]!==undefined&&prevVerdict[key]!==game){void chip.offsetWidth;chip.classList.add('flip');}
+      prevVerdict[key]=game;
+    });
+    const games=res.map(m=>m.length===0);
+    const split=games.some(g=>g)&&games.some(g=>!g);
+    vr.classList.toggle('disputed',split);
+    $('fbody').children[ri].classList.toggle('disputed',split);
+    if(split){
+      const cols=[...new Set(res.flat())];
+      const yes=defs.filter((d,i)=>games[i]).map(d=>d.short);
+      disputed.push({n:ri+1,name:r.name,cols,yes});
+    }
+  });
+  defs.forEach(d=>{
+    $('tot-'+d.k).textContent=tot[d.k];
+    $('totof-'+d.k).textContent=`of ${N}`;
+    $('req-'+d.k).textContent=FEATS.filter(f=>d.req.has(f.k)).map(f=>f.k).join(' ')||'nothing';
+  });
+  const agree=N-disputed.length;
+  $('agree').innerHTML=`All three agree on <b>${agree} of ${N}</b> activities.`;
+  $('disputes').innerHTML=disputed.length
+    ?'Disputed: '+disputed.map(x=>`<b>${x.n}</b> ${esc(x.name)} (game for ${x.yes.join(' and ')} only; splits on ${x.cols.join(', ')})`).join('; ')+'.'
+    :'No disputes. Every definition gives the same verdict on every row.';
+  const dropped=FEATS.filter(f=>reqCount(f.k)===0);
+  $('banner').innerHTML=dropped.map(f=>`<span>${f.k} no longer required</span>`).join('');
+}
+
+// ---------- events ----------
+$('fbody').addEventListener('click',e=>{
+  const b=e.target.closest('.cell');if(!b)return;
+  const r=+b.dataset.r,c=+b.dataset.c;
+  rows[r].v[c]=rows[r].v[c]?0:1;focusR=r;focusC=c;update();
+});
+$('fbody').addEventListener('keydown',e=>{
+  const b=e.target.closest('.cell');if(!b)return;
+  let r=+b.dataset.r,c=+b.dataset.c;
+  const moves={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]};
+  if(e.key==='Home'){c=0;}else if(e.key==='End'){c=NF-1;}
+  else if(moves[e.key]){r=Math.max(0,Math.min(rows.length-1,r+moves[e.key][0]));c=Math.max(0,Math.min(NF-1,c+moves[e.key][1]));}
+  else return;
+  e.preventDefault();focusR=r;focusC=c;
+  document.querySelectorAll('.cell').forEach(x=>x.tabIndex=-1);
+  const nb=cellBtn(r,c);nb.tabIndex=0;nb.focus();
+});
+document.querySelectorAll('.colh').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.f;
+  if(reqCount(k)>0){memo[k]=defs.filter(d=>d.req.has(k)).map(d=>d.k);defs.forEach(d=>d.req.delete(k));}
+  else{const back=memo[k]||DEFS0.filter(d=>d.req.includes(k)).map(d=>d.k);defs.forEach(d=>{if(back.includes(d.k))d.req.add(k);});delete memo[k];}
+  update();
+}));
+$('mbody').addEventListener('change',e=>{
+  const cb=e.target;if(!cb.matches('input'))return;
+  const d=defs[+cb.dataset.d];cb.checked?d.req.add(cb.dataset.f):d.req.delete(cb.dataset.f);
+  delete memo[cb.dataset.f];update();
+});
+$('reset').addEventListener('click',()=>{init();prevVerdict={};focusR=0;focusC=0;buildGrid();update(false);});
+$('add').addEventListener('click',()=>{
+  if(rows.length>ROWS0.length)return;
+  rows.push({name:'Your activity',v:[0,0,0,0,0,0,0],base:null,extra:true});
+  buildGrid();update(false);const nm=$('extraName');nm.focus();nm.select();
+});
+// linked highlight across both panels
+function hl(ri,on){[$('fbody'),$('vbody')].forEach(tb=>{const tr=tb.children[ri];if(tr)tr.classList.toggle('hl',on);});}
+['fbody','vbody'].forEach(id=>{
+  $(id).addEventListener('mouseover',e=>{const tr=e.target.closest('tr');if(tr)hl(+tr.dataset.r,true);});
+  $(id).addEventListener('mouseout',e=>{const tr=e.target.closest('tr');if(tr)hl(+tr.dataset.r,false);});
+  $(id).addEventListener('focusin',e=>{const tr=e.target.closest('tr');if(tr)hl(+tr.dataset.r,true);});
+  $(id).addEventListener('focusout',e=>{const tr=e.target.closest('tr');if(tr)hl(+tr.dataset.r,false);});
+});
+
+buildGrid();update(false);
+})();
+</script>
+</body>
+</html>

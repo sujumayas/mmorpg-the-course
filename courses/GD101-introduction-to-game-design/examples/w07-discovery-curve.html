@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Discovery curve — GD101 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.controls{display:grid;grid-template-columns:1.1fr 1fr 1.2fr;gap:18px;align-items:start}
+@media (max-width:899px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+button:focus-visible,input:focus-visible,select:focus-visible,.row:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.toggle{display:flex;align-items:flex-start;gap:10px;justify-content:flex-start;padding:10px 12px;border:1.5px solid var(--blood);border-radius:10px;cursor:pointer;font-weight:600}
+.toggle input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--blood);flex:none}
+.toggle.on{background:var(--blood);color:var(--paper)}
+.toggle small{display:block;font-weight:400;font-size:.8rem;opacity:.85}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{background:var(--paper-2)}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+select{font:600 .9rem var(--sans);padding:6px 8px;border-radius:8px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);width:100%;margin:4px 0 6px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+@media (max-width:899px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#lineWrap{width:100%}
+svg{display:block;overflow:visible}
+svg text{font-family:var(--sans);font-size:12px;fill:var(--ink-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0}
+.legend i{display:inline-block;width:16px;height:4px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend i.ghost{background:transparent!important;border-top:2px dashed var(--ink-soft);height:0}
+.bars{display:flex;flex-direction:column;gap:5px}
+.row{display:grid;grid-template-columns:minmax(0,9.5em) 1fr;gap:8px;align-items:center;width:100%;background:transparent;border:0;border-radius:8px;padding:4px 6px;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.row:hover{background:var(--paper)}
+.row.sel{background:var(--paper);box-shadow:inset 3px 0 0 var(--ink)}
+@media (max-width:499px){.row{grid-template-columns:minmax(0,7.2em) 1fr}}
+.row .name{font-size:.85rem;font-weight:600;line-height:1.2;overflow-wrap:anywhere}
+.row .name small{display:block;font-weight:400;color:var(--ink-soft);font-size:.74rem}
+.track{display:flex;flex-direction:column;gap:3px;min-width:0}
+.bar{display:flex;align-items:center;gap:6px;min-width:0}
+.bar span.fill{display:block;height:12px;border-radius:3px;min-width:2px;transition:width .25s ease}
+.bar.b span.fill{height:7px;background:var(--ink-soft)}
+.bar b{font-size:.78rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar.b b{font-weight:400;color:var(--ink-soft)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:899px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:560px;width:100%}
+th,td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.total td{font-weight:700;border-top:2px solid var(--ink)}
+th.here,td.here{background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD101 Introduction to Game Design · Week 7 · Worked example</p>
+  <h1>Explaining hides the problem. It doesn&rsquo;t fix it.</h1>
+  <p class="lede">Eight problems in a paper trading game, each hitting a share <i>p</i> of players. Tick &ldquo;Explain the onboarding rules&rdquo; and three problems vanish from your playtest report. Their &ldquo;at launch&rdquo; bars on the right stay exactly where they were.</p>
+</header>
+
+<section class="panel" aria-label="Playtest discovery model">
+  <div class="controls">
+    <div>
+      <label for="n">Testers (n) <output id="oN">5</output></label>
+      <input id="n" type="range" min="1" max="30" step="1" value="5">
+      <div class="btns">
+        <button class="chip" id="nielsen" type="button">Nielsen average (all p = 0.31)</button>
+      </div>
+    </div>
+    <div>
+      <label class="toggle" id="explainLbl"><input type="checkbox" id="explain"><span>Explain the onboarding rules before play<small>Sets p to 0 in the test room for problems 1, 2 and 4</small></span></label>
+    </div>
+    <div>
+      <label for="pick">Selected problem</label>
+      <select id="pick"></select>
+      <label for="pf">Frequency of the selected problem <output id="oPf">0.50</output></label>
+      <input id="pf" type="range" min="0.01" max="0.90" step="0.01" value="0.50">
+      <div class="btns"><button class="chip" id="reset" type="button">Reset frequencies</button></div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Chance your test shows each problem<small>P(seen) = 1 &minus; (1 &minus; p)<sup>n</sup>, one line per problem. Click a line to select it.</small></figcaption>
+      <div id="lineWrap"></div>
+      <div class="legend" id="legend"></div>
+      <div class="btns"><button class="chip" id="tblBtn" type="button" aria-expanded="false" aria-controls="tblWrap">Show as table</button></div>
+      <div class="table-wrap" id="tblWrap" hidden>
+        <table>
+          <caption class="sr">P(seen) for each problem at selected tester counts</caption>
+          <thead id="thead"></thead><tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>In your report vs at launch<small>Thick bar: chance the problem appears in your report at <span id="capN">5</span> testers. Thin bar: share of real players who hit it.</small></figcaption>
+      <div class="bars" id="bars" role="group" aria-label="Problems, click to select"></div>
+      <div class="legend"><span><i style="background:var(--ink)"></i>In your report (colour = kind)</span><span><i style="background:var(--ink-soft);height:3px"></i>At launch (p)</span></div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rExp">—</b><span>expected problems seen</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rOnb">—</b><span>onboarding problems seen</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rNeed">—</b><span id="rNeedLbl">testers for 90% on the rarest problem you can still see</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rHid">—</b><span>expected problems hidden by explaining</span></div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model: Nielsen &amp; Landauer (1993), P(seen) = 1 &minus; (1 &minus; p)<sup>n</sup>, assuming independent testers. The trading-post prototype and its problem frequencies are fictional. The Nielsen preset uses the 31% average single-user find rate from Nielsen (2000).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const KINDS={'Onboarding':'--blood','Rules memory':'--ochre','Strategy':'--steel','Dynamics':'--moss','Rules hole':'--ink'};
+const P0=[0.50,0.40,0.31,0.25,0.20,0.15,0.10,0.05];
+const PROBS=[
+ ['Rolls the wrong die for travel','Wrong travel die','Onboarding'],
+ ["Doesn't notice the market deck refills",'Missed market refill','Onboarding'],
+ ['Forgets to pay upkeep at end of round','Forgets upkeep','Rules memory'],
+ ['Thinks healing is capped at 3','Healing cap myth','Onboarding'],
+ ['Never uses the trade action','Never trades','Strategy'],
+ ['Ends turns with unspent gold','Unspent gold','Strategy'],
+ ['Both players turtle and the game stalls','Turtling stall','Dynamics'],
+ ['Game soft-locks when the market deck is empty','Empty-deck soft-lock','Rules hole']
+];
+const ONB=[0,1,3], TBL_N=[1,3,5,10,15,30], NMAX=30;
+let p=P0.slice(), n=5, explain=false, sel=0;
+
+const seen=(q,k)=>1-Math.pow(1-q,k);
+const peff=i=>(explain&&ONB.includes(i))?0:p[i];
+const pct1=x=>(x*100).toFixed(1)+'%';
+const color=i=>css(KINDS[PROBS[i][2]]);
+const expected=k=>p.reduce((s,_,i)=>s+seen(peff(i),k),0);
+
+// select + bars built once
+const pick=$('pick'), bars=$('bars');
+PROBS.forEach((r,i)=>{
+  const o=document.createElement('option');o.value=i;o.textContent=`${i+1}. ${r[0]}`;pick.appendChild(o);
+  const b=document.createElement('button');b.type='button';b.className='row';b.dataset.i=i;
+  b.innerHTML=`<span class="name">${i+1}. ${r[1]}<small>${r[2]}</small></span><span class="track"><span class="bar a"><span class="fill"></span><b></b></span><span class="bar b"><span class="fill"></span><b></b></span></span>`;
+  b.addEventListener('click',()=>select(i));bars.appendChild(b);
+});
+$('legend').innerHTML=Object.keys(KINDS).map(k=>`<span><i style="background:var(${KINDS[k]})"></i>${k}</span>`).join('')+'<span id="ghostKey" hidden><i class="ghost"></i>Silent curve (ghost)</span>';
+
+function select(i){sel=i;pick.value=i;$('pf').value=p[i].toFixed(2);$('oPf').textContent=p[i].toFixed(2);render();}
+
+const SVGNS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+
+function drawLines(){
+  const wrap=$('lineWrap');wrap.innerHTML='';
+  const W=Math.max(260,wrap.clientWidth), H=W<500?250:290;
+  const pad={l:42,r:34,t:10,b:34}, iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  const X=k=>pad.l+iw*(k-1)/(NMAX-1), Y=v=>pad.t+ih*(1-v);
+  const svg=el('svg',{width:W,height:H,viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':`Line chart of P(seen) against testers 1 to 30 for eight problems. At n = ${n}: `+p.map((_,i)=>`problem ${i+1} ${pct1(seen(peff(i),n))}`).join(', ')},wrap);
+  for(let t=0;t<=4;t++){const y=Y(t/4);el('line',{x1:pad.l,x2:W-pad.r,y1:y,y2:y,stroke:css('--grid')},svg);const tx=el('text',{x:pad.l-6,y:y+4,'text-anchor':'end'},svg);tx.textContent=(t*25)+'%';}
+  [1,5,10,15,20,25,30].forEach(k=>{const tx=el('text',{x:X(k),y:H-pad.b+16,'text-anchor':'middle'},svg);tx.textContent=k;});
+  const xl=el('text',{x:W-pad.r,y:H-2,'text-anchor':'end'},svg);xl.textContent='testers';
+  // marker
+  el('line',{x1:X(n),x2:X(n),y1:pad.t,y2:H-pad.b,stroke:css('--ink'),'stroke-dasharray':'4 4','stroke-opacity':.5},svg);
+  const pts=(q)=>{let d='';for(let k=1;k<=NMAX;k++)d+=(k>1?'L':'M')+X(k).toFixed(1)+','+Y(seen(q,k)).toFixed(1);return d;};
+  // ghosts
+  if(explain)ONB.forEach(i=>el('path',{d:pts(p[i]),fill:'none',stroke:color(i),'stroke-width':1.5,'stroke-dasharray':'5 5','stroke-opacity':.55},svg));
+  const order=[...p.keys()].sort((a,b)=>(a===sel)-(b===sel));
+  order.forEach(i=>{
+    const d=pts(peff(i)), isSel=i===sel;
+    el('path',{d,fill:'none',stroke:color(i),'stroke-width':isSel?4:2.2,'stroke-opacity':isSel?1:.85,'stroke-linejoin':'round'},svg);
+    const hit=el('path',{d,fill:'none',stroke:'transparent','stroke-width':14,style:'cursor:pointer'},svg);
+    hit.addEventListener('click',()=>select(i));
+    el('circle',{cx:X(n),cy:Y(seen(peff(i),n)),r:isSel?5.5:4,fill:color(i),stroke:css('--paper-2'),'stroke-width':1.5},svg);
+  });
+  // end labels with collision avoidance
+  const labs=p.map((_,i)=>({i,y:Y(seen(peff(i),NMAX)),t:Y(seen(peff(i),NMAX))})).sort((a,b)=>a.y-b.y);
+  const gap=13;
+  for(let k=1;k<labs.length;k++)if(labs[k].y<labs[k-1].y+gap)labs[k].y=labs[k-1].y+gap;
+  const last=labs.length-1;if(labs[last].y>H-pad.b)labs[last].y=H-pad.b;
+  for(let k=last-1;k>=0;k--)if(labs[k].y>labs[k+1].y-gap)labs[k].y=labs[k+1].y-gap;
+  labs.forEach(l=>{
+    el('line',{x1:X(NMAX)+2,x2:X(NMAX)+10,y1:l.t,y2:l.y,stroke:color(l.i),'stroke-opacity':.6},svg);
+    const tx=el('text',{x:X(NMAX)+13,y:l.y+4,style:`fill:${color(l.i)};font-weight:${l.i===sel?700:600}`},svg);tx.textContent=l.i+1;
+  });
+}
+
+function drawBars(){
+  bars.querySelectorAll('.row').forEach(r=>{
+    const i=+r.dataset.i, a=seen(peff(i),n), b=p[i];
+    r.classList.toggle('sel',i===sel);r.setAttribute('aria-pressed',i===sel);
+    r.setAttribute('aria-label',`Problem ${i+1}, ${PROBS[i][0]}. In your report ${pct1(a)}. At launch ${Math.round(b*100)}% of players.`);
+    const fa=r.querySelector('.bar.a .fill'), fb=r.querySelector('.bar.b .fill');
+    fa.style.width=`calc((100% - 3.6em) * ${a})`;fa.style.background=color(i);
+    fb.style.width=`calc((100% - 3.6em) * ${b})`;
+    r.querySelector('.bar.a b').textContent=pct1(a);
+    r.querySelector('.bar.b b').textContent=Math.round(b*100)+'%';
+  });
+}
+
+function drawTable(){
+  $('thead').innerHTML='<tr><th>Problem</th><th>p</th>'+TBL_N.map(k=>`<th class="${k===n?'here':''}">n = ${k}</th>`).join('')+'</tr>';
+  $('tbody').innerHTML=p.map((q,i)=>`<tr><td>${i+1}. ${PROBS[i][1]}</td><td>${peff(i).toFixed(2)}</td>`+TBL_N.map(k=>`<td class="${k===n?'here':''}">${pct1(seen(peff(i),k))}</td>`).join('')+'</tr>').join('')
+   +`<tr class="total"><td>Expected problems seen</td><td></td>`+TBL_N.map(k=>`<td class="${k===n?'here':''}">${expected(k).toFixed(2)}</td>`).join('')+'</tr>';
+}
+
+function readouts(){
+  const e=expected(n), onb=ONB.reduce((s,i)=>s+seen(peff(i),n),0);
+  const silent=p.reduce((s,q)=>s+seen(q,n),0);
+  let rare=-1;p.forEach((_,i)=>{if(peff(i)>0&&(rare<0||peff(i)<peff(rare)))rare=i;});
+  const need=Math.ceil(Math.log(0.1)/Math.log(1-peff(rare)));
+  $('rExp').textContent=e.toFixed(2)+' of 8';
+  $('rOnb').textContent=onb.toFixed(2)+' of 3';
+  $('rNeed').textContent=need;
+  $('rNeedLbl').textContent=`testers for 90% on the rarest problem you can still see (problem ${rare+1}, p = ${peff(rare).toFixed(2)})`;
+  $('rHid').textContent=(silent-e).toFixed(2);
+  $('oN').textContent=n;$('capN').textContent=n;
+  const r=p[rare];
+  let s;
+  if(explain){
+    s=`Explaining cost your report <b>${(silent-e).toFixed(2)}</b> expected problems at ${n} testers. Onboarding problems seen: <b>0.00 of 3</b>, and no number of testers changes that. At launch, ${ONB.map(i=>Math.round(p[i]*100)+'%').join(', ')} of players still hit problems 1, 2 and 4.`;
+  }else{
+    s=`With ${n} silent tester${n>1?'s':''} you expect to see <b>${e.toFixed(2)}</b> of the 8 problems. Problem ${sel+1} (p = ${p[sel].toFixed(2)}) shows up ${pct1(seen(p[sel],n))} of the time. The rarest, problem ${rare+1}, needs ${need} testers for a 90% chance.`;
+  }
+  $('insight').innerHTML=s;
+}
+
+function render(){readouts();drawBars();drawLines();if(!$('tblWrap').hidden)drawTable();}
+
+$('n').addEventListener('input',e=>{n=+e.target.value;render();});
+$('explain').addEventListener('change',e=>{explain=e.target.checked;$('explainLbl').classList.toggle('on',explain);$('ghostKey').hidden=!explain;render();});
+pick.addEventListener('change',e=>select(+e.target.value));
+$('pf').addEventListener('input',e=>{p[sel]=+(+e.target.value).toFixed(2);$('oPf').textContent=p[sel].toFixed(2);render();});
+$('reset').addEventListener('click',()=>{p=P0.slice();select(sel);});
+$('nielsen').addEventListener('click',()=>{p=p.map(()=>0.31);n=5;$('n').value=5;select(sel);});
+$('tblBtn').addEventListener('click',e=>{const w=$('tblWrap'),open=w.hidden;w.hidden=!open;e.target.setAttribute('aria-expanded',open);e.target.textContent=open?'Hide table':'Show as table';if(open)drawTable();});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawLines,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawLines);
+select(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pitch pillar map — GD101 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 2px}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-top:14px}
+.bar-row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.lbl{font-weight:600;font-size:.92rem}
+.chip,.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.chip[aria-pressed="true"],.btn[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn.ink{border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:14px;margin-top:14px}
+@media (max-width:760px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem;margin-bottom:8px}
+.doclist{list-style:none;margin:0;padding:0}
+.doclist li{margin:0}
+.doclist button{display:block;width:100%;text-align:left;font:400 .95rem/1.35 var(--serif);color:var(--ink);background:transparent;border:0;border-bottom:1px dotted var(--grid);padding:9px 4px;cursor:pointer;min-height:40px}
+.doclist button:hover{background:var(--paper)}
+.doclist button[aria-pressed="false"]{text-decoration:line-through;opacity:.45}
+.doclist button.untraced{opacity:.45;font-style:italic;cursor:default}
+.doclist .code{font-family:var(--sans);font-weight:700;font-size:.8rem;color:var(--ink-soft);margin-right:6px}
+.doclist .tag{font-family:var(--sans);font-size:.75rem;border:1px solid var(--ink-soft);border-radius:4px;padding:0 4px;margin-left:6px;color:var(--ink-soft);text-decoration:none;display:inline-block}
+#chart{display:block;width:100%;height:370px}
+#chart text{font-family:var(--sans);fill:var(--ink)}
+#chart .soft{fill:var(--ink-soft)}
+#chart .gridline{stroke:var(--grid);stroke-width:1}
+#chart .axis{stroke:var(--ink-soft);stroke-width:1}
+#chart .link{stroke:var(--ink-soft);stroke-width:1.4;opacity:.55}
+#chart .link.hi{stroke:var(--ink);opacity:1;stroke-width:2.4}
+#chart .bar-ok{fill:var(--steel)}
+#chart .bar-frag{fill:var(--ochre)}
+#chart .bar-none{fill:var(--blood)}
+#chart .t-ok{fill:var(--steel)}
+#chart .t-frag{fill:var(--ochre)}
+#chart .t-none{fill:var(--blood)}
+#chart .node circle{fill:var(--paper);stroke:var(--ink);stroke-width:1.8}
+#chart .node.orphan circle{stroke-dasharray:4 3;stroke:var(--blood)}
+#chart .node{cursor:pointer;outline:none}
+#chart .node:hover circle{fill:var(--paper-2)}
+#chart .node:focus-visible circle{stroke:var(--focus);stroke-width:3.5;stroke-dasharray:none}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 12px;margin:8px 0 0;padding:0;list-style:none;font-size:.86rem}
+.legend b{display:inline-block;min-width:2.2em}
+.st{font-weight:700}
+.st.ok{color:var(--steel)} .st.frag{color:var(--ochre)} .st.none{color:var(--blood)}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.insight p{margin:0 0 6px}.insight p:last-child{margin:0}
+.try{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.table-wrap{overflow-x:auto;margin-top:10px;max-width:100%}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}
+th,td{padding:5px 8px;text-align:center;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-weight:700;vertical-align:bottom}
+#grid td.cellwrap{padding:3px}
+#grid button.cell{width:38px;height:38px;border-radius:6px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink-soft);font:600 .95rem var(--sans);cursor:pointer}
+#grid button.cell[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+#grid tr.off td{opacity:.45}
+#grid th.mname{font-weight:400;font-size:.86rem;max-width:230px;min-width:120px}
+#grid input{font:inherit;font-size:.86rem;width:100%;min-width:90px;padding:4px 6px;border:1px solid var(--ink-soft);border-radius:5px;background:var(--paper);color:var(--ink)}
+#grid thead input{width:88px;min-width:0;text-align:center}
+#grid tfoot td,#grid tfoot th{font-weight:700;border-top:2px solid var(--ink)}
+.check{margin:10px 0 0;font-size:.92rem}
+.check b{font-variant-numeric:tabular-nums}
+#swapTable td.chg{font-weight:700}
+#swapTable td.v-safe{color:var(--moss);font-weight:700}
+#swapTable td.v-structural{color:var(--ochre);font-weight:700}
+#swapTable td.v-critical{color:var(--blood);font-weight:700}
+.c-frag{color:var(--ochre)} .c-none{color:var(--blood)}
+.note{font-size:.88rem;color:var(--ink-soft);margin:8px 0 0;max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (max-width:480px){#grid button.cell{width:30px;height:34px;}#grid td.cellwrap{padding:2px}#grid th.mname{min-width:90px;font-size:.8rem}#grid th,#grid td{padding:4px 4px}#grid td.cellwrap{padding:2px 1px}.panel{padding:12px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD101 Introduction to Game Design · Week 14 · Worked example</p>
+  <h1>The pitch pillar map</h1>
+  <p class="lede">Strike any line from the 1994 Diablo pitch and the list still looks full. The pillar view tells the lines apart. Removing turn-based combat leaves every promise standing on two or more mechanics. Removing the random dungeon leaves two promises standing on one.</p>
+</header>
+
+<section class="panel" aria-label="Presets and actions">
+  <div class="bar-row">
+    <span class="lbl" id="presetLbl">Document</span>
+    <div class="bar-row" role="group" aria-labelledby="presetLbl" id="presets">
+      <button class="chip" data-p="diablo" aria-pressed="true">Diablo pitch, 1994</button>
+      <button class="chip" data-p="shipped" aria-pressed="false">As shipped</button>
+      <button class="chip" data-p="blank" aria-pressed="false">Blank 3 by 5</button>
+      <button class="chip" data-p="cy1" aria-pressed="false">Check yourself 1</button>
+    </div>
+  </div>
+  <div class="bar-row" style="margin-top:10px">
+    <button class="btn" id="swapBtn" aria-pressed="false">Swap in real-time combat</button>
+    <button class="btn" id="testBtn">Run swap test</button>
+    <button class="btn ink" id="resetBtn">Reset</button>
+  </div>
+  <p class="note" id="presetNote"></p>
+</section>
+
+<div class="views">
+  <figure>
+    <figcaption><h2>What the reader sees</h2><small>The document as a list. Click a line to remove or restore it.</small></figcaption>
+    <ul class="doclist" id="list" aria-label="Mechanics in the document"></ul>
+  </figure>
+  <figure>
+    <figcaption><h2>What holds the promises up</h2><small>Bar height is each pillar's support. Lines run from each active mechanic to the pillars it serves. Click a node to remove it.</small></figcaption>
+    <div id="chartWrap"><svg id="chart" role="group" aria-label="Pillar support chart"></svg></div>
+    <ul class="legend" id="legend" aria-label="Pillar support"></ul>
+  </figure>
+</div>
+
+<div class="readout" aria-live="polite">
+  <div class="stat" style="--c:var(--steel)"><b id="rCov">—</b><span>pillars covered</span></div>
+  <div class="stat" style="--c:var(--ochre)"><b id="rFrag">—</b><span>fragile pillars</span></div>
+  <div class="stat" style="--c:var(--blood)"><b id="rNone">—</b><span>unsupported pillars</span></div>
+  <div class="stat" style="--c:var(--ink-soft)"><b id="rOrph">—</b><span>orphan mechanics</span></div>
+  <div class="stat" style="--c:var(--moss)"><b id="rLinks">—</b><span>total links</span></div>
+</div>
+
+<div class="insight" id="insight" aria-live="polite"></div>
+<div class="try" id="tryRow" aria-label="Quick comparisons"></div>
+
+<section class="panel" id="testPanel" hidden aria-labelledby="testH">
+  <h2 id="testH">Swap test</h2>
+  <p class="note" style="margin-top:0">Each row removes one active mechanic alone and recomputes support. Bold cells changed. Critical means some pillar drops to 0. Structural means some pillar at 2 or more drops to 1.</p>
+  <div class="table-wrap"><table id="swapTable"></table></div>
+</section>
+
+<section class="panel" aria-labelledby="gridH">
+  <h2 id="gridH">Pillar-mechanic grid</h2>
+  <p class="note" style="margin-top:0">Rows are mechanics, columns are pillars. Arrow keys move between cells, Space toggles a link. Load is the row total. Support counts active rows only.</p>
+  <div class="table-wrap"><table id="grid"></table></div>
+  <p class="check" id="check" aria-live="polite"></p>
+</section>
+
+<footer>Model from the lecture: support(p) = &Sigma;<sub>m</sub> active(m) &times; L[m, p], load(m) = &Sigma;<sub>p</sub> L[m, p]. Swap test for mechanic k: support<sub>k</sub>(p) = support(p) &minus; L[k, p]. Critical if any support<sub>k</sub>(p) = 0 where support(p) &ge; 1, else structural if any support<sub>k</sub>(p) = 1 where support(p) &ge; 2, else safe. Links for the Diablo preset follow the lecture's coding of the Condor pitch (1994). The coding is a reading of the document, so argue with it.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const DIABLO_P=[['Rp','Replayability'],['Ex','Expandability'],['Xp','Exploration'],['Cf','Conflict'],['Cd','Character development']];
+const DIABLO_M=[
+  ['m1','Random dungeon generated on entering each level',[1,1,1,0,0]],
+  ['m2','Turn-based combat with action points',[0,0,0,1,0]],
+  ['m3','Races, classes, stat points, spell schools',[0,0,0,0,1]],
+  ['m4','Magic items and equipment',[0,1,0,1,1]],
+  ['m5','Town trips (shop, temple, home)',[0,0,0,0,1]],
+  ['m6','Lighting and line of sight',[0,0,1,0,0]],
+  ['m7','Permanent death (character erased)',[0,0,0,0,0]],
+  ['m8','Multiplayer by modem or network, with an arena',[0,1,0,1,0]],
+  ['m9','Cheap expansion disks sold at the register',[1,1,0,0,0]]
+];
+const RT=['RT','Real-time combat',[0,0,0,1,0]];
+const ABC=[['A','Pillar A'],['B','Pillar B'],['C','Pillar C']];
+const PRESETS={
+  diablo:{note:'The lecture grid, coded from the 1994 pitch. Support Rp 2, Ex 4, Xp 2, Cf 3, Cd 3.',build(){return mk(DIABLO_P,DIABLO_M,true);}},
+  shipped:{note:'m2 swapped for real-time combat, m9 removed, races dropped from m3, m7 not traced (the lecture’s sources do not confirm it). Rp now rests on m1 alone.',build(){
+    const s=mk(DIABLO_P,DIABLO_M,true);s.swapped=true;s.rows[8].active=false;s.rows[2].name='Classes (three)';s.rows[6].traced=false;return s;}},
+  blank:{note:'An empty grid. Edit the names in the grid and click cells to add links.',editable:true,build(){
+    return mk(ABC,[1,2,3,4,5].map(i=>['m'+i,'Mechanic '+i,[0,0,0]]),false);}},
+  cy1:{note:'Check yourself question 1: m1 to A and B, m2 to B, m3 to C, m4 to nothing, m5 to A and C.',build(){
+    return mk(ABC,[['m1','Mechanic 1',[1,1,0]],['m2','Mechanic 2',[0,1,0]],['m3','Mechanic 3',[0,0,1]],['m4','Mechanic 4',[0,0,0]],['m5','Mechanic 5',[1,0,1]]],false);}}
+};
+function mk(P,M,hasSwap){
+  const rows=M.map(([id,name,L])=>({id,name,L:L.slice(),active:true,traced:true}));
+  const s={pillars:P.map(([code,name])=>({code,name})),rows,hasSwap,swapped:false,
+    rt:{id:RT[0],name:RT[1],L:RT[2].slice(),active:true,traced:true}};
+  return s;
+}
+let presetKey='diablo',S=PRESETS.diablo.build(),base=null,showTest=false;
+
+// effective rows (m2 replaced by RT when swapped)
+function rows(){return S.rows.map((r,i)=>(S.hasSwap&&S.swapped&&i===1)?S.rt:r);}
+function counts(){
+  const R=rows(),np=S.pillars.length;
+  const sup=Array(np).fill(0);
+  R.forEach(r=>{if(r.active&&r.traced)r.L.forEach((v,p)=>sup[p]+=v);});
+  const load=R.map(r=>r.L.reduce((a,b)=>a+b,0));
+  return {R,sup,load};
+}
+function status(v){return v>=2?'ok':v===1?'frag':'none';}
+const statusText={ok:'ok',frag:'fragile',none:'unsupported'};
+function verdict(sup,L){
+  let crit=false,str=false;
+  L.forEach((v,p)=>{const k=sup[p]-v;if(k===0&&sup[p]>=1)crit=true;else if(k===1&&sup[p]>=2)str=true;});
+  return crit?'critical':str?'structural':'safe';
+}
+function label(r){return r.id+' '+r.name;}
+
+// ---------- left list ----------
+function renderList(){
+  const {R,load}=counts();
+  $('list').innerHTML=R.map((r,i)=>{
+    if(!r.traced) return `<li><button class="untraced" data-key="l${i}" aria-disabled="true" title="Not traced"><span class="code">${esc(r.id)}</span>${esc(r.name)}<span class="tag">not traced</span></button></li>`;
+    return `<li><button data-key="l${i}" data-i="${i}" aria-pressed="${r.active}" aria-label="${esc(label(r))}${r.active?'':' (removed)'}"><span class="code">${esc(r.id)}</span>${esc(r.name)}</button></li>`;
+  }).join('');
+  $('list').querySelectorAll('button[data-i]').forEach(b=>b.addEventListener('click',()=>toggle(+b.dataset.i)));
+}
+function toggle(i){const r=rows()[i];if(!r.traced)return;r.active=!r.active;render();}
+
+// ---------- right chart ----------
+let hiRow=-1;
+function renderChart(){
+  const svg=$('chart'),W=Math.max(260,$('chartWrap').clientWidth),H=370;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const {R,sup,load}=counts(),np=S.pillars.length;
+  const padL=26,padR=8,nodeY=20,top=122,base=316,unit=(base-top)/5;
+  const colW=(W-padL-padR)/np,barW=Math.min(54,colW*.55);
+  const px=p=>padL+colW*(p+.5);
+  const nodes=R.map((r,i)=>({r,i})).filter(o=>o.r.active&&o.r.traced);
+  const nn=nodes.length,nodeGap=(W-padL-padR)/Math.max(nn,1),stag=nodeGap<40,rad=Math.min(15,stag?nodeGap*.62:nodeGap*.36);
+  const ny=k=>stag&&k%2?nodeY+40:nodeY;
+  const nx=k=>padL+nodeGap*(k+.5);
+  let g='';
+  for(let v=0;v<=5;v++){const y=base-v*unit;g+=`<line class="gridline" x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}"/><text class="soft" x="${padL-6}" y="${y+4}" text-anchor="end" font-size="11">${v}</text>`;}
+  g+=`<line class="axis" x1="${padL}" x2="${W-padR}" y1="${base}" y2="${base}"/>`;
+  // links
+  nodes.forEach((o,k)=>{o.r.L.forEach((v,p)=>{if(!v)return;const y2=base-Math.min(sup[p],5)*unit;
+    g+=`<line class="link${hiRow===o.i?' hi':''}" data-row="${o.i}" x1="${nx(k)}" y1="${ny(k)+rad}" x2="${px(p)}" y2="${y2}"/>`;});});
+  // bars
+  S.pillars.forEach((pl,p)=>{const v=sup[p],st=status(v),h=Math.min(v,5)*unit,x=px(p);
+    g+=`<rect class="bar-${st}" x="${x-barW/2}" y="${base-h}" width="${barW}" height="${Math.max(h,0)}" rx="3"/>`;
+    if(v===0)g+=`<line x1="${x-barW/2}" x2="${x+barW/2}" y1="${base}" y2="${base}" style="stroke:var(--blood);stroke-width:4"/>`;
+    g+=`<text x="${x}" y="${base-h-6}" text-anchor="middle" font-size="14" font-weight="700">${v}</text>`;
+    g+=`<text x="${x}" y="${base+18}" text-anchor="middle" font-size="13" font-weight="700">${esc(pl.code)}</text>`;
+    g+=`<text class="t-${st}" x="${x}" y="${base+36}" text-anchor="middle" font-size="11.5" font-weight="700">${statusText[st]}</text>`;
+  });
+  // nodes
+  nodes.forEach((o,k)=>{const orphan=load[o.i]===0,x=nx(k);
+    g+=`<g class="node${orphan?' orphan':''}" tabindex="0" role="button" data-key="n${o.i}" data-i="${o.i}" aria-label="Remove ${esc(label(o.r))}${orphan?', orphan':''}"><title>${esc(label(o.r))}</title>`+
+      `<circle cx="${x}" cy="${ny(k)}" r="${rad}"/><text x="${x}" y="${ny(k)+4}" text-anchor="middle" font-size="11" font-weight="700">${esc(o.r.id)}</text>`+
+      (orphan?`<text class="t-none" x="${x}" y="${ny(k)+rad+13}" text-anchor="middle" font-size="10.5" font-weight="700">orphan</text>`:'')+`</g>`;
+  });
+  svg.innerHTML=g;
+  svg.querySelectorAll('.node').forEach(n=>{
+    const i=+n.dataset.i;
+    n.addEventListener('click',()=>toggle(i));
+    n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle(i);}});
+    const hi=on=>svg.querySelectorAll(`.link[data-row="${i}"]`).forEach(l=>l.classList.toggle('hi',on));
+    n.addEventListener('mouseenter',()=>hi(true));n.addEventListener('mouseleave',()=>hi(false));
+    n.addEventListener('focus',()=>hi(true));n.addEventListener('blur',()=>hi(false));
+  });
+  $('legend').innerHTML=S.pillars.map((pl,p)=>{const st=status(sup[p]);return `<li><b>${esc(pl.code)}</b>${esc(pl.name)}: ${sup[p]} <span class="st ${st}">${statusText[st]}</span></li>`;}).join('');
+}
+
+// ---------- grid ----------
+function renderGrid(){
+  const {R,sup,load}=counts(),ed=!!PRESETS[presetKey].editable;
+  let h='<thead><tr><th scope="col">Mechanic</th>'+S.pillars.map((pl,p)=>`<th scope="col">${ed?`<input data-key="pn${p}" data-pn="${p}" value="${esc(pl.name)}" aria-label="Name of pillar ${esc(pl.code)}"><br>`:''}<abbr title="${esc(pl.name)}">${esc(pl.code)}</abbr></th>`).join('')+'<th scope="col">Load</th></tr></thead><tbody>';
+  R.forEach((r,i)=>{
+    const on=r.active&&r.traced;
+    h+=`<tr class="${on?'':'off'}"><th scope="row" class="mname">${ed?`<input data-key="mn${i}" data-mn="${i}" value="${esc(r.name)}" aria-label="Name of ${esc(r.id)}">`:`<b>${esc(r.id)}</b> ${esc(r.name)}${r.traced?'':' <em>(not traced)</em>'}${r.active?'':' <em>(removed)</em>'}`}</th>`;
+    r.L.forEach((v,p)=>{h+=`<td class="cellwrap"><button class="cell" data-key="c${i}_${p}" data-r="${i}" data-c="${p}" aria-pressed="${v===1}" tabindex="-1" aria-label="${esc(r.id)} serves ${esc(S.pillars[p].code)}">${v}</button></td>`;});
+    h+=`<td><b>${load[i]}</b></td></tr>`;
+  });
+  h+='</tbody><tfoot><tr><th scope="row">Support</th>'+sup.map(v=>`<td class="${v===0?'c-none':v===1?'c-frag':''}">${v}</td>`).join('')+'<td></td></tr></tfoot>';
+  $('grid').innerHTML=h;
+  const cells=[...$('grid').querySelectorAll('button.cell')];
+  if(!cells.some(c=>c.tabIndex===0)){const k=cells.find(c=>c.dataset.r==cur.r&&c.dataset.c==cur.c)||cells[0];if(k)k.tabIndex=0;}
+  cells.forEach(c=>{
+    c.addEventListener('click',()=>{cur={r:+c.dataset.r,c:+c.dataset.c};const r=rows()[cur.r];r.L[cur.c]=r.L[cur.c]?0:1;render();});
+    c.addEventListener('keydown',e=>{
+      let {r,c:cc}={r:+c.dataset.r,c:+c.dataset.c};const nr=R.length,nc=S.pillars.length;
+      if(e.key==='ArrowRight')cc=Math.min(nc-1,cc+1);else if(e.key==='ArrowLeft')cc=Math.max(0,cc-1);
+      else if(e.key==='ArrowDown')r=Math.min(nr-1,r+1);else if(e.key==='ArrowUp')r=Math.max(0,r-1);
+      else if(e.key==='Home')cc=0;else if(e.key==='End')cc=nc-1;else return;
+      e.preventDefault();cur={r,c:cc};
+      cells.forEach(x=>x.tabIndex=-1);const t=cells.find(x=>+x.dataset.r===r&&+x.dataset.c===cc);t.tabIndex=0;t.focus();
+    });
+  });
+  $('grid').querySelectorAll('input[data-pn]').forEach(inp=>inp.addEventListener('input',()=>{S.pillars[+inp.dataset.pn].name=inp.value;render(true);}));
+  $('grid').querySelectorAll('input[data-mn]').forEach(inp=>inp.addEventListener('input',()=>{rows()[+inp.dataset.mn].name=inp.value;render(true);}));
+  const rowTot=R.reduce((a,r,i)=>a+((r.active&&r.traced)?load[i]:0),0),colTot=sup.reduce((a,b)=>a+b,0);
+  $('check').innerHTML=`Links by row = links by column: <b>${rowTot}</b> = <b>${colTot}</b> ${rowTot===colTot?'(they agree)':'(mismatch)'}. Row total counts active mechanics only.`;
+}
+let cur={r:0,c:0};
+
+// ---------- swap test ----------
+function renderTest(){
+  $('testPanel').hidden=!showTest;
+  if(!showTest)return;
+  const {R,sup}=counts();
+  let h='<thead><tr><th scope="col">Remove</th>'+S.pillars.map(p=>`<th scope="col">${esc(p.code)}</th>`).join('')+'<th scope="col">Verdict</th></tr></thead><tbody>';
+  h+='<tr><td>nothing</td>'+sup.map(v=>`<td>${v}</td>`).join('')+'<td>baseline</td></tr>';
+  R.forEach(r=>{if(!(r.active&&r.traced))return;
+    const v=verdict(sup,r.L);
+    h+=`<tr><td><b>${esc(r.id)}</b> ${esc(r.name)}</td>`+r.L.map((l,p)=>{const k=sup[p]-l;return `<td class="${l?'chg ':''}${k===0?'c-none':k===1?'c-frag':''}">${k}</td>`;}).join('')+`<td class="v-${v}">${v}</td></tr>`;
+  });
+  $('swapTable').innerHTML=h+'</tbody>';
+}
+
+// ---------- readouts + insight ----------
+function renderReadout(){
+  const {R,sup,load}=counts(),np=sup.length;
+  const act=R.map((r,i)=>i).filter(i=>R[i].active&&R[i].traced);
+  $('rCov').textContent=`${sup.filter(v=>v>=1).length} of ${np}`;
+  $('rFrag').textContent=sup.filter(v=>v===1).length;
+  $('rNone').textContent=sup.filter(v=>v===0).length;
+  const orph=act.filter(i=>load[i]===0).map(i=>R[i].id);
+  $('rOrph').textContent=orph.length?orph.join(', '):'0';
+  $('rLinks').textContent=sup.reduce((a,b)=>a+b,0);
+  // compare with the preset as loaded
+  const struck=R.filter(r=>r.traced&&!r.active).map(r=>r.id);
+  const changes=S.pillars.map((p,i)=>base.sup[i]!==sup[i]?`${p.code} ${base.sup[i]} to ${sup[i]}`:null).filter(Boolean);
+  const weak=S.pillars.map((p,i)=>sup[i]===0?`${p.code} is unsupported`:sup[i]===1?`${p.code} is fragile`:null).filter(Boolean);
+  let a,b;
+  if(!struck.length&&!changes.length&&!(S.hasSwap&&S.swapped!==base.swapped)){
+    a=`Nothing removed yet. The list shows ${R.length} lines of the same size.`;
+    b=weak.length?`The pillar view already shows a weak spot: ${weak.join(', ')}.`:`Every pillar has support 2 or more. Try the two removals below and compare what each view shows.`;
+  }else{
+    a=`The list shows ${R.length} lines, ${struck.length} struck through${struck.length?' ('+struck.join(', ')+')':''}${S.hasSwap&&S.swapped?', with m2 swapped for real-time combat':''}. It still looks like a full document.`;
+    b=(changes.length?`Pillar support moved: ${changes.join(', ')}. `:'No pillar support moved. ')+(weak.length?`Now ${weak.join(', ')}.`:'Every pillar still stands on two or more mechanics.');
+  }
+  $('insight').innerHTML=`<p>${esc(a)}</p><p><b>${esc(b)}</b></p>`;
+  const tr=$('tryRow');
+  if(S.hasSwap){
+    tr.hidden=false;
+    tr.innerHTML=`<button class="btn" data-key="try1" data-only="1">Remove only m2 (turn-based combat)</button><button class="btn" data-key="try0" data-only="0">Remove only m1 (random dungeon)</button>`;
+    tr.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      load_(presetKey);const i=+b.dataset.only;rows()[i].active=false;render();}));
+  }else{tr.hidden=true;tr.innerHTML='';}
+}
+
+// ---------- render + focus keeping ----------
+function render(skipGrid){
+  const key=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.key:null;
+  const selStart=document.activeElement&&document.activeElement.tagName==='INPUT'?document.activeElement.selectionStart:null;
+  renderList();renderChart();if(!skipGrid)renderGrid();
+  renderTest();renderReadout();
+  $('swapBtn').disabled=!S.hasSwap;$('swapBtn').setAttribute('aria-pressed',S.hasSwap&&S.swapped);
+  $('testBtn').textContent=showTest?'Hide swap test':'Run swap test';
+  if(key&&!skipGrid){const el=document.querySelector(`[data-key="${key}"]`);if(el){el.focus();if(selStart!==null&&el.setSelectionRange)el.setSelectionRange(selStart,selStart);}}
+}
+function load_(k){presetKey=k;S=PRESETS[k].build();cur={r:0,c:0};const c=counts();base={sup:c.sup.slice(),swapped:S.swapped};
+  document.querySelectorAll('#presets .chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.p===k));
+  $('presetNote').textContent=PRESETS[k].note;}
+
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{load_(b.dataset.p);render();}));
+$('swapBtn').addEventListener('click',()=>{if(!S.hasSwap)return;S.swapped=!S.swapped;if(S.swapped)S.rt.active=true;render();});
+$('testBtn').addEventListener('click',()=>{showTest=!showTest;render();if(showTest)$('testPanel').scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});
+$('resetBtn').addEventListener('click',()=>{load_(presetKey);render();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(renderChart,60);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(renderChart);
+load_('diablo');render();
+})();
+</script>
+</body>
+</html>
