@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flow channel dropouts: UX201 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}.charts .first-mobile{order:-1}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:340px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:16px;height:16px}
+.cells{display:grid;grid-template-columns:3.6em repeat(10,minmax(0,1fr));gap:2px;font-size:.74rem;font-variant-numeric:tabular-nums;margin-top:8px;text-align:center}
+.cells div{padding:2px 0;border-radius:3px}
+.cells .h{font-weight:700;color:var(--ink-soft);text-align:left;white-space:nowrap}
+@media (max-width:560px){.cells{font-size:.66rem;letter-spacing:-.02em}}
+td:nth-child(3){white-space:nowrap}
+.cells .v{background:var(--paper)}
+.cells .z-flow{box-shadow:inset 0 -3px 0 var(--moss)}
+.cells .z-bored{box-shadow:inset 0 -3px 0 var(--steel)}
+.cells .z-anx{box-shadow:inset 0 -3px 0 var(--blood)}
+.summary{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.05rem}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 0}
+@media (max-width:560px){.stats{grid-template-columns:1fr 1fr}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);vertical-align:top}
+th:first-child,td:first-child{text-align:left}
+td.rs{text-align:left;font-size:.8rem;min-width:16em}
+.rs span{display:inline-block;margin:0 4px 2px 0;padding:0 3px;border-radius:3px}
+.rs .bored{box-shadow:inset 0 -2px 0 var(--steel)} .rs .flow{box-shadow:inset 0 -2px 0 var(--moss)} .rs .anx{box-shadow:inset 0 -2px 0 var(--blood)}
+.rs .ghost{opacity:.55;font-style:italic}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.check{justify-content:flex-start;align-items:center;gap:8px;margin-top:8px}
+.check input{width:18px;height:18px;accent-color:var(--steel);flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:600 .92rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.testers{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:8px}
+.tcard{background:var(--paper-2);border-radius:10px;padding:10px 12px;border-top:4px solid var(--tc)}
+.tcard h3{display:flex;align-items:center;gap:8px;margin:0 0 4px;font:600 1rem var(--serif)}
+.tcard h3 svg{width:16px;height:16px}
+.tcard h3 .x{margin-left:auto;font-size:.8rem;padding:2px 8px}
+details{margin-top:14px;border-top:1px solid var(--grid);padding-top:8px}
+summary{cursor:pointer;font-weight:600}
+.nums{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}
+@media (max-width:560px){.nums{grid-template-columns:repeat(5,1fr)}}
+.nums label{flex-direction:column;gap:2px;font-size:.75rem;font-weight:600;color:var(--ink-soft)}
+.nums input,.txt{width:100%;min-width:0;font:600 .95rem var(--sans);padding:5px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">UX201 Game UX and Player Psychology · Week 3 · Worked example</p>
+  <h1>The average says flow. Two of three testers quit.</h1>
+  <p class="lede">Ana leaves bored after level 3 and Cai leaves anxious after level 6, yet the pooled challenge-to-skill ratio sits at 1.03, dead centre of the flow band. Their opposite errors cancel, and the late levels only contain the tester they happened to fit.</p>
+</header>
+
+<section class="panel" aria-label="Flow channel model">
+  <div class="charts">
+    <figure>
+      <figcaption>Over levels<small>Thick line: challenge ramp C. Thin lines: each tester&rsquo;s skill S, stopping where they quit.</small></figcaption>
+      <canvas id="cLev" role="img" aria-label="Challenge ramp and tester skill over levels"></canvas>
+      <div class="cells" id="cells" aria-label="Per-level mean R and survivors"></div>
+    </figure>
+    <figure class="first-mobile">
+      <figcaption>Flow channel<small>Skill across, challenge up. The shaded band is flow (R between lo and hi). Numbers are levels.</small></figcaption>
+      <canvas id="cCh" role="img" aria-label="Flow channel with tester paths"></canvas>
+      <div class="legend" id="legend" aria-hidden="true"></div>
+    </figure>
+  </div>
+
+  <div class="summary" id="summary" aria-live="polite"></div>
+  <div class="stats">
+    <div class="stat" style="--c:var(--moss)"><b id="sMean">—</b><span>pooled mean R (levels actually played)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="sDrop">—</b><span>dropouts</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="sLate">—</b><span>testers still playing at level 10</span></div>
+  </div>
+  <div class="table-wrap">
+    <table aria-label="Per tester results">
+      <thead><tr><th>Tester</th><th>Played</th><th>Result</th><th>Bored</th><th>Flow</th><th>Anxious</th><th>Final strain</th><th style="text-align:left">R by level (underline = zone)</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="q">Quit threshold Q (strain) <output id="oQ">3</output></label>
+      <input type="range" id="q" min="1" max="8" step="1" value="3">
+      <label class="check" for="ghost"><input type="checkbox" id="ghost"> Show where they would have gone</label>
+      <span class="lbl" style="margin-top:12px" id="presetLbl">Presets</span>
+      <div class="chips" role="group" aria-labelledby="presetLbl" id="presets">
+        <button class="chip" data-p="default" aria-pressed="true">Default: two dropouts</button>
+        <button class="chip" data-p="anaStart" aria-pressed="false">Start Ana at level 6</button>
+        <button class="chip" data-p="caiAssist" aria-pressed="false">Assist 0.75 for Cai</button>
+        <button class="chip" data-p="lower" aria-pressed="false">Lower all C by 10%</button>
+        <button class="chip" data-p="q5" aria-pressed="false">Q = 5</button>
+      </div>
+      <button class="btn" id="reset" style="margin-top:12px">Reset</button>
+      <details>
+        <summary>Advanced: band edges and ramp</summary>
+        <label for="lo" style="margin-top:8px">Band low edge lo <output id="oLo">0.80</output></label>
+        <input type="range" id="lo" min="0.5" max="1.0" step="0.05" value="0.8">
+        <label for="hi">Band high edge hi <output id="oHi">1.25</output></label>
+        <input type="range" id="hi" min="1.0" max="2.0" step="0.05" value="1.25">
+        <label for="scale">Scale all C <output id="oScale">1.00</output></label>
+        <input type="range" id="scale" min="0.5" max="1.5" step="0.05" value="1">
+        <span class="lbl" style="margin-top:8px">Ramp C<sub>k</sub> by level</span>
+        <div class="nums" id="ramp"></div>
+      </details>
+    </div>
+    <div>
+      <h2>Testers</h2>
+      <div class="testers" id="testers"></div>
+      <details id="addBox">
+        <summary>Add tester (up to 5)</summary>
+        <label for="newName" style="margin-top:8px">Name</label>
+        <input class="txt" id="newName" value="Dee" maxlength="12">
+        <span class="lbl" style="margin-top:8px">Skill S for each level played</span>
+        <div class="nums" id="newS"></div>
+        <div class="chips" style="margin-top:8px">
+          <button class="btn" id="loadDee">Load Dee (Check yourself)</button>
+          <button class="btn" id="addT">Add tester</button>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>Model from the lecture: R = challenge / skill, flow when lo &le; R &le; hi. Strain rises by 1 on a level outside the band and falls by 1 (not below 0) inside it; a tester quits after the level where strain first reaches Q. Skill is indexed by levels played, so a tester who starts later brings their first-level skill with them. Testers and ramp are invented.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C0=[2,3,3.5,4,5,5.5,6,7,7.5,8];
+const BASE=[
+ {name:'Ana',S:[6.0,6.5,7.0,7.4,7.7,8.0,8.3,8.5,8.7,8.9]},
+ {name:'Ben',S:[2.2,2.9,3.6,4.2,4.6,5.2,5.8,6.4,6.8,7.3]},
+ {name:'Cai',S:[1.8,2.2,3.0,3.1,3.4,3.7,4.0,4.3,4.6,4.9]}];
+const DEE=[3.0,3.2,3.4,3.8,4.4,5.0,5.6,6.2,6.8,7.4];
+const COLORS=['--steel','--moss','--blood','--ochre','--ink'],SHAPES=['circle','triangle','square','diamond','star'];
+let st;
+function fresh(keep){
+  const testers=(keep||BASE).map((t,i)=>({name:t.name,S:t.S.slice(),start:1,mult:1,visible:true,slot:i}));
+  return {C:C0.slice(),g:1,Q:3,lo:.8,hi:1.25,ghost:false,testers};
+}
+st=fresh();
+const r2=x=>x.toFixed(2);
+function zoneOf(R){return R<st.lo?'bored':(R>st.hi?'anx':'flow');}
+const ZN={bored:'bored',flow:'flow',anx:'anxious'};
+function run(t){
+  const played=[],ghost=[];let strain=0,quit=null;
+  for(let k=t.start,i=0;k<=10&&i<t.S.length;k++,i++){
+    const c=st.C[k-1]*st.g*t.mult,S=t.S[i],R=c/S,z=zoneOf(R);
+    if(quit===null){strain=z==='flow'?Math.max(0,strain-1):strain+1;played.push({k,c,S,R,z,strain});if(strain>=st.Q)quit=k;}
+    else ghost.push({k,c,S,R,z});
+  }
+  return {played,ghost,quit,strain};
+}
+
+// ---------- drawing helpers ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function shape(g,s,x,y,r,fill,stroke){
+  g.beginPath();
+  if(s==='circle')g.arc(x,y,r,0,Math.PI*2);
+  else if(s==='square')g.rect(x-r*.85,y-r*.85,r*1.7,r*1.7);
+  else if(s==='triangle'){g.moveTo(x,y-r*1.1);g.lineTo(x+r,y+r*.8);g.lineTo(x-r,y+r*.8);g.closePath();}
+  else if(s==='diamond'){g.moveTo(x,y-r*1.2);g.lineTo(x+r*1.1,y);g.lineTo(x,y+r*1.2);g.lineTo(x-r*1.1,y);g.closePath();}
+  else{for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.5:r*1.25;i?g.lineTo(x+rr*Math.cos(a),y+rr*Math.sin(a)):g.moveTo(x+rr*Math.cos(a),y+rr*Math.sin(a));}g.closePath();}
+  if(fill){g.fillStyle=fill;g.fill();}if(stroke){g.strokeStyle=stroke;g.lineWidth=1.5;g.stroke();}
+}
+function svgShape(s,col){
+  const d={circle:'<circle cx="8" cy="8" r="6"/>',square:'<rect x="2.5" y="2.5" width="11" height="11"/>',triangle:'<path d="M8 1.5 14.5 13.5h-13z"/>',diamond:'<path d="M8 1 15 8 8 15 1 8z"/>',star:'<path d="M8 .8l2 5 5.3.3-4.1 3.4 1.4 5.2L8 11.8l-4.6 2.9 1.4-5.2L.7 6.1 6 5.8z"/>'}[s];
+  return `<svg viewBox="0 0 16 16" style="fill:${col}">${d}</svg>`;
+}
+function pattern(g,kind,col,bg){
+  const p=document.createElement('canvas');p.width=p.height=10;const x=p.getContext('2d');
+  x.fillStyle=bg;x.fillRect(0,0,10,10);x.strokeStyle=col;x.fillStyle=col;x.globalAlpha=.55;
+  if(kind==='hatch'){x.lineWidth=1.2;x.beginPath();x.moveTo(0,10);x.lineTo(10,0);x.moveTo(-5,5);x.lineTo(5,-5);x.moveTo(5,15);x.lineTo(15,5);x.stroke();}
+  else{x.beginPath();x.arc(5,5,1.3,0,Math.PI*2);x.fill();}
+  return g.createPattern(p,'repeat');
+}
+function frame(g,w,h,pad,xMin,xMax,yMax,xTicks,xLabel,yLabel){
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  const X=v=>pad.l+(w-pad.l-pad.r)*(v-xMin)/(xMax-xMin),Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  for(let v=0;v<=yMax+1e-9;v+=2){g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,Y(v));}
+  xTicks.forEach(v=>{g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.fillText(v,X(v),h-pad.b+6);});
+  g.textAlign='right';g.textBaseline='bottom';g.fillText(xLabel,w-pad.r,h-2);
+  g.textAlign='left';g.textBaseline='top';g.fillText(yLabel,pad.l+4,2);
+  return {X,Y};
+}
+function yMaxFor(){
+  let m=10;st.C.forEach(c=>m=Math.max(m,c*st.g*1.0));
+  st.testers.filter(t=>t.visible).forEach(t=>{t.S.forEach(s=>m=Math.max(m,s));st.C.forEach(c=>m=Math.max(m,c*st.g*t.mult));});
+  return Math.ceil(m/2)*2;
+}
+
+function drawLevels(res){
+  const {g,w,h}=setup($('cLev')),pad={l:34,r:12,t:20,b:34},yM=yMaxFor();
+  const {X,Y}=frame(g,w,h,pad,.5,10.5,yM,[1,2,3,4,5,6,7,8,9,10],'level','C or S');
+  // ramp
+  g.strokeStyle=css('--ochre');g.lineWidth=5;g.lineJoin='round';g.beginPath();
+  st.C.forEach((c,i)=>{const x=X(i+1),y=Y(c*st.g);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+  st.C.forEach((c,i)=>shape(g,'square',X(i+1),Y(c*st.g),5,css('--ochre'),css('--paper')));
+  res.forEach(({t,r})=>{
+    if(!t.visible)return;const col=css(COLORS[t.slot]);
+    const line=(pts,faded)=>{if(!pts.length)return;g.globalAlpha=faded?.4:1;g.setLineDash(faded?[5,4]:[]);g.strokeStyle=col;g.lineWidth=2;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(X(p.k),Y(p.S)):g.moveTo(X(p.k),Y(p.S)));g.stroke();g.setLineDash([]);
+      pts.forEach(p=>shape(g,SHAPES[t.slot],X(p.k),Y(p.S),4.5,faded?null:col,faded?col:css('--paper')));g.globalAlpha=1;};
+    line(r.played,false);
+    if(st.ghost&&r.ghost.length)line([r.played[r.played.length-1]].concat(r.ghost),true);
+    if(r.quit!==null){const p=r.played[r.played.length-1],x=X(p.k),y=Y(p.S);g.strokeStyle=col;g.lineWidth=3;g.beginPath();g.moveTo(x-7,y-7);g.lineTo(x+7,y+7);g.moveTo(x+7,y-7);g.lineTo(x-7,y+7);g.stroke();}
+  });
+}
+function drawChannel(res){
+  const {g,w,h}=setup($('cCh')),pad={l:34,r:12,t:20,b:34},yM=yMaxFor(),xM=yM;
+  const {X,Y}=frame(g,w,h,pad,0,xM,yM,[0,2,4,6,8,10,12,14,16].filter(v=>v<=xM),'skill S','challenge c');
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  const paper2=css('--paper-2');
+  // anxious region (above hi)
+  g.fillStyle=pattern(g,'hatch',css('--blood'),paper2);g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(xM),Y(st.hi*xM));g.lineTo(X(xM),Y(yM*3));g.lineTo(X(0),Y(yM*3));g.closePath();g.fill();
+  // bored region (below lo)
+  g.fillStyle=pattern(g,'dots',css('--steel'),paper2);g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(xM),Y(st.lo*xM));g.lineTo(X(xM),Y(0));g.closePath();g.fill();
+  // flow band
+  g.fillStyle=css('--moss');g.globalAlpha=.22;g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(xM),Y(st.hi*xM));g.lineTo(X(xM),Y(st.lo*xM));g.closePath();g.fill();g.globalAlpha=1;
+  g.strokeStyle=css('--moss');g.lineWidth=1.5;[st.lo,st.hi].forEach(m=>{g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(xM),Y(m*xM));g.stroke();});
+  g.font='600 13px '+css('--sans');g.textBaseline='middle';
+  const tag=(txt,x,y,col,al)=>{g.textAlign=al;const tw=g.measureText(txt).width,bx=al==='left'?x-4:x-tw-4;g.fillStyle=css('--paper');g.globalAlpha=.85;g.fillRect(bx,y-10,tw+8,20);g.globalAlpha=1;g.fillStyle=col;g.fillText(txt,x,y);};
+  tag('anxious (R > '+r2(st.hi)+')',X(xM*.04),Y(yM*.9),css('--blood'),'left');
+  tag('bored (R < '+r2(st.lo)+')',X(xM*.97),Y(yM*.1),css('--steel'),'right');
+  const fx=xM*.78,fy=fx*(st.lo+st.hi)/2;if(fy<yM*.95)tag('flow',X(fx),Y(fy),css('--moss'),'left');
+  g.restore();
+  const labels=[];
+  res.forEach(({t,r})=>{
+    if(!t.visible)return;const col=css(COLORS[t.slot]);
+    const path=(pts,faded)=>{if(!pts.length)return;g.globalAlpha=faded?.4:1;g.setLineDash(faded?[5,4]:[]);g.strokeStyle=col;g.lineWidth=faded?1.5:2;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(X(p.S),Y(p.c)):g.moveTo(X(p.S),Y(p.c)));g.stroke();g.setLineDash([]);
+      pts.forEach((p,i)=>{if(faded&&i===0)return;shape(g,SHAPES[t.slot],X(p.S),Y(p.c),5,faded?null:col,faded?col:css('--paper'));
+        g.font='600 11px '+css('--sans');g.fillStyle=col;g.textAlign='left';g.textBaseline='bottom';g.fillText(p.k,X(p.S)+6,Y(p.c)-3);});g.globalAlpha=1;};
+    path(r.played,false);
+    if(st.ghost&&r.ghost.length)path([r.played[r.played.length-1]].concat(r.ghost),true);
+    if(r.quit!==null){const p=r.played[r.played.length-1],x=X(p.S),y=Y(p.c);
+      g.strokeStyle=css('--paper');g.lineWidth=6;g.beginPath();g.moveTo(x-9,y-9);g.lineTo(x+9,y+9);g.moveTo(x+9,y-9);g.lineTo(x-9,y+9);g.stroke();
+      g.strokeStyle=col;g.lineWidth=3.5;g.stroke();labels.push({x,y,txt:`${t.name} quits after level ${r.quit}`,col});}
+  });
+  // quit labels, placed to stay inside the plot
+  g.font='700 12px '+css('--sans');g.textBaseline='middle';
+  labels.forEach(l=>{const tw=g.measureText(l.txt).width;let tx=l.x+14;if(tx+tw>w-pad.r)tx=l.x-14-tw;let ty=l.y+16;if(ty>h-pad.b-8)ty=l.y-18;
+    g.fillStyle=css('--paper');g.globalAlpha=.9;g.fillRect(tx-4,ty-10,tw+8,20);g.globalAlpha=1;g.fillStyle=l.col;g.textAlign='left';g.fillText(l.txt,tx,ty);});
+}
+
+// ---------- panels ----------
+function render(){
+  const res=st.testers.map(t=>({t,r:run(t)}));
+  const vis=res.filter(x=>x.t.visible);
+  drawLevels(res);drawChannel(res);
+  // per-level cells
+  let h='<div class="h">Level</div>';for(let k=1;k<=10;k++)h+=`<div class="h" style="text-align:center">${k}</div>`;
+  h+='<div class="h" title="mean R among testers still playing">mean R</div>';
+  const nPer=[];
+  for(let k=1;k<=10;k++){const rs=vis.flatMap(x=>x.r.played.filter(p=>p.k===k).map(p=>p.R));nPer.push(rs.length);
+    if(rs.length){const m=rs.reduce((a,b)=>a+b,0)/rs.length;h+=`<div class="v z-${zoneOf(m)}">${r2(m)}</div>`;}else h+='<div class="v"></div>';}
+  h+='<div class="h" title="testers still playing">playing</div>'+nPer.map(n=>`<div class="v">${n}</div>`).join('');
+  $('cells').innerHTML=h;
+  // table
+  $('tbody').innerHTML=res.map(({t,r})=>{
+    const zc={bored:0,flow:0,anx:0};r.played.forEach(p=>zc[p.z]++);
+    const rs=r.played.map(p=>`<span class="${p.z}" title="level ${p.k}, ${ZN[p.z]}">${p.k}: ${r2(p.R)}</span>`).join('')+(st.ghost?r.ghost.map(p=>`<span class="${p.z} ghost" title="would-have-been level ${p.k}">${p.k}: ${r2(p.R)}</span>`).join(''):'');
+    return `<tr${t.visible?'':' style="opacity:.5"'}><td>${svgShape(SHAPES[t.slot],css(COLORS[t.slot])).replace('<svg','<svg width="12" height="12" style="vertical-align:-1px;fill:'+css(COLORS[t.slot])+'"')} ${esc(t.name)}${t.visible?'':' (hidden)'}</td><td>${r.played.length}</td><td>${r.quit!==null?'quits after '+r.quit:'finished'}</td><td>${zc.bored}</td><td>${zc.flow}</td><td>${zc.anx}</td><td>${r.strain}</td><td class="rs">${rs}</td></tr>`;
+  }).join('');
+  // global
+  const allR=vis.flatMap(x=>x.r.played.map(p=>p.R)),mean=allR.length?allR.reduce((a,b)=>a+b,0)/allR.length:NaN;
+  const drops=vis.filter(x=>x.r.quit!==null),late=vis.filter(x=>x.r.played.some(p=>p.k===10)).length;
+  $('sMean').textContent=isNaN(mean)?'—':r2(mean)+' '+ZN[zoneOf(mean)];
+  $('sDrop').textContent=`${drops.length} of ${vis.length}`;$('sLate').textContent=late;
+  let s=`${drops.length} of ${vis.length} testers quit. Pooled mean R = <b>${isNaN(mean)?'—':r2(mean)}</b> (${isNaN(mean)?'no data':ZN[zoneOf(mean)]}), over ${allR.length} levels played.`;
+  if(drops.length){s+=' '+drops.map(x=>{const z=x.r.played.filter(p=>p.z!=='flow');const why=z.filter(p=>p.z==='bored').length>=z.filter(p=>p.z==='anx').length?'bored':'anxious';return `${esc(x.t.name)} leaves ${why} after level ${x.r.quit}`;}).join('; ')+'.';}
+  if(late&&late<vis.length)s+=` Level 10 data comes from ${late} tester${late>1?'s':''} only.`;
+  $('summary').innerHTML=s;
+  $('legend').innerHTML=`<span>${svgShape('square',css('--ochre'))}ramp C</span>`+st.testers.filter(t=>t.visible).map(t=>`<span>${svgShape(SHAPES[t.slot],css(COLORS[t.slot]))}${esc(t.name)}</span>`).join('')+`<span><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3 3 13" stroke="var(--ink)" stroke-width="2.5"/></svg>quits</span>`;
+  $('cCh').setAttribute('aria-label','Flow channel. '+$('summary').textContent);
+  // outputs
+  $('oQ').textContent=st.Q;$('oLo').textContent=r2(st.lo);$('oHi').textContent=r2(st.hi);$('oScale').textContent=r2(st.g);
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function buildTesters(){
+  $('testers').innerHTML=st.testers.map((t,i)=>`<div class="tcard" style="--tc:var(${COLORS[t.slot]})">
+    <h3>${svgShape(SHAPES[t.slot],`var(${COLORS[t.slot]})`)}${esc(t.name)}${i>=3?`<button class="btn x" data-rm="${i}" aria-label="Remove ${esc(t.name)}">Remove</button>`:''}</h3>
+    <label class="check" for="vis${i}"><input type="checkbox" id="vis${i}" data-i="${i}" data-f="visible" ${t.visible?'checked':''}> Visible</label>
+    <label for="st${i}" style="margin-top:6px">Start level <output id="ost${i}">${t.start}</output></label>
+    <input type="range" id="st${i}" data-i="${i}" data-f="start" min="1" max="10" step="1" value="${t.start}">
+    <label for="mu${i}">Challenge multiplier <output id="omu${i}">${r2(t.mult)}</output></label>
+    <input type="range" id="mu${i}" data-i="${i}" data-f="mult" min="0.5" max="1.5" step="0.05" value="${t.mult}"></div>`).join('');
+  $('testers').querySelectorAll('input').forEach(el=>el.addEventListener('input',()=>{
+    const t=st.testers[+el.dataset.i],f=el.dataset.f;
+    if(f==='visible')t.visible=el.checked;else{t[f]=+el.value;$((f==='start'?'ost':'omu')+el.dataset.i).textContent=f==='start'?t.start:r2(t.mult);}
+    markPreset(null);render();}));
+  $('testers').querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{st.testers.splice(+b.dataset.rm,1);reslot();buildTesters();render();}));
+  $('addT').disabled=st.testers.length>=5;
+}
+function reslot(){st.testers.forEach((t,i)=>t.slot=i);}
+function buildRamp(){
+  $('ramp').innerHTML=st.C.map((c,i)=>`<label for="c${i}">L${i+1}<input type="number" id="c${i}" min="0.5" max="15" step="0.5" value="${c}"></label>`).join('');
+  st.C.forEach((c,i)=>$('c'+i).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>0){st.C[i]=v;markPreset(null);render();}}));
+}
+function buildNewS(vals){$('newS').innerHTML=vals.map((v,i)=>`<label for="ns${i}">#${i+1}<input type="number" id="ns${i}" min="0.5" max="15" step="0.1" value="${v}"></label>`).join('');}
+function syncCtl(){$('q').value=st.Q;$('lo').value=st.lo;$('hi').value=st.hi;$('scale').value=st.g;$('ghost').checked=st.ghost;buildRamp();buildTesters();}
+function markPreset(p){document.querySelectorAll('#presets .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===p));}
+const PRESETS={default:()=>{},anaStart:()=>{st.testers[0].start=6;},caiAssist:()=>{st.testers[2].mult=.75;},lower:()=>{st.g=.9;},q5:()=>{st.Q=5;}};
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{
+  const extra=st.testers.slice(3).map(t=>({name:t.name,S:t.S}));st=fresh(BASE.concat(extra));PRESETS[b.dataset.p]();markPreset(b.dataset.p);syncCtl();render();}));
+$('reset').addEventListener('click',()=>{st=fresh();markPreset('default');syncCtl();render();});
+$('q').addEventListener('input',e=>{st.Q=+e.target.value;markPreset(null);render();});
+$('lo').addEventListener('input',e=>{st.lo=+e.target.value;markPreset(null);render();});
+$('hi').addEventListener('input',e=>{st.hi=+e.target.value;markPreset(null);render();});
+$('scale').addEventListener('input',e=>{st.g=+e.target.value;markPreset(null);render();});
+$('ghost').addEventListener('change',e=>{st.ghost=e.target.checked;render();});
+$('loadDee').addEventListener('click',()=>{$('newName').value='Dee';buildNewS(DEE);});
+$('addT').addEventListener('click',()=>{
+  if(st.testers.length>=5)return;
+  const S=[...Array(10).keys()].map(i=>parseFloat($('ns'+i).value)).map(v=>v>0?v:1);
+  st.testers.push({name:($('newName').value||'Tester').slice(0,12),S,start:1,mult:1,visible:true,slot:st.testers.length});
+  buildTesters();render();
+});
+buildNewS(DEE);syncCtl();render();
+let rz;window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(render);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>

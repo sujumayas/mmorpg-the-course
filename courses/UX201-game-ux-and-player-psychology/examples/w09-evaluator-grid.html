@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evaluator grid: how many problems did we miss? — UX201 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.headline{font-family:var(--serif);font-size:clamp(1.1rem,2.6vw,1.4rem);margin:0 0 4px;line-height:1.3}
+.headline b{font-variant-numeric:tabular-nums}
+.sub{margin:0 0 14px;color:var(--ink-soft);font-size:.95rem}
+.views{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px}
+@media (max-width:900px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.gridwrap{overflow-x:auto;padding:4px 2px 6px}
+.egrid{display:grid;gap:2px;width:max-content;font-variant-numeric:tabular-nums}
+.egrid [role=row]{display:contents}
+.c{width:26px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.c.lab{width:auto;justify-content:flex-start;padding-right:4px;font-weight:700}
+.c.num{width:auto;padding-left:4px;font-weight:700}
+.c.hd{flex-direction:column;height:40px;line-height:1.05;font-size:.74rem;cursor:help;border:1px solid transparent}
+.c.hd b{font-size:.84rem}
+.c.hd.unk{opacity:.5}
+.c.cell{border:1.5px solid var(--grid);background:var(--paper)}
+.c.cell.f{background:var(--gc,var(--ink));border-color:var(--gc,var(--ink));color:var(--paper);font-weight:700}
+.c.cell.unk{background:repeating-linear-gradient(45deg,transparent 0 4px,var(--grid) 4px 5px);opacity:.6}
+.row-X .c.cell{opacity:.35}
+.row-A{--gc:var(--steel)} .row-B{--gc:var(--ochre)} .row-X{--gc:var(--ink-soft)}
+.c.foot{font-weight:700;color:var(--ink-soft);font-size:.8rem}
+.c:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.gbtn{width:30px;height:28px;border-radius:6px;border:1.5px solid var(--gc);background:transparent;color:var(--ink);font:700 .85rem var(--sans);cursor:pointer}
+.row-A .gbtn,.row-B .gbtn{background:var(--gc);color:var(--paper)}
+.detail{min-height:3em;font-size:.88rem;margin:6px 0 0;color:var(--ink)}
+canvas{display:block;width:100%;height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0}
+.legend i{display:inline-block;width:20px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid}
+.legend i.dot{width:10px;height:10px;border:none;border-radius:50%;background:var(--ink)}
+.legend i.band{height:10px;border:none;background:var(--blood);opacity:.25}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.work{font-family:var(--serif);font-size:.96rem;background:var(--paper-2);border-radius:10px;padding:10px 14px;margin-top:12px}
+.work p{margin:.2em 0}
+.work code{font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-size:.9em}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:minmax(0,1fr)}}
+.ctl-title{font-weight:600;font-size:.92rem;margin:0 0 4px;display:block}
+label.sl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+label.sl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip,.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"],.tab[aria-selected="true"]{background:var(--steel);color:var(--paper)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.tab{font:600 .92rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tog{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;margin:6px 0;cursor:pointer}
+.tog input{width:20px;height:20px;accent-color:var(--steel)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.86rem}
+th,td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+#histFig{margin-top:14px}
+#histFig canvas{height:320px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">UX201 Game UX and Player Psychology · Week 9 · Worked example</p>
+  <h1>Five evaluators, one raid screen</h1>
+  <p class="lede">Each evaluator of the invented Tidefall raid interface found about a third of the problems. Together they found most of them. The overlap between two groups of evaluators estimates how many nobody found.</p>
+</header>
+
+<section class="panel">
+  <p class="headline" id="headline" aria-live="polite"></p>
+  <p class="sub" id="subline"></p>
+
+  <div class="tabs" role="tablist" aria-label="Data source">
+    <button class="tab" role="tab" id="tLec" aria-selected="true">Lecture data</button>
+    <button class="tab" role="tab" id="tSim" aria-selected="false" tabindex="-1">Simulate a team</button>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Who found what<small>Rows are evaluators, columns are problems. A filled square with a check means found. Arrow keys move between cells. The A/B button sets each evaluator's group.</small></figcaption>
+      <div class="gridwrap"><div class="egrid" id="egrid" role="grid" aria-label="Evaluator by problem grid"></div></div>
+      <p class="detail" id="detail" aria-live="polite">Hover or focus a column header to read the problem.</p>
+    </figure>
+    <figure>
+      <figcaption>Problems found as evaluators are added<small>Dots: union found, adding rows in grid order. Line: Nielsen-Landauer model N × (1 − (1 − λ)^i).</small></figcaption>
+      <canvas id="cChart" role="img" aria-label="Problems found versus number of evaluators, with estimate lines"></canvas>
+      <div class="legend" id="legend">
+        <span><i class="dot"></i>Union found</span>
+        <span><i style="border-color:var(--ink-soft)"></i>Model</span>
+        <span><i style="border-top-style:dashed;border-color:var(--steel)"></i>Lincoln-Petersen</span>
+        <span><i style="border-top-style:dotted;border-color:var(--blood)"></i>Chao</span>
+        <span><i class="band"></i>Estimated still hidden</span>
+        <span id="legTrue" hidden><i style="border-color:var(--ochre)"></i>True total</span>
+      </div>
+      <div class="table-wrap"><table aria-label="Union found and model by number of evaluators"><thead id="uHead"></thead><tbody id="uBody"></tbody></table></div>
+    </figure>
+  </div>
+
+  <figure id="histFig" hidden>
+    <figcaption>1,000 simulated teams<small>Distribution of each estimate. The ochre line is the true total, the dashed line is each estimator's mean.</small></figcaption>
+    <canvas id="cHist" role="img" aria-label="Histograms of Lincoln-Petersen and Chao estimates over 1,000 simulated teams"></canvas>
+    <p class="detail" id="histNote"></p>
+  </figure>
+
+  <div class="readout" aria-live="polite" id="readout"></div>
+  <div class="work" id="work"></div>
+
+  <div class="controls">
+    <div>
+      <span class="ctl-title">Presets</span>
+      <div class="chips" role="group" aria-label="Presets">
+        <button class="chip" data-preset="lecture">Lecture data</button>
+        <button class="chip" data-preset="equal">Equal findability (spread 0)</button>
+        <button class="chip" data-preset="unequal">Very unequal (spread 0.9)</button>
+        <button class="chip" data-preset="three">Three evaluators only</button>
+        <button class="btn" id="reset">Reset</button>
+      </div>
+      <span class="ctl-title" style="margin-top:14px">Sort columns</span>
+      <div class="chips" role="group" aria-label="Sort columns">
+        <button class="chip" data-sort="num" aria-pressed="false">Problem number</button>
+        <button class="chip" data-sort="count" aria-pressed="true">Found-by count</button>
+        <button class="chip" data-sort="sev" aria-pressed="false">Severity</button>
+      </div>
+    </div>
+    <div>
+      <label class="tog"><input type="checkbox" id="reveal"> Reveal truth</label>
+      <label class="tog"><input type="checkbox" id="weight" checked> Weight by severity</label>
+      <p class="detail" style="margin-top:8px">Group buttons cycle A, B, and excluded (–). Put one evaluator in A and one in B to test a single pair.</p>
+    </div>
+    <div id="simCtl">
+      <span class="ctl-title">Simulation</span>
+      <label class="sl" for="sN">True number of problems N <output id="oN">14</output></label>
+      <input id="sN" type="range" min="5" max="40" step="1" value="14">
+      <label class="sl" for="sMu">Mean findability <output id="oMu">0.34</output></label>
+      <input id="sMu" type="range" min="0.1" max="0.7" step="0.01" value="0.34">
+      <label class="sl" for="sSp">Spread (0 = every problem equally findable) <output id="oSp">0.5</output></label>
+      <input id="sSp" type="range" min="0" max="1" step="0.05" value="0.5">
+      <label class="sl" for="sK">Evaluators <output id="oK">5</output></label>
+      <input id="sK" type="range" min="2" max="10" step="1" value="5">
+      <div class="chips" style="margin-top:8px">
+        <button class="btn primary" id="run1">Run once</button>
+        <button class="btn" id="run1000">Run 1,000</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model: Nielsen and Landauer (1993), discovery across evaluators. Estimators: Lincoln-Petersen and Chapman capture-recapture; Chao (1984) lower-bound estimator. Tidefall and its 14 problems are invented for the lecture. In simulation, each problem's findability is drawn from a Beta distribution with the chosen mean and concentration κ = 2 / spread (so the variance is spread ÷ (2 + spread) of its largest possible value).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2d=x=>x.toFixed(2);
+const f1d=x=>x.toFixed(1);
+const trim3=x=>(Math.round(x*1000)/1000).toString();
+
+const LEC={
+  sev:[3.0,2.7,3.3,2.0,3.0,3.3,1.3,2.3,2.0,1.0,2.3,2.7,3.7,3.0],
+  heur:['1, 4','1, 8','8','6','1','5','4','7','9','2','6','1','1','1, 4'],
+  desc:['Boss warning text uses the same yellow as quest text','Raid frames show health as numbers only, no bar','Loot roll window opens over the boss warning area','Need, Greed and Pass are icons with no labels','Dispellable debuffs look like all other debuffs','Leaving the raid needs no confirmation','Role icons differ from the group finder’s icons','Raid frames can’t be moved or resized','“Target not in line of sight” appears late, at the top edge','Raid marker names don’t appear in chat','No way to review a boss warning after it fades','Ready check makes no sound when the game window is in the background','Loot setting silently resets after the leader disconnects','In range and out of range shown only by a red or green tint'],
+  finds:[[1,2,3,5,7,10],[1,2,4,6,8],[1,3,4,5,11],[2,3,6,9],[1,2,7,12]],
+  groups:['A','A','B','B','B']
+};
+
+let mode='lec',sortBy='count',reveal=false,weight=true;
+let probs=[],evals=[];
+let sim={N:14,mu:0.34,spread:0.5,k:5,seed:20260928};
+let hist=null;
+
+function loadLecture(groups){
+  probs=LEC.sev.map((s,i)=>({id:i+1,sev:s,desc:LEC.desc[i]+' (heuristic '+LEC.heur[i]+')'}));
+  evals=LEC.finds.map((f,i)=>({name:'E'+(i+1),finds:new Set(f),group:(groups||LEC.groups)[i]}));
+}
+
+// ---------- random numbers ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let rng=mulberry32(sim.seed);
+function normal(){let u=0;while(u===0)u=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rng());}
+function gamma(k){
+  if(k<1){return gamma(k+1)*Math.pow(rng()||1e-12,1/k);}
+  const d=k-1/3,c=1/Math.sqrt(9*d);
+  for(;;){let x,v;do{x=normal();v=1+c*x;}while(v<=0);v=v*v*v;const u=rng();
+    if(u<1-0.0331*x*x*x*x)return d*v;if(Math.log(u)<0.5*x*x+d*(1-v+Math.log(v)))return d*v;}
+}
+function beta(mu,spread){
+  if(spread<=0)return mu;
+  const kap=2/spread;
+  const x=gamma(mu*kap),y=gamma((1-mu)*kap);
+  if(x+y===0)return rng()<mu?1:0;
+  return x/(x+y);
+}
+function defaultGroups(k){const a=Math.floor(k/2);return Array.from({length:k},(_,i)=>i<a?'A':'B');}
+function drawTeam(N,k,withSev){
+  const p=Array.from({length:N},()=>beta(sim.mu,sim.spread));
+  const pr=withSev?p.map((q,i)=>({id:i+1,sev:Math.round((1+rng()*3)*10)/10,p:q})):null;
+  const finds=Array.from({length:k},()=>{const s=new Set();for(let j=0;j<N;j++)if(rng()<p[j])s.add(j+1);return s;});
+  return {pr,finds};
+}
+function simulateOnce(){
+  const t=drawTeam(sim.N,sim.k,true);
+  probs=t.pr.map(q=>({id:q.id,sev:q.sev,p:q.p,desc:'Simulated problem, findability '+q.p.toFixed(2)}));
+  const g=defaultGroups(sim.k);
+  evals=t.finds.map((s,i)=>({name:'E'+(i+1),finds:s,group:g[i]}));
+}
+
+// ---------- statistics ----------
+function stats(){
+  const N=probs.length,inc=evals.filter(e=>e.group!=='X');
+  const cnt={};probs.forEach(p=>cnt[p.id]=0);
+  inc.forEach(e=>e.finds.forEach(j=>cnt[j]++));
+  const ids=probs.map(p=>p.id);
+  const S=ids.filter(j=>cnt[j]>0).length;
+  const f1=ids.filter(j=>cnt[j]===1).length,f2=ids.filter(j=>cnt[j]===2).length;
+  const uni=g=>{const s=new Set();evals.filter(e=>e.group===g).forEach(e=>e.finds.forEach(j=>s.add(j)));return s;};
+  const A=uni('A'),B=uni('B');let m=0;A.forEach(j=>{if(B.has(j))m++;});
+  const nA=A.size,nB=B.size;
+  const LP=(m>0)?nA*nB/m:null;
+  const chap=(nA>0&&nB>0)?(nA+1)*(nB+1)/(m+1)-1:null;
+  const chaoBC=(f2===0);
+  const chao=chaoBC?S+f1*(f1-1)/2:S+f1*f1/(2*f2);
+  const meanFound=inc.length?inc.reduce((a,e)=>a+e.finds.size,0)/inc.length:0;
+  const lam=N?meanFound/N:0;
+  const lamEst=LP?meanFound/LP:null;
+  const cum=[];const u=new Set();inc.forEach(e=>{e.finds.forEach(j=>u.add(j));cum.push(u.size);});
+  const sevAll=probs.reduce((a,p)=>a+p.sev,0),sevFound=probs.filter(p=>cnt[p.id]>0).reduce((a,p)=>a+p.sev,0);
+  return {N,inc,cnt,S,f1,f2,A,B,nA,nB,m,LP,chap,chao,chaoBC,meanFound,lam,lamEst,cum,sevAll,sevFound};
+}
+function quickEst(finds,groups,N){
+  const cnt=new Array(N+1).fill(0);const A=new Set(),B=new Set();
+  finds.forEach((s,i)=>{if(groups[i]==='X')return;s.forEach(j=>{cnt[j]++;(groups[i]==='A'?A:B).add(j);});});
+  let S=0,f1=0,f2=0;for(let j=1;j<=N;j++){if(cnt[j]>0)S++;if(cnt[j]===1)f1++;if(cnt[j]===2)f2++;}
+  let m=0;A.forEach(j=>{if(B.has(j))m++;});
+  return {LP:m>0?A.size*B.size/m:null,chao:f2>0?S+f1*f1/(2*f2):S+f1*(f1-1)/2};
+}
+
+// ---------- grid ----------
+let focusPos={r:0,c:0};
+function colOrder(st){
+  const o=probs.slice();
+  const hid=p=>st.cnt[p.id]===0?1:0;
+  if(sortBy==='num')o.sort((a,b)=>a.id-b.id);
+  else if(sortBy==='sev')o.sort((a,b)=>hid(a)-hid(b)||b.sev-a.sev||a.id-b.id);
+  else o.sort((a,b)=>hid(a)-hid(b)||st.cnt[b.id]-st.cnt[a.id]||a.id-b.id);
+  return o;
+}
+function renderGrid(st){
+  const order=colOrder(st),g=$('egrid');
+  g.style.gridTemplateColumns=`auto auto repeat(${order.length},26px) auto`;
+  const gl={A:'A',B:'B',X:'–'},gn={A:'group A',B:'group B',X:'excluded'};
+  let h='<div role="row"><div class="c lab" role="columnheader">Eval.</div><div class="c lab" role="columnheader">Grp</div>';
+  order.forEach((p,ci)=>{
+    const unk=st.cnt[p.id]===0&&!reveal;
+    const lbl=unk?`Problem not found by anyone. Turn on reveal truth to see it.`:`Problem ${p.id}, severity ${p.sev.toFixed(1)}: ${p.desc}. Found by ${st.cnt[p.id]}.`;
+    h+=`<div class="c hd${unk?' unk':''}" role="columnheader" data-r="0" data-c="${ci}" data-pid="${p.id}" tabindex="-1" aria-label="${lbl}"><b>${unk?'?':p.id}</b>${unk?'':p.sev.toFixed(1)}</div>`;
+  });
+  h+='<div class="c num" role="columnheader">Found</div></div>';
+  evals.forEach((e,ri)=>{
+    h+=`<div role="row" class="row-${e.group}"><div class="c lab" role="rowheader">${e.name}</div><div class="c" role="gridcell"><button class="gbtn" data-ev="${ri}" aria-label="${e.name}: ${gn[e.group]}. Press to change group.">${gl[e.group]}</button></div>`;
+    order.forEach((p,ci)=>{
+      const f=e.finds.has(p.id),unk=st.cnt[p.id]===0&&!reveal;
+      h+=`<div class="c cell${f?' f':''}${unk?' unk':''}" role="gridcell" data-r="${ri+1}" data-c="${ci}" data-pid="${p.id}" tabindex="-1" aria-label="${e.name}, ${gn[e.group]}, problem ${unk?'unknown':p.id}: ${f?'found':'not found'}">${f?'✓':(unk?'?':'')}</div>`;
+    });
+    h+=`<div class="c num" role="gridcell">${e.finds.size}</div></div>`;
+  });
+  h+='<div role="row"><div class="c lab foot" role="rowheader" style="grid-column:span 2">found by</div>';
+  order.forEach(p=>{h+=`<div class="c foot" role="gridcell">${st.cnt[p.id]}</div>`;});
+  h+=`<div class="c num foot" role="gridcell" title="distinct problems found">${st.S}</div></div>`;
+  const hadFocus=g.contains(document.activeElement)&&document.activeElement.classList.contains('c');
+  g.innerHTML=h;
+  const R=evals.length,C=order.length;
+  focusPos.r=Math.min(focusPos.r,R);focusPos.c=Math.min(focusPos.c,C-1);
+  const cur=g.querySelector(`[data-r="${focusPos.r}"][data-c="${focusPos.c}"]`);
+  if(cur){cur.tabIndex=0;if(hadFocus)cur.focus();}
+}
+$('egrid').addEventListener('keydown',e=>{
+  const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;
+  let r=+t.dataset.r,c=+t.dataset.c;const R=evals.length,C=probs.length;
+  if(e.key==='ArrowRight')c=Math.min(C-1,c+1);else if(e.key==='ArrowLeft')c=Math.max(0,c-1);
+  else if(e.key==='ArrowDown')r=Math.min(R,r+1);else if(e.key==='ArrowUp')r=Math.max(0,r-1);
+  else if(e.key==='Home')c=0;else if(e.key==='End')c=C-1;else return;
+  e.preventDefault();
+  const n=$('egrid').querySelector(`[data-r="${r}"][data-c="${c}"]`);
+  if(n){t.tabIndex=-1;n.tabIndex=0;n.focus();focusPos={r,c};}
+});
+function describe(t){
+  if(!t.dataset||!t.dataset.pid)return;
+  const st=stats(),p=probs.find(x=>x.id===+t.dataset.pid);
+  const unk=st.cnt[p.id]===0&&!reveal;
+  let s=unk?'Not found by any included evaluator. Turn on reveal truth to see what it is.':`Problem ${p.id} (severity ${p.sev.toFixed(1)}): ${p.desc}. Found by ${st.cnt[p.id]} of ${st.inc.length}.`;
+  if(+t.dataset.r>0){const e=evals[+t.dataset.r-1];s=`${e.name} ${e.finds.has(p.id)?'found':'did not find'} this. `+s;}
+  $('detail').textContent=s;
+}
+$('egrid').addEventListener('focusin',e=>{describe(e.target);if(e.target.dataset.r!==undefined)focusPos={r:+e.target.dataset.r,c:+e.target.dataset.c};});
+$('egrid').addEventListener('mouseover',e=>{const t=e.target.closest('.c');if(t)describe(t);});
+$('egrid').addEventListener('click',e=>{
+  const b=e.target.closest('.gbtn');if(!b)return;
+  const ev=evals[+b.dataset.ev];ev.group={A:'B',B:'X',X:'A'}[ev.group];
+  update();const nb=$('egrid').querySelector(`.gbtn[data-ev="${b.dataset.ev}"]`);if(nb)nb.focus();
+});
+
+// ---------- chart ----------
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){const steps=[20,25,30,40,50,60,80,100,150,200];return steps.find(s=>s>=v)||Math.ceil(v/50)*50;}
+function drawChart(st){
+  const {g,w,h}=setupCanvas($('cChart'));
+  const pad={l:40,r:14,t:12,b:34};
+  const ests=[st.LP||0,st.chao,st.N*(reveal?1:0),st.S];
+  const yM=niceMax(Math.max(...ests)*1.05);
+  const X=i=>pad.l+(w-pad.l-pad.r)*i/10,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yM);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=5;i++){const v=yM*i/5,y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(v),pad.l-6,y);}
+  const every=w<380?2:1;
+  for(let i=0;i<=10;i+=every){g.textAlign='center';g.textBaseline='top';g.fillText(i,X(i),h-pad.b+6);}
+  g.textAlign='right';g.fillText('evaluators',w-pad.r,h-14);
+  // hidden band
+  const hi=Math.max(st.LP||0,st.chao);
+  if(hi>st.S){g.fillStyle=css('--blood');g.globalAlpha=.16;g.fillRect(X(0),Y(hi),X(10)-X(0),Y(st.S)-Y(hi));g.globalAlpha=1;
+    g.fillStyle=css('--blood');g.textAlign='left';g.textBaseline='middle';
+    g.textBaseline='bottom';if(Y(st.S)-Y(hi)>14)g.fillText('estimated still hidden',X(0)+6,Y(st.S)-3);}
+  // model
+  g.strokeStyle=css('--ink-soft');g.lineWidth=2;g.beginPath();
+  for(let k=0;k<=100;k++){const i=k/10,v=st.N*(1-Math.pow(1-st.lam,i));k?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v));}
+  g.stroke();
+  const hline=(v,col,dash,lw,label,x,below)=>{g.strokeStyle=col;g.lineWidth=lw;g.setLineDash(dash);g.beginPath();g.moveTo(X(0),Y(v));g.lineTo(X(10),Y(v));g.stroke();g.setLineDash([]);
+    g.fillStyle=col;g.textAlign='right';g.textBaseline=below?'top':'bottom';g.font='600 12px '+css('--sans');g.fillText(label,x,Y(v)+(below?3:-3));g.font='12px '+css('--sans');};
+  const lowerIsLP=st.LP&&st.LP<st.chao;
+  if(reveal)hline(st.N,css('--ochre'),[],2.5,'true '+st.N,X(10)-(w<420?110:150),false);
+  if(st.LP)hline(st.LP,css('--steel'),[8,5],2,'LP '+f2d(st.LP),X(10)-2,lowerIsLP);
+  hline(st.chao,css('--blood'),[2,4],2.5,'Chao '+f2d(st.chao),X(10)-2,st.LP&&!lowerIsLP);
+  // dots
+  st.cum.forEach((v,i)=>{g.fillStyle=css('--ink');g.beginPath();g.arc(X(i+1),Y(v),5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+}
+function drawHist(){
+  const fig=$('histFig');if(!hist||mode!=='sim'){fig.hidden=true;return;}
+  fig.hidden=false;
+  const {g,w,h}=setupCanvas($('cHist'));
+  const N=hist.N,xMax=Math.max(3*N,10),bw=Math.max(1,Math.round(N/14));
+  const nb=Math.ceil(xMax/bw)+1;
+  const bin=arr=>{const b=new Array(nb).fill(0);arr.forEach(v=>{b[Math.min(nb-1,Math.floor(v/bw))]++;});return b;};
+  const bl=bin(hist.lp),bc=bin(hist.chao),top=Math.max(...bl,...bc);
+  const pad={l:40,r:14,t:10,b:30},gap=18,ph=(h-pad.t-pad.b-gap)/2;
+  const X=v=>pad.l+(w-pad.l-pad.r)*v/(nb*bw);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  [[bl,'Lincoln-Petersen',css('--steel'),hist.mLP],[bc,'Chao',css('--blood'),hist.mChao]].forEach(([b,name,col,mean],k)=>{
+    const y0=pad.t+k*(ph+gap);
+    g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y0+ph);g.lineTo(w-pad.r,y0+ph);g.stroke();
+    g.fillStyle=col;b.forEach((c,i)=>{const bh=ph*c/top;g.fillRect(X(i*bw)+.5,y0+ph-bh,Math.max(1,X(bw)-X(0)-1),bh);});
+    g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='top';g.font='600 12px '+css('--sans');g.fillText(name,pad.l+4,y0);g.font='12px '+css('--sans');
+    g.strokeStyle=css('--ochre');g.lineWidth=2.5;g.beginPath();g.moveTo(X(N),y0);g.lineTo(X(N),y0+ph);g.stroke();
+    if(mean!=null){g.strokeStyle=css('--ink');g.lineWidth=1.5;g.setLineDash([5,4]);g.beginPath();g.moveTo(X(mean),y0);g.lineTo(X(mean),y0+ph);g.stroke();g.setLineDash([]);}
+  });
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  const step=xMax<=30?5:10;for(let v=0;v<=xMax;v+=step)g.fillText(v,X(v),h-pad.b+6);
+  g.textAlign='right';g.fillText(`estimated total (last bin = ${nb*bw-bw}+)`,w-pad.r,h-14);
+  $('histNote').innerHTML=`True N = <b>${N}</b>. Mean Lincoln-Petersen <b>${hist.mLP==null?'n/a':f2d(hist.mLP)}</b> (runs with m &gt; 0: ${hist.lp.length.toLocaleString('en-US')} of 1,000). Mean Chao <b>${f2d(hist.mChao)}</b>. Mean found S <b>${f2d(hist.mS)}</b>. Spread ${hist.spread}, mean findability ${hist.mu}, ${hist.k} evaluators.`;
+}
+function run1000(){
+  const groups=evals.length===sim.k?evals.map(e=>e.group):defaultGroups(sim.k);
+  const lp=[],ch=[];let sS=0;
+  for(let r=0;r<1000;r++){const t=drawTeam(sim.N,sim.k,false);const q=quickEst(t.finds,groups,sim.N);if(q.LP!==null)lp.push(q.LP);ch.push(q.chao);
+    const u=new Set();t.finds.forEach((s,i)=>{if(groups[i]!=='X')s.forEach(j=>u.add(j));});sS+=u.size;}
+  const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  hist={N:sim.N,lp,chao:ch,mLP:mean(lp),mChao:mean(ch),mS:sS/1000,spread:sim.spread,mu:sim.mu,k:sim.k};
+  drawHist();
+}
+
+// ---------- numbers ----------
+function stat(v,label,col){return `<div class="stat" style="--c:var(${col})"><b>${v}</b><span>${label}</span></div>`;}
+function readouts(st){
+  const ni=st.inc.length;
+  const lo=st.LP?Math.min(st.LP,st.chao):st.chao,hi=st.LP?Math.max(st.LP,st.chao):st.chao;
+  const loName=st.LP&&st.LP<=st.chao?'Lincoln-Petersen':'Chao',hiName=loName==='Chao'?'Lincoln-Petersen':'Chao';
+  let head=`Found <b>${st.S}</b>. Estimated total: `;
+  head+=st.LP?`<b>${f1d(lo)}</b> (${loName}) to <b>${f1d(hi)}</b> (${hiName}).`:`<b>${f1d(st.chao)}</b> (Chao). Lincoln-Petersen is undefined, the groups share no problems.`;
+  if(reveal)head+=` True total <b>${st.N}</b>.`;
+  $('headline').innerHTML=head;
+  const dLo=Math.max(0,Math.round(lo-st.S)),dHi=Math.max(0,Math.round(hi-st.S));
+  let sent=`${ni} evaluator${ni===1?'':'s'} found ${st.S} problems. `;
+  if(dHi===0)sent+='The estimates say probably none are hidden.';
+  else if(dLo===dHi)sent+=`About ${dHi} more ${dHi===1?'is':'are'} probably hidden.`;
+  else sent+=`Between ${dLo} and ${dHi} more are probably hidden.`;
+  if(reveal)sent+=` In fact ${st.N-st.S} ${st.N-st.S===1?'was':'were'} missed.`;
+  $('subline').textContent=sent;
+
+  let r='';
+  r+=stat(st.S,'distinct problems found, S','--ink');
+  r+=stat(st.LP?f2d(st.LP):'undefined','Lincoln-Petersen'+(st.LP?'':', no overlap'),'--steel');
+  r+=stat(st.chap!==null?f2d(st.chap):'n/a','Chapman','--steel');
+  r+=stat(f2d(st.chao),'Chao'+(st.chaoBC?' (bias-corrected, f₂ = 0)':''),'--blood');
+  r+=stat(`${st.nA} / ${st.nB} / ${st.m}`,'n_A / n_B / m (shared)','--steel');
+  r+=stat(`${st.f1} / ${st.f2}`,'f₁ / f₂ (found by exactly 1 / 2)','--blood');
+  r+=stat(st.lamEst?st.lamEst.toFixed(3):'n/a','estimated λ = mean found ÷ LP','--moss');
+  r+=stat(st.meanFound.toFixed(1),'mean found per evaluator','--moss');
+  if(reveal){
+    r+=stat(st.N,'true total N','--ochre');
+    r+=stat((100*st.S/st.N).toFixed(1)+'%',`coverage by count (${st.S}/${st.N})`,'--ochre');
+    r+=stat(st.lam.toFixed(4),'observed λ = mean found ÷ N','--ochre');
+  }
+  if(weight){
+    r+=reveal?stat((100*st.sevFound/st.sevAll).toFixed(1)+'%',`coverage by severity (${f1d(st.sevFound)}/${f1d(st.sevAll)})`,'--ochre')
+             :stat(f1d(st.sevFound),'severity found; total unknown until you reveal truth','--ochre');
+  }
+  $('readout').innerHTML=r;
+
+  const gA=evals.filter(e=>e.group==='A').map(e=>e.name).join(', ')||'none',gB=evals.filter(e=>e.group==='B').map(e=>e.name).join(', ')||'none';
+  let w=`<p>Group A {${gA}} found <code>n_A = ${st.nA}</code>. Group B {${gB}} found <code>n_B = ${st.nB}</code>. Both found <code>m = ${st.m}</code>.</p>`;
+  w+=st.LP?`<p>Lincoln-Petersen <code>${st.nA} × ${st.nB} / ${st.m} = ${trim3(st.LP)}</code>. Chapman <code>${st.nA+1} × ${st.nB+1} / ${st.m+1} − 1 = ${trim3(st.chap)}</code>.</p>`
+          :`<p>Lincoln-Petersen is undefined: no overlap (m = 0). Chapman <code>${st.nA+1} × ${st.nB+1} / 1 − 1 = ${trim3(st.chap||0)}</code>.</p>`;
+  w+=st.chaoBC?`<p>Chao (f₂ = 0, bias-corrected) <code>${st.S} + ${st.f1} × ${st.f1-1} / 2 = ${trim3(st.chao)}</code>.</p>`
+              :`<p>Chao <code>${st.S} + ${st.f1}² / (2 × ${st.f2}) = ${trim3(st.chao)}</code>.</p>`;
+  $('work').innerHTML=w;
+
+  // union vs model table
+  const n=st.cum.length;
+  let th='<tr><th>Evaluators i</th>',tu='<tr><td>Union found</td>',tm='<tr><td>Model</td>';
+  for(let i=1;i<=n;i++){th+=`<th>${i}</th>`;tu+=`<td>${st.cum[i-1]}</td>`;tm+=`<td>${f2d(st.N*(1-Math.pow(1-st.lam,i)))}</td>`;}
+  $('uHead').innerHTML=th+'</tr>';$('uBody').innerHTML=tu+'</tr>'+tm+'</tr>';
+
+  let ins;
+  if(mode==='lec'){
+    ins=`Each evaluator found ${st.meanFound.toFixed(1)} problems on average, ${reveal?(100*st.lam).toFixed(0)+'% of the '+st.N:'about a third'}. The two estimators disagree because problems 1 and 2 are obvious: both groups found them, which pushes m up and Lincoln-Petersen down, while Chao reads the ${st.f1} problems found only once as the tip of what nobody saw.`;
+    if(reveal)ins+=` The two missed problems need a leader disconnect and atypical colour vision to see, and both are more severe (3.7 and 3.0) than the average found problem (2.4).`;
+  } else {
+    ins=`Simulated team: ${st.inc.length} evaluators, ${st.N} problems with mean findability ${sim.mu} and spread ${sim.spread}. Run 1,000 to see the bias: at spread 0, Lincoln-Petersen averages close to the truth. As the spread grows, it sinks below the truth while Chao stays closer.`;
+  }
+  $('insight').textContent=ins;
+}
+
+function update(){
+  const st=stats();
+  renderGrid(st);readouts(st);drawChart(st);drawHist();
+  $('legTrue').hidden=!reveal;
+  $('simCtl').querySelectorAll('input,button').forEach(x=>x.disabled=(mode!=='sim'));
+  $('simCtl').style.opacity=mode==='sim'?1:.55;
+}
+
+// ---------- controls ----------
+function setMode(m){
+  mode=m;$('tLec').setAttribute('aria-selected',m==='lec');$('tSim').setAttribute('aria-selected',m==='sim');
+  $('tLec').tabIndex=m==='lec'?0:-1;$('tSim').tabIndex=m==='sim'?0:-1;
+  if(m==='lec'){loadLecture();hist=null;}else{simulateOnce();}
+  $('detail').textContent='Hover or focus a column header to read the problem.';
+  update();
+}
+function setSim(k,v){sim[k]=v;$('s'+{N:'N',mu:'Mu',spread:'Sp',k:'K'}[k]).value=v;$('o'+{N:'N',mu:'Mu',spread:'Sp',k:'K'}[k]).textContent=v;}
+$('tLec').addEventListener('click',()=>setMode('lec'));
+$('tSim').addEventListener('click',()=>setMode('sim'));
+[$('tLec'),$('tSim')].forEach(t=>t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const o=t.id==='tLec'?$('tSim'):$('tLec');o.click();o.focus();}}));
+[['sN','N',v=>+v],['sMu','mu',v=>+(+v).toFixed(2)],['sSp','spread',v=>+(+v).toFixed(2)],['sK','k',v=>+v]].forEach(([id,k,p])=>{
+  $(id).addEventListener('input',e=>{setSim(k,p(e.target.value));hist=null;if(mode==='sim'){simulateOnce();update();}});
+});
+$('run1').addEventListener('click',()=>{simulateOnce();update();});
+$('run1000').addEventListener('click',()=>{run1000();update();});
+$('reveal').addEventListener('change',e=>{reveal=e.target.checked;update();});
+$('weight').addEventListener('change',e=>{weight=e.target.checked;update();});
+document.querySelectorAll('[data-sort]').forEach(b=>b.addEventListener('click',()=>{
+  sortBy=b.dataset.sort;document.querySelectorAll('[data-sort]').forEach(x=>x.setAttribute('aria-pressed',x===b));update();}));
+function preset(p){
+  hist=null;
+  if(p==='lecture'){setMode('lec');return;}
+  if(p==='three'){setMode('lec');loadLecture(['A','B','B','X','X']);update();return;}
+  rng=mulberry32(sim.seed);
+  setSim('N',14);setSim('mu',0.34);setSim('k',5);setSim('spread',p==='equal'?0:0.9);
+  setMode('sim');run1000();update();
+}
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>preset(b.dataset.preset)));
+$('reset').addEventListener('click',()=>{
+  reveal=false;$('reveal').checked=false;weight=true;$('weight').checked=true;sortBy='count';
+  document.querySelectorAll('[data-sort]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.sort==='count'));
+  setSim('N',14);setSim('mu',0.34);setSim('spread',0.5);setSim('k',5);rng=mulberry32(sim.seed);setMode('lec');
+});
+window.addEventListener('resize',()=>{const st=stats();drawChart(st);drawHist();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{const st=stats();drawChart(st);drawHist();});
+
+// test hook for automated checks
+window.__w09={stats,setGroups:gs=>{evals.forEach((e,i)=>e.group=gs[i]||'X');update();},preset,sim,run1000:()=>{run1000();return hist;}};
+
+loadLecture();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

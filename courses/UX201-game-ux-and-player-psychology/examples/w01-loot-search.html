@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Loot search time: UX201 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:0 0 8px}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;display:flex;flex-direction:column;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.cwrap{position:relative;flex:1;min-height:300px}
+.cwrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.field{position:relative;width:100%;aspect-ratio:1/1;background:var(--paper);border:1.5px solid var(--grid);border-radius:8px;overflow:hidden;--fs:12px}
+.field:focus{outline:none}
+.field:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.item{position:absolute;display:flex;align-items:center;gap:.35em;padding:0 .4em;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper-2);color:var(--ink-soft);
+font:600 var(--fs)/1.1 var(--sans);text-align:left;cursor:pointer;overflow:hidden}
+.field.dense .item{flex-direction:column;justify-content:center;text-align:center;padding:.15em;gap:.15em}
+.item svg{flex:none;width:1.1em;height:1.1em;fill:currentColor}
+.item.accent{background:var(--ochre);border-color:var(--ochre);color:var(--paper)}
+.item span{overflow:hidden}
+.field.preview .item{cursor:default}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px;gap:6px;pointer-events:none}
+.overlay.dim{background:color-mix(in srgb,var(--paper) 55%,transparent)}
+.overlay .msg{display:flex;flex-direction:column;gap:4px;background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;padding:10px 14px;max-width:90%}
+.overlay b{font-size:1.2rem}
+.overlay .fix{font:400 3.2rem/1 var(--sans);color:var(--ink)}
+.overlay .ok{color:var(--moss)} .overlay .bad{color:var(--blood)}
+.trialbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.btn{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.help{font-size:.84rem;color:var(--ink-soft);margin:8px 0 0}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.item:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.fitline{font-size:.9rem;margin:8px 0 0;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:22px;height:12px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.check{display:flex;align-items:center;gap:8px;font-size:.92rem;margin-top:10px}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+details{margin-top:12px;border-top:1px solid var(--grid);padding-top:8px}
+summary{cursor:pointer;font-weight:600;font-size:.92rem}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin:12px 0 4px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.25rem;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.num{width:100%;font:600 1rem var(--sans);padding:6px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;min-width:300px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.card{background:var(--paper-2);border-radius:10px;padding:12px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">UX201 Game UX and Player Psychology · Week 1 · Worked example</p>
+  <h1>Finding one item among N</h1>
+  <p class="lede">A target that pops out costs the same half second whether the pile holds 4 items or 64. Search item by item and every extra item adds time, twice as much when the target isn&rsquo;t there.</p>
+</header>
+
+<section class="panel" aria-label="Search experiment">
+  <div class="charts">
+    <figure>
+      <figcaption>Search field<small id="fieldCap">Find the gold item with the diamond icon.</small></figcaption>
+      <div class="field preview" id="field" tabindex="-1" aria-label="Search field"></div>
+      <div class="trialbar">
+        <button class="btn primary" id="start">Start trial</button>
+        <button class="btn" id="notHere" disabled>Not here (N)</button>
+        <label class="check" style="margin:0"><input type="checkbox" id="always"> Always present</label>
+      </div>
+      <p class="help">Space starts a trial. Click the target, or press N if it is missing. Keyboard only: press Enter the moment you see it (the time is recorded then), Tab to the item and press Enter to confirm.</p>
+      <p class="sr" aria-live="polite" id="live"></p>
+    </figure>
+    <figure>
+      <figcaption>Search time vs items<small id="dataCap">Lines are the model. Dots are example data until you run a trial.</small></figcaption>
+      <div class="cwrap"><canvas id="chart" role="img" aria-label="Search time in milliseconds versus number of items, model lines and trial dots"></canvas></div>
+      <div class="legend" aria-hidden="true">
+        <span><svg viewBox="0 0 22 12"><line x1="0" y1="6" x2="22" y2="6" stroke="var(--steel)" stroke-width="3"/></svg>Pop-out</span>
+        <span><svg viewBox="0 0 22 12"><line x1="0" y1="6" x2="22" y2="6" stroke="var(--blood)" stroke-width="3"/></svg>Item by item, present</span>
+        <span><svg viewBox="0 0 22 12"><line x1="0" y1="6" x2="22" y2="6" stroke="var(--blood)" stroke-width="3" stroke-dasharray="5 3"/></svg>Item by item, absent</span>
+        <span><svg viewBox="0 0 22 12"><circle cx="11" cy="6" r="4" fill="var(--ink)"/></svg>present trial</span>
+        <span><svg viewBox="0 0 22 12"><circle cx="11" cy="6" r="4" fill="none" stroke="var(--ink)" stroke-width="1.5"/></svg>absent trial</span>
+        <span><svg viewBox="0 0 22 12"><path d="M7 2l8 8M15 2l-8 8" stroke="var(--ink)" stroke-width="2"/></svg>wrong answer</span>
+      </div>
+      <p class="fitline" id="fit"></p>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <span class="lbl" style="margin-top:0">Items on screen, N</span>
+      <div class="seg" role="group" aria-label="Set size" id="segN">
+        <button class="chip" data-n="4" aria-pressed="false">4</button>
+        <button class="chip" data-n="8" aria-pressed="false">8</button>
+        <button class="chip" data-n="16" aria-pressed="true">16</button>
+        <button class="chip" data-n="32" aria-pressed="false">32</button>
+        <button class="chip" data-n="64" aria-pressed="false">64</button>
+      </div>
+      <span class="lbl">Search mode</span>
+      <div class="seg" role="group" aria-label="Search mode" id="segMode">
+        <button class="chip" data-mode="popout" aria-pressed="true">Pop-out</button>
+        <button class="chip" data-mode="conj" aria-pressed="false">Item by item</button>
+      </div>
+      <p class="help" id="modeNote"></p>
+      <details>
+        <summary>Model parameters</summary>
+        <label class="lbl" for="pa">Base time a <output id="oa">500 ms</output></label>
+        <input type="range" id="pa" min="200" max="1000" step="10" value="500">
+        <label class="lbl" for="pkp">Slope, target present k<sub>p</sub> <output id="okp">30 ms</output></label>
+        <input type="range" id="pkp" min="0" max="100" step="1" value="30">
+        <label class="lbl" for="pka">Slope, target absent k<sub>a</sub> <output id="oka">60 ms</output></label>
+        <input type="range" id="pka" min="0" max="200" step="1" value="60">
+      </details>
+      <div class="trialbar">
+        <button class="btn" id="clear">Clear my data</button>
+        <button class="btn" id="csv">Export CSV</button>
+        <span class="help" id="count" style="margin:0"></span>
+      </div>
+    </div>
+    <div>
+      <h2>Model search time (ms)</h2>
+      <div class="table-wrap" style="margin-top:0">
+        <table aria-label="Model search time by set size">
+          <thead><tr><th>N</th><th>Pop-out</th><th>Present</th><th>Absent</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Session cost: a player opening loot packs</h2>
+    <div class="controls" style="margin-top:4px">
+      <div>
+        <label class="lbl" for="packs" style="margin-top:0">Packs per hour</label>
+        <input class="num" type="number" id="packs" min="0" max="5000" step="1" value="300">
+        <label class="lbl" for="items">Items per pack <output id="oItems">16</output></label>
+        <input type="range" id="items" min="1" max="64" step="1" value="16">
+        <label class="lbl" for="pp">Chance a pack has a worthwhile item, p <output id="opp">0.05</output></label>
+        <input type="range" id="pp" min="0" max="1" step="0.01" value="0.05">
+      </div>
+      <div>
+        <label class="lbl" for="hidden" style="margin-top:0">Items hidden by filter <output id="oHidden">0</output></label>
+        <input type="range" id="hidden" min="0" max="16" step="1" value="0">
+        <label class="check"><input type="checkbox" id="pop"> Valuable items pop out</label>
+        <div class="readout" aria-live="polite">
+          <div class="stat" style="--c:var(--steel)"><b id="rN">16</b><span>items searched</span></div>
+          <div class="stat" style="--c:var(--blood)"><b id="rET">—</b><span>E[T] per pack</span></div>
+          <div class="stat" style="--c:var(--ochre)"><b id="rHour">—</b><span>search per hour</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="insight" id="sessNote" style="margin-bottom:0"></p>
+  </div>
+</section>
+
+<footer>Model: search time T = a + k × N, with pop-out search flat (k = 0) and item-by-item search checking half the items on average when the target is present and all of them when it is absent. Parameters are the lecture's teaching values, not measurements of any game. Item names and icons are invented.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const fmt1=n=>(Math.round(n*10)/10).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:1});
+const SIZES=[4,8,16,32,64];
+let N=16,mode='popout',a=500,kp=30,ka=60;
+let trials=[],state='idle',cur=null,t0=0,pendingRT=null,fixTimer=null,lastMsg=null;
+
+// deterministic example data: 12 dots near the model
+const SAMPLE=[
+ ['popout',4,1,512],['popout',16,1,478],['popout',32,1,531],['popout',64,1,495],
+ ['conj',4,1,655],['conj',16,1,940],['conj',32,1,1510],['conj',64,1,2380],
+ ['conj',8,0,1010],['conj',16,0,1420],['conj',32,0,2490],['conj',64,0,4270]
+].map((r,i)=>({trial:i+1,mode:r[0],N:r[1],present:!!r[2],rt:r[3],correct:true,sample:true}));
+function data(){return trials.length?trials:SAMPLE;}
+
+const T=(n,cond)=>cond==='popout'?a:(cond==='present'?a+kp*n:a+ka*n);
+
+// ---------- search field ----------
+const W1=['Dusty','Cracked','Faded','Bent','Rusty','Chipped','Worn','Plain','Dull','Old','Torn','Stale'];
+const W2=['Ring','Amulet','Boot','Glove','Belt','Cloak','Charm','Bracer','Hood','Buckle','Sash','Cap'];
+const ICON={circle:'<circle cx="6" cy="6" r="5"/>',square:'<rect x="1.2" y="1.2" width="9.6" height="9.6"/>',triangle:'<path d="M6 .8 11.4 11H.6z"/>',diamond:'<path d="M6 0 12 6 6 12 0 6z"/>'};
+const OTHER=['circle','square','triangle'];
+function rnd(n){return Math.floor(Math.random()*n);}
+function shuffle(x){for(let i=x.length-1;i>0;i--){const j=rnd(i+1);[x[i],x[j]]=[x[j],x[i]];}return x;}
+function makeItems(n,m,present){
+  const items=[];
+  for(let i=0;i<n;i++){
+    let accent,shape;
+    if(m==='popout'){accent=false;shape=OTHER[i%3];}
+    else if(i%2===0){accent=true;shape=OTHER[(i/2)%3];}
+    else{accent=false;shape='diamond';}
+    items.push({accent,shape,target:false});
+  }
+  if(present){items[rnd(n)]={accent:true,shape:'diamond',target:true};}
+  return shuffle(items).map(it=>Object.assign(it,{name:W1[rnd(W1.length)]+' '+W2[rnd(W2.length)]}));
+}
+function layout(){
+  const f=$('field'),w=f.clientWidth||300,n=f.querySelectorAll('.item').length||N;
+  const cols=Math.ceil(Math.sqrt(n*1.15)),cellPx=w/cols;
+  f.style.setProperty('--fs',Math.max(7,Math.min(13,cellPx*0.17))+'px');
+  f.classList.toggle('dense',cellPx<95);
+}
+function renderField(items,interactive){
+  const f=$('field');f.innerHTML='';
+  const n=items.length,cols=Math.ceil(Math.sqrt(n*1.15)),cell=100/cols;
+  const cells=shuffle([...Array(cols*cols).keys()]).slice(0,n);
+  f.classList.toggle('preview',!interactive);
+  items.forEach((it,i)=>{
+    const b=document.createElement('button');
+    b.className='item'+(it.accent?' accent':'');
+    const dense=(f.clientWidth||300)/cols<95,c=cells[i]%cols,r=Math.floor(cells[i]/cols),w=cell*.9,h=cell*(dense?.84:.62);
+    b.style.left=(c*cell+Math.random()*(cell-w))+'%';b.style.top=(r*cell+Math.random()*(cell-h))+'%';
+    b.style.width=w+'%';b.style.height=h+'%';
+    b.innerHTML=`<svg viewBox="0 0 12 12" aria-hidden="true">${ICON[it.shape]}</svg><span>${it.name}</span>`;
+    b.setAttribute('aria-label',`${it.name}, ${it.accent?'gold':'grey'} ${it.shape}`);
+    if(interactive){b.addEventListener('click',()=>answer(it.target?'hit':'wrongItem'));}
+    else{b.tabIndex=-1;b.setAttribute('aria-hidden','true');}
+    f.appendChild(b);
+  });
+  layout();
+}
+function overlay(html,dim){
+  const o=document.createElement('div');o.className='overlay'+(dim?' dim':'');o.innerHTML=dim||html.indexOf('<b')===0?'<div class="msg">'+html+'</div>':html;$('field').appendChild(o);
+}
+function idleField(){
+  // preview of the current condition, target present, not clickable
+  renderField(makeItems(N,mode,true),false);
+  const msg=lastMsg||`<b>Preview: N = ${N}</b><span>Press Start trial or Space</span>`;
+  overlay(msg,true);
+}
+function startTrial(){
+  if(state==='fix'||state==='run')return;
+  state='fix';pendingRT=null;
+  const present=$('always').checked||Math.random()<.5;
+  cur={mode,N,present,items:makeItems(N,mode,present)};
+  $('field').innerHTML='';overlay('<span class="fix" aria-hidden="true">+</span>',false);
+  $('start').disabled=true;$('live').textContent='Get ready';
+  fixTimer=setTimeout(()=>{
+    renderField(cur.items,true);state='run';$('notHere').disabled=false;
+    $('field').focus({preventScroll:true});
+    requestAnimationFrame(()=>{t0=performance.now();});
+  },600);
+}
+function answer(kind){
+  if(state!=='run')return;
+  const rt=Math.round(pendingRT!==null?pendingRT-t0:performance.now()-t0);
+  const correct=kind==='hit'||(kind==='absent'&&!cur.present);
+  trials.push({trial:trials.length+1,mode:cur.mode,N:cur.N,present:cur.present,rt,correct});
+  state='idle';$('notHere').disabled=true;$('start').disabled=false;
+  const was=cur.present?'The target was there.':'There was no target.';
+  lastMsg=correct?`<b class="ok">Correct: ${fmt(rt)} ms</b><span>${was} Space for the next trial.</span>`
+                 :`<b class="bad">Wrong answer (${fmt(rt)} ms)</b><span>${was} Recorded with a cross, left out of the fit.</span>`;
+  $('live').textContent=(correct?'Correct, ':'Wrong, ')+fmt(rt)+' milliseconds. '+was;
+  $('field').innerHTML='';overlay(lastMsg,false);
+  $('start').focus({preventScroll:true});
+  drawChart();
+}
+
+// ---------- chart ----------
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function fit(pts){
+  const xs=new Set(pts.map(p=>p.N));if(xs.size<2)return null;
+  const n=pts.length,mx=pts.reduce((s,p)=>s+p.N,0)/n,my=pts.reduce((s,p)=>s+p.rt,0)/n;
+  let sxy=0,sxx=0;pts.forEach(p=>{sxy+=(p.N-mx)*(p.rt-my);sxx+=(p.N-mx)**2;});
+  const k=sxy/sxx;return {a:my-k*mx,k};
+}
+function drawChart(){
+  const {g,w,h}=setupCanvas($('chart')),pad={l:52,r:12,t:24,b:36},xM=64,yM=5000;
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/xM,Y=y=>pad.t+(h-pad.t-pad.b)*(1-Math.min(y,yM*1.04)/yM);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=5;i++){const v=i*1000;g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(v),pad.l-6,Y(v));}
+  [0,16,32,48,64].forEach(v=>{g.textAlign='center';g.textBaseline='top';g.fillText(v,X(v),h-pad.b+6);});
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('items N',w-pad.r,h-2);
+  g.textAlign='right';g.textBaseline='top';g.fillText('ms',pad.l-6,0);
+  const line=(f,col,dash)=>{g.strokeStyle=col;g.lineWidth=2.5;g.setLineDash(dash||[]);g.beginPath();g.moveTo(X(0),Y(f(0)));g.lineTo(X(xM),Y(f(xM)));g.stroke();g.setLineDash([]);};
+  line(()=>a,css('--steel'));
+  line(n=>a+kp*n,css('--blood'));
+  line(n=>a+ka*n,css('--blood'),[7,5]);
+  // fit
+  const pts=data().filter(p=>p.correct&&p.present&&p.mode===mode),F=fit(pts);
+  if(F){g.strokeStyle=css('--ink');g.globalAlpha=.7;g.lineWidth=1.5;g.setLineDash([2,4]);g.beginPath();g.moveTo(X(0),Y(F.a));g.lineTo(X(xM),Y(F.a+F.k*xM));g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+  // dots (jitter x slightly when repeated)
+  const seen={};
+  data().forEach(p=>{
+    const key=p.mode+p.N;seen[key]=(seen[key]||0)+1;
+    const jx=((seen[key]-1)%5-2)*2.2,x=X(p.N)+jx,y=Y(p.rt),col=p.mode==='popout'?css('--steel'):css('--blood');
+    g.globalAlpha=p.sample?.7:1;g.lineWidth=2;g.strokeStyle=col;g.fillStyle=col;
+    if(!p.correct){g.beginPath();g.moveTo(x-6,y-6);g.lineTo(x+6,y+6);g.moveTo(x+6,y-6);g.lineTo(x-6,y+6);g.lineWidth=2.5;g.stroke();}
+    else{g.beginPath();if(p.mode==='popout')g.arc(x,y,5,0,Math.PI*2);else g.rect(x-4.5,y-4.5,9,9);
+      if(p.present){g.fill();g.strokeStyle=css('--paper');g.lineWidth=1;g.stroke();}else{g.fillStyle=css('--paper');g.fill();g.stroke();}}
+    g.globalAlpha=1;
+  });
+  if(!trials.length){g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='top';g.font='600 12px '+css('--sans');g.fillText('example data',pad.l+8,pad.t+4);}
+  const who=trials.length?'your':'example';
+  $('fit').innerHTML=F?`Least-squares fit to ${who} correct <b>${mode==='popout'?'pop-out':'item-by-item'}, present</b> trials: a = <b>${fmt(F.a)} ms</b>, k = <b>${(Math.abs(F.k)<0.05?0:F.k).toFixed(1)} ms per item</b> (dotted line, ${pts.length} trials).`
+    :`Fit appears once you have correct ${mode==='popout'?'pop-out':'item-by-item'} present trials at two or more set sizes.`;
+  const nOk=trials.filter(t=>t.correct).length;
+  $('count').textContent=trials.length?`${trials.length} trials, ${nOk} correct`:'No trials yet';
+  $('dataCap').textContent=trials.length?'Lines are the model. Dots are your trials: circles pop-out, squares item by item.':'Lines are the model. Dots are example data until you run a trial: circles pop-out, squares item by item.';
+}
+
+// ---------- table + session ----------
+function table(){
+  $('tbody').innerHTML=SIZES.map(n=>`<tr class="${n===N?'here':''}"><td>${n}</td><td>${fmt(T(n,'popout'))}</td><td>${fmt(T(n,'present'))}</td><td>${fmt(T(n,'absent'))}</td></tr>`).join('');
+}
+function session(){
+  const packs=Math.max(0,+$('packs').value||0),items=+$('items').value,p=+$('pp').value,pop=$('pop').checked;
+  const hs=$('hidden');hs.max=items;if(+hs.value>items)hs.value=items;const hidden=+hs.value;
+  const n=items-hidden,ET=pop?a:p*T(n,'present')+(1-p)*T(n,'absent'),sec=packs*ET/1000;
+  $('oItems').textContent=items;$('opp').textContent=p.toFixed(2);$('oHidden').textContent=hidden;
+  $('rN').textContent=n;$('rET').textContent=fmt(ET)+' ms';$('rHour').textContent=fmt1(sec)+' s';
+  const base=p*T(items,'present')+(1-p)*T(items,'absent'),baseSec=packs*base/1000;
+  let s=pop?`With valuable items popping out, every pack costs the flat ${fmt(a)} ms, whatever the pile size: ${fmt1(sec)} s an hour (${fmt1(sec/60)} min).`
+           :`The player checks ${n} items per pack. With p = ${p.toFixed(2)} the target is usually absent, so most packs cost the full absent search: ${fmt(ET)} ms each, ${fmt1(sec)} s an hour (${fmt1(sec/60)} min).`;
+  if(hidden>0||pop){const saved=baseSec-sec;if(saved>0)s+=` That saves ${fmt1(saved)} s an hour against the unfiltered, plain-label pile (${fmt1(baseSec)} s).`;}
+  $('sessNote').textContent=s;
+}
+function modeNote(){
+  $('modeNote').textContent=mode==='popout'
+    ?'Pop-out: the target is the only gold label and the only diamond. It differs in colour and shape, so players who cannot tell the colours apart still see it at a glance.'
+    :'Item by item: half the distractors are gold with other icons, half are grey diamonds. Only the combination gold + diamond marks the target, so you have to check labels one by one.';
+  $('fieldCap').textContent='Find the gold item with the diamond icon.';
+}
+function all(){table();session();drawChart();if(state==='idle')idleField();}
+
+// ---------- events ----------
+function seg(id,attr,set){
+  document.querySelectorAll('#'+id+' .chip').forEach(b=>b.addEventListener('click',()=>{
+    if(state==='fix'||state==='run')return;
+    document.querySelectorAll('#'+id+' .chip').forEach(x=>x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');set(b.dataset[attr]);lastMsg=null;all();
+  }));
+}
+seg('segN','n',v=>{N=+v;});
+seg('segMode','mode',v=>{mode=v;modeNote();});
+[['pa','oa',v=>a=v],['pkp','okp',v=>kp=v],['pka','oka',v=>ka=v]].forEach(([i,o,s])=>$(i).addEventListener('input',e=>{s(+e.target.value);$(o).textContent=e.target.value+' ms';table();session();drawChart();}));
+['packs','items','pp','hidden','pop'].forEach(i=>$(i).addEventListener('input',session));
+$('pop').addEventListener('change',session);
+$('start').addEventListener('click',startTrial);
+$('notHere').addEventListener('click',()=>answer('absent'));
+$('clear').addEventListener('click',()=>{trials=[];lastMsg=null;drawChart();if(state==='idle')idleField();$('live').textContent='Your data cleared. Showing example data.';});
+$('csv').addEventListener('click',()=>{
+  const rows=[['trial','mode','N','present','rt_ms','correct']].concat(trials.map(t=>[t.trial,t.mode==='popout'?'pop-out':'item-by-item',t.N,t.present,t.rt,t.correct]));
+  const blob=new Blob([rows.map(r=>r.join(',')).join('\n')+'\n'],{type:'text/csv'});
+  const u=URL.createObjectURL(blob),l=document.createElement('a');l.href=u;l.download='loot-search-trials.csv';document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);
+});
+document.addEventListener('keydown',e=>{
+  const t=e.target,tag=t.tagName,typing=(tag==='INPUT'&&t.type!=='checkbox'&&t.type!=='range')||tag==='TEXTAREA';
+  if(typing)return;
+  if(e.key===' '&&state==='idle'&&!(tag==='BUTTON'||tag==='SUMMARY'||tag==='INPUT'||tag==='SELECT')){e.preventDefault();startTrial();}
+  else if((e.key==='n'||e.key==='N')&&state==='run'){e.preventDefault();answer('absent');}
+  else if(e.key==='Enter'&&state==='run'&&!t.classList.contains('item')&&pendingRT===null){
+    e.preventDefault();pendingRT=performance.now();$('live').textContent='Time recorded. Tab to the item and press Enter to confirm, or press N.';
+  }
+});
+let rz;window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(()=>{drawChart();layout();});});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawChart);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawChart);
+modeNote();all();
+})();
+</script>
+</body>
+</html>

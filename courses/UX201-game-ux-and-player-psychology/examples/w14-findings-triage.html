@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Findings triage. UX201 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin:0 0 8px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:1fr 1.25fr;gap:14px}
+@media (max-width:860px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.84rem}
+svg{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);font-size:12px;fill:var(--ink-soft)}
+svg .lbl{fill:var(--ink);font-weight:600}
+svg .gridl{stroke:var(--grid);stroke-width:1}
+svg .axis{stroke:var(--ink-soft);stroke-width:1}
+svg .freq{fill:var(--ink-soft)}
+svg .track{fill:var(--paper);opacity:.7}
+svg .row{outline:none;cursor:default}
+svg .hlband{fill:var(--focus);opacity:0}
+svg .row.hl .hlband{opacity:.14}
+svg .row:focus-visible .hlband{opacity:.22}
+svg .row:focus-visible .focusring{stroke:var(--focus);stroke-width:2.5}
+svg .focusring{fill:none;stroke:none}
+svg .fix{fill:var(--blood);stroke:var(--blood);stroke-width:1.5}
+svg .inv{stroke:var(--ochre);stroke-width:1.5}
+svg .back{fill:transparent;stroke:var(--ink-soft);stroke-width:2}
+svg .pdot{fill:var(--ink);stroke:var(--paper);stroke-width:2}
+svg .tline{stroke:var(--ink);stroke-width:2;stroke-dasharray:6 4}
+svg .arrow{fill:var(--ink-soft)}
+svg .tier-fix{fill:var(--blood);font-weight:700}
+svg .tier-inv{fill:var(--ochre);font-weight:700}
+svg .tier-back{fill:var(--ink-soft);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend svg{display:inline-block;width:22px;height:12px;vertical-align:middle;margin-right:5px;overflow:visible}
+.summary{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.summary b{font-family:var(--sans)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 4px}
+input[type=number],input[type=text],select{font:600 .92rem var(--sans);padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=number]{width:4.6em}
+fieldset{border:0;padding:0;margin:0 0 10px}
+legend{font-weight:700;font-size:.95rem;padding:0;margin-bottom:4px}
+.radio{display:flex!important;justify-content:flex-start!important;align-items:center;gap:8px;cursor:pointer;margin:3px 0}
+.radio input{width:20px;height:20px;accent-color:var(--steel);flex:none}
+.wrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.wrow label{flex-direction:column;align-items:flex-start;gap:2px;font-size:.84rem}
+.wrow input{width:100%}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip,.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.del{font:600 .8rem var(--sans);padding:4px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:4px 0 0}
+.findings{margin-top:18px}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:820px}
+th:nth-child(2){width:32%}
+.scrollhint{display:none}
+@media (max-width:860px){.scrollhint{display:block}}
+th,td{padding:6px 6px;text-align:right;border-bottom:1px solid var(--grid);vertical-align:middle}
+th{font-size:.84rem}
+th:nth-child(1),td:nth-child(1),th:nth-child(2),td:nth-child(2){text-align:left}
+td input[type=text]{width:100%;min-width:12em}
+tr.hl td{background:var(--paper-2)}
+.tier{font-weight:700;white-space:nowrap}
+.tier.fix{color:var(--blood)}.tier.inv{color:var(--ochre)}.tier.back{color:var(--ink-soft)}
+.xcell{white-space:nowrap}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">UX201 Game UX and Player Psychology · Week 14 · Worked example</p>
+  <h1>The bottom of the list is the blocker</h1>
+  <p class="lede">Sorted by how many testers hit it, the quest softlock (F2, 1 of 5) comes fifth of six. Sorted by impact, its bar is the longest on the chart, reaching 18.73, and even its lower end clears the bar. It goes in &ldquo;fix now&rdquo;.</p>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="stripe" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+      <rect width="7" height="7" style="fill:var(--paper)"></rect>
+      <rect width="3.5" height="7" style="fill:var(--ochre)"></rect>
+    </pattern>
+  </defs>
+</svg>
+
+<section class="panel" aria-label="Findings triage explorer">
+  <div class="views">
+    <figure>
+      <figcaption>Sorted by how many testers hit it<small>The report most teams write first. Every bar looks equally urgent.</small></figcaption>
+      <svg id="vFreq" aria-label="Findings sorted by frequency"></svg>
+    </figure>
+    <figure>
+      <figcaption>Impact we&rsquo;re sure of to impact we can&rsquo;t rule out<small>Interval from L to U on a log scale, dot at P, dashed line at the bar T. Rows sorted by tier, then by U.</small></figcaption>
+      <svg id="vImp" aria-label="Findings by impact interval"></svg>
+      <div class="legend" aria-hidden="true">
+        <span><svg viewBox="0 0 22 12"><rect x="1" y="1" width="20" height="10" rx="2" class="fix" style="fill:var(--blood)"></rect></svg>fix now (solid)</span>
+        <span><svg viewBox="0 0 22 12"><rect x="1" y="1" width="20" height="10" rx="2" style="fill:url(#stripe);stroke:var(--ochre);stroke-width:1.5"></rect></svg>investigate (striped)</span>
+        <span><svg viewBox="0 0 22 12"><rect x="1" y="1" width="20" height="10" rx="2" style="fill:none;stroke:var(--ink-soft);stroke-width:2"></rect></svg>backlog (outline)</span>
+      </div>
+    </figure>
+  </div>
+  <p class="hint">Hover a row, or Tab to it, to highlight the same finding in both charts and the table.</p>
+
+  <div class="summary" id="summary" aria-live="polite"></div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="n">Testers n <output id="oN">5</output></label>
+      <input type="range" id="n" min="1" max="40" step="1" value="5">
+      <fieldset>
+        <legend>When n changes</legend>
+        <label class="radio"><input type="radio" name="mode" value="shares" checked> Keep shares (x = round(share × n))</label>
+        <label class="radio"><input type="radio" name="mode" value="counts"> Keep counts (clamp x to n)</label>
+      </fieldset>
+    </div>
+    <div class="ctl">
+      <span style="font-weight:700;font-size:.95rem">Severity weights w(s)</span>
+      <div class="wrow">
+        <label for="w1">s = 1<input type="number" id="w1" min="0" max="100" step="0.5" value="1"></label>
+        <label for="w2">s = 2<input type="number" id="w2" min="0" max="100" step="0.5" value="3"></label>
+        <label for="w3">s = 3<input type="number" id="w3" min="0" max="100" step="0.5" value="10"></label>
+        <label for="w4">s = 4<input type="number" id="w4" min="0" max="100" step="0.5" value="30"></label>
+      </div>
+      <div class="presets" role="group" aria-label="Weight presets">
+        <button class="chip" data-w="1,3,10,30">Steep (1, 3, 10, 30)</button>
+        <button class="chip" data-w="1,2,4,8">Flat (1, 2, 4, 8)</button>
+      </div>
+      <p class="hint">Set weights before the study. They are the team's values, not data.</p>
+    </div>
+    <div class="ctl">
+      <label for="T">Bar T <output id="oT">1.00</output></label>
+      <input type="range" id="T" min="0.25" max="5" step="0.25" value="1">
+      <fieldset>
+        <legend>Confidence</legend>
+        <label class="radio"><input type="radio" name="conf" value="1.645"> 90% (z = 1.645)</label>
+        <label class="radio"><input type="radio" name="conf" value="1.96" checked> 95% (z = 1.96)</label>
+      </fieldset>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="findings">
+    <h2 id="fTitle">Findings</h2>
+    <p class="hint scrollhint">The table scrolls sideways. Edit x, severity and titles in place.</p>
+    <div class="table-wrap">
+      <table aria-labelledby="fTitle">
+        <thead><tr><th scope="col">ID</th><th scope="col">Title</th><th scope="col">x / n</th><th scope="col">Severity</th><th scope="col">Weight</th><th scope="col">Wilson interval</th><th scope="col">P</th><th scope="col">L</th><th scope="col">U</th><th scope="col">Tier</th><th scope="col"><span style="position:absolute;left:-9999px">Delete</span></th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="tools">
+      <button class="btn" id="add">Add finding</button>
+      <span class="hint" id="addHint">Up to 10 findings.</span>
+    </div>
+  </div>
+</section>
+
+<footer>Model from UX201 week 14, section 2: p̂ = x / n; Wilson score interval [lo, hi]; L = lo × w(s), U = hi × w(s), P = p̂ × w(s). Fix now if L ≥ T, investigate if U ≥ T &gt; L, backlog if U &lt; T. On the log axis, L = 0 is drawn at the left edge (0.1) with an arrow. The findings and the MMO starter zone are invented for teaching.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const DEFAULT_FINDINGS=[
+  ['F1','Quest tracker hides second objective',4,2],
+  ['F2','Selling quest item softlocks quest',1,4],
+  ['F3','Talent points spend without confirm',2,3],
+  ['F4','Mailbox minimap icon unreadable',3,1],
+  ['F5','Tutorial pop-up covers boss warning',1,3],
+  ['F6','System messages hide party invites',2,2]
+];
+function fresh(){
+  return {n:5,mode:'shares',w:[1,3,10,30],T:1,z:1.96,
+    F:DEFAULT_FINDINGS.map(([id,title,x,s])=>({id,title,xc:x,share:x/5,s}))};
+}
+let S=fresh(),hl=null;
+const TIER={fix:'fix now',inv:'investigate',back:'backlog'};
+const TORD={fix:0,inv:1,back:2};
+const num=id=>+String(id).slice(1);
+const rnd=(x,d)=>{const m=Math.pow(10,d);return Math.round(x*m+1e-9)/m;};
+const f2=x=>rnd(x,2).toFixed(2);
+const pc=x=>rnd(x*100,1).toFixed(1)+'%';
+
+function wilson(x,n,z){const p=x/n,z2=z*z,d=1+z2/n,c=(p+z2/(2*n))/d,h=z*Math.sqrt(p*(1-p)/n+z2/(4*n*n))/d;return {lo:Math.max(0,c-h),hi:Math.min(1,c+h)};}
+function xOf(f){return S.mode==='shares'?Math.min(S.n,Math.max(0,Math.round(f.share*S.n+1e-9))):Math.min(f.xc,S.n);}
+function compute(){
+  return S.F.map(f=>{
+    const x=xOf(f),ci=wilson(x,S.n,S.z),w=S.w[f.s-1];
+    const L=ci.lo*w,U=ci.hi*w,P=x/S.n*w;
+    const tier=L>=S.T-1e-12?'fix':(U>=S.T-1e-12?'inv':'back');
+    return {...f,x,lo:ci.lo,hi:ci.hi,w,L,U,P,tier};
+  });
+}
+const freqOrder=R=>R.slice().sort((a,b)=>b.x-a.x||num(a.id)-num(b.id));
+const tierOrder=R=>R.slice().sort((a,b)=>TORD[a.tier]-TORD[b.tier]||b.U-a.U||num(a.id)-num(b.id));
+
+// SVG helpers
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,text){const e=document.createElementNS(NS,tag);for(const a in attrs)e.setAttribute(a,attrs[a]);if(text!=null)e.textContent=text;return e;}
+function clear(s){while(s.firstChild)s.removeChild(s.firstChild);}
+function size(s,W,H){s.setAttribute('width',W);s.setAttribute('height',H);s.setAttribute('viewBox',`0 0 ${W} ${H}`);}
+function widthOf(s){return Math.max(260,s.parentNode.clientWidth-24);}
+const ROWH=34,TOP=26;
+
+function rowGroup(svg,r,y,W,label){
+  const g=el('g',{class:'row'+(hl===r.id?' hl':''),tabindex:0,role:'img','aria-label':label,'data-id':r.id});
+  g.appendChild(el('rect',{x:0,y:y-ROWH/2,width:W,height:ROWH,rx:6,class:'hlband'}));
+  g.appendChild(el('rect',{x:1,y:y-ROWH/2+1,width:W-2,height:ROWH-2,rx:6,class:'focusring'}));
+  const on=()=>setHl(r.id),off=()=>setHl(null);
+  g.addEventListener('mouseenter',on);g.addEventListener('mouseleave',off);
+  g.addEventListener('focus',on);g.addEventListener('blur',off);
+  svg.appendChild(g);return g;
+}
+
+function drawFreq(R){
+  const s=$('vFreq'),W=widthOf(s),rows=freqOrder(R),H=TOP+rows.length*ROWH+26,LBL=Math.min(118,Math.max(92,W*0.3)),Rm=10;
+  clear(s);size(s,W,H);
+  const X=v=>LBL+(W-LBL-Rm)*v/S.n;
+  const ticks=S.n<=10?S.n:(S.n<=20?S.n/ (S.n%2?1:2):4);
+  const step=S.n<=10?1:Math.ceil(S.n/8);
+  for(let v=0;v<=S.n;v+=step){s.appendChild(el('line',{x1:X(v),x2:X(v),y1:TOP-8,y2:H-24,class:'gridl'}));s.appendChild(el('text',{x:X(v),y:H-8,'text-anchor':'middle'},v));}
+  s.appendChild(el('text',{x:W-Rm,y:TOP-12,'text-anchor':'end'},'testers who hit it'));
+  rows.forEach((r,i)=>{
+    const y=TOP+i*ROWH+ROWH/2;
+    const g=rowGroup(s,r,y,W,`${r.id}, ${r.title}: ${r.x} of ${S.n} testers. Position ${i+1} of ${rows.length} by frequency.`);
+    g.appendChild(el('text',{x:6,y:y+4,class:'lbl'},`${r.id} · ${r.x} of ${S.n}`));
+    g.appendChild(el('rect',{x:X(0),y:y-9,width:X(S.n)-X(0),height:18,rx:3,class:'track'}));
+    if(r.x>0)g.appendChild(el('rect',{x:X(0),y:y-9,width:X(r.x)-X(0),height:18,rx:3,class:'freq'}));
+  });
+}
+
+const XMIN=0.1,XMAX=50;
+function drawImp(R){
+  const s=$('vImp'),W=widthOf(s),rows=tierOrder(R),H=TOP+rows.length*ROWH+26,LBL=36,RT=W<420?78:92;
+  clear(s);size(s,W,H);
+  const X=v=>LBL+(W-LBL-RT)*Math.log(Math.min(XMAX,Math.max(XMIN,v))/XMIN)/Math.log(XMAX/XMIN);
+  [[0.1,'0.1'],[0.2,'0.2'],[0.5,'0.5'],[1,'1'],[2,'2'],[5,'5'],[10,'10'],[20,'20'],[50,'50']].forEach(([v,t],i)=>{
+    s.appendChild(el('line',{x1:X(v),x2:X(v),y1:TOP-8,y2:H-24,class:'gridl'}));
+    if(W>=420||i%2===0||v===1)s.appendChild(el('text',{x:X(v),y:H-8,'text-anchor':'middle'},t));
+  });
+  s.appendChild(el('text',{x:W,y:TOP-14,'text-anchor':'end'},'impact (log scale)'));
+  rows.forEach((r,i)=>{
+    const y=TOP+i*ROWH+ROWH/2;
+    const g=rowGroup(s,r,y,W,`${r.id}, ${r.title}: L ${f2(r.L)}, P ${f2(r.P)}, U ${f2(r.U)}. Tier ${TIER[r.tier]}.`);
+    g.appendChild(el('text',{x:6,y:y+4,class:'lbl'},r.id));
+    const x0=X(r.L),x1=Math.max(X(r.U),x0+3);
+    const attrs={x:x0,y:y-8,width:x1-x0,height:16,rx:3,class:r.tier};
+    if(r.tier==='inv')attrs.style='fill:url(#stripe)';
+    g.appendChild(el('rect',attrs));
+    if(r.L<XMIN)g.appendChild(el('path',{d:`M${X(XMIN)-2},${y} l7,-6 v12 z`,class:'arrow',transform:`translate(-8,0)`}));
+    if(r.U>XMAX)g.appendChild(el('path',{d:`M${X(XMAX)+10},${y} l-7,-6 v12 z`,class:'arrow'}));
+    g.appendChild(el('circle',{cx:X(r.P),cy:y,r:4.5,class:'pdot'}));
+    g.appendChild(el('text',{x:W-RT+8,y:y+4,class:'tier-'+r.tier},TIER[r.tier]));
+  });
+  const tx=X(S.T);
+  s.appendChild(el('line',{x1:tx,x2:tx,y1:TOP-10,y2:H-24,class:'tline'}));
+  s.appendChild(el('text',{x:tx,y:TOP-14,'text-anchor':'middle',class:'lbl'},`bar ${rnd(S.T,2)}`));
+}
+
+function setHl(id){
+  hl=id;
+  document.querySelectorAll('svg .row').forEach(g=>g.classList.toggle('hl',g.dataset.id===id));
+  document.querySelectorAll('#tbody tr').forEach(tr=>tr.classList.toggle('hl',tr.dataset.id===id));
+}
+
+// table
+function rowHTML(r){
+  return `<tr data-id="${r.id}">
+<td>${r.id}</td>
+<td><input type="text" data-k="title" value="${r.title.replace(/"/g,'&quot;')}" aria-label="${r.id} title"></td>
+<td class="xcell"><input type="number" data-k="x" min="0" max="${S.n}" step="1" value="${r.x}" aria-label="${r.id} testers who hit it"> / <span data-c="n">${S.n}</span></td>
+<td><select data-k="s" aria-label="${r.id} severity">${[1,2,3,4].map(v=>`<option value="${v}"${v===r.s?' selected':''}>${v}</option>`).join('')}</select></td>
+<td data-c="w"></td><td data-c="ci"></td><td data-c="P"></td><td data-c="L"></td><td data-c="U"></td><td data-c="tier" class="tier"></td>
+<td><button class="del" data-k="del" aria-label="Delete ${r.id}">Delete</button></td></tr>`;
+}
+function renderTable(R){
+  const tb=$('tbody'),ids=[...tb.rows].map(tr=>tr.dataset.id).join(','),want=R.map(r=>r.id).join(',');
+  if(ids!==want)tb.innerHTML=R.map(rowHTML).join('');
+  R.forEach(r=>{
+    const tr=tb.querySelector(`tr[data-id="${r.id}"]`);
+    const xi=tr.querySelector('[data-k=x]');xi.max=S.n;if(document.activeElement!==xi)xi.value=r.x;
+    tr.querySelector('[data-c=n]').textContent=S.n;
+    tr.querySelector('[data-c=w]').textContent=rnd(r.w,2);
+    tr.querySelector('[data-c=ci]').textContent=`${pc(r.lo)} to ${pc(r.hi)}`;
+    tr.querySelector('[data-c=P]').textContent=f2(r.P);
+    tr.querySelector('[data-c=L]').textContent=f2(r.L);
+    tr.querySelector('[data-c=U]').textContent=f2(r.U);
+    const t=tr.querySelector('[data-c=tier]');t.textContent=TIER[r.tier];t.className='tier '+r.tier;
+    tr.classList.toggle('hl',hl===r.id);
+  });
+  tb.querySelectorAll('.del').forEach(b=>b.disabled=S.F.length<=1);
+  $('add').disabled=S.F.length>=10;
+}
+
+function render(){
+  const R=compute();
+  $('oN').textContent=S.n;$('oT').textContent=S.T.toFixed(2);
+  document.querySelectorAll('[data-w]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.w===S.w.join(','))));
+  drawFreq(R);drawImp(R);renderTable(R);
+  // summary
+  const c={fix:0,inv:0,back:0};R.forEach(r=>c[r.tier]++);
+  const worst=R.slice().sort((a,b)=>b.U-a.U||num(a.id)-num(b.id))[0];
+  const fo=freqOrder(R),pos=fo.findIndex(r=>r.id===worst.id)+1;
+  let t=`<b>${c.fix} fix now, ${c.inv} investigate, ${c.back} backlog. Frequency sort puts ${worst.id} in position ${pos} of ${R.length}.</b> `;
+  t+=`${worst.id} has the largest impact you can't rule out (U = ${f2(worst.U)})`;
+  if(worst.tier==='fix')t+=`, and even its lower end, L = ${f2(worst.L)}, clears the bar of ${rnd(S.T,2)}. `;
+  else if(worst.tier==='inv')t+=`, but its lower end, L = ${f2(worst.L)}, is under the bar of ${rnd(S.T,2)}, so the data can't decide it yet. `;
+  else t+=`, and still sits under the bar. `;
+  if(c.fix===0&&c.inv>=R.length-1)t+=`With nothing in fix now, this report makes no decisions.`;
+  else if(fo[0].tier!=='fix')t+=`The top of the frequency chart, ${fo[0].id}, is only ${TIER[fo[0].tier]}.`;
+  $('summary').innerHTML=t;
+}
+
+// events
+$('n').addEventListener('input',e=>{S.n=+e.target.value;render();});
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',()=>{
+  const cur=S.F.map(f=>xOf(f));S.mode=r.value;
+  S.F.forEach((f,i)=>{f.xc=cur[i];f.share=cur[i]/S.n;});render();
+}));
+[1,2,3,4].forEach(k=>$('w'+k).addEventListener('change',e=>{let v=+e.target.value;if(!isFinite(v)||v<0)v=0;S.w[k-1]=v;e.target.value=v;render();}));
+document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{S.w=b.dataset.w.split(',').map(Number);S.w.forEach((v,i)=>$('w'+(i+1)).value=v);render();}));
+$('T').addEventListener('input',e=>{S.T=+e.target.value;render();});
+document.querySelectorAll('input[name=conf]').forEach(r=>r.addEventListener('change',()=>{S.z=+r.value;render();}));
+$('tbody').addEventListener('change',e=>{
+  const tr=e.target.closest('tr');if(!tr)return;const f=S.F.find(q=>q.id===tr.dataset.id);const k=e.target.dataset.k;
+  if(k==='x'){let v=Math.round(+e.target.value);if(!isFinite(v))v=0;v=Math.max(0,Math.min(S.n,v));e.target.value=v;f.xc=v;f.share=v/S.n;}
+  else if(k==='s')f.s=+e.target.value;
+  else if(k==='title')f.title=e.target.value.slice(0,80)||f.id;
+  render();
+});
+$('tbody').addEventListener('click',e=>{
+  const b=e.target.closest('[data-k=del]');if(!b||S.F.length<=1)return;
+  const id=b.closest('tr').dataset.id;S.F=S.F.filter(f=>f.id!==id);if(hl===id)hl=null;render();$('add').focus();
+});
+$('tbody').addEventListener('mouseover',e=>{const tr=e.target.closest('tr');if(tr&&hl!==tr.dataset.id)setHl(tr.dataset.id);});
+$('tbody').addEventListener('mouseleave',()=>setHl(null));
+$('tbody').addEventListener('focusin',e=>{const tr=e.target.closest('tr');if(tr)setHl(tr.dataset.id);});
+$('add').addEventListener('click',()=>{
+  if(S.F.length>=10)return;
+  const next=Math.max(0,...S.F.map(f=>num(f.id)))+1,id='F'+next,x=Math.min(1,S.n);
+  S.F.push({id,title:'New finding',xc:x,share:x/S.n,s:2});render();
+  const inp=document.querySelector(`#tbody tr[data-id="${id}"] input[type=text]`);if(inp){inp.focus();inp.select();}
+});
+function syncInputs(){
+  $('n').value=S.n;$('T').value=S.T;S.w.forEach((v,i)=>$('w'+(i+1)).value=v);
+  document.querySelectorAll('input[name=mode]').forEach(r=>r.checked=r.value===S.mode);
+  document.querySelectorAll('input[name=conf]').forEach(r=>r.checked=+r.value===S.z);
+}
+$('reset').addEventListener('click',()=>{S=fresh();hl=null;$('tbody').innerHTML='';syncInputs();render();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,60);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+syncInputs();render();
+})();
+</script>
+</body>
+</html>

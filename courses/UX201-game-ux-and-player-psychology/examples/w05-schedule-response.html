@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fixed vs random rewards: UX201 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:minmax(0,1fr)}}
+.charts{display:grid;gap:12px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:250px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.86rem;margin:0 0 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.side{display:grid;gap:14px;min-width:0}
+h2{font-family:var(--serif);font-size:1.1rem;font-weight:600;margin:0 0 8px}
+.box{background:var(--paper-2);border-radius:10px;padding:12px}
+.ctl{margin-bottom:10px}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+input[type=number]{font:600 .95rem var(--sans);width:6.5em;padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chk{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;justify-content:flex-start;min-height:32px}
+.chk input{width:20px;height:20px;accent-color:var(--steel)}
+button{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:34px}
+button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,.scroll:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+dl.nums{display:grid;grid-template-columns:1fr auto auto;gap:4px 10px;margin:0;font-size:.9rem;font-variant-numeric:tabular-nums}
+dl.nums dt{color:var(--ink-soft)}
+dl.nums dd{margin:0;text-align:right;font-weight:700}
+dl.nums .hd{font-weight:700;color:var(--ink);text-align:right;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+.fr{color:var(--steel)}.vr{color:var(--blood)}
+.scroll{max-height:240px;overflow:auto;margin-top:8px;border-radius:6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+thead th{position:sticky;top:0;background:var(--paper-2)}
+tr.below td{color:var(--blood);font-weight:700}
+.muted{color:var(--ink-soft);font-size:.84rem}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+code{font-size:.92em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">UX201 Game UX and Player Psychology · Week 5 · Worked example</p>
+  <h1>Same average reward, different reasons to stop</h1>
+  <p class="lede">Both players earn one reward per ten actions on average. The fixed player hits a low point after every reward and walks away. The random player's next action is always worth the same, so that low point never comes.</p>
+</header>
+
+<div class="layout">
+  <section class="panel charts" aria-label="Charts">
+    <div class="legend" aria-hidden="true">
+      <span><svg width="30" height="12"><line x1="0" y1="6" x2="30" y2="6" style="stroke:var(--steel)" stroke-width="3"/><circle cx="15" cy="6" r="4" style="fill:var(--steel)"/></svg>Fixed (every Nth action)</span>
+      <span><svg width="30" height="12"><line x1="0" y1="6" x2="30" y2="6" style="stroke:var(--blood)" stroke-width="3" stroke-dasharray="6 4"/><rect x="11" y="2" width="8" height="8" style="fill:var(--blood)"/></svg>Random (1 in N chance each action)</span>
+      <span><svg width="30" height="12"><line x1="0" y1="6" x2="30" y2="6" style="stroke:var(--ochre)" stroke-width="2" stroke-dasharray="3 3"/></svg>Stop threshold θ</span>
+    </div>
+    <figure>
+      <figcaption>Cumulative record<small>Total actions over a 10-minute session. Marks show rewards.</small></figcaption>
+      <canvas id="cRec" role="img" aria-label="Cumulative record"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Value of the next action<small>Hatched: natural stopping points, where the fixed player's value is below θ</small></figcaption>
+      <canvas id="cVal" role="img" aria-label="Value of the next action"></canvas>
+    </figure>
+    <div class="insight" id="insight" aria-live="polite"></div>
+  </section>
+
+  <aside class="side">
+    <div class="panel">
+      <h2>Numbers</h2>
+      <dl class="nums" id="nums"></dl>
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-weight:600;font-size:.9rem">Fixed schedule, action by action</summary>
+        <div class="scroll" tabindex="0" role="region" aria-label="Fixed schedule values by action">
+          <table><thead><tr><th scope="col">j</th><th scope="col">D</th><th scope="col">Value</th><th scope="col">Pause (s)</th></tr></thead><tbody id="tbody"></tbody></table>
+        </div>
+      </details>
+    </div>
+
+    <div class="panel">
+      <h2>Controls</h2>
+      <div class="presets" role="group" aria-label="Presets" style="margin-bottom:12px">
+        <button data-p="def" aria-pressed="true">Default (N = 10, θ = 12)</button>
+        <button data-p="rare" aria-pressed="false">Rare prize (N = 100)</button>
+        <button data-p="k0" aria-pressed="false">No discounting (k = 0)</button>
+        <button data-p="fr5" aria-pressed="false">FR 5 check (N = 5, θ = 20)</button>
+      </div>
+      <div class="ctl"><label for="N">Mean ratio N <output id="oN"></output></label><input id="N" type="range" min="2" max="100" step="1"></div>
+      <div class="ctl"><label for="k">Discount k <output id="ok"></output></label><input id="k" type="range" min="0" max="2" step="0.05"></div>
+      <div class="ctl"><label for="th">Stop threshold θ <output id="oth"></output></label><input id="th" type="range" min="0" max="60" step="0.1"></div>
+      <div class="ctl"><label for="c">Pause constant c <output id="oc"></output></label><input id="c" type="range" min="20" max="300" step="1"></div>
+      <p class="muted" style="margin:0 0 10px">Reward A = 100 (fixed). Pause = c / V seconds, then 1 s to act.</p>
+      <div class="row ctl">
+        <label for="seed" style="display:inline">Random seed</label>
+        <input id="seed" type="number" min="0" max="999999" step="1">
+        <button id="reroll" type="button">Reroll</button>
+      </div>
+      <label class="chk"><input id="ign" type="checkbox"> Ignore stopping</label>
+      <button id="reset" type="button" style="margin-top:8px">Reset</button>
+    </div>
+  </aside>
+</div>
+
+<footer>Model from the UX201 week 5 lecture: hyperbolic discount V = A / (1 + kD) after Mazur, averaged over the geometric wait for the random schedule. Pause and stopping rules are teaching simplifications. Both players are assumed to have chosen to start the session. A player's decision point comes right after each reward, which is where the fixed player's value is lowest. Only the random reward marks depend on the seed.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2=n=>n.toFixed(2);
+const A=100,T=600,DEF={N:10,k:1,th:12,c:100,seed:7,ign:false};
+let S=Object.assign({},DEF);
+
+function vrValue(N,k){
+  const p=1/N;let s=0;
+  for(let d=1;d<=100000;d++){const t=p*Math.pow(1-p,d-1)*A/(1+k*d);s+=t;if(t<1e-9)break;}
+  return s;
+}
+function frValues(N,k){const v=[];for(let j=0;j<N;j++)v.push(A/(1+k*(N-j)));return v;}
+function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// simulate a session. valueAt(j) gives value of next action; isReward(i) says whether action i pays.
+function simulate(valueFn,rewardFn,stopOK){
+  let t=0,n=0,rewarded=false,stopT=null;const pts=[[0,0]],ticks=[];
+  while(t<T){
+    const V=valueFn(n);
+    if(stopOK&&rewarded&&V<S.th){stopT=t;break;}
+    const pause=S.c/V;
+    if(t+pause>=T){pts.push([T,n]);break;}
+    t+=pause;pts.push([t,n]);
+    if(t+1>T){pts.push([T,n+(T-t)]);t=T;break;}
+    t+=1;n+=1;pts.push([t,n]);
+    if(rewardFn(n-1)){ticks.push([t,n]);rewarded=true;}
+  }
+  return {pts,ticks,stopT,end:pts[pts.length-1]};
+}
+
+let M={};
+function compute(){
+  const fr=frValues(S.N,S.k),vr=vrValue(S.N,S.k),p=1/S.N;
+  const pauses=fr.map(v=>S.c/v),cycle=pauses.reduce((a,b)=>a+b,0)+S.N;
+  const vrPause=S.c/vr;
+  const r=rng(S.seed),draws=[];for(let i=0;i<2000;i++)draws.push(r()<p);
+  const frFn=n=>fr[n%S.N],frR=i=>(i+1)%S.N===0,vrFn=()=>vr,vrR=i=>draws[i]||false;
+  const stopOK=!S.ign;
+  M={fr,vr,p,pauses,cycle,vrPause,
+    frApm:S.N/cycle*60,vrApm:60/(vrPause+1),
+    frStops:fr[0]<S.th,vrStops:vr<S.th,
+    frSim:simulate(frFn,frR,stopOK),vrSim:simulate(vrFn,vrR,stopOK),
+    frFull:simulate(frFn,frR,false),vrFull:simulate(vrFn,vrR,false),
+    extVR:Math.ceil(Math.log(0.05)/Math.log(1-p))};
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.6,2,2.4,3,4,6,8,10].map(x=>x*m).find(x=>x>=v)||v;}
+function axes(g,w,h,pad,xMax,yMax,xStep,yFmt,xLabel,yLabel){
+  g.clearRect(0,0,w,h);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){
+    const y=pad.t+(h-pad.t-pad.b)*(1-i/4);
+    g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(yMax*i/4),pad.l-6,y);
+  }
+  const nx=Math.round(xMax/xStep),skip=(w<420&&nx>6)?2:1;
+  for(let i=0;i<=nx;i+=skip){
+    const x=pad.l+(w-pad.l-pad.r)*i/nx;
+    g.textAlign='center';g.textBaseline='top';g.fillText(String(Math.round(xStep*i)),x,h-pad.b+6);
+  }
+  g.textAlign='right';g.fillText(xLabel,w-pad.r,h-14);
+  g.save();g.translate(12,pad.t+(h-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillText(yLabel,0,0);g.restore();
+}
+const pad={l:58,r:14,t:14,b:36};
+function X(w,xMax,x){return pad.l+(w-pad.l-pad.r)*x/xMax;}
+function Y(h,yMax,y){return pad.t+(h-pad.t-pad.b)*(1-y/yMax);}
+function shape(g,kind,x,y,r,color){
+  g.fillStyle=color;g.strokeStyle=css('--paper');g.lineWidth=1.5;g.beginPath();
+  if(kind==='c')g.arc(x,y,r,0,Math.PI*2);else g.rect(x-r,y-r,2*r,2*r);
+  g.fill();g.stroke();
+}
+
+function tag(g,label,x,y,tw,col){
+  g.fillStyle=css('--paper');g.strokeStyle=col;g.lineWidth=1.5;g.beginPath();
+  if(g.roundRect)g.roundRect(x-5,y-10,tw+10,20,5);else g.rect(x-5,y-10,tw+10,20);
+  g.fill();g.stroke();g.fillStyle=col;g.textAlign='left';g.textBaseline='middle';g.fillText(label,x,y+1);
+}
+function drawRec(){
+  const c=setupCanvas($('cRec')),{g,w,h}=c;
+  const yMax=niceMax(Math.max(M.frFull.end[1],M.vrFull.end[1],1)*1.05);
+  axes(g,w,h,pad,T,yMax,100,v=>String(Math.round(v)),'time (s)','actions');
+  const series=[[M.frSim,css('--steel'),[],'c','Fixed'],[M.vrSim,css('--blood'),[7,5],'s','Random']];
+  series.forEach(([s,col,dash,mk])=>{
+    g.strokeStyle=col;g.lineWidth=2.5;g.setLineDash(dash);g.beginPath();
+    s.pts.forEach((p,i)=>{const x=X(w,T,p[0]),y=Y(h,yMax,p[1]);i?g.lineTo(x,y):g.moveTo(x,y);});
+    g.stroke();g.setLineDash([]);
+    s.ticks.forEach(p=>{const x=X(w,T,p[0]),y=Y(h,yMax,p[1]);g.strokeStyle=col;g.lineWidth=2;g.beginPath();g.moveTo(x,y-8);g.lineTo(x,y);g.stroke();shape(g,mk,x,y-9,mk==='c'?3.2:3,col);});
+  });
+  const stopped=series.filter(s=>s[0].stopT!==null);
+  stopped.forEach(([s,col,,mk,name],i)=>{
+    const x=X(w,T,s.stopT),y=Y(h,yMax,s.end[1]);
+    g.fillStyle=col;g.beginPath();
+    if(mk==='c'){g.arc(x,y,7,0,Math.PI*2);}else{g.rect(x-6.5,y-6.5,13,13);}
+    g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.font='600 13px '+css('--sans');g.textBaseline='middle';
+    const label=name+' stops at '+Math.round(s.stopT)+' s';const tw=g.measureText(label).width;
+    const lx=Math.min(Math.max(pad.l+4,x-tw/2),w-pad.r-tw-4),ly=Math.max(pad.t+10,y-30-i*22);
+    tag(g,label,lx,ly,tw,col);
+  });
+  $('cRec').setAttribute('aria-label',`Cumulative record over 600 seconds. Fixed player: ${M.frSim.end[1].toFixed(0)} actions${M.frSim.stopT!==null?', stops at '+Math.round(M.frSim.stopT)+' s':''}. Random player: ${M.vrSim.end[1].toFixed(0)} actions${M.vrSim.stopT!==null?', stops at '+Math.round(M.vrSim.stopT)+' s':''}.`);
+}
+
+let hatch=null,hatchKey='';
+function hatchPattern(g,color){
+  const key=color;if(hatch&&hatchKey===key)return hatch;
+  const p=document.createElement('canvas');p.width=p.height=8;const q=p.getContext('2d');
+  q.strokeStyle=color;q.lineWidth=1.5;q.beginPath();q.moveTo(0,8);q.lineTo(8,0);q.moveTo(-2,2);q.lineTo(2,-2);q.moveTo(6,10);q.lineTo(10,6);q.stroke();
+  hatch=g.createPattern(p,'repeat');hatchKey=key;return hatch;
+}
+function drawVal(){
+  const c=setupCanvas($('cVal')),{g,w,h}=c,XM=60;
+  let vmax=Math.max(M.vr,S.th);for(let i=0;i<XM;i++)vmax=Math.max(vmax,M.fr[i%S.N]);
+  const yMax=Math.min(100,niceMax(vmax*1.08))||1;
+  axes(g,w,h,pad,XM,yMax,10,v=>v>=10||v===0?String(Math.round(v)):v.toFixed(1),'actions','value');
+  // hatch below theta
+  const pat=hatchPattern(g,css('--blood'));
+  for(let i=0;i<XM;i++){
+    const v=M.fr[i%S.N];
+    if(v<S.th){const x0=X(w,XM,i),x1=X(w,XM,i+1),y0=Y(h,yMax,Math.min(S.th,yMax)),y1=Y(h,yMax,v);
+      g.globalAlpha=.9;g.fillStyle=pat;g.fillRect(x0,y0,x1-x0,y1-y0);g.globalAlpha=1;}
+  }
+  // reward boundaries
+  g.strokeStyle=css('--ink-soft');g.globalAlpha=.35;g.lineWidth=1;g.setLineDash([2,4]);
+  for(let i=S.N;i<XM;i+=S.N){const x=X(w,XM,i);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();}
+  g.setLineDash([]);g.globalAlpha=1;
+  // FR sawtooth
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<XM;i++){const v=M.fr[i%S.N],x0=X(w,XM,i),x1=X(w,XM,i+1),y=Y(h,yMax,v);i?g.lineTo(x0,y):g.moveTo(x0,y);g.lineTo(x1,y);}
+  g.stroke();
+  for(let i=0;i<XM;i+=S.N){shape(g,'c',X(w,XM,i),Y(h,yMax,M.fr[0]),4,css('--steel'));}
+  // VR flat
+  const yv=Y(h,yMax,Math.min(M.vr,yMax));
+  g.strokeStyle=css('--blood');g.lineWidth=2.5;g.setLineDash([7,5]);g.beginPath();g.moveTo(X(w,XM,0),yv);g.lineTo(X(w,XM,XM),yv);g.stroke();g.setLineDash([]);
+  shape(g,'s',X(w,XM,XM)-6,yv,4,css('--blood'));
+  // theta
+  if(S.th<=yMax){
+    const yt=Y(h,yMax,S.th);
+    g.strokeStyle=css('--ochre');g.lineWidth=2;g.setLineDash([3,3]);g.beginPath();g.moveTo(pad.l,yt);g.lineTo(w-pad.r,yt);g.stroke();g.setLineDash([]);
+    g.font='600 12px '+css('--sans');g.textBaseline='middle';
+    const lab='θ = '+S.th.toFixed(1),tw=g.measureText(lab).width;
+    tag(g,lab,w-pad.r-tw-8,yt,tw,css('--ochre'));
+  }
+  $('cVal').setAttribute('aria-label',`Value of the next action over 60 actions. Fixed schedule sawtooth from ${f2(M.fr[0])} after each reward to ${f2(M.fr[S.N-1])} before it. Random schedule flat at ${f2(M.vr)}. Threshold ${S.th.toFixed(1)}.`);
+}
+
+function stopText(stops,who){
+  if(!stops)return 'never';
+  return 'after 1st reward';
+}
+function numbers(){
+  const rows=[
+    ['<span class="hd"></span>','<span class="hd fr">Fixed</span>','<span class="hd vr">Random</span>'],
+    ['Value after a reward',f2(M.fr[0]),f2(M.vr)],
+    ['Value before a reward',f2(M.fr[S.N-1]),f2(M.vr)],
+    ['Mean pause (s)',f2(M.pauses.reduce((a,b)=>a+b,0)/S.N),f2(M.vrPause)],
+    ['Longest pause (s)',f2(M.pauses[0]),f2(M.vrPause)],
+    ['Time for N actions (s)',f2(M.cycle),f2(S.N*(M.vrPause+1))],
+    ['Actions per minute',f2(M.frApm),f2(M.vrApm)],
+    ['Stops at θ = '+S.th.toFixed(1)+'?',stopText(M.frStops),stopText(M.vrStops)],
+    ['Unrewarded actions to notice',String(S.N+1),String(M.extVR)]
+  ];
+  let html=rows.map((r,i)=>i===0?`<dt aria-hidden="true"></dt><dd class="hd fr">Fixed</dd><dd class="hd vr">Random</dd>`:`<dt>${r[0]}</dt><dd class="fr" data-k="fr${i}">${r[1]}</dd><dd class="vr" data-k="vr${i}">${r[2]}</dd>`).join('');
+  html+=`<dt>Random ÷ fixed, after a reward</dt><dd></dd><dd id="ratio">${f2(M.vr/M.fr[0])}</dd>`;
+  $('nums').innerHTML=html;
+  $('tbody').innerHTML=M.fr.map((v,j)=>`<tr class="${v<S.th?'below':''}"><td>${j}</td><td>${S.N-j}</td><td>${f2(v)}</td><td>${f2(M.pauses[j])}</td></tr>`).join('');
+  let s;
+  const frA=f2(M.fr[0]),vrA=f2(M.vr);
+  if(S.k===0) s=`With k = 0 no delay is discounted, so every action is worth 100 on both schedules. The random schedule's pull comes entirely from discounting.`;
+  else if(M.frStops&&!M.vrStops) s=`θ = ${S.th.toFixed(1)} sits between the fixed player's low point (${frA}) and the random player's flat value (${vrA}). The fixed player stops after the first reward. The random player never meets a stopping point.`;
+  else if(M.frStops&&M.vrStops) s=`θ = ${S.th.toFixed(1)} is above both values (${frA} fixed, ${vrA} random), so both players stop. Lower θ below ${vrA} and only the fixed player stops.`;
+  else if(!M.frStops&&!M.vrStops) s=`θ = ${S.th.toFixed(1)} is below the fixed player's low point of ${frA}, so neither player stops. Raise θ past ${frA} and the fixed player starts stopping after each reward. The random player holds out until ${vrA}.`;
+  else s=`Only the random player stops here (${vrA} is below θ while the fixed low point ${frA} is above it).`;
+  s+=` After a reward, the next action is worth ${f2(M.vr/M.fr[0])}× more on the random schedule.`;
+  if(M.frSim.stopT===null&&M.frStops&&!S.ign&&M.cycle>T) s+=` At N = ${S.N} the fixed player's first reward takes ${Math.round(M.cycle)} s, past this 10-minute window, so the stop does not show on the chart.`;
+  if(M.vrSim.stopT===null&&M.vrStops&&!S.ign) s+=` The random player got no reward in this window with seed ${S.seed}, so it has not reached a decision point yet.`;
+  $('insight').innerHTML=s;
+}
+function sync(){
+  $('N').value=S.N;$('k').value=S.k;$('th').value=S.th;$('c').value=S.c;$('seed').value=S.seed;$('ign').checked=S.ign;
+  $('oN').textContent=S.N;$('ok').textContent=S.k.toFixed(2);$('oth').textContent=S.th.toFixed(1);$('oc').textContent=S.c;
+}
+function update(){compute();sync();numbers();drawRec();drawVal();}
+function clearPresets(){document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed','false'));}
+
+$('N').addEventListener('input',e=>{S.N=+e.target.value;clearPresets();update();});
+$('k').addEventListener('input',e=>{S.k=Math.round(+e.target.value*100)/100;clearPresets();update();});
+$('th').addEventListener('input',e=>{S.th=Math.round(+e.target.value*10)/10;clearPresets();update();});
+$('c').addEventListener('input',e=>{S.c=+e.target.value;clearPresets();update();});
+$('seed').addEventListener('change',e=>{const v=Math.max(0,Math.floor(+e.target.value||0));S.seed=v;update();});
+$('reroll').addEventListener('click',()=>{S.seed=Math.floor(Math.random()*100000);update();});
+$('ign').addEventListener('change',e=>{S.ign=e.target.checked;update();});
+$('reset').addEventListener('click',()=>{S=Object.assign({},DEF);clearPresets();document.querySelector('[data-p="def"]').setAttribute('aria-pressed','true');update();});
+const P={def:{},rare:{N:100},k0:{k:0},fr5:{N:5,th:20}};
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
+  S=Object.assign({},DEF,{seed:S.seed,ign:S.ign},P[b.dataset.p]);clearPresets();b.setAttribute('aria-pressed','true');update();
+}));
+let raf=0;window.addEventListener('resize',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{drawRec();drawVal();});});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{hatch=null;drawRec();drawVal();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawRec();drawVal();});
+update();
+window.__ux201w05={get S(){return S;},get M(){return M;},set(o){Object.assign(S,o);update();}};
+})();
+</script>
+</body>
+</html>
