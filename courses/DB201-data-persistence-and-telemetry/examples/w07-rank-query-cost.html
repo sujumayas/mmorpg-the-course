@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rank query cost — DB201 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.plot{width:100%}
+.plot svg{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:4px 0 0}
+.legend i{display:inline-block;width:24px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid var(--c)}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 0}
+@media (max-width:900px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block}
+.stat small{font-size:.76rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.load{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+@media (max-width:700px){.load{grid-template-columns:1fr}}
+.loadbox{border-radius:10px;padding:10px 14px;background:var(--paper-2);border-left:5px solid var(--c)}
+.loadbox b{font-size:1.4rem;font-variant-numeric:tabular-nums}
+.loadbox p{margin:2px 0 0;font-size:.86rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+input[type=number]{font:600 .95rem var(--sans);width:9.5em;padding:5px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
+.btn{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:520px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+footer{margin-top:18px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 7 · Worked example</p>
+  <h1>What rank am I?</h1>
+  <p class="lede">SQL answers by counting every player above you, so the question costs more the further down the board you sit. A sorted set walks about 42 skip-list steps for everyone. Most of your players live in the expensive part.</p>
+</header>
+
+<section class="panel" aria-label="Views">
+  <div class="views">
+    <figure>
+      <figcaption>The board<small>All N players, rank 1 at the left. What each system has to touch to answer "what rank am I?"</small></figcaption>
+      <div class="plot" id="board" role="img"></div>
+    </figure>
+    <figure>
+      <figcaption>Work versus rank<small>Log-log. Time for one rank lookup at every position on the board.</small></figcaption>
+      <div class="plot" id="chart" role="img"></div>
+      <div class="legend">
+        <span><i style="--c:var(--blood)"></i>A: SQL, (r − 1) × c</span>
+        <span><i style="--c:var(--steel);border-top-style:dashed"></i>B: sorted set, steps × s</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rE">—</b><span>SQL entries read, r − 1</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rT">—</b><span>SQL time</span><small id="rTns"></small></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rS">—</b><span>skip-list steps, round(2 log₂ N)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rZ">—</b><span>sorted-set time</span><small id="rZns"></small></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rR">—</b><span>SQL / sorted set</span></div>
+  </div>
+
+  <div class="load" aria-live="polite">
+    <div class="loadbox" style="--c:var(--blood)"><b id="lSql">—</b><p id="lSqlP"></p></div>
+    <div class="loadbox" style="--c:var(--steel)"><b id="lZ">—</b><p id="lZP"></p></div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<section class="panel" aria-label="Controls">
+  <div class="controls">
+    <div>
+      <label for="sN">Players N <output id="oN"></output></label>
+      <input id="sN" type="range" min="0" max="1000" step="1">
+      <label for="sR">Your rank r <output id="oR"></output></label>
+      <input id="sR" type="range" min="0" max="1000" step="1">
+      <div class="row">
+        <button class="btn" type="button" id="median">Median player</button>
+        <button class="btn" type="button" id="top10">Top 10</button>
+        <label for="nR" style="font-weight:600">Type a rank <input id="nR" type="number" min="1" step="1"></label>
+      </div>
+    </div>
+    <div>
+      <label for="sC">c, ns per index entry <output id="oC"></output></label>
+      <input id="sC" type="range" min="2" max="50" step="1" value="5">
+      <label for="sS">s, ns per skip-list step <output id="oS"></output></label>
+      <input id="sS" type="range" min="20" max="200" step="1" value="50">
+      <label for="sL">Lookups per second L <output id="oL"></output></label>
+      <input id="sL" type="range" min="100" max="20000" step="100" value="2000">
+    </div>
+  </div>
+  <h2 style="margin-top:8px">The lecture's table, for the current N and c</h2>
+  <div class="table-wrap">
+    <table aria-label="Cost at chosen ranks">
+      <thead><tr><th>Your rank r</th><th>SQL entries read</th><th>SQL time</th><th>Sorted-set steps</th><th>Sorted-set time</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from DB201 week 7, section 2: a rank query in SQL (<code>SELECT COUNT(*) ... WHERE score &gt; mine</code>) reads one index entry per player above you; a Redis sorted set answers <code>ZREVRANK</code> by walking a skip list in about 2 log₂ N steps. The skip-list drawing is schematic, not to scale. Per-entry and per-step costs are the lecture's round numbers, not measurements.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const S={N:2000000,r:1000000,c:5,s:50,L:2000};
+const steps=()=>Math.round(2*Math.log2(S.N));
+const trim=x=>x.replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');
+function ft(ns){
+  ns=Math.round(ns);
+  if(ns<1000) return (Math.round(ns/10)/100).toFixed(2)+' µs';
+  if(ns<1e5) return trim((ns/1000).toFixed(3))+' µs';
+  if(ns<1e6) return trim((Math.round(ns/1000)/1000).toFixed(3))+' ms';
+  if(ns<1e9) return (Math.round(ns/1e5)/10).toFixed(1)+' ms';
+  return (Math.round(ns/1e7)/100).toFixed(2)+' s';
+}
+const big=n=>n>=1e6?trim((n/1e6).toFixed(2))+'M':(n>=1e3?trim((n/1e3).toFixed(1))+'k':String(n));
+
+// log slider with 2-significant-figure snapping and exact keyboard steps
+function snap(v){return Number(Number(v).toPrecision(2));}
+function logSlider(el,min,max,get,set,round){
+  const toPos=v=>Math.round(1000*Math.log(v/min)/Math.log(max()/min));
+  const fromPos=p=>p>=1000?max():Math.max(min,snap(min*Math.pow(max()/min,p/1000)));
+  const fix=v=>{v=Math.min(max(),Math.max(min,v));return round?Math.round(v):v;};
+  el.addEventListener('input',()=>{set(fix(fromPos(+el.value)));});
+  el.addEventListener('keydown',e=>{
+    let v=get();const up=e.key==='ArrowRight'||e.key==='ArrowUp',dn=e.key==='ArrowLeft'||e.key==='ArrowDown';
+    if(e.key==='Home')v=min;else if(e.key==='End')v=max();
+    else if(up||dn||e.key==='PageUp'||e.key==='PageDown'){
+      const n=(e.key==='PageUp'||e.key==='PageDown')?10:1;
+      for(let i=0;i<n;i++){
+        const ref=dn?v*(1-1e-9):v,unit=Math.max(round?1:0,Math.pow(10,Math.floor(Math.log10(ref))-1));
+        v=snap((dn||e.key==='PageDown')?Math.round(v/unit)*unit-unit:Math.round(v/unit)*unit+unit);
+      }
+    } else return;
+    e.preventDefault();set(fix(v));
+  });
+  return ()=>{el.value=toPos(get());};
+}
+const syncN=logSlider($('sN'),1e4,()=>1e7,()=>S.N,v=>{S.N=v;S.r=Math.min(S.r,S.N);update();},true);
+const syncR=logSlider($('sR'),1,()=>S.N,()=>S.r,v=>{S.r=v;update();},true);
+
+// ---- board
+function drawBoard(){
+  const el=$('board'),w=el.clientWidth,h=250,l=10,r=10,bw=w-l-r;
+  const soft=css('--ink-soft'),ink=css('--ink'),blood=css('--blood'),steel=css('--steel'),grid=css('--grid'),paper=css('--paper'),sans=css('--sans');
+  const X=k=>l+(S.N<=1?0:(k-1)/(S.N-1))*bw,xr=X(S.r);
+  let s='';
+  // bar
+  s+=`<rect x="${l}" y="40" width="${bw}" height="30" rx="5" fill="${paper}" stroke="${grid}" stroke-width="1.5"/>`;
+  if(S.r>1) s+=`<rect x="${l}" y="40" width="${Math.max(2,xr-l)}" height="30" rx="5" fill="${blood}" opacity=".85"/>`;
+  s+=`<line x1="${xr}" x2="${xr}" y1="32" y2="78" stroke="${ink}" stroke-width="3"/>`;
+  const anchor=xr>w-70?'end':(xr<70?'start':'middle');
+  s+=`<text x="${xr}" y="24" font-size="13" font-weight="700" text-anchor="${anchor}" fill="${ink}" font-family="${sans}">you, rank ${fmt(S.r)}</text>`;
+  s+=`<text x="${l}" y="92" font-size="11.5" fill="${soft}" font-family="${sans}">rank 1</text><text x="${w-r}" y="92" font-size="11.5" text-anchor="end" fill="${soft}" font-family="${sans}">rank ${fmt(S.N)}</text>`;
+  s+=`<text x="${l}" y="112" font-size="13" font-weight="700" fill="${blood}" font-family="${sans}">SQL counts these: ${fmt(S.r-1)} entries</text>`;
+  // skip list schematic
+  const lanes=5,top=140,gap=18,n=Math.max(12,Math.min(40,Math.floor(bw/14)));
+  const dx=i=>l+i/(n-1)*bw,lev=i=>{let L=0;while(L<lanes-1&&i%Math.pow(2,L+1)===0)L++;return L;};
+  const target=Math.round((xr-l)/bw*(n-1));
+  for(let L=0;L<lanes;L++){const y=top+(lanes-1-L)*gap;s+=`<line x1="${l}" x2="${w-r}" y1="${y}" y2="${y}" stroke="${grid}" stroke-width="1"/>`;}
+  for(let i=0;i<n;i++){for(let L=0;L<=lev(i);L++){const y=top+(lanes-1-L)*gap;s+=`<circle cx="${dx(i)}" cy="${y}" r="3.2" fill="${soft}" opacity=".7"/>`;}}
+  // path: along a lane while the next node at that level does not pass the target, then down
+  let i=0,L=lanes-1,pts=[[dx(0),top]];
+  while(true){
+    let nx=i+1;while(nx<n&&lev(nx)<L)nx++;
+    if(nx<n&&nx<=target){i=nx;pts.push([dx(i),top+(lanes-1-L)*gap]);}
+    else if(L>0){L--;pts.push([dx(i),top+(lanes-1-L)*gap]);}
+    else break;
+  }
+  s+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${steel}" stroke-width="3" stroke-linejoin="round"/>`;
+  pts.forEach(p=>{s+=`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="${steel}"/>`;});
+  s+=`<text x="${l}" y="${top+lanes*gap+14}" font-size="13" font-weight="700" fill="${steel}" font-family="${sans}">Sorted set walks these: ≈ ${steps()} steps</text>`;
+  el.innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${s}</svg>`;
+  el.setAttribute('aria-label',`Board of ${fmt(S.N)} players. SQL reads ${fmt(S.r-1)} entries; the sorted set walks about ${steps()} steps.`);
+}
+
+// ---- chart
+function drawChart(){
+  const el=$('chart'),w=el.clientWidth,h=300,pl=52,pr=12,pt=12,pb=30,narrow=w<460;
+  const soft=css('--ink-soft'),ink=css('--ink'),blood=css('--blood'),steel=css('--steel'),grid=css('--grid'),paper=css('--paper'),sans=css('--sans');
+  const lx=Math.log10(S.N),X=v=>pl+Math.log10(v)/lx*(w-pl-pr),Y=ns=>pt+(1-Math.log10(ns)/9)*(h-pt-pb);
+  let s='';
+  // 90% band
+  s+=`<rect x="${X(S.N/10)}" y="${pt}" width="${X(S.N)-X(S.N/10)}" height="${h-pt-pb}" fill="${css('--ochre')}" opacity=".13"/>`;
+  s+=`<text x="${X(S.N)-4}" y="${pt+14}" font-size="11.5" text-anchor="end" fill="${css('--ochre')}" stroke="${css('--paper-2')}" stroke-width="4" paint-order="stroke" font-weight="700" font-family="${sans}">90% of your players →</text>`;
+  const yl=['1 ns','10 ns','100 ns','1 µs','10 µs','100 µs','1 ms','10 ms','100 ms','1 s'];
+  for(let d=0;d<=9;d++){const y=Y(Math.pow(10,d));s+=`<line x1="${pl}" x2="${w-pr}" y1="${y}" y2="${y}" stroke="${grid}"/>`;if(!narrow||d%2===0||d===9)s+=`<text x="${pl-6}" y="${y+4}" font-size="11" text-anchor="end" fill="${soft}" font-family="${sans}">${yl[d]}</text>`;}
+  for(let d=0;d<=Math.floor(lx);d++){const x=X(Math.pow(10,d));s+=`<line x1="${x}" x2="${x}" y1="${pt}" y2="${h-pb}" stroke="${grid}" opacity=".6"/>`;if(!narrow||d%2===0)s+=`<text x="${x}" y="${h-pb+15}" font-size="11" text-anchor="middle" fill="${soft}" font-family="${sans}">${big(Math.pow(10,d))}</text>`;}
+  s+=`<text x="${w-pr}" y="${h-3}" font-size="11" text-anchor="end" fill="${soft}" font-family="${sans}">rank r (log)</text>`;
+  // line A
+  let d='';for(let i=0;i<=200;i++){const r=Math.pow(10,Math.log10(2)+(lx-Math.log10(2))*i/200),t=Math.max(1,(r-1)*S.c);d+=(i?'L':'M')+X(r).toFixed(1)+','+Y(Math.min(1e9,t)).toFixed(1);}
+  s+=`<path d="${d}" fill="none" stroke="${blood}" stroke-width="3"/>`;
+  const tz=steps()*S.s;
+  s+=`<line x1="${X(1)}" x2="${X(S.N)}" y1="${Y(tz)}" y2="${Y(tz)}" stroke="${steel}" stroke-width="3" stroke-dasharray="9 6"/>`;
+  // cursor
+  const xr=X(S.r);
+  s+=`<line x1="${xr}" x2="${xr}" y1="${pt}" y2="${h-pb}" stroke="${ink}" stroke-opacity=".45" stroke-dasharray="4 4"/>`;
+  const anc=xr>w-120?'end':'start',off=anc==='end'?-9:9;
+  if(S.r>1){const ts=(S.r-1)*S.c,y=Y(Math.max(1,ts));s+=`<circle cx="${xr}" cy="${y}" r="6" fill="${blood}" stroke="${paper}" stroke-width="2"/><text x="${xr+off}" y="${y-8}" font-size="12.5" font-weight="700" text-anchor="${anc}" fill="${blood}" stroke="${css('--paper-2')}" stroke-width="4" paint-order="stroke" font-family="${sans}">SQL ${ft(ts)}</text>`;}
+  s+=`<circle cx="${xr}" cy="${Y(tz)}" r="6" fill="${steel}" stroke="${paper}" stroke-width="2"/><text x="${xr+off}" y="${Y(tz)+18}" font-size="12.5" font-weight="700" text-anchor="${anc}" fill="${steel}" stroke="${css('--paper-2')}" stroke-width="4" paint-order="stroke" font-family="${sans}">sorted set ${ft(tz)}</text>`;
+  el.innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${s}</svg>`;
+  el.setAttribute('aria-label',`At rank ${fmt(S.r)}, SQL takes ${ft((S.r-1)*S.c)} and the sorted set ${ft(tz)}.`);
+}
+
+function update(){
+  syncN();syncR();
+  const ts=(S.r-1)*S.c,st=steps(),tz=st*S.s;
+  $('oN').textContent=fmt(S.N);$('oR').textContent=fmt(S.r);$('oC').textContent=S.c+' ns';$('oS').textContent=S.s+' ns';$('oL').textContent=fmt(S.L)+' /s';
+  $('nR').max=S.N;if(document.activeElement!==$('nR'))$('nR').value=S.r;
+  $('rE').textContent=fmt(S.r-1);$('rT').textContent=ft(ts);$('rTns').textContent=`= ${fmt(ts)} ns`;
+  $('rS').textContent=st;$('rZ').textContent=ft(tz);$('rZns').textContent=`= ${fmt(tz)} ns`;
+  const ratio=ts/tz;$('rR').textContent=(ratio>=10?fmt(ratio):trim(ratio.toFixed(2)))+'×';
+  const sql=S.L*(S.N/2)*S.c/1e9,z=S.L*st*S.s/1e9;
+  $('lSql').textContent=`≈ ${sql>=100?fmt(sql):sql.toFixed(1)} cores busy counting`;
+  $('lSqlP').textContent=`SQL at average rank N/2: ${fmt(S.L)} × ${fmt(S.N/2)} × ${S.c} ns = ${sql>=100?fmt(sql):sql.toFixed(1)} CPU-seconds per second.`;
+  $('lZ').textContent=`${z<0.01?z.toPrecision(2):z.toFixed(3)} CPU-seconds per second`;
+  $('lZP').textContent=`Sorted set: ${fmt(S.L)} × ${st} steps × ${S.s} ns, the same for every rank.`;
+  const share=Math.round((1-S.r/S.N)*1000)/10;
+  $('insight').innerHTML=S.r<=S.N/10
+    ?`Rank ${fmt(S.r)} is in the top 10%. SQL answers in ${ft(ts)}, which looks fine, but it is the view from the top of the board. Press "Median player".`
+    :`At rank ${fmt(S.r)}, SQL reads ${fmt(S.r-1)} entries (${ft(ts)}) where the sorted set takes ${st} steps (${ft(tz)}). ${trim(share.toFixed(1))}% of players sit below you and pay even more in SQL.`;
+  const rows=[10,1000,100000,Math.round(S.N/2),S.N].filter((v,i,a)=>v<=S.N&&a.indexOf(v)===i);
+  $('tbody').innerHTML=rows.map(r=>`<tr class="${r===S.r?'here':''}"><td>${fmt(r)}${r===Math.round(S.N/2)?' (median)':(r===S.N?' (last)':'')}</td><td>${fmt(r-1)}</td><td>${ft((r-1)*S.c)}</td><td>≈ ${st}</td><td>${ft(tz)}</td></tr>`).join('');
+  drawBoard();drawChart();
+}
+[['sC','c'],['sS','s'],['sL','L']].forEach(([id,k])=>$(id).addEventListener('input',e=>{S[k]=+e.target.value;update();}));
+$('median').addEventListener('click',()=>{S.r=Math.round(S.N/2);update();});
+$('top10').addEventListener('click',()=>{S.r=Math.min(10,S.N);update();});
+$('nR').addEventListener('change',e=>{const v=Math.round(+e.target.value);if(v>=1){S.r=Math.min(S.N,v);}update();});
+window.addEventListener('resize',()=>{drawBoard();drawChart();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

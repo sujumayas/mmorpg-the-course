@@ -1,0 +1,2 @@
+-- q05. Total gold held by each class.
+-- Columns: class, total_gold.  Order: class ascending.

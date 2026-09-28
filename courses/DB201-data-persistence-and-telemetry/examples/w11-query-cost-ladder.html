@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Query cost ladder, DB201 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1200px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 22px;margin-bottom:14px}
+@media (max-width:1000px){.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+.ctl label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+input:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1000px){.views{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
+.box{background:var(--paper-2);border-radius:10px;padding:12px 14px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.12rem;margin:0 0 8px}
+h2 small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem}
+.ladder{display:grid;gap:10px}
+.rung{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--paper);border:1.5px solid var(--grid);border-radius:10px;padding:8px 10px;cursor:pointer}
+.rung[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 4px 0 0 var(--ink)}
+.rhead,.rnums{display:flex;}
+.rhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.rname{font-weight:700}
+.rname small{font-weight:400;color:var(--ink-soft);font-size:.82rem;margin-left:6px}
+.rtime{font-weight:700;font-variant-numeric:tabular-nums;font-size:1.05rem}
+.track{display:block;position:relative;height:16px;margin:6px 0 4px;background:linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:calc(100% / 12) 100%;border-bottom:1px solid var(--grid)}
+.bar{display:block;position:absolute;left:0;top:2px;bottom:2px;border-radius:0 6px 6px 0;min-width:4px}
+.rnums{display:flex;flex-wrap:wrap;gap:2px 16px;font-size:.84rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.rnums b{color:var(--ink)}
+.rnote{font-size:.8rem;color:var(--ink-soft);margin:4px 0 0}
+.axis{position:relative;height:18px;font-size:.72rem;color:var(--ink-soft);margin:0 11px;font-variant-numeric:tabular-nums}
+.axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.axis span:first-child{transform:none}.axis span:last-child{transform:translateX(-100%)}
+.axcap{font-size:.78rem;color:var(--ink-soft);margin:2px 11px 0;text-align:right}
+.score{font-weight:700;font-size:1.05rem;margin:0 0 8px}
+.qs{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.q{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--moss);border-radius:9px;padding:7px 10px;background:var(--paper)}
+.q .mk{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.8rem;background:var(--moss);color:var(--paper)}
+.q .qt{font-family:var(--serif);font-size:.95rem}
+.q .qn{display:block;font-family:var(--sans);font-size:.78rem;color:var(--ink-soft)}
+.q.no{border-color:var(--grid);border-style:dashed;background:transparent}
+.q.no .mk{background:transparent;border:1.5px solid var(--blood);color:var(--blood)}
+.q.no .qt{color:var(--ink-soft)}
+.q.part{border-color:var(--ochre)}
+.q.part .mk{background:var(--ochre)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:600px;width:100%}
+.tcap{font-family:var(--serif);margin:0 0 6px;position:sticky;left:0}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.bar{transition:width .25s ease-out}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 11 · Worked example</p>
+  <h1>Layout decides the cost. The fastest layout is the narrowest.</h1>
+  <p class="lede">One question, &ldquo;how many players died in zone 7 yesterday?&rdquo;, on four storage layouts and the same hardware. The query time spans a factor of over a billion. The rollup at the top answers only the question it was built for.</p>
+</header>
+
+<section class="panel" aria-label="Query cost ladder">
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <div class="controls">
+    <div class="ctl"><label for="dau">DAU <output id="oDau"></output></label><input id="dau" type="range" min="0" max="1" step="1" value="0"></div>
+    <div class="ctl"><label for="epp">Events per player per day <output id="oEpp"></output></label><input id="epp" type="range" min="50" max="2000" step="50" value="500"></div>
+    <div class="ctl"><label for="ds">Share of events that are deaths <output id="oDs"></output></label><input id="ds" type="range" min="1" max="20" step="1" value="5"></div>
+    <div class="ctl"><label for="zones">Zones <output id="oZones"></output></label><input id="zones" type="range" min="5" max="200" step="1" value="40"></div>
+    <div class="ctl"><label for="ret">Raw retention (days) <output id="oRet"></output></label><input id="ret" type="range" min="7" max="365" step="1" value="90"></div>
+    <div class="ctl"><label for="scan">Scan rate (million rows/s) <output id="oScan"></output></label><input id="scan" type="range" min="0" max="1" step="1" value="0"></div>
+    <div class="ctl"><label for="qpm">Dashboard queries per minute <output id="oQpm"></output></label><input id="qpm" type="range" min="0" max="1" step="1" value="0"></div>
+    <div class="ctl" style="align-self:center"><button class="chip" id="reset" style="font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer">Lecture values</button></div>
+  </div>
+
+  <div class="views">
+    <div class="box">
+      <h2>The ladder<small>Rows touched per query, log scale from 1 to 10<sup>12</sup>. Select a layout to see what it can answer.</small></h2>
+      <div class="ladder" id="ladder" role="group" aria-label="Storage layouts"></div>
+      <div class="axis" id="axis" aria-hidden="true"></div>
+      <p class="axcap" aria-hidden="true">rows touched</p>
+    </div>
+    <div class="box">
+      <h2 id="qTitle">What this layout can answer</h2>
+      <p class="score" id="score" aria-live="polite"></p>
+      <ul class="qs" id="qs"></ul>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <p class="tcap" id="tcap">Numbers you can check</p>
+    <table>
+      <caption class="tcap" style="position:absolute;left:-9999px">The ladder as a table</caption>
+      <thead><tr><th>Layout</th><th>Rows touched</th><th>Query time</th><th>Cores busy</th><th>Questions</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+<footer>Model from DB201 week 11: rows per day = DAU &times; events per player; L0 = rows per day &times; retention; L1 = rows per day; L2 = rows per day &times; death share / zones; L3 = 1 row. Time = rows / scan rate; cores busy = queries per minute &times; time / 60. Ignores disk speed, index lookup cost and parallelism. The game is invented; no game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmtN=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const trim=(n,d)=>fmtN(n,d).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1');
+const MANT=[1,1.2,1.5,2,2.5,3,4,5,6,8];
+const lad=(lo,hi)=>{const o=[];for(let k=-1;k<=7;k++)for(const m of MANT){const v=Math.round(m*Math.pow(10,k)*10)/10;if(v>=lo&&v<=hi&&!o.includes(v))o.push(v);}return o;};
+const DAUS=lad(1000,1e6),SCANS=lad(1,100),QPMS=lad(1,1000);
+const DEF={dau:40000,epp:500,ds:5,zones:40,ret:90,scan:20,qpm:200};
+const S=Object.assign({sel:3},DEF);
+
+const LAYERS=[
+  ['L0','one raw table, no index','every row ever stored','var(--blood)'],
+  ['L1','partitioned by day','yesterday’s partition only','var(--ochre)'],
+  ['L2','L1 + index on (event type, zone)','yesterday’s zone-7 deaths only','var(--steel)'],
+  ['L3','rollup daily_zone_deaths(day, zone, deaths)','one row','var(--moss)']
+];
+const QS=['Deaths in zone 7 yesterday','Deaths in zone 7 yesterday, by hour','Deaths by mob last week','Heat map of deaths in zone 7','Deaths per player for the top 100 players','Median minutes between a death and session end','Deaths before and after build 1406','All item loot yesterday'];
+
+function fTime(t){
+  if(t<1e-3)return trim(t*1e6,3)+' µs';
+  if(t<1)return trim(t*1e3,3)+' ms';
+  let s=trim(t,2)+' s';
+  if(t>=3600)s+=' ('+trim(t/3600,1)+' h)';else if(t>=60)s+=' ('+trim(t/60,1)+' min)';
+  return s;
+}
+function fCores(c){if(c>=100)return fmtN(c,0);if(c>=1)return trim(c,2);if(c>=1e-4)return String(Number(c.toPrecision(2)));return 'under 0.0001';}
+function model(){
+  const rpd=S.dau*S.epp,rate=S.scan*1e6;
+  const rows=[rpd*S.ret,rpd,rpd*(S.ds/100)/S.zones,1];
+  return {rpd,rows,time:rows.map(r=>r/rate),cores:rows.map(r=>S.qpm*(r/rate)/60),build:rpd/rate,size:S.zones*S.ret};
+}
+// answerability: 'yes', 'no', 'part'
+function ans(l,i){if(l<3)return 'yes';if(i===0)return 'yes';if(i===6)return 'part';return 'no';}
+
+// build ladder
+$('ladder').innerHTML=LAYERS.map((L,i)=>`<button class="rung" id="L${i}" aria-pressed="false">
+  <span class="rhead"><span class="rname">${L[0]}<small>${L[1]}</small></span><span class="rtime" id="t${i}"></span></span>
+  <span class="track" aria-hidden="true"><span class="bar" id="b${i}" style="background:${L[3]}"></span></span>
+  <span class="rnums"><span>touches ${L[2]}: <b id="n${i}"></b> <span id="u${i}">rows</span></span><span><b id="c${i}"></b> cores busy</span></span>
+  <span class="rnote" id="note${i}" style="display:block"></span></button>`).join('');
+const SUP='⁰¹²³⁴⁵⁶⁷⁸⁹';
+$('axis').innerHTML=[0,2,4,6,8,10,12].map(k=>`<span style="left:${k/12*100}%">${k===0?'1':'10'+String(k).split('').map(c=>SUP[+c]).join('')}</span>`).join('');
+$('qs').innerHTML=QS.map((q,i)=>`<li class="q" id="q${i}"><span class="mk" aria-hidden="true"></span><span class="qt">(${i+1}) ${q}<span class="qn"></span></span></li>`).join('');
+
+function render(){
+  const m=model();
+  $('oDau').textContent=fmtN(S.dau);$('oEpp').textContent=fmtN(S.epp);$('oDs').textContent=S.ds+'%';$('oZones').textContent=S.zones;
+  $('oRet').textContent=S.ret;$('oScan').textContent=trim(S.scan,1);$('oQpm').textContent=fmtN(S.qpm);
+  LAYERS.forEach((L,i)=>{
+    const w=Math.max(0,Math.min(100,Math.log10(Math.max(1,m.rows[i]))/12*100));
+    $('b'+i).style.width=w+'%';
+    $('t'+i).textContent=fTime(m.time[i]);
+    $('n'+i).textContent=fmtN(Math.round(m.rows[i]));$('u'+i).textContent=Math.round(m.rows[i])===1?'row':'rows';
+    $('c'+i).textContent=fCores(m.cores[i]);
+    $('L'+i).setAttribute('aria-pressed',S.sel===i);
+    $('L'+i).setAttribute('aria-label',`${L[0]}, ${L[1]}: ${fmtN(Math.round(m.rows[i]))} rows, ${fTime(m.time[i])}, ${fCores(m.cores[i])} cores busy. Show what it can answer.`);
+  });
+  $('note0').textContent=`Grows with retention: ${S.ret} days × ${fmtN(m.rpd)} rows a day.`;
+  $('note1').textContent='Independent of retention: the query opens one day.';
+  $('note2').textContent='Questions that cannot use the (event type, zone) index fall back to L1 speed, '+fTime(m.time[1])+'.';
+  $('note3').textContent=`Build cost once a day: scan one partition, ${fTime(m.build)}. Size: ${fmtN(S.zones)} zones × ${S.ret} days = ${fmtN(m.size)} rows.`;
+  // questions
+  const L=S.sel;let n=0;
+  QS.forEach((q,i)=>{
+    const a=ans(L,i),el=$('q'+i);if(a==='yes')n++;
+    el.className='q'+(a==='no'?' no':a==='part'?' part':'');
+    el.querySelector('.mk').textContent=a==='yes'?'✓':a==='part'?'~':'✗';
+    let note='';
+    if(L===3){
+      if(i===0)note='The one question the rollup was built for.';
+      else if(i===6)note='Only if build 1406 went live at midnight: then compare whole days before and after. Otherwise the rollup cannot split a day.';
+      else note='Not answerable: the rollup kept only day, zone and a count.';
+    }else if(L===2&&[0,1,3].includes(i))note='Uses the (event type, zone) index.';
+    else if(L===2)note='Answerable at L1 speed; the index does not help.';
+    else note='Answerable from raw events.';
+    el.querySelector('.qn').textContent=note;
+    el.setAttribute('aria-label',`Question ${i+1}, ${q}: ${a==='yes'?'answerable':a==='part'?'answerable only in one case':'not answerable'}. ${note}`);
+  });
+  $('qTitle').textContent=`What ${LAYERS[L][0]} can answer`;
+  $('score').textContent=`${LAYERS[L][0]}: ${n} of 8 questions`+(L===3?' (plus question 7 in one case)':'');
+  // insight
+  const f=m.time[0]/m.time[2];
+  $('insight').innerHTML=`Same question, same ${trim(S.scan,1)} M rows/s: <b>${fTime(m.time[0])}</b> on L0, <b>${fTime(m.time[1])}</b> on L1, <b>${fTime(m.time[2])}</b> on L2. L2 is ${fmtN(f,0)} times faster than L0. At ${fmtN(S.qpm)} queries a minute, L0 keeps <b>${fCores(m.cores[0])}</b> cores busy. L3 is faster still and answers 1 of 8 questions.`;
+  // table
+  $('tcap').textContent=`Numbers you can check: ${fmtN(m.rpd)} rows per day, ${S.ret} days kept, ${S.zones} zones, ${S.ds}% deaths, ${trim(S.scan,1)} M rows/s, ${fmtN(S.qpm)} queries/min`;
+  $('tbody').innerHTML=LAYERS.map((La,i)=>`<tr class="${i===L?'here':''}"><td>${La[0]}, ${La[1]}</td><td>${fmtN(Math.round(m.rows[i]))}</td><td>${fTime(m.time[i])}</td><td>${fCores(m.cores[i])}</td><td>${QS.filter((_,j)=>ans(i,j)==='yes').length} of 8</td></tr>`).join('')+
+    `<tr><td>L3 rollup build, once a day</td><td>${fmtN(m.rpd)}</td><td>${fTime(m.build)}</td><td>—</td><td>size ${fmtN(m.size)} rows</td></tr>`;
+}
+
+// controls
+function bindLog(id,arr,key,suffix){const el=$(id);el.max=arr.length-1;el.value=arr.indexOf(S[key]);
+  el.addEventListener('input',()=>{S[key]=arr[+el.value];el.setAttribute('aria-valuetext',fmtN(S[key])+suffix);render();});}
+bindLog('dau',DAUS,'dau',' players');bindLog('scan',SCANS,'scan',' million rows per second');bindLog('qpm',QPMS,'qpm',' queries per minute');
+[['epp','epp'],['ds','ds'],['zones','zones'],['ret','ret']].forEach(([id,k])=>$(id).addEventListener('input',e=>{S[k]=+e.target.value;render();}));
+LAYERS.forEach((_,i)=>$('L'+i).addEventListener('click',()=>{S.sel=i;render();}));
+$('reset').addEventListener('click',()=>{Object.assign(S,DEF);$('dau').value=DAUS.indexOf(S.dau);$('scan').value=SCANS.indexOf(S.scan);$('qpm').value=QPMS.indexOf(S.qpm);
+  ['epp','ds','zones','ret'].forEach(k=>$(k).value=S[k]);render();});
+render();
+})();
+</script>
+</body>
+</html>

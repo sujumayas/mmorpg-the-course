@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Index or scan, DB201 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:0 0 12px;padding:10px 14px;border-radius:10px;background:var(--paper-2)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;align-items:center}
+.presets>span{font-weight:600;font-size:.9rem;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:290px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.78rem;color:var(--ink-soft)}
+.planner{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+@media (max-width:620px){.planner{grid-template-columns:1fr}}
+.pick{padding:10px 12px;border-radius:10px;background:var(--paper-2);font-size:.9rem}
+.pick b.v{font-size:1.05rem}
+.pick .INDEX{color:var(--moss)}.pick .SCAN{color:var(--blood)}
+.pick small{display:block;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:center}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 8px}
+input[type=number]{font:700 .92rem var(--sans);width:9.5em;padding:3px 6px;border:1.5px solid var(--grid);border-radius:var(--radius-sm);background:transparent;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:-6px 0 8px}
+.toggle{display:flex!important;justify-content:flex-start!important;gap:10px!important;cursor:pointer;margin-top:4px}
+.toggle input{width:20px;height:20px;accent-color:var(--moss)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 4 · Worked example</p>
+  <h1>The scan grows with the realm. The index barely moves.</h1>
+  <p class="lede">A thousand times more rows means a thousand times more pages to scan, and one or two more pages through a B-tree. The catch is on the right: the index only wins for selective queries.</p>
+</header>
+
+<section class="panel" aria-label="Index versus scan model">
+  <p class="caption" id="caption"></p>
+  <div class="presets" role="group" aria-label="Presets">
+    <span>Presets</span>
+    <button class="chip" data-p="lab">Lab 04 laptop</button>
+    <button class="chip" data-p="lecture" aria-pressed="true">Lecture model</button>
+    <button class="chip" data-p="huge">Huge realm</button>
+  </div>
+  <div class="charts">
+    <figure>
+      <figcaption>Pages read as the realm grows<small>One character&rsquo;s items, WHERE owner_id = ?. Both axes logarithmic.</small></figcaption>
+      <canvas id="cSize" role="img" aria-label="Pages read versus table size for full scan and index lookups"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>Full scan &lceil;N/R&rceil;</span>
+        <span><i style="background:var(--steel)"></i>Index, scattered h + k</span>
+        <span><i style="background:var(--moss)"></i>Index, clustered h + &lceil;k/R&rceil;</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Cost as the query gets less selective<small>Modelled cost in sequential-page units. Shaded: the index wins.</small></figcaption>
+      <canvas id="cSel" role="img" aria-label="Cost versus selectivity for full scan and index"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>Full scan N/R</span>
+        <span><i style="background:var(--steel)" id="lgIdx"></i><span id="lgIdxT">Index h + s&middot;N&middot;c<sub>r</sub></span></span>
+        <span><i style="background:var(--moss);opacity:.35;height:10px"></i>index wins</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite" id="readout">
+    <div class="stat"><b id="rN">&ndash;</b><span>rows N</span></div>
+    <div class="stat"><b id="rR">&ndash;</b><span>rows per page R</span></div>
+    <div class="stat"><b id="rF">&ndash;</b><span>fanout f</span></div>
+    <div class="stat"><b id="rH">&ndash;</b><span>tree height h</span></div>
+    <div class="stat"><b id="rK">&ndash;</b><span>rows per character k</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rScan">&ndash;</b><span>scan pages</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rIs">&ndash;</b><span>index pages, scattered</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rIc">&ndash;</b><span>index pages, clustered</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rRatio">&ndash;</b><span>scan / index (scattered)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rS">&ndash;</b><span>crossover s* = 1/(c<sub>r</sub>&middot;R)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rSc">&ndash;</b><span>clustered index wins up to</span></div>
+    <div class="stat"><b id="rC">&ndash;</b><span>random_page_cost c<sub>r</sub></span></div>
+  </div>
+  <div class="planner" aria-live="polite">
+    <div class="pick" id="pOwner"></div>
+    <div class="pick" id="pPotion"></div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="nIdx">Table size N <input id="nExact" type="number" min="1000" max="1000000000" step="1" value="1200000" aria-label="Table size N, exact"></label>
+      <input id="nIdx" type="range" min="0" max="24" step="1" value="13" aria-label="Table size N, log slider">
+      <p class="hint">Slider snaps to 1, 1.2, 2 and 5 &times; powers of 10. Type any value in the box.</p>
+      <label for="r">Rows per heap page R <output id="oR"></output></label>
+      <input id="r" type="range" min="10" max="200" step="1" value="80">
+      <label for="f">Index fanout f <output id="oF"></output></label>
+      <input id="f" type="range" min="50" max="1000" step="10" value="400">
+    </div>
+    <div class="ctl">
+      <label for="k">Rows per character k <output id="oK"></output></label>
+      <input id="k" type="range" min="10" max="1000" step="10" value="120">
+      <label for="c"><span>random_page_cost c<sub>r</sub></span> <output id="oC"></output></label>
+      <input id="c" type="range" min="1" max="10" step="0.1" value="4">
+      <p class="hint">1.0 = everything cached (SSD/RAM). PostgreSQL&rsquo;s default is 4.0.</p>
+      <label class="toggle" for="cl"><input id="cl" type="checkbox"> Items clustered by owner</label>
+    </div>
+  </div>
+</section>
+
+<footer>Model from DB201 week 4: h = &lceil;log<sub>f</sub> N&rceil;, scan = &lceil;N/R&rceil;, index = h + k (scattered) or h + &lceil;k/R&rceil; (clustered); cost of an index read at selectivity s is h + s&middot;N&middot;c<sub>r</sub>. The planner cost is a simplified version of PostgreSQL&rsquo;s, which also counts CPU per row. Shapes are generic; no game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const NS=[];for(let e=3;e<=8;e++)[1,1.2,2,5].forEach(m=>NS.push(Math.round(m*Math.pow(10,e))));NS.push(1e9);
+const DEF={N:1200000,R:80,F:400,K:120,C:4};
+let N=DEF.N,R=DEF.R,F=DEF.F,K=DEF.K,C=DEF.C,cl=false;
+
+function height(n,f){let h=1,p=f;while(p<n){p*=f;h++;}return h;}
+function model(){
+  const h=height(N,F),scan=Math.ceil(N/R),is=h+K,ic=h+Math.ceil(K/R);
+  const sStar=1/(C*R);
+  // clustered: largest s with h + ceil(sN/R)*c <= N/R
+  const pMax=Math.floor((N/R-h)/C),sClu=Math.max(0,pMax)*R/N;
+  return {h,scan,is,ic,sStar,sClu};
+}
+function costScan(){return N/R;}
+function costIdx(s,h){return cl?h+Math.ceil(s*N/R)*C:h+s*N*C;}
+function pct(x,d){return (x*100).toFixed(d)+'%';}
+function sLabel(s){const p=s*100;if(p>=1)return p.toFixed(p>=10?0:1).replace(/\.0$/,'')+'%';return Number(p.toPrecision(2)).toString()+'%';}
+const SUP='⁰¹²³⁴⁵⁶⁷⁸⁹';function pow(e){return e<=4?fmt(Math.pow(10,e)):'10'+String(e).split('').map(d=>SUP[+d]).join('');}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:48,r:14,t:14,b:34};
+function logAxes(g,w,h,x0,x1,y0,y1,xl,yl,xStep){
+  const X=v=>pad.l+(w-pad.l-pad.r)*(Math.log10(v)-x0)/(x1-x0);
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-(Math.log10(v)-y0)/(y1-y0));
+  g.clearRect(0,0,w,h);g.font='11px '+css('--sans');g.lineWidth=1;
+  const yStep=(y1-y0)>6?2:1;
+  for(let e=y0;e<=y1;e++){const y=Y(Math.pow(10,e));g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    if((e-y0)%yStep===0){g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(yl(e),pad.l-5,y);}}
+  for(let e=x0;e<=x1;e++){const x=X(Math.pow(10,e));g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    if((e-x0)%xStep===0||e===x1){g.fillStyle=css('--ink-soft');g.textAlign=e===x0?'left':e===x1?'right':'center';g.textBaseline='top';g.fillText(xl(e),x,h-pad.b+5);}}
+  return {X,Y};
+}
+function path(g,pts,color,width,dash,alpha){g.save();g.globalAlpha=alpha==null?1:alpha;g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash||[]);g.beginPath();
+  pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();g.restore();}
+function tag(g,x,y,text,color,w,align){g.font='600 11px '+css('--sans');const tw=g.measureText(text).width;
+  let tx=align==='left'?x-tw-8:x+8;if(tx+tw>w-pad.r)tx=x-tw-8;if(tx<pad.l)tx=x+8;
+  g.fillStyle=css('--paper-2');g.globalAlpha=.85;g.fillRect(tx-2,y-8,tw+4,15);g.globalAlpha=1;
+  g.fillStyle=color;g.textAlign='left';g.textBaseline='middle';g.fillText(text,tx,y);}
+
+function drawSize(m){
+  const {g,w,h}=setup($('cSize'));
+  const {X,Y}=logAxes(g,w,h,3,9,0,8,e=>({3:'1K',6:'1M',9:'1B'}[e]||''),e=>'',3);
+  // y labels as powers of ten
+  g.save();g.clearRect(0,0,pad.l-2,h);g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';
+  [0,2,4,6,8].forEach(e=>g.fillText(pow(e),pad.l-5,Y(Math.pow(10,e))));g.restore();
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  const scanPts=[],isPts=[],icPts=[];let prev=null;
+  for(let i=0;i<=600;i++){const n=Math.pow(10,3+6*i/600);
+    scanPts.push([X(n),Y(Math.max(1,Math.ceil(n/R)))]);
+    const hh=height(n,F);
+    if(prev!==null&&hh!==prev){isPts.push([X(n),Y(prev+K)]);icPts.push([X(n),Y(prev+Math.ceil(K/R))]);}
+    isPts.push([X(n),Y(hh+K)]);icPts.push([X(n),Y(hh+Math.ceil(K/R))]);prev=hh;}
+  path(g,scanPts,css('--blood'),2.5);
+  path(g,isPts,css('--steel'),cl?1.8:2.8,null,cl?.55:1);
+  path(g,icPts,css('--moss'),cl?3:1.8,null,cl?1:.6);
+  g.restore();
+  const x=X(N);
+  g.save();g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.restore();
+  [[m.scan,'--blood'],[m.is,'--steel'],[m.ic,'--moss']].forEach(([v,c])=>{g.fillStyle=css(c);g.beginPath();g.arc(x,Y(v),5,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=1.5;g.stroke();});
+  const right=x<w*0.6,al=right?'right':'left';
+  tag(g,x,Y(m.scan),fmt(m.scan),css('--blood'),w,al);
+  const yi=Y(m.is),yc=Y(m.ic),sep=Math.abs(yc-yi)<16;
+  tag(g,x,yi-(sep?8:0),fmt(m.is),css('--steel'),w,al);
+  tag(g,x,yc+(sep?8:0),fmt(m.ic),css('--moss'),w,al);
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('rows N',w-pad.r,h-2);
+  g.textAlign='left';g.textBaseline='top';g.fillText('pages read',pad.l+4,pad.t+2);
+}
+
+function drawSel(m){
+  const {g,w,h}=setup($('cSel'));
+  const top=Math.max(2,Math.ceil(Math.log10(Math.max(m.h+N*C,N/R)*1.05)));
+  const {X,Y}=logAxes(g,w,h,-5,0,0,top,e=>({'-5':'0.001%','-4':'0.01%','-3':'0.1%','-2':'1%','-1':'10%','0':'100%'})[e],e=>'',w<480?2:1);
+  g.save();g.clearRect(0,0,pad.l-2,h);g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';
+  const st=top>6?2:1;for(let e=0;e<=top;e+=st)g.fillText(pow(e),pad.l-5,Y(Math.pow(10,e)));g.restore();
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  // shade where index wins
+  const sw=cl?m.sClu:(N/R-m.h)/(N*C);
+  if(sw>1e-5){g.fillStyle=css('--moss');g.globalAlpha=.14;g.fillRect(pad.l,pad.t,Math.min(X(Math.min(1,sw)),w-pad.r)-pad.l,h-pad.t-pad.b);g.globalAlpha=1;}
+  path(g,[[X(1e-5),Y(N/R)],[X(1),Y(N/R)]],css('--blood'),2.5);
+  const pts=[];let prevY=null;
+  for(let i=0;i<=800;i++){const s=Math.pow(10,-5+5*i/800),y=Y(Math.max(1,costIdx(s,m.h)));
+    if(cl&&prevY!==null&&Math.abs(y-prevY)>.5)pts.push([X(s),prevY]);pts.push([X(s),y]);prevY=y;}
+  path(g,pts,cl?css('--moss'):css('--steel'),2.5);
+  // crossover
+  const xs=X(m.sStar);
+  path(g,[[xs,pad.t],[xs,h-pad.b]],css('--ink'),1.5,[6,5],.8);
+  g.restore();
+  g.font='600 11px '+css('--sans');const lab='crossover s* = '+pct(m.sStar,2);const tw=g.measureText(lab).width;
+  let lx=xs+6;if(lx+tw>w-pad.r)lx=xs-tw-6;
+  g.fillStyle=css('--paper-2');g.fillRect(lx-2,pad.t+2,tw+4,15);g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='top';g.fillText(lab,lx,pad.t+4);
+  if(cl){const l2='clustered index wins up to s ≈ '+sLabel(m.sClu);const t2=g.measureText(l2).width;
+    g.fillStyle=css('--paper-2');g.fillRect(w-pad.r-t2-6,pad.t+20,t2+4,15);g.fillStyle=css('--moss');g.fillText(l2,w-pad.r-t2-4,pad.t+22);}
+  // markers on x-axis
+  const sOwn=Math.min(1,K/N);
+  [[sOwn,'owner lookup',1],[0.08,'all potions',0]].forEach(([s,t,row])=>{
+    const x=X(Math.max(1e-5,s)),y=h-pad.b;
+    g.fillStyle=css('--ochre');g.beginPath();g.moveTo(x-6,y);g.lineTo(x,y-9);g.lineTo(x+6,y);g.closePath();g.fill();
+    g.font='600 11px '+css('--sans');const tw2=g.measureText(t).width;let tx=Math.min(Math.max(x-tw2/2,pad.l),w-pad.r-tw2);
+    const ty=y-14-row*15;g.fillStyle=css('--paper-2');g.fillRect(tx-2,ty-7,tw2+4,14);g.fillStyle=css('--ochre');g.textBaseline='middle';g.fillText(t,tx,ty);
+  });
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('selectivity s',w-pad.r,h-2);
+}
+
+function pick(el,name,s,m){
+  const ci=costIdx(s,m.h),cs=costScan(),p=ci<cs?'INDEX':'SCAN';
+  el.innerHTML=`${name} (s = ${sLabel(s)}): Planner picks: <b class="v ${p}">${p}</b><small>index cost ${fmt(ci)} vs scan cost ${fmt(cs)}${cl?' (clustered model)':''}</small>`;
+  el.dataset.pick=p;
+}
+
+function update(){
+  const m=model();
+  $('rN').textContent=fmt(N);$('rR').textContent=R;$('rF').textContent=F;$('rH').textContent=m.h;$('rK').textContent=K;
+  $('rScan').textContent=fmt(m.scan);$('rIs').textContent=fmt(m.is);$('rIc').textContent=fmt(m.ic);
+  $('rRatio').textContent=fmt(m.scan/m.is)+'×';$('rS').textContent=pct(m.sStar,2);$('rSc').textContent='s ≈ '+sLabel(m.sClu);
+  $('rC').textContent=C.toFixed(1);
+  $('oR').textContent=R;$('oF').textContent=F;$('oK').textContent=K;$('oC').textContent=C.toFixed(1)+(C===1?' (all cached)':'');
+  if(document.activeElement!==$('nExact'))$('nExact').value=N;
+  pick($('pOwner'),'Owner lookup',Math.min(1,K/N),m);
+  pick($('pPotion'),'All potions',0.08,m);
+  $('lgIdx').style.background=cl?'var(--moss)':'var(--steel)';
+  $('lgIdxT').innerHTML=cl?'Index, clustered h + &lceil;s&middot;N/R&rceil;&middot;c<sub>r</sub>':'Index, scattered h + s&middot;N&middot;c<sub>r</sub>';
+  $('caption').textContent=`At ${fmt(N)} rows a scan reads ${fmt(m.scan)} pages; the index reads ${fmt(cl?m.ic:m.is)}. Slide N up a thousandfold: the scan follows, the index adds a page or two.`;
+  drawSize(m);drawSel(m);
+}
+function nearestIdx(n){let b=0;NS.forEach((v,i)=>{if(Math.abs(Math.log(v/n))<Math.abs(Math.log(NS[b]/n)))b=i;});return b;}
+function clearPresets(){document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));}
+
+$('nIdx').addEventListener('input',e=>{N=NS[+e.target.value];clearPresets();update();});
+$('nExact').addEventListener('input',e=>{const v=Math.round(+e.target.value);if(v>=1000&&v<=1e9){N=v;$('nIdx').value=nearestIdx(v);clearPresets();update();}});
+$('nExact').addEventListener('change',e=>{let v=Math.round(+e.target.value)||DEF.N;v=Math.min(1e9,Math.max(1000,v));N=v;e.target.value=v;$('nIdx').value=nearestIdx(v);update();});
+$('r').addEventListener('input',e=>{R=+e.target.value;clearPresets();update();});
+$('f').addEventListener('input',e=>{F=+e.target.value;clearPresets();update();});
+$('k').addEventListener('input',e=>{K=+e.target.value;clearPresets();update();});
+$('c').addEventListener('input',e=>{C=Math.round(+e.target.value*10)/10;clearPresets();update();});
+$('cl').addEventListener('change',e=>{cl=e.target.checked;update();});
+const PRE={lab:{N:1200000,R:49,F:400,K:120,C:1},lecture:DEF,huge:Object.assign({},DEF,{N:120000000})};
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const p=PRE[b.dataset.p];N=p.N;R=p.R;F=p.F;K=p.K;C=p.C;
+  $('nIdx').value=nearestIdx(N);$('nExact').value=N;$('r').value=R;$('f').value=F;$('k').value=K;$('c').value=C;
+  clearPresets();b.setAttribute('aria-pressed','true');update();}));
+let rw=0;window.addEventListener('resize',()=>{if(innerWidth!==rw){rw=innerWidth;update();}});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

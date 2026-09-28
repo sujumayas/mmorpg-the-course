@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Backfill batches, DB201 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.layout{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:980px){.layout{grid-template-columns:minmax(0,1fr) 300px}}
+.charts{display:grid;grid-template-columns:1fr;gap:14px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cTime{height:190px}
+#cCurve{height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend i.box{height:10px;width:14px;opacity:.6}
+.legend i.dot{width:8px;height:8px;border-radius:50%}
+.readout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;align-content:start}
+@media (min-width:600px) and (max-width:979px){.readout{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block}
+.stat.wide{grid-column:1/-1}
+.warn{color:var(--blood);font-weight:700}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 24px;margin-top:18px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 8px}
+#b{accent-color:var(--blood)}
+#d{accent-color:var(--ochre)}
+.budgets{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:4px}
+.budgets label{justify-content:flex-start;align-items:center;gap:8px}
+input[type=number]{font:600 1rem var(--sans);width:6.5em;padding:5px 8px;border:1.5px solid var(--ink);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip.alt{border-color:var(--blood)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:0 0 6px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:640px;width:100%}
+.tcap{font-family:var(--serif);margin:0 0 6px;position:sticky;left:0}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 9 · Worked example</p>
+  <h1>Batch size sets the stall. Duty cycle sets the total.</h1>
+  <p class="lede">A batched backfill of 60 million rows. Shrink the batches from 100,000 rows to 1,000 and the longest wait a player sees falls 100 times, from 5 s to 50 ms. The whole job takes 10% longer.</p>
+</header>
+
+<section class="panel" aria-label="Batched backfill model">
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <div class="layout">
+    <div class="charts">
+      <figure>
+        <figcaption>Timeline<small id="tlSub">A window of simulated time. Game writes arrive at random; the same settings always draw the same picture.</small></figcaption>
+        <canvas id="cTime" role="img" aria-label="Timeline of backfill batches, pauses and game writes"></canvas>
+        <div class="legend">
+          <span><i class="box" style="background:var(--steel)"></i>batch running, b/r + o</span>
+          <span><i class="dot" style="background:var(--ink-soft)"></i>game write, no wait</span>
+          <span><i style="background:var(--blood)"></i>write waiting for the batch to commit</span>
+        </div>
+      </figure>
+      <figure>
+        <figcaption>Total time against longest stall<small>One point per batch size (powers of 10, then b = N), both axes log. Current b is the large point.</small></figcaption>
+        <canvas id="cCurve" role="img" aria-label="Log-log chart of total backfill time against longest stall, one point per batch size"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--steel)"></i>total time, current d</span>
+          <span><i style="background:var(--ochre)"></i>floor N/(r&middot;d)</span>
+          <span><i style="background:var(--moss)"></i>time budget</span>
+          <span><i style="background:var(--blood)"></i>stall budget</span>
+        </div>
+      </figure>
+    </div>
+    <div class="readout" id="readout">
+      <div class="stat" style="--c:var(--ink)"><b id="rBatches">&ndash;</b><span>batches, N/b</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rStall">&ndash;</b><span>longest stall, b/r</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rBlock">&ndash;</b><span>each batch runs, b/r + o</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rRun">&ndash;</b><span>running time, (N/b)(b/r + o)</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rTotal">&ndash;</b><span>total time, running / d</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rHours">&ndash;</b><span>total in hours</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rFloor">&ndash;</b><span>floor, N/(r&middot;d)</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="rOver">&ndash;</b><span>overhead share of running time</span></div>
+      <div class="stat wide" style="--c:var(--ink-soft)"><b id="rWait">&ndash;</b><span>longest wait on the timeline</span></div>
+      <div class="stat wide" style="--c:var(--moss)"><b id="rRecB">&ndash;</b><span>recommended b = r &times; stall budget</span></div>
+      <div class="stat wide" style="--c:var(--moss)"><b id="rRecD">&ndash;</b><span id="rRecDs">minimum d = N / (r &times; time budget)</span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="b">Batch size b <output id="oB">1,000</output></label>
+      <input id="b" type="range" min="0" max="10" step="1" value="0">
+      <div class="presets" role="group" aria-label="Batch size presets">
+        <button class="chip" data-b="10">10</button>
+        <button class="chip" data-b="100">100</button>
+        <button class="chip" data-b="1000">1,000</button>
+        <button class="chip" data-b="10000">10,000</button>
+        <button class="chip" data-b="100000">100,000</button>
+        <button class="chip alt" id="oneStmt">One statement</button>
+      </div>
+      <p class="hint" style="margin-top:6px">One statement sets b = N and d = 1.</p>
+      <label for="d" style="margin-top:8px">Duty cycle d <output id="oD">0.25</output></label>
+      <input id="d" type="range" min="0.05" max="1" step="0.05" value="0.25">
+    </div>
+    <div class="ctl">
+      <label for="n">Rows to backfill N <output id="oN">60,000,000</output></label>
+      <input id="n" type="range" min="0" max="10" step="1" value="0">
+      <label for="r">Row rate r (rows/s) <output id="oR">20,000</output></label>
+      <input id="r" type="range" min="0" max="10" step="1" value="0">
+      <label for="o">Overhead per batch o <output id="oO">5 ms</output></label>
+      <input id="o" type="range" min="0" max="50" step="1" value="5">
+    </div>
+    <div class="ctl">
+      <label for="lam">Game writes per second &lambda; <output id="oLam">20</output></label>
+      <input id="lam" type="range" min="1" max="200" step="1" value="20">
+      <label for="ph">Chance a write hits the batch&rsquo;s rows <output id="oPh">1.00</output></label>
+      <input id="ph" type="range" min="0" max="1" step="0.05" value="1">
+      <div class="budgets">
+        <label for="sb">Stall budget <input id="sb" type="number" min="0.1" max="100000" step="any" value="50"> ms</label>
+        <label for="tb">Time budget <input id="tb" type="number" min="0.01" max="10000" step="any" value="4"> h</label>
+      </div>
+      <div class="presets" role="group" aria-label="Scenario presets" style="margin-top:10px">
+        <button class="chip" id="presetLecture">Lecture values</button>
+        <button class="chip" id="presetCheck">Check-yourself Q1</button>
+        <button class="chip" id="useRec">Use recommended b</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <p class="tcap" id="tcap">Numbers you can check</p>
+    <table>
+      <thead><tr><th>Batch size b</th><th>Batches</th><th>Longest stall b/r</th><th>Total time</th><th>Total in hours</th><th>Overhead share</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+<footer>Model from DB201 week 9: batches = N/b, longest stall = b/r, total = (N/b)(b/r + o)/d = N/(r&middot;d) + N&middot;o/(b&middot;d). When b does not divide N, the last batch is smaller and batches round up. The timeline uses a fixed seed, so a write &ldquo;hits&rdquo; the batch with the chance you set (default 1, the worst case). Shapes are generic; no game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtN=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const MANT=[1,1.2,1.5,2,2.5,3,4,5,6,8];
+function ladder(lo,hi){const out=[];for(let k=0;k<12;k++){for(const m of MANT){const v=Math.round(m*Math.pow(10,k));if(v>=lo&&v<=hi)out.push(v);}}if(out[out.length-1]!==hi)out.push(hi);return out;}
+const NS=ladder(100000,500000000),RS=ladder(1000,200000);
+let BS=[];
+const S={N:60000000,r:20000,o:0.005,d:0.25,b:1000,lam:20,ph:1,sb:0.05,tb:4*3600};
+
+// seconds formatter: exact integers with commas, otherwise 1 decimal at >= 100 s, else 4 significant digits
+function fs(x){
+  if(!isFinite(x))return '∞';
+  const ri=Math.round(x);
+  if(Math.abs(x-ri)<=1e-9*Math.max(1,Math.abs(x)))return fmtN(ri)+' s';
+  if(x>=100)return fmtN(x,1)+' s';
+  return String(Number(x.toPrecision(4)))+' s';
+}
+function fh(sec){const h=sec/3600;return h>=100?fmtN(h,0):h>=10?h.toFixed(1):h.toFixed(2);}
+function human(sec){ // friendly unit for captions
+  if(sec<1)return String(Number((sec*1000).toPrecision(3)))+' ms';
+  if(sec<120)return String(Number(sec.toPrecision(3)))+' s';
+  if(sec<7200)return String(Number((sec/60).toPrecision(3)))+' min';
+  if(sec<172800)return String(Number((sec/3600).toPrecision(3)))+' h';
+  return String(Number((sec/86400).toPrecision(3)))+' days';
+}
+function model(b,d){
+  const {N,r,o}=S;b=Math.min(b,N);
+  const batches=Math.ceil(N/b-1e-9),stall=b/r,run=N/r+batches*o,total=run/d;
+  return {b,batches,stall,run,total,floor:N/(r*d),over:batches*o/run};
+}
+
+// ---------- canvases ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,rc=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(rc.width*dpr));c.height=Math.max(1,Math.round(rc.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:rc.width,h:rc.height};
+}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x))),m=x/p;return (m<=1?1:m<=2?2:m<=5?5:10)*p;}
+function tickLabel(v,W){
+  if(W<2)return String(Number((v*1000).toPrecision(6)))+' ms';
+  if(W<300)return String(Number(v.toPrecision(6)))+' s';
+  if(W<14400)return String(Number((v/60).toPrecision(6)))+' min';
+  return String(Number((v/3600).toPrecision(6)))+' h';
+}
+const MAXMARK=1500;
+let lastWait=0;
+function drawTimeline(m){
+  const {g,w,h}=setup($('cTime')),p={l:12,r:12,t:28,b:30};
+  g.clearRect(0,0,w,h);
+  const block=m.stall+S.o,cycle=block/S.d;
+  // window: about 8 cycles, at least 1 s; if the whole job is shorter, show the whole job plus a margin
+  let W=Math.max(1,8*cycle);
+  if(m.total<W)W=Math.max(1,m.total*1.12);
+  const iw=w-p.l-p.r,X=t=>p.l+iw*t/W,y0=p.t,y1=h-p.b,bh=y1-y0;
+  // ticks
+  const U=W<2?0.001:W<300?1:W<14400?60:3600,step=niceStep(W/U/(w<500?3:5))*U;
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let t=0;t<=W+1e-12;t+=step){const x=X(t);g.beginPath();g.moveTo(x,y0);g.lineTo(x,y1);g.stroke();
+    g.textAlign=t===0?'left':(X(t+step)>w-p.r+1&&x>w-p.r-40)?'right':'center';g.textBaseline='top';g.fillText(tickLabel(t,W),x,y1+6);}
+  // blocks (last block may be shorter)
+  g.fillStyle=css('--steel');
+  const blocks=[];
+  const lastBlock=(S.N-(m.batches-1)*m.b)/S.r+S.o;
+  for(let i=0;i<m.batches;i++){
+    const s=i*cycle;if(s>W)break;
+    const len=i===m.batches-1?lastBlock:block;
+    blocks.push([s,s+len]);
+  }
+  g.globalAlpha=.42;
+  for(const [s,e] of blocks){const x=X(s),x2=X(Math.min(e,W));g.fillRect(x,y0,Math.max(1,x2-x),bh);}
+  g.globalAlpha=1;
+  let doneX=null;
+  if(m.total<W){ // job done marker
+    const x=X(m.total);g.strokeStyle=css('--moss');g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();g.moveTo(x,y0);g.lineTo(x,y1);g.stroke();g.setLineDash([]);
+    doneX=x;
+  }
+  // game writes, Poisson at rate lam; thinned if too many to draw
+  const rnd=mulberry32(90210);
+  const expected=S.lam*W,thin=expected>MAXMARK?expected/MAXMARK:1,rate=S.lam/thin;
+  let t=0,longest=null;const marks=[];
+  while(true){t+=-Math.log(1-rnd())/rate;if(t>W)break;
+    const jy=rnd(),coin=rnd();
+    // find the block containing t (blocks are periodic)
+    const i=Math.floor(t/cycle);let wait=0;
+    if(i<blocks.length){const [s,e]=blocks[i];if(t>=s&&t<e&&coin<S.ph)wait=e-t;}
+    marks.push([t,jy,wait]);
+    if(wait>0&&(!longest||wait>longest[2]))longest=[t,jy,wait];
+  }
+  const red=css('--blood'),soft=css('--ink-soft');
+  for(const [tt,jy,wait] of marks){
+    const x=X(tt),y=y0+6+jy*(bh-12);
+    if(wait>0){g.strokeStyle=red;g.lineWidth=2;g.beginPath();g.moveTo(x,y);g.lineTo(X(Math.min(tt+wait,W)),y);g.stroke();g.fillStyle=red;}
+    else g.fillStyle=soft;
+    g.beginPath();g.arc(x,y,marks.length>400?2:3,0,Math.PI*2);g.fill();
+  }
+  if(doneX!==null){g.font='600 12px '+css('--sans');const t2='backfill done',tw2=g.measureText(t2).width,right=doneX>w-tw2-16;
+    const bx=right?doneX-tw2-10:doneX+4;g.fillStyle=css('--paper-2');g.fillRect(bx,y1-20,tw2+6,17);
+    g.fillStyle=css('--moss');g.textAlign='left';g.textBaseline='top';g.fillText(t2,bx+3,y1-19);}
+  lastWait=longest?longest[2]:0;
+  if(longest){
+    const x=X(longest[0]),y=y0+6+longest[1]*(bh-12),x2=X(Math.min(longest[0]+longest[2],W));
+    g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.stroke();
+    const lab='longest wait '+human(longest[2]);
+    g.font='600 12px '+css('--sans');const tw=g.measureText(lab).width;
+    let lx=Math.min(Math.max((x+x2)/2-tw/2,p.l),w-p.r-tw);
+    g.fillStyle=css('--paper-2');g.fillRect(lx-3,4,tw+6,17);
+    g.fillStyle=red;g.textAlign='left';g.textBaseline='top';g.fillText(lab,lx,5);
+  }else{
+    g.font='600 12px '+css('--sans');g.fillStyle=soft;g.textAlign='left';g.textBaseline='top';g.fillText('no write waited in this window',p.l,5);
+  }
+  $('tlSub').textContent='Showing '+human(W)+' of simulated time: '+fmtN(Math.min(blocks.length,m.batches))+' batch'+(blocks.length===1?'':'es')+' and '+fmtN(marks.length)+' game writes'+(thin>1?' (1 in '+fmtN(Math.round(thin))+' drawn)':'')+'. Same settings, same picture.';
+  $('cTime').setAttribute('aria-label','Timeline over '+human(W)+'. Each batch runs '+human(block)+' then pauses '+human(cycle-block)+'. Longest visible wait '+(longest?human(longest[2]):'none')+'.');
+}
+
+function decades(lo,hi){const a=Math.floor(Math.log10(lo)),b=Math.ceil(Math.log10(hi));return [a,b];}
+function logLabel(v,unitSec){
+  if(v<1)return String(Number((v*1000).toPrecision(3)))+' ms';
+  if(v<1e3)return String(v)+' s';
+  if(v<1e6)return (v/1e3)+'k s';
+  return (v/1e6)+'M s';
+}
+function drawCurve(m){
+  const {g,w,h}=setup($('cCurve')),p={l:58,r:14,t:14,b:40};
+  g.clearRect(0,0,w,h);
+  const pts=BS.filter(b=>b===S.N||Math.abs(Math.log10(b)-Math.round(Math.log10(b)))<1e-9).map(b=>model(b,S.d));
+  const allT=pts.map(q=>q.total).concat([S.tb,m.floor,m.total]),allS=pts.map(q=>q.stall).concat([S.sb,m.stall]);
+  let [xa,xb]=decades(Math.min(...allS),Math.max(...allS));
+  if(xb===xa)xb++;
+  const ya=Math.log10(Math.min(...allT)*0.6),yb=Math.log10(Math.max(...allT)*1.6);
+  const iw=w-p.l-p.r,ih=h-p.t-p.b;
+  const X=v=>p.l+iw*(Math.log10(v)-xa)/(xb-xa),Y=v=>p.t+ih*(1-(Math.log10(v)-ya)/(yb-ya));
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  const xEvery=Math.ceil((xb-xa)/Math.max(2,Math.floor(iw/62)));
+  for(let k=xa;k<=xb;k++){const x=X(Math.pow(10,k));g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,p.t);g.lineTo(x,h-p.b);g.stroke();
+    if((k-xa)%xEvery===0){g.fillStyle=css('--ink-soft');g.textAlign=k===xb?'right':'center';g.textBaseline='top';g.fillText(logLabel(Math.pow(10,k)),x,h-p.b+6);}}
+  // y ticks at 1, 2, 5 x 10^k (fewer when the range is wide)
+  const span=yb-ya,mults=span<1.5?[1,2,5]:span<3?[1,3]:[1];
+  const yt=[];for(let k=Math.floor(ya);k<=Math.ceil(yb);k++)for(const mm of mults){const v=mm*Math.pow(10,k),lv=Math.log10(v);if(lv>=ya&&lv<=yb)yt.push(v);}
+  const yEvery=Math.max(1,Math.ceil(yt.length/Math.max(2,Math.floor(ih/34))));
+  yt.forEach((v,i)=>{const y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(p.l,y);g.lineTo(w-p.r,y);g.stroke();
+    if(i%yEvery===0){g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(logLabel(v),p.l-6,y);}});
+  g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='bottom';g.fillText('longest stall b/r →',w-p.r,h-2);
+  g.save();g.translate(12,p.t+ih/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='top';g.fillText('total time',0,-8);g.restore();
+  // references
+  const ref=(color,x1,y1,x2,y2,dash)=>{g.strokeStyle=color;g.lineWidth=1.8;g.setLineDash(dash||[6,4]);g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();g.setLineDash([]);};
+  const yf=Y(m.floor);ref(css('--ochre'),p.l,yf,w-p.r,yf,[2,4]);
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--ochre');g.textAlign='right';g.textBaseline=S.tb>=m.floor?'top':'bottom';g.fillText('floor N/(r·d) = '+fs(m.floor),w-p.r-2,S.tb>=m.floor?yf+3:yf-3);
+  const yt0=Y(S.tb);if(yt0>=p.t&&yt0<=h-p.b){ref(css('--moss'),p.l,yt0,w-p.r,yt0);g.fillStyle=css('--moss');g.textAlign='right';g.textBaseline=S.tb>=m.floor?'bottom':'top';g.fillText('time budget '+human(S.tb),w-p.r-2,S.tb>=m.floor?yt0-3:yt0+3);}
+  const xs=X(S.sb);if(xs>=p.l&&xs<=w-p.r){ref(css('--blood'),xs,p.t,xs,h-p.b);g.fillStyle=css('--blood');g.textAlign=xs<p.l+iw/2?'left':'right';g.textBaseline='top';g.fillText('stall budget '+human(S.sb),xs+(xs<p.l+iw/2?4:-4),p.t+2);}
+  // continuous curve
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  const lo=Math.log10(10),hi=Math.log10(S.N);
+  for(let i=0;i<=160;i++){const b=Math.pow(10,lo+(hi-lo)*i/160),q=model(b,S.d);const x=X(q.stall),y=Y(q.total);i?g.lineTo(x,y):g.moveTo(x,y);}
+  g.stroke();
+  g.fillStyle=css('--steel');
+  for(const q of pts){g.beginPath();g.arc(X(q.stall),Y(q.total),4,0,Math.PI*2);g.fill();}
+  // current
+  const cx=X(m.stall),cy=Y(m.total);
+  g.fillStyle=css('--blood');g.beginPath();g.arc(cx,cy,7,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  const lab='current b = '+fmtN(m.b)+': '+fs(m.total);
+  g.font='600 12px '+css('--sans');const tw=g.measureText(lab).width;
+  g.fillStyle=css('--blood');g.textAlign='right';g.textBaseline='top';g.fillText(lab,w-p.r-4,p.t+20);
+}
+
+// ---------- readouts ----------
+function render(){
+  const m=model(S.b,S.d);
+  $('oB').textContent=fmtN(m.b);$('oD').textContent=S.d.toFixed(2);$('oN').textContent=fmtN(S.N);$('oR').textContent=fmtN(S.r);
+  $('oO').textContent=fmtN(S.o*1000)+' ms';$('oLam').textContent=fmtN(S.lam);$('oPh').textContent=S.ph.toFixed(2);
+  $('rBatches').textContent=fmtN(m.batches);
+  $('rStall').textContent=fs(m.stall);
+  $('rBlock').textContent=fs(m.stall+S.o);$('rRun').textContent=fs(m.run);
+  $('rTotal').textContent=fs(m.total);
+  $('rHours').textContent=fh(m.total)+' h';
+  $('rFloor').textContent=fs(m.floor);
+  $('rOver').textContent=(m.over*100).toFixed(1)+'%';
+  const recB=Math.max(1,Math.round(S.r*S.sb)),recD=S.N/(S.r*S.tb);
+  $('rRecB').textContent=fmtN(recB)+' rows';
+  $('rRecD').innerHTML=recD>1?'<span class="warn">'+recD.toFixed(3)+' (over 1: impossible)</span>':recD.toFixed(3);
+  $('rRecDs').innerHTML=recD>1?'minimum d = N / (r &times; time budget). Even d = 1 takes '+human(S.N/S.r)+', longer than the budget.':'minimum d = N / (r &times; time budget)';
+  drawTimeline(m);drawCurve(m);
+  $('rWait').textContent=lastWait>0?fs(lastWait):'none';
+  // insight
+  const extra=m.total/m.floor-1;
+  let s=`At b = ${fmtN(m.b)}, a trade that needs a row in the running batch waits at most <b>${human(m.stall)}</b>. `;
+  s+=`The backfill takes <b>${fs(m.total)}</b> (${fh(m.total)} h), `;
+  if(extra<0.0005)s+=`right on the floor of ${fs(m.floor)} that no batch size can beat.`;
+  else s+=`${(extra*100).toFixed(extra<0.1?1:0)}% above the floor of ${fs(m.floor)} that no batch size can beat.`;
+  if(m.b>=S.N&&S.d===1)s+=` This is one statement: fastest, and every trade on a touched row waits ${human(m.stall)}.`;
+  else if(m.over>0.5)s+=` Overhead is now ${(m.over*100).toFixed(0)}% of running time: you are on the steep wall of the L.`;
+  else if(m.stall>S.sb)s+=` That stall is over your ${human(S.sb)} budget; try b = ${fmtN(Math.max(1,Math.round(S.r*S.sb)))}.`;
+  $('insight').innerHTML=s;
+  // table
+  $('tcap').textContent=`Numbers you can check: N = ${fmtN(S.N)}, r = ${fmtN(S.r)}, o = ${fmtN(S.o,3)} s, d = ${S.d.toFixed(2)}`;
+  const rows=[];
+  const one=model(S.N,1);
+  rows.push(`<tr class="${m.b>=S.N?'here':''}"><td>${fmtN(S.N)} (one statement, d = 1)</td><td>${fmtN(one.batches)}</td><td>${fs(one.stall)}</td><td>${fs(one.total)}</td><td>${fh(one.total)}</td><td>${(one.over*100).toFixed(1)}%</td></tr>`);
+  const pw=[];for(let k=Math.floor(Math.log10(S.N));k>=1;k--){const b=Math.pow(10,k);if(b<S.N)pw.push(b);}
+  if(!pw.includes(m.b)&&m.b<S.N){pw.push(m.b);pw.sort((a,b)=>b-a);}
+  for(const b of pw){const q=model(b,S.d);rows.push(`<tr class="${b===m.b?'here':''}"><td>${fmtN(b)}</td><td>${fmtN(q.batches)}</td><td>${fs(q.stall)}</td><td>${fs(q.total)}</td><td>${fh(q.total)}</td><td>${(q.over*100).toFixed(1)}%</td></tr>`);}
+  $('tbody').innerHTML=rows.join('');
+}
+
+// ---------- controls ----------
+function idxOf(arr,v){let best=0;arr.forEach((x,i)=>{if(Math.abs(Math.log(x/v))<Math.abs(Math.log(arr[best]/v)))best=i;});return best;}
+function syncB(){BS=ladder(10,S.N);const el=$('b');el.max=BS.length-1;el.value=idxOf(BS,S.b);S.b=BS[+el.value];el.setAttribute('aria-valuetext',fmtN(S.b)+' rows');}
+function setAll(v){Object.assign(S,v);
+  $('n').value=idxOf(NS,S.N);$('r').value=idxOf(RS,S.r);$('o').value=Math.round(S.o*1000);$('d').value=S.d;$('lam').value=S.lam;$('ph').value=S.ph;
+  $('sb').value=+(S.sb*1000).toPrecision(6);$('tb').value=+(S.tb/3600).toPrecision(6);
+  syncB();render();}
+$('n').max=NS.length-1;$('r').max=RS.length-1;
+$('n').addEventListener('input',e=>{S.N=NS[+e.target.value];e.target.setAttribute('aria-valuetext',fmtN(S.N)+' rows');syncB();render();});
+$('r').addEventListener('input',e=>{S.r=RS[+e.target.value];e.target.setAttribute('aria-valuetext',fmtN(S.r)+' rows per second');render();});
+$('b').addEventListener('input',e=>{S.b=BS[+e.target.value];e.target.setAttribute('aria-valuetext',fmtN(S.b)+' rows');render();});
+$('o').addEventListener('input',e=>{S.o=+e.target.value/1000;render();});
+$('d').addEventListener('input',e=>{S.d=+e.target.value;render();});
+$('lam').addEventListener('input',e=>{S.lam=+e.target.value;render();});
+$('ph').addEventListener('input',e=>{S.ph=+e.target.value;render();});
+$('sb').addEventListener('input',e=>{const v=+e.target.value;if(v>0){S.sb=v/1000;render();}});
+$('tb').addEventListener('input',e=>{const v=+e.target.value;if(v>0){S.tb=v*3600;render();}});
+document.querySelectorAll('[data-b]').forEach(bt=>bt.addEventListener('click',()=>{S.b=Math.min(+bt.dataset.b,S.N);syncB();render();}));
+$('oneStmt').addEventListener('click',()=>setAll({b:S.N,d:1}));
+$('presetLecture').addEventListener('click',()=>setAll({N:60000000,r:20000,o:0.005,d:0.25,b:1000,sb:0.05,tb:4*3600}));
+$('presetCheck').addEventListener('click',()=>setAll({N:12000000,r:30000,o:0.004,d:0.5,b:600,sb:0.02,tb:4*3600}));
+$('useRec').addEventListener('click',()=>{S.b=Math.min(S.N,Math.max(10,Math.round(S.r*S.sb)));syncB();render();});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(render,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+setAll({});
+window.__state=S;window.__setAll=setAll;
+})();
+</script>
+</body>
+</html>

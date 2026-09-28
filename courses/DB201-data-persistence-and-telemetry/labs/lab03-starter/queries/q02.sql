@@ -1,0 +1,2 @@
+-- q02. The five richest characters.
+-- Columns: name, gold.  Order: gold descending, then name ascending.  Five rows.

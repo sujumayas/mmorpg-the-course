@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Join fan-out, DB201 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:0 0 12px;padding:10px 14px;border-radius:10px;background:var(--paper-2)}
+.modes{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:0 0 14px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:600 .9rem var(--sans);padding:7px 13px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.toggle{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.95rem;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--moss)}
+.btn{font:600 .9rem var(--sans);padding:7px 13px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1.15fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.counter{font-weight:700;font-size:1.05rem;margin:0 0 8px;font-variant-numeric:tabular-nums}
+.counter b{color:var(--blood);font-size:1.35rem}
+.chars{display:flex;flex-direction:column;gap:10px}
+.ch{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:10px;align-items:start;background:var(--paper);border-radius:8px;padding:8px}
+@media (max-width:520px){.ch{grid-template-columns:1fr}}
+.card h3{margin:0;font-size:1rem}
+.card h3 small{font-weight:400;color:var(--ink-soft);font-size:.82rem;margin-left:4px}
+.field{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:.82rem;margin-top:4px}
+.field>span{color:var(--ink-soft)}
+.step{display:inline-flex;align-items:center;border:1.5px solid var(--grid);border-radius:6px}
+.step button{width:28px;height:28px;border:0;background:transparent;color:var(--ink);font:700 1rem var(--sans);cursor:pointer}
+.step input{width:3.2em;text-align:center;border:0;background:transparent;color:var(--ink);font:700 .9rem var(--sans);font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.step input::-webkit-inner-spin-button{display:none}
+input.gold{width:5.4em;text-align:right;padding:3px 6px;border:1.5px solid var(--grid);border-radius:6px;background:transparent;color:var(--ink);font:700 .9rem var(--sans);font-variant-numeric:tabular-nums}
+.block{min-width:0}
+.block .meta{font-size:.78rem;color:var(--ink-soft);margin-bottom:3px}
+.cells{display:grid;gap:2px}
+.cell{height:22px;min-width:0;border-radius:3px;background:var(--blood);color:var(--paper);font:700 10px var(--sans);display:flex;align-items:center;justify-content:center;overflow:hidden;font-variant-numeric:tabular-nums;position:relative}
+.cell.null{background:transparent;color:var(--blood);border:1.5px solid var(--blood)}
+.cell.null::after{content:"NULL";position:absolute;right:2px;bottom:0;font-size:7px;opacity:.9}
+.dropped{border:1.5px dashed var(--ink-soft);border-radius:4px;padding:6px 8px;font-size:.8rem;color:var(--ink-soft)}
+.agg{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:0;font-size:.82rem;border:1.5px solid var(--ochre);border-radius:4px;overflow:hidden;font-variant-numeric:tabular-nums}
+.agg span{padding:2px 8px;border-right:1px solid var(--grid)}
+.agg .h{background:var(--paper-2);color:var(--ink-soft);font-size:.74rem}
+.chart{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end;border-bottom:1.5px solid var(--ink);padding-top:4px}
+.grpc{display:flex;justify-content:center;align-items:flex-end;gap:5px;min-width:0}
+.bcol{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0;flex:1;max-width:46px}
+.bv{font:700 .72rem var(--sans);font-variant-numeric:tabular-nums;white-space:nowrap;margin-bottom:2px}
+.b{width:100%;border-radius:3px 3px 0 0}
+.b.true{border:2px solid var(--ochre);border-bottom:0;background:transparent}
+.b.rep{background:var(--blood)}
+.b.miss{border:1.5px dashed var(--ink-soft);border-bottom:0;height:40px}
+.bv.true{color:var(--ochre)}.bv.rep{color:var(--blood)}.bv.miss{color:var(--ink-soft)}
+.xl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;text-align:center;font-size:.85rem;font-weight:600;margin-top:4px}
+.sub{font-size:.7rem;color:var(--ink-soft);display:block;text-align:center;margin-top:1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:12px;vertical-align:middle;margin-right:5px;border-radius:2px}
+h4{margin:16px 0 4px;font-family:var(--serif);font-weight:400;font-size:.95rem}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 0}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.summary{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-size:.9rem}
+.summary table{border-collapse:collapse;font-variant-numeric:tabular-nums;width:100%}
+.summary th,.summary td{text-align:right;padding:3px 6px;border-bottom:1px solid var(--grid)}
+.summary th:first-child,.summary td:first-child{text-align:left}
+.summary td{white-space:nowrap}
+.summary .bad{color:var(--blood);font-weight:700}
+pre{margin:12px 0 0;padding:12px;border-radius:10px;background:var(--paper-2);font:.8rem/1.45 var(--mono);overflow-x:auto;white-space:pre}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 3 · Worked example</p>
+  <h1>A join multiplies, then SUM adds the copies</h1>
+  <p class="lede">Join characters to items and to quests, then group by class. Each character&rsquo;s gold is counted once per joined row, which is m&#8321; &times; m&#8322; times.</p>
+</header>
+
+<section class="panel" aria-label="Join fan-out model">
+  <p class="caption" id="caption">The query is correct SQL. The numbers are wrong. Count the cells.</p>
+  <div class="modes">
+    <div class="seg" role="group" aria-label="Join type">
+      <button type="button" id="jInner" aria-pressed="true">Inner join</button>
+      <button type="button" id="jLeft" aria-pressed="false">Left join</button>
+    </div>
+    <label class="toggle" for="agg"><input id="agg" type="checkbox"> Aggregate first</label>
+    <button type="button" class="btn" id="sqlBtn" aria-expanded="false" aria-controls="sql">Show the SQL</button>
+  </div>
+  <pre id="sql" hidden></pre>
+
+  <div class="views" style="margin-top:12px">
+    <figure>
+      <figcaption>The joined rows<small>Each cell is one joined row, stamped with the gold value SUM will add. Change the item and quest counts per character.</small></figcaption>
+      <p class="counter">joined rows: <b id="nRows">0</b></p>
+      <div class="chars" id="chars"></div>
+    </figure>
+    <figure>
+      <figcaption>What the dashboard says<small>Per class. Outline = true value, filled = what the query reports.</small></figcaption>
+      <div id="goldChart"></div>
+      <h4>Item stacks and quests</h4>
+      <div id="cntChart"></div>
+      <div class="legend"><span><i style="border:2px solid var(--ochre)"></i>true</span><span><i style="background:var(--blood)"></i>reported</span><span><i style="border:1.5px dashed var(--ink-soft)"></i>class missing from result</span></div>
+      <div class="stats">
+        <div class="stat" style="--c:var(--blood)"><b id="wRep">&ndash;</b><span>world gold reported</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="wTrue">&ndash;</b><span>world gold true</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="wX">&ndash;</b><span>inflation</span></div>
+      </div>
+    </figure>
+  </div>
+  <div class="summary" aria-live="polite" id="summary"></div>
+</section>
+
+<footer>Model from DB201 week 3: an inner join yields m&#8321;(p) &times; m&#8322;(p) rows per character, a left join max(m&#8321;,1) &times; max(m&#8322;,1). Characters and numbers are invented. Shapes are generic; no game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const CLASSES=['mage','rogue','warrior'];
+const chars=[
+  {name:'Aria',cls:'warrior',gold:500,m1:3,m2:2},
+  {name:'Bram',cls:'mage',gold:300,m1:2,m2:4},
+  {name:'Cyra',cls:'rogue',gold:200,m1:0,m2:1},
+  {name:'Dax',cls:'mage',gold:0,m1:1,m2:0}];
+let left=false,agg=false,sqlOpen=false;
+
+function rowsOf(p){ if(agg)return 1; return left?Math.max(p.m1,1)*Math.max(p.m2,1):p.m1*p.m2; }
+function compute(){
+  const out={};CLASSES.forEach(c=>out[c]={present:false,gold:0,items:0,quests:0,tg:0,ti:0,tq:0,any:false});
+  let total=0,rep=0,tru=0;
+  chars.forEach(p=>{
+    const o=out[p.cls],r=rowsOf(p);total+=r;o.any=true;
+    o.tg+=p.gold;o.ti+=p.m1;o.tq+=p.m2;tru+=p.gold;
+    if(agg){o.present=true;o.gold+=p.gold;o.items+=p.m1;o.quests+=p.m2;rep+=p.gold;return;}
+    if(r>0)o.present=true;
+    o.gold+=p.gold*r;rep+=p.gold*r;
+    o.items+=p.m1*(left?Math.max(p.m2,1):p.m2);
+    o.quests+=p.m2*(left?Math.max(p.m1,1):p.m1);
+  });
+  return {out,total,rep,tru};
+}
+
+function buildChars(){
+  $('chars').innerHTML=chars.map((p,i)=>`
+  <div class="ch">
+    <div class="card">
+      <h3>${p.name}<small>${p.cls}</small></h3>
+      <div class="field"><span>gold</span><input class="gold" type="number" min="0" max="2000" step="50" value="${p.gold}" data-i="${i}" aria-label="${p.name} gold"></div>
+      <div class="field"><span>items m&#8321;</span>${stepper(i,'m1',p)}</div>
+      <div class="field"><span>quests m&#8322;</span>${stepper(i,'m2',p)}</div>
+    </div>
+    <div class="block" id="blk${i}"></div>
+  </div>`).join('');
+  $('chars').querySelectorAll('input.gold').forEach(el=>{
+    el.addEventListener('input',()=>{const v=+el.value;if(el.value!==''&&v>=0&&v<=2000){chars[+el.dataset.i].gold=v;update();}});
+    el.addEventListener('change',()=>{let v=Math.min(2000,Math.max(0,Math.round(+el.value)||0));el.value=v;chars[+el.dataset.i].gold=v;update();});
+  });
+  $('chars').querySelectorAll('.step').forEach(st=>{
+    const i=+st.dataset.i,k=st.dataset.k,inp=st.querySelector('input');
+    const set=v=>{v=Math.min(12,Math.max(0,Math.round(v)||0));chars[i][k]=v;inp.value=v;update();};
+    st.querySelector('.dec').addEventListener('click',()=>set(chars[i][k]-1));
+    st.querySelector('.inc').addEventListener('click',()=>set(chars[i][k]+1));
+    inp.addEventListener('input',()=>{if(inp.value!=='')set(+inp.value);});
+    inp.addEventListener('change',()=>set(+inp.value));
+  });
+}
+function stepper(i,k,p){const lab=k==='m1'?'items':'quests';
+  return `<span class="step" data-i="${i}" data-k="${k}"><button type="button" class="dec" aria-label="Fewer ${p.name} ${lab}">&minus;</button><input type="number" min="0" max="12" value="${p[k]}" id="${k}-${p.name}" aria-label="${p.name} ${lab}"><button type="button" class="inc" aria-label="More ${p.name} ${lab}">+</button></span>`;}
+
+function drawBlocks(){
+  chars.forEach((p,i)=>{
+    const el=$('blk'+i);
+    if(agg){
+      el.innerHTML=`<div class="meta">1 row after aggregating each child</div><div class="agg"><span class="h">gold</span><span class="h">n_items</span><span class="h">n_quests</span><span>${fmt(p.gold)}</span><span>${p.m1}</span><span>${p.m2}</span></div>`;return;
+    }
+    const inner0=!left&&(p.m1===0||p.m2===0);
+    if(inner0){el.innerHTML=`<div class="meta">${p.m1} &times; ${p.m2} = 0 rows</div><div class="dropped">dropped (inner join)</div>`;return;}
+    const cols=left?Math.max(p.m1,1):p.m1,rws=left?Math.max(p.m2,1):p.m2;
+    let cells='';
+    for(let r=0;r<rws;r++)for(let c=0;c<cols;c++){
+      const nullItem=p.m1===0,nullQuest=p.m2===0,isNull=nullItem||nullQuest;
+      const t=isNull?`${p.name}, gold ${p.gold}, ${nullItem?'item':'quest'} is NULL`:`${p.name}, gold ${p.gold}, item ${c+1}, quest ${r+1}`;
+      cells+=`<div class="cell${isNull?' null':''}" title="${t}">${fmt(p.gold)}</div>`;
+    }
+    el.innerHTML=`<div class="meta">${cols} item${cols>1?'s':''} &times; ${rws} quest${rws>1?'s':''} = <b>${cols*rws}</b> row${cols*rws>1?'s':''} &middot; gold counted ${fmt(p.gold*cols*rws)}</div><div class="cells" style="grid-template-columns:repeat(${cols},minmax(0,30px))" aria-hidden="true">${cells}</div>`;
+  });
+}
+
+function niceMax(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v);}
+function barChart(id,groups,H){
+  const vals=[];groups.forEach(g=>g.bars.forEach(b=>{if(!b.miss)vals.push(b.v);}));
+  const mx=niceMax(Math.max(...vals,1));
+  $(id).innerHTML=`<div class="chart" style="height:${H+24}px">`+groups.map(g=>`<div class="grpc">`+g.bars.map(b=>{
+    if(b.miss)return `<div class="bcol"><span class="bv miss" data-k="${b.key}">${b.short?'&ndash;':'missing'}</span><div class="b miss"></div>${b.sub?`<span class="sub">${b.sub}</span>`:''}</div>`;
+    const h=Math.max(2,Math.round(H*b.v/mx));
+    return `<div class="bcol"><span class="bv ${b.kind}" data-k="${b.key}">${fmt(b.v)}</span><div class="b ${b.kind}" style="height:${h}px"></div></div>`;
+  }).join('')+`</div>`).join('')+`</div><div class="xl">`+groups.map(g=>`<span>${g.label}${g.sub?`<span class="sub">${g.sub}</span>`:''}</span>`).join('')+`</div>`;
+}
+
+function sqlText(){
+  if(agg)return `SELECT c.class,
+       SUM(c.gold)           AS total_gold,
+       SUM(COALESCE(i.n, 0)) AS item_rows,
+       SUM(COALESCE(q.n, 0)) AS quest_rows
+FROM characters c
+LEFT JOIN (SELECT owner_id, COUNT(*) AS n
+           FROM items GROUP BY owner_id) i
+       ON i.owner_id = c.character_id
+LEFT JOIN (SELECT character_id, COUNT(*) AS n
+           FROM quest_completions GROUP BY character_id) q
+       ON q.character_id = c.character_id
+GROUP BY c.class
+ORDER BY c.class;`;
+  const j=left?'LEFT JOIN':'JOIN';
+  return `SELECT c.class, SUM(c.gold) AS total_gold,
+       COUNT(i.item_id) AS item_rows,
+       COUNT(q.quest_id) AS quest_rows
+FROM characters c
+${j} items i             ON i.owner_id = c.character_id
+${j} quest_completions q ON q.character_id = c.character_id
+GROUP BY c.class;`;
+}
+
+function update(){
+  const {out,total,rep,tru}=compute();
+  $('nRows').textContent=fmt(total);
+  drawBlocks();
+  barChart('goldChart',CLASSES.map(c=>({label:c,bars:[
+    {key:'gold-'+c+'-true',kind:'true',v:out[c].tg},
+    out[c].present?{key:'gold-'+c+'-rep',kind:'rep',v:out[c].gold}:{key:'gold-'+c+'-rep',miss:true}]})),150);
+  barChart('cntChart',CLASSES.map(c=>({label:c+(out[c].present?'':' (missing)'),sub:'items · quests',bars:[
+    {key:'items-'+c+'-true',kind:'true',v:out[c].ti},
+    out[c].present?{key:'items-'+c+'-rep',kind:'rep',v:out[c].items}:{key:'items-'+c+'-rep',miss:true,short:true},
+    {key:'quests-'+c+'-true',kind:'true',v:out[c].tq},
+    out[c].present?{key:'quests-'+c+'-rep',kind:'rep',v:out[c].quests}:{key:'quests-'+c+'-rep',miss:true,short:true}]})),80);
+  $('wRep').textContent=fmt(rep);$('wTrue').textContent=fmt(tru);
+  $('wX').textContent=tru>0?(rep/tru).toFixed(2).replace(/\.?0+$/,'')+'×':(rep>0?'∞':'1×');
+  const row=c=>{const o=out[c];const bad=!o.present||o.gold!==o.tg||o.items!==o.ti||o.quests!==o.tq;
+    return `<tr><td>${c}</td><td class="${bad?'bad':''}">${o.present?`${fmt(o.gold)} / ${o.items} / ${o.quests}`:'missing'}</td><td>${fmt(o.tg)} / ${o.ti} / ${o.tq}</td></tr>`;};
+  $('summary').innerHTML=`<p style="margin:0 0 6px">Joined rows: <b id="sumRows">${fmt(total)}</b>. ${agg?'Aggregate first, left join.':(left?'Left join, naive.':'Inner join, naive.')}</p>
+  <table><thead><tr><th>class</th><th>reported gold / items / quests</th><th>true</th></tr></thead><tbody id="sumBody">${CLASSES.map(row).join('')}</tbody></table>`;
+  $('caption').textContent=agg?'Aggregate first: each child is one row per character, so nothing multiplies and the filled bars match the outlines.'
+    :'The query is correct SQL. The numbers are wrong. Count the cells.';
+  $('jInner').setAttribute('aria-pressed',!left);$('jLeft').setAttribute('aria-pressed',left);
+  $('jInner').disabled=agg;$('jLeft').disabled=agg;
+  $('sql').textContent=sqlText();
+}
+
+$('jInner').addEventListener('click',()=>{left=false;update();});
+$('jLeft').addEventListener('click',()=>{left=true;update();});
+$('agg').addEventListener('change',e=>{agg=e.target.checked;update();});
+$('sqlBtn').addEventListener('click',()=>{sqlOpen=!sqlOpen;$('sql').hidden=!sqlOpen;$('sqlBtn').setAttribute('aria-expanded',sqlOpen);$('sqlBtn').textContent=sqlOpen?'Hide the SQL':'Show the SQL';});
+buildChars();update();
+})();
+</script>
+</body>
+</html>

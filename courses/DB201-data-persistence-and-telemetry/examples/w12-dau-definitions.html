@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>One log, four DAUs — DB201 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin:0 0 4px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.defs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 16px}
+@media (max-width:760px){.defs{grid-template-columns:repeat(2,1fr)}}
+.def{font:inherit;color:var(--ink);text-align:left;background:var(--paper-2);border:1.5px solid transparent;border-radius:10px;padding:10px 12px;cursor:pointer}
+.def[aria-pressed="true"]{border-color:var(--steel);box-shadow:inset 4px 0 0 var(--steel)}
+.def b{display:block;font-size:.95rem}
+.def small{display:block;color:var(--ink-soft);font-size:.8rem;line-height:1.3;min-height:2.1em}
+.def .big{display:block;font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums;margin-top:4px}
+.def .big span{font-size:.78rem;font-weight:600;color:var(--ink-soft)}
+.gridwrap{overflow-x:auto}
+table.log{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed;font-variant-numeric:tabular-nums}
+table.log th{font-size:.78rem;font-weight:600;color:var(--ink-soft);padding:2px 0;text-align:center}
+table.log th[scope=row]{text-align:left;color:var(--ink);font-size:.85rem;width:44px}
+table.log th.next,table.log td.next{opacity:.55}
+table.log td{height:40px;padding:0;text-align:center;font-size:.85rem;border-radius:var(--radius-sm);position:relative;overflow:hidden}
+table.log td.next{background:repeating-linear-gradient(135deg,transparent 0 5px,var(--grid) 5px 6px)}
+.cell{display:flex;align-items:center;justify-content:center;height:100%;border-radius:var(--radius-sm);font-weight:600;line-height:1.1}
+.cell.on{background:var(--steel);color:var(--paper)}
+.cell.off{border:1.5px dashed var(--ink-soft);color:var(--ink-soft)}
+.cell.slide{transform:translateX(calc(100% + 3px))}
+.cell.go{transition:transform .5s ease}
+.key{display:flex;flex-wrap:wrap;gap:14px;font-size:.82rem;color:var(--ink-soft);margin:8px 0 0}
+.key i{display:inline-block;width:16px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.bar{position:sticky;top:0;z-index:5;margin:14px -16px;padding:10px 16px;background:var(--paper);border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center}
+.bar .th{flex:1 1 220px;min-width:200px}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:600 .85rem var(--sans);padding:7px 12px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+@media (max-width:480px){.bar{gap:6px 10px;padding:8px 16px}.seg button{padding:6px 9px;font-size:.8rem}.bar .th{flex-basis:100%}}
+.seglbl{font-size:.78rem;color:var(--ink-soft);display:block;margin-bottom:2px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.lower{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start}
+@media (max-width:760px){.lower{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:240px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.why{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:.98rem}
+.why strong{font-family:var(--sans);font-variant-numeric:tabular-nums}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;border:1.5px dashed var(--ochre);font-family:var(--serif)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 12 · Worked example</p>
+  <h1>One session log, four DAUs</h1>
+  <p class="lede">Nothing below changes except the definition of &ldquo;active&rdquo;. Stickiness still ranges from 0.400 to 0.571, a bigger swing than most feature launches produce.</p>
+</header>
+
+<div class="defs" role="group" aria-label="Definition presets">
+  <button class="def" data-p="D1" aria-pressed="true"><b>D1 baseline</b><small>any session, UTC day, accounts</small><span class="big" id="s-D1"></span></button>
+  <button class="def" data-p="D2" aria-pressed="false"><b>D2 threshold 5</b><small>sessions of 5 min or more</small><span class="big" id="s-D2"></span></button>
+  <button class="def" data-p="D3" aria-pressed="false"><b>D3 local day</b><small>A4 counted in UTC&minus;8</small><span class="big" id="s-D3"></span></button>
+  <button class="def" data-p="D4" aria-pressed="false"><b>D4 people</b><small>A1 and A2 merge into P1</small><span class="big" id="s-D4"></span></button>
+</div>
+
+<section class="panel" aria-labelledby="gridh">
+  <h2 id="gridh">Session log</h2>
+  <p class="vh" id="gridsum"></p>
+  <div class="gridwrap">
+    <table class="log" id="log" aria-describedby="gridsum">
+      <caption class="vh">Minutes played per unit and day. Counted sessions are filled.</caption>
+      <thead><tr><th scope="col"><span class="vh">Unit</span></th><th scope="col">Mon</th><th scope="col">Tue</th><th scope="col">Wed</th><th scope="col">Thu</th><th scope="col">Fri</th><th scope="col">Sat</th><th scope="col">Sun</th><th scope="col" class="next">next Mon</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+  <div class="key"><span><i style="background:var(--steel)"></i>counted</span><span><i style="border:1.5px dashed var(--ink-soft)"></i>session below threshold or outside the week</span><span>numbers are minutes</span></div>
+
+  <div class="bar" role="group" aria-label="Definition of active">
+    <div class="th">
+      <label for="thr">Minimum session length <output id="oThr">1 min</output></label>
+      <input id="thr" type="range" min="1" max="30" step="1" value="1">
+    </div>
+    <div><span class="seglbl" id="lDay">Day boundary</span>
+      <div class="seg" role="group" aria-labelledby="lDay"><button id="bUtc" aria-pressed="true">UTC day</button><button id="bLoc" aria-pressed="false">local day</button></div></div>
+    <div><span class="seglbl" id="lUnit">Unit</span>
+      <div class="seg" role="group" aria-labelledby="lUnit"><button id="bAcc" aria-pressed="true">accounts</button><button id="bPpl" aria-pressed="false">people</button></div></div>
+  </div>
+
+  <div class="lower">
+    <figure>
+      <figcaption>DAU by day<small>Faint bars are D1, the baseline definition</small></figcaption>
+      <canvas id="cv" role="img" aria-label="Bar chart of DAU per day"></canvas>
+    </figure>
+    <div>
+      <div class="stats" aria-live="polite">
+        <div class="stat" style="--c:var(--steel)"><b id="rSum"></b><span>user-days (sum of DAU)</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rMean"></b><span>mean DAU</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rWau"></b><span>WAU</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rStick"></b><span>stickiness, sum &divide; (7 &times; WAU)</span></div>
+      </div>
+      <p class="stat" style="--c:var(--blood);margin:12px 0 0"><b id="rBusy" style="font-size:1.1rem"></b><span>busiest day</span></p>
+      <div class="why" id="why"></div>
+    </div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Hard-coded synthetic log from the lecture: six accounts, five people, one week. DAU[d] counts units with at least one counted session on day d. WAU counts units with any counted session Mon to Sun. Sessions on next Monday never count toward this week.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday','next Monday'];
+const SHORT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const ACC=[
+ {id:'A1',p:'P1',sh:0,s:[[0,45],[1,30],[3,60],[5,90],[6,40]]},
+ {id:'A2',p:'P1',sh:0,s:[[0,3],[2,20],[5,15]]},
+ {id:'A3',p:'P2',sh:0,s:[[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2]]},
+ {id:'A4',p:'P3',sh:-1,s:[[1,50],[2,50],[4,70],[5,80],[7,60]]},
+ {id:'A5',p:'P4',sh:0,s:[[5,120],[6,150]]},
+ {id:'A6',p:'P5',sh:0,s:[[2,25]]}];
+const PRE={D1:{t:1,l:false,p:false},D2:{t:5,l:false,p:false},D3:{t:1,l:true,p:false},D4:{t:1,l:false,p:true}};
+let st={t:1,l:false,p:false},prevLocal=false;
+
+// units: [{name, sessions:[{day,min,shifted}]}]
+function units(s){
+  const out=[],map={};
+  ACC.forEach(a=>{
+    const key=s.p?a.p:a.id;
+    if(!map[key]){map[key]={name:key,src:[],ses:[]};out.push(map[key]);}
+    map[key].src.push(a.id);
+    a.s.forEach(([d,m])=>map[key].ses.push({day:d+(s.l?a.sh:0),min:m,shifted:s.l&&a.sh!==0}));
+  });
+  return out;
+}
+function counted(x,t){return x.min>=t&&x.day>=0&&x.day<=6;}
+function metrics(s){
+  const U=units(s),dau=[0,0,0,0,0,0,0];let wau=0;
+  U.forEach(u=>{
+    const days=new Set(u.ses.filter(x=>counted(x,s.t)).map(x=>x.day));
+    days.forEach(d=>dau[d]++);if(days.size)wau++;
+  });
+  const sum=dau.reduce((a,b)=>a+b,0);
+  return {dau,sum,mean:sum/7,wau,stick:wau?sum/(7*wau):0,U};
+}
+const base=metrics(PRE.D1);
+const f2=n=>n.toFixed(2),f3=n=>n.toFixed(3);
+
+function renderGrid(m){
+  const rows=m.U.map(u=>{
+    let cells='';
+    for(let d=0;d<8;d++){
+      const here=u.ses.filter(x=>x.day===d);
+      const nx=d===7?' class="next"':'';
+      if(!here.length){cells+=`<td${nx} aria-label="${u.name}, ${DAYS[d]}, no session"></td>`;continue;}
+      const on=here.some(x=>counted(x,st.t));
+      const mins=here.map(x=>x.min);
+      const sh=here.some(x=>x.shifted);
+      const lbl=`${u.name}, ${DAYS[d]}, ${mins.length>1?'sessions of '+mins.join(' and ')+' minutes':mins[0]+' minutes'}, ${on?'counted':'not counted'}`;
+      cells+=`<td${nx} aria-label="${lbl}"><span class="cell ${on?'on':'off'}${sh?' sh':''}" aria-hidden="true">${mins.join('<br>')}</span></td>`;
+    }
+    const title=u.src.length>1?`<span title="${u.src.join(' + ')}">${u.name}</span>`:u.name;
+    return `<tr><th scope="row">${title}${u.src.length>1?`<br><small style="color:var(--ink-soft);font-weight:400">${u.src.join('+')}</small>`:''}</th>${cells}</tr>`;
+  });
+  $('tb').innerHTML=rows.join('');
+  // A4 entering local mode: slide its cells one column left
+  if(st.l&&!prevLocal&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const els=[...document.querySelectorAll('.cell.sh')];
+    els.forEach(e=>e.classList.add('slide'));
+    requestAnimationFrame(()=>requestAnimationFrame(()=>els.forEach(e=>{e.classList.add('go');e.classList.remove('slide');})));
+  }
+  prevLocal=st.l;
+  $('gridsum').textContent=`${m.U.length} ${st.p?'people':'accounts'}, threshold ${st.t} minutes, ${st.l?'local':'UTC'} day boundary.`;
+}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.height};}
+function drawChart(m){
+  const {g,w,h}=setupCanvas($('cv')),pad={l:30,r:8,t:18,b:26},yMax=6;
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  const ph=h-pad.t-pad.b,pw=w-pad.l-pad.r,slot=pw/7,bw=Math.min(46,slot*.62);
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=yMax;i+=2){const y=pad.t+ph*(1-i/yMax);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(i,pad.l-6,y);}
+  for(let d=0;d<7;d++){
+    const cx=pad.l+slot*(d+.5);
+    // ghost D1
+    const gh=ph*base.dau[d]/yMax;
+    g.globalAlpha=.22;g.fillStyle=css('--ink');g.fillRect(cx-bw/2-4,pad.t+ph-gh,bw+8,gh);g.globalAlpha=1;
+    const bh=ph*m.dau[d]/yMax;
+    g.fillStyle=css('--steel');g.fillRect(cx-bw/2,pad.t+ph-bh,bw,bh);
+    g.fillStyle=css('--ink');g.textAlign='center';g.textBaseline='bottom';g.font='600 13px '+css('--sans');
+    g.fillText(m.dau[d],cx,pad.t+ph-Math.max(bh,gh)-2);
+    g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.textBaseline='top';g.fillText(SHORT[d],cx,h-pad.b+6);
+  }
+  $('cv').setAttribute('aria-label','DAU per day: '+m.dau.map((v,i)=>SHORT[i]+' '+v).join(', ')+'. D1 baseline: '+base.dau.join(', ')+'.');
+}
+
+function render(){
+  const m=metrics(st);
+  renderGrid(m);drawChart(m);
+  $('oThr').textContent=st.t+' min';
+  $('rSum').textContent=m.sum;$('rMean').textContent=f2(m.mean);$('rWau').textContent=m.wau;$('rStick').textContent=f3(m.stick);
+  const mx=Math.max(...m.dau);$('rBusy').textContent=mx?m.dau.map((v,i)=>v===mx?SHORT[i]:null).filter(Boolean).join(', ')+' ('+mx+')':'none';
+  const unit=st.p?'people':'accounts',u1=st.p?'person':'account';
+  $('why').innerHTML=`Sum of DAU = <strong>${m.sum} user-days</strong>, WAU = <strong>${m.wau} ${m.wau===1?u1:unit}</strong>. A player active on k days is counted k times in the sum and once in WAU, so adding daily numbers never gives you weekly users.`;
+  $('bUtc').setAttribute('aria-pressed',!st.l);$('bLoc').setAttribute('aria-pressed',st.l);
+  $('bAcc').setAttribute('aria-pressed',!st.p);$('bPpl').setAttribute('aria-pressed',st.p);
+  $('thr').value=st.t;
+  let match=null;for(const k in PRE){const p=PRE[k];if(p.t===st.t&&p.l===st.l&&p.p===st.p)match=k;}
+  document.querySelectorAll('.def').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===match));
+  const dS=m.sum-base.sum,dSt=m.stick-base.stick;
+  $('insight').innerHTML=match==='D1'?`This is the baseline. Try D2: a 5-minute threshold removes A3&rsquo;s 2-minute logins and drops stickiness from 0.524 to 0.400, with no player behaving differently.`
+    :`Compared with D1, user-days moved by <b>${dS>0?'+':''}${dS}</b> and stickiness by <b>${dSt>0?'+':''}${f3(dSt)}</b> (${f3(base.stick)} &rarr; ${f3(m.stick)}). ${Math.sign(dS)!==Math.sign(dSt)&&dS!==0&&Math.abs(dSt)>.0005?'They moved in opposite directions. ':''}The log is identical. Write the definition next to every chart.`;
+}
+// preset summary cards
+for(const k in PRE){const m=metrics(PRE[k]);$('s-'+k).innerHTML=`${f3(m.stick)} <span>stickiness</span>`;$('s-'+k).parentElement.setAttribute('aria-label',`${k}: stickiness ${f3(m.stick)}, mean DAU ${f2(m.mean)}, WAU ${m.wau}`);}
+
+$('thr').addEventListener('input',e=>{st.t=+e.target.value;render();});
+$('bUtc').onclick=()=>{st.l=false;render();};$('bLoc').onclick=()=>{st.l=true;render();};
+$('bAcc').onclick=()=>{st.p=false;render();};$('bPpl').onclick=()=>{st.p=true;render();};
+document.querySelectorAll('.def').forEach(b=>b.addEventListener('click',()=>{st=Object.assign({},PRE[b.dataset.p]);render();}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>drawChart(metrics(st)),60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>drawChart(metrics(st)));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>drawChart(metrics(st)));
+window.__dau=()=>metrics(st);
+render();
+})();
+</script>
+</body>
+</html>

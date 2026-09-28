@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RPO and RTO timeline — DB201 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{font:600 .84rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.sm{padding:3px 8px;font-size:.78rem}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 18px}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,1fr)}}
+.controls .wide{grid-column:span 2}
+@media (max-width:600px){.controls .wide{grid-column:1/-1}.controls label:not(.check){flex-direction:column;gap:0}}
+label{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+.check{display:inline-flex;align-items:center;gap:8px;justify-content:flex-start}
+.check input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:2px 0 0;font-variant-numeric:tabular-nums}
+.snaps{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.span-toggle{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.span-toggle button{font:600 .8rem var(--sans);padding:5px 11px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.span-toggle button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+#tl{display:block;width:100%;height:190px;touch-action:none;cursor:ew-resize}
+.segs{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;margin:6px 0 0;font-variant-numeric:tabular-nums}
+.segs svg{vertical-align:-2px;margin-right:5px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+.charts canvas{display:block;width:100%;height:240px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;border:1.5px dashed var(--ochre);font-family:var(--serif)}
+.table-wrap{margin-top:16px;overflow-x:auto}
+td{white-space:nowrap}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+caption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:600px){table{font-size:.78rem}th,td{padding:5px 4px}td:first-child{white-space:normal;min-width:90px}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 14 · Worked example</p>
+  <h1>Two knobs, two numbers</h1>
+  <p class="lede">The log archive interval sets how much data a failure loses (RPO). The base backup interval sets how long recovery takes (RTO). Move one knob and only its own number moves.</p>
+</header>
+
+<section class="panel" aria-label="Backup and recovery model">
+  <div class="presets" role="group" aria-label="Backup setups">
+    <button class="chip" data-p="nightly">Nightly full only</button>
+    <button class="chip" data-p="hourly">Hourly snapshot only</button>
+    <button class="chip" data-p="weekly">Weekly base + WAL</button>
+    <button class="chip" data-p="daily">Daily base + WAL</button>
+    <button class="chip" data-p="six">6-hourly base + WAL</button>
+  </div>
+  <div class="controls">
+    <div><label for="sIb"><span>Base interval I<sub>base</sub></span> <output id="oIb"></output></label><input id="sIb" type="range" min="0" max="1000"></div>
+    <div class="wide">
+      <label for="sIa"><span class="check"><input type="checkbox" id="arch" aria-label="WAL archiving on"><span>WAL archiving on, I<sub>arch</sub></span></span> <output id="oIa"></output></label>
+      <input id="sIa" type="range" min="0" max="1000">
+      <div class="snaps" role="group" aria-label="Snap archive interval to"><button class="chip sm" data-a="1">1 s</button><button class="chip sm" data-a="5">5 s</button><button class="chip sm" data-a="60">60 s</button><button class="chip sm" data-a="300">5 min</button><button class="chip sm" data-a="3600">1 h</button></div>
+      <p class="hint" id="hIa"></p>
+    </div>
+    <div><label for="sP">Players online P <output id="oP"></output></label><input id="sP" type="range" min="0" max="1000"></div>
+    <div><label for="sS">Database size S <output id="oS"></output></label><input id="sS" type="range" min="0" max="1000"></div>
+    <div><label for="sB">Restore throughput B <output id="oB"></output></label><input id="sB" type="range" min="0" max="1000"></div>
+    <div><label for="sw">WAL rate w <output id="ow"></output></label><input id="sw" type="range" min="0" max="1000"></div>
+    <div><label for="sr">Replay rate r <output id="or"></output></label><input id="sr" type="range" min="0" max="1000"></div>
+    <div><label for="sDet">Detection <output id="oDet"></output></label><input id="sDet" type="range" min="0" max="120" step="1"></div>
+    <div><label for="sVer">Verification <output id="oVer"></output></label><input id="sVer" type="range" min="0" max="120" step="1"></div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rRpo"></b><span>RPO worst (average <span id="rRpoAvg"></span>)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rRto"></b><span>RTO worst</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rHere"></b><span>RTO for the failure at the marker</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rPh"></b><span>player-hours lost at marker (average <span id="rPhAvg"></span>)</span></div>
+  </div>
+
+  <figure>
+    <figcaption><span>Timeline<small>Drag the red failure marker, or focus it and use arrow keys (15 min; Shift for 1 min)</small></span>
+      <span class="span-toggle" role="group" aria-label="Timeline span"><button id="sp24" aria-pressed="true">24 h</button><button id="sp168" aria-pressed="false">7 days</button></span></figcaption>
+    <canvas id="tl" tabindex="0" role="slider" aria-label="Failure time" aria-valuemin="0"></canvas>
+    <div class="segs" id="segs"></div>
+  </figure>
+
+  <div class="charts">
+    <figure>
+      <figcaption><span>RPO worst against I<sub>arch</sub><small>Log axes. Only the archive interval moves this dot.</small></span></figcaption>
+      <canvas id="cRpo" role="img"></canvas>
+    </figure>
+    <figure>
+      <figcaption><span>RTO worst against I<sub>base</sub><small>Log x. Only the base interval moves this dot.</small></span></figcaption>
+      <canvas id="cRto" role="img"></canvas>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Results for each setup<small>All rows use the current size, rates, detection, verification, players and marker time. The bold row is your current setup.</small></caption>
+      <thead><tr><th scope="col">Setup</th><th scope="col">RPO worst</th><th scope="col">RPO avg</th><th scope="col">RTO worst</th><th scope="col">RTO at marker</th><th scope="col">Player-hours lost at marker</th><th scope="col">Archive per idle day</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the lecture. Copy time is S &times; 1000 / B seconds. With WAL archiving, a restore copies the last base backup, then replays the log written since it at rate r. Without archiving, you restore the last snapshot and lose everything after it. An idle server still ships one 16 MB WAL segment per archive interval, which sets the archive storage floor.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const comma=n=>Math.round(n).toLocaleString('en-US');
+const strip=s=>s.includes('.')?s.replace(/\.?0+$/,''):s;
+const sig2=v=>+v.toPrecision(2);
+function logS(el,min,max,round){return{get:()=>round(min*Math.pow(max/min,+el.value/1000)),set:v=>{el.value=Math.round(1000*Math.log(v/min)/Math.log(max/min));}};}
+function hrs(h){return h.toFixed(2)+' h';}
+function dur(s){ // seconds -> readable
+  if(s<120)return strip(s.toFixed(1))+' s';
+  if(s<3600)return strip((s/60).toFixed(1))+' min';
+  return strip((s/3600).toFixed(2))+' h';
+}
+function mins(h){return comma(h*60)+' min';}
+function gb(x){const d=x>=100?1:2;return x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})+' GB';}
+
+const S={S:400,B:250,w:10,r:100,Ib:24,arch:true,Ia:60,det:15,ver:15,P:8000,tf:23,span:24,spanAuto:true};
+const PRE={nightly:{arch:false,Ib:24},hourly:{arch:false,Ib:1},weekly:{arch:true,Ib:168,Ia:60},daily:{arch:true,Ib:24,Ia:60},six:{arch:true,Ib:6,Ia:60}};
+const PNAME={nightly:'Nightly full only',hourly:'Hourly snapshot only',weekly:'Weekly base + WAL',daily:'Daily base + WAL',six:'6-hourly base + WAL'};
+const L={Ib:logS($('sIb'),1,168,v=>v<10?+v.toFixed(1):Math.round(v)),Ia:logS($('sIa'),1,3600,v=>v<10?+v.toFixed(1):Math.round(v)),
+  P:logS($('sP'),100,100000,sig2),S:logS($('sS'),10,10000,sig2),B:logS($('sB'),25,2000,sig2),w:logS($('sw'),0.5,100,sig2),r:logS($('sr'),10,1000,sig2)};
+function syncSliders(){for(const k in L)L[k].set(S[k]);$('sDet').value=S.det;$('sVer').value=S.ver;$('arch').checked=S.arch;}
+
+// model; cfg overrides arch/Ib/Ia
+function model(c){
+  c=Object.assign({},S,c||{});
+  const tcopy=c.S*1000/c.B/3600,det=c.det/60,ver=c.ver/60;
+  const rpoW=c.arch?c.Ia/3600:c.Ib, rpoA=rpoW/2;
+  const repW=c.arch?c.w*c.Ib/c.r:0;
+  const rtoW=det+tcopy+repW+ver;
+  // strictly-before semantics: a failure exactly on a tick has not shipped that tick yet
+  const lastBase=(Math.ceil(c.tf/c.Ib-1e-9)-1)*c.Ib, delta=c.tf-lastBase;
+  const tfs=c.tf*3600, lastArchS=(Math.ceil(tfs/c.Ia-1e-9)-1)*c.Ia;
+  const loss=c.arch?(tfs-lastArchS)/3600:delta;
+  const rep=c.arch?c.w*delta/c.r:0;
+  const here=det+tcopy+rep+ver;
+  return {tcopy,det,ver,rpoW,rpoA,repW,rtoW,lastBase,delta,loss,rep,here,restorable:c.tf-loss,
+    ph:c.P*loss,phAvg:c.P*rpoA,archDay:c.arch?86400/c.Ia*16/1000:null};
+}
+function presetMarker(Ib,span){const n=Math.max(1,Math.floor(span/Ib+1e-9));return Math.round(((n-1)*Ib+Ib*23/24)*60)/60;}
+function autoSpan(){if(S.spanAuto)S.span=S.Ib>24?168:24;S.tf=Math.min(Math.max(S.tf,1/60),S.span);}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.height};}
+function pattern(g,kind,color){
+  const p=document.createElement('canvas');p.width=p.height=8;const x=p.getContext('2d');
+  x.strokeStyle=color;x.fillStyle=color;x.lineWidth=1.5;
+  if(kind==='hatch'){x.beginPath();x.moveTo(0,8);x.lineTo(8,0);x.moveTo(-2,2);x.lineTo(2,-2);x.moveTo(6,10);x.lineTo(10,6);x.stroke();}
+  else if(kind==='dots'){x.globalAlpha=.35;x.fillRect(0,0,8,8);x.globalAlpha=1;x.beginPath();x.arc(4,4,1.6,0,7);x.fill();}
+  else if(kind==='cross'){x.globalAlpha=.3;x.fillRect(0,0,8,8);x.globalAlpha=1;x.beginPath();x.moveTo(0,4);x.lineTo(8,4);x.moveTo(4,0);x.lineTo(4,8);x.stroke();}
+  else {x.fillRect(0,0,8,8);}
+  return g.createPattern(p,'repeat');
+}
+const SEG=[['detect','hatch','--ink-soft'],['copy','solid','--steel'],['replay','dots','--ochre'],['verify','cross','--moss']];
+
+let geo=null;
+function drawTimeline(m){
+  const c=$('tl'),{g,w,h}=setupCanvas(c);g.clearRect(0,0,w,h);
+  const pl=22,pr=26,domain=S.span+Math.max(m.rtoW,S.span*0.08);
+  const X=t=>pl+(w-pl-pr)*t/domain;
+  geo={X,domain,pl,pr,w};
+  const yLog=70,yRec=128,font=css('--sans');
+  // window background and axis
+  g.fillStyle=css('--paper');g.fillRect(X(0),yLog-34,X(S.span)-X(0),50);
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(X(0),yLog);g.lineTo(X(S.span),yLog);g.stroke();
+  g.setLineDash([3,4]);g.globalAlpha=.5;g.beginPath();g.moveTo(X(S.span),yLog);g.lineTo(X(domain),yLog);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // hour labels
+  g.font='11px '+font;g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  const step=S.span===24?(w<500?6:3):24;
+  for(let t=0;t<=domain+1e-9;t+=step){const x=X(t);g.fillStyle=css('--ink-soft');g.fillRect(x-.5,yLog+2,1,4);
+    const lab=S.span===24?String(t%24).padStart(2,'0')+':00'+(t>=24?'+1':''):(t<S.span+1e-9?'day '+(t/24+1):'+'+(t-S.span)+' h');
+    if(t<=S.span||S.span===24)g.fillText(lab,x,yLog+8);}
+  // archive ticks
+  if(S.arch){
+    const n=S.span*3600/S.Ia,px=(X(S.span)-X(0))/n;
+    g.strokeStyle=css('--steel');g.lineWidth=1;
+    if(px>=2){g.beginPath();for(let i=0;i<=n;i++){const x=X(i*S.Ia/3600);g.moveTo(x,yLog);g.lineTo(x,yLog-9);}g.stroke();}
+    else{const every=Math.ceil(2/px);g.globalAlpha=.55;g.beginPath();for(let i=0;i<=n;i+=every){const x=X(i*S.Ia/3600);g.moveTo(x,yLog);g.lineTo(x,yLog-9);}g.stroke();g.globalAlpha=1;}
+  }
+  // base ticks
+  g.strokeStyle=css('--ink');g.lineWidth=3;
+  for(let t=0;t<=S.span+1e-9;t+=S.Ib){const x=X(t);g.beginPath();g.moveTo(x,yLog+1);g.lineTo(x,yLog-30);g.stroke();}
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='bottom';g.font='600 11px '+font;
+  g.fillText('base',X(m.lastBase)+4,yLog-22);
+  // lost block
+  const xa=X(m.restorable),xf=X(S.tf);
+  g.fillStyle=pattern(g,'hatch',css('--blood'));g.fillRect(xa,yLog-26,Math.max(2,xf-xa),26);
+  g.strokeStyle=css('--blood');g.lineWidth=1;g.strokeRect(xa,yLog-26,Math.max(2,xf-xa),26);
+  // failure marker
+  g.strokeStyle=css('--blood');g.lineWidth=2.5;g.beginPath();g.moveTo(xf,yLog-40);g.lineTo(xf,yRec+22);g.stroke();
+  g.fillStyle=css('--blood');g.beginPath();g.moveTo(xf-7,yLog-48);g.lineTo(xf+7,yLog-48);g.lineTo(xf,yLog-38);g.closePath();g.fill();
+  const lostTxt='lost '+dur(m.loss*3600);
+  g.font='600 12px '+font;g.textBaseline='bottom';
+  const tw=g.measureText(lostTxt).width;
+  g.textAlign=xf-tw-10>pl?'right':'left';g.fillText(lostTxt,g.textAlign==='right'?xf-10:xf+10,yLog-34);
+  // recovery bar
+  const parts=[m.det,m.tcopy,m.rep,m.ver];let t0=S.tf;
+  parts.forEach((d,i)=>{const x0=X(t0),x1=X(t0+d);
+    g.fillStyle=pattern(g,SEG[i][1],css(SEG[i][2]));g.fillRect(x0,yRec,Math.max(0,x1-x0),20);
+    if(x1-x0>1){g.strokeStyle=css(SEG[i][2]);g.lineWidth=1;g.strokeRect(x0,yRec,x1-x0,20);}
+    const lbl=mins(d);g.font='600 11px '+font;
+    if(x1-x0>g.measureText(lbl).width+8&&SEG[i][1]==='solid'){g.fillStyle=css('--paper');g.textAlign='center';g.textBaseline='middle';g.fillText(lbl,(x0+x1)/2,yRec+10);}
+    t0+=d;});
+  g.fillStyle=css('--ink');g.font='600 12px '+font;g.textBaseline='top';
+  const rt='back online after '+hrs(m.here);const rw=g.measureText(rt).width;
+  const xe=X(t0);g.textAlign=xe+rw+6>w?'right':'left';g.fillText(rt,g.textAlign==='right'?Math.min(w-2,xe):xe+6,yRec+26);
+  g.fillStyle=css('--ink-soft');g.font='11px '+font;g.textAlign='left';g.textBaseline='bottom';
+  g.fillText('recovery',pl,yRec-2);
+  const hh=Math.floor(S.tf%24),mm=Math.round((S.tf*60)%60);
+  c.setAttribute('aria-valuemax',Math.round(S.span*60));c.setAttribute('aria-valuenow',Math.round(S.tf*60));
+  c.setAttribute('aria-valuetext',`Failure at ${S.span===24?'':'day '+(Math.floor(S.tf/24)+1)+' '}${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}, ${strip(m.delta.toFixed(2))} h after the last base backup. Data lost ${dur(m.loss*3600)}. Recovery ${hrs(m.here)}.`);
+}
+function segLegend(m){
+  const sw=(k,c)=>{const pats={hatch:'<path d="M0 12L12 0M-3 3L3 -3M9 15L15 9" stroke="'+c+'" stroke-width="1.5"/>',solid:'<rect width="12" height="12" fill="'+c+'"/>',dots:'<rect width="12" height="12" fill="'+c+'" opacity=".35"/><circle cx="6" cy="6" r="2" fill="'+c+'"/>',cross:'<rect width="12" height="12" fill="'+c+'" opacity=".3"/><path d="M0 6H12M6 0V12" stroke="'+c+'" stroke-width="1.5"/>'};return `<svg width="12" height="12" aria-hidden="true">${pats[k]}</svg>`;};
+  const v=[m.det,m.tcopy,m.rep,m.ver];
+  $('segs').innerHTML=SEG.map((s,i)=>`<span>${sw(s[1],css(s[2]))}${s[0]} ${mins(v[i])}</span>`).join('')+
+    `<span><svg width="12" height="12" aria-hidden="true"><path d="M0 12L12 0M-3 3L3 -3M9 15L15 9" stroke="${css('--blood')}" stroke-width="1.5"/></svg>data lost ${dur(m.loss*3600)}</span><span><b>RTO here ${hrs(m.here)}</b></span>`;
+}
+const cp={l:52,r:14,t:14,b:34};
+function logAxisX(g,w,h,min,max,ticks,fmt){
+  const X=v=>cp.l+(w-cp.l-cp.r)*Math.log(v/min)/Math.log(max/min);
+  g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  ticks.forEach(t=>{const x=X(t);g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(x,cp.t);g.lineTo(x,h-cp.b);g.stroke();g.fillText(fmt(t),x,h-cp.b+6);});
+  return X;
+}
+function dot(g,x,y,col){g.fillStyle=col;g.beginPath();g.arc(x,y,6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+function drawRpo(m){
+  const {g,w,h}=setupCanvas($('cRpo'));g.clearRect(0,0,w,h);
+  const X=logAxisX(g,w,h,1,3600,[1,10,60,600,3600],v=>dur(v).replace(' ',''));
+  const ymin=1,ymax=604800,Y=v=>cp.t+(h-cp.t-cp.b)*(1-Math.log(v/ymin)/Math.log(ymax/ymin));
+  g.textAlign='right';g.textBaseline='middle';
+  [[1,'1s'],[60,'1min'],[3600,'1h'],[86400,'1d'],[604800,'7d']].forEach(([v,l])=>{const y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(cp.l,y);g.lineTo(w-cp.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.fillText(l,cp.l-6,y);});
+  // archiving on: RPO = I_arch for every I_base
+  g.strokeStyle=css('--blood');g.lineWidth=2.5;g.setLineDash(S.arch?[]:[6,4]);g.globalAlpha=S.arch?1:.5;g.beginPath();g.moveTo(X(1),Y(1));g.lineTo(X(3600),Y(3600));g.stroke();g.globalAlpha=1;g.setLineDash([]);
+  // archiving off: flat at I_base
+  const yb=Y(S.Ib*3600);g.strokeStyle=css('--ink-soft');g.lineWidth=2;g.setLineDash(S.arch?[6,4]:[]);g.beginPath();g.moveTo(X(1),yb);g.lineTo(X(3600),yb);g.stroke();g.setLineDash([]);
+  g.font='600 11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillStyle=css('--ink-soft');g.fillText(`archiving off: RPO = I_base = ${dur(S.Ib*3600)}`,cp.l+6,yb-4);
+  g.fillStyle=css('--blood');g.textAlign='right';g.textBaseline='bottom';g.fillText('archiving on: RPO = I_arch,',w-cp.r-4,h-cp.b-22);g.fillText('same for every I_base',w-cp.r-4,h-cp.b-8);
+  g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='bottom';g.font='11px '+css('--sans');g.fillText('I_arch',w-cp.r,h-2);
+  dot(g,X(S.Ia),Y(m.rpoW*3600),css('--blood'));
+  $('cRpo').setAttribute('aria-label',`RPO worst is ${dur(m.rpoW*3600)} at an archive interval of ${dur(S.Ia)}. ${S.arch?'Archiving is on, so the base interval has no effect.':'Archiving is off, so RPO equals the base interval.'}`);
+}
+function drawRto(m){
+  const {g,w,h}=setupCanvas($('cRto'));g.clearRect(0,0,w,h);
+  const X=logAxisX(g,w,h,1,168,[1,6,24,168],v=>v+'h');
+  const f=(Ib,arch)=>model({Ib,arch}).rtoW;
+  const raw=Math.max(f(168,true),f(168,false)),mag=Math.pow(10,Math.floor(Math.log10(raw))),ymax=[1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*mag).find(v=>v>=raw*1.05);
+  const Y=v=>cp.t+(h-cp.t-cp.b)*(1-v/ymax);
+  g.textAlign='right';g.textBaseline='middle';
+  for(let i=0;i<=4;i++){const v=ymax*i/4,y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(cp.l,y);g.lineTo(w-cp.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.fillText(strip(v.toPrecision(3))+'h',cp.l-6,y);}
+  [[true,S.arch],[false,!S.arch]].forEach(([arch,cur])=>{
+    g.strokeStyle=css('--steel');g.lineWidth=2.5;g.globalAlpha=cur?1:.45;g.setLineDash(arch?[]:[6,4]);g.beginPath();
+    for(let i=0;i<=120;i++){const Ib=Math.pow(168,i/120),x=X(Ib),y=Y(f(Ib,arch));i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();g.setLineDash([]);g.globalAlpha=1;});
+  g.font='600 11px '+css('--sans');g.fillStyle=css('--steel');g.textAlign='right';g.textBaseline='bottom';
+  g.textAlign='left';g.textBaseline='top';g.fillText('with WAL: copy + replay',cp.l+6,cp.t+4);g.textAlign='right';
+  g.textBaseline='bottom';g.fillText('snapshot only: copy',w-cp.r-4,Y(f(168,false))-4);
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.fillText('I_base',w-cp.r,h-2);
+  dot(g,X(S.Ib),Y(m.rtoW),css('--steel'));
+  $('cRto').setAttribute('aria-label',`RTO worst is ${hrs(m.rtoW)} at a base interval of ${dur(S.Ib*3600)}.`);
+}
+
+function render(){
+  autoSpan();
+  const m=model();
+  $('oIb').textContent=dur(S.Ib*3600);$('oIa').textContent=S.arch?dur(S.Ia):'off';
+  $('sIa').disabled=!S.arch;
+  $('hIa').textContent=S.arch?`Archive storage per idle day: ${comma(86400/S.Ia)} segments × 16 MB = ${gb(m.archDay)}`:'Archiving off: you can only restore to the last base snapshot.';
+  $('oP').textContent=comma(S.P);$('oS').textContent=S.S>=1000?strip((S.S/1000).toFixed(2))+' TB':comma(S.S)+' GB';
+  $('oB').textContent=comma(S.B)+' MB/s';$('ow').textContent=strip(String(S.w))+' GB/h';$('or').textContent=comma(S.r)+' GB/h';
+  $('oDet').textContent=S.det+' min';$('oVer').textContent=S.ver+' min';
+  $('rRpo').textContent=dur(m.rpoW*3600);$('rRpoAvg').textContent=dur(m.rpoA*3600);
+  $('rRto').textContent=hrs(m.rtoW);$('rHere').textContent=hrs(m.here);
+  $('rPh').textContent=comma(m.ph);$('rPhAvg').textContent=comma(m.phAvg);
+  let match=null;for(const k in PRE){const p=PRE[k];if(p.arch===S.arch&&p.Ib===S.Ib&&(!p.arch||p.Ia===S.Ia))match=k;}
+  document.querySelectorAll('.presets .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===match));
+  document.querySelectorAll('.snaps .chip').forEach(b=>b.setAttribute('aria-pressed',S.arch&&+b.dataset.a===S.Ia));
+  $('sp24').setAttribute('aria-pressed',S.span===24);$('sp168').setAttribute('aria-pressed',S.span===168);
+  drawTimeline(m);segLegend(m);drawRpo(m);drawRto(m);
+  $('insight').innerHTML=S.arch
+    ?`Copying ${$('oS').textContent} takes ${m.tcopy.toFixed(3)} h. Replaying up to ${(S.w*S.Ib).toLocaleString('en-US',{maximumFractionDigits:1})} GB of log adds up to ${hrs(m.repW)}, so RTO worst is <b>${hrs(m.rtoW)}</b>. RPO worst stays at <b>${dur(m.rpoW*3600)}</b> whatever the base interval. Try the weekly and 6-hourly presets and watch only RTO change.`
+    :`Without log archiving, RPO equals the snapshot interval: <b>${dur(m.rpoW*3600)}</b> worst, ${dur(m.rpoA*3600)} on average, or ${comma(m.phAvg)} player-hours of progress lost on an average failure. Recovery is fast (${hrs(m.rtoW)}, of which copying takes ${m.tcopy.toFixed(3)} h) because there is nothing to replay.`;
+  const rows=Object.keys(PRE).map(k=>[PNAME[k],model(PRE[k]),k===match]);
+  if(!match)rows.push(['Your settings',m,true]);
+  $('tb').innerHTML=rows.map(([n,x,here])=>`<tr class="${here?'here':''}"><td>${n}</td><td>${dur(x.rpoW*3600)}</td><td>${dur(x.rpoA*3600)}</td><td>${hrs(x.rtoW)}</td><td>${hrs(x.here)}</td><td>${comma(x.ph)}</td><td>${x.archDay==null?'—':gb(x.archDay)}</td></tr>`).join('');
+}
+
+// events
+function bindLog(k,id){$(id).addEventListener('input',()=>{S[k]=L[k].get();render();});}
+bindLog('S','sS');bindLog('B','sB');bindLog('w','sw');bindLog('r','sr');bindLog('P','sP');bindLog('Ia','sIa');
+$('sIb').addEventListener('input',()=>{S.Ib=L.Ib.get();S.spanAuto=true;render();});
+$('sDet').addEventListener('input',e=>{S.det=+e.target.value;render();});
+$('sVer').addEventListener('input',e=>{S.ver=+e.target.value;render();});
+$('arch').addEventListener('change',e=>{S.arch=e.target.checked;render();});
+document.querySelectorAll('.snaps .chip').forEach(b=>b.addEventListener('click',()=>{S.Ia=+b.dataset.a;S.arch=true;syncSliders();render();}));
+document.querySelectorAll('.presets .chip').forEach(b=>b.addEventListener('click',()=>{
+  Object.assign(S,PRE[b.dataset.p]);S.spanAuto=true;S.span=S.Ib>24?168:24;S.tf=presetMarker(S.Ib,S.span);syncSliders();render();}));
+$('sp24').onclick=()=>{S.spanAuto=false;S.span=24;render();};
+$('sp168').onclick=()=>{S.spanAuto=false;S.span=168;render();};
+const tl=$('tl');let drag=false;
+function fromX(cx){const r=tl.getBoundingClientRect(),t=(cx-r.left-geo.pl)/(geo.w-geo.pl-geo.pr)*geo.domain;S.tf=Math.round(Math.min(S.span,Math.max(1/60,t))*60)/60;render();}
+tl.addEventListener('pointerdown',e=>{drag=true;tl.setPointerCapture(e.pointerId);fromX(e.clientX);});
+tl.addEventListener('pointermove',e=>{if(drag)fromX(e.clientX);});
+tl.addEventListener('pointerup',()=>{drag=false;});
+tl.addEventListener('keydown',e=>{
+  const step=(e.shiftKey?1:15)/60;let t=S.tf;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp')t+=step;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')t-=step;
+  else if(e.key==='Home')t=1/60;else if(e.key==='End')t=S.span;else return;
+  e.preventDefault();S.tf=Math.round(Math.min(S.span,Math.max(1/60,t))*60)/60;render();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+syncSliders();render();
+})();
+</script>
+</body>
+</html>

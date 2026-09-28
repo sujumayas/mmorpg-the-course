@@ -1,0 +1,2 @@
+-- q04. How many characters own no items at all?
+-- One row, one column.  Hint: LEFT JOIN and IS NULL, or NOT EXISTS.

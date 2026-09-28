@@ -1,0 +1,2 @@
+-- q08. For each class with more than 250 characters, the average level rounded to 1 decimal.
+-- Columns: class, avg_level.  Order: class ascending.

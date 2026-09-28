@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Write-behind trade-off — DB201 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.plot svg{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:4px 0 0}
+.legend i{display:inline-block;width:24px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid var(--c)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0 0}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+.chip{font:600 .84rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.toggle{display:flex;align-items:center;gap:10px;justify-content:flex-start;cursor:pointer;margin-top:6px}
+.toggle input{width:20px;height:20px;accent-color:var(--moss);margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:0}
+.table-wrap{overflow-x:auto;margin-top:6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:560px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+#third{margin-top:14px}
+[hidden]{display:none!important}
+footer{margin-top:18px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 8 · Worked example</p>
+  <h1>Buffer longer, save less</h1>
+  <p class="lede">Write-behind keeps changes in memory and flushes each dirty entry every T seconds. Database writes fall off a cliff in the first few multiples of 1/u, then flatten. Crash loss keeps climbing in a straight line. Past the knee, a longer buffer buys almost nothing.</p>
+</header>
+
+<section class="panel" aria-label="Charts">
+  <div class="views">
+    <figure>
+      <figcaption>Database writes per second<small>W(T) = N × (1 − e<sup>−uT</sup>) / T, log-log</small></figcaption>
+      <div class="plot" id="cW" role="img"></div>
+      <div class="legend">
+        <span><i style="--c:var(--steel)"></i>write-behind W(T)</span>
+        <span><i style="--c:var(--blood);border-top-style:dashed"></i>write-through, N × u</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Expected progress lost per crash<small>A crash lands uniformly inside a flush interval, log-log</small></figcaption>
+      <div class="plot" id="cL" role="img"></div>
+      <div class="legend">
+        <span><i style="--c:var(--ochre)"></i>expected, T/2</span>
+        <span><i style="--c:var(--ochre);border-top-style:dashed"></i>worst case, T</span>
+      </div>
+    </figure>
+  </div>
+  <figure id="third" hidden>
+    <figcaption>Writes saved per second of extra expected loss<small>S(T) = −dW/dT ÷ 0.5, log-log. High means buffering longer is cheap; low means you are paying a full second of progress for almost nothing.</small></figcaption>
+    <div class="plot" id="cS" role="img"></div>
+  </figure>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rWt">—</b><span>write-through, N × u (writes/s)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rWb">—</b><span>write-behind W(T) (writes/s)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rCut">—</b><span>cut, 1 − W / N u</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rSav">—</b><span>writes saved per second of extra expected loss</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rL">—</b><span>expected loss per crash, T/2</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rLw">—</b><span>worst case, T</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rLc">—</b><span>changes lost per entry, u T / 2</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rK">—</b><span>knee, 1/u to 3/u</span></div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<section class="panel" aria-label="Controls">
+  <div class="chips" role="group" aria-label="Presets">
+    <button class="chip" type="button" data-p="5000,2,5">MMO shard (N 5,000, u 2, T 5 s)</button>
+    <button class="chip" type="button" data-p="1,20,300">Minecraft chunk (N 1, u 20, T 300 s)</button>
+    <button class="chip" type="button" data-p=",,1">Redis AOF everysec (T 1 s)</button>
+    <button class="chip" type="button" data-p=",,0.6">PostgreSQL async commit worst case (T 0.6 s)</button>
+    <button class="chip" type="button" data-p="8000,4,0.25">Check yourself (N 8,000, u 4)</button>
+  </div>
+  <div class="controls">
+    <div>
+      <label for="sN">Players N <output id="oN"></output></label>
+      <input id="sN" type="range" min="0" max="1000" step="1">
+      <label for="sU">u, changes per player per second <output id="oU"></output></label>
+      <input id="sU" type="range" min="0" max="1000" step="1">
+    </div>
+    <div>
+      <label for="sT">Flush interval T <output id="oT"></output></label>
+      <input id="sT" type="range" min="0" max="1000" step="1">
+      <label class="toggle" for="sav"><input type="checkbox" id="sav"> Show savings per second of loss</label>
+      <p class="hint" style="margin-top:6px">Sliders are logarithmic. Arrow keys step through two-significant-figure values.</p>
+    </div>
+  </div>
+  <h2 style="margin-top:14px">The lecture's table, for the current N and u</h2>
+  <div class="table-wrap">
+    <table aria-label="Write rate and loss at chosen flush intervals">
+      <thead><tr><th>Flush interval T</th><th>DB writes per second</th><th>Cut versus write-through</th><th>Expected loss</th><th>Worst-case loss</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from DB201 week 8, section 2: each entry changes as a Poisson process at rate u, and a flush writes an entry only if it changed since the last flush, so each entry is written with probability 1 − e<sup>−uT</sup> every T seconds. The presets use the lecture's figures: Redis <code>appendfsync everysec</code> flushes once a second; PostgreSQL with <code>synchronous_commit = off</code> can lose up to 3 × <code>wal_writer_delay</code> (200 ms by default); Minecraft autosaves every 5 minutes.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const S={N:5000,u:2,T:5,sav:false};
+const trim=x=>x.indexOf('.')<0?x:x.replace(/0+$/,'').replace(/\.$/,'');
+const f1=x=>x<0.1?String(Number(x.toPrecision(3))):x.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const num=x=>Number.isInteger(x)?x.toLocaleString('en-US'):trim(x.toFixed(x<1?4:2));
+const secs=x=>(x<1?trim(x.toFixed(3)):(x<100?trim(x.toFixed(2)):trim(x.toFixed(1))))+' s';
+const W=T=>S.N*(1-Math.exp(-S.u*T))/T;
+const sav=T=>{const e=Math.exp(-S.u*T);return -S.N*(S.u*T*e-(1-e))/(T*T)/0.5;};
+function cutStr(T){const c=100*(1-W(T)/(S.N*S.u));return c<89.95?Math.round(c)+'%':(c<99.95?trim(c.toFixed(1)):trim(c.toFixed(c<99.995?2:3)))+'%';}
+const sig=x=>x>=1000?Math.round(x).toLocaleString('en-US'):(x>=10?trim(x.toFixed(1)):Number(x.toPrecision(3)).toString());
+
+function snap(v){return Number(Number(v).toPrecision(2));}
+function logSlider(el,min,max,get,set,round){
+  const toPos=v=>Math.round(1000*Math.log(v/min)/Math.log(max/min));
+  const fromPos=p=>p>=1000?max:(p<=0?min:snap(min*Math.pow(max/min,p/1000)));
+  const fix=v=>{v=Math.min(max,Math.max(min,v));return round?Math.max(1,Math.round(v)):v;};
+  el.addEventListener('input',()=>set(fix(fromPos(+el.value))));
+  el.addEventListener('keydown',e=>{
+    let v=get();const k=e.key,up=k==='ArrowRight'||k==='ArrowUp'||k==='PageUp',dn=k==='ArrowLeft'||k==='ArrowDown'||k==='PageDown';
+    if(k==='Home')v=min;else if(k==='End')v=max;
+    else if(up||dn){const n=(k==='PageUp'||k==='PageDown')?10:1;
+      for(let i=0;i<n;i++){const ref=dn?v*(1-1e-9):v,unit=Math.max(round?1:0,Math.pow(10,Math.floor(Math.log10(ref))-1));
+        v=snap(dn?Math.round(v/unit)*unit-unit:Math.round(v/unit)*unit+unit);}}
+    else return;
+    e.preventDefault();set(fix(v));
+  });
+  return ()=>{el.value=toPos(get());};
+}
+const syncN=logSlider($('sN'),1,50000,()=>S.N,v=>{S.N=v;update();},true);
+const syncU=logSlider($('sU'),0.001,50,()=>S.u,v=>{S.u=v;update();});
+const syncT=logSlider($('sT'),0.01,1000,()=>S.T,v=>{S.T=v;update();});
+
+const TMIN=0.01,TMAX=1000;
+function frame(el,h,yMin,yMax,yFmt,body){
+  const w=el.clientWidth,pl=58,pr=12,pt=12,pb=30,narrow=w<460;
+  const soft=css('--ink-soft'),grid=css('--grid'),sans=css('--sans');
+  const X=t=>pl+(Math.log10(t)+2)/5*(w-pl-pr);
+  const ly0=Math.log10(yMin),ly1=Math.log10(yMax),Y=v=>pt+(1-(Math.log10(Math.max(v,yMin*1e-3))-ly0)/(ly1-ly0))*(h-pt-pb);
+  let s='';
+  const d0=Math.ceil(ly0-1e-9),d1=Math.floor(ly1+1e-9),every=Math.max(1,Math.ceil((d1-d0+1)/(narrow?5:8)));
+  for(let d=d0;d<=d1;d++){const y=Y(Math.pow(10,d));s+=`<line x1="${pl}" x2="${w-pr}" y1="${y}" y2="${y}" stroke="${grid}"/>`;if((d-d0)%every===0)s+=`<text x="${pl-6}" y="${y+4}" font-size="11" text-anchor="end" fill="${soft}" font-family="${sans}">${yFmt(Math.pow(10,d))}</text>`;}
+  [0.01,0.1,1,10,100,1000].forEach((t,i)=>{const x=X(t);s+=`<line x1="${x}" x2="${x}" y1="${pt}" y2="${h-pb}" stroke="${grid}" opacity=".6"/>`;if(!narrow||i%2===0)s+=`<text x="${x}" y="${h-pb+15}" font-size="11" text-anchor="${i===5?'end':'middle'}" fill="${soft}" font-family="${sans}">${t>=1?t.toLocaleString('en-US'):t} s</text>`;});
+  s+=`<defs><clipPath id="clip-${el.id}"><rect x="${pl}" y="${pt}" width="${w-pl-pr}" height="${h-pt-pb}"/></clipPath></defs>`;
+  s+=body({X,Y,w,h,pl,pr,pt,pb});
+  el.innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${s}</svg>`;
+}
+function curve(f,X,Y){let d='';for(let i=0;i<=240;i++){const t=Math.pow(10,-2+5*i/240);d+=(i?'L':'M')+X(t).toFixed(1)+','+Y(f(t)).toFixed(1);}return d;}
+const yFmtN=v=>v>=1e6?trim((v/1e6).toFixed(1))+'M':(v>=1e3?trim((v/1e3).toFixed(1))+'k':(v>=1?String(v):String(Number(v.toPrecision(1)))));
+const yFmtS=v=>v>=1?v.toLocaleString('en-US')+' s':(v>=0.001?String(Number(v.toPrecision(1)))+' s':v.toExponential(0)+' s');
+
+function cursor(X,Y,pt,h,pb){const x=X(S.T),ink=css('--ink');return `<line x1="${x}" x2="${x}" y1="${pt}" y2="${h-pb}" stroke="${ink}" stroke-opacity=".45" stroke-dasharray="4 4"/>`;}
+function dot(x,y,c,label,w,above){const anc=x>w-150?'end':'start',off=anc==='end'?-9:9;return `<circle cx="${x}" cy="${y}" r="6" fill="${c}" stroke="${css('--paper')}" stroke-width="2"/><text x="${x+off}" y="${y+(above?-9:18)}" font-size="12.5" font-weight="700" text-anchor="${anc}" fill="${c}" stroke="${css('--paper-2')}" stroke-width="4" paint-order="stroke" font-family="${css('--sans')}">${label}</text>`;}
+
+function drawW(){
+  const Wt=S.N*S.u,yMax=2*Wt,yMin=Math.min(0.1,Math.pow(10,Math.floor(Math.log10(W(TMAX)))));
+  const el=$('cW');
+  frame(el,290,yMin,yMax,yFmtN,({X,Y,w,h,pt,pb})=>{
+    const steel=css('--steel'),blood=css('--blood'),soft=css('--ink-soft'),sans=css('--sans');
+    let s='';
+    const k0=Math.max(TMIN,1/S.u),k1=Math.min(TMAX,3/S.u);
+    if(k1>k0){s+=`<rect x="${X(k0)}" y="${pt}" width="${X(k1)-X(k0)}" height="${h-pt-pb}" fill="${css('--ochre')}" opacity=".16"/>`;
+      s+=`<text x="${(X(k0)+X(k1))/2}" y="${h-pb-8}" font-size="11.5" text-anchor="middle" font-weight="700" fill="${css('--ochre')}" font-family="${sans}">knee</text>`;}
+    s+=`<g clip-path="url(#clip-cW)">`;
+    s+=`<line x1="${X(TMIN)}" x2="${X(TMAX)}" y1="${Y(Wt)}" y2="${Y(Wt)}" stroke="${blood}" stroke-width="2.5" stroke-dasharray="9 6"/>`;
+    s+=`<path d="${curve(W,X,Y)}" fill="none" stroke="${steel}" stroke-width="3"/></g>`;
+    s+=`<text x="${w-14}" y="${Y(Wt)-7}" font-size="11.5" text-anchor="end" fill="${blood}" font-weight="700" font-family="${sans}">write-through ${num(Wt)}</text>`;
+    s+=cursor(X,Y,pt,h,pb)+dot(X(S.T),Y(W(S.T)),steel,f1(W(S.T))+' writes/s',w,false);
+    return s;
+  });
+  el.setAttribute('aria-label',`At T = ${secs(S.T)}, write-behind makes ${f1(W(S.T))} database writes per second against ${num(Wt)} for write-through.`);
+}
+function drawL(){
+  const el=$('cL');
+  frame(el,290,0.001,1000,yFmtS,({X,Y,w,h,pt,pb})=>{
+    const o=css('--ochre');let s=`<g clip-path="url(#clip-cL)">`;
+    s+=`<path d="${curve(t=>t/2,X,Y)}" fill="none" stroke="${o}" stroke-width="3"/>`;
+    s+=`<path d="${curve(t=>t,X,Y)}" fill="none" stroke="${o}" stroke-width="2.5" stroke-dasharray="9 6"/></g>`;
+    s+=cursor(X,Y,pt,h,pb)+`<circle cx="${X(S.T)}" cy="${Y(S.T)}" r="4.5" fill="${o}"/>`+dot(X(S.T),Y(S.T/2),o,'expected '+secs(S.T/2),w,false);
+    return s;
+  });
+  el.setAttribute('aria-label',`At T = ${secs(S.T)}, a crash loses ${secs(S.T/2)} of progress on average and ${secs(S.T)} at worst.`);
+}
+function drawS(){
+  if(!S.sav) return;
+  const el=$('cS'),lo=sav(TMAX),hi=S.N*S.u*S.u*1.5;
+  const yMin=Math.pow(10,Math.floor(Math.log10(Math.max(lo,1e-6)))),yMax=Math.pow(10,Math.ceil(Math.log10(hi)));
+  frame(el,240,yMin,yMax,yFmtN,({X,Y,w,h,pt,pb})=>{
+    const m=css('--moss');let s=`<g clip-path="url(#clip-cS)"><path d="${curve(sav,X,Y)}" fill="none" stroke="${m}" stroke-width="3"/></g>`;
+    s+=cursor(X,Y,pt,h,pb)+dot(X(S.T),Y(sav(S.T)),m,sig(sav(S.T))+' writes/s per s',w,true);
+    return s;
+  });
+}
+function update(){
+  syncN();syncU();syncT();
+  $('oN').textContent=S.N.toLocaleString('en-US');$('oU').textContent=num(S.u)+' /s';$('oT').textContent=secs(S.T);
+  const Wt=S.N*S.u,Wb=W(S.T);
+  $('rWt').textContent=num(Wt);$('rWb').textContent=f1(Wb);$('rCut').textContent=cutStr(S.T);
+  $('rSav').textContent=sig(sav(S.T));
+  $('rL').textContent=secs(S.T/2);$('rLw').textContent=secs(S.T);$('rLc').textContent=sig(S.u*S.T/2);
+  $('rK').textContent=`${secs(1/S.u)} to ${secs(3/S.u)}`;
+  const uT=S.u*S.T;
+  let msg=`At T = ${secs(S.T)}, the database takes ${f1(Wb)} writes per second instead of ${num(Wt)} (${cutStr(S.T)} cut), and a crash costs ${secs(S.T/2)} of progress on average. `;
+  if(uT<1) msg+=`You are left of the knee: uT = ${sig(uT)}, so most flushes find each entry changed at most once. Longer buffering still pays well here.`;
+  else if(uT<=3) msg+=`You are in the knee, where most of the savings have already arrived.`;
+  else { const W2=W(2*S.T); msg+=`You are past the knee. Doubling T to ${secs(2*S.T)} would save only ${f1(Wb-W2)} more writes per second and add ${secs(S.T/2)} of expected loss.`; }
+  $('insight').innerHTML=msg;
+  const rows=[1,5,30,300];if(!rows.includes(S.T))rows.push(S.T);rows.sort((a,b)=>a-b);
+  $('tbody').innerHTML=`<tr><td>write-through</td><td>${num(Wt)}</td><td>—</td><td>0 s</td><td>0 s</td></tr>`+
+    rows.map(T=>`<tr class="${T===S.T?'here':''}"><td>${secs(T)}</td><td>${f1(W(T))}</td><td>${cutStr(T)}</td><td>${secs(T/2)}</td><td>${secs(T)}</td></tr>`).join('');
+  drawW();drawL();drawS();
+}
+$('sav').addEventListener('change',e=>{S.sav=e.target.checked;$('third').hidden=!S.sav;update();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const [n,u,t]=b.dataset.p.split(',');if(n)S.N=+n;if(u)S.u=+u;if(t)S.T=+t;update();
+}));
+window.addEventListener('resize',()=>{drawW();drawL();drawS();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

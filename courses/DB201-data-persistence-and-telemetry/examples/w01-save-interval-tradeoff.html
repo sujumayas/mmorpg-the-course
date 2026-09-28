@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Save interval trade-off, DB201 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:0 0 12px;padding:10px 14px;border-radius:10px;background:var(--paper-2)}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+#cTime{cursor:ew-resize;touch-action:none;border-radius:6px}
+#cTime:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.stat.off b{color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+input[type=number]{font:600 1rem var(--sans);width:7em;padding:5px 8px;border:1.5px solid var(--ink);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink)}
+.ctl .toggle{justify-content:flex-start}
+.toggle{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.95rem;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--moss)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.events{border:1.5px dashed var(--grid);border-radius:10px;padding:10px 12px}
+.events[data-on="true"]{border-color:var(--moss)}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:2px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:560px;width:100%}
+.tcap{font-family:var(--serif);margin:0 0 6px;position:sticky;left:0}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 1 · Worked example</p>
+  <h1>Writes per second × average loss = N / 2</h1>
+  <p class="lede">A periodic save policy trades lost progress for database writes. The save interval T cancels out of the product, so every choice of T lands on the same curve.</p>
+</header>
+
+<section class="panel" aria-label="Save interval model">
+  <p class="caption" id="caption">Move T: the point slides along the curve. It never goes below it.</p>
+  <div class="charts">
+    <figure>
+      <figcaption>One player&rsquo;s hour<small>Drag the crash marker, or focus the chart and use the arrow keys (Shift for 100 s steps).</small></figcaption>
+      <canvas id="cTime" tabindex="0" role="slider" aria-label="Crash time in seconds" aria-valuemin="0" aria-valuemax="3600" aria-valuenow="2000"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>progress</span>
+        <span><i style="background:var(--ink-soft)"></i>save tick</span>
+        <span><i style="background:var(--blood)"></i>lost at crash</span>
+        <span><i style="background:var(--ochre);height:8px;width:8px;transform:rotate(45deg)"></i>valuable event</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>The trade-off<small>Writes per second against average loss, both on log scales</small></figcaption>
+      <canvas id="cTrade" role="img" aria-label="Log-log chart of writes per second versus average loss, with the curve W = (N/2)/loss and the current policy"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>W = (N/2) / loss</span>
+        <span><i style="background:var(--blood)"></i>periodic policy</span>
+        <span id="lgHybrid" hidden><i style="background:var(--moss)"></i>hybrid, valuable state</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite" id="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rW">&ndash;</b><span>writes/s, W = N/T</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rB">&ndash;</b><span>write volume, B = N&middot;S/T</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rAvg">&ndash;</b><span>average loss, T/2</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rWorst">&ndash;</b><span>worst loss, T</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rPh">&ndash;</b><span>player-hours lost per crash</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rProd">&ndash;</b><span>W &times; T/2 (always N/2)</span></div>
+    <div class="stat" id="sHW" style="--c:var(--moss)"><b id="rHW">&ndash;</b><span>hybrid writes/s</span></div>
+    <div class="stat" id="sHB" style="--c:var(--moss)"><b id="rHB">&ndash;</b><span>hybrid write volume</span></div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="tIdx">Save interval T <output id="oT">300 s</output></label>
+      <input id="tIdx" type="range" min="0" max="10" step="1" value="7" aria-describedby="tHint">
+      <p class="hint" id="tHint">Snaps to 1, 2, 5, 10, 30, 60, 120, 300, 600, 840, 1,800 s</p>
+      <label for="n" style="margin-top:10px">Players online N <output id="oN">4,000</output></label>
+      <input id="n" type="range" min="100" max="20000" step="100" value="4000">
+      <label for="s" style="margin-top:10px;justify-content:flex-start;align-items:center;gap:12px">State size S (kB) <input id="s" type="number" min="1" max="500" step="1" value="24"></label>
+    </div>
+    <div class="ctl events" id="evBox" data-on="false">
+      <label class="toggle" for="ev"><input id="ev" type="checkbox"> Save on valuable events</label>
+      <label for="e" style="margin-top:10px">Valuable events per player-hour e <output id="oE">12</output></label>
+      <input id="e" type="range" min="0" max="60" step="1" value="12">
+      <label for="se" style="margin-top:10px"><span>Event save size s<sub>e</sub></span> <output id="oSe">2 kB</output></label>
+      <input id="se" type="range" min="0.5" max="20" step="0.5" value="2">
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <p class="tcap">Numbers you can check, for the current N and S (1 kB = 1,000 bytes)</p>
+    <table>
+      <thead><tr><th>Save interval T</th><th>Saves/s W</th><th>Write volume B</th><th>Average loss</th><th>Player-hours lost</th><th>W &times; avg loss</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from DB201 week 1: W = N/T, B = N&middot;S/T, average loss T/2, hybrid W = N/T + N&middot;e/3600. The event times on the timeline are fixed pseudo-random draws, the same every visit. Shapes are generic; no game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const oneDec=n=>fmt(n,1).replace(/\.0$/,'');
+const TS=[1,2,5,10,30,60,120,300,600,840,1800];
+let T=300,N=4000,S=24,ev=false,E=12,SE=2,crash=2000;
+
+// seeded event times: fixed list of 60, first e are used
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const rnd=mulberry32(20240901);
+const EVT=Array.from({length:60},()=>Math.round(rnd()*3600));
+
+function sig(v,p){const s=Number(v.toPrecision(p));return s.toLocaleString('en-US',{maximumFractionDigits:6});}
+function bytesRate(b,p){ // b in bytes per second, decimal units
+  if(b>=1e9)return sig(b/1e9,p)+' GB/s';
+  if(b>=1e6)return sig(b/1e6,p)+' MB/s';
+  if(b>=1e3)return sig(b/1e3,p)+' kB/s';
+  return sig(b,p)+' B/s';
+}
+function tLabel(t){if(t===840)return '840 s (a Stardew day)';if(t>=60&&t%60===0)return fmt(t)+' s ('+t/60+' min)';return fmt(t)+' s';}
+
+function model(){
+  const W=N/T,B=N*S*1000/T,avg=T/2,ph=N*T/2/3600;
+  const WH=N/T+N*E/3600,BH=N*S*1000/T+N*E*SE*1000/3600;
+  return {W,B,avg,ph,WH,BH};
+}
+
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const padT={l:44,r:12,t:26,b:32};
+
+function xOfTime(w,t){return padT.l+(w-padT.l-padT.r)*t/3600;}
+function drawTimeline(){
+  const {g,w,h}=setup($('cTime')),p=padT,ih=h-p.t-p.b;
+  g.clearRect(0,0,w,h);
+  const X=t=>xOfTime(w,t),Y=v=>p.t+ih*(1-v/3600);
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=p.t+ih*(1-i/4);g.beginPath();g.moveTo(p.l,y);g.lineTo(w-p.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(900*i),p.l-6,y);}
+  for(let i=0;i<=4;i++){g.textAlign=i===0?'left':i===4?'right':'center';g.textBaseline='top';g.fillText(fmt(900*i)+(i===4?' s':''),X(900*i),h-p.b+6);}
+  // save ticks
+  g.strokeStyle=css('--ink-soft');g.globalAlpha=T<10?.25:.55;
+  for(let t=T;t<=3600;t+=T){g.beginPath();g.moveTo(X(t),p.t);g.lineTo(X(t),h-p.b);g.stroke();}
+  g.globalAlpha=1;
+  const last=Math.floor(crash/T)*T;
+  // lost region
+  g.fillStyle=css('--blood');g.globalAlpha=.22;g.fillRect(X(last),p.t,X(crash)-X(last),ih);g.globalAlpha=1;
+  // progress line up to crash, then faint after
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();g.moveTo(X(0),Y(0));g.lineTo(X(crash),Y(crash));g.stroke();
+  g.globalAlpha=.3;g.setLineDash([5,5]);g.beginPath();g.moveTo(X(crash),Y(crash));g.lineTo(X(3600),Y(3600));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // saved level after crash: what you restore to
+  g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(X(last),Y(last));g.lineTo(X(crash),Y(last));g.lineTo(X(crash),Y(crash));g.stroke();
+  // events
+  const evs=EVT.slice(0,E);let lostEv=0;
+  evs.forEach(t=>{
+    const x=X(t),y=Y(t),inLost=t>last&&t<=crash;
+    let filled=true;
+    if(t<=crash){ if(!ev&&inLost){filled=false;lostEv++;} } else filled=false;
+    g.save();g.translate(x,y);g.rotate(Math.PI/4);
+    g.fillStyle=css('--ochre');g.strokeStyle=css('--ochre');g.lineWidth=2;
+    g.globalAlpha=t>crash?.4:1;
+    if(filled)g.fillRect(-4.5,-4.5,9,9);else{g.fillStyle=css('--paper-2');g.fillRect(-4.5,-4.5,9,9);g.strokeRect(-4.5,-4.5,9,9);}
+    g.restore();
+  });
+  // crash marker
+  const cx=X(crash);
+  g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(cx,p.t-4);g.lineTo(cx,h-p.b);g.stroke();
+  g.fillStyle=css('--blood');g.beginPath();g.moveTo(cx-7,p.t-14);g.lineTo(cx+7,p.t-14);g.lineTo(cx,p.t-3);g.closePath();g.fill();
+  // label
+  const lab='lost: '+fmt(crash-last)+' s · valuable events lost: '+lostEv;
+  g.font='600 12px '+css('--sans');const tw=g.measureText(lab).width;
+  let lx=Math.min(Math.max(cx-tw/2,p.l),w-p.r-tw);
+  g.fillStyle=css('--paper-2');g.fillRect(lx-3,2,tw+6,16);
+  g.fillStyle=css('--blood');g.textAlign='left';g.textBaseline='top';g.fillText(lab,lx,3);
+  const cEl=$('cTime');cEl.setAttribute('aria-valuenow',crash);
+  cEl.setAttribute('aria-valuetext','crash at '+fmt(crash)+' seconds, last save at '+fmt(last)+', lost '+fmt(crash-last)+' seconds, valuable events lost '+lostEv);
+  return {last,lostEv};
+}
+
+const padL={l:52,r:14,t:14,b:34};
+function drawTrade(m){
+  const {g,w,h}=setup($('cTrade')),p=padL;
+  g.clearRect(0,0,w,h);
+  const yMaxE=N>10000?5:4,xmin=-1,xmax=3;
+  const X=l=>p.l+(w-p.l-p.r)*(Math.log10(l)-xmin)/(xmax-xmin);
+  const Y=v=>p.t+(h-p.t-p.b)*(1-Math.log10(v)/yMaxE);
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let e=0;e<=yMaxE;e++){const y=Y(Math.pow(10,e));g.beginPath();g.moveTo(p.l,y);g.lineTo(w-p.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(Math.pow(10,e)),p.l-6,y);}
+  for(let e=xmin;e<=xmax;e++){const x=X(Math.pow(10,e));g.beginPath();g.moveTo(x,p.t);g.lineTo(x,h-p.b);g.stroke();
+    g.textAlign=e===xmin?'left':e===xmax?'right':'center';g.textBaseline='top';g.fillText((e<0?'0.1':fmt(Math.pow(10,e)))+(e===xmax?' s':''),x,h-p.b+6);}
+  g.textAlign='right';g.textBaseline='top';g.fillText('writes/s',w-p.r-4,p.t+4);
+  // curve
+  g.save();g.beginPath();g.rect(p.l,p.t,w-p.l-p.r,h-p.t-p.b);g.clip();
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=200;i++){const l=Math.pow(10,xmin+(xmax-xmin)*i/200),v=(N/2)/l;i?g.lineTo(X(l),Y(v)):g.moveTo(X(l),Y(v));}
+  g.stroke();
+  // shade below curve lightly
+  g.globalAlpha=.08;g.fillStyle=css('--steel');g.beginPath();g.moveTo(X(.1),Y(1));
+  for(let i=0;i<=200;i++){const l=Math.pow(10,xmin+(xmax-xmin)*i/200);g.lineTo(X(l),Y(Math.max(1,(N/2)/l)));}
+  g.lineTo(X(1000),Y(1));g.lineTo(X(.1),Y(1));g.closePath();g.fill();g.globalAlpha=1;
+  if(ev){
+    // guide at the periodic cost of 0.5 s loss (T = 1)
+    const gy=Y(N);
+    g.strokeStyle=css('--moss');g.lineWidth=1.5;g.setLineDash([6,5]);g.beginPath();g.moveTo(X(.1),gy);g.lineTo(X(.5),gy);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--steel');g.beginPath();g.arc(X(.5),gy,4,0,7);g.fill();
+    g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';
+    g.fillText('periodic at 0.5 s: '+fmt(N)+'/s',X(.5)+7,gy-2);
+  }
+  g.restore();
+  // current point
+  const px=X(m.avg),py=Y(m.W);
+  g.fillStyle=css('--blood');g.beginPath();g.arc(px,py,7,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--blood');g.textBaseline='bottom';
+  const lab='T = '+fmt(T)+' s';const tw=g.measureText(lab).width;
+  g.textAlign='left';g.fillText(lab,Math.min(px+10,w-p.r-tw),py-8);
+  if(ev){
+    const hx=p.l+1,hy=Y(m.WH);
+    g.fillStyle=css('--moss');g.beginPath();g.arc(hx+2,hy,7,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.fillStyle=css('--moss');g.textAlign='left';g.textBaseline='top';g.fillText('valuable: 0 s',hx+12,hy+4);
+  }
+}
+
+function tableRows(){
+  const list=[1,10,60,300,840];if(!list.includes(T)){list.push(T);list.sort((a,b)=>a-b);}
+  $('tbody').innerHTML=list.map(t=>{
+    const W=N/t,B=N*S*1000/t;
+    return `<tr class="${t===T?'here':''}"><td>${tLabel(t)}</td><td>${oneDec(W)}</td><td>${bytesRate(B,3)}</td><td>${oneDec(t/2)} s</td><td>${fmt(N*t/2/3600,2)}</td><td>${fmt(W*t/2)}</td></tr>`;
+  }).join('');
+}
+
+function update(){
+  const m=model();
+  $('oT').textContent=tLabel(T);$('oN').textContent=fmt(N);$('oE').textContent=E;$('oSe').textContent=SE+' kB';
+  $('rW').textContent=oneDec(m.W);
+  $('rB').textContent=bytesRate(m.B,3);
+  $('rAvg').textContent=oneDec(m.avg)+' s';
+  $('rWorst').textContent=fmt(T)+' s';
+  $('rPh').textContent=fmt(m.ph,2);
+  $('rProd').textContent=fmt(m.W*m.avg);
+  $('sHW').classList.toggle('off',!ev);$('sHB').classList.toggle('off',!ev);
+  $('rHW').textContent=ev?oneDec(m.WH):'off';
+  $('rHB').textContent=ev?bytesRate(m.BH,4):'off';
+  $('evBox').dataset.on=ev;$('lgHybrid').hidden=!ev;
+  const tl=drawTimeline();drawTrade(m);tableRows();
+  let s;
+  if(ev){
+    const ratio=N/m.WH;
+    s=`Hybrid: <b>${oneDec(m.WH)} writes/s</b> and zero loss on valuable state. Periodic saves alone would need T = 1 s (0.5 s average loss) and <b>${fmt(N)} writes/s</b> to get close, ${oneDec(ratio)}&times; more. Cheap state still loses ${oneDec(m.avg)} s on average, by choice.`;
+    $('caption').textContent='The green point sits below the curve: valuable state is saved when it changes, not on a timer.';
+  } else {
+    s=`At T = ${fmt(T)} s the shard does ${oneDec(m.W)} writes/s and a crash erases ${oneDec(m.avg)} s per player on average. Multiply them: ${fmt(m.W*m.avg)} = N/2. Halve the loss and you double the writes.`;
+    if(tl.lostEv>0) s+=` This crash also erased ${tl.lostEv} valuable event${tl.lostEv>1?'s':''} (hollow diamonds). Turn on event saves to keep them.`;
+    $('caption').textContent='Move T: the point slides along the curve. It never goes below it.';
+  }
+  $('insight').innerHTML=s;
+}
+
+// controls
+$('tIdx').addEventListener('input',e=>{T=TS[+e.target.value];update();});
+$('n').addEventListener('input',e=>{N=+e.target.value;update();});
+$('s').addEventListener('input',e=>{const v=+e.target.value;if(v>=1&&v<=500){S=v;update();}});
+$('s').addEventListener('change',e=>{let v=Math.round(+e.target.value)||24;v=Math.min(500,Math.max(1,v));e.target.value=v;S=v;update();});
+$('ev').addEventListener('change',e=>{ev=e.target.checked;update();});
+$('e').addEventListener('input',e=>{E=+e.target.value;update();});
+$('se').addEventListener('input',e=>{SE=+e.target.value;update();});
+// crash marker: pointer and keyboard
+const ct=$('cTime');let dragging=false;
+function crashFromEvent(e){const r=ct.getBoundingClientRect(),w=r.width;
+  const t=(e.clientX-r.left-padT.l)/(w-padT.l-padT.r)*3600;crash=Math.round(Math.min(3600,Math.max(0,t)));update();}
+ct.addEventListener('pointerdown',e=>{dragging=true;ct.setPointerCapture(e.pointerId);crashFromEvent(e);});
+ct.addEventListener('pointermove',e=>{if(dragging)crashFromEvent(e);});
+ct.addEventListener('pointerup',()=>{dragging=false;});
+ct.addEventListener('pointercancel',()=>{dragging=false;});
+ct.addEventListener('keydown',e=>{
+  const step=e.shiftKey?100:10;let c=crash;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp')c+=step;
+  else if(e.key==='ArrowLeft'||e.key==='ArrowDown')c-=step;
+  else if(e.key==='Home')c=0;else if(e.key==='End')c=3600;else return;
+  e.preventDefault();crash=Math.min(3600,Math.max(0,c));update();
+});
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

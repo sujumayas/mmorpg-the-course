@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Retention and erasure cost — DB201 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 18px}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,1fr)}}
+.controls .wide{grid-column:span 2}
+@media (max-width:900px){.controls .wide{grid-column:1/-1}}
+label{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+.snaps{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font:600 .82rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.check{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem;justify-content:flex-start;margin-top:4px}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.stat.warn b{color:var(--blood)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:290px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 4px}
+.legend svg{vertical-align:middle;margin-right:5px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:560px}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+@media (max-width:600px){table{min-width:0;font-size:.8rem}th,td{padding:6px 4px}.controls label:not(.check){flex-direction:column;gap:0}}
+td.bad{color:var(--blood);font-weight:700}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 13 · Worked example</p>
+  <h1>Keep data longer, pay on every erasure</h1>
+  <p class="lede">Storage grows in proportion to the retention window. Triple the days and you triple the terabytes. Erasure by full scan grows with it and runs into the 720 hours a month has. A pseudonym table keeps erasure flat at every retention window. Pick retention and schema together.</p>
+</header>
+
+<section class="panel" aria-label="Retention and erasure model">
+  <div class="controls">
+    <div class="wide">
+      <label for="sR">Retention R <output id="oR"></output></label>
+      <input id="sR" type="range" min="0" max="1000" step="1" aria-describedby="oR">
+      <div class="snaps" role="group" aria-label="Snap retention to">
+        <button class="chip" data-r="7">7 d</button><button class="chip" data-r="30">30 d</button><button class="chip" data-r="90">90 d</button><button class="chip" data-r="395">395 d</button><button class="chip" data-r="1095">1,095 d</button>
+      </div>
+    </div>
+    <div><label for="sD">Daily players D <output id="oD"></output></label><input id="sD" type="range" min="0" max="1000" step="1"></div>
+    <div><label for="se">Events per player per day e <output id="oe"></output></label><input id="se" type="range" min="100" max="5000" step="50"></div>
+    <div><label for="sb">Bytes per event b <output id="ob"></output></label><input id="sb" type="range" min="50" max="1000" step="10"></div>
+    <div><label for="sq">Erasure requests per month q <output id="oq"></output></label><input id="sq" type="range" min="0" max="1000" step="1"></div>
+    <div><label for="sT">Scan throughput T <output id="oT"></output></label><input id="sT" type="range" min="0" max="1000" step="1"></div>
+    <div><label for="sa">Active days of erasing player a <output id="oa"></output></label><input id="sa" type="range" min="1" max="365" step="1"></div>
+    <div><label class="check"><input type="checkbox" id="batch"> Batch weekly (strategy A)</label></div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rSt"></b><span>event storage</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rScan"></b><span>one full scan</span></div>
+    <div class="stat" id="stA" style="--c:var(--blood)"><b id="rA"></b><span>A scan hours per month, of 720</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rBC"></b><span>rows per request, B index / C pseudonym</span></div>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Storage<small>TB against retention window (log days)</small></figcaption>
+      <div class="legend">
+        <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--steel)" stroke-width="3"/></svg>events only</span>
+        <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--ochre)" stroke-width="3" stroke-dasharray="6 4"/></svg>events + index (B)</span>
+      </div>
+      <canvas id="cSt" role="img"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Monthly erasure work<small>Rows examined per month (log) against retention window (log days)</small></figcaption>
+      <div class="legend">
+        <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--steel)" stroke-width="3"/></svg>A scan</span>
+        <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--ochre)" stroke-width="3" stroke-dasharray="6 4"/></svg>B index</span>
+        <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--moss)" stroke-width="3" stroke-dasharray="1.5 4" stroke-linecap="round"/></svg>C pseudonym</span>
+        <span><svg width="26" height="8" aria-hidden="true"><rect width="26" height="8" fill="var(--blood)" opacity=".25"/></svg>a month of scanning</span>
+      </div>
+      <canvas id="cW" role="img"></canvas>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Results at the current settings</caption>
+      <thead><tr><th scope="col">Strategy</th><th scope="col">Rows per request</th><th scope="col">Rows per month</th><th scope="col">Scan hours per month</th><th scope="col">Extra storage</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the lecture. A scans every event row per request (or once a week for a batch). B looks up the player's rows through a 24-byte-per-row index on player id. C deletes two rows from a pseudonym table, which leaves the event rows unlinkable. The 720-hour ceiling is 30 days of round-the-clock scanning; the dotted line at 30 days marks the one-month response deadline.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const comma=n=>Math.round(n).toLocaleString('en-US');
+const strip=s=>s.replace(/\.?0+$/,'');
+function hrs(h){return h>=100?comma(h):strip(h.toFixed(2));}
+function big(n){
+  if(n<1e6)return comma(n);
+  const u=[[1e12,' trillion'],[1e9,' billion'],[1e6,' million']].find(x=>n>=x[0]);
+  return strip((n/u[0]).toPrecision(3))+u[1];
+}
+function tb(bytes){const t=(bytes/1e12).toFixed(2)+' TB';return bytes<1e12?t+' ('+comma(bytes/1e9)+' GB)':t;}
+// log slider helper: position 0..1000 <-> value
+function logS(el,min,max,round){
+  return {get:()=>{const v=min*Math.pow(max/min,+el.value/1000);return round(v);},
+          set:v=>{el.value=Math.round(1000*Math.log(v/min)/Math.log(max/min));}};
+}
+const S={R:395,D:40000,e:1500,b:200,q:300,T:1,a:20,batch:false};
+const lR=logS($('sR'),7,1095,Math.round), lD=logS($('sD'),1000,500000,v=>{const m=Math.pow(10,Math.floor(Math.log10(v))-1);return Math.round(v/m)*m;}),
+      lq=logS($('sq'),10,5000,v=>{const m=Math.pow(10,Math.max(0,Math.floor(Math.log10(v))-1));return Math.round(v/m)*m;}),
+      lT=logS($('sT'),0.1,10,v=>+v.toPrecision(2));
+lR.set(S.R);lD.set(S.D);lq.set(S.q);lT.set(S.T);$('se').value=S.e;$('sb').value=S.b;$('sa').value=S.a;
+
+function model(R){
+  const rows=S.D*S.e*R,st=rows*S.b,scan=st/(S.T*1e9),scans=S.batch?4:S.q;
+  return {rows,st,idx:24*rows,scan,scans,hoursA:scans*scan/3600,
+    monthA:scans*rows,monthAscan:S.q*rows,monthAbatch:4*rows,
+    aEff:Math.min(S.a,R),perB:S.e*Math.min(S.a,R),monthB:S.q*S.e*Math.min(S.a,R),perC:2,monthC:S.q*2,
+    hoursScan:S.q*scan/3600,hoursBatch:4*scan/3600};
+}
+const band=()=>720*3600*S.T*1e9/S.b;
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.height};}
+const pad={l:54,r:20,t:14,b:34};
+const XT=[7,30,90,395,1095];
+function xp(R,w){return pad.l+(w-pad.l-pad.r)*Math.log(R/7)/Math.log(1095/7);}
+function xAxis(g,w,h){
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  XT.forEach(v=>{const x=xp(v,w);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.fillText(comma(v),x,h-pad.b+6);});
+  g.textAlign='right';g.fillText('days',w-pad.r,h-14);
+}
+function deadline(g,w,h,bottom){const x=xp(30,w);g.strokeStyle=css('--ink');g.globalAlpha=.6;g.setLineDash([2,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline=bottom?'bottom':'top';g.fillText('one-month response deadline',x+5,bottom?h-pad.b-4:pad.t+4);}
+function line(g,w,h,f,yp,color,dash,warnAbove){
+  const N=160;g.lineWidth=2.5;g.setLineDash(dash);g.lineCap=dash.length&&dash[0]<3?'round':'butt';
+  let prev=null;
+  for(let i=0;i<=N;i++){
+    const R=7*Math.pow(1095/7,i/N),v=f(R),pt=[xp(R,w),yp(v)];
+    if(prev){g.strokeStyle=(warnAbove!=null&&v>warnAbove&&prev[2]>warnAbove)?css('--blood'):color;g.beginPath();g.moveTo(prev[0],prev[1]);g.lineTo(pt[0],pt[1]);g.stroke();}
+    prev=[pt[0],pt[1],v];
+  }
+  g.setLineDash([]);g.lineCap='butt';
+}
+function dot(g,x,y,color){g.fillStyle=color;g.beginPath();g.arc(x,y,5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+function curMarker(g,w,h){const x=xp(S.R,w);g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;return x;}
+
+function drawStorage(){
+  const {g,w,h}=setupCanvas($('cSt'));g.clearRect(0,0,w,h);
+  const top=model(1095),raw=(top.st+top.idx)/1e12,mag=Math.pow(10,Math.floor(Math.log10(raw))),yMax=[1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(v=>v>=raw*1.02);
+  const yp=v=>pad.t+(h-pad.t-pad.b)*(1-v/1e12/yMax);
+  g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='middle';
+  for(let i=0;i<=4;i++){const v=yMax*i/4,y=pad.t+(h-pad.t-pad.b)*(1-i/4);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.fillText(strip(v.toPrecision(3)),pad.l-6,y);}
+  g.save();g.translate(12,pad.t+(h-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.fillText('TB',0,0);g.restore();
+  xAxis(g,w,h);deadline(g,w,h,false);
+  line(g,w,h,R=>{const m=model(R);return m.st+m.idx;},yp,css('--ochre'),[6,4]);
+  line(g,w,h,R=>model(R).st,yp,css('--steel'),[]);
+  const x=curMarker(g,w,h),m=model(S.R);
+  dot(g,x,yp(m.st+m.idx),css('--ochre'));dot(g,x,yp(m.st),css('--steel'));
+  g.fillStyle=css('--ink');g.font='600 13px '+css('--sans');g.textBaseline='bottom';
+  const lbl=tb(m.st);g.textAlign=x>w-90?'right':'left';g.fillText(lbl,x+(x>w-90?-8:8),yp(m.st)-6);
+  $('cSt').setAttribute('aria-label',`Storage against retention. At R = ${comma(S.R)} days: events ${tb(m.st)}, events plus index ${tb(m.st+m.idx)}.`);
+}
+function drawWork(){
+  const {g,w,h}=setupCanvas($('cW'));g.clearRect(0,0,w,h);
+  const yp=v=>pad.t+(h-pad.t-pad.b)*(1-Math.log10(Math.max(1,v))/14);
+  g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='middle';
+  for(let e=0;e<=14;e+=2){const y=yp(Math.pow(10,e));g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.fillText(e===0?'1':'1e'+e,pad.l-6,y);}
+  xAxis(g,w,h);deadline(g,w,h,true);
+  const B=band(),yb=yp(B);
+  g.fillStyle=css('--blood');g.globalAlpha=.16;g.fillRect(pad.l,pad.t,w-pad.l-pad.r,Math.max(0,yb-pad.t));g.globalAlpha=.8;g.fillRect(pad.l,yb-1,w-pad.l-pad.r,2);g.globalAlpha=1;
+  g.fillStyle=css('--blood');g.textAlign='left';g.textBaseline='bottom';g.font='600 11px '+css('--sans');if(yb>pad.t+12)g.fillText('a month of full-time scanning',pad.l+6,yb-4);else{g.textBaseline='top';g.fillText('a month of full-time scanning',pad.l+6,Math.max(pad.t,yb)+4);}
+  line(g,w,h,R=>model(R).monthA,yp,css('--steel'),[],B);
+  line(g,w,h,R=>model(R).monthB,yp,css('--ochre'),[6,4]);
+  line(g,w,h,R=>model(R).monthC,yp,css('--moss'),[1.5,5]);
+  const x=curMarker(g,w,h),m=model(S.R);
+  dot(g,x,yp(m.monthA),m.monthA>B?css('--blood'):css('--steel'));dot(g,x,yp(m.monthB),css('--ochre'));dot(g,x,yp(m.monthC),css('--moss'));
+  const e=model(1095);g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';
+  [['A',e.monthA,e.monthA>B?css('--blood'):css('--steel')],['B',e.monthB,css('--ochre')],['C',e.monthC,css('--moss')]].forEach(([l,v,c])=>{g.fillStyle=c;g.fillText(l,w-pad.r-2,yp(v)-4);});
+  $('cW').setAttribute('aria-label',`Rows examined per month at R = ${comma(S.R)} days: A ${big(m.monthA)}, B ${big(m.monthB)}, C ${big(m.monthC)}. A month of scanning is ${big(B)} rows.`);
+}
+
+function render(){
+  const m=model(S.R),over=m.hoursA>720;
+  $('oR').textContent=comma(S.R)+' days';$('oD').textContent=comma(S.D);$('oe').textContent=comma(S.e);$('ob').textContent=comma(S.b)+' B';
+  $('oq').textContent=comma(S.q);$('oT').textContent=strip(S.T.toFixed(2))+' GB/s';
+  $('oa').textContent=S.a>S.R?`${S.a} (clamped to ${S.R})`:String(S.a);
+  document.querySelectorAll('.snaps .chip').forEach(c=>c.setAttribute('aria-pressed',+c.dataset.r===S.R));
+  $('rSt').textContent=tb(m.st);
+  $('rScan').textContent=`${comma(m.scan)} s = ${strip((m.scan/60).toFixed(1))} min`;
+  $('rA').textContent=hrs(m.hoursA)+' h';$('stA').classList.toggle('warn',over);
+  $('rBC').textContent=`${comma(m.perB)} / ${m.perC}`;
+  const rowsTxt=`${comma(S.D*S.e)} rows per day, ${comma(m.rows)} rows kept.`;
+  $('insight').innerHTML=`${rowsTxt} ` + (over
+    ? `Scanning for ${comma(S.q)} requests takes <b style="color:var(--blood)">${hrs(m.hoursA)} hours</b> a month. A month has 720, so erasure by full scan can no longer keep up. Batching weekly cuts it to ${hrs(m.hoursBatch)} h, the pseudonym table to ${comma(m.monthC)} rows.`
+    : `Strategy A needs <b>${hrs(m.hoursA)} of 720 hours</b> a month${S.batch?' with weekly batches':''}. Strategy C touches ${comma(m.monthC)} rows a month at any retention window. Drag R to 1,095 days to see A cross the ceiling.`);
+  const rows=[
+    ['A scan',m.rows,m.monthAscan,hrs(m.hoursScan)+' h',m.hoursScan>720,'—'],
+    ['A batched weekly',4*m.rows/S.q,m.monthAbatch,hrs(m.hoursBatch)+' h',m.hoursBatch>720,'—'],
+    ['B index',m.perB,m.monthB,'—',false,tb(m.idx)],
+    ['C pseudonym',m.perC,m.monthC,'—',false,'—']];
+  $('tb').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${big(r[1])}</td><td>${big(r[2])}</td><td class="${r[4]?'bad':''}">${r[3]}${r[4]?' over ceiling':''}</td><td>${r[5]}</td></tr>`).join('');
+  drawStorage();drawWork();
+}
+$('sR').addEventListener('input',()=>{S.R=lR.get();render();});
+$('sD').addEventListener('input',()=>{S.D=lD.get();render();});
+$('sq').addEventListener('input',()=>{S.q=lq.get();render();});
+$('sT').addEventListener('input',()=>{S.T=lT.get();render();});
+$('se').addEventListener('input',e=>{S.e=+e.target.value;render();});
+$('sb').addEventListener('input',e=>{S.b=+e.target.value;render();});
+$('sa').addEventListener('input',e=>{S.a=+e.target.value;render();});
+$('batch').addEventListener('change',e=>{S.batch=e.target.checked;render();});
+document.querySelectorAll('.snaps .chip').forEach(c=>c.addEventListener('click',()=>{S.R=+c.dataset.r;lR.set(S.R);render();}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+render();
+})();
+</script>
+</body>
+</html>

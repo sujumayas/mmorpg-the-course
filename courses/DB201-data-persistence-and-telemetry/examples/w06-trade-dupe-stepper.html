@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trade dupe stepper — DB201 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1240px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 4px}
+.sub{font-size:.86rem;color:var(--ink-soft);margin:0 0 12px}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px;min-width:0}
+fieldset{border:0;margin:0;padding:0}
+legend{font-weight:700;font-size:.95rem;margin-bottom:8px;padding:0}
+.radios{display:flex;flex-wrap:wrap;gap:8px}
+.radios label{display:flex;align-items:center;gap:7px;padding:7px 11px;border:1.5px solid var(--steel);border-radius:8px;font-weight:600;font-size:.88rem;cursor:pointer}
+.radios input{accent-color:var(--steel);margin:0;width:16px;height:16px}
+.radios label:has(input:checked){background:var(--steel);color:var(--paper)}
+.radios label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.duo{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:1100px){.duo{grid-template-columns:1.45fr 1fr;align-items:start}}
+.btn{font:600 .9rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+kbd{font:600 .78rem var(--mono);border:1px solid var(--ink-soft);border-radius:4px;padding:0 4px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch;justify-content:space-between;margin-bottom:12px}
+.count{border-radius:10px;padding:8px 14px;border:2px solid var(--ink);display:flex;flex-direction:column;justify-content:center}
+.count b{font-size:1.5rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.count span{font-size:.84rem}
+.count.dupe{border-color:var(--blood);color:var(--blood);background:color-mix(in srgb,var(--blood) 10%,transparent)}
+.orderline{font-size:.9rem;align-self:center}
+.orderline code{font:700 1rem var(--mono);letter-spacing:.08em}
+.lane{border:1.5px solid var(--grid);border-radius:12px;padding:10px;background:var(--paper-2)}
+.lane h3{font-size:.98rem;margin:0 0 8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.lane h3 small{font-weight:600;color:var(--ink-soft);font-size:.8rem}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cards.one{grid-template-columns:1fr}
+.card{border:1.5px solid var(--grid);border-radius:8px;padding:6px 8px;min-height:74px;background:var(--paper);font-size:.8rem;line-height:1.3;transition:background-color .25s,border-color .25s}
+.card .k{font:700 1.05rem var(--mono);display:block}
+.card .d{color:var(--ink-soft)}
+.card .st{display:block;font-weight:700;font-size:.75rem;margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+.card.current{border:2.5px solid var(--ink);box-shadow:0 0 0 3px color-mix(in srgb,var(--ink) 12%,transparent)}
+.card.done{background:var(--paper-2);color:var(--ink-soft)}
+.card.done .st{color:var(--moss)}
+.card.waiting{border:2.5px dashed var(--ochre)}
+.card.waiting .st{color:var(--ochre)}
+.card.rejected{opacity:.6}
+.card.rejected .k{text-decoration:line-through}
+.card.conflict,.card.aborted{border:2.5px solid var(--blood)}
+.card.conflict .st,.card.aborted .st{color:var(--blood)}
+.copy{margin-top:8px;padding:6px 10px;border-radius:8px;border:1.5px dashed var(--grid);font-size:.84rem;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.copy code{font:700 .95rem var(--mono)}
+.copy.live{border-style:solid;border-color:var(--steel)}
+.copy.stale{border:2px solid var(--ochre);background:color-mix(in srgb,var(--ochre) 18%,transparent)}
+.tag{font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;padding:1px 7px;border-radius:999px}
+.tag.stale{background:var(--ochre);color:var(--paper)}
+.db{margin:10px 0;border:2px solid var(--ink);border-radius:12px;padding:10px;background:var(--paper)}
+.db h3{font-size:.95rem;margin:0 0 8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.db h3 small{font-weight:600;font-size:.8rem;color:var(--ink-soft)}
+.invs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.inv{border:1.5px solid var(--grid);border-radius:8px;padding:6px 8px;display:flex;gap:8px;align-items:center;min-width:0}
+.inv .slot{width:36px;height:36px;flex:none;border-radius:7px;border:1.5px dashed var(--grid);display:grid;place-items:center}
+.inv .slot.full{border:1.5px solid var(--ochre)}
+.inv .slot.pend{border:1.5px dashed var(--ochre);opacity:.7}
+.inv b{display:block;font-size:.88rem}
+.inv code{font:600 .82rem var(--mono);overflow-wrap:anywhere}
+.inv small{display:block;font-size:.72rem;color:var(--ink-soft)}
+.lockbadge{font-size:.8rem;font-weight:700;color:var(--ochre)}
+.log{margin:12px 0 0;padding:8px 10px 8px 34px;border-radius:8px;background:var(--paper-2);font:.8rem/1.5 var(--mono);max-height:190px;overflow:auto}
+.log li.new{font-weight:700}
+.gridwrap{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+@media (max-width:520px){.gridwrap{grid-template-columns:repeat(4,1fr)}}
+.cell{font:700 .82rem var(--mono);padding:7px 2px 6px;border-radius:8px;border:1.5px solid var(--grid);cursor:pointer;background:var(--paper-2);color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.cell small{font:600 .68rem var(--sans);text-align:center;line-height:1.15}
+.cell.dupe{background:var(--blood);border-color:var(--blood);color:var(--paper)}
+.cell.here{outline:3px solid var(--ink);outline-offset:2px}
+.cell:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.summary{font-size:1.1rem;font-weight:700;margin:12px 0 4px;font-variant-numeric:tabular-nums}
+.summary.bad{color:var(--blood)}
+.gridnote{font-size:.86rem;color:var(--ink-soft);margin:6px 0 0}
+.timing{display:grid;grid-template-columns:1fr 1.3fr;gap:16px 24px}
+@media (max-width:820px){.timing{grid-template-columns:1fr}}
+label.sl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+label.sl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 10px}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font:600 .8rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.warn{color:var(--blood);font-weight:700;font-size:.9rem;min-height:1.4em;margin:4px 0 0}
+#bars{width:100%}
+#bars svg{display:block}
+.insight{margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:.98rem}
+[hidden]{display:none!important}
+footer{margin-top:18px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (max-width:520px){.cards{gap:5px}.card{padding:5px 6px;font-size:.74rem}.invs{gap:5px}.inv{flex-direction:column;align-items:flex-start;padding:6px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 6 · Worked example</p>
+  <h1>The trade dupe, step by step</h1>
+  <p class="lede">Each trade is correct on its own. Run them at the same time and 18 of the 20 ways their steps can interleave end with two swords, because each trade writes back a stale copy of the giver's inventory. Watch the amber copy below: that is the bug.</p>
+</header>
+
+<section class="panel" aria-label="Handler">
+  <fieldset>
+    <legend>Trade handler</legend>
+    <div class="radios" id="handlers"></div>
+  </fieldset>
+</section>
+
+<div class="duo">
+<section class="panel" aria-labelledby="hStep">
+  <h2 id="hStep">Two trades, one sword</h2>
+  <p class="sub">Step either trade. Keys <kbd>1</kbd> and <kbd>2</kbd> step trade 1 and trade 2.</p>
+  <div class="bar">
+    <button class="btn" id="b1" type="button">Trade 1 step</button>
+    <button class="btn" id="b2" type="button">Trade 2 step</button>
+    <button class="btn primary" id="play" type="button">Play</button>
+    <button class="btn" id="reset" type="button">Reset</button>
+  </div>
+  <div class="top">
+    <div class="orderline" id="orderline"></div>
+    <div class="count" id="count" aria-live="polite"><b id="countN">—</b><span id="countL"></span></div>
+  </div>
+  <div class="lane" id="lane1"></div>
+  <div class="db" id="db"></div>
+  <div class="lane" id="lane2"></div>
+  <ol class="log" id="log" aria-label="Steps executed" aria-live="polite"></ol>
+</section>
+
+<section class="panel" aria-labelledby="hGrid">
+  <h2 id="hGrid">All 20 interleavings</h2>
+  <p class="sub">Each string says which trade takes the next turn. Red cells end with two swords. Pick one to load it into the step view. Arrow keys move between cells.</p>
+  <div class="gridwrap" id="grid" role="group" aria-label="Interleavings"></div>
+  <p class="summary" id="summary" aria-live="polite"></p>
+  <p class="gridnote" id="gridnote"></p>
+</section>
+</div>
+
+<section class="panel" aria-labelledby="hTime">
+  <h2 id="hTime">How often does it fire?</h2>
+  <p class="sub">"18 of 20" counts orders, not time. Two requests sent together start after independent random delays in [0, J]. They race when their starts differ by less than the window w: P = 1 − (1 − w/J)².</p>
+  <div class="timing">
+    <div>
+      <label class="sl" for="sw">Race window w <output id="ow">5.0 ms</output></label>
+      <input id="sw" type="range" min="0.1" max="50" step="0.1" value="5">
+      <label class="sl" for="sj">Jitter J <output id="oj">50 ms</output></label>
+      <input id="sj" type="range" min="1" max="200" step="1" value="50">
+      <label class="sl" for="sn">Attempts n <output id="on">20</output></label>
+      <input id="sn" type="range" min="1" max="100" step="1" value="20">
+      <div class="chips" role="group" aria-label="Lecture values">
+        <button class="chip" type="button" data-t="5,50,20">w 5, J 50, n 20</button>
+        <button class="chip" type="button" data-t="2,100,100">w 2, J 100, n 100</button>
+        <button class="chip" type="button" data-t="8,40,20">w 8, J 40</button>
+        <button class="chip" type="button" data-t="1.2,3,20">Lab 06 stress: w 1.2, J 3</button>
+      </div>
+    </div>
+    <div>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rWJ">—</b><span>w / J</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rP">—</b><span>P per attempt</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rE">—</b><span>expected attempts 1/P</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rN">—</b><span id="rNl">P(at least one in n)</span></div>
+      </div>
+      <p class="warn" id="warn"></p>
+      <div id="bars" aria-hidden="true"></div>
+    </div>
+  </div>
+  <div class="insight" id="tinsight"></div>
+</section>
+
+<footer>Semantics match DB201 Lab 06 (<code>dupe_lab.py</code>): the giver owns sword 5001, trade 1 gives it to Bram, trade 2 to Cyra. A turn for a finished trade is skipped. Under the row lock, a blocked turn goes back in the queue and the other trade moves first, as in the lab's scheduler. The sword is a generic shape.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SW=5001,RECV={1:'Bram',2:'Cyra'};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const H={
+  naive:{label:'Naive (read, give, take)',steps:['R','G','T']},
+  rtg:{label:'Naive, take before give (R T G)',steps:['R','T','G']},
+  fix1:{label:'Fix 1: conditional UPDATE (row model)',steps:['M']},
+  fix2:{label:'Fix 2: row lock (FOR UPDATE)',steps:['R','G','T']},
+  fix3:{label:'Fix 3: version check',steps:['R','T','G']},
+  fix4:{label:'Fix 4: serializable with retry',steps:['R','G','T']}
+};
+function desc(h,s,t){
+  const r=RECV[t];
+  if(s==='M') return ['Move','UPDATE items SET owner = '+r+' WHERE owner = giver'];
+  if(s==='R') return h==='fix2'?['Read giver','FOR UPDATE: takes the row lock']:(h==='fix3'?['Read giver','list and version']:['Read giver','copy = giver\'s list']);
+  if(s==='G') return ['Give',h==='fix4'?r+' += sword (in transaction)':r+' += sword'];
+  if(h==='fix3') return ['Take','giver = copy − sword, if version unchanged'];
+  if(h==='fix2') return ['Take','giver = copy − sword; COMMIT, unlock'];
+  if(h==='fix4') return ['Take','giver = copy − sword; COMMIT'];
+  return ['Take','giver = copy − sword'];
+}
+const L=a=>'['+a.join(', ')+']';
+const has=a=>a.includes(SW);
+const minus=a=>{const b=a.slice(),i=b.indexOf(SW);if(i>=0)b.splice(i,1);return b;};
+
+function newTrade(){return {idx:0,status:'running',copy:null,ver:null,seq:0,waiting:false,retries:0,aborted:false};}
+function newWorld(h){return {h,giver:[SW],inv:{1:[],2:[]},version:0,lock:0,seq:0,pend:{1:false,2:false},tr:{1:newTrade(),2:newTrade()}};}
+function finish(W,t){const T=W.tr[t];if(T.idx>=H[W.h].steps.length){T.status='done';T.copy=null;}}
+
+// One step of trade t. Returns {log, wait} or null if the trade is finished.
+function step(W,t){
+  const T=W.tr[t],o=t===1?2:1,h=W.h;
+  if(T.status!=='running') return null;
+  const s=H[h].steps[T.idx];T.aborted=false;
+  const p=`T${t}: `;
+  if(s==='M'){
+    if(has(W.giver)){W.giver=minus(W.giver);W.inv[t].push(SW);T.idx++;finish(W,t);return {log:p+`UPDATE ... WHERE owner = giver: 1 row, sword moved to ${RECV[t]}`};}
+    T.status='rejected';return {log:p+'UPDATE ... WHERE owner = giver: 0 rows, rejected'};
+  }
+  if(s==='R'){
+    if(h==='fix2'){
+      if(W.lock&&W.lock!==t){T.waiting=true;return {wait:true,log:p+`SELECT ... FOR UPDATE waits: trade ${o} holds the lock`};}
+      W.lock=t;T.waiting=false;
+    }
+    T.copy=W.giver.slice();T.ver=W.version;T.seq=W.seq;
+    const again=T.retries?' (retry)':'';
+    if(!has(T.copy)){
+      T.status='rejected';
+      let x=p+`read giver = ${L(T.copy)}${again}, no sword: rejected`;
+      if(W.lock===t){W.lock=0;x+=', lock released';}
+      return {log:x};
+    }
+    T.idx++;
+    return {log:p+`read giver = ${L(T.copy)}${h==='fix3'?', version '+T.ver:''}${again}, sword present: check passes`+(h==='fix2'?' (lock taken)':'')};
+  }
+  if(s==='G'){
+    if(h==='fix4'){W.pend[t]=true;T.idx++;return {log:p+`give, ${RECV[t]} = [${SW}] (uncommitted)`};}
+    W.inv[t].push(SW);T.idx++;finish(W,t);
+    return {log:p+`give, ${RECV[t]} = ${L(W.inv[t])}`};
+  }
+  // s==='T'
+  if(h==='fix3'&&W.version!==T.ver){
+    T.status='conflict';T.copy=null;
+    return {log:p+`write giver WHERE version = ${T.ver}: 0 rows (version is ${W.version}), conflict, gives nothing`};
+  }
+  if(h==='fix4'&&W.seq!==T.seq){
+    W.pend[t]=false;T.idx=0;T.copy=null;T.retries++;T.aborted=true;
+    return {log:p+`COMMIT fails with 40001 (serialization failure): rolled back, ${RECV[t]}'s sword removed, retry from R`};
+  }
+  const stale=JSON.stringify(T.copy)!==JSON.stringify(W.giver);
+  W.giver=minus(T.copy);W.seq++;
+  let x=p+`write giver = ${L(W.giver)} (from ${stale?'stale copy':'its copy, still current'})`;
+  if(h==='fix3'){W.version++;x=p+`write giver = ${L(W.giver)} WHERE version = ${T.ver}: 1 row, version now ${W.version}`;}
+  if(h==='fix4'){if(W.pend[t]){W.inv[t].push(SW);W.pend[t]=false;}x+=', COMMIT';}
+  if(h==='fix2'){W.lock=0;W.tr[o].waiting=false;x+=', COMMIT, lock released';}
+  T.idx++;finish(W,t);
+  return {log:x};
+}
+const count=W=>[W.giver,W.inv[1],W.inv[2]].reduce((n,a)=>n+a.filter(x=>x===SW).length,0);
+const running=W=>W.tr[1].status==='running'||W.tr[2].status==='running';
+
+// Lab 06 scheduler rules applied to a queue of turns.
+function takeTurn(W,Q,who){
+  const i=Q.indexOf(who);
+  if(Q[0]===who) Q.shift();
+  const r=step(W,who);
+  if(r&&r.wait){
+    const o=who===1?2:1;Q.push(who);const j=Q.indexOf(o);if(j>=0)Q.splice(j,1);Q.unshift(o);
+  }
+  return r;
+}
+function nextWho(W,Q){
+  while(Q.length&&W.tr[Q[0]].status!=='running') Q.shift();
+  if(Q.length) return Q[0];
+  return W.tr[1].status==='running'?1:(W.tr[2].status==='running'?2:0);
+}
+function runOrder(h,order){
+  const W=newWorld(h),Q=order.split('').map(Number);let g=0;
+  while(running(W)&&g++<200){const who=nextWho(W,Q);if(!who)break;takeTurn(W,Q,who);}
+  const n=count(W),rej=['rejected','conflict'].some(s=>W.tr[1].status===s||W.tr[2].status===s);
+  return {n,rej,W};
+}
+const ORDERS=[];
+(function gen(s,a,b){if(s.length===6){ORDERS.push(s);return;}if(a<3)gen(s+'1',a+1,b);if(b<3)gen(s+'2',a,b+1);})('',0,0);
+
+// ---------- state
+const V={h:'naive',order:'112122',W:null,Q:null,done:'',log:[],timer:null};
+function load(order){
+  stop();V.order=order;V.W=newWorld(V.h);V.Q=order?order.split('').map(Number):null;V.done='';V.log=[];render();
+}
+function doStep(t){
+  const W=V.W;if(W.tr[t].status!=='running') return;
+  if(V.Q){const nw=nextWho(W,V.Q);if(nw!==t&&V.Q.length){V.Q=null;}}
+  const r=V.Q?takeTurn(W,V.Q,t):step(W,t);
+  if(r){V.log.push(r.log);if(!r.wait)V.done+=t;}
+  render();
+}
+function playStep(){
+  if(!V.Q){stop();return;}
+  const who=nextWho(V.W,V.Q);if(!who){stop();return;}
+  doStep(who);if(!running(V.W))stop();
+}
+function stop(){if(V.timer){clearInterval(V.timer);V.timer=null;}setPlay();}
+function setPlay(){
+  const b=$('play');
+  if(reduce.matches){b.textContent='Next step';}else b.textContent=V.timer?'Pause':'Play';
+  b.disabled=!V.Q||!V.W||!running(V.W);
+}
+
+// ---------- rendering
+const SWORD=(cls)=>`<svg width="28" height="28" viewBox="0 0 34 34" aria-hidden="true" class="${cls||''}"><g transform="rotate(45 17 17)"><polygon points="15,5 17,1 19,5 19,21 15,21" fill="var(--steel)"/><rect x="10" y="21" width="14" height="3" rx="1.5" fill="var(--ochre)"/><rect x="15.5" y="24" width="3" height="6" fill="var(--ink)"/><circle cx="17" cy="31.5" r="2" fill="var(--ochre)"/></g></svg>`;
+function laneHTML(t){
+  const W=V.W,T=W.tr[t],steps=H[V.h].steps;
+  let status={running:'running',done:'finished',rejected:'rejected',conflict:'conflict'}[T.status];
+  if(T.waiting) status='blocked on lock';
+  if(T.retries) status+=`, attempt ${T.retries+1}`;
+  let s=`<h3><span>Trade ${t} → ${RECV[t]}</span><small>${status}</small></h3><div class="cards${steps.length===1?' one':''}">`;
+  steps.forEach((k,i)=>{
+    const [nm,d]=desc(V.h,k,t);let c='pending',st='pending';
+    if(T.status==='rejected'){ if(i<T.idx){c='done';st='done';} else if(i===T.idx){c='rejected';st='rejected';} else {c='rejected';st='skipped';} }
+    else if(T.status==='conflict'){ if(i<T.idx){c='done';st='done';} else if(i===T.idx){c='conflict';st='conflict';} else {c='rejected';st='never runs';} }
+    else if(T.status==='done'){c='done';st='done';}
+    else if(i<T.idx){c='done';st='done';}
+    else if(i===T.idx){ if(T.waiting){c='waiting';st='waiting for lock';} else {c='current';st='next';} }
+    if(T.aborted&&k==='T'){c='aborted';st='40001, retry';}
+    s+=`<div class="card ${c}"><span class="k">${k}${t}</span><span class="d"><b>${nm}</b>. ${d}</span><span class="st">${st}</span></div>`;
+  });
+  s+='</div>';
+  if(V.h==='fix1') s+=`<div class="copy"><span>No copy in memory: one statement checks and writes.</span></div>`;
+  else if(T.copy){
+    const stale=JSON.stringify(T.copy)!==JSON.stringify(W.giver);
+    s+=`<div class="copy ${stale?'stale':'live'}"><span>Trade ${t}'s copy of the giver's inventory: <code>${L(T.copy)}</code>${V.h==='fix3'?' <code>v'+T.ver+'</code>':''}</span>${stale?'<span class="tag stale">stale</span>':'<span class="tag">matches the database</span>'}</div>`;
+  } else s+=`<div class="copy"><span>Trade ${t}'s copy of the giver's inventory: <code>—</code> ${T.status==='running'?'(nothing read yet)':'(discarded)'}</span></div>`;
+  return s;
+}
+function invHTML(name,list,pend,extra){
+  const full=has(list);
+  return `<div class="inv"><div class="slot ${full?'full':(pend?'pend':'')}">${full||pend?SWORD():''}</div><div><b>${name}</b><code>${L(list)}</code>${pend?'<small>+ sword, uncommitted</small>':''}${extra||''}</div></div>`;
+}
+function render(){
+  const W=V.W;
+  $('lane1').innerHTML=laneHTML(1);$('lane2').innerHTML=laneHTML(2);
+  let head='Database';
+  let side=V.h==='fix2'?`<span class="lockbadge">${W.lock?'giver row locked by trade '+W.lock:'giver row unlocked'}</span>`:(V.h==='fix4'?'<small>only committed rows count</small>':(V.h==='fix1'?'<small>row model: items.owner_id</small>':''));
+  $('db').innerHTML=`<h3><span>${head}</span>${side}</h3><div class="invs">${invHTML('Giver',W.giver,false,V.h==='fix3'?`<small>version ${W.version}</small>`:'')}${invHTML('Bram',W.inv[1],W.pend[1])}${invHTML('Cyra',W.inv[2],W.pend[2])}</div>`;
+  const n=count(W),c=$('count');
+  c.className='count'+(n>1?' dupe':'');
+  $('countN').textContent=`Swords in the world: ${n}`;
+  $('countL').textContent=n>1?'DUPE ×2':(n===1?'correct so far':'LOST');
+  $('b1').disabled=W.tr[1].status!=='running';$('b2').disabled=W.tr[2].status!=='running';
+  const ord=V.Q?`Order <code>${V.order}</code>`:'Order <code>custom</code>';
+  $('orderline').innerHTML=`${ord}<br>Steps run: <code>${V.done||'—'}</code>`;
+  $('log').innerHTML=V.log.length?V.log.map((x,i)=>`<li class="${i===V.log.length-1?'new':''}">${x}</li>`).join(''):'<li>Nothing has run yet.</li>';
+  $('log').scrollTop=$('log').scrollHeight;
+  document.querySelectorAll('.cell').forEach(b=>b.classList.toggle('here',!!V.Q&&b.dataset.o===V.order));
+  setPlay();
+}
+function renderGrid(){
+  let d=0;
+  document.querySelectorAll('.cell').forEach(b=>{
+    const r=runOrder(V.h,b.dataset.o),dupe=r.n>1;d+=dupe;
+    b.className='cell'+(dupe?' dupe':'');
+    const txt=dupe?'×2 dupe':(r.rej?'ok, one rejected':'ok');
+    b.querySelector('small').textContent=txt;
+    b.setAttribute('aria-label',`${b.dataset.o}: ${dupe?'dupe, two swords':txt}`);
+  });
+  const s=$('summary');s.textContent=`Dupes: ${d} of 20`;s.className='summary'+(d?' bad':'');
+  const notes={
+    naive:'Safe only when one trade finishes before the other starts: 111222 and 222111.',
+    rtg:'Taking before giving does not close the race. The dupe condition is unchanged: each read before the other\'s take. With T second, that means both reads come first, so 12 of the 20 orders still dupe.',
+    fix1:'One statement checks and writes. Whichever trade moves second updates zero rows.',
+    fix2:'The second read waits for the lock, then sees the committed list without the sword.',
+    fix3:'The second take finds the version changed and gives nothing. Try 121122.',
+    fix4:'The database aborts the second commit with 40001. The retry reads the committed list and rejects.'
+  };
+  $('gridnote').textContent=notes[V.h];
+}
+
+// ---------- build controls
+Object.entries(H).forEach(([k,v],i)=>{
+  const l=document.createElement('label');
+  l.innerHTML=`<input type="radio" name="h" value="${k}" ${i===0?'checked':''}> ${v.label}`;
+  $('handlers').appendChild(l);
+});
+$('handlers').addEventListener('change',e=>{V.h=e.target.value;renderGrid();load(V.order||'112122');});
+ORDERS.forEach((o,i)=>{
+  const b=document.createElement('button');b.type='button';b.className='cell';b.dataset.o=o;b.tabIndex=i===0?0:-1;
+  b.innerHTML=`${o}<small></small>`;
+  b.addEventListener('click',()=>{document.querySelectorAll('.cell').forEach(x=>x.tabIndex=-1);b.tabIndex=0;load(o);});
+  b.addEventListener('keydown',e=>{
+    const cols=getComputedStyle($('grid')).gridTemplateColumns.split(' ').length;
+    const m={ArrowRight:1,ArrowLeft:-1,ArrowDown:cols,ArrowUp:-cols,Home:-i,End:19-i}[e.key];
+    if(m===undefined) return;
+    e.preventDefault();const j=Math.max(0,Math.min(19,i+m)),cells=document.querySelectorAll('.cell');
+    cells.forEach(x=>x.tabIndex=-1);cells[j].tabIndex=0;cells[j].focus();
+  });
+  $('grid').appendChild(b);
+});
+$('b1').addEventListener('click',()=>{stop();doStep(1);});
+$('b2').addEventListener('click',()=>{stop();doStep(2);});
+$('reset').addEventListener('click',()=>load(V.Q?V.order:V.order));
+$('play').addEventListener('click',()=>{
+  if(reduce.matches){playStep();return;}
+  if(V.timer){stop();return;}
+  playStep();if(running(V.W)){V.timer=setInterval(playStep,900);}setPlay();
+});
+document.addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.target.tagName==='INPUT'&&e.target.type!=='radio') return;
+  if(e.key==='1'||e.key==='2'){e.preventDefault();stop();doStep(+e.key);}
+});
+reduce.addEventListener('change',setPlay);
+
+// ---------- timing
+const T={w:5,J:50,n:20};
+function fp(x){if(x>=1)return '1.000';if(x>=0.9995)return x.toFixed(4);if(x>=0.1)return x.toFixed(3);return x.toPrecision(3);}
+function pAt(){return T.w>=T.J?1:1-Math.pow(1-T.w/T.J,2);}
+function timing(){
+  const P=pAt(),atn=1-Math.pow(1-P,T.n);
+  $('ow').textContent=T.w.toFixed(1)+' ms';$('oj').textContent=T.J+' ms';$('on').textContent=T.n;
+  $('rWJ').textContent=(T.w/T.J).toFixed(3);$('rP').textContent=fp(P);$('rE').textContent=(1/P).toFixed(1);
+  $('rN').textContent=fp(atn);$('rNl').textContent=`P(at least one in ${T.n})`;
+  $('warn').textContent=T.w>T.J?'window longer than jitter: every attempt overlaps.':'';
+  $('tinsight').innerHTML=`An honest player sends one request, so nothing races. An attacker who sends two on purpose, ${T.n} times, gets at least one dupe with probability <b>${fp(atn)}</b>. On average the first dupe comes after <b>${(1/P).toFixed(1)}</b> attempts.`;
+  drawBars(P);
+}
+function drawBars(P){
+  const el=$('bars'),w=el.clientWidth,h=190,pl=34,pr=8,pt=10,pb=26,n=T.n;
+  const soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),sans=css('--sans'),ink=css('--ink');
+  const X=k=>pl+(k-1)/n*(w-pl-pr),bw=Math.max(1,(w-pl-pr)/n-(n>40?1:2)),Y=v=>pt+(1-v)*(h-pt-pb);
+  let s='';
+  [0,0.25,0.5,0.75,1].forEach(v=>{s+=`<line x1="${pl}" x2="${w-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${grid}"/><text x="${pl-5}" y="${Y(v)+4}" font-size="11" text-anchor="end" fill="${soft}" font-family="${sans}">${v}</text>`;});
+  for(let k=1;k<=n;k++){const v=1-Math.pow(1-P,k);s+=`<rect x="${X(k)}" y="${Y(v)}" width="${bw}" height="${Y(0)-Y(v)}" fill="${blood}" opacity="${k===n?1:.55}"/>`;}
+  s+=`<text x="${pl}" y="${h-6}" font-size="11" fill="${soft}" font-family="${sans}">k = 1</text><text x="${w-pr}" y="${h-6}" font-size="11" text-anchor="end" fill="${soft}" font-family="${sans}">k = ${n}: P(at least one dupe in k attempts)</text>`;
+  el.innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${s}</svg>`;
+}
+[['sw','w'],['sj','J'],['sn','n']].forEach(([id,k])=>$(id).addEventListener('input',e=>{T[k]=+e.target.value;timing();}));
+document.querySelectorAll('.chip[data-t]').forEach(b=>b.addEventListener('click',()=>{
+  const [w,J,n]=b.dataset.t.split(',').map(Number);T.w=w;T.J=J;T.n=n;$('sw').value=w;$('sj').value=J;$('sn').value=n;timing();
+}));
+window.addEventListener('resize',()=>drawBars(pAt()));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>drawBars(pAt()));
+
+// ---------- start: 112122 paused at the stale moment
+renderGrid();load('112122');
+[1,1,2,1].forEach(t=>doStep(t));
+timing();
+})();
+</script>
+</body>
+</html>

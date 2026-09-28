@@ -1,0 +1,4 @@
+-- q06. One row per class with: total gold, number of item rows, number of quest completions.
+-- Columns: class, total_gold, item_rows, quest_rows.  Order: class ascending.
+-- Warning: this is the fan-out trap from lecture section 2. Write the naive
+-- three-table join first, record its numbers in your report, then fix it.

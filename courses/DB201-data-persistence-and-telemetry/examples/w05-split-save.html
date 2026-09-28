@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Split save — DB201 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px}
+figure{margin:0 0 14px;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.plot{width:100%;display:block;touch-action:none;cursor:ew-resize;border-radius:6px}
+.plot svg{display:block}
+.plot:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.restored{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:stretch;margin-top:10px}
+@media (max-width:600px){.restored{grid-template-columns:1fr 1fr}.restored .count{grid-column:1/-1}.inv{padding:8px;gap:8px}.slot{width:38px;height:38px}}
+.inv{border:1.5px solid var(--grid);border-radius:10px;padding:8px 10px;background:var(--paper);display:flex;align-items:center;gap:10px;min-height:64px}
+.inv .who{font-size:.85rem;color:var(--ink-soft)}
+.inv .what{font-weight:700}
+.slot{width:44px;height:44px;flex:none;border-radius:8px;border:1.5px dashed var(--grid);display:grid;place-items:center}
+.slot.full{border:1.5px solid var(--ochre)}
+.count{border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;justify-content:center;border:2px solid var(--ink);background:var(--paper);min-width:180px}
+.count b{font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.count span{font-size:.85rem}
+.count.dupe{border-color:var(--blood);color:var(--blood)}
+.count.lost{border-color:var(--ink-soft);color:var(--ink-soft);border-style:dashed}
+.readout{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin:4px 0 0}
+@media (max-width:900px){.readout{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.btn,.chip{font:600 .9rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.chip{border-color:var(--steel);font-size:.82rem;padding:6px 10px}
+.toggle{display:flex;align-items:flex-start;gap:10px;font-weight:600;font-size:.95rem;justify-content:flex-start;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--moss);flex:none;margin-top:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.sim{font-variant-numeric:tabular-nums;font-size:.95rem;margin:10px 0 0;min-height:1.5em}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:22px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid var(--c)}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:4px 0 0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 10px}
+[hidden]{display:none!important}
+footer{margin-top:18px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 5 · Worked example</p>
+  <h1>One trade, two save timers</h1>
+  <p class="lede">A gives B a sword. Each character is saved on its own timer, so a crash can restore one side with the trade and the other without it. Half an interval after the trade, that split is a coin flip.</p>
+</header>
+
+<section class="panel" aria-label="Timeline and outcome">
+  <figure>
+    <figcaption>What the disk remembers<small>Save ticks for each character. Drag the red crash line, or focus the chart and use the arrow keys.</small></figcaption>
+    <div class="plot" id="tl" tabindex="0" role="slider" aria-label="Crash time after the trade, in seconds" aria-valuemin="0"></div>
+    <p class="hint" style="margin:10px 0 0;font-weight:600;color:var(--ink)">Restored from disk after the crash</p>
+    <div class="restored" aria-live="polite" style="margin-top:4px">
+      <div class="inv"><div class="slot" id="slotA"></div><div><div class="who">A (giver)</div><div class="what" id="invA">—</div></div></div>
+      <div class="inv"><div class="slot" id="slotB"></div><div><div class="who">B (receiver)</div><div class="what" id="invB">—</div></div></div>
+      <div class="count" id="count"><b id="countN">—</b><span id="countL">—</span></div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Across all phases<small>Chance of each outcome for a crash d seconds after the trade, when the save timers could be anywhere</small></figcaption>
+    <div class="plot" id="curves" aria-hidden="true"></div>
+    <div class="legend" id="legend">
+      <span><i style="--c:var(--blood)"></i>P(dupe) = p(1 − p)</span>
+      <span><i style="--c:var(--steel);border-top-style:dashed"></i>P(loss) = p(1 − p), same curve</span>
+      <span><i style="--c:var(--ink);border-top-width:5px"></i>P(split) = 2p(1 − p)</span>
+    </div>
+  </figure>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rT">—</b><span>save interval T</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rD">—</b><span>crash delay d</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rDT">—</b><span>d / T</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rP">—</b><span>p = min(d/T, 1)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rDupe">—</b><span>P(dupe)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rLoss">—</b><span>P(loss)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rSplit">—</b><span>P(split)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rOut">—</b><span>outcome, these phases</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<section class="panel" aria-label="Controls">
+  <div class="controls">
+    <div>
+      <label for="sT">Save interval T <output id="oT">300 s</output></label>
+      <input id="sT" type="range" min="30" max="600" step="10" value="300">
+      <label for="sD" style="margin-top:10px">Crash delay d <output id="oD">150 s</output></label>
+      <input id="sD" type="range" min="0" max="450" step="1" value="150">
+      <label for="sA" style="margin-top:10px"><span>Phase of A, φ<sub>A</sub></span> <output id="oA">210 s</output></label>
+      <input id="sA" type="range" min="0" max="300" step="1" value="210">
+      <label for="sB" style="margin-top:10px"><span>Phase of B, φ<sub>B</sub></span> <output id="oB">90 s</output></label>
+      <input id="sB" type="range" min="0" max="300" step="1" value="90">
+      <p class="hint">Arrow keys move a slider by 1% of T. A character's first save after the trade happens at its phase.</p>
+    </div>
+    <div>
+      <label class="toggle" for="joint"><input type="checkbox" id="joint"> Save both characters in one transaction when they trade</label>
+      <div class="row">
+        <button class="btn" id="rand" type="button">Random phases</button>
+        <button class="btn primary" id="simBtn" type="button">Simulate 10,000 crashes</button>
+      </div>
+      <p class="sim" id="sim" aria-live="polite"></p>
+      <h2 style="margin-top:14px">Cases from the lecture</h2>
+      <div class="row" role="group" aria-label="Lecture test cases" id="cases" style="margin-top:0"></div>
+    </div>
+  </div>
+</section>
+
+<footer>Model from DB201 week 5, section 2: each character saves every T seconds at an independent phase, and a crash restores the last save of each. With one transaction per trade, both sides share one commit point. The sword is a generic shape.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f3=x=>x.toFixed(3);
+const sec=x=>Math.round(x).toLocaleString('en-US')+' s';
+const S={T:300,d:150,pa:210,pb:90,joint:false};
+const CASES=[[300,150,210,90],[300,150,90,210],[300,30,210,90],[120,30,10,20],[240,180,200,100],[300,400,210,90]];
+
+const pOf=(d,T)=>Math.min(d/T,1);
+function outcome(){
+  if(S.joint) return {a:false,b:true,key:'correct'};
+  const aS=S.pa<S.d,bS=S.pb<S.d;
+  const key=aS&&bS?'correct':(!aS&&!bS?'nothing':(bS?'dupe':'lost'));
+  return {a:!aS,b:bS,key,aS,bS};
+}
+const OUT={correct:'correct',nothing:'nothing happened',dupe:'DUPE',lost:'LOST'};
+
+const SWORD='<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><g transform="rotate(45 17 17)"><polygon points="15,5 17,1 19,5 19,21 15,21" fill="var(--steel)"/><rect x="10" y="21" width="14" height="3" rx="1.5" fill="var(--ochre)"/><rect x="15.5" y="24" width="3" height="6" fill="var(--ink)"/><circle cx="17" cy="31.5" r="2" fill="var(--ochre)"/></g></svg>';
+
+function svgWrap(el,h,body){const w=el.clientWidth;el.innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="presentation">${body(w)}</svg>`;}
+
+// ---- timeline
+const TL={l:14,r:14,h:196,yA:62,yB:122,ax:166};
+function tx(t,w){return TL.l+(t+0.2*S.T)/(1.7*S.T)*(w-TL.l-TL.r);}
+function drawTimeline(){
+  const el=$('tl'),o=outcome();
+  svgWrap(el,TL.h,w=>{
+    const ink=css('--ink'),soft=css('--ink-soft'),moss=css('--moss'),blood=css('--blood'),ochre=css('--ochre'),grid=css('--grid');
+    let s='';
+    // risk window
+    const xd=tx(Math.min(S.d,1.5*S.T),w),x0=tx(0,w);
+    s+=`<rect x="${x0}" y="${TL.yA-14}" width="${Math.max(0,xd-x0)}" height="${TL.yB-TL.yA+28}" fill="${blood}" opacity=".07"/>`;
+    // axis
+    s+=`<line x1="${TL.l}" x2="${w-TL.r}" y1="${TL.ax}" y2="${TL.ax}" stroke="${soft}" stroke-width="1"/>`;
+    const nar=w<560;[0,0.5,1,1.5].forEach(k=>{const x=tx(k*S.T,w);if(nar){s+=`<line x1="${x}" x2="${x}" y1="${TL.ax}" y2="${TL.ax+5}" stroke="${soft}"/><text x="${x}" y="${TL.ax+18}" font-size="12" fill="${soft}" text-anchor="${k===1.5?'end':'middle'}" font-family="${css('--sans')}">${['0','T/2','T','1.5T'][k*2]}</text>`;return;}s+=`<line x1="${x}" x2="${x}" y1="${TL.ax}" y2="${TL.ax+5}" stroke="${soft}"/><text x="${x}" y="${TL.ax+18}" font-size="12" fill="${soft}" text-anchor="${k===1.5?'end':'middle'}" font-family="${css('--sans')}">${k===0?'trade, t = 0':(k===1.5?'1.5T = ':(k===1?'T = ':'T/2 = '))+(k===0?'':sec(k*S.T))}</text>`;});
+    // rows
+    [['A',S.pa,TL.yA,'Character A (giver)',o.aS],['B',S.pb,TL.yB,'Character B (receiver)',o.bS]].forEach(([id,ph,y,lab,saved])=>{
+      s+=`<text x="${TL.l}" y="${y-20}" font-size="13" font-weight="600" fill="${ink}" stroke="${css('--paper-2')}" stroke-width="5" paint-order="stroke" font-family="${css('--sans')}">${lab}</text>`;
+      s+=`<line x1="${TL.l}" x2="${w-TL.r}" y1="${y}" y2="${y}" stroke="${grid}" stroke-width="2"/>`;
+      for(let k=-1;k<=2;k++){
+        const t=ph+k*S.T; if(t<-0.2*S.T||t>1.5*S.T) continue;
+        const x=tx(t,w),first=(k===0),after=t>=S.d;
+        let col=soft,op=1,sw=2.5;
+        if(first&&!S.joint&&t<S.d){col=moss;sw=4;}
+        if(after) op=.3;
+        s+=`<line x1="${x}" x2="${x}" y1="${y-11}" y2="${y+11}" stroke="${col}" stroke-width="${sw}" opacity="${op}" stroke-linecap="round"/>`;
+        if(first&&!S.joint&&t<S.d){
+          const anchor=x>w-110?'end':(x<90?'start':'middle');
+          s+=`<text x="${x}" y="${y+25}" font-size="11.5" fill="${moss}" text-anchor="${anchor}" font-weight="700" font-family="${css('--sans')}">saved with trade</text>`;
+        }
+      }
+    });
+    // trade diamond (and joint commit)
+    const dy=TL.ax;
+    s+=`<line x1="${x0}" x2="${x0}" y1="${TL.yA-12}" y2="${TL.ax}" stroke="${ochre}" stroke-width="${S.joint?5:1.5}" ${S.joint?'':'stroke-dasharray="3 3"'}/>`;
+    s+=`<polygon points="${x0},${dy-9} ${x0+9},${dy} ${x0},${dy+9} ${x0-9},${dy}" fill="${ochre}" stroke="${css('--paper')}" stroke-width="1.5"/>`;
+    if(S.joint) s+=`<text x="${x0+8}" y="${(TL.yA+TL.yB)/2+4}" font-size="11.5" font-weight="700" fill="${ochre}" font-family="${css('--sans')}">joint commit</text>`;
+    // crash line
+    const xc=tx(Math.min(S.d,1.5*S.T),w),anchor=xc>w-120?'end':'start',off=anchor==='end'?-6:6;
+    s+=`<line x1="${xc}" x2="${xc}" y1="14" y2="${TL.ax}" stroke="${blood}" stroke-width="3"/>`;
+    s+=`<rect x="${xc-7}" y="8" width="14" height="14" rx="3" fill="${blood}"/>`;
+    s+=`<text x="${xc+off+(anchor==='end'?-6:6)}" y="19" font-size="12.5" font-weight="700" fill="${blood}" text-anchor="${anchor}" font-family="${css('--sans')}">crash, d = ${sec(S.d)}</text>`;
+    return s;
+  });
+  el.setAttribute('aria-valuemax',Math.round(1.5*S.T));el.setAttribute('aria-valuenow',Math.round(S.d));
+  el.setAttribute('aria-valuetext',`${sec(S.d)} after the trade, outcome ${OUT[o.key]}`);
+}
+
+// ---- curves
+const CV={l:44,r:12,t:12,b:32,h:250};
+function drawCurves(){
+  const el=$('curves');
+  svgWrap(el,CV.h,w=>{
+    const soft=css('--ink-soft'),grid=css('--grid'),ink=css('--ink'),blood=css('--blood'),steel=css('--steel'),sans=css('--sans');
+    const X=v=>CV.l+v/1.5*(w-CV.l-CV.r),Y=v=>CV.t+(1-v/0.55)*(CV.h-CV.t-CV.b);
+    let s='';
+    for(let v=0;v<=0.5001;v+=0.1){s+=`<line x1="${CV.l}" x2="${w-CV.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="${grid}"/><text x="${CV.l-6}" y="${Y(v)+4}" font-size="11.5" text-anchor="end" fill="${soft}" font-family="${sans}">${v.toFixed(1)}</text>`;}
+    [0,0.25,0.5,0.75,1,1.25,1.5].forEach(v=>{s+=`<text x="${X(v)}" y="${CV.h-CV.b+16}" font-size="11.5" text-anchor="middle" fill="${soft}" font-family="${sans}">${v}</text>`;});
+    s+=`<text x="${w-CV.r}" y="${CV.h-4}" font-size="11.5" text-anchor="end" fill="${soft}" font-family="${sans}">d / T</text>`;
+    const path=(f,dy)=>{let d='';for(let i=0;i<=180;i++){const v=1.5*i/180;d+=(i?'L':'M')+X(v).toFixed(1)+','+(Y(f(v))+dy).toFixed(1);}return d;};
+    const pd=v=>{const p=Math.min(v,1);return p*(1-p);};
+    const cur=Math.min(S.d/S.T,1.5);
+    s+=`<line x1="${X(cur)}" x2="${X(cur)}" y1="${CV.t}" y2="${CV.h-CV.b}" stroke="${ink}" stroke-opacity=".35" stroke-dasharray="4 4"/>`;
+    if(S.joint){
+      s+=`<path d="${path(()=>0,0)}" fill="none" stroke="${ink}" stroke-width="4"/>`;
+      s+=`<text x="${X(0.05)}" y="${Y(0)-10}" font-size="13" font-weight="700" fill="${ink}" font-family="${sans}">one commit point: no split possible</text>`;
+      s+=`<circle cx="${X(cur)}" cy="${Y(0)}" r="6" fill="${ink}" stroke="${css('--paper')}" stroke-width="2"/>`;
+    } else {
+      s+=`<line x1="${X(0)}" x2="${X(1)}" y1="${Y(1/3)}" y2="${Y(1/3)}" stroke="${soft}" stroke-width="1.5" stroke-dasharray="2 4"/>`;
+      s+=`<text x="${X(1)+6}" y="${Y(1/3)+4}" font-size="11.5" fill="${soft}" font-family="${sans}">${w<560?'avg: 1/3':'average over the interval: 1/3'}</text>`;
+      s+=`<path d="${path(pd,0)}" fill="none" stroke="${blood}" stroke-width="2.5"/>`;
+      s+=`<path d="${path(pd,1)}" fill="none" stroke="${steel}" stroke-width="2.5" stroke-dasharray="7 5"/>`;
+      s+=`<path d="${path(v=>2*pd(v),0)}" fill="none" stroke="${ink}" stroke-width="4"/>`;
+      s+=`<text x="${X(0.5)}" y="${Y(0.5)-10}" font-size="12" font-weight="700" text-anchor="middle" fill="${ink}" font-family="${sans}">P(split)</text>`;
+      s+=`<text x="${X(0.5)}" y="${Y(0.25)+20}" font-size="12" text-anchor="middle" fill="${blood}" font-family="${sans}">P(dupe) = P(loss)</text>`;
+      s+=`<circle cx="${X(cur)}" cy="${Y(2*pd(cur))}" r="6" fill="${ink}" stroke="${css('--paper')}" stroke-width="2"/>`;
+    }
+    return s;
+  });
+}
+
+function readouts(){
+  const p=S.joint?null:pOf(S.d,S.T),o=outcome();
+  const pd=S.joint?0:p*(1-p);
+  $('rT').textContent=sec(S.T);$('rD').textContent=sec(S.d);$('rDT').textContent=f3(S.d/S.T);
+  $('rP').textContent=f3(pOf(S.d,S.T));
+  $('rDupe').textContent=f3(pd);$('rLoss').textContent=f3(pd);$('rSplit').textContent=f3(2*pd);
+  $('rOut').textContent=OUT[o.key];
+  $('oT').textContent=sec(S.T);$('oD').textContent=sec(S.d);$('oA').textContent=sec(S.pa);$('oB').textContent=sec(S.pb);
+  $('slotA').innerHTML=o.a?SWORD:'';$('slotA').className='slot'+(o.a?' full':'');
+  $('slotB').innerHTML=o.b?SWORD:'';$('slotB').className='slot'+(o.b?' full':'');
+  $('invA').textContent=o.a?'has the sword':'no sword';$('invB').textContent=o.b?'has the sword':'no sword';
+  const n=(o.a?1:0)+(o.b?1:0),c=$('count');
+  c.className='count'+(n===2?' dupe':(n===0?' lost':''));
+  $('countN').textContent=`Swords in the world: ${n}`;
+  $('countL').textContent=n===2?'DUPE: both sides kept it':(n===0?'LOST: nobody has it':(o.key==='correct'?'correct: the trade happened':'nothing happened: the trade was forgotten'));
+  let s;
+  if(S.joint) s=`Both characters were written in one transaction at the moment of the trade, so any crash after <i>t</i> = 0 restores B holding the sword. P(split) = 0.000 for every crash time and every phase.`;
+  else{
+    const a=o.aS?`A's timer fired at ${sec(S.pa)}, before the crash, so A was saved without the sword`:`A's next save was due at ${sec(S.pa)}, after the crash, so the disk still shows A holding the sword`;
+    const b=o.bS?`B's timer fired at ${sec(S.pb)}, so B was saved with it`:`B's next save was due at ${sec(S.pb)}, so the disk shows B without it`;
+    s=`${a}. ${b}. Result: <b>${OUT[o.key]}</b>. Over all phases, a crash at d/T = ${f3(S.d/S.T)} splits the trade with probability <b>${f3(2*pd)}</b>`+(p>=1?`, because both timers have certainly fired by now.`:(Math.abs(p-0.5)<0.005?`, the worst possible moment.`:`.`));
+  }
+  $('insight').innerHTML=s;
+  document.querySelectorAll('#cases .chip').forEach((b,i)=>{const c=CASES[i];b.setAttribute('aria-pressed',String(c[0]===S.T&&c[1]===S.d&&c[2]===S.pa&&c[3]===S.pb));});
+}
+
+function syncSliders(){
+  const sD=$('sD'),sA=$('sA'),sB=$('sB');
+  $('sT').value=S.T;sD.max=Math.round(1.5*S.T);sA.max=S.T;sB.max=S.T;
+  sD.value=S.d;sA.value=S.pa;sB.value=S.pb;
+}
+function update(){readouts();drawTimeline();drawCurves();}
+
+// events
+$('sT').addEventListener('input',e=>{const T=+e.target.value,r=T/S.T;S.T=T;S.d=Math.round(S.d*r);S.pa=Math.min(T,Math.round(S.pa*r));S.pb=Math.min(T,Math.round(S.pb*r));syncSliders();update();});
+[['sD','d'],['sA','pa'],['sB','pb']].forEach(([id,k])=>{
+  const el=$(id);
+  el.addEventListener('input',()=>{S[k]=+el.value;update();});
+  el.addEventListener('keydown',e=>{
+    const step=Math.max(1,Math.round(S.T/100)),max=+el.max;let v=S[k];
+    if(e.key==='ArrowRight'||e.key==='ArrowUp')v+=step;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')v-=step;
+    else if(e.key==='PageUp')v+=10*step;else if(e.key==='PageDown')v-=10*step;else return;
+    e.preventDefault();S[k]=Math.max(0,Math.min(max,v));el.value=S[k];update();
+  });
+});
+$('joint').addEventListener('change',e=>{S.joint=e.target.checked;$('legend').hidden=S.joint;$('sim').textContent='';update();});
+$('rand').addEventListener('click',()=>{S.pa=Math.floor(Math.random()*S.T);S.pb=Math.floor(Math.random()*S.T);syncSliders();update();});
+$('simBtn').addEventListener('click',()=>{
+  const N=10000;let dupe=0,loss=0;
+  for(let i=0;i<N;i++){
+    const d=Math.random()*S.T,a=Math.random()*S.T,b=Math.random()*S.T;
+    if(S.joint) continue;
+    const aS=a<d,bS=b<d;if(bS&&!aS)dupe++;else if(aS&&!bS)loss++;
+  }
+  $('sim').innerHTML=`10,000 crashes, T = ${sec(S.T)}, d uniform in [0, T], random phases: observed dupe <b>${f3(dupe/N)}</b>, loss <b>${f3(loss/N)}</b>. Model: `+(S.joint?'0 with one transaction.':'1/6 ≈ 0.167 each.');
+});
+// crash marker: drag on either chart, keys on the timeline
+function dragFrom(el,toD){
+  let on=false;
+  const set=e=>{const r=el.getBoundingClientRect();S.d=Math.round(Math.max(0,Math.min(1.5*S.T,toD(e.clientX-r.left,r.width))));$('sD').value=S.d;update();};
+  el.addEventListener('pointerdown',e=>{on=true;el.setPointerCapture(e.pointerId);set(e);});
+  el.addEventListener('pointermove',e=>{if(on)set(e);});
+  el.addEventListener('pointerup',()=>{on=false;});el.addEventListener('pointercancel',()=>{on=false;});
+}
+dragFrom($('tl'),(x,w)=>(x-TL.l)/(w-TL.l-TL.r)*1.7*S.T-0.2*S.T);
+dragFrom($('curves'),(x,w)=>(x-CV.l)/(w-CV.l-CV.r)*1.5*S.T);
+$('tl').addEventListener('keydown',e=>{
+  const step=Math.max(1,Math.round(S.T/100));let v=S.d;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp')v+=step;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')v-=step;
+  else if(e.key==='PageUp')v+=10*step;else if(e.key==='PageDown')v-=10*step;
+  else if(e.key==='Home')v=0;else if(e.key==='End')v=1.5*S.T;else return;
+  e.preventDefault();S.d=Math.max(0,Math.min(Math.round(1.5*S.T),v));$('sD').value=S.d;update();
+});
+// lecture cases
+const labels=['DUPE (2 swords)','LOST (0 swords)','nothing happened','correct, B has it','DUPE, T = 240','d > T: correct'];
+CASES.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=`T ${c[0]}, d ${c[1]}, φ ${c[2]}/${c[3]}: ${labels[i]}`;
+  b.addEventListener('click',()=>{[S.T,S.d,S.pa,S.pb]=c;syncSliders();update();});$('cases').appendChild(b);});
+window.addEventListener('resize',()=>{drawTimeline();drawCurves();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+syncSliders();update();
+})();
+</script>
+</body>
+</html>

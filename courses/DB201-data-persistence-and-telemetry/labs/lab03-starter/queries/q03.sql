@@ -1,0 +1,3 @@
+-- q03. Total quantity of items held in the world, per rarity.
+-- Columns: rarity, total_qty.  Order: rarity ascending.
+-- Hint: quantity lives on items, rarity lives on item_types.

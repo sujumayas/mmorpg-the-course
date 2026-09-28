@@ -1,0 +1,2 @@
+-- q01. How many characters play each class?
+-- Columns: class, n.  Order: n descending, then class ascending.

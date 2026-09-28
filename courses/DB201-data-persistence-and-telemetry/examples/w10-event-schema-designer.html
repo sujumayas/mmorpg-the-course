@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Event schema designer, DB201 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1200px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;align-items:center}
+.presets .lbl{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.cols{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1000px){.cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.15fr)}}
+.box{background:var(--paper-2);border-radius:10px;padding:12px 14px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.12rem;margin:0 0 8px}
+h2 small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem}
+fieldset{border:0;margin:0 0 10px;padding:0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+.mode{display:grid;gap:6px}
+.mode label{display:flex;gap:8px;align-items:flex-start;font-size:.95rem;cursor:pointer;padding:6px 8px;border:1.5px solid var(--grid);border-radius:8px}
+.mode label:has(input:checked){border-color:var(--ink)}
+.mode input{accent-color:var(--steel);width:18px;height:18px;margin:2px 0 0;flex:none}
+.fields{list-style:none;margin:0;padding:0;font-variant-numeric:tabular-nums;font-size:.9rem}
+.fields li{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dotted var(--grid)}
+.fields li.tot{font-weight:700;border-bottom:0}
+.fields code,.props code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86rem}
+.env{border-left:4px solid var(--ink-soft);padding-left:10px;margin-bottom:12px}
+.env.off{opacity:.45}
+.lock{font-size:.78rem;color:var(--ink-soft);margin:0 0 4px}
+.props{display:grid;gap:4px}
+.props label{display:flex;align-items:center;gap:10px;font-size:.93rem;padding:4px 6px;border-radius:6px;cursor:pointer}
+.props label:hover{background:var(--paper)}
+.props input{accent-color:var(--moss);width:18px;height:18px;margin:0;flex:none}
+.props .sz{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.props.off label{opacity:.4;cursor:not-allowed}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 8px}
+input:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.readout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;margin:6px 0 14px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block}
+.stat code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.76rem;color:var(--ink-soft);display:block;overflow-wrap:anywhere}
+.barwrap{margin-top:4px}
+.bartitle{font-weight:600;font-size:.88rem;margin:0 0 4px}
+.bar{position:relative;height:92px}
+.track{position:absolute;left:0;right:0;top:30px;height:18px;border-radius:9px;background:var(--paper);border:1px solid var(--grid);overflow:hidden}
+.fill{position:absolute;left:0;top:0;bottom:0;background:var(--steel);border-radius:9px 0 0 9px}
+.ghost{position:absolute;top:22px;width:0;height:34px;border-left:2px dashed var(--ink-soft)}
+.ghost span{position:absolute;left:-7px;width:14px;text-align:center;font:700 .78rem var(--sans);color:var(--ink-soft)}
+.ghost.up span{top:-18px}.ghost.down span{top:34px}
+.axis{position:absolute;left:0;right:0;top:72px;height:18px;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.axis span:first-child{transform:none}.axis span:last-child{transform:translateX(-100%)}
+.qs{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.q{border:1.5px solid var(--moss);border-radius:9px;padding:8px 10px;background:var(--paper)}
+.q .qh{display:flex;gap:8px;align-items:baseline}
+.q .qn{font-weight:700;font-variant-numeric:tabular-nums;color:var(--moss);flex:none}
+.q .qt{font-family:var(--serif);font-size:.96rem}
+.q .qs2{font-size:.8rem;color:var(--ink-soft);margin:2px 0 0 0}
+.q.dim{border-color:var(--grid);border-style:dashed;background:transparent}
+.q.dim .qn,.q.dim .qt{color:var(--ink-soft)}
+.q.dim .qs2{color:var(--blood)}
+.q.jump{animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(.97);box-shadow:0 0 0 3px var(--moss)}100%{transform:none;box-shadow:none}}
+.score{font-weight:700;font-size:1.05rem;margin:0 0 8px}
+.last{margin-top:12px;font-size:.9rem;padding:8px 10px;border-radius:8px;background:var(--paper);border-left:4px solid var(--ochre)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:560px;width:100%}
+.tcap{font-family:var(--serif);margin:0 0 6px;position:sticky;left:0}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">DB201 Data Persistence and Telemetry · Week 10 · Worked example</p>
+  <h1>Storage grows in steps. Questions grow in jumps.</h1>
+  <p class="lede">Each property you add costs a few percent more bytes. Switching from a counter to an event costs 56 times the storage and turns one answerable question into five. That first choice matters more than any field.</p>
+</header>
+
+<section class="panel" aria-label="Death event schema designer">
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <div class="presets" role="group" aria-label="Design presets">
+    <span class="lbl">Section 2 designs</span>
+    <button class="chip" data-preset="A" aria-pressed="false">A counter</button>
+    <button class="chip" data-preset="B" aria-pressed="true">B lean</button>
+    <button class="chip" data-preset="C" aria-pressed="false">C rich</button>
+  </div>
+  <div class="cols">
+    <div class="box">
+      <h2>1. Fields<small>What each row records</small></h2>
+      <fieldset class="mode">
+        <legend>Record deaths as</legend>
+        <label><input type="radio" name="mode" value="event" checked> Event (one row per death)</label>
+        <label><input type="radio" name="mode" value="counter"> Counter (one row per player per day)</label>
+      </fieldset>
+      <div class="env" id="envBox">
+        <p class="lock">Envelope, always on (every event carries it)</p>
+        <ul class="fields">
+          <li><code>event_id</code><span>16 B</span></li>
+          <li><code>event_type</code><span>2 B</span></li>
+          <li><code>event_time</code><span>8 B</span></li>
+          <li><code>player_id</code><span>8 B</span></li>
+          <li><code>session_id</code><span>16 B</span></li>
+          <li><code>build_id</code><span>4 B</span></li>
+          <li class="tot"><span>Envelope</span><span>54 B</span></li>
+        </ul>
+      </div>
+      <div class="env" id="ctrBox" hidden>
+        <p class="lock">Counter row, replaces the envelope and all properties</p>
+        <ul class="fields">
+          <li><code>player_id</code><span>8 B</span></li>
+          <li><code>day</code><span>4 B</span></li>
+          <li><code>deaths</code><span>4 B</span></li>
+          <li class="tot"><span>Counter data</span><span>16 B</span></li>
+        </ul>
+      </div>
+      <fieldset class="props" id="props">
+        <legend>Properties of <code>player_died</code></legend>
+      </fieldset>
+    </div>
+
+    <div class="box">
+      <h2>2. Cost<small>PostgreSQL row overhead 28 B; no indexes or compression</small></h2>
+      <div class="ctl">
+        <label for="dau">Daily active users <output id="oDau">40,000</output></label>
+        <input id="dau" type="range" min="0" max="30" step="1" value="0">
+        <label for="dpp">Deaths per player per day <output id="oDpp">25</output></label>
+        <input id="dpp" type="range" min="1" max="100" step="1" value="25">
+      </div>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--steel)"><b id="rBpr">&ndash;</b><span>bytes per row</span><code id="fBpr"></code></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rRows">&ndash;</b><span>rows per day</span><code id="fRows"></code></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rMb">&ndash;</b><span>MB per day</span><code id="fMb"></code></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rGb">&ndash;</b><span>GB per year</span><code id="fGb"></code></div>
+      </div>
+      <div class="barwrap">
+        <p class="bartitle">MB per day, log scale. Dashed marks are designs A, B, C at these sliders.</p>
+        <div class="bar" id="bar" role="img" aria-label="MB per day bar">
+          <div class="track"><div class="fill" id="fill"></div></div>
+          <div class="ghost down" id="gA"><span>A</span></div>
+          <div class="ghost up" id="gB"><span>B</span></div>
+          <div class="ghost down" id="gC"><span>C</span></div>
+          <div class="axis" id="axis"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>3. Questions<small>Lit if every field the question needs is recorded</small></h2>
+      <p class="score" id="score" aria-live="polite"></p>
+      <ul class="qs" id="qs"></ul>
+      <p class="last" id="last" aria-live="polite">Tick or untick a property to see what it costs.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <p class="tcap" id="tcap">Numbers you can check</p>
+    <table>
+      <thead><tr><th>Design</th><th>Bytes per row</th><th>Rows per day</th><th>MB per day</th><th>GB per year</th><th>Questions</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+<footer>Model from DB201 week 10: bytes per row = 28 + 54 + properties (event) or 28 + 16 (counter); MB per day = bytes per row &times; rows per day / 10<sup>6</sup>; GB per year = MB per day &times; 365 / 1,000. Ignores alignment padding, indexes and compression. The game and its numbers are invented; no game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmtN=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const PROPS=[['zone_id',4],['x',4],['y',4],['z',4],['killer_kind',2],['killer_id',4],['ability_id',4],['player_level',2],['group_size',2],['damage_last_5s',4]];
+const SIZE=Object.fromEntries(PROPS);
+const QS=[
+  ['Q1','How many deaths per day?',[]],
+  ['Q2','Which zone kills the most players?',['zone_id']],
+  ['Q3','Where inside the zone do they die?',['zone_id','x','y']],
+  ['Q4','Which mob kills the most players?',['killer_id']],
+  ['Q5','Which of that mob’s abilities is overtuned?',['killer_id','ability_id']],
+  ['Q6','Do players quit the session soon after dying?',[]],
+  ['Q7','Do solo players die more than grouped players?',['group_size']]
+];
+const PRESETS={A:{mode:'counter',on:['zone_id','x','y','killer_id']},B:{mode:'event',on:['zone_id','x','y','killer_id']},C:{mode:'event',on:PROPS.map(p=>p[0])}};
+const MANT=[1,1.2,1.5,2,2.5,3,4,5,6,8];
+const DAUS=[];for(let k=3;k<=6;k++)for(const m of MANT){const v=Math.round(m*Math.pow(10,k));if(v<=1e6)DAUS.push(v);}
+const S={mode:'event',on:new Set(PRESETS.B.on),dau:40000,dpp:25};
+let prevLit=null;
+
+// build property checkboxes
+const pf=$('props');
+PROPS.forEach(([n,b])=>{const l=document.createElement('label');l.innerHTML=`<input type="checkbox" value="${n}"> <code>${n}</code><span class="sz">${b} B</span>`;pf.appendChild(l);});
+// questions
+$('qs').innerHTML=QS.map(q=>`<li class="q" id="${q[0]}"><div class="qh"><span class="qn">${q[0]}</span><span class="qt">${q[1]}</span></div><p class="qs2"></p></li>`).join('');
+
+function calc(mode,on,dau,dpp){
+  const bpr=mode==='counter'?44:28+54+[...on].reduce((s,n)=>s+SIZE[n],0);
+  const rows=mode==='counter'?dau:dau*dpp;
+  const mb=bpr*rows/1e6,gb=mb*365/1000;
+  const lit=QS.map(q=>mode==='counter'?q[0]==='Q1':q[2].every(f=>on.has(f)));
+  return {bpr,rows,mb,gb,lit,n:lit.filter(Boolean).length};
+}
+const fMB=v=>v<10?fmtN(v,2):fmtN(v,1);
+const fGB=v=>v<10?fmtN(v,2):fmtN(v,1);
+const LO=-1,HI=5,pos=v=>Math.max(0,Math.min(100,(Math.log10(Math.max(v,1e-9))-LO)/(HI-LO)*100));
+$('axis').innerHTML=['0.1','1','10','100','1k','10k','100k'].map((t,i)=>`<span style="left:${i/6*100}%">${t}</span>`).join('');
+
+function presetMatch(){for(const k of ['A','B','C']){const p=PRESETS[k];if(p.mode!==S.mode)continue;if(k==='A')return 'A';if(p.on.length===S.on.size&&p.on.every(f=>S.on.has(f)))return k;}return null;}
+
+function render(){
+  const r=calc(S.mode,S.on,S.dau,S.dpp);
+  const ev=S.mode==='event';
+  document.querySelector(`input[name=mode][value=${S.mode}]`).checked=true;
+  $('envBox').classList.toggle('off',!ev);$('ctrBox').hidden=ev;
+  pf.classList.toggle('off',!ev);
+  pf.querySelectorAll('input').forEach(i=>{i.checked=S.on.has(i.value);i.disabled=!ev;});
+  $('oDau').textContent=fmtN(S.dau);$('oDpp').textContent=S.dpp;
+  const propB=[...S.on].reduce((s,n)=>s+SIZE[n],0);
+  $('rBpr').textContent=fmtN(r.bpr)+' B';
+  $('fBpr').textContent=ev?`28 + 54 + ${propB}`:'28 + 16';
+  $('rRows').textContent=fmtN(r.rows);
+  $('fRows').textContent=ev?`${fmtN(S.dau)} × ${S.dpp}`:`DAU = ${fmtN(S.dau)}`;
+  $('rMb').textContent=fMB(r.mb);
+  $('fMb').textContent=`${r.bpr} × ${fmtN(r.rows)} / 10⁶`;
+  $('rGb').textContent=fGB(r.gb);
+  $('fGb').textContent=`${fMB(r.mb)} × 365 / 1,000`;
+  // bar
+  $('fill').style.width=pos(r.mb)+'%';
+  const g={};['A','B','C'].forEach(k=>{g[k]=calc(PRESETS[k].mode,new Set(PRESETS[k].on),S.dau,S.dpp);$('g'+k).style.left=pos(g[k].mb)+'%';});
+  $('bar').setAttribute('aria-label',`MB per day on a log scale: current ${fMB(r.mb)}, design A ${fMB(g.A.mb)}, B ${fMB(g.B.mb)}, C ${fMB(g.C.mb)}`);
+  // questions
+  QS.forEach((q,i)=>{
+    const el=$(q[0]),lit=r.lit[i],s=el.querySelector('.qs2');
+    el.classList.toggle('dim',!lit);
+    let txt;
+    if(lit){txt=q[0]==='Q1'?'Answerable: count rows (or sum the counter).':q[0]==='Q6'?'Answerable from event_time and session_id, if you also record a session_ended event.':'Answerable: uses '+q[2].join(', ')+'.';}
+    else if(!ev){txt='Not answerable: a daily counter keeps no zone, position, killer or time of death.';}
+    else{txt='Not answerable, needs '+q[2].filter(f=>!S.on.has(f)).join(' and ')+'.';}
+    s.textContent=txt;
+    el.setAttribute('aria-label',`${q[0]} ${q[1]} ${lit?'answerable':txt.replace(/\.$/,'').replace(/^Not answerable/,'not answerable')}`);
+    if(prevLit&&lit&&!prevLit[i]){el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump');}
+  });
+  prevLit=r.lit;
+  $('score').textContent=`${r.n} of 7 questions answerable`;
+  // presets
+  const pm=presetMatch();
+  document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.preset===pm));
+  // insight
+  const mult=g.B.mb/g.A.mb;
+  let s=`${pm?'Design '+pm+': ':''}<b>${fmtN(r.bpr)} B</b> per row, <b>${fMB(r.mb)} MB</b> a day, <b>${r.n} of 7</b> questions. `;
+  if(ev) s+=`Every property costs 2 to 4 B, a few percent of the row. The counter would cost ${fMB(g.A.mb)} MB a day and answer 1 question.`;
+  else s+=`Six of the seven questions are dark. Lean events (B) cost ${fmtN(mult,0)} times as much storage and answer 5.`;
+  $('insight').innerHTML=s;
+  // table
+  $('tcap').textContent=`Numbers you can check: DAU ${fmtN(S.dau)}, ${S.dpp} deaths per player per day`;
+  const rows=[['A, counter',g.A,'A'],['B, lean event',g.B,'B'],['C, rich event',g.C,'C']];
+  if(!pm)rows.push(['Your design',r,'you']);
+  $('tbody').innerHTML=rows.map(([n,q,k])=>`<tr class="${(pm===k||k==='you')?'here':''}"><td>${n}</td><td>${fmtN(q.bpr)}</td><td>${fmtN(q.rows)}</td><td>${fMB(q.mb)}</td><td>${fGB(q.gb)}</td><td>${q.n} of 7</td></tr>`).join('');
+}
+
+// events
+pf.addEventListener('change',e=>{
+  const n=e.target.value,before=calc(S.mode,S.on,S.dau,S.dpp).bpr;
+  if(e.target.checked)S.on.add(n);else S.on.delete(n);
+  const after=calc(S.mode,S.on,S.dau,S.dpp).bpr,d=after-before;
+  $('last').innerHTML=`Cost of the last property you ${d>0?'ticked':'unticked'} (<code>${n}</code>): <b>${d>0?'+':'−'}${Math.abs(d)} B</b> per row (${d>0?'+':'−'}${fmtN(Math.abs(d)/before*100,1)}%).`;
+  render();
+});
+document.querySelectorAll('input[name=mode]').forEach(i=>i.addEventListener('change',()=>{S.mode=i.value;render();}));
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{const p=PRESETS[b.dataset.preset];S.mode=p.mode;S.on=new Set(p.on);$('last').textContent='Tick or untick a property to see what it costs.';render();}));
+$('dau').max=DAUS.length-1;$('dau').value=DAUS.indexOf(40000);
+$('dau').addEventListener('input',e=>{S.dau=DAUS[+e.target.value];e.target.setAttribute('aria-valuetext',fmtN(S.dau)+' players');render();});
+$('dpp').addEventListener('input',e=>{S.dpp=+e.target.value;render();});
+render();
+})();
+</script>
+</body>
+</html>

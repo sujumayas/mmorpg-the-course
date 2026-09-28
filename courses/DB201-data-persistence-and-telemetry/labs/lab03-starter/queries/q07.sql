@@ -1,0 +1,3 @@
+-- q07. The five characters whose inventories are worth the most at the vendor.
+-- Value of a row = quantity * vendor_price.
+-- Columns: name, value.  Order: value descending, then name ascending.  Five rows.
