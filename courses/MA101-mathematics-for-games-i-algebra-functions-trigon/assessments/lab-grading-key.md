@@ -1,6 +1,6 @@
 # MA101 · Lab grading key (labs 13 and 14)
 
-Reference answers for the generated starter data in `labs/starter/`, computed by the course reviewer against reference solutions. Regenerating the data changes these values.
+Reference answers for the generated starter data in `labs/starter/`, computed by the course reviewer against reference solutions. Regenerating the data changes these values. Labs 10 to 12 need no key here. Their starter files come with test scripts (`test_lab10.py`, `test_lab11.py`, `test_lab12.py`) that check a solution directly.
 
 ## Lab 13: Guard vision
 

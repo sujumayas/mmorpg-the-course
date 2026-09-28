@@ -9,7 +9,7 @@
 Each problem set covers two or three weeks and has two parts of equal weight.
 
 - **Written part (50% of the set).** Six to eight problems, handed out in the first week the set covers. At least 60% of the marks come from running a lecture model on numbers you have not seen. Every set also has one explain question and one critique or design question. None of the problems are copied from the exam bank, so the bank stays useful for revision.
-- **Lab part (50% of the set).** The labs assigned in the set's weeks. Each lab keeps its own due date and is graded with the rubric printed in its brief. The lab part of the set is the average of those lab grades.
+- **Lab part (50% of the set).** The labs assigned in the set's weeks. Each lab keeps its own due date and is graded with the rubric printed in its brief. The lab part of the set is the average of those lab grades. Labs 10 to 14 start from files in `labs/starter/`. Reference values for labs 13 and 14 are in the [lab grading key](lab-grading-key.md).
 
 The written part practises the models in small pieces. The labs practise building them in a spreadsheet or script. The exams test the first skill without a computer, which is why the written part asks for working by hand.
 

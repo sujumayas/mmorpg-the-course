@@ -73,4 +73,4 @@ Graded out of 100 points.
 
 - The document word count excludes tables, formulas and the check-yourself answers.
 - The one-time 48-hour extension from the problem sets does not apply to M3. The showcase happens in the final session.
-- If you work on brief F or G, lab 13 and lab 14 already contain code you may reuse. Say which parts are reused.
+- If you work on brief F or G, lab 13 and lab 14, with their starter files in `labs/starter/`, already contain code you may reuse. Say which parts are reused.

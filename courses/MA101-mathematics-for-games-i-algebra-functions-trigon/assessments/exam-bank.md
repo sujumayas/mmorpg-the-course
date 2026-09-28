@@ -221,7 +221,7 @@ Type counts are 51 compute, 4 explain, 6 design and 10 critique. Every compute q
 
     **Answer.** (a) 45. (b) 30. (c) 204,800 XP.
 
-    The total doubles every 5 levels. Half the cap total sits one doubling interval below the cap, `50 − 5 = 45`. One sixteenth is four doublings down, `50 − 20 = 30`. `200 × 2^10 = 204,800`.
+    The total doubles every 5 levels. This curve is a pure exponential with no constant term, so the halfway rule is exact here. Half the cap total sits one doubling interval below the cap, `50 − 5 = 45`. (For a table with constant terms, such as RuneScape's, the rule can be off by a level.) One sixteenth is four doublings down, `50 − 20 = 30`. `200 × 2^10 = 204,800`.
 
     </details>
 
@@ -269,7 +269,7 @@ Type counts are 51 compute, 4 explain, 6 design and 10 critique. Every compute q
     <details>
     <summary>Answer and worked solution</summary>
 
-    **Answer.** The curve doubles every 3.1 levels, so the halfway level is about 57. The last level alone is 20% of the total. Level 30 holds 0.12% of the total. The level-60 total is about 65 million. Most of the game's XP sits in the last three levels, which is wrong for a 40-hour game. Lengthen the doubling interval (for example 10, which puts the halfway level at 50) or switch to a polynomial curve.
+    **Answer.** The curve doubles every 3.1 levels, so the halfway level is about 57. The last level alone is 20% of the total. Level 30 holds 0.12% of the total. The level-60 total is about 65 million. Almost half the game's XP (48.8%) sits in the last three levels, which is wrong for a 40-hour game. Lengthen the doubling interval (for example 10, which puts the halfway level at 50) or switch to a polynomial curve.
 
     Doubling interval: `ln 2 / ln 1.25 = 3.11`, so halfway at `60 − 3.1 ≈ 56.9`. The rule of 70 gives 2.8, which is rough at 25%. Last-step share: `(b − 1) / b = 0.25 / 1.25 = 20%`. Level 30 share: `1.25^−30 = 0.0012`. Total: `100 × 1.25^60 ≈ 65.3` million.
 
@@ -336,7 +336,7 @@ Type counts are 51 compute, 4 explain, 6 design and 10 critique. Every compute q
 
     **Answer.** About 59.1, so level 59, which agrees with the table. Level 66 needs roughly double, about 500,000 XP (the exact table value is 496,254).
 
-    `(250,000 + 796) / 720.5 = 348.1`. `log₂(348.1) = 8.44`. `7 × 8.44 = 59.1`. 250,000 lies between the level-59 and level-60 thresholds, so the player is level 59.
+    `(250,000 + 796) / 720.5 = 348.1`. `log₂(348.1) = 8.44`. `7 × 8.44 = 59.1`. The unrounded constants from week 4, 720.53 and 795.53, give the same 59.1. 250,000 lies between the level-59 and level-60 thresholds, so the player is level 59.
 
     Seven more levels is one more doubling of total XP, so about `2 × 250,000 = 500,000`.
 
@@ -403,9 +403,9 @@ Type counts are 51 compute, 4 explain, 6 design and 10 critique. Every compute q
     <details>
     <summary>Answer and worked solution</summary>
 
-    **Answer.** (a) 6.67 s. (b) 9 casts per minute. (c) 0.5, at every haste value.
+    **Answer.** (a) 6.67 s. (b) 9 casts per minute. (c) 0.5, at every haste value up to League's hard cap of 500 haste (week 7).
 
-    (a) `12 × 100 / 180 = 6.67`. (b) `60 / 6.67 = 9`. (c) Casts per minute is `(60 / 12) × (1 + haste / 100) = 5 + 0.05 × haste`, a line with slope 0.05 per haste.
+    (a) `12 × 100 / 180 = 6.67`. (b) `60 / 6.67 = 9`. (c) Casts per minute is `(60 / 12) × (1 + haste / 100) = 5 + 0.05 × haste`, a line with slope 0.05 per haste. The line stops at the 500-haste cap, far above the 80 here.
 
     </details>
 
@@ -909,7 +909,7 @@ Type counts are 51 compute, 4 explain, 6 design and 10 critique. Every compute q
 
     **Answer.** `d = 5`, `a = 7,812.5`, so `xp(L) = 7,812.5 · 2^(L/5)`. 500,000 XP reaches level 30. Level 35 needs 1,000,000.
 
-    The halfway level is the cap minus one doubling interval, so `d = 40 − 35 = 5`. `a = 2,000,000 / 2^8 = 7,812.5`. Invert: `L = 5 · log₂(xp / 7,812.5)`. For 500,000: `log₂(64) = 6`, so `L = 30`. `xp(35) = 7,812.5 × 2^7 = 1,000,000`, half of the level-40 total as designed.
+    For a pure exponential with no constant term, the halfway level is exactly the cap minus one doubling interval, so `d = 40 − 35 = 5`. `a = 2,000,000 / 2^8 = 7,812.5`. Invert: `L = 5 · log₂(xp / 7,812.5)`. For 500,000: `log₂(64) = 6`, so `L = 30`. `xp(35) = 7,812.5 × 2^7 = 1,000,000`, half of the level-40 total as designed.
 
     </details>
 
