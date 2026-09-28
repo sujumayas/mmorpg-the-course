@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BFS reachability · CS102 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.caption{font-family:var(--serif);font-weight:600;margin:0 0 12px}
+.split{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.split{grid-template-columns:1.35fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.nb{stroke:var(--ink);stroke-width:1.5}
+.nt{font:700 13px var(--sans);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.node{cursor:pointer}
+.node.src .nb{stroke:var(--focus);stroke-width:3.5}
+.node.cur .nb{stroke:var(--ochre);stroke-width:4}
+.node.unr .nb{stroke-dasharray:4 3;stroke:var(--ink-soft)}
+.badge{font:700 10px var(--sans);text-anchor:middle;pointer-events:none}
+.edge{stroke:var(--ink-soft);stroke-width:1.6;fill:none}
+.edge.path{stroke:var(--ochre);stroke-width:4}
+.hit{stroke:transparent;stroke-width:14;fill:none;cursor:pointer}
+.hit:hover+.hov,.hit:focus+.hov{stroke:var(--blood);stroke-width:3;opacity:.8}
+.hov{fill:none;stroke:transparent;pointer-events:none}
+.hit:focus{outline:none}
+.hit:focus-visible+.hov{stroke:var(--focus);stroke-width:4;opacity:1}
+.qlabel{font-weight:600;font-size:.88rem;margin:0 0 4px}
+.queue{display:flex;flex-wrap:wrap;gap:6px;min-height:34px;padding:5px;border:1.5px dashed var(--ink-soft);border-radius:8px;background:var(--paper)}
+.qchip{font:600 .85rem var(--sans);padding:3px 9px;border-radius:999px;background:var(--steel);color:var(--paper)}
+.qchip:first-child{outline:2px solid var(--ochre);outline-offset:1px}
+.qempty{font-size:.85rem;color:var(--ink-soft);padding:3px 4px}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+td.num{text-align:right}
+tr.cur td{background:color-mix(in srgb,var(--ochre) 22%,transparent)}
+.lint-bad{color:var(--blood);font-weight:700}
+.readout{margin:10px 0 0;font-size:.92rem}
+.readout b{font-variant-numeric:tabular-nums}
+.pathline{margin:4px 0 0;font-weight:600}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 16px;margin-top:16px;align-items:end}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.controls{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem}
+select{font:600 .9rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--steel);background:var(--paper);color:var(--ink);min-height:40px;width:100%}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.btn{font:600 .9rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.primary{background:var(--steel);color:var(--paper)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.edit{margin-top:14px;padding:10px 12px;border:1.5px solid var(--grid);border-radius:10px}
+.edit h3{margin:0 0 6px;font:700 .92rem var(--sans)}
+.edit .row{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.edit .row .field{min-width:130px;flex:1}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+.msg{min-height:1.4em;font-size:.88rem;font-weight:600;color:var(--moss);margin:6px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:var(--ink-soft);margin-top:8px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px;border:1px solid var(--ink-soft)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 8 · Worked example</p>
+  <h1>One search, two jobs</h1>
+  <p class="lede">The same breadth-first search finds the shortest route through a dungeon and the lines of dialogue no player can reach. Its answers change only when an edge changes.</p>
+</header>
+
+<section class="panel" aria-label="Breadth-first search on a graph">
+  <p class="caption">Delete one edge. Watch what becomes unreachable.</p>
+  <div class="split">
+    <figure>
+      <figcaption>Graph<small>Click an edge (or Tab to it and press Enter) to delete it. Click one node, then another, to add an edge.</small></figcaption>
+      <svg id="graph" role="group" aria-label="Directed graph"></svg>
+      <div class="legend" aria-hidden="true">
+        <span><span class="sw" style="background:color-mix(in srgb,var(--steel) 100%,var(--paper))"></span>dist 0</span>
+        <span><span class="sw" style="background:color-mix(in srgb,var(--steel) 44%,var(--paper))"></span>further</span>
+        <span><span class="sw" style="background:var(--paper-2);border-style:dashed"></span>unreachable</span>
+        <span><span class="sw" style="background:var(--ochre);border-color:var(--ochre)"></span>shortest path / current</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>BFS table<small>Rows in the order BFS first sees each node.</small></figcaption>
+      <p class="qlabel">Queue (front on the left)</p>
+      <div class="queue" id="queue" aria-live="polite"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Node</th><th scope="col" style="text-align:right">dist</th><th scope="col">prev</th><th scope="col">Lint</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="readout" id="stats"></p>
+      <p class="pathline" id="pathline" aria-live="polite"></p>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <label class="field">Preset<select id="preset"><option value="dungeon">Dungeon</option><option value="smith">Blacksmith</option></select></label>
+    <label class="field">Start node<select id="start"></select></label>
+    <label class="field">Shortest path to<select id="target"></select></label>
+    <div class="btnrow" style="margin:0">
+      <button class="btn primary" id="stepBtn">Step</button>
+      <button class="btn primary" id="runBtn">Run</button>
+      <button class="btn" id="resetBtn">Reset</button>
+    </div>
+  </div>
+
+  <div class="edit">
+    <h3>Edit edges</h3>
+    <div class="row">
+      <label class="field">From<select id="from"></select></label>
+      <label class="field">To<select id="to"></select></label>
+      <button class="btn" id="addBtn">Add edge</button>
+      <button class="btn" id="restoreBtn">Restore preset</button>
+    </div>
+    <p class="msg" id="msg" role="status"></p>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Algorithm and data from the lecture: <code>bfs(graph, start)</code> with a FIFO queue, the 7-room <code>MAP</code> from section 2 and the invented <code>DIALOGUE</code> from section 3. Neighbours are visited in the order listed; added edges go at the end of the source's list.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const PRESETS={
+  dungeon:{start:'Gate',target:'Vault',endings:[],w:540,h:300,
+    graph:{Gate:['Hall'],Hall:['Gate','Armory','Well'],Armory:['Hall','Crypt'],Well:['Hall','Crypt'],Crypt:['Armory','Well','Shrine'],Shrine:['Crypt','Vault'],Vault:['Gate']},
+    pos:{Gate:[50,90],Hall:[150,90],Armory:[265,90],Crypt:[380,90],Shrine:[490,90],Well:[265,185],Vault:[490,245]},
+    bend:{'Vault>Gate':0.3},
+    narrow:{w:340,h:480,pos:{Gate:[150,40],Hall:[150,125],Armory:[150,215],Crypt:[150,305],Shrine:[150,395],Well:[50,215],Vault:[270,440]},bend:{'Vault>Gate':-0.425}}},
+  smith:{start:'greet',target:'bye',endings:['leave','bye'],w:560,h:300,
+    graph:{greet:['ask_price','ask_rumor','leave'],ask_price:['haggle','buy','greet'],haggle:['buy','leave'],buy:['bye'],ask_rumor:['rumor_detail'],rumor_detail:[],secret_discount:['buy'],leave:[],bye:[]},
+    pos:{greet:[55,150],ask_price:[190,55],leave:[190,150],ask_rumor:[190,250],haggle:[335,150],buy:[335,55],rumor_detail:[335,250],bye:[490,55],secret_discount:[490,150]},
+    bend:{},
+    narrow:{w:340,h:440,pos:{greet:[170,35],ask_price:[75,120],leave:[190,120],ask_rumor:[275,120],haggle:[130,215],rumor_detail:[270,215],buy:[60,310],secret_discount:[200,310],bye:[60,400]},bend:{}}}
+};
+let P,graph,startN,target,S,srcSel=null,msgT=null;
+
+function clone(g){const o={};for(const k in g)o[k]=g[k].slice();return o;}
+function nodes(){return Object.keys(graph);}
+function edgeCount(){return nodes().reduce((s,n)=>s+graph[n].length,0);}
+
+// ---------- BFS as explicit steps (same as the lecture's bfs())
+function initSearch(){S={dist:{[startN]:0},prev:{[startN]:null},queue:[startN],order:[startN],cur:null,started:false,done:false};}
+function step(){
+  if(S.done)return;
+  S.started=true;
+  if(!S.queue.length){S.done=true;S.cur=null;return;}
+  const u=S.queue.shift();S.cur=u;
+  for(const w of graph[u]){
+    if(w in graph&&!(w in S.dist)){S.dist[w]=S.dist[u]+1;S.prev[w]=u;S.queue.push(w);S.order.push(w);}
+  }
+  if(!S.queue.length){S.done=true;}
+}
+function runAll(){S.started=true;while(!S.done)step();S.cur=null;}
+function pathTo(t){if(!(t in S.prev))return [];const p=[];while(t!=null){p.push(t);t=S.prev[t];}return p.reverse();}
+function isEnding(n){return P.endings.includes(n);}
+function lint(n){
+  if(n===startN)return {t:'start'};
+  if(!(n in S.dist))return S.done?{t:'unreachable',bad:1}:{t:''};
+  if(isEnding(n))return {t:'ending'};
+  if(!graph[n].length)return {t:'dead end',bad:1};
+  return {t:''};
+}
+
+// ---------- drawing
+function boxW(n){return Math.max(58,n.length*7.6+18);}
+const BH=34;
+function clip(c,o,w,h){ // point on box border of centre c toward o
+  const dx=o[0]-c[0],dy=o[1]-c[1];const sx=(w/2+4)/Math.abs(dx||1e-9),sy=(h/2+4)/Math.abs(dy||1e-9);const s=Math.min(sx,sy);
+  return [c[0]+dx*s,c[1]+dy*s];
+}
+function color(d){const p=Math.max(30,100-d*14);return {fill:`color-mix(in srgb,var(--steel) ${p}%,var(--paper))`,text:p>=58?'var(--paper)':'var(--ink)'};}
+let L0=null;
+function draw(){
+  const svg=$('graph');
+  const narrow=svg.parentElement.clientWidth<540;
+  L0=narrow?P.narrow:{w:P.w,h:P.h,pos:P.pos,bend:P.bend};
+  svg.setAttribute('viewBox',`0 0 ${L0.w} ${L0.h}`);
+  const path=S.done||S.started?pathTo(target):[];
+  const onPath=new Set();for(let i=0;i+1<path.length;i++)onPath.add(path[i]+'>'+path[i+1]);
+  let defs=`<defs>${['ink-soft','ochre'].map(c=>`<marker id="ah-${c}" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="${c==='ochre'?12:9}" markerHeight="${c==='ochre'?12:9}" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--${c})"/></marker>`).join('')}</defs>`;
+  let lines='',hits='';
+  const done=new Set();
+  nodes().forEach(a=>graph[a].forEach(b=>{
+    if(!(b in graph)||a===b)return;
+    const k=a+'>'+b,rk=b+'>'+a;if(done.has(k))return;
+    const both=graph[b]&&graph[b].includes(a);done.add(k);if(both)done.add(rk);
+    const A=L0.pos[a],B=L0.pos[b];
+    const bend=L0.bend[k]!=null?L0.bend[k]:(L0.bend[rk]!=null?-L0.bend[rk]:(P.added&&P.added.has(k)&&!both?0.3:0));
+    let d,mid,dA,dB;
+    if(bend){
+      const mx=(A[0]+B[0])/2,my=(A[1]+B[1])/2,dx=B[0]-A[0],dy=B[1]-A[1];
+      const cx=mx+dy*bend,cy=my-dx*bend;
+      const s=clip(A,[cx,cy],boxW(a),BH),e=clip(B,[cx,cy],boxW(b),BH);
+      d=`M${s[0]} ${s[1]} Q${cx} ${cy} ${e[0]} ${e[1]}`;
+      // halves for hit targets
+      const q=(t)=>[(1-t)*(1-t)*s[0]+2*(1-t)*t*cx+t*t*e[0],(1-t)*(1-t)*s[1]+2*(1-t)*t*cy+t*t*e[1]];
+      mid=q(.5);dA=`M${s[0]} ${s[1]} Q${(s[0]+cx)/2} ${(s[1]+cy)/2} ${mid[0]} ${mid[1]}`;dB=`M${mid[0]} ${mid[1]} Q${(e[0]+cx)/2} ${(e[1]+cy)/2} ${e[0]} ${e[1]}`;
+    }else{
+      const s=clip(A,B,boxW(a),BH),e=clip(B,A,boxW(b),BH);mid=[(s[0]+e[0])/2,(s[1]+e[1])/2];
+      d=`M${s[0]} ${s[1]} L${e[0]} ${e[1]}`;dA=`M${s[0]} ${s[1]} L${mid[0]} ${mid[1]}`;dB=`M${mid[0]} ${mid[1]} L${e[0]} ${e[1]}`;
+    }
+    const hot=onPath.has(k)||(both&&onPath.has(rk));const mk=hot?'ochre':'ink-soft';
+    lines+=`<path class="edge${hot?' path':''}" d="${d}" marker-end="url(#ah-${mk})"${both?` marker-start="url(#ah-${mk})"`:''}/>`;
+    // hit target near the arrowhead of each direction
+    hits+=`<path class="hit" d="${dB}" tabindex="0" role="button" data-edge="${k}" aria-label="Edge ${a} to ${b}. Press Enter to delete."/><path class="hov" d="${dB}"/>`;
+    if(both)hits+=`<path class="hit" d="${dA}" tabindex="0" role="button" data-edge="${rk}" aria-label="Edge ${b} to ${a}. Press Enter to delete."/><path class="hov" d="${dA}"/>`;
+  }));
+  let ns='';
+  nodes().forEach(n=>{
+    const [x,y]=L0.pos[n],w=boxW(n),seen=S.started&&(n in S.dist),unr=S.done&&!(n in S.dist);
+    let fill='var(--paper)',text='var(--ink)';
+    if(seen){const c=color(S.dist[n]);fill=c.fill;text=c.text;}
+    if(unr){fill='var(--paper-2)';text='var(--ink-soft)';}
+    const cls=['node',n===srcSel?'src':'',S.cur===n?'cur':'',unr?'unr':''].join(' ');
+    ns+=`<g class="${cls}" data-node="${n}">`;
+    if(isEnding(n))ns+=`<rect x="${x-w/2-4}" y="${y-BH/2-4}" width="${w+8}" height="${BH+8}" rx="10" fill="none" stroke="var(--ink)" stroke-width="1.2"/>`;
+    ns+=`<rect class="nb" x="${x-w/2}" y="${y-BH/2}" width="${w}" height="${BH}" rx="7" fill="${fill}"/><text class="nt" x="${x}" y="${y}" fill="${text}">${n}</text>`;
+    if(seen)ns+=`<text class="badge" x="${x+w/2-2}" y="${y-BH/2-4}" text-anchor="end" fill="var(--ink-soft)">d=${S.dist[n]}</text>`;
+    const L=lint(n);
+    if(L.bad&&(S.done||L.t==='dead end')&&S.started){const by=y+BH/2+(isEnding(n)?16:13);
+      const bw=L.t.length*6+12;ns+=`<rect x="${x-bw/2}" y="${by-9}" width="${bw}" height="14" rx="7" fill="${L.t==='unreachable'?'var(--ink-soft)':'var(--blood)'}"/><text class="badge" x="${x}" y="${by+1}" fill="var(--paper)" dominant-baseline="middle">${L.t}</text>`;}
+    ns+='</g>';
+  });
+  svg.innerHTML=defs+lines+ns+hits;
+}
+
+function render(){
+  draw();
+  $('queue').innerHTML=S.queue.length?S.queue.map(n=>`<span class="qchip">${n}</span>`).join(''):`<span class="qempty">${S.done?'empty, search finished':'empty'}</span>`;
+  const rows=S.order.map(n=>row(n,S.dist[n],S.prev[n]));
+  if(S.done)nodes().filter(n=>!(n in S.dist)).forEach(n=>rows.push(row(n,null,null)));
+  $('tbody').innerHTML=rows.join('');
+  const reach=Object.keys(S.dist).length;
+  $('stats').innerHTML=`V = <b>${nodes().length}</b>, E = <b>${edgeCount()}</b>, reachable ${S.done?'':'so far '}= <b>${reach}</b>`;
+  const p=pathTo(target);
+  $('pathline').textContent=p.length?`shortest path to ${target}: ${p.join(' → ')} (${p.length-1} edge${p.length===2?'':'s'})`:(S.done?`no path: ${target} is unreachable from ${startN}`:`shortest path to ${target}: not found yet`);
+  const unr=S.done?nodes().filter(n=>!(n in S.dist)):[],dead=nodes().filter(n=>n in S.dist&&lint(n).t==='dead end');
+  let s;
+  if(!S.started)s=`The queue holds only ${startN}. Press Step to dequeue it and see its neighbours get distance 1.`;
+  else if(!S.done)s=`Dequeued ${S.cur}. Every node at distance ${S.dist[S.cur]} leaves the queue before any node at distance ${S.dist[S.cur]+2}, so the first distance a node gets is the shortest.`;
+  else{
+    s=`BFS reached ${reach} of ${nodes().length} nodes. `;
+    s+=unr.length?`<b>Unreachable:</b> ${unr.join(', ')}. No player will ever see ${unr.length>1?'them':'it'}. `:'Every node is reachable. ';
+    if(dead.length)s+=`<b>Dead end:</b> ${dead.join(', ')}, reachable with no way out and not an ending.`;
+    else if(P===PRESETS.smith)s+='No dead ends.';
+  }
+  $('insight').innerHTML=s;
+  $('stepBtn').disabled=S.done;$('runBtn').disabled=S.done;
+}
+function row(n,d,pv){const L=lint(n);return `<tr class="${S.cur===n?'cur':''}"><td>${n}</td><td class="num">${d==null?'—':d}</td><td>${pv==null?'—':pv}</td><td class="${L.bad?'lint-bad':''}">${L.t}</td></tr>`;}
+
+function fillSelect(id,val,list){const s=$(id);s.innerHTML=list.map(n=>`<option${n===val?' selected':''}>${n}</option>`).join('');}
+function loadPreset(key){
+  P=PRESETS[key];P.added=new Set();graph=clone(P.graph);startN=P.start;target=P.target;srcSel=null;
+  fillSelect('start',startN,nodes());fillSelect('target',target,nodes());
+  fillSelect('from',nodes()[0],nodes());fillSelect('to',nodes()[1],nodes());
+  initSearch();runAll();render();
+}
+function flash(t){clearTimeout(msgT);$('msg').textContent=t;msgT=setTimeout(()=>{$('msg').textContent='';},3500);}
+function rerun(){initSearch();runAll();render();}
+function delEdge(k){const [a,b]=k.split('>');const i=graph[a].indexOf(b);if(i<0)return;graph[a].splice(i,1);P.added.delete(k);flash(`Deleted ${a} → ${b}. Search rerun.`);rerun();}
+function addEdge(a,b){
+  if(a===b){flash('An edge needs two different nodes.');return;}
+  if(graph[a].includes(b)){flash(`${a} → ${b} already exists.`);return;}
+  graph[a].push(b);P.added.add(a+'>'+b);flash(`Added ${a} → ${b}. Search rerun.`);rerun();
+}
+
+// ---------- events
+$('preset').addEventListener('change',e=>loadPreset(e.target.value));
+$('start').addEventListener('change',e=>{startN=e.target.value;rerun();});
+$('target').addEventListener('change',e=>{target=e.target.value;render();});
+$('stepBtn').addEventListener('click',()=>{step();render();});
+$('runBtn').addEventListener('click',()=>{runAll();render();});
+$('resetBtn').addEventListener('click',()=>{initSearch();render();});
+$('addBtn').addEventListener('click',()=>addEdge($('from').value,$('to').value));
+$('restoreBtn').addEventListener('click',()=>{loadPreset($('preset').value);flash('Preset restored.');});
+$('graph').addEventListener('click',e=>{
+  const h=e.target.closest('.hit');if(h){delEdge(h.dataset.edge);return;}
+  const g=e.target.closest('.node');if(!g)return;const n=g.dataset.node;
+  if(srcSel===null){srcSel=n;flash(`From ${n}. Now click the target node.`);draw();}
+  else if(srcSel===n){srcSel=null;flash('Cancelled.');draw();}
+  else{const a=srcSel;srcSel=null;addEdge(a,n);}
+});
+$('graph').addEventListener('keydown',e=>{
+  const h=e.target.closest('.hit');if(!h)return;
+  if(e.key==='Enter'||e.key===' '||e.key==='Delete'||e.key==='Backspace'){e.preventDefault();
+    const idx=[...document.querySelectorAll('.hit')].indexOf(h);delEdge(h.dataset.edge);
+    const all=document.querySelectorAll('.hit');if(all.length)all[Math.min(idx,all.length-1)].focus();}
+});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,80);});
+loadPreset('dungeon');
+window.__cs102w08={get S(){return S;},delEdge,addEdge};
+})();
+</script>
+</body>
+</html>

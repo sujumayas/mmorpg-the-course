@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Property sweep · CS102 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:0 0 6px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+code{font-family:var(--mono);font-size:.88em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media (min-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 330px}}
+.card{background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+.tip{font:600 .9rem/1.4 var(--mono);min-height:2.9em;margin:0 0 8px;padding:6px 8px;background:var(--paper);border-radius:6px;border:1px solid var(--grid);overflow-wrap:anywhere}
+.tip.fail{border-color:var(--blood)}
+.plot{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px}
+.yax{position:relative;height:280px;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.yax span{position:absolute;right:2px;transform:translateY(-50%)}
+.area{position:relative;height:280px;border-left:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink)}
+.gl{position:absolute;left:0;right:0;border-top:1px solid var(--grid)}
+.gl.major{border-top:1.5px solid var(--ink-soft);opacity:.55}
+.fm{position:absolute;top:-2px;transform:translateX(-50%);font:700 .75rem var(--sans);color:var(--blood);pointer-events:none;line-height:1}
+.bars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:1px;padding:0 1px}
+.bars button{flex:1 1 0;min-width:0;margin:0;padding:0;border:0;background:var(--steel);cursor:pointer;border-radius:1px 1px 0 0;position:relative}
+.bars button.ex{background:var(--moss)}
+.bars button.fail{background:repeating-linear-gradient(135deg,var(--blood) 0 3px,transparent 3px 5px),var(--blood);background:repeating-linear-gradient(135deg,var(--blood) 0 3px,var(--paper) 3px 5px)}
+.bars button:focus-visible{outline:3px solid var(--focus);outline-offset:1px;z-index:2}
+.bars button.cur{box-shadow:0 0 0 2px var(--ink)}
+svg.intended{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.xax{position:relative;height:18px;margin-left:38px;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.xax span{position:absolute;transform:translateX(-50%)}
+.marks{position:relative;height:12px;margin-left:38px}
+.marks i{position:absolute;top:0;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid var(--moss);transform:translateX(-50%)}
+.marks i.bad{border-bottom-color:var(--blood)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font:600 .8rem var(--sans);border:1.5px solid var(--moss);color:var(--moss);font-variant-numeric:tabular-nums;background:transparent}
+.chip.bad{border-color:var(--blood);color:var(--blood);border-style:dashed}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;margin-top:8px;color:var(--ink)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:14px;height:12px;border-radius:2px}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+fieldset{border:0;margin:0 0 12px;padding:0}
+legend{font-weight:700;font-size:.92rem;padding:0;margin-bottom:4px}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:.9rem;line-height:1.35}
+.opt:hover{background:var(--paper)}
+.opt input{margin:2px 0 0;width:17px;height:17px;accent-color:var(--steel);flex:none}
+.opt small{display:block;color:var(--ink-soft);font-family:var(--mono);font-size:.74rem}
+input:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.run{font:700 .95rem var(--sans);padding:10px 16px;border-radius:8px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;width:100%;min-height:42px}
+.summary{margin-top:10px;padding:8px 10px;border-left:4px solid var(--ink-soft);font-size:.9rem;background:var(--paper);border-radius:0 6px 6px 0;overflow-wrap:anywhere}
+.summary.bad{border-left-color:var(--blood)}
+.summary.ok{border-left-color:var(--moss)}
+.summary b{font-variant-numeric:tabular-nums}
+.examples{margin-top:10px;font-weight:700;font-size:.95rem}
+.examples.bad{color:var(--blood)}.examples.ok{color:var(--moss)}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 14 · Worked example</p>
+  <h1>Six example tests pass. Level 22 still kills you.</h1>
+  <p class="lede">The bars are the bonus timer Donkey Kong's ROM computes for each level, in hundreds of points. The green chips are six hand-picked example tests, all passing. Press the sweep button to check one plain-English property at all 99 levels and see which bars it catches.</p>
+</header>
+
+<section class="panel" aria-label="Property sweep">
+  <div class="layout">
+    <div class="card">
+      <h2>Bonus timer by level</h2>
+      <p class="tip" id="tip" aria-live="off"></p>
+      <div class="plot">
+        <div class="yax" aria-hidden="true" id="yax"></div>
+        <div class="area" id="area">
+          <div class="bars" id="bars" role="group" aria-label="Timer bars for levels 1 to 99. Arrow keys move between levels, Enter toggles an example test."></div>
+          <div id="fmarks" aria-hidden="true"></div>
+          <svg class="intended" id="intended" viewBox="0 0 99 90" preserveAspectRatio="none" aria-hidden="true"></svg>
+        </div>
+      </div>
+      <div class="marks" id="marks" aria-hidden="true"></div>
+      <div class="xax" id="xax" aria-hidden="true"></div>
+      <div class="chips" id="chips" aria-label="Example-test levels"></div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw" style="background:var(--steel)"></i>computed timer</span>
+        <span><i class="sw" style="background:var(--moss)"></i>example-test level</span>
+        <span><i class="sw" style="background:repeating-linear-gradient(135deg,var(--blood) 0 3px,var(--paper) 3px 5px)"></i>fails the property</span>
+        <span><svg width="24" height="10"><line x1="1" y1="5" x2="23" y2="5" stroke="var(--ochre)" stroke-width="2.5" stroke-dasharray="5 3"/></svg>intended min(80, 10 × level + 40)</span>
+      </div>
+      <p class="hint">Hover or focus a bar to see its arithmetic. Click a bar, or press Enter on it, to add or remove it as an example test.</p>
+    </div>
+
+    <div class="card">
+      <fieldset>
+        <legend>Implementation</legend>
+        <label class="opt"><input type="radio" name="impl" value="rom" checked><span>Shipped ROM (8-bit, cap after)<small>a = (10L + 40) &amp; 0xFF; if a ≥ 81: a = 80</small></span></label>
+        <label class="opt"><input type="radio" name="impl" value="fix"><span>Hodges' fix (clamp level to 4 first)<small>a = 10 × min(L, 4) + 40</small></span></label>
+        <label class="opt"><input type="radio" name="impl" value="w16"><span>16-bit register<small>a = (10L + 40) &amp; 0xFFFF; if a ≥ 81: a = 80</small></span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Property</legend>
+        <label class="opt"><input type="radio" name="prop" value="range" checked><span>Timer between 50 and 80<small>levels 1 to 99</small></span></label>
+        <label class="opt"><input type="radio" name="prop" value="drop"><span>Timer never drops<small>a(L) ≥ a(L − 1), levels 2 to 99</small></span></label>
+        <label class="opt"><input type="radio" name="prop" value="oracle"><span>Equals intended (oracle)<small>a = min(80, 10L + 40)</small></span></label>
+      </fieldset>
+      <button class="run" type="button" id="run">Run property sweep</button>
+      <div class="summary" id="summary" aria-live="polite">Not run yet. The sweep checks the property at every level.</div>
+      <div class="examples" id="examples" aria-live="polite"></div>
+    </div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>
+  <p>Timer routine after Don Hodges' disassembly of the Donkey Kong arcade ROM (Nintendo, 1981): level × 10 + 40 in an 8-bit register, capped at 80 hundreds only after the overflow, level counter capped at 99. His patch clamps the level to 4 before the arithmetic. Source: D. Hodges, "How High Can You Get? The Fix for Donkey Kong's Kill Screen" (2007, updated 2017). Bars are drawn generically; no game art.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const N=99,YMAX=90;
+const IMPL={
+  rom:{name:'Shipped ROM',f:L=>{let a=(10*L+40)&0xFF;return a>=81?80:a;},
+       explain:L=>{const r=10*L+40,m=r&0xFF,a=m>=81?80:m;return `Level ${L}: 10 × ${L} + 40 = ${r} → & 0xFF = ${m} → cap: ${a}`;}},
+  fix:{name:"Hodges' fix",f:L=>10*Math.min(L,4)+40,
+       explain:L=>{const c=Math.min(L,4);return `Level ${L}: min(${L}, 4) = ${c} → 10 × ${c} + 40 = ${10*c+40}`;}},
+  w16:{name:'16-bit register',f:L=>{let a=(10*L+40)&0xFFFF;return a>=81?80:a;},
+       explain:L=>{const r=10*L+40,m=r&0xFFFF,a=m>=81?80:m;return `Level ${L}: 10 × ${L} + 40 = ${r} → & 0xFFFF = ${m} → cap: ${a}`;}}
+};
+const intended=L=>Math.min(80,10*L+40);
+const PROP={
+  range:{name:'between 50 and 80',from:1,fails:(f,L)=>{const a=f(L);return a<50||a>80;}},
+  drop:{name:'never drops',from:2,fails:(f,L)=>f(L)<f(L-1)},
+  oracle:{name:'equals intended',from:1,fails:(f,L)=>f(L)!==intended(L)}
+};
+let impl='rom',prop='range',swept=false,examples=new Set([1,2,3,4,10,20]),focusL=22;
+
+// build static pieces
+const bars=$('bars'),btns=[];
+for(let L=1;L<=N;L++){const b=document.createElement('button');b.type='button';b.dataset.level=L;b.tabIndex=L===focusL?0:-1;bars.appendChild(b);btns.push(b);}
+(function axes(){
+  const y=$('yax'),area=$('area');
+  for(const v of [0,10,20,30,40,50,60,70,80,90]){const s=document.createElement('span');s.style.top=(100-v/YMAX*100)+'%';s.textContent=v;y.appendChild(s);
+    if(v>0){const g=document.createElement('div');g.className='gl'+(v===50||v===80?' major':'');g.style.top=(100-v/YMAX*100)+'%';area.insertBefore(g,bars);}}
+  const x=$('xax');for(const L of [1,10,20,30,40,50,60,70,80,90,99]){const s=document.createElement('span');s.style.left=((L-0.5)/N*100)+'%';s.textContent=L;x.appendChild(s);}
+  let d='';for(let L=1;L<=N;L++){const yv=YMAX-intended(L);d+=(L===1?'M':'L')+(L-1)+' '+yv+' L'+L+' '+yv+' ';}
+  $('intended').innerHTML=`<path d="${d}" fill="none" stroke="var(--ochre)" stroke-width="2.5" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>`;
+})();
+
+function failures(){const f=IMPL[impl].f,p=PROP[prop],out=[];for(let L=p.from;L<=N;L++)if(p.fails(f,L))out.push(L);return {out,checked:N-p.from+1};}
+function tipText(L){const f=IMPL[impl].f,a=f(L);return `${IMPL[impl].explain(L)} (intended ${intended(L)})`;}
+
+function render(){
+  const f=IMPL[impl].f,fails=swept?new Set(failures().out):new Set();
+  btns.forEach((b,k)=>{const L=k+1,a=f(L);b.style.height=(Math.min(a,YMAX)/YMAX*100)+'%';
+    b.classList.toggle('ex',examples.has(L)&&!fails.has(L));b.classList.toggle('fail',fails.has(L));b.classList.toggle('cur',L===focusL);
+    b.setAttribute('aria-pressed',examples.has(L)?'true':'false');
+    b.setAttribute('aria-label',tipText(L)+(fails.has(L)?'. Fails the property':'')+(examples.has(L)?'. Example test':''));});
+  $('fmarks').innerHTML=[...fails].map(L=>`<span class="fm" style="left:${(L-0.5)/N*100}%">✗</span>`).join('');
+  // example chips + marks
+  const ex=[...examples].sort((a,b)=>a-b);let pass=0;
+  $('chips').innerHTML=ex.map(L=>{const ok=f(L)===intended(L);if(ok)pass++;return `<span class="chip${ok?'':' bad'}">${ok?'✓':'✗'} L${L}: ${f(L)}${ok?'':' ≠ '+intended(L)}</span>`;}).join('');
+  $('marks').innerHTML=ex.map(L=>`<i class="${f(L)===intended(L)?'':'bad'}" style="left:${(L-0.5)/N*100}%"></i>`).join('');
+  const e=$('examples');e.textContent=`Example tests: ${pass} of ${ex.length} pass`;e.className='examples '+(pass===ex.length?'ok':'bad');
+  // sweep summary
+  const s=$('summary');
+  if(swept){const r=failures();s.className='summary '+(r.out.length?'bad':'ok');
+    s.innerHTML=`Property: ${PROP[prop].name} · <b>${r.checked}</b> levels checked · <b>${r.out.length}</b> failure${r.out.length===1?'':'s'}${r.out.length?': '+r.out.join(', '):''}`;}
+  const t=$('tip');t.textContent=tipText(focusL);t.classList.toggle('fail',f(focusL)!==intended(focusL));
+  insight(pass,ex.length);
+}
+function insight(pass,n){
+  const f=IMPL[impl].f,drops=[];for(let L=2;L<=N;L++)if(f(L)<f(L-1))drops.push(L);
+  let s;
+  if(!swept) s=`${pass} of ${n} example tests pass${impl==='rom'?`, yet the bars collapse at levels ${drops.join(', ')}. No example sits on them. Press “Run property sweep”.`:`, and this implementation has no drops. Run the sweep to confirm it.`}`;
+  else{const r=failures();s=r.out.length?`The property “${PROP[prop].name}” fails at ${r.out.length} level${r.out.length===1?'':'s'} while the example tests still read ${pass} of ${n}. Try another property: each one sees a different set of failures.`:`Zero failures for “${PROP[prop].name}” on ${IMPL[impl].name} across all ${r.checked} checked levels. Switch properties; ${impl==='rom'?'the ROM fails the others.':'a correct fix passes all three.'}`;}
+  $('insight').textContent=s;
+}
+
+// events
+function setFocus(L,move){focusL=L;btns.forEach((b,k)=>b.tabIndex=k+1===L?0:-1);if(move)btns[L-1].focus();render();}
+bars.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const L=+b.dataset.level;examples.has(L)?examples.delete(L):examples.add(L);setFocus(L,false);});
+bars.addEventListener('mouseover',e=>{const b=e.target.closest('button');if(!b)return;const L=+b.dataset.level;const t=$('tip');t.textContent=tipText(L);t.classList.toggle('fail',IMPL[impl].f(L)!==intended(L));});
+bars.addEventListener('mouseleave',()=>render());
+bars.addEventListener('focusin',e=>{const b=e.target.closest('button');if(b&&+b.dataset.level!==focusL)setFocus(+b.dataset.level,false);});
+bars.addEventListener('keydown',e=>{
+  let L=focusL;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp')L=Math.min(N,L+1);else if(e.key==='ArrowLeft'||e.key==='ArrowDown')L=Math.max(1,L-1);
+  else if(e.key==='Home')L=1;else if(e.key==='End')L=N;else if(e.key==='PageUp')L=Math.min(N,L+10);else if(e.key==='PageDown')L=Math.max(1,L-10);else return;
+  e.preventDefault();setFocus(L,true);
+});
+document.querySelectorAll('input[name=impl]').forEach(r=>r.addEventListener('change',()=>{impl=r.value;render();}));
+document.querySelectorAll('input[name=prop]').forEach(r=>r.addEventListener('change',()=>{prop=r.value;render();}));
+$('run').addEventListener('click',()=>{swept=true;render();});
+render();
+})();
+</script>
+</body>
+</html>

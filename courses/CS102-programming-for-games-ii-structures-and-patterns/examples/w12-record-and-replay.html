@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Record and replay · CS102 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.switchbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:14px}
+.switchbar .lbl{font-weight:700;font-size:.92rem;margin-right:2px}
+.sw{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;padding:7px 12px 7px 9px;border:1.5px solid var(--steel);border-radius:999px;cursor:pointer;user-select:none}
+.sw input{width:18px;height:18px;margin:0;accent-color:var(--steel)}
+.sw:has(input:not(:checked)){border-color:var(--blood);border-style:dashed}
+.status{margin-left:auto;font:700 1rem var(--sans);padding:7px 14px;border-radius:999px;border:2px solid var(--ink);font-variant-numeric:tabular-nums}
+.status.match{border-color:var(--moss);color:var(--moss)}
+.status.desync{border-color:var(--blood);color:var(--blood);border-style:dashed}
+@media (max-width:760px){.status{margin-left:0;width:100%;text-align:center}}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend svg{vertical-align:middle;margin-right:5px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+button,select,input[type=number]{font:600 .9rem var(--sans);color:var(--ink)}
+.btn{padding:8px 13px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;cursor:pointer;min-height:38px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.chip{padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.seg{display:inline-flex;gap:4px}
+.clock{margin-left:auto;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--ink-soft)}
+.check{display:inline-flex;align-items:center;gap:7px;font-size:.88rem;font-weight:600;cursor:pointer}
+.check input{width:17px;height:17px;margin:0;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sw:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.sw input:focus-visible{outline:none}
+select,input[type=number]{padding:7px 9px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);min-height:38px}
+input[type=number]{width:8.5em;font-variant-numeric:tabular-nums}
+.inputs{display:grid;grid-template-columns:auto auto 1fr;gap:12px 18px;align-items:end;margin-top:14px;padding-top:12px;border-top:1px solid var(--grid)}
+@media (max-width:760px){.inputs{grid-template-columns:1fr 1fr}}
+.field{display:flex;flex-direction:column;gap:4px;font-size:.86rem;font-weight:600;min-width:0}
+.recwrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+@media (max-width:760px){.recwrap{grid-column:1/-1}}
+.dpad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:4px;touch-action:none}
+.dpad button{border-radius:8px;border:1.5px solid var(--steel);background:var(--paper);cursor:pointer;font-size:1.05rem;padding:0;touch-action:none}
+.dpad button[data-held="1"]{background:var(--steel);color:var(--paper)}
+.dpad .fire{grid-column:2;grid-row:2;border-color:var(--blood);font-size:.72rem;font-weight:700}
+.dpad .up{grid-column:2;grid-row:1}.dpad .down{grid-column:2;grid-row:3}.dpad .left{grid-column:1;grid-row:2}.dpad .right{grid-column:3;grid-row:2}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:0;max-width:40ch}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:18px 0 6px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{display:block;font-size:.8rem;color:var(--ink-soft);overflow-wrap:anywhere}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:560px}
+caption{text-align:left;font-family:var(--serif);font-weight:600;font-size:1.02rem;padding-bottom:6px}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.bad{color:var(--blood)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86rem}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);max-width:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+footer p{margin:0 0 8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 12 · Worked example</p>
+  <h1>1,800 bytes replay 30 seconds, if every input is in them</h1>
+  <p class="lede">The replay re-runs the recorded commands through the same <code>step</code> function. With every input recorded it matches the live run to the last bit. Switch off one input and watch which part of the state breaks, and that the error never shrinks back.</p>
+</header>
+
+<section class="panel" aria-label="Record and replay">
+  <div class="switchbar" role="group" aria-label="Replay switches">
+    <span class="lbl">Replay uses:</span>
+    <label class="sw"><input type="checkbox" id="swDt" checked> Fixed timestep</label>
+    <label class="sw"><input type="checkbox" id="swRng" checked> Seeded RNG</label>
+    <label class="sw"><input type="checkbox" id="swIn" checked> Record every input</label>
+    <span class="status" id="status">MATCH</span>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Arena<small>Recording solid, replay dotted on top. Hits: filled circle = recording, ring = replay.</small></figcaption>
+      <canvas id="cArena" role="img" aria-label="Arena showing the recorded path and the replayed path"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--steel)" stroke-width="3"/></svg>recording</span>
+        <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--ochre)" stroke-width="3" stroke-dasharray="2 4" stroke-linecap="round"/></svg>replay</span>
+        <span><svg width="14" height="14"><rect x="2" y="2" width="10" height="10" fill="var(--steel)"/></svg>/ <svg width="14" height="14"><rect x="2" y="2" width="10" height="10" fill="none" stroke="var(--ochre)" stroke-width="2"/></svg>now</span>
+      </div>
+      <div class="bar">
+        <button class="btn primary" id="play" type="button">Play</button>
+        <button class="btn" id="restart" type="button">Restart</button>
+        <span class="seg" role="group" aria-label="Playback speed">
+          <button class="chip" type="button" data-speed="1" aria-pressed="false">1×</button>
+          <button class="chip" type="button" data-speed="4" aria-pressed="true">4×</button>
+          <button class="chip" type="button" data-speed="0" aria-pressed="false">Instant</button>
+        </span>
+        <span class="clock" id="clock">t = 0.00 s</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Replay error over time<small>Position error (units, left axis) and score difference (right axis)</small></figcaption>
+      <canvas id="cErr" role="img" aria-label="Replay error over 30 seconds"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--steel)" stroke-width="3"/></svg>position error</span>
+        <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--blood)" stroke-width="2.5" stroke-dasharray="7 4"/></svg>|score difference|</span>
+        <span><svg width="14" height="12"><line x1="7" y1="0" x2="7" y2="12" stroke="var(--ink)" stroke-width="2" stroke-dasharray="3 2"/></svg>first difference</span>
+      </div>
+      <div class="bar">
+        <label class="check"><input type="checkbox" id="logY"> Log scale</label>
+      </div>
+    </figure>
+  </div>
+
+  <div class="inputs">
+    <label class="field" for="src">Input source
+      <select id="src"><option value="script">Scripted</option><option value="own">Record my own</option></select>
+    </label>
+    <label class="field" for="seed">World seed
+      <input id="seed" type="number" step="1" value="1234" inputmode="numeric">
+    </label>
+    <div class="recwrap" id="recwrap" hidden>
+      <button class="btn primary" id="recBtn" type="button">Start recording (30 s)</button>
+      <div class="dpad" id="dpad" aria-label="On-screen controls">
+        <button class="up" type="button" data-b="1" aria-label="Up">▲</button>
+        <button class="left" type="button" data-b="4" aria-label="Left">◀</button>
+        <button class="fire" type="button" data-b="16" aria-label="Fire">FIRE</button>
+        <button class="right" type="button" data-b="8" aria-label="Right">▶</button>
+        <button class="down" type="button" data-b="2" aria-label="Down">▼</button>
+      </div>
+      <p class="hint" id="recHint">Arrow keys or WASD to move, Space to fire. Input is sampled once per tick, 60 times a second.</p>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rRec">1,800 bytes</b><span>Recording: 1 byte per tick</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rChg">—</b><span id="rChgL">Change-only encoding</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rSnap">14,400,000 bytes</b><span>Snapshots: 200 entities × 5 fields × 8 bytes × 1,800 ticks</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rRatio">8,000×</b><span>Ratio, snapshots ÷ commands</span></div>
+    <div class="stat" style="--c:var(--ink)" id="doomStat"><b id="rDoom">4,214 bytes</b><span id="rDoomL">Doom-style demo, same 30 s: 13 + 1,050 × 4 + 1</span></div>
+  </div>
+  <label class="check"><input type="checkbox" id="showDoom" checked> Show Doom-style size</label>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Final state after 1,800 ticks</caption>
+      <thead><tr><th scope="col">Run</th><th scope="col">x</th><th scope="col">y</th><th scope="col">score</th><th scope="col">shots</th><th scope="col">FNV-1a checksum</th></tr></thead>
+      <tbody id="stateBody"></tbody>
+    </table>
+  </div>
+  <p class="sr" id="announce" aria-live="polite"></p>
+
+  <div class="table-wrap">
+    <table>
+      <caption>What each missing input breaks (same recording, one switch off at a time)</caption>
+      <thead><tr><th scope="col">Replay</th><th scope="col">final (x, y)</th><th scope="col">drift at 30 s</th><th scope="col">score</th><th scope="col">shots</th><th scope="col">first difference</th></tr></thead>
+      <tbody id="breakBody"></tbody>
+    </table>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>
+  <p>Simulation: 60 ticks per second, 1,800 ticks. Buttons are one byte per tick (UP 1, DOWN 2, LEFT 4, RIGHT 8, FIRE 16). <code>step</code> moves 90 units per second and rolls a 25% hit per shot from a mulberry32 generator seeded with the world seed. The sparkle on hits uses its own generator, so drawing never consumes simulation numbers. Timestep off: <code>dt = (1/60) × (0.8 + 0.4v)</code>, v from mulberry32 seed 5. Seeded RNG off: the replay seeds with 999. Record every input off: FIRE is dropped on ticks where tick % 7 = 0.</p>
+  <p>The scripted player holds RIGHT, then UP, then LEFT for 600 ticks each and fires every 10th tick, the same player as the lecture's table. End position, shots, change count and sizes match that table. The score and the jitter drift differ, because this page rolls hits and jitter with mulberry32 while the lecture's Python uses random.Random. Checksum packs x and y as little-endian float64 and score and shots as int32, then hashes the 24 bytes with 32-bit FNV-1a. Doom demo layout from the 1997 id Software source release: 13-byte header, 4 bytes per player per tic at 35 tics per second, 1-byte end marker.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const T=1800,HZ=60,DT=1/60,UP=1,DOWN=2,LEFT=4,RIGHT=8,FIRE=16,ALT_SEED=999,JITTER_SEED=5;
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const minus=s=>s.replace(/^-/,'−');
+function num(v,d){let s=v.toFixed(d);if(/^-0\.?0*$/.test(s))s=s.slice(1);return minus(s);}
+const tsec=i=>(i/HZ).toFixed(2);
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// One world. The same class runs the recording and the replay.
+function World(seed,jitter,dropFire){
+  this.rng=mulberry32(seed);this.jit=jitter?mulberry32(JITTER_SEED):null;this.drop=dropFire;
+  this.x=0;this.y=0;this.score=0;this.shots=0;this.t=0;
+  this.X=[0];this.Y=[0];this.S=[0];this.N=[0];this.hits=[];
+}
+World.prototype.step=function(b){
+  if(this.drop&&this.t%7===0)b&=~FIRE;
+  const dt=this.jit?DT*(0.8+0.4*this.jit()):DT;
+  this.x+=(((b&RIGHT)?1:0)-((b&LEFT)?1:0))*90*dt;
+  this.y+=(((b&DOWN)?1:0)-((b&UP)?1:0))*90*dt;
+  if(b&FIRE){this.shots++;if(this.rng()<0.25){this.score++;this.hits.push({i:this.t+1,x:this.x,y:this.y});}}
+  this.t++;this.X.push(this.x);this.Y.push(this.y);this.S.push(this.score);this.N.push(this.shots);
+};
+function simulate(cmds,seed,jitter,drop){const w=new World(seed,jitter,drop);for(let t=0;t<cmds.length;t++)w.step(cmds[t]);return w;}
+
+function checksum(x,y,s,n){
+  const dv=new DataView(new ArrayBuffer(24));
+  dv.setFloat64(0,x,true);dv.setFloat64(8,y,true);dv.setInt32(16,s,true);dv.setInt32(20,n,true);
+  let h=0x811c9dc5;for(let i=0;i<24;i++){h^=dv.getUint8(i);h=Math.imul(h,0x01000193)>>>0;}
+  return h.toString(16).padStart(8,'0');
+}
+function scripted(){const c=new Uint8Array(T);for(let t=0;t<T;t++){c[t]=t<600?RIGHT:t<1200?UP:LEFT;if(t%10===0)c[t]|=FIRE;}return c;}
+function changes(c){let n=0;for(let t=0;t<c.length;t++)if(t===0||c[t]!==c[t-1])n++;return n;}
+function compare(a,b){
+  const L=Math.min(a.X.length,b.X.length),err=new Float64Array(L),sd=new Float64Array(L);let first=-1,maxE=0,maxS=0;
+  for(let i=0;i<L;i++){
+    err[i]=Math.hypot(a.X[i]-b.X[i],a.Y[i]-b.Y[i]);sd[i]=Math.abs(a.S[i]-b.S[i]);
+    if(err[i]>maxE)maxE=err[i];if(sd[i]>maxS)maxS=sd[i];
+    if(first<0&&(a.X[i]!==b.X[i]||a.Y[i]!==b.Y[i]||a.S[i]!==b.S[i]||a.N[i]!==b.N[i]))first=i;
+  }
+  return {err,sd,first,maxE,maxS};
+}
+
+// ---------- state ----------
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let seed=1234,cmds=scripted(),mode='script',rec=null,rep=null,cmp=null;
+let shown=T,playing=false,speed=reduce?0:4,acc=0,last=0,announced=false;
+let recording=false,live=null,liveCmds=null,held=0,padHeld=0;
+const fxRng=mulberry32(77),fxCache=new Map();   // presentation only
+function sparkle(i){if(!fxCache.has(i)){const a=[];for(let k=0;k<5;k++)a.push(fxRng()*Math.PI*2);fxCache.set(i,a);}return fxCache.get(i);}
+
+function sw(){return {dt:$('swDt').checked,rng:$('swRng').checked,inp:$('swIn').checked};}
+function runReplay(){
+  const s=sw();
+  rep=simulate(cmds,s.rng?seed:ALT_SEED,!s.dt,!s.inp);
+  cmp=compare(rec,rep);
+}
+function recompute(){
+  rec=simulate(cmds,seed,false,false);
+  runReplay();
+}
+
+// ---------- drawing ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceStep(range,target){const raw=range/target,m=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/m;return (f<1.5?1:f<3?2:f<7?5:10)*m;}
+
+function drawArena(){
+  const {g,w,h}=setup($('cArena'));g.clearRect(0,0,w,h);
+  const runs=recording?[live]:[rec,rep];
+  let x0=0,x1=0,y0=0,y1=0;
+  for(const r of runs){for(let i=0;i<r.X.length;i++){const x=r.X[i],y=r.Y[i];if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}}
+  if(recording){x0=Math.min(x0,-300);x1=Math.max(x1,300);y0=Math.min(y0,-300);y1=Math.max(y1,300);}
+  const pad=26,sx=(w-2*pad)/Math.max(1,x1-x0),sy=(h-2*pad)/Math.max(1,y1-y0),s=Math.min(sx,sy);
+  const ox=pad+((w-2*pad)-(x1-x0)*s)/2-x0*s,oy=pad+((h-2*pad)-(y1-y0)*s)/2-y0*s;
+  const P=(x,y)=>[ox+x*s,oy+y*s];
+  // grid
+  const step=niceStep(Math.max(x1-x0,y1-y0,1),5);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');
+  for(let gx=Math.ceil((-ox/s)/step)*step;ox+gx*s<=w;gx+=step){const px=ox+gx*s;g.beginPath();g.moveTo(px,0);g.lineTo(px,h);g.stroke();}
+  for(let gy=Math.ceil((-oy/s)/step)*step;oy+gy*s<=h;gy+=step){const py=oy+gy*s;g.beginPath();g.moveTo(0,py);g.lineTo(w,py);g.stroke();}
+  g.textAlign='right';g.textBaseline='top';g.fillText('grid = '+fmt(step)+' units',w-6,4);
+  const [sx0,sy0]=P(0,0);g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(sx0-6,sy0);g.lineTo(sx0+6,sy0);g.moveTo(sx0,sy0-6);g.lineTo(sx0,sy0+6);g.stroke();
+  g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='top';g.fillText('start (0, 0)',sx0+6,sy0+10);
+  const upto=recording?live.X.length-1:shown;
+  function trail(r,color,width,dash,cap){
+    g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash);g.lineCap=cap;g.beginPath();
+    for(let i=0;i<=upto&&i<r.X.length;i++){const [px,py]=P(r.X[i],r.Y[i]);i?g.lineTo(px,py):g.moveTo(px,py);}
+    g.stroke();g.setLineDash([]);g.lineCap='butt';
+  }
+  const steel=css('--steel'),ochre=css('--ochre'),paper=css('--paper');
+  trail(runs[0],steel,4,[],'butt');
+  if(!recording)trail(rep,ochre,3,[1,6],'round');
+  // hits
+  for(const hit of runs[0].hits){if(hit.i>upto)continue;const [px,py]=P(hit.x,hit.y);
+    g.fillStyle=steel;g.beginPath();g.arc(px,py,4,0,Math.PI*2);g.fill();
+    if(upto-hit.i<20&&upto<T){const age=(upto-hit.i)/20;g.strokeStyle=css('--ochre');g.globalAlpha=1-age;g.lineWidth=1.5;
+      for(const a of sparkle(hit.i)){const r0=6+age*6,r1=11+age*10;g.beginPath();g.moveTo(px+Math.cos(a)*r0,py+Math.sin(a)*r0);g.lineTo(px+Math.cos(a)*r1,py+Math.sin(a)*r1);g.stroke();}
+      g.globalAlpha=1;}
+  }
+  if(!recording){for(const hit of rep.hits){if(hit.i>upto)continue;const [px,py]=P(hit.x,hit.y);g.strokeStyle=ochre;g.lineWidth=2;g.beginPath();g.arc(px,py,7.5,0,Math.PI*2);g.stroke();}}
+  // current positions
+  const r0=runs[0],i0=Math.min(upto,r0.X.length-1);let [px,py]=P(r0.X[i0],r0.Y[i0]);
+  g.fillStyle=steel;g.fillRect(px-6,py-6,12,12);g.strokeStyle=paper;g.lineWidth=1.5;g.strokeRect(px-6,py-6,12,12);
+  if(!recording){[px,py]=P(rep.X[upto],rep.Y[upto]);g.strokeStyle=ochre;g.lineWidth=2.5;g.strokeRect(px-9,py-9,18,18);}
+}
+
+function drawErr(){
+  const {g,w,h}=setup($('cErr'));g.clearRect(0,0,w,h);
+  const pad={l:52,r:44,t:14,b:34},W=w-pad.l-pad.r,H=h-pad.t-pad.b,log=$('logY').checked;
+  const ink=css('--ink-soft'),grid=css('--grid');g.font='11px '+css('--sans');
+  if(recording||!cmp){g.fillStyle=ink;g.textAlign='center';g.textBaseline='middle';g.fillText(recording?'Recording… the replay runs when you finish':'',pad.l+W/2,pad.t+H/2);return;}
+  let yE,yS,ticksE,ticksS;
+  if(log){
+    const fe=1e-3,te=Math.max(1,Math.pow(10,Math.ceil(Math.log10(Math.max(cmp.maxE,1e-3)*1.0001))));
+    const fs=0.1,ts=Math.max(10,Math.pow(10,Math.ceil(Math.log10(Math.max(cmp.maxS,0.1)*1.0001))));
+    yE=v=>pad.t+H*(1-(Math.log10(Math.max(v,fe))-Math.log10(fe))/(Math.log10(te)-Math.log10(fe)));
+    yS=v=>pad.t+H*(1-(Math.log10(Math.max(v,fs))-Math.log10(fs))/(Math.log10(ts)-Math.log10(fs)));
+    ticksE=[];for(let v=fe;v<=te*1.0001;v*=10)ticksE.push([v,v===fe?'exact':(v<1?+v.toPrecision(1)+'':fmt(v))]);
+    ticksS=[];for(let v=fs;v<=ts*1.0001;v*=10)ticksS.push([v,v===fs?'exact':fmt(v)]);
+  }else{
+    const se=cmp.maxE>0?niceStep(cmp.maxE,4):0.25,te=cmp.maxE>0?Math.ceil(cmp.maxE/se)*se:1;
+    const ss=Math.max(1,niceStep(Math.max(cmp.maxS,1),4)),ts=Math.max(1,Math.ceil(cmp.maxS/ss)*ss);
+    yE=v=>pad.t+H*(1-v/te);yS=v=>pad.t+H*(1-v/ts);
+    const n=Math.round(te/(cmp.maxE>0?se:0.25));ticksE=[];for(let k=0;k<=n;k++){const v=k*te/n;ticksE.push([v,v===0?'0':(te<10?+v.toFixed(2)+'':fmt(v))]);}
+    ticksS=[];for(let v=0;v<=ts;v+=ss)ticksS.push([v,fmt(v)]);
+  }
+  g.strokeStyle=grid;g.lineWidth=1;g.fillStyle=ink;
+  for(const [v,l] of ticksE){const y=yE(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(l,pad.l-6,y);}
+  g.fillStyle=css('--blood');for(const [v,l] of ticksS){g.textAlign='left';g.textBaseline='middle';g.fillText(l,w-pad.r+6,yS(v));}
+  g.fillStyle=ink;g.textAlign='center';g.textBaseline='top';
+  for(let s=0;s<=30;s+=5){const x=pad.l+W*s/30;g.fillText(s+' s',x,h-pad.b+6);}
+  const X=i=>pad.l+W*i/T,end=Math.min(shown,cmp.err.length-1);
+  // score difference, stepped and dashed
+  g.strokeStyle=css('--blood');g.lineWidth=2.5;g.setLineDash([7,4]);g.beginPath();
+  for(let i=0;i<=end;i++){const x=X(i),y=yS(cmp.sd[i]);if(!i)g.moveTo(x,y);else{g.lineTo(x,yS(cmp.sd[i-1]));g.lineTo(x,y);}}
+  g.stroke();g.setLineDash([]);
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=end;i++){const x=X(i),y=yE(cmp.err[i]);i?g.lineTo(x,y):g.moveTo(x,y);}
+  g.stroke();
+  if(cmp.first>=0&&cmp.first<=end){
+    const x=X(cmp.first);g.strokeStyle=css('--ink');g.lineWidth=1.5;g.setLineDash([4,3]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+    const lab='first difference t = '+tsec(cmp.first)+' s';g.font='600 12px '+css('--sans');const tw=g.measureText(lab).width;
+    let lx=x+6;if(lx+tw>w-pad.r-2)lx=x-6-tw;g.fillStyle=css('--paper');g.fillRect(lx-3,pad.t+2,tw+6,18);g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='top';g.fillText(lab,lx,pad.t+5);
+  }else if(cmp.first<0&&end===T){
+    g.font='600 12px '+css('--sans');g.fillStyle=css('--moss');g.textAlign='center';g.textBaseline='bottom';g.fillText('Both lines are 0 for all 1,800 ticks: exact replay',pad.l+W/2,yE(log?1e-3:0)-8);
+  }
+}
+
+// ---------- readouts ----------
+function stateRow(name,r,i){
+  return `<tr><th scope="row" style="text-align:left">${name}</th><td>${num(r.X[i],3)}</td><td>${num(r.Y[i],3)}</td><td>${r.S[i]}</td><td>${r.N[i]}</td><td class="mono">${checksum(r.X[i],r.Y[i],r.S[i],r.N[i])}</td></tr>`;
+}
+function readouts(){
+  const n=recording?changes(liveCmds.subarray(0,live.t)):changes(cmds);
+  $('rChg').textContent=fmt(n*3)+' bytes';
+  $('rChgL').textContent=`Change-only encoding: ${fmt(n)} changes × 3 = ${fmt(n*3)} bytes`;
+  $('doomStat').hidden=!$('showDoom').checked;
+  if(recording){$('stateBody').innerHTML=stateRow('Recording (live)',live,live.X.length-1);
+    $('breakBody').innerHTML='<tr><td colspan="6">The comparison runs when the 30 s recording ends.</td></tr>';$('insight').textContent='Recording so far: '+fmt(live.t)+' ticks, '+fmt(live.t)+' bytes.';return;}
+  const i=shown;
+  $('stateBody').innerHTML=stateRow(i===T?'Recording':'Recording at t = '+tsec(i)+' s',rec,i)+stateRow(i===T?'Replay':'Replay at t = '+tsec(i)+' s',rep,i);
+  // breakdown table: each switch off alone, same commands
+  const s=sw(),cur=(!s.dt)+(!s.rng)+(!s.inp);
+  const cases=[['All inputs recorded',true,true,true],['Fixed timestep off',false,true,true],['Seeded RNG off',true,false,true],['Record every input off',true,true,false]];
+  let rows=`<tr><td>Recording</td><td>(${num(rec.X[T],3)}, ${num(rec.Y[T],3)})</td><td>—</td><td>${rec.S[T]}</td><td>${rec.N[T]}</td><td>—</td></tr>`;
+  let facts={};
+  for(const [name,dt,rng,inp] of cases){
+    const r=simulate(cmds,rng?seed:ALT_SEED,!dt,!inp),c=compare(rec,r),here=(dt===s.dt&&rng===s.rng&&inp===s.inp);
+    const drift=c.err[T];facts[name]={r,c,drift};
+    rows+=`<tr class="${here?'here':''}"><td>${name}</td><td class="${r.X[T]!==rec.X[T]||r.Y[T]!==rec.Y[T]?'bad':''}">(${num(r.X[T],3)}, ${num(r.Y[T],3)})</td><td class="${drift>0?'bad':''}">${num(drift,3)}</td><td class="${r.S[T]!==rec.S[T]?'bad':''}">${r.S[T]}</td><td class="${r.N[T]!==rec.N[T]?'bad':''}">${r.N[T]}</td><td>${c.first<0?'none':'t = '+tsec(c.first)+' s (tick '+(c.first-1)+')'}</td></tr>`;
+  }
+  if(cur>1){const c=cmp;rows+=`<tr class="here"><td>Your mix (${cur} off)</td><td>(${num(rep.X[T],3)}, ${num(rep.Y[T],3)})</td><td class="${c.err[T]>0?'bad':''}">${num(c.err[T],3)}</td><td>${rep.S[T]}</td><td>${rep.N[T]}</td><td>${c.first<0?'none':'t = '+tsec(c.first)+' s (tick '+(c.first-1)+')'}</td></tr>`;}
+  $('breakBody').innerHTML=rows;
+  const fd=facts['Fixed timestep off'],fr=facts['Seeded RNG off'],fi=facts['Record every input off'];
+  $('insight').innerHTML=`Each unrecorded input breaks a different field. A measured timestep bends the path (${num(fd.drift,2)} units off after 30 s) but keeps the score, because the generator is still called once per shot in the same order. A different seed keeps the path exact but scores ${fr.r.S[T]} instead of ${rec.S[T]}. Dropping FIRE on every 7th tick loses ${rec.N[T]-fi.r.N[T]} shots, which shifts every later roll. None of these errors ever returns to zero.`;
+}
+function status(){
+  const el=$('status');
+  if(recording){el.className='status';el.textContent='Recording… '+(30-live.t/HZ).toFixed(1)+' s left';$('clock').textContent='t = '+tsec(live.t)+' s';return;}
+  const f=cmp.first;
+  if(f>=0&&f<=shown){el.className='status desync';el.textContent='DESYNC at t = '+tsec(f)+' s';}
+  else if(shown>=T){el.className='status match';el.textContent='MATCH';}
+  else{el.className='status';el.textContent='Replaying… t = '+tsec(shown)+' s';}
+  $('clock').textContent='t = '+tsec(recording?live.t:shown)+' s';
+  if(shown>=T&&!announced){announced=true;$('announce').textContent=f<0?'MATCH':'DESYNC at t = '+tsec(f)+' s';}
+}
+function render(){drawArena();drawErr();readouts();status();}
+
+// ---------- playback ----------
+let loopId=0;
+function loop(){const id=++loopId;last=performance.now();acc=0;const f=now=>{if(id!==loopId)return;if(frame(now))requestAnimationFrame(f);};requestAnimationFrame(f);}
+function setPlaying(p){playing=p&&!recording;$('play').textContent=playing?'Pause':'Play';if(playing)loop();else if(!recording)loopId++;}
+function restart(){if(recording)return;announced=false;$('announce').textContent='';if(speed===0){shown=T;setPlaying(false);render();}else{shown=0;render();setPlaying(true);}}
+function frame(now){
+  if(recording)return recTick(now);
+  if(!playing)return false;
+  const dtR=Math.min(0.1,(now-last)/1000);last=now;acc+=dtR*HZ*speed;
+  const n=Math.floor(acc);acc-=n;shown=Math.min(T,shown+n);
+  render();
+  if(shown>=T){setPlaying(false);return false;}
+  return true;
+}
+$('play').addEventListener('click',()=>{if(recording)return;if(playing){setPlaying(false);return;}if(shown>=T){restart();return;}if(speed===0){shown=T;render();return;}setPlaying(true);});
+$('restart').addEventListener('click',restart);
+document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+  speed=+b.dataset.speed;if(speed===0&&!recording){shown=T;setPlaying(false);render();}
+}));
+document.querySelectorAll('[data-speed]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.speed===speed?'true':'false'));
+
+['swDt','swRng','swIn'].forEach(id=>$(id).addEventListener('change',()=>{if(recording)return;runReplay();announced=false;if(shown>=T)status();render();}));
+$('logY').addEventListener('change',drawErr);
+$('showDoom').addEventListener('change',readouts);
+$('seed').addEventListener('change',()=>{
+  let v=parseInt($('seed').value,10);if(!Number.isFinite(v))v=1234;v=Math.max(-2147483648,Math.min(2147483647,v));$('seed').value=v;seed=v;
+  if(recording)return;recompute();restart();
+});
+
+// ---------- recording your own ----------
+const keyMap={ArrowUp:UP,KeyW:UP,ArrowDown:DOWN,KeyS:DOWN,ArrowLeft:LEFT,KeyA:LEFT,ArrowRight:RIGHT,KeyD:RIGHT,Space:FIRE};
+document.addEventListener('keydown',e=>{if(!recording)return;const b=keyMap[e.code];if(b){held|=b;e.preventDefault();}});
+document.addEventListener('keyup',e=>{const b=keyMap[e.code];if(b){held&=~b;if(recording)e.preventDefault();}});
+window.addEventListener('blur',()=>{held=0;});
+document.querySelectorAll('#dpad button').forEach(btn=>{
+  const b=+btn.dataset.b;
+  const on=e=>{e.preventDefault();padHeld|=b;btn.dataset.held='1';try{btn.setPointerCapture(e.pointerId);}catch(_){}};
+  const off=()=>{padHeld&=~b;btn.dataset.held='0';};
+  btn.addEventListener('pointerdown',on);['pointerup','pointercancel','lostpointercapture'].forEach(ev=>btn.addEventListener(ev,off));
+  btn.addEventListener('keydown',e=>{if(e.key==='Enter'){padHeld|=b;btn.dataset.held='1';}});
+  btn.addEventListener('keyup',e=>{if(e.key==='Enter')off();});
+  btn.addEventListener('contextmenu',e=>e.preventDefault());
+});
+function startRecording(){
+  setPlaying(false);recording=true;held=0;live=new World(seed,false,false);liveCmds=new Uint8Array(T);
+  $('recBtn').textContent='Cancel recording';announced=false;$('announce').textContent='Recording started';
+  render();loop();
+}
+function stopRecording(done){
+  recording=false;loopId++;held=0;$('recBtn').textContent='Record again (30 s)';
+  if(done){cmds=liveCmds;recompute();restart();}else{render();}
+}
+function recTick(now){
+  if(!recording)return false;
+  const dtR=Math.min(0.1,(now-last)/1000);last=now;acc+=dtR*HZ;
+  while(acc>=1&&live.t<T){acc-=1;const b=held|padHeld;liveCmds[live.t]=b;live.step(b);}
+  if(live.t>=T){stopRecording(true);return false;}
+  drawArena();drawErr();readouts();status();return true;
+}
+$('recBtn').addEventListener('click',()=>{if(recording)stopRecording(false);else startRecording();});
+$('src').addEventListener('change',()=>{
+  mode=$('src').value;$('recwrap').hidden=mode!=='own';
+  if(recording)stopRecording(false);
+  if(mode==='script'){cmds=scripted();recompute();restart();}
+  else{$('recBtn').textContent='Start recording (30 s)';render();}
+});
+
+window.addEventListener('resize',()=>{drawArena();drawErr();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+recompute();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawArena();drawErr();});
+shown=T;setPlaying(false);render();
+})();
+</script>
+</body>
+</html>

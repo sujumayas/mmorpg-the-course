@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pair checks vs frame budget · CS102 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1160px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+.views{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
+@media (max-width:899px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 8px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 4px 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+svg{display:block;width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;margin:6px 4px 2px}
+.legend i{display:inline-block;width:20px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.ax{fill:var(--ink-soft);font:12px var(--sans)}
+.gl{stroke:var(--grid);stroke-width:1}
+.axis{stroke:var(--ink-soft);stroke-width:1}
+.naive{fill:none;stroke:var(--blood);stroke-width:2.5}
+.gridl{fill:none;stroke:var(--steel);stroke-width:2.5}
+.budget{stroke:var(--ochre);stroke-width:2;stroke-dasharray:7 5}
+.marker{stroke:var(--ink);stroke-width:1.2;stroke-dasharray:4 4;opacity:.5}
+.dot-n{fill:var(--blood);stroke:var(--paper-2);stroke-width:2}
+.dot-g{fill:var(--steel);stroke:var(--paper-2);stroke-width:2}
+.lbl{font:700 12px var(--sans)}
+.lbl-n{fill:var(--blood)}.lbl-g{fill:var(--steel)}.lbl-b{fill:var(--ochre)}.lbl-o{fill:var(--ink-soft)}
+.halo{fill:none;stroke:var(--focus);stroke-width:3}
+.ghost{fill:none;stroke:var(--blood);stroke-width:1.5;stroke-dasharray:3 4;opacity:.55}
+/* frame bar */
+.fb{margin-top:6px}
+.fbrow{margin:12px 0 4px}
+.fbrow .top{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;font-weight:600}
+.fbrow .top b{font-variant-numeric:tabular-nums}
+.track{position:relative;height:30px;margin-top:4px}
+.strip{position:absolute;left:0;top:0;bottom:0;width:72%;border:1.5px solid var(--ink);border-radius:5px;background:var(--paper)}
+.fill{position:absolute;left:0;top:3px;bottom:3px;border-radius:3px}
+.fill.n{background:var(--blood)}.fill.g{background:var(--steel)}
+.spill{position:absolute;top:3px;bottom:3px;left:72%;border-radius:0 3px 3px 0;background:repeating-linear-gradient(135deg,var(--blood) 0 6px,transparent 6px 10px);border:1.5px solid var(--blood)}
+.btick{position:absolute;top:-5px;bottom:-5px;width:0;border-left:2.5px dashed var(--ochre)}
+.frames{font-size:.82rem;color:var(--blood);font-weight:700;min-height:1.2em}
+.scale{display:flex;justify-content:space-between;width:72%;font-size:.75rem;color:var(--ink-soft)}
+/* controls */
+.controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:14px;align-items:end}
+@media (max-width:899px){.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.controls{grid-template-columns:minmax(0,1fr)}}
+.ctl label,.ctl .lab{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+output,.num{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.nrow{display:flex;gap:8px;align-items:center}
+.nrow input[type=number]{width:6.5em;font:600 1rem var(--sans);padding:5px 7px;border-radius:7px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+select{font:600 .95rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);width:100%}
+.btn{font:600 .9rem var(--sans);padding:9px 12px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper-2);color:var(--ink);cursor:pointer;min-height:40px}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px;margin-top:16px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2;user-select:all}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.stat.over b{color:var(--blood)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--ochre);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 4 · Worked example</p>
+  <h1>How many units fit in the frame?</h1>
+  <p class="lede">Checking every pair costs n(n − 1)/2 checks, so the naive curve bends upward and hits the budget at 566 units. A 10× faster machine only moves that to 1,789. A uniform grid moves it to 6,921, until the units crowd together.</p>
+</header>
+
+<section class="panel" aria-label="Pair checks against the frame budget">
+  <div class="views">
+    <figure>
+      <figcaption>Proximity cost per frame<small>x: units n, y: milliseconds, both linear. Dots mark where each line crosses the budget.</small></figcaption>
+      <svg id="chart" role="img" aria-labelledby="chartDesc" style="height:300px"><desc id="chartDesc">Line chart of naive and grid cost against unit count</desc></svg>
+      <div class="legend"><span><i style="background:var(--blood)"></i>naive, all pairs</span><span><i style="background:var(--steel)"></i>uniform grid</span><span><i style="background:repeating-linear-gradient(90deg,var(--ochre) 0 7px,transparent 7px 12px)"></i>budget B</span></div>
+    </figure>
+    <figure>
+      <figcaption>Frame bar<small>The box is one 60 fps frame (16.67 ms). The dashed tick is the budget. Cost past the box spills into later frames.</small></figcaption>
+      <div class="fb">
+        <div class="fbrow">
+          <div class="top"><span>Naive</span><b id="fbN">6.24 ms</b></div>
+          <div class="track"><div class="strip"></div><div class="fill n" id="fillN"></div><div class="spill" id="spillN" hidden></div><div class="btick" id="tick1"></div></div>
+          <div class="frames" id="frN"></div>
+        </div>
+        <div class="fbrow">
+          <div class="top"><span>Grid</span><b id="fbG">0.51 ms</b></div>
+          <div class="track"><div class="strip"></div><div class="fill g" id="fillG"></div><div class="spill" id="spillG" hidden></div><div class="btick" id="tick2"></div></div>
+          <div class="frames" id="frG"></div>
+        </div>
+        <div class="scale"><span>0</span><span>8.33</span><span>16.67 ms</span></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="n">Units n <output id="oN">500</output></label>
+      <input id="n" type="range" min="10" max="8000" step="10" value="500">
+      <div class="nrow"><label for="nNum" style="font-weight:400;font-size:.84rem">exact</label><input id="nNum" type="number" min="10" max="8000" step="10" value="500"></div>
+    </div>
+    <div class="ctl">
+      <label for="c">Cost per pair check, c_pair</label>
+      <select id="c">
+        <option value="50" selected>50 ns (Python)</option>
+        <option value="20">20 ns</option>
+        <option value="5">5 ns (10× faster machine)</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <label for="B">Budget B <output id="oB">8 ms</output></label>
+      <input id="B" type="range" min="1" max="16" step="0.5" value="8">
+    </div>
+    <div class="ctl">
+      <span class="lab">Scenario</span>
+      <div class="btns">
+        <button class="btn" id="cluster" type="button" aria-pressed="false">Cluster</button>
+        <button class="btn" id="tenx" type="button">Show 10× machine</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout" aria-live="polite" id="readout">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rN">500</b><span>units n</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rPairs">124,750</b><span>pairs n(n − 1)/2</span></div>
+    <div class="stat" style="--c:var(--blood)" id="sNaive"><b id="rNaive">6.24 ms</b><span>naive cost</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rNmaxN">566</b><span>naive n_max at budget</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rChecks">112.5</b><span id="rChecksL">grid checks, 4.5 n²/C</span></div>
+    <div class="stat" style="--c:var(--steel)" id="sGrid"><b id="rGrid">0.51 ms</b><span>grid cost</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rNmaxG">6,921</b><span>grid n_max at budget</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rRatio">×3.16</b><span id="rRatioL">capacity from a 10× machine (naive)</span></div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model from the lecture: pairs(n) = n(n − 1)/2; T_naive = pairs × c_pair; grid: C = 10,000 cells, c_unit = 1 µs, spread checks = 4.5 n²/C, clustered checks = 0.6 × pairs (the lab's measured ratio); T_grid = n × c_unit + checks × c_pair. n_max values are exact integer searches. Uniform grid after Robert Nystrom, Game Programming Patterns, "Spatial Partition".</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const FRAME=16.67,C=10000;
+let n=500,c=50,B=8,cluster=false,flashOld=null,flashTimer=null;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const fmt=v=>Math.round(v).toLocaleString('en-US');
+// exact costs in units of 1e-5 ns (integers while c is an integer), converted to ms
+const pairs=k=>k*(k-1)/2;
+function naiveX(k,cp){return pairs(k)*cp*1e5;}
+function gridX(k,cp,cl){return cl?k*1e8+6e4*pairs(k)*cp:k*1e8+45*k*k*cp;}
+const toMs=X=>X/1e11;
+function fmtMs(X){const ms=toMs(X);return ms>=100?(Math.round(X/1e10)/10).toFixed(1):(Math.round(X/1e9)/100).toFixed(2);}
+function nmaxNaive(Bms,cp){
+  const lim=Bms*1e6/cp;let k=Math.floor((1+Math.sqrt(1+8*lim))/2);
+  while(pairs(k+1)*cp<=Bms*1e6)k++;while(k>0&&pairs(k)*cp>Bms*1e6)k--;return k;
+}
+function nmaxGrid(Bms,cp,cl){
+  const lim=Bms*1e11;let lo=0,hi=1;
+  while(gridX(hi,cp,cl)<=lim)hi*=2;
+  while(hi-lo>1){const m=(lo+hi)>>1;gridX(m,cp,cl)<=lim?lo=m:hi=m;}
+  return lo;
+}
+const NS='http://www.w3.org/2000/svg';
+function el(tag,a,p){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e;}
+function txt(s,a,p){const t=el('text',a,p);t.textContent=s;return t;}
+
+function draw(nmN,nmG){
+  const svg=$('chart');[...svg.querySelectorAll(':not(desc)')].forEach(x=>x.remove());
+  const W=Math.max(280,Math.round(svg.getBoundingClientRect().width)||600),H=W<520?270:300;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.style.height=H+'px';
+  const p={l:40,r:14,t:18,b:32},XM=8000,YM=40;
+  const X=v=>p.l+(W-p.l-p.r)*v/XM,Yr=v=>p.t+(H-p.t-p.b)*(1-v/YM),Y=v=>Yr(Math.min(v,YM));
+  for(let v=0;v<=YM;v+=10){el('line',{x1:p.l,x2:W-p.r,y1:Y(v),y2:Y(v),class:'gl'},svg);txt(v,{x:p.l-6,y:Y(v)+4,'text-anchor':'end',class:'ax'},svg);}
+  for(let v=0;v<=XM;v+=2000){txt(v?fmt(v):'0',{x:X(v),y:H-p.b+18,'text-anchor':v===XM?'end':'middle',class:'ax'},svg);}
+  txt('ms',{x:p.l-6,y:p.t-6,'text-anchor':'end',class:'ax'},svg);
+  const clip=el('clipPath',{id:'plotclip'},el('defs',{},svg));el('rect',{x:p.l,y:p.t-2,width:W-p.l-p.r,height:H-p.t-p.b+2},clip);
+  const g=el('g',{'clip-path':'url(#plotclip)'},svg);
+  function line(f,cls){let d='';const steps=240;for(let i=0;i<=steps;i++){const k=Math.max(2,XM*i/steps);d+=(i?'L':'M')+X(k).toFixed(1)+','+Yr(Math.min(f(k),YM*3)).toFixed(1);}el('path',{d,class:cls},g);}
+  if(flashOld)line(k=>toMs(naiveX(k,flashOld.c)),'ghost');
+  line(k=>toMs(gridX(k,c,cluster)),'gridl');
+  line(k=>toMs(naiveX(k,c)),'naive');
+  el('line',{x1:p.l,x2:W-p.r,y1:Y(B),y2:Y(B),class:'budget'},svg);
+  txt(`B = ${B} ms`,{x:X(2600),y:Y(B)-7,'text-anchor':'start',class:'lbl lbl-b'},svg);
+  el('line',{x1:X(n),x2:X(n),y1:p.t,y2:H-p.b,class:'marker'},svg);
+  // crossing dots
+  function cross(k,cls,lblCls,label,above,halo){
+    if(k>XM){txt(`${label?label+' ':''}${fmt(k)} →`,{x:W-p.r-2,y:Y(B)+(above?-22:18),'text-anchor':'end',class:'lbl '+lblCls},svg);return;}
+    const x=X(k),y=Y(B);
+    if(halo)el('circle',{cx:x,cy:y,r:11,class:'halo'},svg);
+    el('circle',{cx:x,cy:y,r:5.5,class:cls},svg);
+    const right=above||x<p.l+60;
+    txt(`${label?label+' ':''}${fmt(k)}`,{x:right?x+9:x-9,y:above?y+17:y-9,'text-anchor':right?'start':'end',class:'lbl '+lblCls},svg);
+  }
+  const halo=!!flashOld;
+  if(flashOld){const x=X(flashOld.nm),y=Y(B);el('circle',{cx:x,cy:y,r:11,class:'halo'},svg);el('circle',{cx:x,cy:y,r:4.5,class:'dot-n',opacity:.5},svg);txt(`was ${fmt(flashOld.nm)}`,{x:x,y:y+20,'text-anchor':'middle',class:'lbl lbl-o'},svg);}
+  cross(nmN,'dot-n','lbl-n','',true,halo);
+  cross(nmG,'dot-g','lbl-g','',false,false);
+  // off-scale labels at current n
+  const vn=toMs(naiveX(n,c)),vg=toMs(gridX(n,c,cluster));
+  [[vn,'lbl-n'],[vg,'lbl-g']].forEach(([v,cl],i)=>{
+    if(v>YM){const x=X(n),anchor=x>W-90?'end':'start';txt(`↑ ${fmtMs(i?gridX(n,c,cluster):naiveX(n,c))} ms`,{x:x+(anchor==='end'?-6:6),y:p.t+10+i*15,'text-anchor':anchor,class:'lbl '+cl},svg);}
+    else el('circle',{cx:X(n),cy:Y(v),r:4,class:i?'dot-g':'dot-n'},svg);
+  });
+}
+
+function bar(fillId,spillId,frId,X){
+  const ms=toMs(X),inStrip=Math.min(ms,FRAME)/FRAME*72;
+  $(fillId).style.width=inStrip+'%';
+  const sp=$(spillId);
+  if(ms>FRAME){sp.hidden=false;sp.style.width=Math.min(28,(ms-FRAME)/FRAME*72)+'%';$(frId).textContent=`${(ms/FRAME).toFixed(1)} frames${ms-FRAME>FRAME*28/72?' (bar clipped)':''}`;}
+  else{sp.hidden=true;$(frId).textContent='';}
+}
+
+function update(){
+  const Xn=naiveX(n,c),Xg=gridX(n,c,cluster);
+  const nmN=nmaxNaive(B,c),nmG=nmaxGrid(B,c,cluster);
+  $('oN').textContent=fmt(n);$('oB').textContent=B+' ms';
+  $('rN').textContent=fmt(n);$('rPairs').textContent=fmt(pairs(n));
+  $('rNaive').textContent=fmtMs(Xn)+' ms';$('rGrid').textContent=fmtMs(Xg)+' ms';
+  $('sNaive').classList.toggle('over',toMs(Xn)>B);$('sGrid').classList.toggle('over',toMs(Xg)>B);
+  const checks=cluster?0.6*pairs(n):45*n*n/1e5;
+  $('rChecks').textContent=Number.isInteger(checks)?fmt(checks):checks.toLocaleString('en-US',{maximumFractionDigits:1});
+  $('rChecksL').textContent=cluster?'grid checks, clustered 0.6 × pairs':'grid checks, spread 4.5 n²/C';
+  $('rNmaxN').textContent=fmt(nmN);$('rNmaxG').textContent=fmt(nmG);
+  const ratio=nmaxNaive(B,c/10)/nmN;
+  $('rRatio').textContent='×'+ratio.toFixed(2);
+  $('rRatioL').textContent=`naive capacity from a 10× machine (${fmt(nmN)} → ${fmt(nmaxNaive(B,c/10))})`;
+  $('fbN').textContent=fmtMs(Xn)+' ms';$('fbG').textContent=fmtMs(Xg)+' ms';
+  bar('fillN','spillN','frN',Xn);bar('fillG','spillG','frG',Xg);
+  const tk=(Math.min(B,FRAME)/FRAME*72)+'%';$('tick1').style.left=tk;$('tick2').style.left=tk;
+  draw(nmN,nmG);
+  // insight
+  const fitsN=toMs(Xn)<=B,fitsG=toMs(Xg)<=B;
+  let s=`At n = ${fmt(n)}: naive ${fmtMs(Xn)} ms (${fitsN?'fits':'over'} the ${B} ms budget), grid ${fmtMs(Xg)} ms (${fitsG?'fits':'over'}). `;
+  s+=`With c_pair = ${c} ns the naive limit is <b>${fmt(nmN)}</b> units and the grid limit is <b>${fmt(nmG)}</b>. `;
+  s+=`A 10× faster machine gives naive only ×${ratio.toFixed(2)}, because capacity grows with √(speedup). `;
+  if(cluster)s+=`Clustered, the grid still checks 60% of all pairs, so its curve bends like the naive one.`;
+  else s+=`Press Cluster to see the grid lose its advantage when every unit is near every other.`;
+  $('insight').innerHTML=s;
+  $('chartDesc').textContent=`Naive cost ${fmtMs(Xn)} ms and grid cost ${fmtMs(Xg)} ms at ${fmt(n)} units. Naive crosses the ${B} ms budget at ${fmt(nmN)} units, grid at ${fmt(nmG)}.`;
+}
+
+function setN(v){n=Math.max(10,Math.min(8000,Math.round(+v||10)));$('n').value=n;$('nNum').value=n;}
+function clearFlash(){flashOld=null;clearTimeout(flashTimer);}
+$('n').addEventListener('input',e=>{setN(e.target.value);update();});
+$('nNum').addEventListener('change',e=>{setN(e.target.value);update();});
+$('c').addEventListener('change',e=>{clearFlash();c=+e.target.value;update();});
+$('B').addEventListener('input',e=>{clearFlash();B=+e.target.value;update();});
+$('cluster').addEventListener('click',e=>{cluster=!cluster;e.currentTarget.setAttribute('aria-pressed',cluster);update();});
+$('tenx').addEventListener('click',()=>{
+  const old=c===5?50:c;
+  flashOld={c:old,nm:nmaxNaive(B,old)};c=5;$('c').value='5';update();
+  clearTimeout(flashTimer);
+  if(!reduce.matches)flashTimer=setTimeout(()=>{flashOld=null;update();},3500);
+});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+update();
+})();
+</script>
+</body>
+</html>

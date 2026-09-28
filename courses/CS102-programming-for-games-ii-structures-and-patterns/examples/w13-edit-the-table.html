@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Edit the table · CS102 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.08rem;margin:0 0 8px}
+h2 small{font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.8rem;margin-left:6px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+code{font-family:var(--mono);font-size:.88em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:899px){.views{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+.editor{display:flex;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);overflow:hidden}
+.gutter{margin:0;padding:10px 8px 10px 10px;font:13px/1.6 var(--mono);color:var(--ink-soft);text-align:right;user-select:none;border-right:1px solid var(--grid);background:var(--paper-2);overflow:hidden;white-space:pre;min-width:3.2em}
+.gutter .bad{color:var(--blood);font-weight:700}
+textarea{flex:1;min-width:0;margin:0;border:0;padding:10px;font:13px/1.6 var(--mono);color:var(--ink);background:var(--paper);resize:vertical;white-space:pre;overflow:auto;height:calc(13px*1.6*9 + 20px);tab-size:4}
+textarea:focus{outline:none}
+.editor:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+button{font:600 .9rem var(--sans);color:var(--ink);cursor:pointer}
+.chip{padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;min-height:38px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.toggle{padding:8px 14px;border-radius:999px;border:1.5px solid var(--moss);background:transparent;min-height:38px}
+.toggle[aria-pressed="true"]{background:var(--moss);color:var(--paper)}
+.toggle[aria-pressed="false"]{border-color:var(--blood);border-style:dashed;color:var(--blood)}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.valid{margin-top:12px;border-left:4px solid var(--moss);padding:6px 0 6px 12px}
+.valid.bad{border-color:var(--blood)}
+.valid.off{border-color:var(--ochre);border-left-style:dashed}
+.valid h3{margin:0;font-size:1rem}
+.valid.ok h3{color:var(--moss)}.valid.bad h3{color:var(--blood)}.valid.off h3{color:var(--ochre)}
+.valid ol{margin:6px 0 0;padding-left:1.2em}
+.valid li{margin:2px 0}
+.prob{font:13px/1.45 var(--mono);color:var(--ink);background:none;border:0;padding:3px 4px;text-align:left;border-radius:4px;text-decoration:underline dotted var(--blood);text-underline-offset:3px;overflow-wrap:anywhere}
+.prob:hover{background:var(--paper)}
+.valid p{margin:4px 0 0;font-size:.88rem;color:var(--ink-soft)}
+.chart{position:relative}
+.chart.stale .bars{opacity:.5;filter:grayscale(1)}
+.stale-tag{display:none;font-size:.82rem;font-weight:700;color:var(--blood);margin:0 0 6px}
+.chart.stale .stale-tag{display:block}
+.bars{list-style:none;margin:0;padding:0}
+.bars li{display:grid;grid-template-columns:7.2em minmax(0,1fr);gap:8px;align-items:center;margin:0 0 8px}
+.bars .name{font-weight:600;font-size:.9rem;line-height:1.2;overflow-wrap:anywhere}
+.bars .name small{display:block;font-weight:400;font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}
+.track{position:relative;height:30px;background-image:linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:var(--tick,20%) 100%}
+.bar{position:absolute;left:0;top:3px;height:24px;background:var(--steel);border-radius:0 5px 5px 0;transition:width .35s ease;min-width:2px}
+.bar.moved{background:var(--moss)}
+.val{position:absolute;top:0;height:30px;display:flex;align-items:center;font:600 .78rem var(--sans);font-variant-numeric:tabular-nums;white-space:nowrap;padding:0 6px;transition:left .35s ease}
+.val.inside{color:var(--paper);transform:translateX(-100%)}
+.cell{position:relative;min-width:0}
+.val.under{position:static;height:auto;padding:1px 0 0;white-space:normal}
+.val .was{font-weight:400;opacity:.8;margin-left:5px}
+.axis{display:grid;grid-template-columns:7.2em minmax(0,1fr);gap:8px;font-size:.75rem;color:var(--ink-soft)}
+.axis .ticks{position:relative;height:16px}
+.axis .ticks span{position:absolute;transform:translateX(-50%);font-variant-numeric:tabular-nums}
+.axis .ticks span:first-child{transform:none}
+.axis .ticks span:last-child{transform:translateX(-100%)}
+.axis-label{font-size:.75rem;color:var(--ink-soft);text-align:right;margin:2px 0 0}
+details{margin-top:12px;background:var(--paper);border-radius:8px;border:1px solid var(--grid)}
+summary{cursor:pointer;padding:8px 10px;font-weight:600;font-size:.9rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+summary .edits{margin-left:auto;font-family:var(--mono);font-size:.82rem;padding:2px 8px;border-radius:999px;border:1.5px solid var(--moss);color:var(--moss)}
+pre.code{margin:0;padding:10px 12px;font:12.5px/1.55 var(--mono);overflow-x:auto;border-top:1px solid var(--grid)}
+.fight{margin-top:14px}
+.log{list-style:none;margin:8px 0 0;padding:8px 10px;font:12.5px/1.6 var(--mono);background:var(--paper);border-radius:8px;border:1px solid var(--grid);min-height:3.4em;overflow-wrap:anywhere}
+.log li.crash{color:var(--blood);font-weight:700}
+.log li.crash::before{content:"✖ "}
+.log li.warn{color:var(--ochre);font-weight:700}
+.log li.warn::before{content:"⚠ "}
+.log li.hit::before{content:"· "}
+.log li.info{color:var(--ink-soft)}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 13 · Worked example</p>
+  <h1>Change a number in the table, not in the code</h1>
+  <p class="lede">The left side is <code>weapons.csv</code>. The right side is what the game computes from it with one rule written once in Python. Edit a cell and one bar moves while the code-edit counter stays at 0. Load the broken file and compare five messages at load with a fight that crashes, or quietly goes wrong.</p>
+</header>
+
+<section class="panel" aria-label="Data-driven weapons">
+  <div class="views">
+    <div class="card">
+      <h2>The data file <small>weapons.csv, line 1 is the header</small></h2>
+      <div class="editor">
+        <pre class="gutter" id="gutter" aria-hidden="true"></pre>
+        <textarea id="csv" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-label="weapons.csv contents, editable"></textarea>
+      </div>
+      <div class="row" role="group" aria-label="Load a preset file">
+        <button class="chip" type="button" data-preset="clean" aria-pressed="true">Clean table</button>
+        <button class="chip" type="button" data-preset="long25" aria-pressed="false">Long Sword max 25</button>
+        <button class="chip" type="button" data-preset="broken" aria-pressed="false">Broken file</button>
+      </div>
+      <div class="row">
+        <button class="toggle" type="button" id="validate" aria-pressed="true">Validate at load: on</button>
+      </div>
+      <div class="valid ok" id="valid" aria-live="polite">
+        <h3 id="validHead">Loaded 5 weapons</h3>
+        <ol id="probs" hidden></ol>
+        <p id="validNote"></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>The game's view <small>damage per second, one bar per weapon in table order</small></h2>
+      <div class="chart" id="chart">
+        <p class="stale-tag">Showing last good table. The new file did not load.</p>
+        <ol class="bars" id="bars" aria-label="DPS by weapon"></ol>
+        <div class="axis" aria-hidden="true"><span></span><div class="ticks" id="ticks"></div></div>
+        <p class="axis-label">DPS = (min_dmg + max_dmg) / 2 × attacks_per_sec</p>
+      </div>
+      <details>
+        <summary>Python rule (unchanged) <span class="edits" id="edits">code edits: 0</span></summary>
+<pre class="code"><code>def average_hit(w):
+    return (w.min_dmg + w.max_dmg) / 2
+
+def dps(w):
+    return average_hit(w) * w.attacks_per_sec</code></pre>
+      </details>
+      <div class="fight">
+        <div class="row" style="margin-top:0">
+          <button class="btn primary" type="button" id="fight">Fight</button>
+          <span style="font-size:.85rem;color:var(--ink-soft)">Every weapon swings once at a dummy. Rolls use mulberry32, seed 13.</span>
+        </div>
+        <ol class="log" id="log" aria-live="polite" aria-label="Combat log"><li class="info">Press Fight to swing every loaded weapon once.</li></ol>
+      </div>
+    </div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>
+  <p>The validating loader follows <code>load_weapons</code> from the lecture: strict integer and float parsing, type in {sword, axe, mace, knife}, 0 ≤ min ≤ max, attacks_per_sec &gt; 0, first row wins on a duplicate id, and upgrade references checked after every row is read. Line numbers are row index + 2, as <code>enumerate(csv.DictReader(f), start=2)</code> counts them. The naive loader uses JavaScript's <code>parseInt</code> and <code>parseFloat</code>, which read <code>4O</code> as 4 without complaint, and lets a later duplicate row overwrite the earlier one. Column layout adapted from Diablo II: Resurrected's weapons table (blizzhackers/d2data extraction); all weapons here are generic.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const HEADER='id,name,type,min_dmg,max_dmg,attacks_per_sec,req_str,upgrade';
+const CLEAN=HEADER+`
+short_sword,Short Sword,sword,2,7,1.5,0,gladius
+gladius,Gladius,sword,8,22,1.5,25,
+long_sword,Long Sword,sword,3,19,1.2,55,
+hand_axe,Hand Axe,axe,3,6,1.6,0,
+war_hammer,War Hammer,mace,10,20,0.8,60,
+`;
+const PRESETS={
+  clean:CLEAN,
+  long25:CLEAN.replace('long_sword,Long Sword,sword,3,19,','long_sword,Long Sword,sword,3,25,'),
+  broken:HEADER+`
+short_sword,Short Sword,sword,2,7,1.5,0,gladus
+dagger,Dagger,knife,1,4O,2.0,0,
+club,Club,mace,6,1,1.4,0,
+long_sword,Long Sword,sowrd,3,19,1.2,55,
+short_sword,Short Sword,sword,2,7,1.5,0,
+`};
+const VALID=['sword','axe','mace','knife'];
+const COLS=HEADER.split(',');
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// Minimal CSV: commas, double-quoted fields, blank lines skipped (as csv.DictReader does).
+function parseCSV(text){
+  const rows=[];let row=[],f='',q=false,i=0;
+  const push=()=>{row.push(f);f='';};
+  const end=()=>{push();if(!(row.length===1&&row[0]===''))rows.push(row);row=[];};
+  for(;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else if(c==='"')q=true;else if(c===',')push();else if(c==='\n')end();else if(c!=='\r')f+=c;}
+  if(f!==''||row.length)end();
+  return rows;
+}
+function records(text){
+  const rows=parseCSV(text);if(!rows.length)return {head:[],recs:[]};
+  const head=rows[0].map(h=>h);const recs=rows.slice(1).map(r=>{const o={};head.forEach((h,k)=>{o[h]=r[k]===undefined?null:r[k];});return o;});
+  return {head,recs};
+}
+const INT=/^-?\d+$/,FLOAT=/^-?\d+(\.\d+)?$/;
+function number(row,key,kind,dflt){
+  const text=(row[key]||'').trim();
+  if(text===''&&dflt!==undefined)return dflt;
+  if(kind==='int'?INT.test(text):FLOAT.test(text))return kind==='int'?parseInt(text,10):parseFloat(text);
+  throw new Error(`${key}: '${text}' is not a valid ${kind}`);
+}
+function loadStrict(text){
+  const {head,recs}=records(text),errors=[],table=new Map(),lineOf=new Map();
+  const missing=COLS.filter(c=>!head.includes(c));
+  if(missing.length){return {errors:missing.map(c=>`header: missing column '${c}'`),table,lineOf,probLines:[1]};}
+  const probLines=[];
+  recs.forEach((row,idx)=>{
+    const line=idx+2,s=k=>(row[k]||'').trim();let w;
+    try{
+      w={id:s('id'),name:s('name'),type:s('type'),min:number(row,'min_dmg','int'),max:number(row,'max_dmg','int'),aps:number(row,'attacks_per_sec','float'),req:number(row,'req_str','int',0),upgrade:s('upgrade')||null};
+    }catch(e){errors.push(`line ${line}: ${e.message}`);probLines.push(line);return;}
+    if(!VALID.includes(w.type)){errors.push(`line ${line}: unknown type '${w.type}'`);probLines.push(line);}
+    if(!(0<=w.min&&w.min<=w.max)){errors.push(`line ${line}: need 0 <= min_dmg <= max_dmg, got ${w.min}..${w.max}`);probLines.push(line);}
+    if(w.aps<=0){errors.push(`line ${line}: attacks_per_sec must be > 0`);probLines.push(line);}
+    if(table.has(w.id)){errors.push(`line ${line}: duplicate id '${w.id}'`);probLines.push(line);}
+    else{table.set(w.id,w);lineOf.set(w.id,line);}
+  });
+  for(const w of table.values()){if(w.upgrade!==null&&!table.has(w.upgrade)){errors.push(`${w.id}: upgrade '${w.upgrade}' is not a weapon id`);probLines.push(lineOf.get(w.id));}}
+  return {errors,table,lineOf,probLines};
+}
+function loadNaive(text){
+  const {recs}=records(text),table=new Map();
+  for(const row of recs){const s=k=>(row[k]||'').trim();
+    const reqT=s('req_str');
+    table.set(s('id'),{id:s('id'),name:s('name'),type:s('type'),min:parseInt(s('min_dmg'),10),max:parseInt(s('max_dmg'),10),aps:parseFloat(s('attacks_per_sec')),req:reqT===''?0:parseInt(reqT,10),upgrade:s('upgrade')||null});}
+  return table;
+}
+const avg=w=>(w.min+w.max)/2, dps=w=>avg(w)*w.aps;
+const f1=v=>Number.isFinite(v)?v.toFixed(1):'NaN', f2=v=>Number.isFinite(v)?v.toFixed(2):'NaN';
+
+// ---------- state ----------
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const baseline=loadStrict(CLEAN).table;
+let validate=true,lastGood=baseline,current=null,naive=null,timer=0;
+
+function renderGutter(bad){
+  const n=$('csv').value.split('\n').length;let out='';
+  for(let i=1;i<=n;i++)out+=(bad.has(i)?'<span class="bad">'+i+'</span>':i)+(i<n?'\n':'');
+  $('gutter').innerHTML=out;$('gutter').scrollTop=$('csv').scrollTop;
+}
+function renderChart(table,stale){
+  const list=[...table.values()],vals=list.map(dps).filter(Number.isFinite);
+  const max=Math.max(25,(vals.length?Math.max(...vals):0)*1.1);
+  const step=max<=30?5:max<=60?10:max<=150?25:Math.pow(10,Math.floor(Math.log10(max)));
+  $('chart').classList.toggle('stale',stale);
+  const bars=$('bars');bars.innerHTML='';
+  list.forEach(w=>{
+    const d=dps(w),pct=Number.isFinite(d)?Math.max(0,d)/max*100:0,b=baseline.get(w.id);
+    const was=b&&Math.abs(dps(b)-d)>1e-9&&Number.isFinite(d)?`<span class="was">(clean ${f2(dps(b))})</span>`:'';
+    const li=document.createElement('li');
+    const label=`avg ${f1(avg(w))} · dps ${f2(d)}`;
+    li.innerHTML=`<span class="name">${esc(w.name||w.id)}<small>${esc(w.id)}</small></span><div class="cell"><div class="track" style="--tick:${(step/max*100).toFixed(4)}%"><div class="bar${was?' moved':''}" style="width:${pct}%"></div></div><span class="val" data-pct="${pct}" style="left:${pct}%">${label}${was}</span></div>`;
+    li.setAttribute('aria-label',`${w.name||w.id}: ${label}${was?', clean table '+f2(dps(b)):''}`);
+    bars.appendChild(li);
+  });
+  placeLabels();
+  const t=$('ticks');t.innerHTML='';
+  for(let v=0;v<=max+1e-9;v+=step){const s=document.createElement('span');s.style.left=(v/max*100)+'%';s.textContent=v;t.appendChild(s);}
+}
+// Label goes after the bar end if it fits, inside the bar if the bar is long enough, else under the bar.
+function placeLabels(){
+  document.querySelectorAll('#bars .val').forEach(v=>{
+    v.classList.remove('inside','under');const tw=v.parentNode.clientWidth,bw=+v.dataset.pct/100*tw,vw=v.scrollWidth;
+    if(bw+vw<=tw)return;if(bw>=vw+4)v.classList.add('inside');else v.classList.add('under');
+  });
+}
+window.addEventListener('resize',placeLabels);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function run(){
+  const text=$('csv').value;
+  current=loadStrict(text);naive=loadNaive(text);
+  const v=$('valid'),probs=$('probs');
+  if(validate){
+    if(current.errors.length){
+      v.className='valid bad';$('validHead').textContent=`${current.errors.length} problem(s)`;
+      probs.hidden=false;probs.innerHTML='';
+      current.errors.forEach((m,k)=>{const li=document.createElement('li'),b=document.createElement('button');b.type='button';b.className='prob';b.textContent=m;b.dataset.line=current.probLines[k];b.addEventListener('click',()=>goLine(+b.dataset.line));li.appendChild(b);probs.appendChild(li);});
+      $('validNote').textContent='The game refuses to start. Select a message to jump to its line.';
+      renderChart(lastGood,true);renderGutter(new Set(current.probLines));
+    }else{
+      lastGood=current.table;
+      v.className='valid ok';$('validHead').textContent=`Loaded ${current.table.size} weapons`;probs.hidden=true;probs.innerHTML='';
+      $('validNote').textContent='Parsed, validated and indexed by id.';
+      renderChart(current.table,false);renderGutter(new Set());
+    }
+  }else{
+    v.className='valid off';$('validHead').textContent=`Loaded ${naive.size} weapons (no checks)`;probs.hidden=true;probs.innerHTML='';
+    $('validNote').textContent=current.errors.length?`Validation is off. The checker would have found ${current.errors.length} problem(s); the game starts anyway.`:'Validation is off. This file happens to be clean.';
+    renderChart(naive,false);renderGutter(new Set());
+  }
+  insight();
+}
+function goLine(line){
+  const ta=$('csv'),lines=ta.value.split('\n');let pos=0;
+  for(let i=0;i<line-1&&i<lines.length;i++)pos+=lines[i].length+1;
+  const endPos=pos+(lines[line-1]||'').length;
+  ta.focus();ta.setSelectionRange(pos,endPos);
+  const lh=parseFloat(getComputedStyle(ta).lineHeight)||20.8;ta.scrollTop=Math.max(0,(line-3)*lh);$('gutter').scrollTop=ta.scrollTop;
+}
+function insight(){
+  const e=current.errors.length,changed=[...(validate&&e?lastGood:validate?current.table:naive).values()].filter(w=>{const b=baseline.get(w.id);return b&&Math.abs(dps(b)-dps(w))>1e-9;});
+  let s='';
+  if(validate&&e) s=`Validation on: ${e} precise message${e>1?'s':''} at load, each naming a line or an id, and the chart still shows the last good table. Turn validation off and press Fight to see where the same mistakes surface without it.`;
+  else if(!validate&&e) s=`Validation off: the game starts on a file with ${e} problem${e>1?'s':''}. Press Fight. Some show up as crashes mid-fight, attributed to a weapon rather than a line, and some never show up at all.`;
+  else if(changed.length) s=`${changed.map(w=>`${w.name} moved from dps ${f2(dps(baseline.get(w.id)))} to ${f2(dps(w))}`).join('; ')}. Code edits: 0. The rule <code>dps = avg_hit × attacks_per_sec</code> was written once and applied to the new row.`;
+  else s=`Clean table: DPS 6.75, 22.50, 13.20, 7.20 and 12.00, all from one rule in code. Try “Long Sword max 25”, or type a new value into any cell.`;
+  $('insight').innerHTML=s;
+}
+
+// Levenshtein, to name the bonus a misspelled type silently loses.
+function lev(a,b){const d=[];for(let i=0;i<=a.length;i++){d[i]=[i];for(let j=1;j<=b.length;j++)d[i][j]=i?Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1)):j;}return d[a.length][b.length];}
+function fight(){
+  const rng=mulberry32(13),randint=(a,b)=>a+Math.floor(rng()*(b-a+1)),log=$('log'),out=[];
+  if(validate){
+    if(current.errors.length){out.push(['crash',`Game did not start: ${current.errors.length} problem(s) at load. Fix the file first.`]);}
+    else for(const w of current.table.values())out.push(['hit',`${w.name} hits for ${randint(w.min,w.max)}`]);
+  }else{
+    for(const w of naive.values()){
+      if(w.min>w.max){out.push(['crash',`${w.name}: crash, empty range in randrange(${w.min}, ${w.max+1})`]);continue;}
+      const n=randint(w.min,w.max);
+      if(!VALID.includes(w.type)){const near=VALID.map(t=>[lev(t,w.type),t]).sort((a,b)=>a[0]-b[0])[0];
+        out.push(['warn',`${w.name} hits for ${n} (no ${near[0]<=2?near[1]:'type'} bonus applied)`]);}
+      else out.push(['hit',`${w.name} hits for ${n}`]);
+    }
+    for(const w of naive.values())if(w.upgrade!==null&&!naive.has(w.upgrade))out.push(['crash',`${w.name}: crash on upgrade, KeyError '${w.upgrade}'`]);
+  }
+  log.innerHTML=out.map(([c,t])=>`<li class="${c}">${esc(t)}</li>`).join('');
+}
+
+// ---------- events ----------
+$('csv').addEventListener('input',()=>{document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed','false'));renderGutter(new Set());clearTimeout(timer);timer=setTimeout(run,200);});
+$('csv').addEventListener('scroll',()=>{$('gutter').scrollTop=$('csv').scrollTop;});
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-preset]').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+  $('csv').value=PRESETS[b.dataset.preset];clearTimeout(timer);run();
+  $('log').innerHTML='<li class="info">Press Fight to swing every loaded weapon once.</li>';
+}));
+$('validate').addEventListener('click',()=>{validate=!validate;const t=$('validate');t.setAttribute('aria-pressed',String(validate));t.textContent='Validate at load: '+(validate?'on':'off');run();
+  $('log').innerHTML='<li class="info">Press Fight to swing every loaded weapon once.</li>';});
+$('fight').addEventListener('click',fight);
+if(reduce)document.documentElement.classList.add('reduce');
+$('csv').value=CLEAN;run();
+})();
+</script>
+</body>
+</html>

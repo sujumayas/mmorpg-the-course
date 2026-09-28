@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hierarchy vs components · CS102 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1160px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 2px}
+.sub{font-size:.82rem;color:var(--ink-soft);margin:0 0 10px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.metrics{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--paper);border:1.5px solid var(--ink);border-radius:12px;padding:10px 12px;margin-bottom:14px}
+@media (max-width:760px){.metrics{grid-template-columns:repeat(2,1fr);gap:6px 10px;padding:8px 10px}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block;line-height:1.25}
+@media (max-width:760px){.stat b{font-size:1.1rem}}
+.tabs{display:none;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.tab{font:600 .92rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+.right [role=tabpanel][hidden]{display:none}
+@media (max-width:860px){
+  .tabs{display:flex}
+  .views{grid-template-columns:minmax(0,1fr)}
+  .views [role=tabpanel][hidden]{display:none}
+}
+@media (min-width:861px){#tabC{display:none}#pC[hidden]{display:block!important}}
+.headrow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper-2);color:var(--ink);cursor:pointer;min-height:36px}
+.btn.alt{border-color:var(--ochre)}
+.chipbtn{font:600 .84rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+/* matrix */
+.mwrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}
+.matrix{width:100%}
+.matrix th{font-size:.74rem;font-weight:600;color:var(--ink-soft);padding:4px 2px;text-align:center}
+.matrix th.nm{text-align:left}
+.matrix td{padding:3px 2px;text-align:center;border-bottom:1px solid var(--grid)}
+.matrix td.nm{text-align:left;font-weight:600;white-space:nowrap;padding-right:6px;max-width:9.5em;overflow:hidden;text-overflow:ellipsis}
+.cell{appearance:none;-webkit-appearance:none;width:26px;height:26px;margin:0;border:2px solid var(--steel);border-radius:5px;background:transparent;cursor:pointer;display:inline-block;vertical-align:middle}
+.cell:checked{background:var(--steel)}
+.cell:checked::after{content:"";display:block;width:8px;height:13px;margin:2px auto 0;border:solid var(--paper);border-width:0 3px 3px 0;transform:rotate(45deg)}
+.rm{font:700 1rem var(--sans);width:30px;height:30px;border-radius:6px;border:1.5px solid var(--grid);background:transparent;color:var(--ink-soft);cursor:pointer;line-height:1}
+.rm:hover{border-color:var(--blood);color:var(--blood)}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.addrow input[type=text]{font:1rem var(--sans);padding:7px 9px;border-radius:8px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);min-width:0;flex:1 1 9em;max-width:14em}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+/* tree */
+.tree,.tree ul{list-style:none;margin:0;padding:0}
+.tree ul{margin-left:14px;padding-left:18px;border-left:2px solid var(--ink-soft)}
+.tree li{position:relative;padding-top:8px}
+.tree ul>li::before{content:"";position:absolute;left:-18px;top:26px;width:16px;border-top:2px solid var(--ink-soft)}
+.tree ul>li:last-child::after{content:"";position:absolute;left:-20px;top:27px;bottom:0;border-left:4px solid var(--paper)}
+.node{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:6px 9px;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper-2);max-width:100%}
+.node.root{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.node .n{font-weight:700}
+.node .isa{font-size:.72rem;color:var(--ink-soft);font-style:italic}
+.chip{font:600 .74rem var(--sans);padding:1px 7px;border-radius:999px;border:1.5px solid var(--steel);color:var(--steel)}
+.chip.dup{border-color:var(--blood);color:var(--paper);background:var(--blood)}
+.chip.none{border-style:dashed;border-color:var(--grid);color:var(--ink-soft)}
+.node.changed{animation:fade .15s ease-out}
+@keyframes fade{from{opacity:.25}to{opacity:1}}
+.alt-table{margin-top:14px;width:100%}
+.alt-table th,.alt-table td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--grid)}
+.alt-table thead th{color:var(--ink-soft);font-weight:600;font-size:.82rem}
+.alt-table td.dupc{color:var(--blood);font-weight:700}
+.counts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:.84rem}
+.counts span{padding:2px 8px;border-radius:6px;background:var(--paper-2)}
+.counts span.dup{box-shadow:inset 3px 0 0 var(--blood);font-weight:700}
+/* god */
+.godbox{border:1.5px solid var(--ink);border-radius:8px;overflow:hidden;max-width:300px;margin:8px 0 12px}
+.godbox div{padding:6px 10px}
+.godbox .t{background:var(--ink);color:var(--paper);font-weight:700}
+.godbox .f{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;border-top:1px solid var(--grid)}
+.slots{display:grid;grid-template-columns:minmax(0,8.5em) auto;gap:3px 10px;align-items:center;font-size:.84rem}
+.slots .row{display:flex;gap:3px}
+.sq{width:16px;height:16px;border-radius:3px;border:2px solid var(--ochre)}
+.sq.on{background:var(--ochre)}
+.sq.off{border-style:dashed;border-color:var(--ink-soft);opacity:.8}
+.slots .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--ochre);font-family:var(--serif)}
+.matrix .short{display:none}
+@media (max-width:520px){.matrix .short{display:inline}.matrix .long{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.cell{width:23px;height:23px}.cell:checked::after{width:7px;height:12px;margin-top:1px}.matrix td.nm{max-width:6.5em;font-size:.85rem}.rm{width:26px;height:26px}.panel{padding:14px 12px}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 2 · Worked example</p>
+  <h1>Six parts, eight entities, ten implementations</h1>
+  <p class="lede">The component matrix writes each capability once. The best single-inheritance tree for the same eight entities writes 10, four of them copies (red chips), and it has to claim that a goblin is a turret. Toggle a cell and watch one matrix row change while the tree reshuffles.</p>
+</header>
+
+<div class="metrics" aria-live="polite" id="metrics">
+  <div class="stat" style="--c:var(--steel)"><b id="mImpl">10 / 6</b><span>implementations written: tree / components</span></div>
+  <div class="stat" style="--c:var(--blood)"><b id="mDup">4</b><span>duplicates in the tree</span></div>
+  <div class="stat" style="--c:var(--ochre)"><b id="mGod">23 of 48</b><span>god class unused slots</span></div>
+  <div class="stat" style="--c:var(--moss)"><b>2<sup>6</sup> = 64</b><span>possible capability sets</span></div>
+</div>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="tabC" aria-controls="pC" aria-selected="false" tabindex="-1">Components</button>
+  <button class="tab" role="tab" id="tabA" aria-controls="pA" aria-selected="true">Tree</button>
+  <button class="tab" role="tab" id="tabG" aria-controls="pG" aria-selected="false" tabindex="-1">God class</button>
+</div>
+
+<div class="views">
+  <section class="panel" id="pC" role="tabpanel" aria-labelledby="tabC" hidden>
+    <h2>Components</h2>
+    <p class="sub">One row per entity type, one column per component. This matrix is the input for every view.</p>
+    <div class="mwrap"><table class="matrix" id="matrix"></table></div>
+    <div class="addrow">
+      <label for="newName" class="sr">New entity name</label>
+      <input type="text" id="newName" value="New type" autocomplete="off">
+      <button class="btn" id="add" type="button">Add entity type</button>
+      <button class="btn" id="reset" type="button">Reset</button>
+    </div>
+    <div class="presets" role="group" aria-label="Presets">
+      <button class="chipbtn" type="button" data-preset="init">Section 2 table</button>
+      <button class="chipbtn" type="button" data-preset="healer">Add Healer NPC</button>
+      <button class="chipbtn" type="button" data-preset="bush">Add Burning Bush</button>
+    </div>
+  </section>
+
+  <div class="right">
+    <section class="panel" id="pA" role="tabpanel" aria-labelledby="tabA">
+      <div class="headrow">
+        <div><h2>Inheritance tree</h2><p class="sub">Best single parent for each class. Chips are what that class must write itself.</p></div>
+        <button class="btn alt" type="button" id="hoist">Hoist to base class</button>
+      </div>
+      <ul class="tree" id="tree" aria-hidden="true"></ul>
+      <div class="counts" id="counts"></div>
+      <table class="alt-table" aria-label="Tree as text: class, parent, must write">
+        <thead><tr><th>Class</th><th>Is a</th><th>Must write</th></tr></thead>
+        <tbody id="alt"></tbody>
+      </table>
+    </section>
+    <section class="panel" id="pG" role="tabpanel" aria-labelledby="tabG" hidden>
+      <div class="headrow">
+        <div><h2>God class</h2><p class="sub">Every capability hoisted into one base class. Each is written once, and every object carries all six.</p></div>
+        <button class="btn alt" type="button" id="unhoist">Back to tree</button>
+      </div>
+      <div class="godbox" aria-hidden="true"><div class="t">class GameObject</div><div class="f">render, collide, move,<br>health, ai, explode</div></div>
+      <p style="margin:0 0 8px;font-size:.9rem"><b id="gSum">23 of 48</b> slots unused. Filled squares are data the object uses; dashed squares are dead weight.</p>
+      <div class="slots" id="slots"></div>
+    </section>
+    <div class="insight" id="insight" aria-live="polite"></div>
+  </div>
+</div>
+
+<footer>Tree rule from the lecture: add classes smallest first (ties in table order); each class's parent is the placed class with the largest capability set that is a subset of its own (ties go to the earliest placed). Duplicates = tree implementations − distinct capabilities used. God-class unused slots = Σ (6 − |capabilities|). The 7,300 types from 169 components figure is from Scott Bilas's GDC 2002 talk on Dungeon Siege, cited in the lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const CAPS=['Render','Collide','Move','Health','AI','Explode'];
+const SHORT={Render:'Rend',Collide:'Coll',Move:'Move',Health:'Hlth',AI:'AI',Explode:'Expl'};
+const INIT=[
+  ['Bush',['Render']],
+  ['TriggerZone',['Collide']],
+  ['Crate',['Render','Collide','Health']],
+  ['Rock',['Render','Collide','Move']],
+  ['Goblin',['Render','Collide','Move','Health','AI']],
+  ['Grenade',['Render','Collide','Move','Explode']],
+  ['Barrel',['Render','Collide','Health','Explode']],
+  ['Turret',['Render','Collide','Health','AI']]
+];
+let uid=0,ents=[],prevParents=null,lastChange='';
+const mk=(name,caps)=>({id:++uid,name,caps:new Set(caps)});
+function reset(){ents=INIT.map(([n,c])=>mk(n,c));}
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sub=(a,b)=>[...a].every(x=>b.has(x));
+
+function compute(){
+  const order=ents.map((e,i)=>i).sort((a,b)=>ents[a].caps.size-ents[b].caps.size||a-b);
+  const root={id:0,name:'Entity',caps:new Set(),children:[]};
+  const placed=[root],nodes={0:root};
+  order.forEach(i=>{
+    const e=ents[i];let par=null;
+    placed.forEach(p=>{if(sub(p.caps,e.caps)&&(!par||p.caps.size>par.caps.size))par=p;});
+    const written=CAPS.filter(c=>e.caps.has(c)&&!par.caps.has(c));
+    const n={id:e.id,name:e.name,caps:e.caps,parent:par,written,children:[]};
+    par.children.push(n);placed.push(n);nodes[e.id]=n;
+  });
+  const list=placed.slice(1);
+  const impl=list.reduce((s,n)=>s+n.written.length,0);
+  const union=new Set();ents.forEach(e=>e.caps.forEach(c=>union.add(c)));
+  const times={};CAPS.forEach(c=>times[c]=0);list.forEach(n=>n.written.forEach(c=>times[c]++));
+  const unused=ents.reduce((s,e)=>s+(6-e.caps.size),0);
+  return {root,list,impl,comp:union.size,dup:impl-union.size,times,unused,total:6*ents.length};
+}
+
+function renderMatrix(){
+  let h='<thead><tr><th class="nm" scope="col">Entity</th>'+CAPS.map(c=>`<th scope="col" title="${c}"><span class="long">${c}</span><span class="short" aria-hidden="true">${SHORT[c]}</span></th>`).join('')+'<th><span class="sr">Remove</span></th></tr></thead><tbody>';
+  ents.forEach(e=>{
+    h+=`<tr><td class="nm" title="${esc(e.name)}">${esc(e.name)}</td>`+CAPS.map(c=>`<td><input type="checkbox" class="cell" data-id="${e.id}" data-cap="${c}" aria-label="${esc(e.name)}: ${c}" ${e.caps.has(c)?'checked':''}></td>`).join('')+`<td><button class="rm" type="button" data-rm="${e.id}" aria-label="Remove ${esc(e.name)}">×</button></td></tr>`;
+  });
+  $('matrix').innerHTML=h+'</tbody>';
+}
+
+function renderTree(r){
+  const dupCaps=new Set(CAPS.filter(c=>r.times[c]>1));
+  function li(n,isRoot){
+    const changed=prevParents&&!isRoot&&prevParents[n.id]!==n.parent.id;
+    let chips=isRoot?'':(n.written.length?n.written.map(c=>`<span class="chip${dupCaps.has(c)?' dup':''}">${c}</span>`).join(''):'<span class="chip none">writes nothing</span>');
+    let s=`<li><span class="node${isRoot?' root':''}${changed?' changed':''}"><span class="n">${esc(n.name)}</span>${isRoot?'':`<span class="isa">is a ${esc(n.parent.name)}</span>`}${chips}</span>`;
+    if(n.children.length)s+='<ul>'+n.children.map(c=>li(c,false)).join('')+'</ul>';
+    return s+'</li>';
+  }
+  $('tree').innerHTML=li(r.root,true);
+  $('alt').innerHTML=r.list.map(n=>`<tr><td>${esc(n.name)}</td><td>${esc(n.parent.name)}</td><td>${n.written.length?n.written.map(c=>dupCaps.has(c)?`<span class="dupc" style="color:var(--blood);font-weight:700">${c}</span>`:c).join(', '):'nothing'}</td></tr>`).join('');
+  $('counts').innerHTML='<span>Times written:</span>'+CAPS.map(c=>`<span class="${r.times[c]>1?'dup':''}">${c} ×${r.times[c]}</span>`).join('');
+}
+
+function renderGod(r){
+  $('slots').innerHTML=ents.map(e=>`<span class="nm">${esc(e.name)}</span><span class="row">${CAPS.map(c=>`<span class="sq ${e.caps.has(c)?'on':'off'}" title="${c}"></span>`).join('')}</span>`).join('');
+  $('gSum').textContent=`${r.unused} of ${r.total}`;
+}
+
+function render(){
+  const r=compute();
+  $('mImpl').textContent=`${r.impl} / ${r.comp}`;
+  $('mDup').textContent=r.dup;
+  $('mGod').textContent=`${r.unused} of ${r.total}`;
+  renderMatrix();renderTree(r);renderGod(r);
+  // insight: what changed in the tree
+  const parents={};r.list.forEach(n=>parents[n.id]=n.parent.id);
+  const moved=prevParents?r.list.filter(n=>n.id in prevParents&&prevParents[n.id]!==n.parent.id):[];
+  const odd=r.list.filter(n=>n.parent.id!==0&&n.written.length).sort((x,y)=>y.caps.size-x.caps.size).slice(0,3).map(n=>`${esc(n.name)} is a ${esc(n.parent.name)}`);
+  let s='';
+  if(lastChange)s+=`<b>${lastChange}</b> The matrix changed one row. `+(moved.length?`In the tree, ${moved.map(n=>`${esc(n.name)} moved under ${esc(n.parent.name)}`).join('; ')}. `:'No existing class changed parent this time. ')+`Tree: ${r.impl} implementations, ${r.dup} duplicate${r.dup===1?'':'s'}. Components: ${r.comp}. `;
+  else s+=`Tree: ${r.impl} implementations for ${r.comp} capabilities, so ${r.dup} ${r.dup===1?'is a copy':'are copies'}. Components: ${r.comp}, no copies. `;
+  if(odd.length)s+=`Read the parents aloud: ${odd.join(', ')}.`;
+  $('insight').innerHTML=s;
+  prevParents=parents;
+}
+
+// events
+$('matrix').addEventListener('change',e=>{
+  const t=e.target;if(!t.classList.contains('cell'))return;
+  const ent=ents.find(x=>x.id==t.dataset.id);
+  t.checked?ent.caps.add(t.dataset.cap):ent.caps.delete(t.dataset.cap);
+  lastChange=`${ent.name} ${t.checked?'gained':'lost'} ${t.dataset.cap}.`;
+  const key=`${t.dataset.id}:${t.dataset.cap}`;render();
+  const again=document.querySelector(`.cell[data-id="${key.split(':')[0]}"][data-cap="${key.split(':')[1]}"]`);again&&again.focus();
+});
+$('matrix').addEventListener('click',e=>{
+  const b=e.target.closest('[data-rm]');if(!b)return;
+  const i=ents.findIndex(x=>x.id==b.dataset.rm);const nm=ents[i].name;ents.splice(i,1);
+  lastChange=`Removed ${nm}.`;render();
+  const next=document.querySelectorAll('.rm')[Math.min(i,ents.length-1)];(next||$('add')).focus();
+});
+function addEnt(name,caps){
+  let n=name.trim()||'New type',k=2,base=n;while(ents.some(e=>e.name===n))n=`${base} ${k++}`;
+  ents.push(mk(n,caps));lastChange=`Added ${n}${caps.length?` (${caps.join(', ')})`:' with no capabilities'}.`;render();
+}
+$('add').addEventListener('click',()=>addEnt($('newName').value,[]));
+$('newName').addEventListener('keydown',e=>{if(e.key==='Enter')addEnt($('newName').value,[]);});
+$('reset').addEventListener('click',()=>{reset();prevParents=null;lastChange='';render();});
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+  const p=b.dataset.preset;
+  if(p==='init'){reset();prevParents=null;lastChange='';render();}
+  else if(p==='healer')addEnt('Healer NPC',['Render','Collide','Move','Health','AI']);
+  else addEnt('Burning Bush',['Render','Health']);
+}));
+// tabs
+const tabs=[$('tabC'),$('tabA'),$('tabG')];
+const wide=()=>matchMedia('(min-width:861px)').matches;
+function sel(t,focus){
+  tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});
+  if(focus)t.focus();
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>sel(t,true));
+  t.addEventListener('keydown',e=>{
+    if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+    const vis=tabs.filter(x=>getComputedStyle(x).display!=='none');const j=vis.indexOf(t);
+    sel(vis[(j+(e.key==='ArrowRight'?1:vis.length-1))%vis.length],true);
+  });
+});
+$('hoist').addEventListener('click',()=>{sel($('tabG'),false);$('unhoist').focus();});
+$('unhoist').addEventListener('click',()=>{sel($('tabA'),false);$('hoist').focus();});
+matchMedia('(min-width:861px)').addEventListener('change',()=>{if(wide()&&$('tabC').getAttribute('aria-selected')==='true')sel($('tabA'),false);});
+
+reset();render();
+})();
+</script>
+</body>
+</html>

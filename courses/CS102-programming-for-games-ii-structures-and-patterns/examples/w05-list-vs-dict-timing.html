@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>List vs Map lookups · CS102 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cLook{height:280px}
+#cFrame{height:200px}
+.status{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0;min-height:1.3em}
+.status.busy::before{content:"";display:inline-block;width:.7em;height:.7em;border-radius:50%;background:var(--ochre);margin-right:6px;vertical-align:middle;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:16px;align-items:start}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.ticks{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.group-label{font-weight:600;font-size:.92rem;display:block;margin-bottom:6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.insight b{font-family:var(--sans)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:640px;width:100%}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.8rem;color:var(--ink-soft);font-weight:600;vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.over{color:var(--blood)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 5 · Worked example</p>
+  <h1>75 microseconds is nothing. 250 of them are a dropped frame.</h1>
+  <p class="lede">One view shows the cost of a single lookup, where the list and the map both look instant. The other multiplies by the lookups a frame needs, and the list runs off the end of the 16.67 ms budget.</p>
+</header>
+
+<section class="panel" aria-label="List versus Map lookup timing">
+  <div class="charts">
+    <figure>
+      <figcaption>Per lookup<small>Microseconds for one lookup, log scales. Both look small.</small></figcaption>
+      <canvas id="cLook" role="img" aria-label="Log-log chart of microseconds per lookup against item count for an array scan and a Map"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Per frame<small>q lookups against one 60 fps frame (16.67 ms)</small></figcaption>
+      <canvas id="cFrame" role="img" aria-label="Bars showing per-frame lookup time for the array and the Map against a 16.67 ms frame"></canvas>
+      <p class="status" id="status"></p>
+    </figure>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rListUs">-</b><span>array scan, µs per lookup</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rMapUs">-</b><span>Map, µs per lookup</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rListMs">-</b><span>array scan, ms per frame</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rLimit">-</b><span>items where the list overruns the frame</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="nIn">Items in the database, n <output id="oN">10,000</output></label>
+      <input id="nIn" type="range" min="0" max="8" step="1" value="6" aria-valuetext="10,000 items">
+      <div class="ticks" aria-hidden="true"><span>10</span><span>100</span><span>1k</span><span>10k</span><span>100k</span></div>
+    </div>
+    <div>
+      <label for="qIn">Lookups per frame, q <output id="oQ">250</output></label>
+      <input id="qIn" type="range" min="1" max="2000" step="1" value="250">
+      <div class="ticks" aria-hidden="true"><span>1</span><span>500</span><span>1,000</span><span>1,500</span><span>2,000</span></div>
+    </div>
+    <div>
+      <span class="group-label" id="modeLbl">Timings from</span>
+      <div class="presets" role="group" aria-labelledby="modeLbl">
+        <button class="chip" id="mLive" aria-pressed="true">Live (this browser)</button>
+        <button class="chip" id="mModel" aria-pressed="false">Model (lecture)</button>
+        <button class="chip" id="remeasure" disabled>Re-measure</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <p class="note" style="font-family:var(--serif);margin:16px 0 0">Model values (c_scan = 15 ns, c_hash = 30 ns) beside this browser's measurements. The frame column uses the current q and mode.</p>
+  <div class="table-wrap" style="margin-top:6px">
+    <table>
+      <thead><tr><th scope="col">n items</th><th scope="col">avg comparisons (n+1)/2</th><th scope="col">array µs/lookup, model</th><th scope="col">array µs/lookup, live</th><th scope="col">Map µs/lookup, model</th><th scope="col">Map µs/lookup, live</th><th scope="col" id="thFrame">array ms/frame</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the lecture: t_list(n) = c_scan × (n + 1) / 2 and t_map = c_hash, with c_scan = 15 ns and c_hash = 30 ns measured in CPython 3.13 on the course reference machine. Live mode times <code>Array.prototype.find</code> and <code>Map.get</code> in your browser with <code>performance.now()</code>, taking the fastest of 3 runs. The frame budget is 1000 / 60 ms.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS=[10,30,100,300,1000,3000,10000,30000,100000];
+const B=1000/60;               // ms, shown as 16.67
+const C_SCAN=0.015, C_HASH=0.030; // µs
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let idx=6,q=250,mode='live';
+const live={list:new Array(9).fill(null),map:new Array(9).fill(null),done:false,running:false};
+
+const fmtInt=n=>Math.round(n).toLocaleString('en-US');
+function fmtUs(v){if(v==null)return '...';if(v>=10)return v.toFixed(1);if(v>=0.1)return v.toFixed(2);return v.toFixed(3);}
+function fmtMs(v){return v>=0.01?v.toFixed(2):v.toFixed(4);}
+function fmtPct(v){const p=v*100;return (p<1?p.toFixed(3):p.toFixed(1))+'%';}
+
+// per-lookup times in µs for the active source
+const modelList=n=>C_SCAN*(n+1)/2;
+function useLive(){return mode==='live'&&live.done;}
+function listUs(i){return useLive()?live.list[i]:modelList(NS[i]);}
+function mapUs(i){return useLive()?live.map[i]:C_HASH;}
+function scanCost(){ // µs per compared element, for the overrun limit
+  if(!useLive())return C_SCAN;
+  return live.list[8]/((NS[8]+1)/2);
+}
+function nLimit(){return 2*(B*1000)/(q*scanCost())-1;}
+
+// ---------- canvas helpers
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};
+}
+const log=Math.log10;
+
+function drawLook(){
+  const {g,w,h}=setup($('cLook'));
+  const pad={l:50,r:14,t:14,b:34};
+  const X=n=>pad.l+(w-pad.l-pad.r)*(log(n)-1)/4;
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-(log(v)+3)/7);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let e=-3;e<=4;e++){
+    const y=Y(Math.pow(10,e));g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';
+    g.fillText(e<0?String(Math.pow(10,e)):fmtInt(Math.pow(10,e)).replace(',000','k'),pad.l-6,y);
+  }
+  [10,100,1000,10000,100000].forEach(n=>{
+    const x=X(n);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.fillText(n>=1000?(n/1000)+'k':String(n),x,h-pad.b+6);
+  });
+  g.textAlign='right';g.textBaseline='top';g.fillText('n items',w-pad.r,h-14);
+  g.save();g.translate(12,pad.t+(h-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillText('µs per lookup',0,0);g.restore();
+
+  // overrun limit
+  const lim=nLimit();
+  if(lim>=10&&lim<=100000){
+    const x=X(lim);g.strokeStyle=css('--blood');g.lineWidth=1.5;g.setLineDash([6,4]);
+    g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--blood');g.font='600 12px '+css('--sans');g.textBaseline='top';
+    const right=x+8+130<w-pad.r;
+    g.textAlign=right?'left':'right';const tx=right?x+6:x-6;
+    g.fillText('list overruns frame',tx,pad.t+4);g.fillText(right?'beyond here':'beyond here →',tx,pad.t+19);
+    g.font='12px '+css('--sans');
+  }
+  function line(f,color,dash,width){
+    g.strokeStyle=color;g.lineWidth=width||2.5;g.setLineDash(dash||[]);g.beginPath();
+    for(let i=0;i<=120;i++){const n=Math.pow(10,1+4*i/120),v=Math.max(1e-3,f(n));const px=X(n),py=Y(v);i?g.lineTo(px,py):g.moveTo(px,py);}
+    g.stroke();g.setLineDash([]);
+  }
+  function poly(arr,color){
+    g.strokeStyle=color;g.lineWidth=2.5;g.beginPath();
+    arr.forEach((v,i)=>{const px=X(NS[i]),py=Y(Math.max(1e-3,v));i?g.lineTo(px,py):g.moveTo(px,py);});g.stroke();
+    arr.forEach((v,i)=>{g.fillStyle=color;g.beginPath();g.arc(X(NS[i]),Y(Math.max(1e-3,v)),3.5,0,7);g.fill();});
+  }
+  const steel=css('--steel'),moss=css('--moss');
+  if(useLive()){
+    g.globalAlpha=.45;line(modelList,steel,[5,4],1.5);line(()=>C_HASH,moss,[5,4],1.5);g.globalAlpha=1;
+    poly(live.list,steel);poly(live.map,moss);
+  }else{
+    line(modelList,steel);line(()=>C_HASH,moss);
+  }
+  // labels at right end
+  g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';
+  g.textAlign='left';
+  g.fillStyle=steel;g.fillText('array scan',X(12)+2,Y(Math.max(1e-3,useLive()?Math.max(live.list[1],modelList(30)):modelList(30)))-16);
+  g.fillStyle=moss;g.textBaseline='top';g.fillText('Map',X(30)+4,Y(Math.max(1e-3,useLive()?Math.min(live.map[1],C_HASH):C_HASH))+8);
+  // current n marker
+  const x=X(NS[idx]);g.strokeStyle=css('--ink');g.globalAlpha=.4;g.lineWidth=1;g.setLineDash([3,3]);
+  g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  [[listUs(idx),steel],[mapUs(idx),moss]].forEach(([v,c])=>{g.fillStyle=c;g.beginPath();g.arc(x,Y(Math.max(1e-3,v)),6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+}
+
+function drawFrame(){
+  const {g,w,h}=setup($('cFrame'));
+  const pad={l:12,r:12};
+  const avail=w-pad.l-pad.r,strip=avail*0.7,x0=pad.l,x1=x0+strip,xMax=w-pad.r;
+  const rows=[['array scan',q*listUs(idx)/1000,css('--steel')],['Map',q*mapUs(idx)/1000,css('--moss')]];
+  const rowH=(h-8)/2;
+  g.font='12px '+css('--sans');
+  rows.forEach(([name,ms,color],r)=>{
+    const top=4+r*rowH,barY=top+20,barH=24;
+    g.fillStyle=css('--ink');g.font='600 13px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText(name,x0,top);
+    // frame strip
+    g.fillStyle=css('--paper');g.fillRect(x0,barY,strip,barH);
+    g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(x0,barY,strip,barH);
+    const frac=ms/B,inW=Math.max(2,Math.min(1,frac)*strip);
+    g.fillStyle=color;g.fillRect(x0,barY+3,inW,barH-6);
+    if(frac>1){
+      const overPx=(frac-1)*strip,room=xMax-x1-4,drawn=Math.min(overPx,room);
+      g.fillStyle=css('--blood');g.fillRect(x1,barY+3,drawn,barH-6);
+      if(overPx>room){ // torn edge: runs further than shown
+        g.fillStyle=css('--paper-2');g.beginPath();const ex=x1+drawn;
+        g.moveTo(ex,barY+2);for(let k=0;k<=4;k++){g.lineTo(ex-(k%2?6:0),barY+2+(barH-4)*k/4);}g.lineTo(ex+2,barY+barH-2);g.lineTo(ex+2,barY+2);g.fill();
+      }
+      g.fillStyle=css('--blood');g.font='700 12px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+      g.fillText('+'+(frac-1).toFixed(1)+' frames',x1+4,top);
+    }
+    g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+    g.fillText(fmtMs(ms)+' ms · '+fmtPct(frac)+' of frame',x0,barY+barH+5);
+  });
+  // frame edge label
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';
+  g.fillText('16.67 ms',x1-4,4+20-2);
+}
+
+function render(){
+  const n=NS[idx],lu=listUs(idx),mu=mapUs(idx),lf=q*lu/1000,mf=q*mu/1000,lim=nLimit();
+  $('oN').textContent=fmtInt(n);$('nIn').setAttribute('aria-valuetext',fmtInt(n)+' items');
+  $('oQ').textContent=fmtInt(q);
+  $('rListUs').textContent=fmtUs(lu);$('rMapUs').textContent=fmtUs(mu);
+  $('rListMs').textContent=fmtMs(lf);
+  $('rLimit').textContent=lim>1e7?'> 10 million':fmtInt(lim);
+  const src=useLive()?'In this browser':'In the model';
+  let s=`${src}, one array lookup among ${fmtInt(n)} items takes <b>${fmtUs(lu)} µs</b> and one Map lookup takes <b>${fmtUs(mu)} µs</b>. `;
+  s+=`Times ${fmtInt(q)} lookups, the array needs <b>${fmtMs(lf)} ms</b>, ${fmtPct(lf/B)} of the frame`;
+  s+=lf>B?`, so it overruns by ${((lf/B)-1).toFixed(1)} frames before anything is drawn. `:(lf>B/4?'. That fits, but leaves little for the rest of the game. ':'. That fits comfortably. ');
+  s+=`The Map needs ${fmtMs(mf)} ms at any n.`;
+  if(useLive())s+=' Your browser is faster than Python; the crossing moves, the shape stays.';
+  $('insight').innerHTML=s;
+  // table
+  const rows=NS.map((nn,i)=>{
+    const f=q*listUs(i)/1000;
+    return `<tr class="${i===idx?'here':''}"><td>${fmtInt(nn)}</td><td>${(nn+1)/2%1?((nn+1)/2).toLocaleString('en-US',{minimumFractionDigits:1}):fmtInt((nn+1)/2)}</td><td>${fmtUs(modelList(nn))}</td><td>${fmtUs(live.list[i])}</td><td>${fmtUs(C_HASH)}</td><td>${fmtUs(live.map[i])}</td><td class="${f>B?'over':''}">${fmtMs(f)}</td></tr>`;
+  });
+  $('tbody').innerHTML=rows.join('');
+  $('thFrame').textContent=`array ms/frame, q = ${fmtInt(q)} (${useLive()?'live':'model'})`;
+  drawLook();drawFrame();
+}
+
+// ---------- live measurement
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let sink=0;
+function build(n){
+  const ids=shuffle(Array.from({length:n},(_,i)=>10000+i*7));
+  const arr=ids.map(id=>({id,name:'item_'+id,price:(id%97)+1}));
+  const map=new Map();arr.forEach(o=>map.set(o.id,o));
+  const pick=k=>Array.from({length:k},()=>ids[Math.floor(Math.random()*n)]);
+  return {arr,map,listKeys:pick(200),mapKeys:pick(20000)};
+}
+function timeList(d){
+  let count=0,t0=performance.now(),el=0;
+  do{for(const k of d.listKeys){sink+=d.arr.find(o=>o.id===k).price;}count+=d.listKeys.length;el=performance.now()-t0;}while(el<4);
+  return el*1000/count;
+}
+function timeMap(d){
+  let count=0,t0=performance.now(),el=0;
+  do{for(const k of d.mapKeys){sink+=d.map.get(k).price;}count+=d.mapKeys.length;el=performance.now()-t0;}while(el<4);
+  return el*1000/count;
+}
+const later=f=>(window.requestIdleCallback?requestIdleCallback(f,{timeout:200}):setTimeout(f,16));
+function measureAll(){
+  if(live.running)return;
+  live.running=true;live.done=false;live.list.fill(null);live.map.fill(null);
+  $('remeasure').disabled=true;
+  const status=$('status');status.className='status busy';
+  const jobs=[];NS.forEach((n,i)=>{jobs.push({i,rep:-1});for(let r=0;r<3;r++)jobs.push({i,rep:r});});
+  let data=null,best={l:Infinity,m:Infinity};
+  function step(){
+    const job=jobs.shift();
+    if(!job){live.running=false;live.done=true;status.className='status';
+      status.textContent='Live timings measured in this browser. Model values are in the table.';
+      $('remeasure').disabled=mode!=='live';render();return;}
+    status.textContent=`Measuring n = ${fmtInt(NS[job.i])} (${job.i+1} of 9). Showing model values until done.`;
+    if(job.rep<0){data=build(NS[job.i]);best={l:Infinity,m:Infinity};}
+    else{best.l=Math.min(best.l,timeList(data));best.m=Math.min(best.m,timeMap(data));
+      if(job.rep===2){live.list[job.i]=best.l;live.map[job.i]=best.m;data=null;if(mode==='live')render();}}
+    later(step);
+  }
+  later(step);
+}
+
+// ---------- events
+$('nIn').addEventListener('input',e=>{idx=+e.target.value;render();});
+$('qIn').addEventListener('input',e=>{q=+e.target.value;render();});
+function setMode(m){mode=m;$('mLive').setAttribute('aria-pressed',m==='live');$('mModel').setAttribute('aria-pressed',m==='model');
+  $('remeasure').disabled=m!=='live'||live.running;
+  $('status').style.visibility=m==='live'?'visible':'hidden';render();}
+$('mLive').addEventListener('click',()=>setMode('live'));
+$('mModel').addEventListener('click',()=>setMode('model'));
+$('remeasure').addEventListener('click',()=>{measureAll();render();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,reduce?0:60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+render();
+// let the first screen paint with model values, then start measuring
+setTimeout(measureAll,400);
+window.__cs102w05={setMode,get live(){return live;}};
+})();
+</script>
+</body>
+</html>

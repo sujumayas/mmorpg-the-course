@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Triple jump window, CS102 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-top:14px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 2px}
+h3{font-size:.95rem;margin:14px 0 4px}
+.sub{font-size:.85rem;color:var(--ink-soft);margin:0 0 10px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px}
+svg{display:block;width:100%}
+svg text{font-family:var(--sans);fill:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:8px 0 0;align-items:center}
+.legend svg{display:inline-block;width:auto;vertical-align:-3px;margin-right:5px}
+.summary{font-family:var(--serif);font-size:1.12rem;margin:12px 0 0;padding:10px 12px;background:var(--paper-2);border-radius:10px}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 20px;margin-top:14px;align-items:end}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.btn{font:700 .88rem var(--sans);padding:7px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.solid{background:var(--ink);color:var(--paper);min-width:5.5em}
+.chip{font:600 .84rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.toggle{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.92rem}
+.toggle input{width:20px;height:20px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--grid)}
+td.num,th.num{text-align:right}
+.win{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:3px;margin-top:6px}
+.cell{border:1.5px solid var(--grid);border-radius:5px;text-align:center;font-size:.72rem;padding:3px 0;line-height:1.2;min-width:0}
+.cell b{display:block;font-size:.85rem}
+.cell.double{background:var(--moss);color:var(--paper);border-color:var(--moss)}
+.cell.hop{background:transparent;color:var(--blood);border-color:var(--blood);background-image:repeating-linear-gradient(45deg,transparent 0 4px,var(--grid) 4px 6px)}
+.cell.lost{color:var(--ink-soft);border-style:dashed}
+.cell.cur{outline:3px solid var(--ink);outline-offset:1px}
+@media (max-width:520px){.cell{font-size:.6rem}.cell span{display:none}}
+.why{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.why{grid-template-columns:1fr}}
+.dnode rect{fill:var(--paper);stroke:var(--ink);stroke-width:1.6}
+.dnode.cur rect{stroke-width:4}
+.dnode.hot rect{fill:var(--ochre)}
+.dnode.hot text{fill:var(--paper)}
+.dedge{stroke:var(--ink-soft);stroke-width:1.4;fill:none}
+.dedge.hot{stroke:var(--ochre);stroke-width:4}
+.caption{font-size:.9rem;margin:8px 0 0;min-height:1.5em}
+.good{color:var(--moss);font-weight:700}
+.bad{color:var(--blood);font-weight:700}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 11 · Worked example</p>
+  <h1>Eight frames to keep the chain</h1>
+  <p class="lede">A teaching model of Super Mario 64's jump chain, using the numbers in the community decompilation: a 4-frame landing, a countdown of 5, and a triple jump that needs forward speed above 20. The same small hop can come from two different guards. This page shows which one fired.</p>
+</header>
+
+<section class="panel" aria-labelledby="hA">
+  <h2 id="hA">A. When: frames 0 to 120</h2>
+  <p class="sub">Press 1 is on frame 0. Press 2 comes d2 frames after the first touchdown, press 3 comes d3 frames after the second. Airtimes (20, 24, 30 frames) are invented.</p>
+  <figure>
+    <svg id="timeline" role="img" aria-label="Action timeline with countdown"></svg>
+    <div class="legend" aria-hidden="true">
+      <span><svg width="22" height="14"><rect width="22" height="14" fill="var(--paper)" stroke="var(--ink-soft)"/></svg>grounded</span>
+      <span><svg width="22" height="14"><rect width="22" height="14" fill="var(--steel)"/></svg>jump</span>
+      <span><svg width="22" height="14"><rect width="22" height="14" fill="url(#lgDot)" stroke="var(--moss)"/></svg>double_jump</span>
+      <span><svg width="22" height="14"><rect width="22" height="14" fill="url(#lgCross)" stroke="var(--ochre)"/></svg>triple_jump</span>
+      <span><svg width="22" height="14"><rect width="22" height="14" fill="url(#lgHatch)" stroke="var(--ink-soft)"/></svg>landing (edge in its jump's colour)</span>
+      <span><svg width="14" height="12"><path d="M1 1 L13 1 L7 11 z" fill="var(--ink)"/></svg>A press</span>
+    </div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+      <pattern id="lgDot" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="var(--paper)"/><circle cx="3" cy="3" r="1.5" fill="var(--moss)"/></pattern>
+      <pattern id="lgCross" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="var(--paper)"/><path d="M0 0L7 7M7 0L0 7" stroke="var(--ochre)" stroke-width="1.6"/></pattern>
+      <pattern id="lgHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--paper)"/><rect width="2" height="6" fill="var(--ink-soft)"/></pattern>
+    </defs></svg>
+  </figure>
+
+  <p class="summary" id="summary"></p>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <h3 id="hWin">Window: what press 2 gives at each delay d2 (everything else fixed)</h3>
+  <div class="win" id="win" role="list" aria-labelledby="hWin"></div>
+  <p class="sub" id="winCap" style="margin-top:6px"></p>
+
+  <div class="controls">
+    <div><label class="row" for="d2">Press 2 delay d2 <output id="od2"></output></label><input id="d2" type="range" min="1" max="15" step="1" value="3"></div>
+    <div><label class="row" for="d3">Press 3 delay d3 <output id="od3"></output></label><input id="d3" type="range" min="1" max="15" step="1" value="3"></div>
+    <div><label class="row" for="sp">Forward speed <output id="osp"></output></label><input id="sp" type="range" min="0" max="40" step="0.5" value="25"></div>
+  </div>
+  <div class="btnrow">
+    <label class="toggle"><input type="checkbox" id="rerun" checked> Rerun handlers in the same frame</label>
+  </div>
+  <div class="btnrow" role="group" aria-label="Presets" id="presets">
+    <button class="chip" data-p="3,3,25">Clean triple</button>
+    <button class="chip" data-p="3,3,20">Too slow</button>
+    <button class="chip" data-p="3,9,25">Late third</button>
+    <button class="chip" data-p="4,3,25">Press on landing's last frame</button>
+    <button class="chip" data-p="9,3,25">Late second</button>
+  </div>
+  <div class="controls" style="grid-template-columns:auto minmax(0,1fr)">
+    <div class="btnrow" style="margin:0"><button class="btn solid" id="play">Play</button></div>
+    <div><label class="row" for="scrub">Playhead <output id="oT"></output></label><input id="scrub" type="range" min="0" max="120" step="1" value="0"></div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="hB">
+  <h2 id="hB">B. Why: the machine and the guard that decided each press</h2>
+  <p class="sub">The node Mario is in at the playhead has a thick outline. When the playhead crosses a transition, that edge lights up and the caption names its guard.</p>
+  <div class="why">
+    <figure><svg id="diagram" viewBox="0 0 560 330" role="img" aria-label="State diagram of the jump chain"></svg><p class="caption" id="cap"></p></figure>
+    <div class="table-wrap" style="margin:0">
+      <table aria-label="Presses">
+        <thead><tr><th class="num">#</th><th class="num">Frame</th><th>Action when A arrived</th><th class="num">Timer read</th><th>Result</th><th>Guard</th></tr></thead>
+        <tbody id="presses"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Model: the lecture's Mario class, ported line for line. Each frame the countdown drops by 1 if above 0, then action handlers run until one does not switch action (at most 4 passes; 1 with the rerun toggle off). Landing frames set the countdown to 5 (0 after a triple jump). Numbers from the n64decomp Super Mario 64 decompilation; the model leaves out steep floors, quicksand, held objects, the Wing Cap and wall kicks. No game art is shown.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const LAND=4,CHAIN={jump_land:5,double_jump_land:5,triple_jump_land:0},TRIPLE_SPEED=20;
+const AIR={jump:20,double_jump:24,triple_jump:30};
+const LANDS_AS={jump:'jump_land',double_jump:'double_jump_land',triple_jump:'triple_jump_land'};
+const FRAMES=150,SHOW=120;
+const st={d2:3,d3:3,speed:25,rerun:true,t:0,playing:false};
+
+// ---------- the lecture's model, ported ----------
+function simulate(d2,d3,speed,rerun){
+  const m={action:'grounded',prev:null,timer:0,count:0,frame:0};
+  const log=[],acts=[],timers=[],presses=[];
+  const delays=[d2,d3];let pressed=0,next=0,cur=null;
+  const fast=()=>speed>TRIPLE_SPEED;
+  const set=(nw,why)=>{log.push({f:m.frame,from:m.action,to:nw,why});m.action=nw;m.count=0;return true;};
+  const use=(res,why,timer)=>{if(cur&&cur.result===null){cur.result=res;cur.why=why;if(timer!==undefined)cur.timer=timer;}};
+  function grounded(a){
+    if(!a)return false;
+    const t=m.timer,chained=t>0;m.timer=0;
+    if(chained&&m.prev==='jump_land'){use('double_jump','timer '+t+' > 0, after a single',t);return set('double_jump','A, timer '+t+' > 0, prev_land = jump_land');}
+    if(chained&&m.prev==='double_jump_land'&&fast()){use('triple_jump','timer '+t+' > 0, speed '+speed+' > 20',t);return set('triple_jump','A, timer '+t+' > 0, prev_land = double_jump_land, speed > 20');}
+    let why=m.prev===null?'first press':!chained?'timer 0':m.prev==='double_jump_land'?'speed ≤ 20':'after a triple, no chain';
+    use('jump',why,t);return set('jump','A, '+why);
+  }
+  function airborne(a){
+    if(m.count===AIR[m.action]){set(LANDS_AS[m.action],'touchdown after '+AIR[m.action]+' airborne frames');return false;}
+    m.count++;return false;
+  }
+  function landing(a){
+    m.timer=CHAIN[m.action];m.count++;
+    if(m.count>=LAND){m.prev=m.action;return set('grounded','4th landing frame, prev_land = '+m.action);}
+    if(a&&m.action==='jump_land'){use('double_jump','A during jump_land');return set('double_jump','A during jump_land');}
+    if(a&&m.action==='double_jump_land'){
+      if(fast()){use('triple_jump','A during landing, speed '+speed+' > 20');return set('triple_jump','A during double_jump_land, speed > 20');}
+      use('jump','speed ≤ 20');return set('jump','A during double_jump_land, speed ≤ 20');
+    }
+    return false;
+  }
+  for(let f=0;f<FRAMES;f++){
+    const a=f===next;
+    if(a){cur={n:presses.length+1,f,at:null,timer:'not read',result:null,why:''};presses.push(cur);}
+    if(m.timer>0)m.timer--;
+    if(a)cur.at=m.action;
+    for(let i=0;i<(rerun?4:1);i++){
+      const again=m.action==='grounded'?grounded(a):(m.action in AIR)?airborne(a):landing(a);
+      if(!again)break;
+    }
+    if(a&&cur.result===null){cur.result='none';cur.timer=(cur.at in AIR||cur.at==='triple_jump_land')?'ignored':cur.timer;cur.why=cur.at==='triple_jump_land'?'triple_jump_land ignores A':(cur.at in AIR)?'A ignored in the air':'press dropped: landing ended, no rerun';}
+    m.frame++;
+    acts.push(m.action);timers.push(m.timer);
+    const last=log[log.length-1];
+    if(last&&last.f===f&&last.to.endsWith('_land')&&pressed<delays.length){next=f+delays[pressed];pressed++;}
+  }
+  const jumps=log.filter(e=>e.to in AIR).map(e=>({f:e.f,to:e.to}));
+  return {log,acts,timers,presses,jumps};
+}
+function label(p){
+  if(p.n===1)return p.result==='none'?'lost':'jump';
+  return {double_jump:'double',triple_jump:'triple',jump:'hop',none:'lost'}[p.result];
+}
+let sim=null,win=[];
+
+// ---------- drawing helpers ----------
+const SVGNS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+const FILL={grounded:'var(--paper)',jump:'var(--steel)',double_jump:'url(#pDot)',triple_jump:'url(#pCross)',jump_land:'url(#pHatch)',double_jump_land:'url(#pHatch)',triple_jump_land:'url(#pHatch)'};
+const STROKE={grounded:'var(--ink-soft)',jump:'var(--steel)',double_jump:'var(--moss)',triple_jump:'var(--ochre)',jump_land:'var(--steel)',double_jump_land:'var(--moss)',triple_jump_land:'var(--ochre)'};
+const SHORT={grounded:['grounded','gr'],jump:['jump','J'],double_jump:['double_jump','DJ'],triple_jump:['triple_jump','TJ'],jump_land:['land','L'],double_jump_land:['land','L'],triple_jump_land:['land','L']};
+
+function drawTimeline(){
+  const svg=$('timeline'),W=Math.max(300,Math.round(svg.getBoundingClientRect().width)||900);
+  const narrow=W<560,L=narrow?8:52,R=narrow?8:14,H=206;
+  const X=f=>L+(W-L-R)*f/SHOW;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML='';
+  const defs=el('defs',{},svg);
+  const p1=el('pattern',{id:'pDot',width:6,height:6,patternUnits:'userSpaceOnUse'},defs);el('rect',{width:6,height:6,fill:'var(--paper)'},p1);el('circle',{cx:3,cy:3,r:1.5,fill:'var(--moss)'},p1);
+  const p2=el('pattern',{id:'pCross',width:7,height:7,patternUnits:'userSpaceOnUse'},defs);el('rect',{width:7,height:7,fill:'var(--paper)'},p2);el('path',{d:'M0 0L7 7M7 0L0 7',stroke:'var(--ochre)','stroke-width':1.6},p2);
+  const p3=el('pattern',{id:'pHatch',width:6,height:6,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},defs);el('rect',{width:6,height:6,fill:'var(--paper)'},p3);el('rect',{width:2,height:6,fill:'var(--ink-soft)'},p3);
+  const barY=44,barH=34,tY=108,tH=52,axisY=tY+tH+10;
+  if(!narrow){el('text',{x:L-6,y:barY+barH/2+4,'text-anchor':'end','font-size':11,fill:'var(--ink-soft)'},svg,'action');
+    el('text',{x:L-6,y:tY+tH/2+4,'text-anchor':'end','font-size':11,fill:'var(--ink-soft)'},svg,'timer');}
+  // segments: frame f is occupied by acts[f]
+  let s=0;
+  for(let f=1;f<=SHOW;f++){
+    if(f===SHOW||sim.acts[f]!==sim.acts[s]){
+      const a=sim.acts[s],x=X(s),w=X(f)-X(s);
+      el('rect',{x,y:barY,width:w,height:barH,fill:FILL[a],stroke:STROKE[a],'stroke-width':a.endsWith('_land')?2.5:1},svg);
+      const [lg,sh]=SHORT[a],lab=w>lg.length*7+6?lg:w>sh.length*8+4?sh:'';
+      if(lab){el('rect',{x:x+w/2-lab.length*3.4-3,y:barY+barH/2-9,width:lab.length*6.8+6,height:17,rx:3,fill:a==='jump'?'var(--steel)':'var(--paper)',opacity:.92},svg);
+        el('text',{x:x+w/2,y:barY+barH/2+4,'text-anchor':'middle','font-size':11.5,'font-weight':700,fill:a==='jump'?'var(--paper)':'var(--ink)'},svg,lab);}
+      s=f;
+    }
+  }
+  // timer step plot
+  el('line',{x1:X(0),x2:X(SHOW),y1:tY+tH,y2:tY+tH,stroke:'var(--ink-soft)'},svg);
+  [0,5].forEach(v=>{if(!narrow)el('text',{x:L-22,y:tY+tH-v*tH/5+4,'text-anchor':'end','font-size':10,fill:'var(--ink-soft)'},svg,v);});
+  let d='';for(let f=0;f<SHOW;f++){const y=tY+tH-sim.timers[f]*tH/5;d+=(f?'L':'M')+X(f)+','+y+'L'+X(f+1)+','+y;}
+  el('path',{d,fill:'none',stroke:'var(--blood)','stroke-width':2},svg);
+  // axis
+  for(let f=0;f<=SHOW;f+=10){const x=X(f);el('line',{x1:x,x2:x,y1:axisY-4,y2:axisY,stroke:'var(--ink-soft)'},svg);
+    if(!narrow||f%20===0)el('text',{x,y:axisY+14,'text-anchor':'middle','font-size':10.5,fill:'var(--ink-soft)'},svg,f);}
+  el('text',{x:W-R,y:H-2,'text-anchor':'end','font-size':10.5,fill:'var(--ink-soft)'},svg,'frame');
+  // presses
+  sim.presses.forEach(p=>{if(p.f>SHOW)return;const x=X(p.f)+(X(1)-X(0))/2,lab=label(p);
+    el('path',{d:`M${x-5},${barY-14} L${x+5},${barY-14} L${x},${barY-4} z`,fill:'var(--ink)'},svg);
+    const hopWhy=lab==='hop'?' ('+p.why+')':'';
+    el('text',{x:Math.max(x,L+18),y:barY-20,'text-anchor':'middle','font-size':11,'font-weight':700,fill:lab==='hop'||lab==='lost'?'var(--blood)':'var(--ink)'},svg,lab+(narrow?'':hopWhy));
+  });
+  // playhead
+  const px=X(st.t)+(X(1)-X(0))/2;
+  el('line',{x1:px,x2:px,y1:barY-2,y2:tY+tH+2,stroke:'var(--focus)','stroke-width':2,'stroke-dasharray':'4 3'},svg);
+}
+
+// ---------- diagram ----------
+const NODES={grounded:[70,165],jump:[220,45],double_jump:[360,45],triple_jump:[495,45],jump_land:[220,285],double_jump_land:[360,285],triple_jump_land:[495,285]};
+const EDGES=[['grounded','jump'],['grounded','double_jump'],['grounded','triple_jump'],['jump','jump_land'],['double_jump','double_jump_land'],['triple_jump','triple_jump_land'],
+  ['jump_land','double_jump'],['double_jump_land','triple_jump'],['double_jump_land','jump'],['jump_land','grounded'],['double_jump_land','grounded'],['triple_jump_land','grounded']];
+let hot=null,hotTimer=0;
+function curAction(){return st.t===0?sim.acts[0]:sim.acts[Math.min(st.t,SHOW)];}
+function drawDiagram(){
+  const svg=$('diagram');svg.innerHTML='';
+  const defs=el('defs',{},svg);
+  ['a','h'].forEach(k=>{const mk=el('marker',{id:'ar'+k,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);el('path',{d:'M0 0L10 5L0 10z',fill:k==='h'?'var(--ochre)':'var(--ink-soft)'},mk);});
+  const bw=w=>Math.max(64,w*7.2+14);
+  EDGES.forEach(([a,b])=>{
+    const [x1,y1]=NODES[a],[x2,y2]=NODES[b],dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);
+    const sx=x1+dx/len*30,sy=y1+dy/len*18,ex=x2-dx/len*34,ey=y2-dy/len*20;
+    const isHot=hot&&hot.from===a&&hot.to===b;
+    el('path',{d:`M${sx},${sy}L${ex},${ey}`,class:'dedge'+(isHot?' hot':''),'marker-end':`url(#ar${isHot?'h':'a'})`},svg);
+  });
+  const ca=curAction();
+  Object.entries(NODES).forEach(([n,[x,y]])=>{
+    const g=el('g',{class:'dnode'+(n===ca?' cur':'')+(hot&&hot.to===n?' hot':'')},svg),w=bw(n.length);
+    el('rect',{x:x-w/2,y:y-15,width:w,height:30,rx:8},g);
+    el('text',{x,y:y+4.5,'text-anchor':'middle','font-size':12.5,'font-weight':600},g,n);
+  });
+}
+function flash(e){
+  hot=e;$('cap').innerHTML=`Frame ${e.f}: <b>${e.from} → ${e.to}</b>. ${e.why}.`;drawDiagram();
+  clearTimeout(hotTimer);hotTimer=setTimeout(()=>{hot=null;drawDiagram();},reduce.matches?0:600);
+}
+
+// ---------- readouts ----------
+function drawReadouts(){
+  $('summary').innerHTML='Jumps: '+sim.jumps.map(j=>`${j.to} (${j.f})`).join(', ')+'.';
+  $('presses').innerHTML=sim.presses.map(p=>{const lab=label(p);return `<tr><td class="num">${p.n}</td><td class="num">${p.f}</td><td>${p.at}</td><td class="num">${p.timer}</td><td class="${lab==='hop'||lab==='lost'?'bad':'good'}">${p.result==='none'?'none (lost)':p.result}</td><td>${p.why}</td></tr>`;}).join('');
+  $('win').innerHTML=win.map((r,i)=>`<div role="listitem" class="cell ${r}${i+1===st.d2?' cur':''}" aria-label="d2 = ${i+1}: ${r}"><b>${i+1}</b><span>${r}</span></div>`).join('');
+  const ok=win.map((r,i)=>r==='double'?i+1:null).filter(v=>v!==null);
+  $('winCap').textContent=st.rerun?`Chain window after touchdown: frames ${ok[0]} to ${ok[ok.length-1]} (L + C - 1 = 4 + 5 - 1).`:`Rerun off: a press on frame 4, when the landing ends, is lost. Doubles on ${ok.join(', ')}.`;
+  $('od2').textContent=st.d2;$('od3').textContent=st.d3;$('osp').textContent=st.speed;$('oT').textContent='frame '+st.t;
+  $('d2').value=st.d2;$('d3').value=st.d3;$('sp').value=st.speed;$('scrub').value=st.t;$('rerun').checked=st.rerun;
+  const key=[st.d2,st.d3,st.speed].join(',');
+  document.querySelectorAll('#presets .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.p===key&&st.rerun)));
+}
+function recompute(){
+  sim=simulate(st.d2,st.d3,st.speed,st.rerun);
+  win=[];for(let d=1;d<=15;d++){const r=simulate(d,st.d3,st.speed,st.rerun).presses[1];win.push(r?label(r):'lost');}
+  drawTimeline();drawDiagram();drawReadouts();
+}
+function moveTo(t,announce){
+  const prev=st.t;st.t=Math.max(0,Math.min(SHOW,Math.round(t)));
+  if(announce&&st.t>prev){const crossed=sim.log.filter(e=>e.f>prev&&e.f<=st.t);
+    if(crossed.length){$('live').textContent=crossed.map(e=>`frame ${e.f}, ${e.from} to ${e.to}`).join('. ');drawTimeline();drawReadouts();flash(crossed[crossed.length-1]);return;}}
+  drawTimeline();drawDiagram();drawReadouts();
+}
+let raf=0,last=0,acc=0;
+function loop(now){if(!st.playing)return;const dt=last?(now-last)/1000:0;last=now;acc+=dt*30;
+  if(acc>=1){const n=Math.floor(acc);acc-=n;moveTo(st.t+n,true);}
+  if(st.t>=SHOW){stop();return;}raf=requestAnimationFrame(loop);}
+function play(){if(st.t>=SHOW)st.t=0;st.playing=true;last=0;acc=0;$('play').textContent='Pause';raf=requestAnimationFrame(loop);}
+function stop(){st.playing=false;cancelAnimationFrame(raf);$('play').textContent='Play';}
+$('play').addEventListener('click',()=>st.playing?stop():play());
+$('scrub').addEventListener('input',e=>{stop();moveTo(+e.target.value,true);});
+$('d2').addEventListener('input',e=>{st.d2=+e.target.value;recompute();});
+$('d3').addEventListener('input',e=>{st.d3=+e.target.value;recompute();});
+$('sp').addEventListener('input',e=>{st.speed=+e.target.value;recompute();});
+$('rerun').addEventListener('change',e=>{st.rerun=e.target.checked;recompute();});
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{const [a,c,s]=b.dataset.p.split(',').map(Number);st.d2=a;st.d3=c;st.speed=s;st.rerun=true;stop();recompute();}));
+window.addEventListener('resize',drawTimeline);
+recompute();
+$('cap').textContent='Press Play or move the playhead to see each transition and its guard.';
+window.__cs102w11={st,simulate,recompute,get sim(){return sim;},get win(){return win;}};
+})();
+</script>
+</body>
+</html>

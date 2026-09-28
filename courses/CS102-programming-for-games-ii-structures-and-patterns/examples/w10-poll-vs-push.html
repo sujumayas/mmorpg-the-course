@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Poll vs push — CS102 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.layout{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1000px){.layout{grid-template-columns:1.35fr 1fr;align-items:start}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 2px}
+.sub{font-size:.85rem;color:var(--ink-soft);margin:0 0 10px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px}
+canvas{display:block;width:100%;height:240px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:8px 0 0;align-items:center}
+.sw{display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:6px;border-radius:2px}
+.sw.poll{background:var(--steel)}
+.sw.ev{background:repeating-linear-gradient(135deg,var(--ochre) 0 3px,transparent 3px 6px);border:1.5px solid var(--ochre)}
+.toolrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:600px){.readout{grid-template-columns:1fr 1fr}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.verdict{font-family:var(--serif);font-size:1.12rem;margin:10px 0 0;padding:10px 12px;background:var(--paper-2);border-radius:10px}
+.session{font-size:.92rem;margin:8px 0 0;font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-top:14px}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.erow{display:flex;gap:8px;align-items:center}
+.erow input[type=number]{width:7em;font:600 .95rem var(--sans);padding:5px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.ticks{position:relative;height:8px;margin:0 9px}
+.ticks i{position:absolute;top:0;width:1.5px;height:8px;background:var(--ink-soft)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .82rem var(--sans);padding:6px 9px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:600 .88rem var(--sans);padding:7px 14px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn{font:700 .88rem var(--sans);padding:7px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.solid{background:var(--ink);color:var(--paper)}
+.check{display:inline-flex;gap:6px;align-items:center;font-size:.9rem;font-weight:600;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.fieldlabel{font-weight:600;font-size:.92rem;display:block;margin-bottom:4px}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--sans);fill:var(--ink)}
+.node rect{fill:var(--paper);stroke:var(--ink);stroke-width:1.8}
+.node.combat rect{stroke-width:2.6}
+.node.combat.flash rect{fill:var(--blood);stroke:var(--blood)}
+.node.combat.flash text{fill:var(--paper)}
+.node.bus rect{fill:var(--paper-2);stroke:var(--steel);stroke-width:2.4}
+.node.fresh rect{stroke:var(--moss);stroke-width:2.6}
+.edge{stroke:var(--ink-soft);stroke-width:1.6;fill:none}
+.badge rect{fill:none;stroke:var(--blood);stroke-width:1.8;stroke-dasharray:4 3}
+.badge text{fill:var(--blood);font-weight:700}
+.counterline{font-variant-numeric:tabular-nums;font-size:.95rem;margin:10px 0 0}
+.counterline b{font-size:1.15rem}
+.graphnote{font-family:var(--serif);font-size:.98rem;margin:8px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 10 · Worked example</p>
+  <h1>Polling pays every frame. Events pay per event.</h1>
+  <p class="lede">150 watchers polling at 60 fps cost 9,000 checks a second even when nothing happens. One kill a second with 3 listeners costs 3 calls. Drag the event rate up and find where the two meet.</p>
+</header>
+
+<div class="layout">
+<section class="panel" aria-labelledby="hA">
+  <h2 id="hA">A. Work per frame</h2>
+  <p class="sub" id="subA">Last 120 frames, newest on the right. Each frame has a polling bar and an event bar.</p>
+  <figure>
+    <canvas id="cFrames" role="img" aria-label="Bar strip of recent frames: constant polling bars and event spikes"></canvas>
+    <div class="legend">
+      <span><i class="sw poll"></i>Polling: N checks, every frame</span>
+      <span><i class="sw ev"></i>Events: L calls × events that frame</span>
+    </div>
+    <div class="toolrow">
+      <button class="btn" id="pause" aria-pressed="false">Pause</button>
+      <label class="check"><input type="checkbox" id="logY"> Log scale</label>
+    </div>
+  </figure>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rPoll">—</b><span>polling checks/s, F × N</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rEv">—</b><span>event calls/s, E × L</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rCross">—</b><span>crossover events/s, F × N / L</span></div>
+  </div>
+  <p class="verdict" id="verdict"></p>
+  <p class="session" id="session"></p>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="controls">
+    <div>
+      <label class="row" for="nIn">N conditions polled <output id="oN">150</output></label>
+      <input id="nIn" type="range" min="10" max="1000" step="10" value="150">
+    </div>
+    <div>
+      <label class="row" for="lIn">L listeners per event <output id="oL">3</output></label>
+      <input id="lIn" type="range" min="1" max="20" step="1" value="3">
+    </div>
+    <div>
+      <label class="row" for="eIn">E events per second <output id="oE">1</output></label>
+      <input id="eIn" type="range" min="0" max="500" step="1" value="100" aria-describedby="eHint">
+      <div class="ticks" aria-hidden="true"><i style="left:0"></i><i style="left:20%"></i><i style="left:60%"></i><i style="left:100%"></i></div>
+      <div class="presets" role="group" aria-label="Named event rates" id="ePresets">
+        <button class="chip" data-e="0.1">0.1 boss kill</button>
+        <button class="chip" data-e="1">1 questing kills</button>
+        <button class="chip" data-e="100">100 raid damage ticks</button>
+        <button class="chip" data-e="10000">10,000 every projectile moved</button>
+      </div>
+      <div class="erow" style="margin-top:8px"><label for="eNum" style="font-size:.88rem;font-weight:600">Exact E</label><input id="eNum" type="number" min="0.1" max="10000" step="any" value="1"></div>
+      <p class="sub" id="eHint" style="margin-top:4px">Log scale, 0.1 to 10,000.</p>
+    </div>
+    <div>
+      <span class="fieldlabel" id="fLab">F frame rate</span>
+      <div class="seg" role="group" aria-labelledby="fLab" id="fSeg">
+        <button data-f="30" aria-pressed="false">30</button>
+        <button data-f="60" aria-pressed="true">60</button>
+        <button data-f="120" aria-pressed="false">120</button>
+      </div>
+      <div class="presets" style="margin-top:14px">
+        <button class="chip" id="pDef">Lecture defaults</button>
+        <button class="chip" id="pQ1">Check yourself Q1</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="hB">
+  <h2 id="hB">B. Who depends on whom</h2>
+  <p class="sub">Add a system that reacts to kills. Watch which file has to change.</p>
+  <div class="toolrow" style="margin:0 0 10px">
+    <div class="seg" role="group" aria-label="Wiring">
+      <button id="mDirect" aria-pressed="true">Direct calls</button>
+      <button id="mBus" aria-pressed="false">Event bus</button>
+    </div>
+    <button class="btn solid" id="addSys">Add a system</button>
+    <button class="btn" id="resetSys">Reset</button>
+  </div>
+  <figure><svg id="graph" role="img" aria-label="Dependency graph"></svg></figure>
+  <p class="counterline" aria-live="polite">combat.py edits: <b id="edits">0</b></p>
+  <p class="graphnote" id="graphNote"></p>
+</section>
+</div>
+
+<footer>Model from the lecture: polling costs F × N checks per second; events cost E × L listener calls per second; they cross at E = F × N / L. Event arrivals are a Poisson process, k ~ Poisson(E / F) per frame, from a seeded generator (mulberry32, seed 10), so the first screen is the same on every load. Above 50 events per frame the strip uses the normal approximation.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const num=(v,d)=>v.toLocaleString('en-US',{maximumFractionDigits:d===undefined?2:d,minimumFractionDigits:0});
+const fx1=v=>v.toLocaleString("en-US",{minimumFractionDigits:1,maximumFractionDigits:1});
+const st={N:150,E:1,L:3,F:60,log:false,paused:false};
+
+// ---------- PRNG and sampling ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let rng=mulberry32(10);
+function normal(){let u=0;while(u===0)u=rng();const v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function poisson(lam){
+  if(lam>50)return Math.round(Math.max(0,lam+Math.sqrt(lam)*normal()));
+  const Lx=Math.exp(-lam);let k=0,p=1;
+  do{k++;p*=rng();}while(p>Lx);
+  return k-1;
+}
+function p99(lam){
+  if(lam>50)return Math.ceil(lam+2.326*Math.sqrt(lam));
+  let k=0,pmf=Math.exp(-lam),cdf=pmf;
+  while(cdf<0.99){k++;pmf*=lam/k;cdf+=pmf;}
+  return k;
+}
+let frames=[];
+function visibleCount(){return window.innerWidth<600?60:120;}
+function regen(){rng=mulberry32(10);frames=[];const n=120;for(let i=0;i<n;i++)frames.push(poisson(st.E/st.F));}
+
+// ---------- strip ----------
+let hatch=null,hatchKey='';
+function getHatch(g){
+  const col=css('--ochre');if(hatch&&hatchKey===col)return hatch;
+  const c=document.createElement('canvas');c.width=c.height=6;const x=c.getContext('2d');
+  x.fillStyle=col;x.globalAlpha=.35;x.fillRect(0,0,6,6);x.globalAlpha=1;
+  x.strokeStyle=col;x.lineWidth=1.6;x.beginPath();x.moveTo(-1,7);x.lineTo(7,-1);x.moveTo(-1,1);x.lineTo(1,-1);x.moveTo(5,7);x.lineTo(7,5);x.stroke();
+  hatch=g.createPattern(c,'repeat');hatchKey=col;return hatch;
+}
+function drawStrip(){
+  const cv=$('cFrames'),dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  const w=r.width,h=r.height,pad={l:46,r:8,t:10,b:26};
+  const vis=visibleCount(),data=frames.slice(-vis);
+  const yMax=Math.max(st.N,st.L*p99(st.E/st.F))*1.1;
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const Y=v=>{if(st.log){const lv=Math.log10(Math.max(1,v)),lm=Math.log10(yMax);return pad.t+ph*(1-lv/lm);}return pad.t+ph*(1-v/yMax);};
+  g.clearRect(0,0,w,h);
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  let ticks=[];
+  if(st.log){for(let e=0;Math.pow(10,e)<=yMax;e++)ticks.push(Math.pow(10,e));}
+  else{const raw=yMax/4,mag=Math.pow(10,Math.floor(Math.log10(raw))),stp=[1,2,2.5,5,10].map(m=>m*mag).find(s=>s>=raw);for(let v=0;v<=yMax;v+=stp)ticks.push(v);}
+  ticks.forEach(v=>{const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v>=1000?num(v/1000,1)+'k':num(v),pad.l-6,y);});
+  g.textAlign='left';g.textBaseline='top';g.fillText(`← ${vis} frames = ${num(vis/st.F,2)} s`,pad.l,h-pad.b+7);
+  g.textAlign='right';g.fillText('now',w-pad.r,h-pad.b+7);
+  const slot=pw/vis,bw=Math.max(1,slot*0.42);
+  const base=Y(st.log?1:0);
+  for(let i=0;i<data.length;i++){
+    const x=pad.l+i*slot;
+    const yp=Y(st.N);g.fillStyle=css('--steel');g.fillRect(x,yp,bw,base-yp);
+    const ev=st.L*data[i];
+    if(ev>0){const ye=Y(ev);g.fillStyle=getHatch(g);g.fillRect(x+bw,ye,bw,base-ye);g.fillStyle=css('--ochre');g.fillRect(x+bw,ye,bw,1.5);}
+    if(ev>0){const ye=Y(ev);g.strokeStyle=css("--ochre");g.lineWidth=2;g.beginPath();g.arc(x+bw*1.5,Math.min(ye,base)-7,3.5,0,Math.PI*2);g.stroke();}
+  }
+  // polling level line label
+  g.strokeStyle=css('--steel');g.setLineDash([4,3]);g.beginPath();g.moveTo(pad.l,Y(st.N));g.lineTo(w-pad.r,Y(st.N));g.stroke();g.setLineDash([]);
+  {let ev=0;data.forEach(k=>ev+=k);g.font="600 12px "+css("--sans");g.textAlign="right";g.textBaseline="top";const t1=`this strip: polling ${num(st.N*data.length)} checks`,t2=`events ${num(ev)} × ${st.L} = ${num(ev*st.L)} calls`;[t1,t2].forEach((t,j)=>{const tw=g.measureText(t).width;g.fillStyle=css("--paper-2");g.fillRect(w-pad.r-tw-4,pad.t+2+j*16,tw+4,15);g.fillStyle=j?css("--ochre"):css("--steel");g.fillText(t,w-pad.r-2,pad.t+3+j*16);});}
+  $('subA').textContent=`Last ${vis} frames (${num(vis/st.F,2)} s at ${st.F} fps), newest on the right. Each frame has a polling bar and an event bar.`;
+}
+
+// ---------- readouts ----------
+function verdictText(){
+  const p=st.F*st.N,e=st.E*st.L;
+  if(Math.abs(p-e)<=1e-9*Math.max(p,e))return 'Equal';
+  if(e<p)return `Events are cheaper by a factor of ${fx1(p/e)}`;
+  return `Polling is cheaper by a factor of ${fx1(e/p)}`;
+}
+function readouts(){
+  const p=st.F*st.N,e=st.E*st.L,x=st.F*st.N/st.L;
+  $('rPoll').textContent=num(p);$('rEv').textContent=num(e);$('rCross').textContent=num(x,1);
+  $('oN').textContent=num(st.N);$('oL').textContent=st.L;$('oE').textContent=num(st.E);
+  const v=verdictText();
+  $('verdict').innerHTML=`<b>${v}.</b> `+(v==='Equal'?`At ${num(st.E)} events/s the event spikes add up to exactly the polling bars.`:`Crossover at ${num(x,1)} events/s: below it events win, above it polling wins.`);
+  $('session').textContent=`10-minute session: polling ${num(600*p)} checks vs events ${num(600*e)} calls.`;
+  document.querySelectorAll('#ePresets .chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.e===st.E));
+  document.querySelectorAll('#fSeg button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.f===st.F));
+}
+function announce(){$('live').textContent=`Polling ${num(st.F*st.N)} checks per second, events ${num(st.E*st.L)} calls per second. ${verdictText()}.`;}
+
+// E slider mapping: position s in [0,500] -> 10^(-1+s/100), 2 significant digits
+function sig2(v){const m=Math.pow(10,Math.floor(Math.log10(v))-1);return Math.round(v/m)*m;}
+function clean(v){return +v.toPrecision(12);}
+const eFromPos=s=>clean(sig2(Math.pow(10,-1+s/100)));
+const posFromE=e=>Math.round((Math.log10(e)+1)*100);
+function change(regenerate){if(regenerate!==false)regen();readouts();drawStrip();}
+
+$('nIn').addEventListener('input',e=>{st.N=+e.target.value;change();});
+$('lIn').addEventListener('input',e=>{st.L=+e.target.value;change();});
+$('eIn').addEventListener('input',e=>{st.E=eFromPos(+e.target.value);$('eNum').value=st.E;$('eIn').setAttribute('aria-valuetext',num(st.E)+' events per second');change();});
+function setE(v){st.E=Math.min(10000,Math.max(0.1,v));$('eIn').value=posFromE(st.E);$('eNum').value=st.E;$('eIn').setAttribute('aria-valuetext',num(st.E)+' events per second');change();}
+$('eNum').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>=0.1&&v<=10000)setE(v);});
+['nIn','lIn','eIn','eNum'].forEach(id=>$(id).addEventListener('change',announce));
+document.querySelectorAll('#ePresets .chip').forEach(b=>b.addEventListener('click',()=>{setE(+b.dataset.e);announce();}));
+document.querySelectorAll('#fSeg button').forEach(b=>b.addEventListener('click',()=>{st.F=+b.dataset.f;change();announce();}));
+$('logY').addEventListener('change',e=>{st.log=e.target.checked;drawStrip();});
+function setAll(N,E,L,F){st.N=N;st.L=L;st.F=F;$('nIn').value=N;$('lIn').value=L;setE(E);announce();}
+$('pDef').addEventListener('click',()=>setAll(150,1,3,60));
+$('pQ1').addEventListener('click',()=>setAll(80,4,5,120));
+
+// animation: new frames arrive at F per second of real time
+let last=0,acc=0,raf=0;
+function tick(now){
+  if(!last)last=now;acc+=(now-last)/1000*st.F;last=now;
+  let added=false;
+  while(acc>=1){frames.push(poisson(st.E/st.F));acc-=1;added=true;}
+  if(frames.length>240)frames=frames.slice(-120);
+  if(added)drawStrip();
+  raf=requestAnimationFrame(tick);
+}
+function startAnim(){cancelAnimationFrame(raf);last=0;acc=0;if(!st.paused&&!reduce.matches)raf=requestAnimationFrame(tick);}
+$('pause').addEventListener('click',()=>{st.paused=!st.paused;$('pause').textContent=st.paused?'Play':'Pause';$('pause').setAttribute('aria-pressed',st.paused);startAnim();});
+function motionState(){if(reduce.matches){$('pause').hidden=true;cancelAnimationFrame(raf);regen();drawStrip();}else{$('pause').hidden=false;startAnim();}}
+reduce.addEventListener('change',motionState);
+
+// ---------- dependency graph ----------
+const BASE=['quests','achievements','audio','combat log','telemetry'];
+const EXTRA=['bestiary','daily challenge','pet XP'];
+const g={mode:'direct',systems:BASE.slice(),edits:0,flash:false,fresh:-1};
+function nextName(){const n=g.systems.length;return n<8?EXTRA[n-5]:'system '+(n+1);}
+const SVGNS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function drawGraph(){
+  const svg=$('graph');svg.innerHTML='';
+  const W=Math.max(340,Math.min(460,Math.round($("graph").getBoundingClientRect().width)||460)),rowH=34,n=g.systems.length,H=Math.max(230,n*rowH+60);
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const defs=el('defs',{},svg);const mk=el('marker',{id:'arr',viewBox:'0 0 10 10',refX:'9',refY:'5',markerWidth:'7',markerHeight:'7',orient:'auto-start-reverse'},defs);
+  el('path',{d:'M0,0 L10,5 L0,10 z',fill:css('--ink-soft')},mk);
+  const nw=W<400?108:132,cw=W<400?88:104,hw=cw/2,sl=W-6-nw,cx=6+hw,cy=H/2,bx=Math.round((cx+hw+sl)/2)-8;
+  const sysY=i=>30+i*rowH+(H-60-(n-1)*rowH)/2;
+  // edges
+  if(g.mode==='direct'){
+    g.systems.forEach((s,i)=>el('path',{class:'edge',d:`M${cx+hw},${cy} C${cx+hw+70},${cy} ${sl-70},${sysY(i)} ${sl},${sysY(i)}`,'marker-end':'url(#arr)'},svg));
+  }else{
+    el('line',{class:'edge',x1:cx+hw,y1:cy,x2:bx-25,y2:cy,'marker-end':'url(#arr)'},svg);
+    g.systems.forEach((s,i)=>el('path',{class:'edge',d:`M${sl},${sysY(i)} L${bx+25},${cy}`,'marker-end':'url(#arr)'},svg));
+    const b=el('g',{class:'node bus'},svg);el('rect',{x:bx-25,y:cy-17,width:50,height:34,rx:17},b);
+    el('text',{x:bx,y:cy+5,'text-anchor':'middle','font-size':'14','font-weight':'700'},b).textContent='bus';
+  }
+  // system nodes
+  g.systems.forEach((s,i)=>{const gg=el('g',{class:'node'+(i===g.fresh?' fresh':'')},svg);el('rect',{x:sl,y:sysY(i)-13,width:nw,height:26,rx:6},gg);el('text',{x:sl+nw/2,y:sysY(i)+5,'text-anchor':'middle','font-size':'13'},gg).textContent=s;});
+  // combat node
+  const c=el('g',{class:'node combat'+(g.flash?' flash':'')},svg);
+  el('rect',{x:cx-hw,y:cy-20,width:cw,height:40,rx:8},c);
+  el('text',{x:cx,y:cy+5,'text-anchor':'middle','font-size':'15','font-weight':'700'},c).textContent='combat';
+  const lab=el('text',{x:6,y:cy+40,'text-anchor':'start','font-size':'12.5','font-weight':'600'},svg);
+  lab.textContent=g.mode==='direct'?`imports ${n} systems`:'imports 1 thing';
+  if(g.mode==='direct'&&g.badge){
+    const bd=el('g',{class:'badge'},svg);el('rect',{x:4,y:cy-60,width:150,height:24,rx:5},bd);
+    el('text',{x:79,y:cy-43,'text-anchor':'middle','font-size':'11'},bd).textContent='file edited: 1 more import';
+  }
+  $('edits').textContent=g.edits;
+  $('graphNote').textContent=g.mode==='direct'
+    ?`Direct calls: combat calls all ${n} systems by name, so every new system is an edit to combat.py.`
+    :`Event bus: combat emits enemy_killed to the bus and knows nothing else. ${n} systems subscribe on their own.`;
+  $('addSys').disabled=n>=12;
+}
+let flashT=0;
+$('addSys').addEventListener('click',()=>{
+  if(g.systems.length>=12)return;
+  g.systems.push(nextName());g.fresh=g.systems.length-1;
+  if(g.mode==='direct'){g.edits++;g.badge=true;g.flash=true;clearTimeout(flashT);if(!reduce.matches)flashT=setTimeout(()=>{g.flash=false;drawGraph();},700);else g.flash=false;}
+  else g.badge=false;
+  drawGraph();
+});
+$('resetSys').addEventListener('click',()=>{g.systems=BASE.slice();g.edits=0;g.flash=false;g.badge=false;g.fresh=-1;drawGraph();});
+function setMode(m){g.mode=m;g.badge=false;g.flash=false;$('mDirect').setAttribute('aria-pressed',m==='direct');$('mBus').setAttribute('aria-pressed',m==='bus');drawGraph();}
+$('mDirect').addEventListener('click',()=>setMode('direct'));
+$('mBus').addEventListener('click',()=>setMode('bus'));
+
+window.addEventListener("resize",()=>{drawStrip();drawGraph();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawStrip();drawGraph();});
+regen();readouts();drawStrip();drawGraph();motionState();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawStrip);
+})();
+</script>
+</body>
+</html>

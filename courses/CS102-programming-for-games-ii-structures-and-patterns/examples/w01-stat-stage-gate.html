@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>One gate for the stat stage · CS102 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 4px}
+h2 small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem}
+.layout{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:14px;align-items:start}
+@media (max-width:820px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+.moves{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 14px}
+.move{font:600 .95rem var(--sans);padding:10px 10px;border-radius:10px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;text-align:left;min-height:44px}
+.move:hover{background:var(--paper-2)}
+.move.buggy{border-color:var(--blood);border-style:dashed;grid-column:1/-1}
+.move .d{font-variant-numeric:tabular-nums;color:var(--ink-soft);font-weight:700;margin-left:4px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+fieldset{border:0;padding:0;margin:0 0 12px}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg span{display:inline-block;font:600 .88rem var(--sans);padding:7px 12px;border-radius:999px;border:1.5px solid var(--ink)}
+.seg input:checked+span{background:var(--ink);color:var(--paper)}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.reset{font:600 .9rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper-2);color:var(--ink);cursor:pointer}
+.caption{font-size:.8rem;color:var(--ink-soft);margin:12px 0 0}
+figure{margin:10px 0 0;background:var(--paper-2);border-radius:10px;padding:10px 8px 6px}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:6px 4px 2px}
+.legend i{display:inline-block;width:20px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.stat.warn b{color:var(--blood)}
+.log{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1rem}
+.log.warn{box-shadow:inset 4px 0 0 var(--blood)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--ochre);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-weight:600;color:var(--ink-soft)}
+tr.hl td{background:var(--paper-2);font-weight:700;box-shadow:inset 0 -2px 0 var(--blood)}
+tr.hl td:first-child{box-shadow:inset 4px 0 0 var(--blood),inset 0 -2px 0 var(--blood)}
+td.warn{color:var(--blood);font-weight:700}
+#history{min-width:600px}
+#history th,#history td{padding:6px 7px}
+.fnote{font-size:.88rem;margin:8px 0 0;color:var(--blood);font-weight:600}
+.band{fill:var(--moss);opacity:.16}
+.danger{fill:var(--blood);opacity:.09}
+.gl{stroke:var(--grid);stroke-width:1}
+.gl0{stroke:var(--ink-soft);stroke-width:1}
+.ax{fill:var(--ink-soft);font:12px var(--sans)}
+.line{fill:none;stroke:var(--steel);stroke-width:2.5;stroke-linejoin:round}
+.publine{fill:none;stroke:var(--ochre);stroke-width:2.5;stroke-dasharray:7 5;stroke-linejoin:round}
+.pt.pub{fill:var(--ochre)}
+td,th{white-space:nowrap}
+.pt{fill:var(--steel);stroke:var(--paper-2);stroke-width:1.5}
+.pt.out{fill:var(--blood)}
+.xmark{stroke:var(--blood);stroke-width:2.5}
+.edge{stroke:var(--moss);stroke-width:1.5;stroke-dasharray:3 3}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 1 · Worked example</p>
+  <h1>One gate keeps the stage between −6 and +6</h1>
+  <p class="lede">Below, the same five button presses run through two codebases. The encapsulated class (solid line) stops at +6. The public field (dashed) leaves the shaded band on the first press of the one move file that forgot the clamp.</p>
+</header>
+
+<div class="layout">
+  <section class="panel" aria-labelledby="hMoves">
+    <h2 id="hMoves">Moves<small>Each press asks the stat to change by the number shown</small></h2>
+    <div class="moves" id="moves"></div>
+    <fieldset>
+      <legend>Ability</legend>
+      <div class="seg">
+        <label><input type="radio" name="ab" value="none" checked><span>None</span></label>
+        <label><input type="radio" name="ab" value="simple"><span>Simple (×2)</span></label>
+        <label><input type="radio" name="ab" value="contrary"><span>Contrary (×−1)</span></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Design shown in the readout</legend>
+      <div class="seg">
+        <label><input type="radio" name="design" value="enc"><span>Encapsulated class</span></label>
+        <label><input type="radio" name="design" value="pub" checked><span>Public field</span></label>
+      </div>
+    </fieldset>
+    <button class="reset" id="reset" type="button">Reset (stage 0)</button>
+    <p class="caption">Model based on Pokémon stat stages (Gen III+). Move names here are generic.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="hChart">
+    <h2 id="hChart">Stage over time<small>Shaded band is the legal range −6 to +6. Red points are outside it.</small></h2>
+    <figure>
+      <svg id="chart" viewBox="0 0 640 300" style="height:300px" role="img" aria-labelledby="chartDesc"><desc id="chartDesc">Step chart of the stat stage after each action</desc></svg>
+      <div class="legend" id="legend"></div>
+    </figure>
+    <p class="sr" aria-live="polite" id="live"></p>
+
+    <div class="readout">
+      <div class="stat" style="--c:var(--steel)" id="sStage"><b id="rStage">0</b><span>current stage</span></div>
+      <div class="stat" style="--c:var(--ochre)" id="sMult"><b id="rMult">×1</b><span id="rMultSub">2/2 = 1.000</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="rReq">—</b><span>last requested delta</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="rMod">—</b><span>after ability</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="rApp">—</b><span>actually applied</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="rN">0</b><span>actions so far</span></div>
+    </div>
+    <p class="log" id="rLog">Press a move.</p>
+
+    <div class="insight" id="insight"></div>
+
+    <h2 style="margin-top:18px">Files edited for a rule change<small>Five move files in this model, so <i>c</i> = 5</small></h2>
+    <div class="table-wrap">
+      <table aria-label="Files edited per rule change">
+        <thead><tr><th>Change to the rule</th><th>Public field</th><th>Encapsulated</th></tr></thead>
+        <tbody>
+          <tr id="fSimple"><td>Add Simple</td><td>5</td><td>1</td></tr>
+          <tr id="fContrary"><td>Add Contrary</td><td>5</td><td>1</td></tr>
+          <tr id="fCap"><td>Change cap to ±4</td><td>5</td><td>1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fnote" id="fnote" hidden></p>
+
+    <h2 style="margin-top:18px">Action log<small>Every press, for the design shown in the readout</small></h2>
+    <div class="table-wrap">
+      <table id="history" aria-label="Action history">
+        <thead><tr><th>#</th><th style="text-align:left">Move</th><th style="text-align:left">Ability</th><th>Asked</th><th>Modified</th><th>Applied</th><th>Stage</th><th>Multiplier</th><th>Other design</th></tr></thead>
+        <tbody id="hbody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<footer>Rules from the lecture: <code>d' = modify(d)</code>, <code>n = clamp(n + d', −6, +6)</code>, multiplier <code>max(2, 2+n) / max(2, 2−n)</code>. In public-field mode no move file was updated for abilities, so Simple and Contrary do nothing there, and the buggy file adds its delta with no clamp. Stage multipliers per Bulbapedia, "Stat modifier" (Generation III onward).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const MOVES=[
+  {id:'sharpen',name:'Sharpen',d:2},
+  {id:'howl',name:'Howl',d:1},
+  {id:'growl',name:'Growl',d:-1},
+  {id:'charm',name:'Charm',d:-2},
+  {id:'powerup',name:'Power-Up',d:1,buggy:true}
+];
+const AB_LABEL={none:'None',simple:'Simple',contrary:'Contrary'};
+const sgn=v=>v>0?'+'+v:v<0?'−'+Math.abs(v):'0';
+const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+function mult(n){
+  const num=Math.max(2,2+n),den=Math.max(2,2-n),g=gcd(num,den),rn=num/g,rd=den/g;
+  return {num,den,short:rd===1?'×'+rn:'×'+rn+'/'+rd,dec:(num/den).toFixed(3),out:n>6||n<-6};
+}
+function step(n,move,ab,design){
+  let mod,nw;
+  if(design==='enc'){
+    mod=ab==='simple'?2*move.d:ab==='contrary'?-move.d:move.d;
+    nw=clamp(n+mod,-6,6);
+  }else{
+    mod=move.d; // move files were never updated for abilities
+    nw=move.buggy?n+move.d:clamp(n+move.d,-6,6);
+  }
+  const applied=nw-n;
+  let log;
+  if(applied>0)log=`${move.name}: Attack rose by ${applied}.`;
+  else if(applied<0)log=`${move.name}: Attack fell by ${-applied}.`;
+  else log=mod>0?`${move.name}: Attack won't go any higher!`:`${move.name}: Attack won't go any lower!`;
+  return {n:nw,mod,applied,log};
+}
+
+let actions=[],ab='none',design='pub';
+function run(des){
+  let n=0;const out=[{n:0}];
+  actions.forEach(a=>{const r=step(n,MOVES[a.m],a.ab,des);r.move=MOVES[a.m];r.ab=a.ab;n=r.n;out.push(r);});
+  return out;
+}
+
+// build move buttons
+MOVES.forEach((m,i)=>{
+  const b=document.createElement('button');b.type='button';b.className='move'+(m.buggy?' buggy':'');
+  b.innerHTML=`${m.name}<span class="d">${sgn(m.d)}</span>${m.buggy?' <span style="color:var(--blood)">(buggy)</span>':''}`;
+  b.setAttribute('aria-label',`${m.name}, request ${m.d>0?'plus':'minus'} ${Math.abs(m.d)}${m.buggy?', buggy file with no clamp':''}`);
+  b.addEventListener('click',()=>{actions.push({m:i,ab});render(true);});
+  $('moves').appendChild(b);
+});
+
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e;}
+
+function draw(enc,pub){const main=enc,ghost=pub;
+  const svg=$('chart');[...svg.querySelectorAll(':not(desc)')].forEach(x=>x.remove());
+  const W=Math.max(280,Math.round(svg.getBoundingClientRect().width)||640),H=W<500?260:300,p={l:34,r:12,t:10,b:30};
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.style.height=H+'px';
+  const xMax=Math.max(20,actions.length);
+  const all=main.concat(ghost).map(r=>Math.abs(r.n));
+  const yM=Math.max(10,Math.ceil(Math.max(...all)));
+  const X=i=>p.l+(W-p.l-p.r)*i/xMax, Y=v=>p.t+(H-p.t-p.b)*(yM-v)/(2*yM);
+  el('rect',{x:p.l,y:p.t,width:W-p.l-p.r,height:Y(6)-p.t,class:'danger'},svg);
+  el('rect',{x:p.l,y:Y(-6),width:W-p.l-p.r,height:H-p.b-Y(-6),class:'danger'},svg);
+  el('rect',{x:p.l,y:Y(6),width:W-p.l-p.r,height:Y(-6)-Y(6),class:'band'},svg);
+  const yStep=yM>20?Math.ceil(yM/10):1;
+  for(let v=-yM;v<=yM;v++){
+    if(v%yStep)continue;
+    el('line',{x1:p.l,x2:W-p.r,y1:Y(v),y2:Y(v),class:v===0?'gl0':'gl'},svg);
+    if(v%(yStep*2)===0||yM<=10&&v%2===0){const t=el('text',{x:p.l-6,y:Y(v)+4,'text-anchor':'end',class:'ax'},svg);t.textContent=sgn(v);}
+  }
+  [6,-6].forEach(v=>el('line',{x1:p.l,x2:W-p.r,y1:Y(v),y2:Y(v),class:'edge'},svg));
+  const xs=xMax<=20?5:Math.ceil(xMax/4/5)*5;
+  for(let i=0;i<=xMax;i+=xs){const t=el('text',{x:X(i),y:H-p.b+18,'text-anchor':'middle',class:'ax'},svg);t.textContent=i;}
+  const t=el('text',{x:W-p.r,y:p.t+14,'text-anchor':'end',class:'ax'},svg);t.textContent='x: action number';
+  function path(rows){let d=`M${X(0)},${Y(rows[0].n)}`;for(let i=1;i<rows.length;i++)d+=`H${X(i)}V${Y(rows[i].n)}`;return d;}
+  el('path',{d:path(enc),class:'line'},svg);
+  el('path',{d:path(pub),class:'publine'},svg);
+  (design==='enc'?enc:pub).forEach((r,i)=>{
+    const out=r.n>6||r.n<-6;
+    el('circle',{cx:X(i),cy:Y(r.n),r:out?6:4,class:'pt'+(design==='pub'?' pub':'')+(out?' out':'')},svg);
+    if(out){const s=5,cx=X(i),cy=Y(r.n)+(r.n>0?-13:13);el('line',{x1:cx-s,y1:cy-s,x2:cx+s,y2:cy+s,class:'xmark'},svg);el('line',{x1:cx-s,y1:cy+s,x2:cx+s,y2:cy-s,class:'xmark'},svg);}
+  });
+}
+
+function render(announce){
+  const enc=run('enc'),pub=run('pub');
+  const main=design==='enc'?enc:pub,ghost=design==='enc'?pub:enc;
+  draw(enc,pub);
+  const mainName=design==='enc'?'Encapsulated class':'Public field',ghostName=design==='enc'?'Public field':'Encapsulated class';
+  $('legend').innerHTML=`<span><i style="background:var(--steel)"></i>Encapsulated class (solid)</span><span><i style="background:repeating-linear-gradient(90deg,var(--ochre) 0 7px,transparent 7px 12px)"></i>Public field (dashed)</span><span>Dots: ${mainName.toLowerCase()}, shown in the readout</span>`;
+  const last=main[main.length-1],m=mult(last.n);
+  $('rStage').textContent=sgn(last.n);
+  $('sStage').classList.toggle('warn',m.out);
+  $('rMult').textContent=m.short;
+  $('rMultSub').textContent=`${m.num}/${m.den} = ${m.dec}`;
+  $('sMult').classList.toggle('warn',m.out);
+  $('rN').textContent=actions.length;
+  if(actions.length){
+    $('rReq').textContent=sgn(last.move.d);$('rMod').textContent=sgn(last.mod);$('rApp').textContent=sgn(last.applied);
+    $('rLog').textContent=last.log;
+  }else{['rReq','rMod','rApp'].forEach(i=>$(i).textContent='—');$('rLog').textContent='Press a move.';}
+  $('rLog').classList.toggle('warn',m.out);
+  // insight
+  const maxPub=Math.max(...pub.map(r=>r.n)),minPub=Math.min(...pub.map(r=>r.n));
+  const encOut=enc.some(r=>r.n>6||r.n<-6);
+  const firstOut=pub.findIndex(r=>r.n>6||r.n<-6);
+  let s;
+  if(firstOut>0){
+    const worst=Math.abs(maxPub)>=Math.abs(minPub)?maxPub:minPub,wm=mult(worst);
+    s=`The public field left the band at action ${firstOut}, a press of <b>${pub[firstOut].move.name}</b>, and reached ${sgn(worst)} (multiplier ${wm.short} = ${wm.dec}, above the ×4 the design allows). The encapsulated class stayed between −6 and +6 for all ${actions.length} actions${encOut?'':' because every move goes through one <code>change()</code> method'}.`;
+  }else if(actions.length){
+    s=`Both designs are still inside the band. Only the buggy move file can push the public field out. Press Power-Up a few times near +6 and watch the dashed line.`;
+  }else s=`Nothing pressed yet. Try Sharpen three times, then Power-Up twice.`;
+  if(ab!=='none'&&design==='pub')s+=` ${AB_LABEL[ab]} is selected, but the public-field move files were never updated for it, so it changes nothing there.`;
+  $('insight').innerHTML=s;
+  // files table
+  ['fSimple','fContrary'].forEach(id=>$(id).classList.remove('hl'));
+  const fn=$('fnote');
+  if(design==='pub'&&ab!=='none'){
+    $(ab==='simple'?'fSimple':'fContrary').classList.add('hl');
+    fn.hidden=false;fn.textContent=`Each move file must now ${ab==='simple'?'double':'reverse'} its own delta; the buggy move does not.`;
+  }else fn.hidden=true;
+  // history
+  const rows=[];
+  for(let i=1;i<main.length;i++){
+    const r=main[i],mm=mult(r.n),o=ghost[i].n,oo=o>6||o<-6;
+    rows.push(`<tr><td>${i}</td><td style="text-align:left">${r.move.name}</td><td style="text-align:left">${AB_LABEL[r.ab]}</td><td>${sgn(r.move.d)}</td><td>${sgn(r.mod)}</td><td>${sgn(r.applied)}</td><td class="${mm.out?'warn':''}">${sgn(r.n)}</td><td class="${mm.out?'warn':''}">${mm.short} (${mm.dec})</td><td class="${oo?'warn':''}">${sgn(o)}</td></tr>`);
+  }
+  $('hbody').innerHTML=rows.length?rows.reverse().join(''):'<tr><td colspan="9" style="text-align:left;color:var(--ink-soft)">No actions yet.</td></tr>';
+  $('chartDesc').textContent=`Step chart of ${mainName.toLowerCase()} stage over ${actions.length} actions. Current stage ${sgn(last.n)}, ${m.out?'outside':'inside'} the legal band.`;
+  if(announce)$('live').textContent=`${last.log||''} Stage ${sgn(last.n)}, multiplier ${m.short.replace('×','')}${m.out?', outside the legal range':''}.`;
+}
+
+document.querySelectorAll('input[name=ab]').forEach(r=>r.addEventListener('change',e=>{ab=e.target.value;render(false);}));
+document.querySelectorAll('input[name=design]').forEach(r=>r.addEventListener('change',e=>{design=e.target.value;render(false);}));
+$('reset').addEventListener('click',()=>{actions=[];render(false);$('live').textContent='Reset. Stage 0.';});
+// first screen: the lecture's bug story, Sharpen x3 then Power-Up x2
+actions=[0,0,0,4,4].map(m=>({m,ab:'none'}));
+render(false);
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>render(false),60);});
+})();
+</script>
+</body>
+</html>

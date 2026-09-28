@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ghost mode timeline — CS102 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-top:14px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 2px}
+.sub{font-size:.85rem;color:var(--ink-soft);margin:0 0 10px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px}
+svg{display:block;width:100%}
+svg text{font-family:var(--sans);fill:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:8px 0 0;align-items:center}
+.legend svg{display:inline-block;width:auto;vertical-align:-3px;margin-right:5px}
+.summary{font-family:var(--serif);font-size:1.12rem;margin:12px 0 0;padding:10px 12px;background:var(--paper-2);border-radius:10px}
+.controls{display:grid;grid-template-columns:auto 1fr 1fr;gap:14px 20px;margin-top:14px;align-items:end}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{font:700 .88rem var(--sans);padding:7px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.solid{background:var(--ink);color:var(--paper);min-width:5.5em}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.chip{font:600 .84rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,.emark:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.emark{cursor:grab;outline:none}
+.emark:focus-visible circle,.emark:focus circle{stroke:var(--focus);stroke-width:3.5}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--grid)}
+td.num,th.num{text-align:right}
+tr.past td{color:var(--ink)}
+tr.future td{color:var(--ink-soft)}
+.yes{font-weight:700;color:var(--blood)}
+.no{font-weight:700;color:var(--moss)}
+.why{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;align-items:start}
+@media (max-width:860px){.why{grid-template-columns:1fr}}
+#diagram{max-width:420px;margin:0 auto}
+.dnode rect{fill:var(--paper);stroke:var(--ink);stroke-width:1.8}
+.dnode.cur rect{stroke-width:4}
+.dnode.hot rect{fill:var(--ochre)}
+.dnode.hot text{fill:var(--paper)}
+.tt th,.tt td{font-size:.84rem}
+.tt th code{font-size:.74rem}
+@media (max-width:520px){#log td:nth-child(5),table[aria-label="Transitions log"] th:nth-child(5){display:none}}
+.tt td.hot{background:var(--ochre);color:var(--paper);font-weight:700}
+.tt td.dash{color:var(--ink-soft)}
+.tt tr.cur th{box-shadow:inset 4px 0 0 var(--ink)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 11 · Worked example</p>
+  <h1>An energizer stops the clock</h1>
+  <p class="lede">Ghost modes in the arcade Pac-Man (level 1) are a schedule plus a transition table. Eat an energizer and the schedule pauses, so every later switch slides right by exactly F seconds. Leaving frightened never reverses the ghosts.</p>
+</header>
+
+<section class="panel" aria-labelledby="hA">
+  <h2 id="hA">A. When: the mode timeline, 0 to 100 s</h2>
+  <p class="sub">Drag the energizer markers below the bar, or focus one and use the arrow keys (0.5 s; Shift for 5 s; Delete removes it).</p>
+  <figure>
+    <svg id="timeline" role="group" aria-label="Mode timeline with energizer markers"></svg>
+    <div class="legend" aria-hidden="true">
+      <span><svg width="22" height="14"><rect width="22" height="14" fill="url(#pScatterL)" stroke="var(--steel)"/></svg>scatter</span>
+      <span><svg width="22" height="14"><rect width="22" height="14" fill="var(--blood)"/></svg>chase</span>
+      <span><svg width="22" height="14"><rect width="22" height="14" fill="url(#pFrightL)" stroke="var(--ochre)"/></svg>frightened</span>
+      <span><svg width="14" height="12"><path d="M1 1 L13 1 L7 11 z" fill="var(--ink)"/></svg>reversal</span>
+      <span><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="none" stroke="var(--ink)" stroke-width="2"/></svg>no reversal</span>
+    </div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+      <pattern id="pScatterL" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="var(--paper)"/><circle cx="3" cy="3" r="1.4" fill="var(--steel)"/></pattern>
+      <pattern id="pFrightL" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--paper)"/><rect width="2.6" height="6" fill="var(--ochre)"/></pattern>
+    </defs></svg>
+  </figure>
+
+  <p class="summary" id="summary"></p>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="controls">
+    <div class="btnrow" style="margin:0"><button class="btn solid" id="play">Play</button></div>
+    <div>
+      <label class="row" for="scrub">Playhead <output id="oT">0.0 s</output></label>
+      <input id="scrub" type="range" min="0" max="100" step="0.1" value="0">
+    </div>
+    <div>
+      <label class="row" for="fIn">Fright time F <output id="oF">6 s</output></label>
+      <input id="fIn" type="range" min="0" max="10" step="0.5" value="6">
+    </div>
+  </div>
+  <div class="btnrow">
+    <button class="btn" id="addE">Add energizer</button>
+    <button class="btn" id="clearE">Clear energizers</button>
+  </div>
+  <div class="btnrow" role="group" aria-label="Presets" id="presets">
+    <button class="chip" data-p="">None</button>
+    <button class="chip" data-p="30">One at 30 s</button>
+    <button class="chip" data-p="30,50">Two at 30 s and 50 s</button>
+    <button class="chip" data-p="10">One at 10 s</button>
+    <button class="chip" data-p="30,33">Two at 30 s and 33 s</button>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Transitions log">
+      <thead><tr><th class="num">Time (s)</th><th>From</th><th>To</th><th>Reverse?</th><th>Input</th></tr></thead>
+      <tbody id="log"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="hB">
+  <h2 id="hB">B. Why: states and the transition table</h2>
+  <p class="sub">The node the ghosts are in at the playhead has a thick outline. When the playhead crosses a transition, the node and the table cell that fired light up.</p>
+  <div class="why">
+    <figure><svg id="diagram" viewBox="0 0 400 290" role="img" aria-label="State diagram: scatter, chase and frightened"></svg></figure>
+    <div class="table-wrap" style="margin:0">
+      <table class="tt" aria-label="Transition table">
+        <thead><tr><th>From \ input</th><th><code>PHASE_<wbr>TIMER_<wbr>EXPIRED</code></th><th><code>ENERGIZER_<wbr>EATEN</code></th><th><code>FRIGHT_<wbr>TIMER_<wbr>EXPIRED</code></th></tr></thead>
+        <tbody id="tt"></tbody>
+      </table>
+      <p class="hint">Reversing edges: chase↔scatter, chase→frightened, scatter→frightened. The two returns from frightened do not reverse.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Model: the ghost-mode rules traced in CS101 week 11 and revisited in CS102 week 11's cross-game section, with the reversal rule stored as a set of (from, to) edges, run at 60 updates per second for 6,000 ticks. Schedule (level 1): scatter 7, chase 20, scatter 7, chase 20, scatter 5, chase 20, scatter 5, then chase forever. While frightened, the phase timer does not count down. An energizer while frightened restarts the fright timer and logs nothing. Times in the log are rounded to 0.1 s. Ghosts are not drawn; this page shows only the timing.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const HZ=60,SECONDS=100,TOTAL=SECONDS*HZ;
+const SCHEDULE=[['scatter',7],['chase',20],['scatter',7],['chase',20],['scatter',5],['chase',20],['scatter',5],['chase',null]];
+const REVERSES=new Set(['chase>scatter','scatter>chase','chase>frightened','scatter>frightened']);
+const INPUT={phase:'PHASE_TIMER_EXPIRED',energizer:'ENERGIZER_EATEN',fright:'FRIGHT_TIMER_EXPIRED'};
+const st={F:6,en:[30],t:0,playing:false};
+
+// ---------- simulation, integer ticks, same order as the lecture's run() ----------
+function simulate(energizers,F){
+  let phase=0,phaseLeft=SCHEDULE[0][1]*HZ,mode='scatter',fright=0,paused=0;
+  const log=[],events=[],pending=energizers.slice().sort((a,b)=>a-b);
+  const sw=(tick,to,cause)=>{const from=mode;mode=to;const rev=REVERSES.has(from+'>'+to);log.push({tick,from,to,rev,cause});events.push({tick,from,to,cause});};
+  for(let tick=1;tick<=TOTAL;tick++){
+    while(pending.length&&pending[0]*HZ<=tick-0.5){
+      pending.shift();
+      if(mode!=='frightened')sw(tick,'frightened','energizer');
+      else events.push({tick,from:'frightened',to:'frightened',cause:'energizer',restart:true});
+      fright=Math.round(F*HZ);
+    }
+    if(mode==='frightened'){paused++;fright--;if(fright<=0)sw(tick,SCHEDULE[phase][0],'fright');continue;}
+    if(phaseLeft===null)continue;
+    phaseLeft--;
+    if(phaseLeft<=0){phase++;phaseLeft=SCHEDULE[phase][1]===null?null:SCHEDULE[phase][1]*HZ;sw(tick,SCHEDULE[phase][0],'phase');}
+  }
+  // mode segments for drawing
+  const segs=[];let start=0,m='scatter';
+  log.forEach(e=>{if(e.tick>start)segs.push({a:start/HZ,b:e.tick/HZ,m});start=e.tick;m=e.to;});
+  segs.push({a:start/HZ,b:SECONDS,m});
+  return {log,events,segs,paused,reversals:log.filter(e=>e.rev).length};
+}
+const base=simulate([],6);
+let sim=simulate(st.en,st.F);
+const t1=v=>(Math.round(v*10)/10).toFixed(1);
+const trim=v=>{const r=Math.round(v*10)/10;return Number.isInteger(r)?String(r):r.toFixed(1);};
+function modeAt(t){let m='scatter';for(const e of sim.log){if(e.tick/HZ<=t)m=e.to;else break;}return m;}
+
+// ---------- timeline ----------
+const SVGNS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!==undefined)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+let geom=null;
+function fillFor(m){return m==='chase'?'var(--blood)':m==='scatter'?'url(#pScatter)':'url(#pFright)';}
+function strokeFor(m){return m==='chase'?'var(--blood)':m==='scatter'?'var(--steel)':'var(--ochre)';}
+function drawTimeline(){
+  const svg=$('timeline'),W=Math.max(300,Math.round(svg.getBoundingClientRect().width)||900);
+  const narrow=W<560,L=narrow?10:44,R=narrow?10:14,H=178;
+  const X=t=>L+(W-L-R)*t/SECONDS;
+  geom={X,L,R,W,toT:x=>Math.min(SECONDS,Math.max(0,(x-L)/(W-L-R)*SECONDS))};
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML='';
+  const defs=el('defs',{},svg);
+  const p1=el('pattern',{id:'pScatter',width:7,height:7,patternUnits:'userSpaceOnUse'},defs);el('rect',{width:7,height:7,fill:'var(--paper)'},p1);el('circle',{cx:3.5,cy:3.5,r:1.6,fill:'var(--steel)'},p1);
+  const p2=el('pattern',{id:'pFright',width:7,height:7,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},defs);el('rect',{width:7,height:7,fill:'var(--paper)'},p2);el('rect',{width:3,height:7,fill:'var(--ochre)'},p2);
+  const barY=26,barH=40,baseY=barY+barH+20,baseH=10,axisY=baseY+baseH+4,eY=axisY+42;
+  if(!narrow){el('text',{x:L-6,y:barY+barH/2+4,'text-anchor':'end','font-size':11,fill:'var(--ink-soft)'},svg,'mode');}
+  // main bar
+  sim.segs.forEach(s=>{
+    const x=X(s.a),w=Math.max(0,X(s.b)-X(s.a));if(w<=0)return;
+    el('rect',{x,y:barY,width:w,height:barH,fill:fillFor(s.m),stroke:strokeFor(s.m),'stroke-width':1},svg);
+    const label=s.m==='frightened'?(w>70?'frightened':w>26?'fr':''):(w>44?s.m:w>22?s.m[0]+s.m[1]:'');
+    if(label){const bx=el('rect',{x:x+w/2-label.length*3.4-3,y:barY+barH/2-9,width:label.length*6.8+6,height:17,rx:3,fill:s.m==='chase'?'var(--blood)':'var(--paper)',opacity:.92},svg);
+      el('text',{x:x+w/2,y:barY+barH/2+4,'text-anchor':'middle','font-size':11.5,'font-weight':700,fill:s.m==='chase'?'var(--paper)':'var(--ink)'},svg,label);}
+  });
+  // transition markers
+  sim.log.forEach(e=>{const x=X(e.tick/HZ);
+    if(e.rev)el('path',{d:`M${x-5},${barY-14} L${x+5},${barY-14} L${x},${barY-5} z`,fill:'var(--ink)'},svg);
+    else el('circle',{cx:x,cy:barY-9,r:4.5,fill:'var(--paper)',stroke:'var(--ink)','stroke-width':2},svg);
+  });
+  // baseline schedule
+  base.segs.forEach(s=>{const x=X(s.a),w=X(s.b)-X(s.a);el('rect',{x,y:baseY,width:w,height:baseH,fill:fillFor(s.m),stroke:strokeFor(s.m),'stroke-width':.8,opacity:.75},svg);});
+  el('text',{x:L,y:baseY-4,'text-anchor':'start','font-size':10.5,fill:'var(--ink-soft)'},svg,'schedule with no energizers');
+  // axis
+  for(let t=0;t<=SECONDS;t+=10){const x=X(t);el('line',{x1:x,y1:axisY,x2:x,y2:axisY+5,stroke:'var(--ink-soft)'},svg);
+    if(!narrow||t%20===0)el('text',{x,y:axisY+17,'text-anchor':t===0?'start':t===SECONDS?'end':'middle','font-size':11,fill:'var(--ink-soft)'},svg,t+(t===SECONDS?' s':''));}
+  // energizer track
+  el('line',{x1:X(0),y1:eY,x2:X(SECONDS),y2:eY,stroke:'var(--grid)','stroke-width':6,'stroke-linecap':'round'},svg);
+  if(!narrow)el('text',{x:L-6,y:eY+4,'text-anchor':'end','font-size':11,fill:'var(--ink-soft)'},svg,'eat');
+  st.en.forEach((t,i)=>{
+    const x=X(t),g=el('g',{class:'emark',tabindex:0,role:'slider','aria-label':`Energizer ${i+1}`,'aria-valuemin':0,'aria-valuemax':SECONDS,'aria-valuenow':t,'aria-valuetext':`${t1(t)} seconds`,'data-i':i},svg);
+    el('line',{x1:x,y1:barY+barH,x2:x,y2:eY-9,stroke:'var(--ochre)','stroke-width':1.5,'stroke-dasharray':'3 3'},g);
+    el('circle',{cx:x,cy:eY,r:9,fill:'var(--ochre)',stroke:'var(--paper)','stroke-width':2},g);
+    el('text',{x,y:eY+24,'text-anchor':'middle','font-size':11,'font-weight':700},g,t1(t)+' s');
+    el('rect',{x:x-16,y:eY-18,width:32,height:36,fill:'transparent'},g);
+    bindMarker(g,i);
+  });
+  // playhead
+  const px=X(st.t);
+  el('line',{x1:px,y1:4,x2:px,y2:axisY,stroke:'var(--ink)','stroke-width':2},svg);
+  el('path',{d:`M${px-5},2 L${px+5},2 L${px},9 z`,fill:'var(--ink)'},svg);
+  if(focusIdx!==null){const m=svg.querySelector(`.emark[data-i="${focusIdx}"]`);if(m)m.focus();}
+}
+let focusIdx=null,drag=null;
+function setEnergizer(i,t){t=Math.round(Math.min(SECONDS,Math.max(0,t))*2)/2;st.en[i]=t;recompute();}
+function bindMarker(g,i){
+  g.addEventListener('keydown',e=>{
+    const step=e.shiftKey?5:0.5;let t=st.en[i];
+    if(e.key==='ArrowRight'||e.key==='ArrowUp')t+=step;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')t-=step;
+    else if(e.key==='Home')t=0;else if(e.key==='End')t=SECONDS;
+    else if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();st.en.splice(i,1);focusIdx=null;recompute();$('addE').focus();return;}
+    else return;
+    e.preventDefault();focusIdx=i;setEnergizer(i,t);
+  });
+  g.addEventListener('focus',()=>{focusIdx=i;});
+  g.addEventListener('blur',()=>{if(!drag)focusIdx=null;});
+  g.addEventListener('pointerdown',e=>{e.preventDefault();drag={i};focusIdx=i;g.focus();});
+}
+function svgX(e){const svg=$('timeline'),r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;return (e.clientX-r.left)*vb.width/r.width;}
+window.addEventListener('pointermove',e=>{if(!drag)return;setEnergizer(drag.i,geom.toT(svgX(e)));});
+window.addEventListener('pointerup',()=>{drag=null;});
+
+// ---------- diagram and transition table ----------
+const POS={scatter:[80,60],chase:[320,60],frightened:[200,230]};
+let hot=null,hotTimer=0;
+function drawDiagram(){
+  const svg=$('diagram');svg.innerHTML='';
+  const defs=el('defs',{},svg);
+  const mk=el('marker',{id:'ah',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);el('path',{d:'M0,0 L10,5 L0,10 z',fill:'var(--ink)'},mk);
+  const mk2=el('marker',{id:'ah2',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);el('path',{d:'M0,0 L10,5 L0,10 z',fill:'var(--moss)'},mk2);
+  const edge=(d,rev,lx,ly,lab)=>{el('path',{d,fill:'none',stroke:rev?'var(--ink)':'var(--moss)','stroke-width':2,'stroke-dasharray':rev?'':'6 4','marker-end':rev?'url(#ah)':'url(#ah2)'},svg);
+    el('text',{x:lx,y:ly,'text-anchor':'middle','font-size':14,'font-weight':600,fill:rev?'var(--ink)':'var(--moss)'},svg,lab);};
+  edge('M130,48 Q200,18 268,48',true,200,24,'reverse');
+  edge('M270,74 Q200,104 132,74',true,200,112,'reverse');
+  edge('M92,84 L166,206',true,98,148,'reverse');
+  edge('M308,84 L234,206',true,302,148,'reverse');
+  edge('M146,222 Q60,200 64,90',false,58,196,'no reverse');
+  edge('M254,222 Q340,200 336,90',false,342,196,'no reverse');
+  const cur=modeAt(st.t);
+  Object.entries(POS).forEach(([m,[x,y]])=>{
+    const g=el('g',{class:'dnode'+(m===cur?' cur':'')+(hot&&hot.to===m?' hot':'')},svg);
+    el('rect',{x:x-54,y:y-22,width:108,height:44,rx:22,fill:'var(--paper)'},g);
+    el('text',{x,y:y+6,'text-anchor':'middle','font-size':17,'font-weight':700},g,m);
+  });
+  el('text',{x:200,y:282,'text-anchor':'middle','font-size':13,fill:'var(--ink-soft)'},svg,'frightened + energizer: stay, restart the fright timer');
+}
+const TT={
+  scatter:{phase:'chase',energizer:'frightened',fright:'—'},
+  chase:{phase:'scatter',energizer:'frightened',fright:'—'},
+  frightened:{phase:'— (timer paused)',energizer:'frightened, timer restarts',fright:'paused mode (scatter or chase)'}
+};
+function drawTable(){
+  const cur=modeAt(st.t);
+  $('tt').innerHTML=['scatter','chase','frightened'].map(m=>`<tr class="${m===cur?'cur':''}"><th scope="row">${m}</th>`+['phase','energizer','fright'].map(k=>{const v=TT[m][k],isHot=hot&&hot.from===m&&hot.cause===k;return `<td class="${isHot?'hot':''} ${v.startsWith('—')?'dash':''}">${v}</td>`;}).join('')+'</tr>').join('');
+}
+function flash(ev){
+  hot=ev;clearTimeout(hotTimer);drawDiagram();drawTable();
+  hotTimer=setTimeout(()=>{hot=null;drawDiagram();drawTable();},600);
+}
+
+// ---------- readouts ----------
+function drawLog(){
+  $('log').innerHTML=sim.log.map(e=>{const t=e.tick/HZ;return `<tr class="${t<=st.t?'past':'future'}"><td class="num">${t1(t)}</td><td>${e.from}</td><td>${e.to}</td><td class="${e.rev?'yes':'no'}">${e.rev?'yes':'no'}</td><td>${INPUT[e.cause]}</td></tr>`;}).join('');
+  $('summary').innerHTML=`Reversals in 0 to 100 s: <b>${sim.reversals}</b>. Schedule delayed by <b>${trim(sim.paused/HZ)} s</b>.`+(sim.paused?` Compare the thin “no energizers” strip: every later switch sits ${trim(sim.paused/HZ)} s further right.`:'');
+}
+function renderAll(){drawTimeline();drawLog();drawDiagram();drawTable();
+  $('oT').textContent=t1(st.t)+' s';$('scrub').value=st.t;$('oF').textContent=trim(st.F)+' s';
+  $('addE').disabled=st.en.length>=3;
+  const key=st.en.slice().sort((a,b)=>a-b).join(',');
+  document.querySelectorAll('#presets .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===key));
+}
+function recompute(){sim=simulate(st.en,st.F);renderAll();}
+
+// playhead movement: announce and flash transitions crossed going forward
+function moveTo(t,announce){
+  const prev=st.t;st.t=Math.min(SECONDS,Math.max(0,t));
+  if(announce&&st.t>prev){
+    const crossed=sim.events.filter(e=>e.tick/HZ>prev&&e.tick/HZ<=st.t);
+    if(crossed.length){const e=crossed[crossed.length-1];
+      $('live').textContent=crossed.map(e=>e.restart?`t = ${t1(e.tick/HZ)} s, energizer while frightened, fright timer restarts`:`t = ${t1(e.tick/HZ)} s, ${e.from} to ${e.to}, ${REVERSES.has(e.from+'>'+e.to)?'ghosts reverse':'no reverse'}`).join('. ');
+      drawTimeline();drawLog();$('oT').textContent=t1(st.t)+' s';$('scrub').value=st.t;flash(e);return;}
+  }
+  drawTimeline();drawLog();drawDiagram();drawTable();$('oT').textContent=t1(st.t)+' s';$('scrub').value=st.t;
+}
+let raf=0,last=0;
+function loop(now){
+  if(!st.playing)return;
+  const dt=last?(now-last)/1000:0;last=now;
+  moveTo(st.t+dt*5,true);
+  if(st.t>=SECONDS){stop();return;}
+  raf=requestAnimationFrame(loop);
+}
+function play(){if(st.t>=SECONDS)st.t=0;st.playing=true;last=0;$('play').textContent='Pause';raf=requestAnimationFrame(loop);}
+function stop(){st.playing=false;cancelAnimationFrame(raf);$('play').textContent='Play';}
+$('play').addEventListener('click',()=>st.playing?stop():play());
+$('scrub').addEventListener('input',e=>{stop();moveTo(+e.target.value,true);});
+$('fIn').addEventListener('input',e=>{st.F=+e.target.value;recompute();});
+$('addE').addEventListener('click',()=>{if(st.en.length>=3)return;const c=[30,50,70,10,90].find(v=>!st.en.includes(v));st.en.push(c);recompute();});
+$('clearE').addEventListener('click',()=>{st.en=[];recompute();});
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{st.en=b.dataset.p?b.dataset.p.split(',').map(Number):[];stop();recompute();}));
+
+window.addEventListener('resize',drawTimeline);
+recompute();
+window.__cs102w11={st,simulate};
+})();
+</script>
+</body>
+</html>

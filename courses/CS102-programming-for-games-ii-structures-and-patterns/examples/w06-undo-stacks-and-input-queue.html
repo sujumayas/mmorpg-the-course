@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Undo stacks and input queues · CS102 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+[hidden]{display:none!important}
+.split{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.split{grid-template-columns:1.25fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#board{display:block;width:100%;max-width:520px;margin:0 auto;border-radius:8px}
+#board:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.cell-wall{fill:var(--ink);opacity:.82}
+.cell-floor{fill:var(--paper);stroke:var(--grid);stroke-width:1}
+.flash-cell{fill:var(--blood);opacity:0}
+.flash-cell.on{animation:wallflash .5s ease-out}
+@keyframes wallflash{0%{opacity:.9}100%{opacity:0}}
+.coord{fill:var(--ink-soft);font:10px var(--sans);opacity:.8}
+.stacks{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
+.col{display:flex;flex-direction:column;min-width:0}
+.col h3{margin:0 0 6px;font:700 .9rem var(--sans);letter-spacing:.08em;text-align:center}
+.col .sub{font-size:.76rem;color:var(--ink-soft);text-align:center;margin-bottom:6px}
+.well{display:flex;flex-direction:column-reverse;justify-content:flex-start;gap:5px;min-height:292px;padding:8px;border:1.5px dashed var(--ink-soft);border-top:none;border-radius:0 0 10px 10px;background:var(--paper);transition:background-color .6s}
+@media (max-width:899px){.well{min-height:190px}}
+.well.flash{background:color-mix(in srgb,var(--blood) 30%,var(--paper))}
+.tile{font:700 1rem var(--sans);font-variant-numeric:tabular-nums;text-align:center;padding:5px 0;border-radius:6px;border:1.5px solid var(--c);color:var(--ink);background:transparent}
+.tile.top{background:var(--c);color:var(--paper)}
+.tile.enter{animation:enter .28s ease-out}
+@keyframes enter{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+.more{font-size:.75rem;color:var(--ink-soft);text-align:center}
+.msg{min-height:1.5em;margin:10px 0 0;font-weight:600;color:var(--blood);font-size:.92rem}
+.controls{display:grid;grid-template-columns:auto 1fr;gap:16px 22px;margin-top:14px;align-items:start}
+@media (max-width:620px){.controls{grid-template-columns:1fr}}
+.pad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,44px);gap:4px}
+.pad button{font:700 1.1rem var(--sans)}
+.btn{font:600 .9rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.primary{background:var(--steel);color:var(--paper)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.field{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem}
+select{font:600 .9rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--steel);background:var(--paper);color:var(--ink);min-height:40px}
+.kbd{font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow:auto;margin-top:14px;max-height:380px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:560px;width:100%}
+th,td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-size:.8rem;color:var(--ink-soft);font-weight:600;position:sticky;top:0;background:var(--paper)}
+td:first-child,th:first-child{text-align:right}
+tr.last td{font-weight:700;background:var(--paper-2)}
+/* tab 2 */
+#cTime{display:block;width:100%;height:230px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls2{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:16px;margin-top:14px;align-items:end}
+@media (max-width:760px){.controls2{grid-template-columns:1fr}}
+label.rng{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label.rng output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:8px 0 0;color:var(--ink-soft)}
+.sw{display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:6px;border-radius:3px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS102 Programming for Games II · Week 6 · Worked example</p>
+  <h1>Undo is two stacks. One new move empties the second.</h1>
+  <p class="lede">The lecture's script has run to step 6. One move waits on REDO. Make any new move and watch the REDO column.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Undo stacks</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Input buffer</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="split">
+    <figure>
+      <figcaption>The 7 × 5 level<small>Click the board, then use the arrow keys. Z undoes, Y redoes.</small></figcaption>
+      <svg id="board" viewBox="0 0 364 272" tabindex="0" role="application" aria-roledescription="puzzle board" aria-label="Puzzle board. Arrow keys move the player, Z undo, Y redo."></svg>
+    </figure>
+    <figure>
+      <figcaption>The two stacks<small>Bottom to top, newest on top. <code>*</code> marks a move that pushed the box.</small></figcaption>
+      <div class="stacks">
+        <div class="col"><h3 style="color:var(--steel)">UNDO</h3><div class="sub" id="undoCount">0 commands</div><div class="well" id="undoWell" style="--c:var(--steel)"></div></div>
+        <div class="col"><h3 style="color:var(--ochre)">REDO</h3><div class="sub" id="redoCount">0 commands</div><div class="well" id="redoWell" style="--c:var(--ochre)"></div></div>
+      </div>
+      <p class="msg" id="msg" role="status"></p>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div class="pad" role="group" aria-label="Move pad">
+      <span></span><button class="btn" data-dir="U" aria-label="Move up">&uarr;</button><span></span>
+      <button class="btn" data-dir="L" aria-label="Move left">&larr;</button><span></span><button class="btn" data-dir="R" aria-label="Move right">&rarr;</button>
+      <span></span><button class="btn" data-dir="D" aria-label="Move down">&darr;</button><span></span>
+    </div>
+    <div>
+      <div class="btnrow">
+        <button class="btn primary" id="undoBtn" aria-keyshortcuts="Z">Undo (Z)</button>
+        <button class="btn primary" id="redoBtn" aria-keyshortcuts="Y">Redo (Y)</button>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px">History limit
+          <select id="limit"><option value="0">unlimited</option><option value="3">3</option><option value="5">5</option><option value="10">10</option></select>
+        </label>
+      </div>
+      <div class="btnrow" style="margin-top:8px">
+        <button class="btn" id="resetBtn">Reset level</button>
+        <button class="btn" id="scriptBtn">Play lecture script</button>
+      </div>
+      <p class="kbd">Arrow keys work while the board has focus. A blocked move records nothing.</p>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap" id="traceWrap" tabindex="0" aria-label="Trace table, scrollable">
+    <table>
+      <thead><tr><th scope="col">Step</th><th scope="col">Action</th><th scope="col">Player</th><th scope="col">Box</th><th scope="col">UNDO (bottom → top)</th><th scope="col">REDO (bottom → top)</th></tr></thead>
+      <tbody id="trace"></tbody>
+    </table>
+  </div>
+  <p class="sr" aria-live="polite" id="announce"></p>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <figure>
+    <figcaption>Presses and moves on one timeline<small>Top lane: key presses. Bottom lane: moves, each <span id="stepCap">150</span> ms long.</small></figcaption>
+    <canvas id="cTime" role="img" aria-label="Timeline of key presses and the moves they start"></canvas>
+    <div class="legend" aria-hidden="true">
+      <span><span class="sw" style="background:var(--steel)"></span>press that moved at once</span>
+      <span><span class="sw" style="background:var(--ochre)"></span>press that waited in the queue</span>
+      <span><span class="sw" style="border:2px solid var(--blood)"></span>press dropped</span>
+    </div>
+  </figure>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rStarts">-</b><span>move start times (ms)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rMoves">-</b><span>moves made</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rStop">-</b><span>character stops at</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rAfter">-</b><span>time after last tap</span></div>
+  </div>
+
+  <div class="controls2">
+    <div>
+      <label class="rng" for="step">Move length, step_ms <output id="oStep">150</output></label>
+      <input id="step" type="range" min="50" max="300" step="10" value="150">
+    </div>
+    <label class="field">Buffer size, maxlen
+      <select id="maxlen"><option value="-1">unlimited</option><option value="2">2</option><option value="1" selected>1</option><option value="0">0 (no buffer)</option></select>
+    </label>
+    <label class="field">Tap times
+      <select id="preset">
+        <option value="lecture" selected>lecture: 0, 40, 80, 120, 160</option>
+        <option value="even">even: 0, 100, 200, 300</option>
+        <option value="check">check yourself: 0, 50, 100, 250 (step 200)</option>
+        <option value="custom" disabled>your taps</option>
+      </select>
+    </label>
+  </div>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn primary" id="tapBtn">Tap</button>
+    <span class="kbd" style="margin:0" id="tapNote">Press Tap or Space (while this panel has focus) to record up to 12 taps in one second.</span>
+  </div>
+
+  <div class="insight" id="insight2"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Buffer (maxlen)</th><th scope="col">Moves that start (ms)</th><th scope="col">Moves made</th><th scope="col">Character stops at</th><th scope="col">Time after last tap</th></tr></thead>
+      <tbody id="bufTable"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Logic follows the lecture's <code>Move</code>, <code>History</code> and <code>simulate_buffer</code> from <code>labs/lab06-starter/puzzle.py</code>. Coordinates are (x, y) with y growing downward. Undo designs discussed in the lecture: Baba Is You (2019) and Into the Breach (2018). Shapes here are generic.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const W=7,H=5,DIRS={R:[1,0],L:[-1,0],U:[0,-1],D:[0,1]};
+const key=(x,y)=>x+','+y;
+const pos=p=>`(${p[0]}, ${p[1]})`;
+
+// ---------------- board + commands (lecture logic)
+const board={walls:new Set(),boxes:new Set(),player:[2,2],
+  free(c){return !this.walls.has(key(...c))&&!this.boxes.has(key(...c));}};
+for(let x=0;x<W;x++)for(let y=0;y<H;y++)if(x===0||y===0||x===W-1||y===H-1)board.walls.add(key(x,y));
+let blockedCell=null;
+class Move{
+  constructor(name){this.name=name;[this.dx,this.dy]=DIRS[name];this.pushed=false;}
+  label(){return this.name+(this.pushed?'*':'');}
+  do(b){
+    const [px,py]=b.player,ahead=[px+this.dx,py+this.dy];
+    if(b.walls.has(key(...ahead))){blockedCell=ahead;return false;}
+    if(b.boxes.has(key(...ahead))){
+      const beyond=[ahead[0]+this.dx,ahead[1]+this.dy];
+      if(!b.free(beyond)){blockedCell=beyond;return false;}
+      b.boxes.delete(key(...ahead));b.boxes.add(key(...beyond));this.pushed=true;
+    }else this.pushed=false;
+    b.player=ahead;return true;
+  }
+  undo(b){
+    const [px,py]=b.player;
+    if(this.pushed){const box=[px+this.dx,py+this.dy];b.boxes.delete(key(...box));b.boxes.add(key(px,py));}
+    b.player=[px-this.dx,py-this.dy];
+  }
+}
+const hist={undo:[],redo:[],limit:0};
+let trace=[],stepNo=0,lastEvent=null,msgTimer=null,playTimer=null;
+
+function boxPos(){const [k]=[...board.boxes];return '('+k.replace(',',', ')+')';}
+function labels(s){return s.length?s.map(c=>c.label()).join(', '):'—';}
+function record(action){trace.push({step:stepNo,action,player:pos(board.player),box:boxPos(),undo:labels(hist.undo),redo:labels(hist.redo)});stepNo++;}
+
+function run(name,fromUser){
+  if(fromUser)stopScript();
+  const cmd=new Move(name);
+  if(!cmd.do(board)){lastEvent={type:'blocked',name};flashCell(blockedCell);announce(`Blocked. ${name} hits ${board.walls.has(key(...blockedCell))?'a wall':'the box against a wall'}. Nothing recorded.`);render();return false;}
+  hist.undo.push(cmd);
+  let dropped=false;
+  if(hist.limit&&hist.undo.length>hist.limit){hist.undo.shift();dropped=true;}
+  const cleared=hist.redo.length;hist.redo=[];
+  record('run '+cmd.name);
+  lastEvent={type:'run',cmd,cleared,dropped};
+  if(cleared)flashWell('redoWell');
+  const parts=[];
+  if(cleared)parts.push(`REDO cleared (${cleared} command${cleared>1?'s':''} discarded)`);
+  if(dropped)parts.push('oldest command dropped');
+  showMsg(parts.join('. '));
+  announce(`Run ${cmd.label()}. Undo stack now ${labels(hist.undo)}.`+(cleared?` Redo stack cleared, ${cleared} discarded.`:'')+(dropped?' Oldest command dropped.':''));
+  render('undo');return true;
+}
+function doUndo(fromUser){
+  if(fromUser)stopScript();
+  if(!hist.undo.length)return false;
+  const cmd=hist.undo.pop();cmd.undo(board);hist.redo.push(cmd);
+  record('undo');lastEvent={type:'undo',cmd};showMsg('');
+  announce(`Undo: ${cmd.label()}. Redo stack now ${labels(hist.redo)}.`);
+  render('redo');return true;
+}
+function doRedo(fromUser){
+  if(fromUser)stopScript();
+  if(!hist.redo.length)return false;
+  const cmd=hist.redo.pop();cmd.do(board);hist.undo.push(cmd);
+  record('redo');lastEvent={type:'redo',cmd};showMsg('');
+  announce(`Redo: ${cmd.label()}. Undo stack now ${labels(hist.undo)}.`);
+  render('undo');return true;
+}
+function reset(){
+  board.boxes=new Set([key(3,2)]);board.player=[2,2];hist.undo=[];hist.redo=[];trace=[];stepNo=0;lastEvent=null;
+  record('start');showMsg('');
+}
+const SCRIPT=['R','R','D','undo','undo','redo','U'];
+function scriptStep(s){if(s==='undo')doUndo();else if(s==='redo')doRedo();else run(s);}
+function stopScript(){if(playTimer){clearTimeout(playTimer);playTimer=null;$('scriptBtn').textContent='Play lecture script';}}
+function playScript(){
+  stopScript();reset();render();
+  if(reduce){SCRIPT.forEach(scriptStep);return;}
+  let i=0;$('scriptBtn').textContent='Playing...';
+  const next=()=>{scriptStep(SCRIPT[i++]);if(i<SCRIPT.length)playTimer=setTimeout(next,600);else{playTimer=null;$('scriptBtn').textContent='Play lecture script';}};
+  playTimer=setTimeout(next,600);
+}
+
+// ---------------- rendering tab 1
+const S=52,OX=0,OY=0;
+function drawBoard(){
+  const svg=$('board');let h='';
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const wall=board.walls.has(key(x,y));
+    h+=`<rect class="${wall?'cell-wall':'cell-floor'}" x="${OX+x*S}" y="${OY+y*S}" width="${S}" height="${S}"/>`;
+    h+=`<rect class="flash-cell" id="f${x}_${y}" x="${OX+x*S}" y="${OY+y*S}" width="${S}" height="${S}"/>`;
+  }
+  board.boxes.forEach(k=>{const [x,y]=k.split(',').map(Number);
+    h+=`<rect x="${x*S+12}" y="${y*S+14}" width="${S-24}" height="${S-24}" rx="4" fill="var(--ochre)" fill-opacity=".35" stroke="var(--ochre)" stroke-width="3"/>`;});
+  const [px,py]=board.player;
+  h+=`<circle cx="${px*S+S/2}" cy="${py*S+S/2+3}" r="${S*0.26}" fill="var(--steel)" stroke="var(--paper)" stroke-width="2"/>`;
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)h+=`<text class="coord" x="${x*S+4}" y="${y*S+12}">${x},${y}</text>`;
+  svg.innerHTML=h;
+}
+function flashCell(c){
+  drawBoard();const el=$(`f${c[0]}_${c[1]}`);if(!el)return;
+  el.classList.remove('on');void el.getBBox();el.classList.add('on');
+}
+function flashWell(id){const w=$(id);w.classList.remove('flash');void w.offsetWidth;w.classList.add('flash');setTimeout(()=>w.classList.remove('flash'),reduce?2000:700);}
+function showMsg(t){clearTimeout(msgTimer);$('msg').textContent=t;if(t)msgTimer=setTimeout(()=>{$('msg').textContent='';},2000);}
+function announce(t){$('announce').textContent=t;}
+const MAXTILES=8;
+function fillWell(id,stack,enter){
+  const w=$(id);let h='';
+  const shown=stack.slice(-MAXTILES),hidden=stack.length-shown.length;
+  shown.forEach((c,i)=>{const top=i===shown.length-1;h+=`<div class="tile${top?' top':''}${top&&enter?' enter':''}">${c.label()}</div>`;});
+  if(hidden)h=`<div class="more">+${hidden} more below</div>`+h;
+  w.innerHTML=h;
+}
+function render(enterCol){
+  drawBoard();
+  fillWell('undoWell',hist.undo,enterCol==='undo');fillWell('redoWell',hist.redo,enterCol==='redo');
+  $('undoCount').textContent=hist.undo.length+' command'+(hist.undo.length===1?'':'s')+(hist.limit?` (limit ${hist.limit})`:'');
+  $('redoCount').textContent=hist.redo.length+' command'+(hist.redo.length===1?'':'s');
+  $('undoBtn').disabled=!hist.undo.length;$('redoBtn').disabled=!hist.redo.length;
+  $('trace').innerHTML=trace.map((r,i)=>`<tr class="${i===trace.length-1?'last':''}"><td>${r.step}</td><td>${r.action}</td><td>${r.player}</td><td>${r.box}</td><td>${r.undo}</td><td>${r.redo}</td></tr>`).join('');
+  const tw=$('traceWrap');tw.scrollTop=tw.scrollHeight;
+  let s;
+  const e=lastEvent;
+  if(e&&e.type==='run'&&e.cleared)s=`A new move after an undo. The ${e.cleared} command${e.cleared>1?'s':''} on REDO no longer follow from the present, so History.run cleared them in one step. Redo now does nothing.`;
+  else if(e&&e.type==='run'&&e.dropped)s=`UNDO is full at ${hist.limit}. The oldest command fell off the bottom, so the level start can no longer be reached by undo.`;
+  else if(hist.redo.length)s=`REDO holds ${labels(hist.redo)}. Redo would replay ${hist.redo[hist.redo.length-1].label()}. <b>Make any move to see what happens to REDO.</b>`;
+  else if(e&&e.type==='blocked')s=`That move was blocked, so nothing went on UNDO. Undo still reverses your last real move.`;
+  else s=`UNDO holds ${hist.undo.length} command${hist.undo.length===1?'':'s'}. Undo one to move it onto REDO.`;
+  $('insight').innerHTML=s;
+}
+
+// events tab 1
+document.querySelectorAll('.pad button').forEach(b=>b.addEventListener('click',()=>run(b.dataset.dir,true)));
+$('undoBtn').addEventListener('click',()=>doUndo(true));
+$('redoBtn').addEventListener('click',()=>doRedo(true));
+$('resetBtn').addEventListener('click',()=>{stopScript();reset();render();announce('Level reset. Both stacks empty.');});
+$('scriptBtn').addEventListener('click',playScript);
+$('limit').addEventListener('change',e=>{
+  hist.limit=+e.target.value;let n=0;
+  while(hist.limit&&hist.undo.length>hist.limit){hist.undo.shift();n++;}
+  if(n)showMsg(`oldest command dropped (${n})`);render();
+});
+const ARROWS={ArrowRight:'R',ArrowLeft:'L',ArrowUp:'U',ArrowDown:'D'};
+$('board').addEventListener('keydown',e=>{if(ARROWS[e.key]){e.preventDefault();run(ARROWS[e.key],true);}});
+$('board').addEventListener('pointerdown',()=>$('board').focus());
+document.addEventListener('keydown',e=>{
+  if($('p1').hidden||e.ctrlKey||e.metaKey||e.altKey)return;
+  const t=e.target.tagName;if(t==='SELECT'||t==='INPUT'||t==='TEXTAREA')return;
+  const k=e.key.toLowerCase();
+  if(k==='z'){e.preventDefault();doUndo(true);}else if(k==='y'){e.preventDefault();doRedo(true);}
+});
+
+// ---------------- tab 2: input buffer (exact lecture algorithm)
+const PRESETS={lecture:[0,40,80,120,160],even:[0,100,200,300],check:[0,50,100,250]};
+let taps=PRESETS.lecture.slice(),stepMs=150,maxlen=1,tapStart=null;
+function simulate(taps,step,maxlen){ // maxlen: -1 = unlimited
+  const presses=taps.map(t=>({t,fate:'dropped',start:null}));
+  const moves=[];let busy=0,queue=[];
+  const start=(p,at)=>{p.start=at;p.fate=at===p.t?'now':'waited';moves.push({start:at,press:p});busy=at+step;};
+  const order=presses.slice().sort((a,b)=>a.t-b.t);
+  for(const p of order){
+    while(queue.length&&busy<=p.t)start(queue.shift(),busy);
+    if(p.t>=busy&&!queue.length)start(p,p.t);
+    else if(maxlen!==0){queue.push(p);if(maxlen>0&&queue.length>maxlen)queue.shift();}
+  }
+  while(queue.length)start(queue.shift(),busy);
+  const stop=moves.length?moves[moves.length-1].start+step:0;
+  const last=order.length?order[order.length-1].t:0;
+  return {presses:order,moves,stop,after:stop-last};
+}
+function mlName(m){return m<0?'unlimited':m===0?'0 (no buffer)':String(m);}
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};
+}
+function drawTimeline(res){
+  const {g,w,h}=setupCanvas($('cTime'));
+  const pad={l:62,r:14},tMax=Math.max(1000,Math.ceil(res.stop/250)*250);
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/tMax;
+  const laneP=58,laneM=138,axisY=196;
+  g.font='12px '+css('--sans');g.textBaseline='middle';
+  // grid
+  const stepT=tMax>2000?500:(w<500?250:100);
+  for(let t=0;t<=tMax;t+=stepT){const x=X(t);g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(x,24);g.lineTo(x,axisY);g.stroke();
+    if(t%(w<500&&tMax<=2000?250:(tMax>2000?1000:200))===0){g.fillStyle=css('--ink-soft');g.textAlign='center';g.fillText(t+'',x,axisY+12);}}
+  g.textAlign='right';g.fillStyle=css('--ink-soft');g.fillText('ms',w-pad.r,axisY+26);
+  g.textAlign='left';g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');
+  g.fillText('presses',4,laneP);g.fillText('moves',4,laneM);
+  // after-last-tap span
+  if(res.presses.length){
+    const last=res.presses[res.presses.length-1].t,xa=X(last),xb=X(res.stop),y=14;
+    g.strokeStyle=css('--blood');g.fillStyle=css('--blood');g.lineWidth=1.5;
+    g.setLineDash([3,3]);g.beginPath();g.moveTo(xa,y);g.lineTo(xa,laneP);g.moveTo(xb,y);g.lineTo(xb,laneM+16);g.stroke();g.setLineDash([]);
+    g.beginPath();g.moveTo(xa,y);g.lineTo(xb,y);g.stroke();
+    g.font='600 12px '+css('--sans');const txt=`${res.after} ms after last tap`,tw=g.measureText(txt).width;
+    const tx=Math.min(Math.max((xa+xb)/2,pad.l+tw/2),w-pad.r-tw/2);
+    g.fillStyle=css('--paper-2');g.fillRect(tx-tw/2-4,y-8,tw+8,16);g.fillStyle=css('--blood');g.textAlign='center';g.fillText(txt,tx,y);
+  }
+  // moves
+  res.moves.forEach((m,i)=>{
+    const x0=X(m.start),x1=X(m.start+stepMs);
+    g.fillStyle=m.press.fate==='now'?css('--steel'):css('--ochre');g.globalAlpha=i%2?.8:1;
+    g.fillRect(x0+1,laneM-13,Math.max(2,x1-x0-2),26);g.globalAlpha=1;
+    g.fillStyle=css('--paper');g.font='700 11px '+css('--sans');g.textAlign='left';
+    if(x1-x0>26)g.fillText(String(m.start),x0+4,laneM);
+  });
+  // wait links
+  res.presses.forEach(p=>{if(p.fate==='waited'){g.strokeStyle=css('--ochre');g.lineWidth=1.5;g.beginPath();g.moveTo(X(p.t),laneP+12);g.lineTo(X(p.start),laneM-14);g.stroke();}});
+  // presses
+  res.presses.forEach(p=>{
+    const x=X(p.t);
+    const tw=6,th=24,y0=laneP-th/2;
+    if(p.fate==='dropped'){g.strokeStyle=css('--blood');g.lineWidth=1.5;g.fillStyle=css('--paper-2');g.fillRect(x-tw/2,y0,tw,th);g.strokeRect(x-tw/2,y0,tw,th);
+      g.beginPath();g.moveTo(x-6,y0+th+3);g.lineTo(x+6,y0-3);g.stroke();}
+    else{g.fillStyle=p.fate==='now'?css('--steel'):css('--ochre');g.fillRect(x-tw/2,y0,tw,th);}
+  });
+}
+function renderBuf(){
+  const res=simulate(taps,stepMs,maxlen);
+  $('oStep').textContent=stepMs;$('stepCap').textContent=stepMs;
+  $('rStarts').textContent=res.moves.map(m=>m.start).join(', ')||'none';
+  $('rMoves').textContent=res.moves.length+' of '+taps.length;
+  $('rStop').textContent=res.stop+' ms';$('rAfter').textContent=res.after+' ms';
+  drawTimeline(res);
+  const dropped=res.presses.filter(p=>p.fate==='dropped').length,waited=res.presses.filter(p=>p.fate==='waited').length;
+  let s=`With maxlen ${mlName(maxlen)}, ${taps.length} taps make ${res.moves.length} moves. `;
+  if(dropped)s+=`${dropped} press${dropped>1?'es were':' was'} dropped. `;
+  if(waited)s+=`${waited} waited in the queue. `;
+  s+=`The character keeps moving ${res.after} ms after the last tap.`;
+  if(maxlen<0&&res.after>2*stepMs)s+=' Every press obeyed, and it feels slidey.';
+  else if(maxlen===0&&dropped)s+=' It stops fast, and it feels like dropped inputs.';
+  $('insight2').textContent=s;
+  $('bufTable').innerHTML=[-1,2,1,0].map(m=>{const r=simulate(taps,stepMs,m);
+    return `<tr class="${m===maxlen?'last':''}"><td>${mlName(m)}</td><td>${r.moves.map(x=>x.start).join(', ')}</td><td>${r.moves.length}</td><td>${r.stop} ms</td><td>${r.after} ms</td></tr>`;}).join('');
+  $('tapNote').textContent=$('preset').value==='custom'?`Your taps (ms): ${taps.join(', ')}. Tap again after a 1 s pause to start over.`:'Press Tap or Space (while this panel has focus) to record up to 12 taps in one second.';
+}
+$('step').addEventListener('input',e=>{stepMs=+e.target.value;renderBuf();});
+$('maxlen').addEventListener('change',e=>{maxlen=+e.target.value;renderBuf();});
+$('preset').addEventListener('change',e=>{const v=e.target.value;if(PRESETS[v]){taps=PRESETS[v].slice();if(v==='check'){stepMs=200;$('step').value=200;}}renderBuf();});
+function tap(){
+  const now=performance.now();
+  if($('preset').value!=='custom'||tapStart===null||now-tapStart>1000){tapStart=now;taps=[0];}
+  else if(taps.length<12)taps.push(Math.round(now-tapStart));
+  $('preset').value='custom';renderBuf();
+}
+$('tapBtn').addEventListener('click',tap);
+$('p2').addEventListener('keydown',e=>{
+  if(e.key!==' ')return;const t=e.target.tagName;if(t==='BUTTON'||t==='SELECT'||t==='INPUT')return;
+  e.preventDefault();tap();
+});
+$('p2').tabIndex=-1;
+
+// tabs
+const tabs=[$('t1'),$('t2')];
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();if(t.id==='t2')renderBuf();else render();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2]);}});});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!$('p2').hidden)renderBuf();},60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(!$('p2').hidden)renderBuf();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(!$('p2').hidden)renderBuf();});
+
+// first screen: lecture script played to step 6
+reset();SCRIPT.slice(0,6).forEach(scriptStep);lastEvent=null;showMsg('');announce('');render();
+window.__cs102w06={simulate,get trace(){return trace;},playScript};
+})();
+</script>
+</body>
+</html>
