@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Order book depth · MMO401 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 4px}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+.sub{color:var(--ink-soft);font-size:.9rem;margin:0 0 12px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 10px 6px}
+canvas{display:block;width:100%;height:300px}
+@media (max-width:600px){canvas{height:250px}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 2px 2px}
+.legend i{display:inline-block;width:16px;height:10px;vertical-align:middle;margin-right:6px;border-radius:2px}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg span{display:inline-block;font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);cursor:pointer;color:var(--ink)}
+.seg input:checked+span{background:var(--steel);color:var(--paper)}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;margin-top:14px}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.lab output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:4px 0 0}
+input[type=number]{font:600 .95rem var(--sans);width:6.5em;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:2px 0 0}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+@media (max-width:600px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.stat small{font-size:.78rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;display:block;overflow-wrap:anywhere}
+.warn{color:var(--blood);font-weight:700}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.chk{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;flex-wrap:wrap}
+.chk input[type=checkbox]{width:18px;height:18px;accent-color:var(--moss)}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+details{margin-top:12px}
+summary{cursor:pointer;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .84rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 6px}
+.bar{position:relative;height:34px;background:var(--paper-2);border-radius:8px;margin:22px 0 26px}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:8px;background:var(--ochre);opacity:.35}
+.bar .tick{position:absolute;top:-6px;bottom:-6px;width:3px;border-radius:2px}
+.bar .tl{position:absolute;font-size:.76rem;white-space:nowrap;transform:translateX(-50%);font-variant-numeric:tabular-nums}
+.bar .tl.up{top:-22px}.bar .tl.dn{bottom:-22px}
+.verdict{font-family:var(--serif);margin:0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO401 Virtual Economies II · Week 5 · Worked example</p>
+  <h1>Same spread, ten times the slippage</h1>
+  <p class="lede">Both books below quote a best bid of 9.8 and a best ask of 10.0, a 2% spread. The spread prices the first unit. Depth prices the rest. Drag the order size and switch between the books.</p>
+</header>
+
+<div class="layout">
+<section class="panel" aria-labelledby="hA">
+  <h2 id="hA">A. Walk the book</h2>
+  <p class="sub">A market order fills level by level, best price first, until it has its quantity.</p>
+  <figure>
+    <canvas id="cDepth" role="img" aria-label="Depth chart of the herb order book"></canvas>
+    <div class="legend" aria-hidden="true">
+      <span><i style="background:var(--steel)"></i>Bids (units you could sell at or above a price)</span>
+      <span><i style="background:var(--blood)"></i>Asks (units you could buy at or below a price)</span>
+      <span><i style="background:var(--ochre)"></i>Consumed by your order</span>
+      <span id="lgLin" hidden><i style="background:var(--moss)"></i>Linear model</span>
+    </div>
+  </figure>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ochre)"><b id="rTotal">—</b><span id="rTotalL">total cost</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rAvg">—</b><span>average price</span><small id="rAvgX"></small></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rMarg">—</b><span id="rMargL">marginal price (new best ask)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rSlip">—</b><span id="rSlipL">slippage above best ask</span></div>
+  </div>
+  <p id="rExh" class="warn" hidden></p>
+  <p id="rLin" class="hint" hidden></p>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Book</legend>
+      <div class="seg">
+        <label><input type="radio" name="book" value="lecture" checked><span>Lecture book</span></label>
+        <label><input type="radio" name="book" value="thin"><span>Thin</span></label>
+        <label><input type="radio" name="book" value="wall"><span>Wall</span></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Market order</legend>
+      <div class="seg">
+        <label><input type="radio" name="side" value="buy" checked><span>Buy (walk the asks)</span></label>
+        <label><input type="radio" name="side" value="sell"><span>Sell (walk the bids)</span></label>
+      </div>
+    </fieldset>
+    <div class="full">
+      <div class="lab"><label for="q">Order size</label><span><input id="qn" type="number" min="0" max="5000" step="1" value="55" aria-label="Order size, exact"> units <output id="qMax"></output></span></div>
+      <input id="q" type="range" min="0" max="850" step="1" value="55" aria-describedby="qHint">
+      <p class="hint" id="qHint">Arrow keys move by 10, Page Up and Page Down by 100. Type a number above the book's depth to see it run out.</p>
+    </div>
+    <div class="full chk">
+      <input id="lin" type="checkbox"><label for="lin">Show linear model with depth d =</label>
+      <input id="d" type="number" min="1" max="5000" step="1" value="100" aria-label="Linear depth d, units per gold"> <span class="hint" style="margin:0">units per gold</span>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table aria-label="The same order in each of the three books">
+      <caption class="sub" style="text-align:left;caption-side:top;margin:0 0 4px">The same order in each book</caption>
+      <thead><tr><th>Book</th><th>Spread</th><th>Slippage</th><th>Average</th><th>Filled</th><th>Total</th></tr></thead>
+      <tbody id="tCmp"></tbody>
+    </table>
+  </div>
+
+  <details>
+    <summary>Staircase values for this book</summary>
+    <div class="table-wrap">
+      <table aria-label="Order book levels with cumulative quantity">
+        <thead><tr><th>Side</th><th>Price</th><th>Quantity</th><th>Cumulative units</th><th>Cumulative value</th><th>Taken by order</th></tr></thead>
+        <tbody id="tLevels"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<section class="panel" aria-labelledby="hB">
+  <h2 id="hB">B. Break-even spread</h2>
+  <p class="sub">A market maker buys at bid B, sells at ask A, pays broker fee b on both orders and sales tax t on the sale. Profit is zero when A / B = (1 + b) / (1 − b − t).</p>
+  <div class="chips" role="group" aria-label="Fee presets">
+    <button class="chip" data-b="3" data-t="7.5">EVE no skills</button>
+    <button class="chip" data-b="1.5" data-t="7.5">EVE BR V</button>
+    <button class="chip" data-b="3" data-t="3.375">EVE Acc V</button>
+    <button class="chip" data-b="1.5" data-t="3.375">EVE both V</button>
+    <button class="chip" data-b="0" data-t="2">OSRS</button>
+    <button class="chip" data-b="0" data-t="5">WoW</button>
+  </div>
+  <div class="controls" style="grid-template-columns:1fr">
+    <div>
+      <div class="lab"><label for="b">Broker fee b</label><output id="oB"></output></div>
+      <input id="b" type="range" min="0" max="5" step="0.1" value="3">
+    </div>
+    <div>
+      <div class="lab"><label for="t">Sales tax t</label><output id="oT"></output></div>
+      <input id="t" type="range" min="0" max="10" step="0.025" value="7.5">
+    </div>
+  </div>
+  <div class="big" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rRatio">—</b><span>break-even A / B</span><small id="rRatioX"></small></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rBE">—</b><span>break-even spread</span></div>
+  </div>
+  <div class="bar" id="bar" role="img" aria-label="Herb book spread compared with the break-even spread">
+    <div class="fill" id="barFill"></div>
+    <div class="tick" id="tkHerb" style="background:var(--ink)"></div>
+    <div class="tick" id="tkBE"></div>
+    <span class="tl up" id="lbHerb"></span>
+    <span class="tl dn" id="lbBE"></span>
+  </div>
+  <p class="verdict" id="verdict"></p>
+  <p class="hint">Scale 0% to 20%. The herb book's spread as a ratio is 10.0 / 9.8 − 1 = 2.04%, about 2.0%. As a share of the 9.9 mid it is 2.02%.</p>
+</section>
+</div>
+
+<footer>The herb book and linear depth values are invented for teaching. Fees: EVE Online broker fee 3% base, minus 0.3 points per Broker Relations level; sales tax 7.5% base since release 22.02 (March 2025), minus 11% per Accounting level; standings ignored. Old School RuneScape Grand Exchange 2% seller tax. World of Warcraft auction house 5% cut. See the lecture's Sources section.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const num=(n,max)=>n.toLocaleString('en-US',{maximumFractionDigits:max==null?2:max});
+const trim3=n=>(Math.round(n*1000)/1000).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:3});
+const pct1=x=>(x*100).toFixed(1)+'%';
+
+const LECT={bids:[[9.8,50],[9.5,120],[9.0,200],[8.0,300]],asks:[[10.0,40],[10.2,60],[10.5,100],[11.0,150],[12.0,200],[14.0,300]]};
+const BOOKS={
+  lecture:{name:'Lecture book',...LECT},
+  thin:{name:'Thin',bids:[[9.8,5],[9.5,12],[9.0,20],[8.0,30]],asks:[[10.0,4],[10.2,6],[10.5,10],[11.0,15],[12.0,20],[14.0,30]]},
+  wall:{name:'Wall',bids:LECT.bids,asks:[[10.0,40],[10.2,60],[10.5,100],[10.5,1000],[11.0,150],[12.0,200],[14.0,300]]}
+};
+let book='lecture',side='buy',Q=55,showLin=false,D=100;
+
+// Walk the book: levels in priority order, take min(remaining, q_i), sum p_i × taken.
+function walk(bk,sd,q){
+  const lv=sd==='buy'?bk.asks:bk.bids;
+  let rem=q,total=0,filled=0,marg=null;const taken=[];
+  for(const [p,qi] of lv){
+    const t=Math.min(rem,qi);taken.push(t);
+    if(t>0){total+=p*t;filled+=t;rem-=t;marg=p;}
+  }
+  const best=lv[0][0],avg=filled?total/filled:best;
+  const slip=sd==='buy'?avg/best-1:1-avg/best;
+  return {total,filled,avg,marg:marg==null?best:marg,slip,best,taken,exhausted:rem>0,depth:lv.reduce((s,l)=>s+l[1],0)};
+}
+function depthOf(bk,sd){return (sd==='buy'?bk.asks:bk.bids).reduce((s,l)=>s+l[1],0);}
+
+// ---- depth chart
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(x=>x>=v);}
+const XMIN=7.5,XMAX=15;
+function drawDepth(){
+  const bk=BOOKS[book],c=setupCanvas($('cDepth')),g=c.g,w=c.w,h=c.h;
+  const pad={l:48,r:12,t:26,b:34};
+  const yMax=niceMax(Math.max(1000,depthOf(bk,'buy'),depthOf(bk,'sell')));
+  const X=p=>pad.l+(w-pad.l-pad.r)*(p-XMIN)/(XMAX-XMIN);
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-Math.min(v,yMax*1.02)/yMax);
+  g.clearRect(0,0,w,h);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const v=yMax*i/4,y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(num(v,0),pad.l-6,y);
+  }
+  for(let p=8;p<=XMAX+1e-9;p+=(w<500?1:0.5)){
+    g.textAlign='center';g.textBaseline='top';g.fillStyle=css('--ink-soft');
+    if(w>=500||Math.abs(p-Math.round(p))<1e-9) g.fillText(Number.isInteger(p)?p.toFixed(0):p.toFixed(1),X(p),h-pad.b+6);
+  }
+  g.textAlign='left';g.textBaseline='top';g.fillText('units',4,4);
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('price',w-pad.r,h-2);
+
+  function stairs(levels,dir){ // dir +1 asks (rightwards), -1 bids (leftwards)
+    const pts=[];let cum=0;const edge=dir>0?XMAX:XMIN;
+    pts.push([levels[0][0],0]);
+    const merged=[];levels.forEach(([p,q])=>{const m=merged.find(x=>x[0]===p);m?m[1]+=q:merged.push([p,q]);});
+    merged.forEach(([p,q],i)=>{if(i>0)pts.push([p,cum]);cum+=q;pts.push([p,cum]);});
+    pts.push([edge,cum]);
+    return pts;
+  }
+  function path(pts,close){
+    g.beginPath();pts.forEach(([p,v],i)=>i?g.lineTo(X(p),Y(v)):g.moveTo(X(p),Y(v)));
+    if(close){g.lineTo(X(pts[pts.length-1][0]),Y(0));g.closePath();}
+  }
+  const res=walk(bk,side,Q);
+  [['asks',1,'--blood'],['bids',-1,'--steel']].forEach(([k,dir,col])=>{
+    const pts=stairs(bk[k],dir);
+    g.globalAlpha=.16;g.fillStyle=css(col);path(pts,true);g.fill();g.globalAlpha=1;
+    // consumed region
+    if((k==='asks')===(side==='buy')&&res.filled>0){
+      g.save();g.beginPath();
+      const x0=X(res.best),x1=X(res.marg)+(dir>0?1:-1)*3,y0=Y(res.filled);
+      g.rect(Math.min(x0,x1),y0,Math.abs(x1-x0),Y(0)-y0);g.clip();
+      g.globalAlpha=.75;g.fillStyle=css('--ochre');path(pts,true);g.fill();g.restore();g.globalAlpha=1;
+    }
+    g.strokeStyle=css(col);g.lineWidth=2.5;path(pts,false);g.stroke();
+  });
+  // linear model overlay
+  if(showLin){
+    const a=res.best,dir=side==='buy'?1:-1,end=dir>0?XMAX:XMIN;
+    g.strokeStyle=css('--moss');g.lineWidth=2;g.setLineDash([7,5]);g.beginPath();
+    g.moveTo(X(a),Y(0));g.lineTo(X(end),Y(D*Math.abs(end-a)));g.stroke();g.setLineDash([]);
+  }
+  // order line and marginal price marker
+  if(res.filled>0){
+    const xm=X(res.marg);
+    g.strokeStyle=css('--ink');g.lineWidth=1.5;g.setLineDash([4,4]);
+    g.beginPath();g.moveTo(xm,pad.t);g.lineTo(xm,Y(0));g.stroke();
+    g.beginPath();g.moveTo(X(res.best),Y(res.filled));g.lineTo(xm,Y(res.filled));g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textBaseline='bottom';
+    const lab='marginal '+res.marg.toFixed(1);g.textAlign=xm>w-90?'right':(xm<pad.l+60?'left':'center');
+    g.fillText(lab,xm+(g.textAlign==='right'?-4:g.textAlign==='left'?4:0),pad.t-4);
+  }
+  // spread label
+  const bb=bk.bids[0][0],ba=bk.asks[0][0],mid=(bb+ba)/2;
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;const ys=Y(0)-10;
+  g.beginPath();g.moveTo(X(bb),ys);g.lineTo(X(ba),ys);g.moveTo(X(bb),ys-4);g.lineTo(X(bb),ys+4);g.moveTo(X(ba),ys-4);g.lineTo(X(ba),ys+4);g.stroke();
+  const st='spread '+(ba-bb).toFixed(1)+' ('+pct1((ba-bb)/mid)+(w<500?')':' of mid)');
+  g.font='600 12px '+css('--sans');const tw=g.measureText(st).width+10,ty=Y(0)-30,tx=Math.min(Math.max(X(mid),pad.l+tw/2),w-pad.r-tw/2);
+  g.fillStyle=css('--paper');g.globalAlpha=.92;g.fillRect(tx-tw/2,ty-17,tw,18);g.globalAlpha=1;
+  g.strokeStyle=css('--ink');g.lineWidth=1;g.strokeRect(tx-tw/2,ty-17,tw,18);
+  g.beginPath();g.moveTo(X(mid),ty+1);g.lineTo(X(mid),ys-3);g.stroke();
+  g.fillStyle=css('--ink');g.textAlign='center';g.textBaseline='bottom';
+  g.fillText(st,tx,ty-2);
+  $('cDepth').setAttribute('aria-label',`Depth chart, ${bk.name}. Best bid ${bb}, best ask ${ba}. ${side==='buy'?'Buy':'Sell'} order of ${num(Q)} units fills ${num(res.filled)} with marginal price ${res.marg.toFixed(1)}.`);
+}
+
+function render(){
+  const bk=BOOKS[book],res=walk(bk,side,Q),buy=side==='buy';
+  const dep=depthOf(bk,side),s=$('q');s.max=dep;s.value=Math.min(Q,dep);
+  $('qMax').textContent=`(book holds ${num(dep)})`;
+  if(+$('qn').value!==Q)$('qn').value=Q;
+  $('rTotal').textContent=num(res.total);
+  $('rTotalL').textContent=buy?'total cost':'total proceeds';
+  $('rAvg').textContent=res.filled?res.avg.toFixed(2):'—';
+  $('rAvgX').textContent=res.filled?`${num(res.total)} / ${num(res.filled)} = ${trim3(res.avg)}`:'';
+  $('rMarg').textContent=res.filled?res.marg.toFixed(1):'—';
+  $('rMargL').textContent=buy?'marginal price (new best ask)':'marginal price (new best bid)';
+  $('rSlip').textContent=res.filled?pct1(res.slip):'—';
+  $('rSlipL').textContent=buy?'slippage above best ask':'slippage below best bid';
+  const ex=$('rExh');ex.hidden=!res.exhausted;
+  if(res.exhausted) ex.textContent=`Book exhausted: filled ${num(res.filled)} of ${num(Q)} units. ${num(Q-res.filled)} left unfilled.`;
+  const L=$('rLin');L.hidden=!showLin;$('lgLin').hidden=!showLin;
+  if(showLin&&Q>0){
+    const a=res.best,la=buy?a+Q/(2*D):a-Q/(2*D),lm=buy?a+Q/D:a-Q/D,ls=buy?la/a-1:1-la/a;
+    L.textContent=`Linear model, a = ${a.toFixed(1)}, d = ${num(D)}: marginal ${a.toFixed(1)} ${buy?'+':'−'} ${num(Q)}/${num(D)} = ${num(lm,3)}, average ${a.toFixed(1)} ${buy?'+':'−'} ${num(Q)}/${num(2*D)} = ${trim3(la)}, slippage ${pct1(ls)}. Exact average ${res.filled?trim3(res.avg):'—'}.`;
+  } else if(showLin) L.textContent='Linear model: set an order size above 0.';
+  // comparison across books
+  const rows=Object.keys(BOOKS).map(k=>{
+    const b=BOOKS[k],r=walk(b,side,Q),bb=b.bids[0][0],ba=b.asks[0][0];
+    return `<tr class="${k===book?'here':''}"><td>${b.name}</td><td>${pct1((ba-bb)/((ba+bb)/2))}</td><td>${r.filled?pct1(r.slip):'—'}</td><td>${r.filled?r.avg.toFixed(2):'—'}</td><td>${num(r.filled)}${r.exhausted?' <span class="warn">(ran out)</span>':''}</td><td>${num(r.total)}</td></tr>`;
+  });
+  $('tCmp').innerHTML=rows.join('');
+  // levels table
+  const lv=[];
+  [['Ask',bk.asks,buy],['Bid',bk.bids,!buy]].forEach(([nm,levels,active])=>{
+    let cq=0,cv=0;const tk=active?res.taken:[];
+    levels.forEach(([p,q],i)=>{cq+=q;cv+=p*q;const t=tk[i]||0;
+      lv.push(`<tr class="${t>0?'here':''}"><td>${nm}</td><td>${p.toFixed(1)}</td><td>${num(q)}</td><td>${num(cq)}</td><td>${num(cv)}</td><td>${active?num(t):'—'}</td></tr>`);});
+  });
+  $('tLevels').innerHTML=lv.join('');
+  // insight
+  const lr=walk(BOOKS.lecture,side,Q),tr=walk(BOOKS.thin,side,Q);
+  let msg;
+  if(Q<=0) msg='Pick an order size. With zero units you pay the quoted price, which is all the spread can tell you.';
+  else if(tr.exhausted) msg=`${num(Q)} units ${buy?'costs':'sells for'} ${pct1(lr.slip)} slippage in the lecture book${lr.exhausted?' (and runs it dry)':''}. The thin book only holds ${num(tr.depth)} units on this side, so it cannot fill the order at all. Both books quote the same 2% spread.`;
+  else {
+    const f=lr.slip>0?tr.slip/lr.slip:null;
+    msg=`${num(Q)} units ${buy?'bought':'sold'}: <b>${pct1(lr.slip)}</b> slippage in the lecture book, <b>${pct1(tr.slip)}</b> in the thin book${f&&f>=1.5?`, about ${f.toFixed(0)} times worse`:''}. Both quote the same 2% spread. `;
+    const ten=walk(BOOKS.lecture,side,Q*10);
+    if(!ten.exhausted) msg+=`The thin book at ${num(Q)} units matches the lecture book at ${num(Q*10)} units (${pct1(ten.slip)}). A tenth of the depth means a tenth of the order size for the same slippage.`;
+  }
+  $('insight').innerHTML=msg;
+  drawDepth();
+}
+
+// ---- panel B
+const HERB=10.0/9.8;
+function renderB(){
+  const b=+$('b').value/100,t=+$('t').value/100;
+  const r=(1+b)/(1-b-t),be=r-1;
+  $('oB').textContent=num(b*100,1)+'%';$('oT').textContent=num(t*100,3)+'%';
+  $('rRatio').textContent=r.toFixed(4);
+  $('rRatioX').textContent=`${(1+b).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')} / ${(1-b-t).toFixed(5).replace(/0+$/,'').replace(/\.$/,'')}`;
+  $('rBE').textContent=pct1(be);
+  const S=0.20,xp=v=>Math.min(v,S)/S*100;
+  const herb=HERB-1,profit=10*(1-b-t)-9.8*(1+b),eps=1e-9;
+  const col=profit>eps?'--moss':(profit<-eps?'--blood':'--ochre');
+  $('barFill').style.width=xp(be)+'%';
+  $('tkHerb').style.left=`calc(${xp(herb)}% - 1px)`;
+  $('tkBE').style.left=`calc(${xp(be)}% - 1px)`;$('tkBE').style.background=css(col);
+  $('lbHerb').style.left=xp(herb)+'%';$('lbHerb').textContent='herb 2.0%';
+  $('lbBE').style.left=Math.min(Math.max(xp(be),12),88)+'%';$('lbBE').textContent='break-even '+pct1(be)+(be>S?' (off scale)':'');
+  $('lbHerb').style.transform=xp(herb)<12?'none':'translateX(-50%)';
+  const v=$('verdict');v.style.color=css(col);
+  v.textContent=profit>eps?`A market maker quoting the herb book (bid 9.8, ask 10.0) keeps ${profit.toFixed(3)} gold per unit round trip.`
+    :profit<-eps?`A market maker quoting the herb book (bid 9.8, ask 10.0) loses ${(-profit).toFixed(3)} gold per unit round trip. The spread is below the fee floor.`
+    :'The herb book sits exactly on the break-even spread: 10.0 × (1 − b − t) = 9.8 × (1 + b). Zero profit.';
+  $('bar').setAttribute('aria-label',`Herb spread 2.0% against break-even ${pct1(be)}`);
+  document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(+c.dataset.b===+$('b').value&&+c.dataset.t===+$('t').value)));
+}
+
+// ---- events
+document.querySelectorAll('input[name=book]').forEach(r=>r.addEventListener('change',()=>{book=r.value;render();}));
+document.querySelectorAll('input[name=side]').forEach(r=>r.addEventListener('change',()=>{side=r.value;render();}));
+$('q').addEventListener('input',e=>{Q=+e.target.value;render();});
+$('q').addEventListener('keydown',e=>{
+  const m={ArrowRight:10,ArrowUp:10,ArrowLeft:-10,ArrowDown:-10,PageUp:100,PageDown:-100}[e.key];
+  if(m==null)return;e.preventDefault();
+  const max=+e.target.max,cur=Math.min(Q,max);
+  Q=Math.max(0,Math.min(max,m>0?Math.floor(cur/Math.abs(m))*Math.abs(m)+m:Math.ceil(cur/Math.abs(m))*Math.abs(m)+m));
+  render();
+});
+$('qn').addEventListener('input',e=>{const v=Math.round(+e.target.value);if(!isFinite(v)||v<0)return;Q=Math.min(v,5000);render();});
+$('lin').addEventListener('change',e=>{showLin=e.target.checked;render();});
+$('d').addEventListener('input',e=>{const v=+e.target.value;if(v>=1){D=v;render();}});
+$('b').addEventListener('input',renderB);$('t').addEventListener('input',renderB);
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{$('b').value=c.dataset.b;$('t').value=c.dataset.t;renderB();}));
+let raf=0;const redraw=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{render();renderB();});};
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+render();renderB();
+})();
+</script>
+</body>
+</html>

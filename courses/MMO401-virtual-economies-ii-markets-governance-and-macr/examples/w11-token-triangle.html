@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The token triangle — MMO401 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h1 .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.62em;line-height:1.05;margin:0 .15em}
+h1 .frac span:first-child{border-bottom:2px solid currentColor;padding:0 .2em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.scen{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:14px}
+.scen>span{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:14px}
+@media (max-width:820px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#tri{display:block;width:100%;height:auto;max-height:340px}
+#tri text{font-family:var(--sans);fill:var(--ink)}
+#tri .node circle{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+#tri .node text{font-weight:700;font-size:15px;text-anchor:middle;dominant-baseline:central}
+#tri .edge{stroke:var(--ink);stroke-width:2;fill:none}
+#tri .edge.derived{stroke-dasharray:6 5;stroke:var(--ink-soft)}
+#tri .elab{font-size:13px;font-weight:600;text-anchor:middle;paint-order:stroke;stroke:var(--paper-2);stroke-width:5px;stroke-linejoin:round}
+#tri .elab.sub{font-weight:400;font-size:11.5px;fill:var(--ink-soft)}
+.hw{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.big{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.big b{display:block;font-size:clamp(1.6rem,4vw,2.1rem);font-variant-numeric:tabular-nums;line-height:1.1}
+.big span{font-size:.84rem;color:var(--ink-soft)}
+canvas#chart{display:block;width:100%;height:290px;cursor:crosshair;border-radius:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.86rem;margin:8px 0 0}
+.legend i{display:inline-block;width:22px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid}
+.legend i.band{height:12px;width:14px;border:0;border-radius:2px;opacity:.5}
+.month{margin-top:10px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 6px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td.unit{text-align:left;color:var(--ink-soft);font-size:.85rem}
+#readout td:nth-child(2){font-weight:700}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:minmax(0,1fr)}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:10px 12px 6px;margin:0;min-width:0}
+legend{font-family:var(--serif);font-weight:600;padding:0 6px}
+.toggle{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;margin:2px 0 6px;justify-content:flex-start}
+.toggle input{width:20px;height:20px;accent-color:var(--steel);margin:0}
+.sub-ctl[aria-disabled="true"]{opacity:.5}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600}
+#full{min-width:640px}
+#full tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO401 Virtual Economies II · Week 11 · Worked example</p>
+  <h1>PLEX price = <span class="frac"><span>ISK spent</span><span>PLEX supplied</span></span></h1>
+  <p class="lede">The solid line is the token price. The dashed line is where it would sit if only the ISK money supply moved it. They climb together, then a store sale and a new PLEX use pull them apart with no change in inflation.</p>
+</header>
+
+<section class="panel" aria-label="Token triangle model">
+  <div class="scen" role="group" aria-label="Scenarios">
+    <span>Scenario</span>
+    <button class="chip" data-s="story" aria-pressed="true">2% growth, sale m8, new use m16</button>
+    <button class="chip" data-s="base" aria-pressed="false">Base, no growth</button>
+    <button class="chip" data-s="sale" aria-pressed="false">Sale only</button>
+    <button class="chip" data-s="use" aria-pressed="false">New use only</button>
+    <button class="chip" data-s="growth" aria-pressed="false">Growth only</button>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>The triangle in month <span id="tMonth">24</span><small>Three currencies, four edges. Solid edges are set by the store, the rules or the market. The dashed edge is derived.</small></figcaption>
+      <svg id="tri" viewBox="0 0 420 330" role="img" aria-labelledby="triDesc">
+        <desc id="triDesc">Triangle diagram</desc>
+        <line class="edge" x1="70" y1="270" x2="210" y2="70"/>
+        <line class="edge" x1="210" y1="70" x2="350" y2="270"/>
+        <line class="edge derived" x1="70" y1="270" x2="350" y2="270"/>
+        <line class="edge" x1="210" y1="70" x2="345" y2="40" style="stroke-dasharray:2 4"/>
+        <text class="elab" id="eC" x="112" y="160" transform="rotate(-55 112 160)">$20 per 500 PLEX</text>
+        <text class="elab sub" x="128" y="178" transform="rotate(-55 128 178)">store price c</text>
+        <text class="elab" id="eP" x="308" y="160" transform="rotate(55 308 160)">5.00 M ISK per PLEX</text>
+        <text class="elab sub" x="292" y="178" transform="rotate(55 292 178)">market price P</text>
+        <text class="elab" id="eE" x="210" y="262">e = 125 M ISK per $</text>
+        <text class="elab sub" x="210" y="292">derived: 500 × P / c</text>
+        <text class="elab sub" x="282" y="40">500 PLEX, fixed</text>
+        <g class="node"><circle cx="70" cy="270" r="34"/><text x="70" y="270">Dollars</text></g>
+        <g class="node"><circle cx="210" cy="70" r="34" style="stroke:var(--ochre)"/><text x="210" y="70">PLEX</text></g>
+        <g class="node"><circle cx="350" cy="270" r="34"/><text x="350" y="270">ISK</text></g>
+        <g class="node"><circle cx="372" cy="36" r="27" style="stroke:var(--ink-soft);stroke-dasharray:3 3"/><text x="372" y="36" style="font-size:12px">30 days</text></g>
+      </svg>
+      <div class="hw" aria-live="polite">
+        <div class="big" style="--c:var(--ochre)"><b id="bigH">25.0</b><span>hours of play per month, H</span></div>
+        <div class="big" style="--c:var(--moss)"><b id="bigW">$0.80</b><span>wage per hour of play, W</span></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption>24 months of the PLEX price<small>Million ISK per PLEX. Click the chart or use the month slider to pick the month the triangle shows.</small></figcaption>
+      <canvas id="chart" tabindex="0" role="img" aria-label="Line chart of PLEX price and money-only line over 24 months. Use left and right arrow keys to change the month."></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--ochre)"></i>PLEX price P</span>
+        <span><i style="border-color:var(--steel);border-top-style:dashed"></i>if price followed money only</span>
+        <span><i class="band" style="background:var(--blood)"></i>store sale</span>
+        <span><i class="band" style="background:var(--moss)"></i>new PLEX use</span>
+      </div>
+      <div class="month">
+        <label for="m">Month shown <output id="oM">24</output></label>
+        <input id="m" type="range" min="0" max="24" step="1" value="24">
+      </div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="table-wrap">
+    <table aria-label="Values for the selected month">
+      <thead><tr><th>Quantity</th><th>Month <span id="thM">24</span></th><th style="text-align:left">Unit</th></tr></thead>
+      <tbody id="readout"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>ISK side</legend>
+      <label for="b0">B(0), ISK spent on PLEX in month 0 <output id="oB0"></output></label>
+      <input id="b0" type="range" min="20" max="200" step="5" value="75">
+      <label for="g">Monthly ISK income growth g <output id="oG"></output></label>
+      <input id="g" type="range" min="-5" max="10" step="0.5" value="2">
+      <label for="w">ISK earned per hour of play w <output id="oW"></output></label>
+      <input id="w" type="range" min="10" max="500" step="10" value="100">
+    </fieldset>
+    <fieldset>
+      <legend>PLEX side</legend>
+      <label for="q">Base supply Q <output id="oQ"></output></label>
+      <input id="q" type="range" min="5" max="40" step="0.5" value="15">
+      <label for="c">Store price c per 500 PLEX <output id="oC"></output></label>
+      <input id="c" type="range" min="5" max="40" step="1" value="20">
+    </fieldset>
+    <fieldset>
+      <legend>Events</legend>
+      <label class="toggle" for="saleOn"><input type="checkbox" id="saleOn" checked> Store sale (one month)</label>
+      <div class="sub-ctl" id="saleCtl">
+        <label for="saleM">Sale month <output id="oSaleM"></output></label>
+        <input id="saleM" type="range" min="1" max="24" step="1" value="8">
+        <label for="boost">Supply boost that month <output id="oBoost"></output></label>
+        <input id="boost" type="range" min="0" max="100" step="5" value="50">
+      </div>
+      <label class="toggle" for="useOn"><input type="checkbox" id="useOn" checked> New PLEX use (permanent)</label>
+      <div class="sub-ctl" id="useCtl">
+        <label for="useM">From month <output id="oUseM"></output></label>
+        <input id="useM" type="range" min="1" max="24" step="1" value="16">
+        <label for="mult">Multiplier on spending share s <output id="oMult"></output></label>
+        <input id="mult" type="range" min="1" max="3" step="0.1" value="2">
+      </div>
+    </fieldset>
+  </div>
+
+  <details>
+    <summary>All 25 months as a table</summary>
+    <div class="table-wrap">
+      <table id="full" aria-label="All months">
+        <thead><tr><th>Month</th><th>B (T ISK)</th><th>Q (M PLEX)</th><th>P (M ISK)</th><th>Money-only (M ISK)</th><th>Gap</th><th>e (M ISK/$)</th><th>H (h)</th><th>W ($/h)</th></tr></thead>
+        <tbody id="fullBody"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<footer>Model from the lecture: B(t) = B(0) × (1 + g)<sup>t</sup> × (use multiplier from the use month on), Q(t) = Q × (1 + boost) in the sale month only, P = B / Q, e = 500 × P / c, H = 500 × P / w, W = c / H. The money-only line is P(0) × (1 + g)<sup>t</sup>. All values are invented round numbers for teaching, not CCP store prices or market data. Fixed rule from EVE University Wiki, "Accounts" (current): 500 PLEX buys 30 days of Omega time.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const T=24;
+const S={c:20,b0:75,g:2,q:15,w:100,saleOn:true,saleM:8,boost:50,useOn:true,useM:16,mult:2,m:24};
+
+// 3 significant figures, integers with separators from 100 up
+function sig(n){if(!isFinite(n))return '—';const a=Math.abs(n);if(a>=100)return Math.round(n).toLocaleString('en-US');if(a===0)return '0';return n.toPrecision(3);}
+const money=n=>'$'+n.toFixed(2);
+function gapFmt(x){const v=(x*100);const r=Math.abs(v)<0.05?0:v;const s=r.toFixed(1).replace(/\.0$/,'');return (r>0?'+':'')+s+'%';}
+
+function model(t){
+  const growth=Math.pow(1+S.g/100,t);
+  const useMul=(S.useOn&&t>=S.useM)?S.mult:1;
+  const B=S.b0*growth*useMul;                       // trillion ISK per month
+  const Q=S.q*((S.saleOn&&t===S.saleM)?1+S.boost/100:1); // million PLEX per month
+  const P=B/Q;                                      // million ISK per PLEX (1e12/1e6)
+  const money=(S.b0/S.q)*growth;                    // P(0) x (1+g)^t
+  const plex500=500*P/1000;                         // billion ISK
+  const e=500*P/S.c;                                // million ISK per dollar
+  const H=500*P/S.w;                                // hours
+  const W=S.c/H;                                    // dollars per hour
+  return {t,B,Q,P,money,plex500,e,H,W,gap:P/money-1};
+}
+function series(){const a=[];for(let t=0;t<=T;t++)a.push(model(t));return a;}
+
+// ---- chart ----
+const pad={l:44,r:14,t:14,b:34};
+let geom=null;
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function niceMax(v){const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(x=>x>=v*1.04)||v;}
+function drawChart(data){
+  const cv=$('chart'),{g,w,h}=setupCanvas(cv);
+  const yMax=niceMax(Math.max(...data.map(d=>Math.max(d.P,d.money))));
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/T, Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  geom={X,w};
+  g.clearRect(0,0,w,h);
+  // event bands
+  if(S.useOn){g.fillStyle=css('--moss');g.globalAlpha=.16;g.fillRect(X(S.useM-.5),pad.t,X(T)-X(S.useM-.5),h-pad.t-pad.b);g.globalAlpha=.55;g.fillRect(X(S.useM-.5),pad.t,Math.max(2,X(S.useM)-X(S.useM-.5)),h-pad.t-pad.b);g.globalAlpha=1;}
+  if(S.saleOn){g.fillStyle=css('--blood');g.globalAlpha=.22;g.fillRect(X(S.saleM-.5),pad.t,X(S.saleM+.5)-X(S.saleM-.5),h-pad.t-pad.b);g.globalAlpha=1;}
+  // grid + axes
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const v=yMax*i/4,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(+v.toFixed(2)+'',pad.l-6,y);}
+  const step=w<420?6:4;
+  for(let t=0;t<=T;t+=step){g.textAlign='center';g.textBaseline='top';g.fillText(t,X(t),h-pad.b+6);}
+  g.textAlign='right';g.fillText('month',w-pad.r,h-14);
+  g.textAlign='left';g.textBaseline='top';
+  // lines
+  function line(key,color,dash,width){g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash);g.beginPath();data.forEach((d,i)=>{const x=X(d.t),y=Y(d[key]);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.setLineDash([]);}
+  line('money',css('--steel'),[7,5],2.5);
+  line('P',css('--ochre'),[],3);
+  // selected month
+  const d=data[S.m],x=X(S.m);
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([3,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  [['money','--steel'],['P','--ochre']].forEach(([k,c])=>{g.fillStyle=css(c);g.beginPath();g.arc(x,Y(d[k]),5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+}
+
+// ---- triangle + readouts ----
+function render(){
+  const data=series(),d=data[S.m];
+  // control outputs
+  $('oB0').textContent=S.b0+' T ISK';$('oG').textContent=(S.g>0?'+':'')+S.g+'%';$('oW').textContent=S.w+' M ISK';
+  $('oQ').textContent=S.q+' M PLEX';$('oC').textContent='$'+S.c;
+  $('oSaleM').textContent=S.saleM;$('oBoost').textContent='+'+S.boost+'%';$('oUseM').textContent=S.useM;$('oMult').textContent='×'+S.mult.toFixed(1);
+  $('saleCtl').setAttribute('aria-disabled',!S.saleOn);$('useCtl').setAttribute('aria-disabled',!S.useOn);
+  ['saleM','boost'].forEach(id=>$(id).disabled=!S.saleOn);['useM','mult'].forEach(id=>$(id).disabled=!S.useOn);
+  $('oM').textContent=S.m;$('tMonth').textContent=S.m;$('thM').textContent=S.m;
+  // triangle
+  $('eC').textContent='$'+S.c+' per 500 PLEX';
+  $('eP').textContent=sig(d.P)+' M ISK per PLEX';
+  $('eE').textContent='e = '+sig(d.e)+' M ISK per $';
+  $('bigH').textContent=sig(d.H);$('bigW').textContent=money(d.W);
+  $('triDesc').textContent=`Month ${S.m}. Dollars to PLEX: $${S.c} per 500 PLEX. PLEX to game time: 500 PLEX for 30 days, fixed. PLEX to ISK: ${sig(d.P)} million ISK per PLEX. Derived Dollars to ISK: ${sig(d.e)} million ISK per dollar.`;
+  // readout table
+  const rows=[
+    ['B, ISK spent on PLEX',sig(d.B),'trillion ISK per month'],
+    ['Q, PLEX supplied',sig(d.Q),'million PLEX per month'],
+    ['P, PLEX price',sig(d.P),'million ISK per PLEX'],
+    ['500 PLEX (30 days)',sig(d.plex500),'billion ISK'],
+    ['e, implied exchange rate',sig(d.e),'million ISK per dollar'],
+    ['H, hours to earn 30 days',sig(d.H),'hours'],
+    ['W, implied wage',d.W.toFixed(2),'dollars per hour'],
+    ['Money-only line',sig(d.money),'million ISK per PLEX'],
+    ['Gap, P vs money-only',gapFmt(d.gap),'percent']
+  ];
+  $('readout').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="unit">${r[2]}</td></tr>`).join('');
+  $('fullBody').innerHTML=data.map(x=>`<tr class="${x.t===S.m?'here':''}"><td>${x.t}</td><td>${sig(x.B)}</td><td>${sig(x.Q)}</td><td>${sig(x.P)}</td><td>${sig(x.money)}</td><td>${gapFmt(x.gap)}</td><td>${sig(x.e)}</td><td>${sig(x.H)}</td><td>${x.W.toFixed(2)}</td></tr>`).join('');
+  // insight
+  const isSale=S.saleOn&&S.m===S.saleM&&S.boost>0, isUse=S.useOn&&S.m>=S.useM&&S.mult!==1;
+  const gp=gapFmt(d.gap);
+  let s;
+  if(isSale&&isUse) s=`Month ${S.m} has both a store sale and the new use, so the price is ${gp} off the money line. Two causes, one number. Neither is inflation.`;
+  else if(isSale) s=`Month ${S.m} is the store sale. Supply is up ${S.boost}%, so P drops to ${sig(d.P)} M ISK, ${gp} against the money line. No ISK was destroyed. Read this as deflation and you would be wrong. Next month the price snaps back.`;
+  else if(isUse) s=`Since month ${S.useM} a new PLEX use has players spending ×${S.mult.toFixed(1)} as much of their ISK on PLEX. P is ${sig(d.P)} M ISK, ${gp} above the money line, and not one extra ISK was created. A gauge that reads this as inflation overstates it by ${gp}.`;
+  else s=`In month ${S.m} the price and the money line agree (${sig(d.P)} M ISK). Here the PLEX price is a fair inflation gauge, because supply and token uses have not changed. ${S.g!==0?`ISK incomes compound at ${S.g}% a month, a factor of ${Math.pow(1+S.g/100,S.m).toFixed(2)} since month 0, and P follows exactly.`:'With zero income growth both lines stay flat.'}`;
+  s+=` At this price an hour of play is worth <b>${money(d.W)}</b>.`;
+  $('insight').innerHTML=s;
+  $('chart').setAttribute('aria-label',`Line chart over 24 months. Month ${S.m}: PLEX price ${sig(d.P)} million ISK, money-only line ${sig(d.money)} million ISK, gap ${gp}. Left and right arrow keys change the month.`);
+  drawChart(data);
+}
+
+// ---- controls ----
+function syncInputs(){['c','b0','g','q','w','saleM','boost','useM','mult','m'].forEach(k=>$(k).value=S[k]);$('saleOn').checked=S.saleOn;$('useOn').checked=S.useOn;}
+function clearChips(){document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));}
+['c','b0','g','q','w','saleM','boost','useM','mult'].forEach(k=>$(k).addEventListener('input',e=>{S[k]=+e.target.value;clearChips();render();}));
+$('m').addEventListener('input',e=>{S.m=+e.target.value;render();});
+['saleOn','useOn'].forEach(k=>$(k).addEventListener('change',e=>{S[k]=e.target.checked;clearChips();render();}));
+const SCEN={
+  story:{g:2,saleOn:true,useOn:true,m:24},
+  base:{g:0,saleOn:false,useOn:false,m:0},
+  sale:{g:0,saleOn:true,useOn:false,m:8},
+  use:{g:0,saleOn:false,useOn:true,m:16},
+  growth:{g:2,saleOn:false,useOn:false,m:12}
+};
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  Object.assign(S,{c:20,b0:75,q:15,w:100,saleM:8,boost:50,useM:16,mult:2},SCEN[b.dataset.s]);
+  clearChips();b.setAttribute('aria-pressed','true');syncInputs();render();
+}));
+function pickMonth(t){S.m=Math.max(0,Math.min(T,t));$('m').value=S.m;render();}
+$('chart').addEventListener('click',e=>{if(!geom)return;const r=e.currentTarget.getBoundingClientRect(),px=e.clientX-r.left;pickMonth(Math.round((px-pad.l)/(geom.w-pad.l-pad.r)*T));});
+$('chart').addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowUp'){pickMonth(S.m+1);e.preventDefault();}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){pickMonth(S.m-1);e.preventDefault();}
+  else if(e.key==='Home'){pickMonth(0);e.preventDefault();}
+  else if(e.key==='End'){pickMonth(T);e.preventDefault();}
+});
+window.addEventListener('resize',()=>drawChart(series()));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>drawChart(series()));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+syncInputs();render();
+})();
+</script>
+</body>
+</html>

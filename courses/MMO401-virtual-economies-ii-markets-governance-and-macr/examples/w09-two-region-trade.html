@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Two-region trade · MMO401 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin:0 0 4px}
+h2 small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-areas:"map side" "chart side";gap:14px;align-items:start}
+.a-map{grid-area:map}.a-chart{grid-area:chart}.a-side{grid-area:side}
+@media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"map" "side" "chart"}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 14px 14px;min-width:0}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.town-price{font:700 22px var(--sans);font-variant-numeric:tabular-nums}
+.town-name{font:600 14px var(--sans)}
+.flow-label{font:700 14px var(--sans);font-variant-numeric:tabular-nums}
+.gap-label{font:600 15px var(--sans)}
+@media (max-width:600px){.town-price{font-size:34px}.town-name{font-size:22px}.flow-label,.gap-label{font-size:21px}}
+.flow-dash{stroke-dasharray:6 14;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-20}}
+@media (prefers-reduced-motion:reduce){.flow-dash{animation:none}*{transition:none!important}}
+.bar-wrap{margin-top:8px}
+.bar-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:.9rem}
+.bar-head b{font-size:1.2rem;font-variant-numeric:tabular-nums}
+.bar{position:relative;height:22px;border-radius:5px;background:var(--paper);border:1px solid var(--grid);margin-top:4px;overflow:hidden}
+.bar div{position:absolute;top:0;bottom:0;transition:left .2s,width .2s}
+.bar .seg-t{background:var(--steel)}
+.bar .seg-f{background:repeating-linear-gradient(45deg,var(--ink-soft) 0 4px,transparent 4px 7px)}
+.bar .seg-l{background:var(--blood)}
+.bar .stop{width:0;border-left:2px dashed var(--ink);z-index:2}
+.bar-scale{position:relative;height:18px;font-size:.75rem;color:var(--ink-soft)}
+.bar-scale span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;margin-top:2px}
+.key i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.insight{margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--paper);font-family:var(--serif);font-size:.98rem}
+canvas{display:block;width:100%}
+#cPrice{height:280px}
+#cGain{height:150px;margin-top:10px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:20px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.side h3{font-size:.95rem;margin:0 0 6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .84rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sliders{display:grid;gap:8px;margin-top:14px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+label .sym{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--ink-soft)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;margin-top:14px}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th{text-align:left;font-weight:600}
+td.sub{font-size:.8rem;color:var(--ink-soft);text-align:left}
+tr.key-row td,tr.key-row th{background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO401 Virtual Economies II · Week 9 · Worked example</p>
+  <h1>The price gap is the cost of the trip</h1>
+  <p class="lede">Two towns trade one good. Change the road and watch the frontier price. Whatever rule you touch, the gap between the towns always equals the transport cost &tau;. Past &tau; = 20, trade stops.</p>
+</header>
+
+<div class="panel">
+<div class="layout">
+
+  <figure class="a-map">
+    <h2>The route<small>Town prices, and an arrow as wide as the daily flow from hub to frontier</small></h2>
+    <svg id="map" viewBox="0 0 600 190" role="img" aria-labelledby="mapDesc">
+      <desc id="mapDesc">Map of the hub and the frontier joined by a road, with prices and trade flow.</desc>
+      <rect x="140" y="104" width="320" height="22" rx="11" fill="var(--grid)"/>
+      <line x1="150" y1="115" x2="450" y2="115" stroke="var(--paper)" stroke-width="2" stroke-dasharray="10 8"/>
+      <polygon id="arrow" fill="var(--moss)" opacity=".85" points=""/>
+      <line id="arrowDash" class="flow-dash" x1="160" y1="115" x2="420" y2="115" stroke="var(--paper)" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+      <text id="flowLabel" class="flow-label" x="300" y="170" text-anchor="middle" fill="var(--ink)"></text>
+      <!-- Hub: generic house shape -->
+      <g transform="translate(80,115)">
+        <polygon points="-38,6 0,-26 38,6 38,38 -38,38" fill="var(--steel)"/>
+        <rect x="-9" y="16" width="18" height="22" fill="var(--paper-2)"/>
+      </g>
+      <text class="town-name" x="80" y="176" text-anchor="middle" fill="var(--ink)">Hub (A)</text>
+      <text id="pA" class="town-price" x="80" y="68" text-anchor="middle" fill="var(--steel)"></text>
+      <!-- Frontier: generic tower shape -->
+      <g transform="translate(520,115)">
+        <polygon points="-30,38 -30,-6 -20,-6 -20,-18 -8,-18 -8,-6 8,-6 8,-18 20,-18 20,-6 30,-6 30,38" fill="var(--blood)"/>
+        <rect x="-8" y="16" width="16" height="22" fill="var(--paper-2)"/>
+      </g>
+      <text class="town-name" x="520" y="176" text-anchor="middle" fill="var(--ink)">Frontier (B)</text>
+      <text id="pB" class="town-price" x="520" y="68" text-anchor="middle" fill="var(--blood)"></text>
+      <text id="gapLabel" class="gap-label" x="300" y="34" text-anchor="middle" fill="var(--ink)"></text>
+    </svg>
+
+    <div class="bar-wrap">
+      <div class="bar-head"><span>Transport cost per unit, &tau;</span><b id="tauBig"></b></div>
+      <div class="bar" aria-hidden="true">
+        <div class="seg-t" id="segT"></div><div class="seg-f" id="segF"></div><div class="seg-l" id="segL"></div><div class="stop" id="stopMark"></div>
+      </div>
+      <div class="bar-scale" id="barScale" aria-hidden="true"></div>
+      <div class="key">
+        <span><i style="background:var(--steel)"></i>Time <span id="kT"></span></span>
+        <span><i style="background:repeating-linear-gradient(45deg,var(--ink-soft) 0 4px,transparent 4px 7px)"></i>Toll <span id="kF"></span></span>
+        <span><i style="background:var(--blood)"></i>Expected loss <span id="kL"></span></span>
+        <span><i style="width:0;border-left:2px dashed var(--ink);border-radius:0"></i>Trade stops at 20</span>
+      </div>
+    </div>
+    <div class="insight" id="insight" aria-live="polite"></div>
+  </figure>
+
+  <aside class="a-side side">
+    <h3>Route presets (lecture table rows)</h3>
+    <div class="presets" role="group" aria-label="Route presets">
+      <button class="chip" data-p="0.5,200,0,0,600">Safe highway</button>
+      <button class="chip" data-p="2,200,0,0,600">Long road</button>
+      <button class="chip" data-p="0.5,200,10,0,600">Short, dangerous</button>
+      <button class="chip" data-p="2,200,10,0,600">Long and dangerous</button>
+      <button class="chip" data-p="0.5,200,0,5,600">Highway with toll</button>
+      <button class="chip" data-p="0.5,50,0,0,600">Small cargo</button>
+      <button class="chip" data-p="0,200,0,0,600">Global market</button>
+    </div>
+    <div class="sliders">
+      <div><label for="h">Trip time <span><span class="sym">h</span> <output id="oh"></output></span></label>
+        <input id="h" type="range" min="0" max="5" step="0.1" value="0.5"></div>
+      <div><label for="k">Capacity <span><span class="sym">k</span> <output id="ok"></output></span></label>
+        <input id="k" type="range" min="10" max="500" step="10" value="200"></div>
+      <div><label for="lam">Loss chance <span><span class="sym">&lambda;</span> <output id="olam"></output></span></label>
+        <input id="lam" type="range" min="0" max="40" step="0.5" value="0"></div>
+      <div><label for="f">Toll <span><span class="sym">f</span> <output id="of"></output></span></label>
+        <input id="f" type="range" min="0" max="20" step="0.5" value="0"></div>
+      <div><label for="w">Hauler wage <span><span class="sym">w</span> <output id="ow"></output></span></label>
+        <input id="w" type="range" min="100" max="2000" step="50" value="600"></div>
+    </div>
+    <table aria-label="Current route values">
+      <tbody>
+        <tr><th scope="row">t0 = w&middot;h/k + f</th><td id="rT0"></td></tr>
+        <tr class="key-row"><th scope="row">&tau;</th><td id="rTau"></td></tr>
+        <tr><th scope="row">P_A (hub)</th><td id="rPA"></td></tr>
+        <tr><th scope="row">P_B (frontier)</th><td id="rPB"></td></tr>
+        <tr class="key-row"><th scope="row">Gap P_B &minus; P_A</th><td id="rGap"></td></tr>
+        <tr><th scope="row">Flow F (units/day)</th><td id="rF"></td></tr>
+        <tr><th scope="row">Gains from trade G</th><td id="rG"></td></tr>
+        <tr><th scope="row">Expected loss per unit &lambda;&middot;P_A</th><td id="rLoss"></td></tr>
+      </tbody>
+    </table>
+  </aside>
+
+  <figure class="a-chart">
+    <h2>Prices against transport cost<small>Every possible route on one chart. The marker is the route above.</small></h2>
+    <canvas id="cPrice" role="img" aria-label="Hub and frontier prices and trade flow plotted against transport cost from 0 to 25"></canvas>
+    <div class="legend">
+      <span><i style="border-color:var(--steel)"></i>P_A hub</span>
+      <span><i style="border-color:var(--blood)"></i>P_B frontier</span>
+      <span><i style="border-color:var(--moss);border-top-style:dashed"></i>Flow F (right axis)</span>
+    </div>
+    <canvas id="cGain" role="img" aria-label="Gains from trade plotted against transport cost"></canvas>
+  </figure>
+
+</div>
+</div>
+
+<footer>Model from the lecture: demand Q = 100 &minus; P in both regions, supply Q = P in the hub and Q = P &minus; 40 in the frontier. &tau; = (w&middot;h/k + f + 60&lambda;) / (1 + &lambda;/2) while trade flows. When trade stops, the table shows the cost at the autarky hub price, w&middot;h/k + f + 50&lambda;, which is also at least 20. Towns are generic shapes.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2=n=>n.toFixed(2);
+const S={h:0.5,k:200,lam:0,f:0,w:600};
+
+function model(s){
+  const lam=s.lam/100,time=s.w*s.h/s.k,t0=time+s.f;
+  let tau=(t0+60*lam)/(1+lam/2);
+  if(tau>=20){
+    const PA=50;
+    return {t0,time,lam,tau:t0+lam*PA,PA,PB:70,F:0,G:0,loss:lam*PA,capped:true};
+  }
+  const PA=60-tau/2;
+  return {t0,time,lam,tau,PA,PB:60+tau/2,F:20-tau,G:(20-tau)*(20-tau)/2,loss:lam*PA,capped:false};
+}
+
+function drawMap(m){
+  $('pA').textContent=f2(m.PA);$('pB').textContent=f2(m.PB);
+  const gap=m.PB-m.PA;
+  $('gapLabel').textContent=m.capped?`Gap ${f2(gap)} (autarky). Nobody hauls.`:`Gap ${f2(gap)} = τ ${f2(m.tau)}`;
+  const hw=m.F>0?(2+m.F*0.9):0;
+  const x0=150,x1=450,head=Math.max(16,hw*1.6);
+  const arrow=$('arrow'),dash=$('arrowDash');
+  if(m.F>0){
+    const y=115,hh=hw+7;
+    arrow.setAttribute('points',`${x0},${y-hw} ${x1-head},${y-hw} ${x1-head},${y-hh} ${x1},${y} ${x1-head},${y+hh} ${x1-head},${y+hw} ${x0},${y+hw}`);
+    arrow.style.display='';dash.style.display='';dash.setAttribute('x2',x1-head-4);
+    $('flowLabel').textContent=`Flow F = ${f2(m.F)} units/day`;
+  }else{
+    arrow.style.display='none';dash.style.display='none';
+    $('flowLabel').textContent='Flow F = 0. Arrow hidden.';
+  }
+}
+
+function drawBar(m){
+  const max=Math.max(25,Math.ceil(m.tau/5)*5);
+  const loss=m.tau-m.t0; // equals lambda * P_A
+  const pct=v=>(100*v/max);
+  $('segT').style.left='0%';$('segT').style.width=pct(m.time)+'%';
+  $('segF').style.left=pct(m.time)+'%';$('segF').style.width=pct(S.f)+'%';
+  $('segL').style.left=pct(m.t0)+'%';$('segL').style.width=pct(Math.max(0,loss))+'%';
+  $('stopMark').style.left=pct(20)+'%';
+  const ticks=max===25?[0,10,20,25]:[0,20,max];
+  $('barScale').innerHTML=ticks.map(v=>`<span style="left:${Math.min(97,Math.max(3,pct(v)))}%">${v}</span>`).join('');
+  $('tauBig').textContent=(m.capped?'≥ 20: ':'')+f2(m.tau);
+  $('kT').textContent=f2(m.time);$('kF').textContent=f2(S.f);$('kL').textContent=f2(m.loss);
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+
+function drawPrice(m){
+  const {g,w,h}=setupCanvas($('cPrice'));
+  const pad={l:40,r:40,t:14,b:34};
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/25;
+  const Yp=p=>pad.t+(h-pad.t-pad.b)*(1-(p-40)/40);   // price 40..80
+  const Yf=q=>pad.t+(h-pad.t-pad.b)*(1-q/40);        // flow 0..40, so 20 sits mid-height
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),blood=css('--blood'),moss=css('--moss'),ochre=css('--ochre');
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let p=40;p<=80;p+=10){g.strokeStyle=grid;g.beginPath();g.moveTo(pad.l,Yp(p));g.lineTo(w-pad.r,Yp(p));g.stroke();
+    g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText(p,pad.l-6,Yp(p));}
+  for(let q=0;q<=40;q+=10){g.fillStyle=moss;g.textAlign='left';g.fillText(q,w-pad.r+6,Yf(q));}
+  for(let t=0;t<=25;t+=5){g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText(t,X(t),h-pad.b+6);}
+  g.textAlign='right';g.fillText('τ',w-pad.r,h-14);
+  g.save();g.translate(12,pad.t+(h-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillStyle=soft;g.fillText('price',0,0);g.restore();
+  const PA=t=>t>=20?50:60-t/2,PB=t=>t>=20?70:60+t/2,F=t=>Math.max(0,20-t);
+  // shaded gap
+  g.fillStyle=ochre;g.globalAlpha=.14;g.beginPath();
+  for(let i=0;i<=250;i++){const t=25*i/250;i?g.lineTo(X(t),Yp(PB(t))):g.moveTo(X(t),Yp(PB(t)));}
+  for(let i=250;i>=0;i--){const t=25*i/250;g.lineTo(X(t),Yp(PA(t)));}
+  g.fill();g.globalAlpha=1;
+  // trade stops line
+  g.strokeStyle=soft;g.setLineDash([3,4]);g.beginPath();g.moveTo(X(20),pad.t);g.lineTo(X(20),h-pad.b);g.stroke();g.setLineDash([]);
+  g.fillStyle=soft;g.textAlign='right';g.textBaseline='top';g.fillText('trade stops',X(20)-4,pad.t+2);
+  const line=(fn,Y,col,dash,wd)=>{g.strokeStyle=col;g.lineWidth=wd||2.5;g.setLineDash(dash||[]);g.beginPath();
+    for(let i=0;i<=250;i++){const t=25*i/250;i?g.lineTo(X(t),Y(fn(t))):g.moveTo(X(t),Y(fn(t)));}g.stroke();g.setLineDash([]);};
+  line(F,Yf,moss,[7,5]);line(PA,Yp,steel);line(PB,Yp,blood);
+  // direct labels
+  g.font='600 12px '+css('--sans');g.textBaseline='bottom';g.textAlign='left';
+  g.fillStyle=blood;g.fillText('P_B frontier',X(9),Yp(PB(9))-5);
+  g.fillStyle=steel;g.textBaseline='top';g.fillText('P_A hub',X(9),Yp(PA(9))+5);
+  g.fillStyle=moss;g.textBaseline='bottom';g.textBaseline='top';g.fillText('flow F',X(14.5),Yf(F(14.5))+4);
+  // marker
+  const tm=Math.min(m.tau,25),off=m.tau>25;
+  g.strokeStyle=ink;g.lineWidth=1.5;g.globalAlpha=.55;g.beginPath();g.moveTo(X(tm),pad.t);g.lineTo(X(tm),h-pad.b);g.stroke();g.globalAlpha=1;
+  const dot=(y,col)=>{g.fillStyle=col;g.beginPath();g.arc(X(tm),y,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();};
+  // gap bracket
+  if(!m.capped){g.strokeStyle=ochre;g.lineWidth=3;g.beginPath();g.moveTo(X(tm),Yp(m.PA));g.lineTo(X(tm),Yp(m.PB));g.stroke();}
+  dot(Yp(m.PA),steel);dot(Yp(m.PB),blood);dot(Yf(m.F),moss);
+  g.font='700 12px '+css('--sans');g.fillStyle=ink;g.textBaseline='middle';
+  const lbl=`τ = ${f2(m.tau)}${off?' →':''}`;
+  const right=X(tm)+8+g.measureText(lbl).width<w-pad.r;
+  g.textAlign=right?'left':'right';g.fillText(lbl,X(tm)+(right?8:-8),Yp(73.5));
+}
+
+function drawGain(m){
+  const {g,w,h}=setupCanvas($('cGain'));
+  const pad={l:40,r:40,t:22,b:26};
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/25,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/200);
+  const soft=css('--ink-soft'),grid=css('--grid'),ochre=css('--ochre'),ink=css('--ink');
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.fillStyle=ink;g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('Gains from trade G = (20 − τ)² / 2',pad.l,2);
+  g.font='12px '+css('--sans');
+  for(let v=0;v<=200;v+=100){g.strokeStyle=grid;g.lineWidth=1;g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();
+    g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,Y(v));}
+  for(let t=0;t<=25;t+=5){g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';g.fillText(t,X(t),h-pad.b+5);}
+  const G=t=>Math.max(0,20-t)**2/2;
+  g.fillStyle=ochre;g.globalAlpha=.18;g.beginPath();g.moveTo(X(0),Y(0));
+  for(let i=0;i<=250;i++){const t=25*i/250;g.lineTo(X(t),Y(G(t)));}g.lineTo(X(25),Y(0));g.fill();g.globalAlpha=1;
+  g.strokeStyle=ochre;g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=250;i++){const t=25*i/250;i?g.lineTo(X(t),Y(G(t))):g.moveTo(X(t),Y(G(t)));}g.stroke();
+  const tm=Math.min(m.tau,25);
+  g.fillStyle=ochre;g.beginPath();g.arc(X(tm),Y(m.G),5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  const lbl=`G = ${f2(m.G)}`;g.fillStyle=ink;g.font='700 12px '+css('--sans');g.textBaseline='bottom';
+  const right=X(tm)+8+g.measureText(lbl).width<w-pad.r;g.textAlign=right?'left':'right';
+  g.fillText(lbl,X(tm)+(right?8:-8),Y(m.G)-4);
+}
+
+function table(m){
+  $('rT0').textContent=f2(m.t0);
+  $('rTau').textContent=(m.capped?'≥ 20 ('+f2(m.tau)+')':f2(m.tau));
+  $('rPA').textContent=f2(m.PA);$('rPB').textContent=f2(m.PB);$('rGap').textContent=f2(m.PB-m.PA);
+  $('rF').textContent=f2(m.F);$('rG').textContent=f2(m.G);$('rLoss').textContent=f2(m.loss);
+}
+
+function insight(m){
+  const s=$('insight');
+  if(m.capped){s.innerHTML=`Moving one unit costs <b>${f2(m.tau)}</b>, more than the autarky gap of 20. Hauling loses money, so the arrow is gone and each town pays its own price: <b>50</b> at the hub, <b>70</b> at the frontier.`;return;}
+  const share=m.G/200*100;
+  let t=`The frontier pays <b>${f2(m.PB)}</b>, exactly <b>${f2(m.tau)}</b> more than the hub. `;
+  t+=`${f2(m.F)} units a day make the trip, and the route keeps <b>${share.toFixed(0)}%</b> of the gains a free road would create. `;
+  if(m.loss>m.time+S.f&&m.loss>0) t+=`Most of τ is expected loss, so a bigger cargo hold would barely move prices.`;
+  else if(S.f>m.time&&S.f>0) t+=`Most of τ is the toll, a per-unit tax on the route.`;
+  else if(m.tau>0) t+=`Most of τ is hauler time, so capacity and trip length are the levers.`;
+  else t+=`With τ = 0 the two towns are one market. No gap, no haulers.`;
+  s.innerHTML=t;
+}
+
+function syncSliders(){
+  $('h').value=S.h;$('k').value=S.k;$('lam').value=S.lam;$('f').value=S.f;$('w').value=S.w;
+}
+function labels(){
+  $('oh').textContent=S.h.toFixed(1)+' h';$('ok').textContent=S.k+' units';
+  $('olam').textContent=(+S.lam).toFixed(1).replace(/\.0$/,'')+'%';
+  $('of').textContent=(+S.f).toFixed(1).replace(/\.0$/,'')+' gold';
+  $('ow').textContent=S.w.toLocaleString('en-US')+' gold/h';
+}
+function markPreset(){
+  document.querySelectorAll('.chip').forEach(b=>{
+    const [h,k,l,f,w]=b.dataset.p.split(',').map(Number);
+    b.setAttribute('aria-pressed',String(Math.abs(h-S.h)<1e-9&&k===S.k&&l===S.lam&&f===S.f&&w===S.w));
+  });
+}
+function update(){
+  const m=model(S);labels();drawMap(m);drawBar(m);table(m);insight(m);drawPrice(m);drawGain(m);markPreset();
+}
+['h','k','lam','f','w'].forEach(id=>$(id).addEventListener('input',e=>{S[id]=+e.target.value;update();}));
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const [h,k,l,f,w]=b.dataset.p.split(',').map(Number);Object.assign(S,{h,k,lam:l,f,w});syncSliders();update();
+}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+syncSliders();update();
+})();
+</script>
+</body>
+</html>

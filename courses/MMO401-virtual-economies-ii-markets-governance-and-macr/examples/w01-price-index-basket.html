@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Price index basket · MMO401 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--warm:var(--blood);--cool:var(--steel);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0}
+h2 small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem}
+h3{font-size:.95rem;margin:0 0 8px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 14px 14px;min-width:0}
+/* Left: price change bars */
+.hbars{margin-top:12px}
+.hrow{display:grid;grid-template-columns:7.2em 1fr 4.2em;align-items:center;gap:8px;min-height:40px}
+.hrow .name{font-weight:600;font-size:.9rem;line-height:1.2}
+.hrow .name small{display:block;font-weight:400;color:var(--ink-soft);font-size:.74rem}
+.hrow.out .name,.hrow.out .val{opacity:.5}
+.hrow.out .bar{opacity:.3}
+.track{position:relative;height:22px}
+.bar{position:absolute;top:3px;height:16px;border-radius:3px;transition:left .25s,width .25s}
+.bar.up{background:var(--warm)}.bar.down{background:var(--cool)}
+.bar.clip-r{border-top-right-radius:0;border-bottom-right-radius:0;box-shadow:inset -4px 0 0 var(--ink)}
+.bar.clip-l{border-top-left-radius:0;border-bottom-left-radius:0;box-shadow:inset 4px 0 0 var(--ink)}
+.hrow .val{font-variant-numeric:tabular-nums;font-weight:700;text-align:right;font-size:.95rem}
+.zero{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);transform:translateX(-1px)}
+.gridline{position:absolute;top:0;bottom:0;width:1px;background:var(--grid)}
+.haxis{display:grid;grid-template-columns:7.2em 1fr 4.2em;gap:8px;margin-top:4px}
+.haxis .ticks{position:relative;height:18px;font-size:.75rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.haxis .ticks span{position:absolute;transform:translateX(-50%)}
+.hgrid{position:absolute;inset:0;pointer-events:none}
+@media (max-width:480px){.hrow,.haxis{grid-template-columns:5.4em 1fr 3.3em;gap:6px}.hrow .name{font-size:.84rem}.hrow .val{font-size:.88rem}.haxis .ticks{font-size:.68rem}}
+/* Right: index bars */
+.verdict{font-family:var(--serif);font-size:1.35rem;font-weight:600;margin:8px 0 2px;font-variant-numeric:tabular-nums}
+.verdict.up{color:var(--warm)}.verdict.down{color:var(--cool)}
+.verdict-sub{font-size:.85rem;color:var(--ink-soft);margin:0 0 8px}
+.vchart{position:relative;height:230px;margin:6px 0 0 34px}
+.vchart .yl{position:absolute;left:-36px;width:30px;text-align:right;font-size:.75rem;color:var(--ink-soft);transform:translateY(-50%);font-variant-numeric:tabular-nums}
+.vchart .gl{position:absolute;left:0;right:0;height:1px;background:var(--grid)}
+.vchart .ref{position:absolute;left:0;right:0;border-top:2px dashed var(--ink)}
+.vchart .ref span{position:absolute;right:2px;top:-19px;font-size:.75rem;color:var(--ink-soft);background:var(--paper-2);padding:0 3px}
+.cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:0 10px}
+.col{position:relative}
+.vbar{position:absolute;left:12%;right:12%;border-radius:3px;transition:top .25s,height .25s;opacity:.45}
+.vbar.up{background:var(--warm)}.vbar.down{background:var(--cool)}
+.col.hi .vbar{opacity:1;outline:2px solid var(--ink);outline-offset:1px}
+.vval{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:.95rem;transition:top .25s}
+.xl{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:0 10px;margin:6px 0 0 34px;text-align:center;font-size:.85rem;font-weight:600}
+.xl span.hi{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.na-msg{font-size:.85rem;color:var(--blood);margin:6px 0 0;min-height:1.3em}
+/* Headline strip */
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 0}
+@media (max-width:760px){.strip{grid-template-columns:1fr}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+/* Controls */
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.ctl{grid-template-columns:1fr}}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg span{display:inline-block;font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel)}
+.seg input:checked+span{background:var(--steel);color:var(--paper)}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.checks{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.9rem}
+.checks label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.checks input{width:18px;height:18px;accent-color:var(--steel)}
+.sliders{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-top:16px}
+@media (max-width:760px){.sliders{grid-template-columns:1fr}}
+.sl label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+.sl label output{font-variant-numeric:tabular-nums;font-weight:700}
+.sl label small{font-weight:400;color:var(--ink-soft)}
+.rw{position:relative}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0;display:block}
+.tick{position:absolute;bottom:-3px;width:2px;height:9px;background:var(--ochre);transform:translateX(-1px);pointer-events:none}
+.tickkey{display:inline-block;width:2px;height:10px;background:var(--ochre);vertical-align:middle;margin:0 4px}
+button.reset{font:600 .9rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.row-end{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.hint{font-size:.85rem;color:var(--ink-soft);margin:0}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;max-width:560px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td code{font-size:.88rem}
+caption{text-align:left;font-weight:600;padding-bottom:6px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO401 Virtual Economies II · Week 1 · Worked example</p>
+  <h1>Same prices, opposite headlines</h1>
+  <p class="lede">The price bars on the left never move when you change the basket or the formula. The verdict on the right does. Laspeyres calls this month inflation, Paasche calls it deflation, and a veteran's basket fell 20% while a new player's rose 35%.</p>
+</header>
+
+<section class="panel" aria-label="Price index worked example">
+  <div class="views">
+    <figure>
+      <h2>What prices did<small>Month 0 to month 1 price change, <code>p1/p0 − 1</code></small></h2>
+      <div class="hbars" id="hbars"></div>
+      <div class="haxis" aria-hidden="true"><span></span><div class="ticks" id="hticks"></div><span></span></div>
+    </figure>
+    <figure>
+      <h2>What the index says<small>Base month = 100, for the selected basket</small></h2>
+      <p class="verdict" id="verdict" aria-live="polite">&nbsp;</p>
+      <p class="verdict-sub" id="verdictSub">&nbsp;</p>
+      <div class="vchart" id="vchart" role="img" aria-label="Laspeyres, Paasche and Fisher index values">
+        <div class="cols" id="cols"></div>
+      </div>
+      <div class="xl" id="xl" aria-hidden="true"><span>Laspeyres</span><span>Paasche</span><span>Fisher</span></div>
+      <p class="na-msg" id="naMsg"></p>
+    </figure>
+  </div>
+
+  <div class="strip" aria-live="polite">
+    <div class="stat" style="--c:var(--ochre)"><b id="sNew">n/a</b><span id="sNewL">New player basket</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="sVet">n/a</b><span id="sVetL">Veteran basket</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="sAll">n/a</b><span id="sAllL">All goods</span></div>
+  </div>
+  <div class="insight" id="insight"></div>
+
+  <div class="ctl">
+    <fieldset>
+      <legend>Basket</legend>
+      <div class="seg" id="basketSeg">
+        <label><input type="radio" name="basket" value="all" checked><span>All goods</span></label>
+        <label><input type="radio" name="basket" value="new"><span>New player</span></label>
+        <label><input type="radio" name="basket" value="vet"><span>Veteran</span></label>
+        <label><input type="radio" name="basket" value="custom"><span>Custom</span></label>
+      </div>
+      <div class="checks" id="checks" hidden></div>
+    </fieldset>
+    <fieldset>
+      <legend>Highlighted formula (drives the verdict)</legend>
+      <div class="seg">
+        <label><input type="radio" name="formula" value="L" checked><span>Laspeyres</span></label>
+        <label><input type="radio" name="formula" value="P"><span>Paasche</span></label>
+        <label><input type="radio" name="formula" value="F"><span>Fisher</span></label>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="sliders">
+    <div><h3>Month-1 prices</h3><div id="pSliders"></div></div>
+    <div><h3>Month-1 quantities traded</h3><div id="qSliders"></div></div>
+  </div>
+  <div class="row-end">
+    <p class="hint"><span class="tickkey" aria-hidden="true"></span>marks the month-0 value on each slider.</p>
+    <button class="reset" id="reset" type="button">Reset to lecture defaults</button>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-describedby="tblCap">
+      <caption id="tblCap">Sums and indices for the selected basket</caption>
+      <thead><tr><th>Quantity</th><th>Value</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Laspeyres L = 100 × Σ p1 q0 / Σ p0 q0. Paasche P = 100 × Σ p1 q1 / Σ p0 q1. Fisher F = √(L × P). Goods and prices are the lecture's teaching data, not taken from any game. Bars past the axis end are cut off with a dark edge; the printed number is exact.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const one=n=>n.toFixed(1);
+const signed=n=>(n>0?'+':n<0?'−':'')+Math.abs(n).toFixed(1);
+const GOODS=[
+  {name:'Ore',sub:'raw material',p0:10,q0:1000,p1:15,q1:700,pr:[5,30,1],qr:[200,1500,10]},
+  {name:'Health potion',sub:'consumable',p0:20,q0:300,p1:22,q1:320,pr:[10,40,1],qr:[100,500,5]},
+  {name:'Mid-tier sword',sub:'gear',p0:500,q0:20,p1:400,q1:30,pr:[200,800,10],qr:[5,60,1]},
+  {name:'Mount',sub:'luxury',p0:5000,q0:2,p1:4000,q1:3,pr:[2000,8000,100],qr:[0,8,1]}
+];
+const DEF=GOODS.map(g=>({p1:g.p1,q1:g.q1}));
+const PRESETS={all:[1,1,1,1],new:[1,1,0,0],vet:[0,0,1,1]};
+let basket='all',custom=[1,1,1,1],formula='L';
+const FNAME={L:'Laspeyres',P:'Paasche',F:'Fisher'};
+
+function sel(){return basket==='custom'?custom:PRESETS[basket];}
+function compute(mask){
+  let a=0,b=0,c=0,d=0;
+  GOODS.forEach((g,i)=>{if(!mask[i])return;a+=g.p0*g.q0;b+=g.p1*g.q0;c+=g.p0*g.q1;d+=g.p1*g.q1;});
+  const L=a>0?100*b/a:null,P=c>0?100*d/c:null,F=(L!==null&&P!==null)?Math.sqrt(L*P):null;
+  return {a,b,c,d,L,P,F};
+}
+function verdictOf(v){
+  if(v===null)return {t:'n/a',cls:''};
+  const r=Math.round(v*10)/10,d=r-100;
+  if(Math.abs(d)<=0.5)return {t:'Flat',cls:''};
+  return d>0?{t:'Inflation '+signed(d)+'%',cls:'up'}:{t:'Deflation '+signed(d)+'%',cls:'down'};
+}
+
+// Left panel
+const HMIN=-50,HMAX=100,hx=v=>(Math.min(HMAX,Math.max(HMIN,v))-HMIN)/(HMAX-HMIN)*100;
+function buildLeft(){
+  $('hbars').innerHTML=GOODS.map((g,i)=>`<div class="hrow" id="hr${i}"><div class="name">${g.name}<small>${g.sub}</small></div><div class="track"><div class="hgrid">${[-50,0,50,100].map(v=>v===0?'':`<div class="gridline" style="left:${hx(v)}%"></div>`).join('')}<div class="zero" style="left:${hx(0)}%"></div></div><div class="bar" id="hb${i}"></div></div><div class="val" id="hv${i}"></div></div>`).join('');
+  $('hticks').innerHTML=[-50,0,50,100].map(v=>`<span style="left:${hx(v)}%">${v>0?'+':v<0?'−':''}${Math.abs(v)}%</span>`).join('');
+}
+function drawLeft(mask){
+  GOODS.forEach((g,i)=>{
+    const ch=(g.p1/g.p0-1)*100,z=hx(0),x=hx(ch),b=$('hb'+i);
+    b.className='bar '+(ch>=0?'up':'down')+(ch>HMAX?' clip-r':'')+(ch<HMIN?' clip-l':'');
+    b.style.left=Math.min(z,x)+'%';b.style.width=Math.max(Math.abs(x-z),ch===0?0:0.6)+'%';
+    $('hv'+i).textContent=(ch>0?'+':ch<0?'−':'')+Math.abs(ch).toFixed(1).replace(/\.0$/,'')+'%';
+    $('hr'+i).classList.toggle('out',!mask[i]);
+    $('hr'+i).setAttribute('aria-label',`${g.name}: price ${g.p0} to ${g.p1}, ${$('hv'+i).textContent}${mask[i]?'':', not in basket'}`);
+  });
+}
+
+// Right panel
+const VMIN=60,VMAX=150,vy=v=>(1-(Math.min(VMAX,Math.max(VMIN,v))-VMIN)/(VMAX-VMIN))*100;
+function buildRight(){
+  const ch=$('vchart');
+  [60,80,100,120,140,150].forEach(v=>{
+    if(v!==100){const l=document.createElement('div');l.className='gl';l.style.top=vy(v)+'%';ch.insertBefore(l,$('cols'));}
+    const t=document.createElement('div');t.className='yl';t.style.top=vy(v)+'%';t.textContent=v;ch.appendChild(t);
+  });
+  const r=document.createElement('div');r.className='ref';r.style.top=vy(100)+'%';r.innerHTML='<span>no change</span>';ch.appendChild(r);
+  $('cols').innerHTML=['L','P','F'].map(k=>`<div class="col" id="c${k}"><div class="vbar" id="vb${k}"></div><div class="vval" id="vv${k}"></div></div>`).join('');
+}
+function drawRight(r){
+  ['L','P','F'].forEach(k=>{
+    const v=r[k],bar=$('vb'+k),lab=$('vv'+k);
+    $('c'+k).classList.toggle('hi',k===formula);
+    if(v===null){bar.style.height='0';bar.style.top=vy(100)+'%';lab.textContent='n/a';lab.style.top='calc('+vy(100)+'% - 26px)';return;}
+    const y=vy(v),z=vy(100);
+    bar.className='vbar '+(v>=100?'up':'down');
+    bar.style.top=Math.min(y,z)+'%';bar.style.height=Math.max(Math.abs(y-z),0.8)+'%';
+    lab.textContent=one(v);
+    lab.style.top=v>=100?'calc('+y+'% - 24px)':'calc('+y+'% + 4px)';
+    if(v<VMIN+6)lab.style.top='calc('+y+'% - 22px)';
+  });
+  document.querySelectorAll('#xl span').forEach((s,i)=>s.classList.toggle('hi',['L','P','F'][i]===formula));
+  $('vchart').setAttribute('aria-label',`Laspeyres ${r.L===null?'n/a':one(r.L)}, Paasche ${r.P===null?'n/a':one(r.P)}, Fisher ${r.F===null?'n/a':one(r.F)}`);
+  const vd=verdictOf(r[formula]);
+  $('verdict').textContent=vd.t;$('verdict').className='verdict '+vd.cls;
+  const others=['L','P','F'].filter(k=>k!==formula).map(k=>`${FNAME[k]}: ${verdictOf(r[k]).t}`).join(' · ');
+  $('verdictSub').textContent=`${FNAME[formula]} ${r[formula]===null?'n/a':one(r[formula])}. ${others}`;
+  const n=!sel().some(Boolean);
+  $('naMsg').textContent=n?'The basket is empty. Tick at least one good.':(r.L===null||r.P===null)?'No trades in this basket in that period.':'';
+}
+
+function draw(){
+  const mask=sel(),r=compute(mask);
+  drawLeft(mask);drawRight(r);
+  // headline strip: the three fixed presets under the highlighted formula
+  [['new','sNew'],['vet','sVet'],['all','sAll']].forEach(([k,id])=>{
+    const v=compute(PRESETS[k])[formula];
+    $(id).textContent=v===null?'n/a':one(v)+' ('+verdictOf(v).t+')';
+    $(id+'L').textContent={new:'New player basket',vet:'Veteran basket',all:'All goods'}[k]+', '+FNAME[formula];
+  });
+  // insight
+  let s='';
+  if(r.L!==null&&r.P!==null){
+    const vl=verdictOf(r.L),vp=verdictOf(r.P),gap=Math.round(r.L*10)/10-Math.round(r.P*10)/10;
+    if(vl.cls&&vp.cls&&vl.cls!==vp.cls) s=`Laspeyres says <b>${vl.t.toLowerCase()}</b>, Paasche says <b>${vp.t.toLowerCase()}</b>, from the same prices. The ${one(Math.abs(gap))}-point gap is substitution: players bought less of what got dearer and more of what got cheaper.`;
+    else if(Math.abs(gap)<0.05) s=`Laspeyres and Paasche agree at ${one(r.L)}. That happens when month-1 quantities match month-0 quantities in proportion, or when every price in the basket moved by the same percentage.`;
+    else s=`Laspeyres and Paasche differ by ${one(Math.abs(gap))} points. ${Math.abs(gap)>2?'A gap this large is a finding in itself: players are substituting hard.':'A small gap means little substitution between the goods in this basket.'}`;
+  } else s='With no trades on one side, only part of the story can be priced. Pick a basket with trades in both months.';
+  const nv=compute(PRESETS.new)[formula],vv=compute(PRESETS.vet)[formula];
+  if(nv!==null&&vv!==null&&verdictOf(nv).cls&&verdictOf(vv).cls&&verdictOf(nv).cls!==verdictOf(vv).cls)
+    s+=` Switch baskets and the headline flips again: new players see ${verdictOf(nv).t.toLowerCase()}, veterans see ${verdictOf(vv).t.toLowerCase()}.`;
+  $('insight').innerHTML=s;
+  // table
+  const na=v=>v===null?'n/a':one(v);
+  $('tbody').innerHTML=[
+    ['<code>Σ p0 q0</code>',fmt(r.a)],['<code>Σ p1 q0</code>',fmt(r.b)],['<code>Σ p0 q1</code>',fmt(r.c)],['<code>Σ p1 q1</code>',fmt(r.d)],
+    ['Laspeyres L',na(r.L)],['Paasche P',na(r.P)],['Fisher F',na(r.F)]
+  ].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('');
+}
+
+// Sliders
+function slider(i,kind){
+  const g=GOODS[i],[mn,mx,st]=kind==='p'?g.pr:g.qr,v0=kind==='p'?g.p0:g.q0,id=kind+i;
+  const f=(v0-mn)/(mx-mn);
+  return `<div class="sl"><label for="${id}"><span>${g.name} <small>(month 0: ${fmt(v0)})</small></span><output id="o${id}"></output></label><div class="rw"><input type="range" id="${id}" min="${mn}" max="${mx}" step="${st}"><span class="tick" style="left:calc(9px + (100% - 18px) * ${f})"></span></div></div>`;
+}
+function syncSliders(){
+  GOODS.forEach((g,i)=>{$('p'+i).value=g.p1;$('q'+i).value=g.q1;$('op'+i).textContent=fmt(g.p1);$('oq'+i).textContent=fmt(g.q1);});
+}
+$('pSliders').innerHTML=GOODS.map((_,i)=>slider(i,'p')).join('');
+$('qSliders').innerHTML=GOODS.map((_,i)=>slider(i,'q')).join('');
+GOODS.forEach((g,i)=>{
+  $('p'+i).addEventListener('input',e=>{g.p1=+e.target.value;$('op'+i).textContent=fmt(g.p1);draw();});
+  $('q'+i).addEventListener('input',e=>{g.q1=+e.target.value;$('oq'+i).textContent=fmt(g.q1);draw();});
+});
+$('checks').innerHTML=GOODS.map((g,i)=>`<label><input type="checkbox" data-i="${i}" checked>${g.name}</label>`).join('');
+$('checks').addEventListener('change',e=>{custom[+e.target.dataset.i]=e.target.checked?1:0;draw();});
+document.querySelectorAll('input[name=basket]').forEach(r=>r.addEventListener('change',()=>{basket=r.value;$('checks').hidden=basket!=='custom';draw();}));
+document.querySelectorAll('input[name=formula]').forEach(r=>r.addEventListener('change',()=>{formula=r.value;draw();}));
+$('reset').addEventListener('click',()=>{
+  GOODS.forEach((g,i)=>{g.p1=DEF[i].p1;g.q1=DEF[i].q1;});
+  basket='all';formula='L';custom=[1,1,1,1];
+  document.querySelector('input[name=basket][value=all]').checked=true;
+  document.querySelector('input[name=formula][value=L]').checked=true;
+  document.querySelectorAll('#checks input').forEach(c=>c.checked=true);$('checks').hidden=true;
+  syncSliders();draw();
+});
+buildLeft();buildRight();syncSliders();draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tax order book · MMO401 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink)}
+.legend i{display:inline-block;width:18px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid currentColor}
+.legend i.dash{border-top-style:dashed}
+.legend i.box{height:11px;border:1.5px solid currentColor;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 0}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:center}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--ochre);height:28px;margin:2px 0 6px}
+input[type=range]:disabled{opacity:.4}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--ochre);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ochre);color:var(--paper)}
+.chip.alt{border-color:var(--ink-soft)}
+.switch{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.92rem;cursor:pointer;justify-content:flex-start;margin-bottom:8px}
+.switch input{width:20px;height:20px;accent-color:var(--ochre);margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.tables{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:820px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td.m{text-align:left;color:var(--ink-soft)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO401 Virtual Economies II · Week 7 · Worked example</p>
+  <h1>The book says the tax is cheap. The sink curve disagrees.</h1>
+  <p class="lede">A 20% tax still leaves 44 of 50 trades crossing on the order book, so it looks harmless. Let players trade around the market and the sink peaks at a much lower rate, then falls. How hard bypass is sets the rate you can charge.</p>
+</header>
+
+<section class="panel" aria-label="Tax model">
+  <div class="charts">
+    <figure>
+      <figcaption>Today's order book<small>100 buyers (bids at 101 − k) and 100 sellers (asks at k). A trade happens when the bid covers the ask plus tax.</small></figcaption>
+      <canvas id="cBook" role="img" aria-label="Order book staircase"></canvas>
+      <div class="legend">
+        <span style="color:var(--ink)"><i></i>bids</span>
+        <span style="color:var(--steel)"><i></i>asks</span>
+        <span style="color:var(--steel)"><i class="dash"></i>asks grossed up by tax</span>
+        <span style="color:var(--ochre)"><i class="box" style="background:color-mix(in srgb,var(--ochre) 40%,transparent)"></i>trades on book</span>
+        <span style="color:var(--ink-soft)"><i class="box" style="background:repeating-linear-gradient(45deg,currentColor 0 2px,transparent 2px 5px)"></i>traded off-market</span>
+        <span style="color:var(--blood)"><i class="box" style="background:color-mix(in srgb,var(--blood) 25%,transparent)"></i>lost to the tax</span>
+      </div>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--ochre)"><b id="sOn">—</b><span>trades on book</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="sOff">—</b><span>traded off-market</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="sLost">—</b><span>lost to the tax</span></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Sink and volume against tax rate<small>Gold removed per day (left axis) and trades on the market (right axis, dashed).</small></figcaption>
+      <canvas id="cSink" role="img" aria-label="Sink and volume curves against tax rate"></canvas>
+      <div class="legend">
+        <span style="color:var(--steel)"><i></i>R, no bypass</span>
+        <span style="color:var(--ochre)"><i style="border-top-width:4px"></i>R<sub>m</sub>, with bypass</span>
+        <span style="color:var(--moss)"><i class="dash"></i>Q<sub>m</sub>, market volume</span>
+      </div>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--ochre)"><b id="sRm">—</b><span>sink collected</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="sR">—</b><span>sink the book promises</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="sPeak">—</b><span id="sPeakL">best rate</span></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="tax"><span>Tax rate <code>t</code></span> <output id="oTax">5%</output></label>
+      <input id="tax" type="range" min="0" max="80" step="0.5" value="5">
+      <span class="lbl">Presets (set the rate only)</span>
+      <div class="presets" role="group" aria-label="Tax presets">
+        <button class="chip" data-t="0.02" aria-pressed="false">Old School RuneScape 2%</button>
+        <button class="chip" data-t="0.05" aria-pressed="true">World of Warcraft 5%</button>
+        <button class="chip" data-t="0.105" aria-pressed="false">EVE base seller who lists 10.5%</button>
+        <button class="chip" data-t="0.15" aria-pressed="false">Guild Wars 2 15%</button>
+        <button class="chip alt" data-t="0.6666666666666666" aria-pressed="false">No-bypass peak 66.7%</button>
+        <button class="chip alt" id="goPeak" aria-pressed="false">Go to the current peak</button>
+      </div>
+    </div>
+    <div>
+      <label class="switch" for="bypass"><input id="bypass" type="checkbox" role="switch" checked> Players can trade around the market</label>
+      <label for="cost"><span>Maximum bypass cost <code>E</code></span> <output id="oCost">20 gold</output></label>
+      <input id="cost" type="range" min="1" max="100" step="1" value="20">
+      <p class="note" style="margin:4px 0 0;font-size:.9rem;color:var(--ink-soft)">Bypass cost is spread evenly from 0 to <code>E</code> across trades. A trade leaves the market when the tax on it, <code>t × P<sub>b</sub></code>, is more than its cost of trading directly.</p>
+    </div>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <table>
+        <caption>Readout at the current settings</caption>
+        <thead><tr><th>Quantity</th><th>Meaning</th><th>Value</th></tr></thead>
+        <tbody id="tRead"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Revenue-maximizing rate by bypass cost</caption>
+        <thead><tr><th><code>E</code></th><th>Best rate</th><th>Sink at peak</th></tr></thead>
+        <tbody id="tPeak"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Model: linear demand <code>P = 100 − Q</code> and supply <code>P = Q</code>, tax on the buyer's price, bypass share <code>b = min(1, t × P<sub>b</sub> / E)</code>. The order book is the discrete version: 100 buyers and 100 sellers with one unit each. Preset rates as cited in the lecture: Old School RuneScape Grand Exchange 2% (from 29 May 2025), World of Warcraft auction house 5% cut (current retail), EVE Online base broker's fee 3% plus 7.5% sales tax (from 12 March 2025), Guild Wars 2 trading post 5% listing plus 10% exchange fee. The model uses one combined rate on the sale price.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+let T=0.05,E=20,BYP=true,anim=null;
+
+// ---- model (formulas from the lecture spec) ----
+function model(t,e,byp){
+  const Pb=100/(2-t),Ps=(1-t)*Pb,Q=100*(1-t)/(2-t),R=t*Pb*Q,DWL=2500-(100*Q-Q*Q);
+  const b=byp?Math.min(1,t*Pb/e):0,Qm=Q*(1-b),Rm=t*Pb*Qm;
+  return {t,Pb,Ps,Q,R,DWL,b,Qm,Rm};
+}
+function kStar(t){let n=0;for(let k=1;k<=100;k++){if(101-k>=k/(1-t)-1e-9)n++;}return n;}
+function peak(e,byp){let best=-1,bt=0;for(let i=0;i<=800;i++){const t=i/1000,r=model(t,e,byp).Rm;if(r>best+1e-12){best=r;bt=t;}}return {t:bt,r:best};}
+
+// ---- formatting ----
+const f2=x=>x.toFixed(2);
+const f1=x=>x.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const pT=t=>(Math.round(t*1000)/10).toFixed(1).replace(/\.0$/,'')+'%';
+const p1=x=>(x*100).toFixed(1)+'%';
+
+// ---- canvas helpers ----
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};
+}
+function hatch(g,color){
+  const p=document.createElement('canvas');p.width=p.height=8;const q=p.getContext('2d');
+  q.strokeStyle=color;q.lineWidth=1.6;q.beginPath();q.moveTo(0,8);q.lineTo(8,0);q.moveTo(-2,2);q.lineTo(2,-2);q.moveTo(6,10);q.lineTo(10,6);q.stroke();
+  return g.createPattern(p,'repeat');
+}
+function alpha(g,a,fn){g.save();g.globalAlpha=a;fn();g.restore();}
+
+// ---- left: order book ----
+function drawBook(m,k,off){
+  const c=setup($('cBook')),g=c.g,w=c.w,h=c.h,pad={l:38,r:10,t:10,b:30},yMax=110;
+  const X=q=>pad.l+(w-pad.l-pad.r)*q/100,Y=p=>pad.t+(h-pad.t-pad.b)*(1-Math.min(p,yMax)/yMax);
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let i=0;i<=5;i++){const p=i*20,y=Y(p);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(p,pad.l-6,y);}
+  for(let i=0;i<=4;i++){const q=i*25;g.textAlign='center';g.textBaseline='top';g.fillText(q,X(q),h-pad.b+6);}
+  g.textAlign='right';g.fillText('trades (k)',w-pad.r,h-14);
+  g.save();g.translate(11,pad.t+4);g.textAlign='left';g.textBaseline='top';g.fillText('price',0,0);g.restore();
+  // shaded columns
+  const onEnd=k-off;
+  for(let i=1;i<=50;i++){
+    const x0=X(i-1),x1=X(i),yb=Y(101-i),ya=Y(i);
+    if(i<=onEnd){alpha(g,.42,()=>{g.fillStyle=css('--ochre');g.fillRect(x0,yb,x1-x0,ya-yb);});}
+    else if(i<=k){g.fillStyle=hatch(g,css('--ink-soft'));g.fillRect(x0,yb,x1-x0,ya-yb);}
+    else{alpha(g,.28,()=>{g.fillStyle=css('--blood');g.fillRect(x0,yb,x1-x0,ya-yb);});}
+  }
+  // staircases
+  function stair(f,color,wd,dash){
+    g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+    g.strokeStyle=color;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();
+    for(let i=1;i<=100;i++){const y=Y(f(i));if(i===1)g.moveTo(X(0),y);else g.lineTo(X(i-1),y);g.lineTo(X(i),y);}
+    g.stroke();g.restore();
+  }
+  stair(i=>101-i,css('--ink'),2);
+  stair(i=>i,css('--steel'),2);
+  if(m.t>0)stair(i=>i/(1-m.t),css('--steel'),2,[6,4]);
+  // direct labels
+  g.font='600 12px '+css('--sans');g.textBaseline='bottom';
+  g.fillStyle=css('--ink');g.textAlign='left';g.fillText('bids',X(84)+2,Y(101-84)-6);
+  g.fillStyle=css('--steel');g.textAlign='right';g.fillText('asks',X(100)-2,Y(80));
+  if(m.t>0){
+    const kl=Math.min(94,Math.max(55,Math.floor(100*(1-m.t))-6));
+    const yl=kl/(1-m.t);
+    g.textAlign='right';g.fillText('asks + tax',X(kl)-4,Y(Math.min(yl,106))-2);
+  }
+  // k* marker
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([3,4]);g.beginPath();g.moveTo(X(k),pad.t);g.lineTo(X(k),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign=X(k)>w*0.5?'right':'left';g.textBaseline='top';
+  g.fillText('k* = '+k,X(k)+(X(k)>w*0.5?-5:5),pad.t+2);
+  $('cBook').setAttribute('aria-label',`Order book at ${pT(m.t)} tax: ${k} of 50 trades cross, ${off} of them off-market, ${50-k} lost to the tax.`);
+}
+
+// ---- right: sink vs tax ----
+function drawSink(m,pk){
+  const c=setup($('cSink')),g=c.g,w=c.w,h=c.h,pad={l:46,r:34,t:12,b:30},xM=0.8,yM=1400,vM=50;
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/xM,Y=r=>pad.t+(h-pad.t-pad.b)*(1-r/yM),V=q=>pad.t+(h-pad.t-pad.b)*(1-q/vM);
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const r=i*350,y=Y(r);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillStyle=css('--ink-soft');g.fillText(r.toLocaleString('en-US'),pad.l-6,y);
+    g.textAlign='left';g.fillStyle=css('--moss');g.fillText(Math.round(vM*i/4*10)/10,w-pad.r+5,y);}
+  g.fillStyle=css('--ink-soft');
+  for(let i=0;i<=4;i++){const t=i*0.2;g.textAlign='center';g.textBaseline='top';g.fillText(Math.round(t*100)+'%',X(t),h-pad.b+6);}
+  g.textAlign='right';g.fillText('tax rate',w-pad.r,h-14);
+  const n=320;
+  function line(f,sc,color,wd,dash){
+    g.strokeStyle=color;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();
+    for(let i=0;i<=n;i++){const t=xM*i/n,px=X(t),py=sc(f(t));i?g.lineTo(px,py):g.moveTo(px,py);}
+    g.stroke();g.setLineDash([]);
+  }
+  line(t=>model(t,E,false).R,Y,css('--steel'),2);
+  line(t=>model(t,E,BYP).Qm,V,css('--moss'),2,[7,5]);
+  if(BYP)line(t=>model(t,E,true).Rm,Y,css('--ochre'),3.5);
+  // direct labels
+  g.font='600 12px '+css('--sans');g.textBaseline='bottom';g.textAlign='right';
+  g.fillStyle=css('--steel');g.fillText('R, no bypass',X(0.8)-2,Y(model(0.8,E,false).R)-6);
+  g.fillStyle=css('--moss');g.textAlign='left';g.fillText('Q',X(0.012)+2,V(model(0.012,E,BYP).Qm)-4);
+  // current t marker
+  g.strokeStyle=css('--ink');g.globalAlpha=.45;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(m.t),pad.t);g.lineTo(X(m.t),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  const yCur=BYP?m.Rm:m.R;
+  g.fillStyle=css('--paper');g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.arc(X(m.t),Y(yCur),4.5,0,Math.PI*2);g.fill();g.stroke();
+  // peak dot and label
+  const px=X(pk.t),py=Y(pk.r),col=BYP?css('--ochre'):css('--steel');
+  g.fillStyle=col;g.beginPath();g.arc(px,py,6,0,Math.PI*2);g.fill();
+  g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();
+  const lab=`peak ${(pk.t*100).toFixed(1)}% · ${f1(pk.r)}`;
+  g.font='700 12px '+css('--sans');g.fillStyle=css('--ink');
+  const tw=g.measureText(lab).width,right=px+10+tw<w-pad.r;
+  const lx=right?px+9:px-9-tw,ly=py-8;
+  alpha(g,.85,()=>{g.fillStyle=css('--paper-2');g.fillRect(lx-3,ly-15,tw+6,18);});
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='bottom';g.fillText(lab,lx,ly);
+  if(BYP){g.fillStyle=css('--ochre');g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';
+    g.fillText('Rₘ, with bypass',w-pad.r-4,Y(0)-6);}
+  $('cSink').setAttribute('aria-label',`Sink against tax rate. With bypass cost ${E}, the sink peaks at ${(pk.t*100).toFixed(1)}% with ${f1(pk.r)} gold per day. Current rate ${pT(m.t)} collects ${f1(yCur)}.`);
+}
+
+// ---- readouts ----
+function update(){
+  const m=model(T,E,BYP),k=kStar(T),off=Math.round(k*m.b),lost=50-k,pk=peak(E,BYP);
+  $('oTax').textContent=pT(T);$('oCost').textContent=E+' gold';
+  $('sOn').textContent=(k-off);$('sOff').textContent=off;$('sLost').textContent=lost;
+  $('sRm').textContent=f1(m.Rm);$('sR').textContent=f1(m.R);
+  $('sPeak').textContent=(pk.t*100).toFixed(1)+'%';$('sPeakL').textContent='best rate, sink '+f1(pk.r);
+  const rows=[
+    ['<code>t</code>','tax rate',pT(T)],
+    ['<code>P<sub>b</sub></code>','buyer pays',f2(m.Pb)],
+    ['<code>P<sub>s</sub></code>','seller keeps',f2(m.Ps)],
+    ['<code>Q</code>','volume, continuous',f2(m.Q)],
+    ['<code>k*</code>','trades that cross on the book',String(k)],
+    ['<code>b</code>','share bypassing',p1(m.b)],
+    ['<code>Q<sub>m</sub></code>','trades on the market',f2(m.Qm)],
+    ['<code>R</code>','sink, no bypass',f1(m.R)],
+    ['<code>R<sub>m</sub></code>','sink, with bypass',f1(m.Rm)],
+    ['<code>DWL</code>','deadweight loss',f1(m.DWL)],
+    ['peak','revenue-maximizing rate for this <code>E</code>',(pk.t*100).toFixed(1)+'% ('+f1(pk.r)+')']
+  ];
+  $('tRead').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td class="m">${r[1]}</td><td id="v-${r[0].replace(/<[^>]+>/g,'').replace('*','star')}">${r[2]}</td></tr>`).join('');
+  $('tPeak').innerHTML=[1,5,10,20,40,60,100].map(e=>{const p=peak(e,true);return `<tr class="${e===E&&BYP?'here':''}"><td>${e}</td><td>${(p.t*100).toFixed(1)}%</td><td>${f1(p.r)}</td></tr>`;}).join('');
+  // insight
+  let s;
+  if(!BYP){
+    s=`Bypass is off, so every trade that crosses pays the tax. At ${pT(T)} the book clears ${k} of 50 trades and the sink is <b>${f1(m.R)}</b>. The textbook peak is 66.7%, where the sink hits 1,250.0 and deadweight loss is 625.0. That answer only holds if players cannot trade around the market.`;
+  }else if(m.b>=1){
+    s=`At ${pT(T)} the tax on a trade (${f2(T*m.Pb)} gold) is more than the most anyone pays to trade directly (${E} gold). Every trade leaves the market and the sink is <b>0</b>. The book on the left still shows ${k} trades crossing, which is why it misleads.`;
+  }else{
+    s=`At ${pT(T)} the book clears ${k} of 50 trades, so only ${lost} fail to cross and the tax looks cheap. But ${p1(m.b)} of those trades go around the market, and the sink is <b>${f1(m.Rm)}</b>, not the ${f1(m.R)} the book promises. `;
+    const d=T-pk.t;
+    if(d<-0.004)s+=`Raising the rate still adds to the sink, up to ${(pk.t*100).toFixed(1)}% where it reaches ${f1(pk.r)}.`;
+    else if(d<=0.004)s+=`You are at the peak for a bypass cost of ${E}. Any higher rate loses more trades than it gains in tax.`;
+    else s+=`You are past the peak. Cutting to ${(pk.t*100).toFixed(1)}% would collect <b>${f1(pk.r)}</b> and keep ${f2(model(pk.t,E,true).Qm-m.Qm)} more trades on the market.`;
+  }
+  $('insight').innerHTML=s;
+  document.querySelectorAll('.chip[data-t]').forEach(b=>b.setAttribute('aria-pressed',String(Math.abs(+b.dataset.t-T)<1e-9)));
+  drawBook(m,k,off);drawSink(m,pk);
+}
+
+function setT(t){
+  if(anim)cancelAnimationFrame(anim);
+  $('tax').value=Math.round(t*200)/2;
+  if(reduce.matches){T=t;update();return;}
+  const t0=T,st=performance.now(),dur=320;
+  const step=now=>{const u=Math.min(1,(now-st)/dur),e=1-Math.pow(1-u,3);T=t0+(t-t0)*e;if(u>=1)T=t;update();if(u<1)anim=requestAnimationFrame(step);else anim=null;};
+  anim=requestAnimationFrame(step);
+}
+
+$('tax').addEventListener('input',e=>{if(anim){cancelAnimationFrame(anim);anim=null;}T=+e.target.value/100;update();});
+$('cost').addEventListener('input',e=>{E=+e.target.value;update();});
+$('bypass').addEventListener('change',e=>{BYP=e.target.checked;$('cost').disabled=!BYP;update();});
+document.querySelectorAll('.chip[data-t]').forEach(b=>b.addEventListener('click',()=>setT(+b.dataset.t)));
+$('goPeak').addEventListener('click',()=>setT(peak(E,BYP).t));
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

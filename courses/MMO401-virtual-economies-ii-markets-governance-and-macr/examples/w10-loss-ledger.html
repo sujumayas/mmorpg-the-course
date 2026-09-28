@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Loss ledger · MMO401 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.75rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0}
+h2 small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;margin-top:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin:14px 0 0;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 20px}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:14px}
+.row .lbl{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.battle{border-color:var(--blood)}
+.chip.battle[aria-pressed="true"]{background:var(--blood);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:760px){.views{grid-template-columns:1fr}}
+.view{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:14px;min-width:0}
+figure{margin:10px 0 0;background:var(--paper-2);border-radius:10px;padding:10px 12px 8px;min-width:0}
+figcaption{font-size:.9rem;font-weight:600;margin:0 0 4px}
+figcaption small{font-weight:400;color:var(--ink-soft)}
+canvas{display:block;width:100%}
+.c-stock{height:220px}.c-price{height:130px}.c-flow{height:150px}.c-cash{height:330px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink)}
+.legend svg{vertical-align:middle;margin-right:5px}
+.big{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--paper-2)}
+.big b{display:block;font-size:clamp(1.7rem,4.2vw,2.4rem);font-variant-numeric:tabular-nums;line-height:1.1}
+.big span{font-size:.86rem;color:var(--ink-soft)}
+.note{font-size:.85rem;color:var(--ink-soft);margin:6px 0 0}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-weight:600;color:var(--ink-soft)}
+th:first-child,td:first-child{text-align:left}
+td code,th code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.tables{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}.tables>*{min-width:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO401 Virtual Economies II · Week 10 · Worked example</p>
+  <h1>Destroyed per day always ends up equal to built per day</h1>
+  <p class="lede">Drag the recovery fraction <i>r</i>. The stock and the price move by a factor of ten, yet at the steady state the world still destroys exactly what crafters build. Insurance never touches the left ledger. It only moves the right one.</p>
+</header>
+
+<section class="panel" aria-label="Steady-state summary">
+  <div class="stats" aria-live="polite" id="stats">
+    <div class="stat" style="--c:var(--blood)"><b id="sDestr">1,000</b><span>destroyed per day at steady state</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="sStock">100,000</b><span>steady stock <i>S*</i></span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="sPrice">500,000</b><span>steady price <i>p*</i> (ISK)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="sNet">+775 million</b><span>net ISK per day at steady state</span></div>
+  </div>
+  <p class="insight" id="insight"></p>
+</section>
+
+<section class="panel" aria-label="Controls">
+  <div class="controls">
+    <div><label for="F"><span>Built per day <i>F</i></span> <output id="oF" for="F"></output></label><input id="F" type="range" min="100" max="5000" step="100" value="1000"></div>
+    <div><label for="h"><span>Loss hazard <i>h</i> per day</span> <output id="oh" for="h"></output></label><input id="h" type="range" min="0" max="0.1" step="0.005" value="0.02"></div>
+    <div><label for="r"><span>Recovery fraction <i>r</i></span> <output id="or" for="r"></output></label><input id="r" type="range" min="0" max="1" step="0.05" value="0.5"></div>
+    <div><label for="A"><span>ISK held in the class <i>A</i></span> <output id="oA" for="A"></output></label><input id="A" type="range" min="5" max="200" step="5" value="50"></div>
+    <div><label for="I"><span>Insurance per lost copy <i>I</i></span> <output id="oI" for="I"></output></label><input id="I" type="range" min="0" max="1000000" step="50000" value="400000"></div>
+    <div><label for="tau"><span>Sales tax <i>&tau;</i></span> <output id="otau" for="tau"></output></label><input id="tau" type="range" min="0" max="0.1" step="0.005" value="0.05"></div>
+  </div>
+  <div class="row" role="group" aria-label="Presets">
+    <span class="lbl">Presets</span>
+    <button class="chip" data-p='{"h":0.02,"r":0.5,"I":400000}'>EVE-like</button>
+    <button class="chip" data-p='{"r":1,"I":0}'>Full-loot transfer</button>
+    <button class="chip" data-p='{"r":0,"I":0}'>No loot, destroy all</button>
+    <button class="chip" data-p='{"h":0}'>WoW-like</button>
+    <button class="chip battle" id="battle" aria-pressed="false">One battle on day 180</button>
+  </div>
+  <p class="note" id="presetNote">Presets set only the knobs they name. They are the lecture's invented parameter sets, not measured game values.</p>
+</section>
+
+<div class="views">
+  <section class="view" aria-labelledby="hItems">
+    <h2 id="hItems">Item ledger<small>What players see. Day 0 to 365, starting from <i>S</i>(0) = <i>F</i>.</small></h2>
+    <figure>
+      <figcaption>Stock <i>S</i>(t) <small>copies in the world</small></figcaption>
+      <canvas id="cStock" class="c-stock" role="img" aria-label="Stock of copies over one year with the steady-state level as a dashed line"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--steel)" stroke-width="3"/></svg>stock <i>S</i>(t)</span>
+        <span id="lgStar"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--ink-soft)" stroke-width="2" stroke-dasharray="5 4"/></svg>steady state <i>S*</i> = <i>F</i> / &delta;</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Price <i>p</i>(t) = <i>A</i> / <i>S</i>(t) <small>ISK per copy, log scale</small></figcaption>
+      <canvas id="cPrice" class="c-price" role="img" aria-label="Price per copy over one year, log scale"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Flows per day <small>copies</small></figcaption>
+      <canvas id="cFlow" class="c-flow" role="img" aria-label="Production and destruction per day over one year"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--moss)" stroke-width="3"/></svg>built <i>F</i></span>
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--blood)" stroke-width="3" stroke-dasharray="6 4"/></svg>destroyed &delta; &times; <i>S</i>(t)</span>
+      </div>
+    </figure>
+  </section>
+
+  <section class="view" aria-labelledby="hCash">
+    <h2 id="hCash">Currency ledger<small>What the economist sees. Same days 0 to 365, ISK per day.</small></h2>
+    <div class="big" aria-live="polite"><b id="netYear">—</b><span>net ISK added this year (insurance paid minus sales tax, 365 days)</span></div>
+    <figure>
+      <figcaption>ISK per day <small>above zero adds money, below zero removes it</small></figcaption>
+      <canvas id="cCash" class="c-cash" role="img" aria-label="Insurance faucet, sales tax sink and net ISK per day over one year"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--moss)" stroke-width="3"/></svg>faucet: insurance <i>h</i> &times; <i>S</i> &times; <i>I</i></span>
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--blood)" stroke-width="3" stroke-dasharray="6 4"/></svg>sink: tax &tau; &times; <i>p</i> &times; <i>F</i></span>
+        <span><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--ink)" stroke-width="4" stroke-dasharray="1.5 3"/></svg><b>net</b></span>
+      </div>
+      <p class="note" id="clipNote"></p>
+    </figure>
+  </section>
+</div>
+
+<section class="panel" aria-labelledby="hRead">
+  <h2 id="hRead">Readout<small>Steady-state figures for the current settings, plus checks on the day-by-day run.</small></h2>
+  <div class="tables">
+    <div class="table-wrap">
+      <table aria-label="Steady-state readout">
+        <thead><tr><th>Quantity</th><th>Formula</th><th>Value</th><th>Exact</th></tr></thead>
+        <tbody id="tRead"></tbody>
+      </table>
+    </div>
+    <div>
+      <h2 style="margin-top:6px">Same knobs, four recovery fractions<small>Built per day and destroyed per day match in every row that has a steady state. The stock does not.</small></h2>
+      <div class="table-wrap">
+        <table aria-label="Steady state at r equal to 0, 0.5, 0.9 and 1">
+          <thead><tr><th>Recovery <i>r</i></th><th>&delta;</th><th>Mean life</th><th>Destroyed per day</th><th><i>S*</i></th><th><i>p*</i> (ISK)</th><th>Revenue per day</th><th>Insurance per day</th><th>Net ISK per day</th></tr></thead>
+          <tbody id="tCmp"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>Model from the lecture: &delta; = <i>h</i>(1 &minus; <i>r</i>), <i>S</i>(t+1) = <i>S</i>(t) + <i>F</i> &minus; &delta;<i>S</i>(t), <i>p</i> = <i>A</i> / <i>S</i> (unit-elastic demand), stepped one day at a time. The price is capped at 10 &times; <i>A</i> / <i>F</i>. The battle removes 1,000 copies on day 180, destroys 1,000 &times; (1 &minus; <i>r</i>) of them and pays 1,000 &times; <i>I</i> in insurance. All numbers are an invented teaching example in ISK. Game names describe rule shapes only.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DAYS=365, BATTLE_DAY=180, BATTLE_N=1000;
+const st={F:1000,h:0.02,r:0.5,A:50,I:400000,tau:0.05,battle:false};
+const clean=x=>Math.round(x*1e9)/1e9;
+
+// ---------- formatting ----------
+const comma=n=>Math.round(n).toLocaleString('en-US');
+function trim(x,d){return x.toFixed(d).replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');}
+function bil(x){ // always in billions, at least one decimal
+  const v=x/1e9;let s=trim(v,3);if(!s.includes('.'))s=v.toFixed(1);return s+' billion';}
+function isk(x){
+  const a=Math.abs(x),sg=x<0?'−':'';
+  if(a>=1e9)return sg+bil(a);
+  if(a>=1e6)return sg+trim(a/1e6,1)+' million';
+  if(a>=10||a===0)return sg+comma(a);
+  return sg+trim(a,2);
+}
+const signed=x=>(x>0.5?'+':'')+isk(x);
+const exact=x=>(x<0?'-':'')+comma(Math.abs(x));
+function price(x){return x>=10?comma(x):trim(x,2);}
+function days(x){return Number.isInteger(clean(x))?comma(x)+' days':trim(x,1)+' days';}
+
+// ---------- model ----------
+function steady(F,h,r,A,I,tau){
+  const d=clean(h*(1-r)),Ab=A*1e9;
+  if(d<=0){
+    const ins=h*I>0?Infinity:0;
+    return {d:0,life:Infinity,S:Infinity,p:0,rev:0,ins,tax:0,net:ins,destr:0};
+  }
+  const S=F/d,p=Ab*d/F,rev=Ab*d,ins=h*S*I,tax=tau*Ab*d;
+  return {d,life:1/d,S,p,rev,ins,tax,net:ins-tax,destr:d*S};
+}
+function simulate(){
+  const {F,h,r,I,tau,battle}=st,A=st.A*1e9,d=clean(h*(1-r)),pMax=10*A/F;
+  const S=[F],p=[],destr=[],ins=[],tax=[],net=[];
+  let total=0;
+  for(let t=0;t<=DAYS;t++){
+    const s=S[t],b=battle&&t===BATTLE_DAY;
+    const pt=s>0?Math.min(A/s,pMax):pMax;
+    let de=d*s+(b?BATTLE_N*(1-r):0);
+    de=Math.min(de,s+F);
+    const inT=h*s*I+(b?BATTLE_N*I:0),taT=tau*pt*F;
+    p.push(pt);destr.push(de);ins.push(inT);tax.push(taT);net.push(inT-taT);
+    if(t<DAYS)total+=inT-taT;
+    S.push(s+F-de);
+  }
+  S.length=DAYS+1;
+  return {S,p,destr,ins,tax,net,total,d};
+}
+
+// ---------- drawing ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);
+  return {g,w:r.width,h:r.height};
+}
+function niceStep(range,n){
+  const raw=range/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/mag;
+  return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*mag;
+}
+function short(v){
+  const a=Math.abs(v),s=v<0?'−':'';
+  if(a>=1e9)return s+trim(a/1e9,2)+'B';
+  if(a>=1e6)return s+trim(a/1e6,2)+'M';
+  if(a>=1e3)return s+trim(a/1e3,1)+'k';
+  return s+trim(a,2);
+}
+function frame(c,pad,yMin,yMax,ticks,fmtY){
+  const {g,w,h}=c;
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/DAYS;
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-yMin)/(yMax-yMin));
+  ticks.forEach(v=>{
+    const y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(fmtY(v),pad.l-6,y);
+  });
+  [0,90,180,270,365].forEach(t=>{g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.fillText(t,X(t),h-pad.b+5);});
+  return {X,Y};
+}
+function line(c,xy,arr,color,width,dash,yMin,yMax){
+  const {g}=c;g.save();g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash||[]);g.lineJoin='round';g.beginPath();
+  arr.forEach((v,t)=>{const vv=Math.max(yMin,Math.min(yMax,v));const x=xy.X(t),y=xy.Y(vv);t?g.lineTo(x,y):g.moveTo(x,y);});
+  g.stroke();g.restore();
+}
+function hline(c,xy,v,color,dash,label){
+  const {g,w}=c,y=xy.Y(v);g.save();g.strokeStyle=color;g.lineWidth=2;g.setLineDash(dash);g.beginPath();g.moveTo(xy.X(0),y);g.lineTo(xy.X(DAYS),y);g.stroke();g.restore();
+  if(label){g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText(label,xy.X(8),y-3);}
+}
+function battleMark(c,xy){
+  if(!st.battle)return;const {g,h}=c,x=xy.X(BATTLE_DAY);
+  g.save();g.strokeStyle=css('--blood');g.globalAlpha=.5;g.setLineDash([2,3]);g.beginPath();g.moveTo(x,6);g.lineTo(x,h-24);g.stroke();g.restore();
+}
+const pad={l:50,r:12,t:12,b:24};
+
+function draw(sim,ss){
+  // stock
+  let c=setup($('cStock'));
+  const maxS=Math.max(...sim.S);
+  const showStar=isFinite(ss.S)&&ss.S>0;
+  const starOn=showStar&&ss.S<=maxS*3;
+  let top=Math.max(maxS,starOn?ss.S:0)*1.08;
+  let step=niceStep(top,4);top=Math.ceil(top/step)*step;
+  let ticks=[];for(let v=0;v<=top+1e-9;v+=step)ticks.push(v);
+  let xy=frame(c,pad,0,top,ticks,short);
+  if(starOn)hline(c,xy,ss.S,css('--ink-soft'),[6,5],'S* = '+comma(ss.S));
+  battleMark(c,xy);
+  line(c,xy,sim.S,css('--steel'),2.8,[],0,top);
+  if(showStar&&!starOn){c.g.fillStyle=css('--ink-soft');c.g.font='12px '+css('--sans');c.g.textAlign='left';c.g.textBaseline='top';c.g.fillText('S* = '+comma(ss.S)+' (off the chart)',pad.l+6,pad.t+2);}
+  $('lgStar').style.visibility=showStar?'visible':'hidden';
+
+  // price, log scale
+  c=setup($('cPrice'));
+  const lp=sim.p.map(v=>Math.log10(Math.max(v,1e-3)));
+  let lo=Math.floor(Math.min(...lp)),hi=Math.ceil(Math.max(...lp));if(hi===lo)hi=lo+1;
+  ticks=[];const dStep=hi-lo>4?2:1;for(let v=lo;v<=hi;v+=dStep)ticks.push(v);
+  xy=frame(c,pad,lo,hi,ticks,v=>short(Math.pow(10,v)));
+  battleMark(c,xy);
+  line(c,xy,lp,css('--ochre'),2.6,[],lo,hi);
+
+  // flows
+  c=setup($('cFlow'));
+  top=Math.max(st.F,...sim.destr)*1.1;step=niceStep(top,3);top=Math.ceil(top/step)*step;
+  ticks=[];for(let v=0;v<=top+1e-9;v+=step)ticks.push(v);
+  xy=frame(c,pad,0,top,ticks,short);
+  battleMark(c,xy);
+  line(c,xy,sim.S.map(()=>st.F),css('--moss'),2.8,[],0,top);
+  line(c,xy,sim.destr,css('--blood'),2.8,[7,5],0,top);
+
+  // currency
+  c=setup($('cCash'));
+  const from=14; // ignore start-up days when choosing the scale
+  const vals=[];for(let t=from;t<=DAYS;t++){vals.push(sim.ins[t],-sim.tax[t],sim.net[t]);}
+  if(st.battle){vals.push(sim.ins[BATTLE_DAY],sim.net[BATTLE_DAY]);}
+  let yMax=Math.max(0,...vals),yMin=Math.min(0,...vals);
+  if(yMax-yMin<1){yMax=1;yMin=-1;}
+  const span=yMax-yMin;yMax+=span*.08;yMin-=span*.08;
+  step=niceStep(yMax-yMin,5);yMax=Math.ceil(yMax/step)*step;yMin=Math.floor(yMin/step)*step;
+  ticks=[];for(let v=yMin;v<=yMax+1e-9;v+=step)ticks.push(Math.round(v/step)*step);
+  const cp={l:56,r:12,t:12,b:24};
+  xy=frame(c,cp,yMin,yMax,ticks,short);
+  c.g.strokeStyle=css('--ink');c.g.lineWidth=1.2;c.g.beginPath();c.g.moveTo(cp.l,xy.Y(0));c.g.lineTo(c.w-cp.r,xy.Y(0));c.g.stroke();
+  battleMark(c,xy);
+  line(c,xy,sim.ins,css('--moss'),2.6,[],yMin,yMax);
+  line(c,xy,sim.tax.map(v=>-v),css('--blood'),2.6,[7,5],yMin,yMax);
+  line(c,xy,sim.net,css('--ink'),4,[1.5,3.5],yMin,yMax);
+  let clipped=0;for(let t=0;t<from;t++){if(-sim.tax[t]<yMin||sim.net[t]<yMin||sim.ins[t]>yMax||sim.net[t]>yMax)clipped=t+1;}
+  $('clipNote').textContent=clipped?`Days 0 to ${clipped-1} run off the scale. The run starts with one day's output in the world, so the price, and the tax on each sale, starts high (day 0 tax ${isk(sim.tax[0])}).`:'';
+}
+
+// ---------- readouts ----------
+function render(){
+  const {F,h,r,A,I,tau}=st;
+  $('oF').textContent=comma(F);$('oh').textContent=trim(h,3);$('or').textContent=trim(r,2);
+  $('oA').textContent=A+' billion';$('oI').textContent=comma(I);$('otau').textContent=trim(tau*100,1)+'%';
+  const ss=steady(F,h,r,A,I,tau),sim=simulate();
+  const none=ss.d===0;
+  $('sDestr').textContent=none?'0 (no steady state)':comma(ss.destr);
+  $('sStock').textContent=none?'no steady state':comma(ss.S);
+  $('sPrice').textContent=none?'falls toward 0':price(ss.p);
+  $('sNet').textContent=none?(ss.ins===Infinity?'grows without limit':signed(-0)):signed(ss.net);
+  $('netYear').textContent=signed(sim.total)+' ISK';
+
+  let s;
+  if(none&&h===0) s=`With <i>h</i> = 0 nothing is ever lost. The stock climbs by exactly ${comma(F)} a day, ${comma(sim.S[DAYS])} by day 365, and the price keeps falling. Scarcity must come from somewhere else, such as binding or obsolescence.`;
+  else if(none) s=`With <i>r</i> = 1 every loss is a transfer. Players lose items but the world loses none, so the stock climbs by exactly ${comma(F)} a day with no steady state. ${I>0?'Insurance on those losses grows with the stock, so the faucet grows without limit.':''}`;
+  else {
+    const reach=sim.S[DAYS]/ss.S;
+    s=`At the steady state the world destroys <b>${comma(ss.destr)}</b> copies a day because crafters build <b>${comma(F)}</b>. What <i>r</i> sets is the stock (${comma(ss.S)}), the price (${price(ss.p)} ISK) and the mean life (${days(ss.life)}). `;
+    s+=reach<0.95?`This year only reaches ${Math.round(reach*100)}% of <i>S*</i>, so destruction is still ${comma(sim.destr[DAYS-1])} a day on day 364.`:`The run is within ${Math.max(1,Math.round((1-reach)*100))}% of <i>S*</i> by day 365.`;
+    s+=` Insurance pays ${isk(ss.ins)} a day against ${isk(ss.tax)} of tax: a net ${ss.net>=0?'faucet':'sink'}.`;
+  }
+  $('insight').innerHTML=s;
+
+  const inf=ss.ins===Infinity;
+  const rows=[
+    ['Effective destruction rate &delta;','<code>h(1 &minus; r)</code>',trim(ss.d,4),trim(ss.d,6)],
+    ['Mean life','<code>1 / &delta;</code>',none?'forever':days(ss.life),none?'forever':trim(ss.life,3)],
+    ['Steady stock <i>S*</i>','<code>F / &delta;</code>',none?'no steady state':comma(ss.S),none?'no steady state':comma(ss.S)],
+    ['Steady price <i>p*</i>','<code>A&delta; / F</code>',none?'falls toward 0':price(ss.p)+' ISK',none?'0 at the limit':exact(ss.p)],
+    ['Crafting revenue per day','<code>A &times; &delta;</code>',none?'0 at the limit':bil(ss.rev),none?'0':exact(ss.rev)],
+    ['Insurance paid per day','<code>h &times; S* &times; I</code>',inf?'grows without limit':isk(ss.ins),inf?'no steady state':exact(ss.ins)],
+    ['Sales tax per day','<code>&tau; &times; A &times; &delta;</code>',none?'0 at the limit':isk(ss.tax),none?'0':exact(ss.tax)],
+    ['Net ISK per day','insurance &minus; tax',inf?'grows without limit':signed(ss.net),inf?'no steady state':exact(ss.net)],
+    ['Simulated <i>S</i>(1)','<code>S(0) + F &minus; &delta;S(0)</code>',comma(sim.S[1]),exact(sim.S[1])],
+    ['Simulated <i>S</i>(365)','daily steps',comma(sim.S[DAYS]),exact(sim.S[DAYS])],
+    ['Net ISK added this year','sum of days 0 to 364',signed(sim.total),exact(sim.total)]
+  ];
+  $('tRead').innerHTML=rows.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td><td>${x[3]}</td></tr>`).join('');
+
+  const rs=[0,0.5,0.9,1];if(!rs.some(v=>Math.abs(v-r)<1e-9)){rs.push(r);rs.sort((a,b)=>a-b);}
+  $('tCmp').innerHTML=rs.map(rv=>{
+    const q=steady(F,h,rv,A,I,tau),n=q.d===0,here=Math.abs(rv-r)<1e-9;
+    const cells=[trim(rv,2),trim(q.d,4),n?'forever':days(q.life),n?'0':comma(q.destr),n?'no limit':comma(q.S),n?'falls toward 0':price(q.p),n?'0 at the limit':bil(q.rev),q.ins===Infinity?'no limit':isk(q.ins),q.ins===Infinity?'no limit':signed(q.net)];
+    return `<tr class="${here?'here':''}"${here?' aria-current="true"':''}>${cells.map(v=>`<td>${v}</td>`).join('')}</tr>`;
+  }).join('');
+
+  draw(sim,ss);
+  window.__lossLedger={ss,sim};
+}
+
+// ---------- events ----------
+['F','h','r','A','I','tau'].forEach(k=>$(k).addEventListener('input',e=>{st[k]=+e.target.value;render();}));
+document.querySelectorAll('.chip[data-p]').forEach(b=>b.addEventListener('click',()=>{
+  const p=JSON.parse(b.dataset.p);Object.keys(p).forEach(k=>{st[k]=p[k];$(k).value=p[k];});
+  $('presetNote').textContent=`${b.textContent}: set `+Object.keys(p).map(k=>`${k} = ${k==='I'?comma(p[k]):p[k]}`).join(', ')+'. Other knobs unchanged. These are the lecture’s invented parameter sets, not measured game values.';
+  render();
+}));
+$('battle').addEventListener('click',()=>{st.battle=!st.battle;$('battle').setAttribute('aria-pressed',st.battle);render();});
+let raf=0;const redraw=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(render);};
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+render();
+})();
+</script>
+</body>
+</html>

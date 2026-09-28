@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dupe response: rollback or clawback — MMO401 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}.panel{padding:12px}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px;touch-action:none}
+#cMoney{cursor:ew-resize}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:20px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid var(--c)}
+.legend i.sw{height:10px;border:0;background:var(--c);opacity:.8}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.delay{margin-top:14px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.toggle{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.92rem;justify-content:flex-start;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--steel);margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:22px 0 0}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+table.wide{min-width:640px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.muted{color:var(--ink-soft);font-size:.86rem}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO401 Virtual Economies II · Week 12 · Worked example</p>
+  <h1>Roll back early, claw back late</h1>
+  <p class="lede">A dupe put 20% extra money into the economy. Every hour you wait, a rollback erases more honest play, so its cost climbs in a straight line. A clawback's leftover harm climbs fast, then levels off, because the money can only leak once. The lines cross, and the crossing tells you which response to pick.</p>
+</header>
+
+<section class="panel" aria-label="Dupe response model">
+  <div class="charts">
+    <figure>
+      <figcaption>Where the duped money is<small>Drag the line (or use the delay slider) to set when you detect the dupe.</small></figcaption>
+      <canvas id="cMoney" role="img" aria-label="Stacked area of duped money still with exploiters and money leaked to other players, over 10 days"></canvas>
+      <div class="legend">
+        <span><i class="sw" style="--c:var(--blood)"></i>Still with exploiters X(t)</span>
+        <span><i class="sw" style="--c:var(--ochre)"></i>Leaked L(t)</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Harm by response<small>Player-hours lost if you respond after this delay. Shaded where rollback is cheaper.</small></figcaption>
+      <canvas id="cHarm" role="img" aria-label="Harm in player-hours of rollback, clawback and inaction versus detection delay"></canvas>
+      <div class="legend">
+        <span><i style="--c:var(--steel)"></i>Rollback</span>
+        <span><i style="--c:var(--ochre);border-top-style:dashed"></i>Clawback</span>
+        <span><i style="--c:var(--blood);border-top-style:dotted"></i>Do nothing</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite" id="live">
+    <div class="stat" style="--c:var(--moss)"><b id="rBest">—</b><span>cheapest at this delay</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rCross">—</b><span>rollback and clawback cross</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rRoll">—</b><span>rollback, player-hours</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rClaw">—</b><span>clawback, player-hours</span></div>
+  </div>
+
+  <div class="delay">
+    <label for="tIn">Detection delay t <output id="oT">1 day</output></label>
+    <input id="tIn" type="range" min="0" max="240" step="1" value="24" aria-valuetext="1 day">
+    <div class="presets" role="group" aria-label="Delay presets from the lecture table">
+      <button class="chip" data-h="1">1 hour</button>
+      <button class="chip" data-h="24">1 day</button>
+      <button class="chip" data-h="48">2 days</button>
+      <button class="chip" data-h="72">3 days</button>
+      <button class="chip" data-h="168">7 days</button>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="shock">Shock size ΔM / M <output id="oShock">20%</output></label>
+      <input id="shock" type="range" min="1" max="100" step="1" value="20">
+      <label for="q">Leak rate q per day <output id="oQ">0.30</output></label>
+      <input id="q" type="range" min="0.05" max="0.9" step="0.05" value="0.3">
+      <label for="nIn">Active players N <output id="oN">50,000</output></label>
+      <input id="nIn" type="range" min="0" max="1000" step="1" value="629" aria-valuetext="50,000 players">
+    </div>
+    <div>
+      <label for="h">Hours per player per day h <output id="oH">2</output></label>
+      <input id="h" type="range" min="0.5" max="6" step="0.5" value="2">
+      <label for="lam">λ, player-hours per point of inflation <output id="oLam">20,000</output></label>
+      <input id="lam" type="range" min="1000" max="100000" step="1000" value="20000">
+      <label class="toggle" for="freeze"><input id="freeze" type="checkbox"> Freeze trade at detection</label>
+      <div id="cfWrap" style="margin-top:8px">
+        <label for="cf"><span>Freeze cost c<sub>f</sub>, hours per player</span> <output id="oCf">0.10</output></label>
+        <input id="cf" type="range" min="0" max="1" step="0.05" value="0.1">
+      </div>
+    </div>
+  </div>
+
+  <h2>Readout at the chosen delay</h2>
+  <div class="table-wrap">
+    <table aria-label="Readout at the chosen delay">
+      <tbody id="readTable"></tbody>
+    </table>
+  </div>
+
+  <h2>Same model at the lecture's delays</h2>
+  <p class="muted" style="margin:4px 0 0">Matches the lecture table at default settings. Freeze is ignored here.</p>
+  <div class="table-wrap">
+    <table class="wide" aria-label="Harm at fixed delays">
+      <thead><tr><th>Delay t</th><th>Still with exploiters</th><th>Leaked L(t)</th><th>Price rise after clawback</th><th>Clawback harm</th><th>Rollback harm</th><th>Better choice</th></tr></thead>
+      <tbody id="cmpTable"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 12 lecture. X(t) = ΔM(1 − q)<sup>t</sup>, L(t) = ΔM − X(t), t in days. Rollback harm = N × h × t. Clawback harm = λ × 100 × L(t) / M. Inaction harm = λ × 100 × ΔM / M. M is 1 billion for display; every harm depends only on ΔM / M. With freeze on, trade stops at the chosen t, so leakage stops and the clawback harm stays at λ × 100 × L(t) / M + N × c<sub>f</sub> for any later clawback.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const M=1e9;
+const NLO=3,NHI=Math.log10(500000);
+let share=0.2,q=0.3,N=50000,h=2,lam=20000,tH=24,freeze=false,cf=0.1;
+
+const X=t=>share*M*Math.pow(1-q,t);
+const L=t=>share*M-X(t);
+const roll=t=>N*h*t;
+const clawRaw=t=>lam*100*L(t)/M;
+const inaction=()=>lam*100*share;
+const tSel=()=>tH/24;
+// clawback harm if the clawback happens at delay x (freeze, if on, happened at the chosen t)
+function claw(x){
+  if(freeze&&x>=tSel()) return clawRaw(tSel())+N*cf;
+  return clawRaw(x);
+}
+const money=v=>{const m=v/1e6;return (m<10?m.toFixed(2):m.toFixed(1))+'M';};
+function dur(hours){
+  hours=Math.round(hours);
+  if(hours===0) return '0 hours';
+  if(hours<24) return hours+(hours===1?' hour':' hours');
+  const d=Math.floor(hours/24),r=hours%24;
+  return d+(d===1?' day':' days')+(r?' '+r+' h':'');
+}
+// first delay (days) where rollback stops being cheaper than clawback
+function crossover(){
+  const f=x=>roll(x)-claw(x);
+  const step=1/240,maxD=60;
+  let prev=f(step),x0=step;
+  if(prev>=0) return {none:'claw'};
+  for(let x=2*step;x<=maxD;x+=step){
+    const v=f(x);
+    if(v>=0){
+      let a=x-step,b=x;
+      for(let i=0;i<60;i++){const m=(a+b)/2;f(m)<0?a=m:b=m;}
+      return {t:(a+b)/2};
+    }
+    prev=v;x0=x;
+  }
+  return {none:'roll'};
+}
+function cheapest(t){
+  const opts=[['Rollback',roll(t)],['Clawback'+(freeze?' + freeze':''),claw(t)],['Do nothing',inaction()]];
+  opts.sort((a,b)=>a[1]-b[1]);
+  if(Math.abs(opts[0][1]-opts[1][1])<1e-6*Math.max(1,opts[0][1])) return 'Tie';
+  return opts[0][0];
+}
+function crossText(c){
+  if(c.none==='claw') return 'never';
+  if(c.none==='roll') return '> 60 days';
+  return c.t.toFixed(2)+' d ('+Math.round(c.t*24)+' h)';
+}
+
+// canvas helpers
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){
+  if(v<=0) return 1;
+  const mag=Math.pow(10,Math.floor(Math.log10(v)));
+  return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(x=>x>=v*1.001);
+}
+const short=v=>v>=1e6?(+(v/1e6).toFixed(2))+'M':v>=1e3?(+(v/1e3).toFixed(1))+'k':fmt(v);
+const pad={l:50,r:14,t:14,b:36};
+function frame(g,w,H,yMax,yFmt){
+  g.clearRect(0,0,w,H);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  const pw=w-pad.l-pad.r,ph=H-pad.t-pad.b;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ph*(1-i/4);
+    g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(yMax*i/4),pad.l-6,y);
+  }
+  const every=pw<320?2:1;
+  g.textAlign='center';g.textBaseline='top';
+  for(let d=0;d<=10;d++){
+    const x=pad.l+pw*d/10;
+    g.strokeStyle=css('--ink-soft');g.beginPath();g.moveTo(x,pad.t+ph);g.lineTo(x,pad.t+ph+5);g.stroke();
+    if(d%every===0){g.fillStyle=css('--ink-soft');g.fillText(d+'d',x,pad.t+ph+7);}
+  }
+  // secondary hour ticks in the first day
+  for(const hr of [6,12,18]){
+    const x=pad.l+pw*hr/240;
+    g.strokeStyle=css('--ink-soft');g.beginPath();g.moveTo(x,pad.t+ph);g.lineTo(x,pad.t+ph+3);g.stroke();
+  }
+  if(pw>=360){g.font='10px '+css('--sans');g.fillStyle=css('--ink-soft');g.fillText('12h',pad.l+pw*12/240,pad.t+ph+7);g.font='12px '+css('--sans');}
+  g.textAlign='right';g.fillStyle=css('--ink-soft');g.fillText('days since dupe',w-pad.r,H-15);
+  return {pw,ph,X:x=>pad.l+pw*x/10,Y:y=>pad.t+ph*(1-Math.min(y,yMax*1.02)/yMax)};
+}
+function cursor(g,f,t,H){
+  const x=f.X(t);
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.setLineDash([5,4]);
+  g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,pad.t+f.ph);g.stroke();g.setLineDash([]);
+}
+
+function drawMoney(){
+  const c=setup($('cMoney')),g=c.g,dm=share*M,yMax=niceMax(dm);
+  const f=frame(g,c.w,c.h,yMax,v=>short(v));
+  const t=tSel(),n=240;
+  const xAt=d=>(freeze&&d>t)?X(t):X(d);
+  // leaked area (top) from X to dm
+  g.fillStyle=css('--ochre');g.globalAlpha=.55;g.beginPath();
+  for(let i=0;i<=n;i++){const d=10*i/n;i?g.lineTo(f.X(d),f.Y(dm)):g.moveTo(f.X(d),f.Y(dm));}
+  for(let i=n;i>=0;i--){const d=10*i/n;g.lineTo(f.X(d),f.Y(xAt(d)));}
+  g.closePath();g.fill();
+  // exploiter area (bottom)
+  g.fillStyle=css('--blood');g.globalAlpha=.6;g.beginPath();g.moveTo(f.X(0),f.Y(0));
+  for(let i=0;i<=n;i++){const d=10*i/n;g.lineTo(f.X(d),f.Y(xAt(d)));}
+  g.lineTo(f.X(10),f.Y(0));g.closePath();g.fill();g.globalAlpha=1;
+  // boundary
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();
+  for(let i=0;i<=n;i++){const d=10*i/n;i?g.lineTo(f.X(d),f.Y(xAt(d))):g.moveTo(f.X(d),f.Y(xAt(d)));}
+  g.stroke();
+  cursor(g,f,t,c.h);
+  // handle and label
+  const hx=f.X(t);
+  g.fillStyle=css('--ink');g.beginPath();g.arc(hx,f.Y(X(t)),5,0,7);g.fill();
+  g.font='600 12px '+css('--sans');g.textBaseline='top';
+  const lab='L = '+money(L(t));
+  g.textAlign=hx>c.w-110?'right':'left';
+  const lx=hx+(g.textAlign==='right'?-7:7);
+  g.fillStyle=css('--paper-2');const tw=g.measureText(lab).width;g.fillRect(g.textAlign==='right'?lx-tw-3:lx-3,pad.t+3,tw+6,17);
+  g.fillStyle=css('--ink');g.fillText(lab,lx,pad.t+5);
+  if(freeze){g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.fillText('trade frozen',lx,pad.t+22);}
+}
+
+function drawHarm(cr){
+  const c=setup($('cHarm')),g=c.g,t=tSel();
+  const inact=inaction();
+  let top=Math.max(inact,claw(10),freeze?claw(t):0);
+  if(cr.t) top=Math.max(top,roll(cr.t)*1.4);
+  const yMax=niceMax(top*1.15);
+  const f=frame(g,c.w,c.h,yMax,v=>short(v));
+  const n=480;
+  // shade where rollback is cheaper
+  g.fillStyle=css('--steel');g.globalAlpha=.14;
+  let start=null;
+  for(let i=1;i<=n;i++){
+    const d=10*i/n,cheap=roll(d)<claw(d);
+    if(cheap&&start===null) start=10*(i-1)/n;
+    if((!cheap||i===n)&&start!==null){const end=cheap?10:d;g.fillRect(f.X(start),pad.t,f.X(end)-f.X(start),f.ph);start=null;}
+  }
+  g.globalAlpha=1;
+  const line=(fn,col,dash,wd)=>{
+    g.save();g.beginPath();g.rect(pad.l,pad.t-2,f.pw+2,f.ph+4);g.clip();
+    g.strokeStyle=col;g.lineWidth=wd||2.5;g.setLineDash(dash);g.beginPath();
+    for(let i=0;i<=n;i++){const d=10*i/n,y=fn(d);i?g.lineTo(f.X(d),f.Y(y)):g.moveTo(f.X(d),f.Y(y));}
+    g.stroke();g.restore();g.setLineDash([]);
+  };
+  line(()=>inact,css('--blood'),[2,4]);
+  line(claw,css('--ochre'),[8,5]);
+  line(roll,css('--steel'),[]);
+  // direct labels
+  g.font='600 12px '+css('--sans');g.textBaseline='bottom';g.textAlign='right';
+  const lblX=c.w-pad.r-2;
+  g.fillStyle=css('--blood');g.fillText('do nothing',lblX,f.Y(inact)-3);
+  const cy=f.Y(claw(10)),iy=f.Y(inact);
+  g.fillStyle=css('--ochre');g.textBaseline='top';g.fillText('clawback',lblX,Math.abs(cy-iy)<16?cy+4:cy+4);
+  // rollback label near where it exits the frame or ends
+  let rx=10;if(roll(10)>yMax){rx=yMax/(N*h)*0.92;}
+  g.fillStyle=css('--steel');g.textAlign='left';g.textBaseline='middle';
+  const rpx=Math.min(f.X(rx)+6,c.w-pad.r-58);g.fillText('rollback',rpx,Math.max(pad.t+8,f.Y(roll(rx))));
+  cursor(g,f,t,c.h);
+  // crossover point
+  if(cr.t&&cr.t<=10){
+    const px=f.X(cr.t),py=f.Y(roll(cr.t));
+    g.fillStyle=css('--ink');g.beginPath();g.arc(px,py,6,0,7);g.fill();
+    g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    const lab=cr.t.toFixed(2)+' d / '+Math.round(cr.t*24)+' h';
+    g.font='600 12px '+css('--sans');const tw=g.measureText(lab).width;
+    let lx=px+9;if(lx+tw>c.w-pad.r) lx=px-9-tw;
+    const ly=py>pad.t+f.ph-30?py-26:py+10;
+    g.fillStyle=css('--paper-2');g.fillRect(lx-3,ly-1,tw+6,17);
+    g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='top';g.fillText(lab,lx,ly);
+  }
+}
+
+function update(){
+  const t=tSel(),cr=crossover();
+  const vt=dur(tH);
+  $('oT').textContent=vt;$('tIn').setAttribute('aria-valuetext',vt);
+  $('oShock').textContent=Math.round(share*100)+'%';
+  $('oQ').textContent=q.toFixed(2);
+  $('oN').textContent=fmt(N);$('nIn').setAttribute('aria-valuetext',fmt(N)+' players');
+  $('oH').textContent=String(h);
+  $('oLam').textContent=fmt(lam);
+  $('oCf').textContent=cf.toFixed(2);
+  $('cfWrap').hidden=!freeze;
+  document.querySelectorAll('.chip[data-h]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.h===tH)));
+
+  const best=cheapest(t);
+  $('rBest').textContent=best;
+  $('rCross').textContent=crossText(cr);
+  $('rRoll').textContent=fmt(roll(t));
+  $('rClaw').textContent=fmt(claw(t));
+
+  const lt=L(t);
+  const rows=[
+    ['Detection delay t',vt+(tH%24?' ('+t.toFixed(3).replace(/\.?0+$/,'')+' days)':'')],
+    ['X, still with exploiters',money(X(t))],
+    ['L, leaked to other players',money(lt)],
+    ['Price rise after clawback',(100*lt/M).toFixed(1)+'%'],
+    ['Harm of clawback'+(freeze?' with freeze':''),fmt(claw(t))+(freeze?' (incl. '+fmt(N*cf)+' freeze cost)':'')],
+    ['Harm of rollback',fmt(roll(t))],
+    ['Harm of inaction',fmt(inaction())],
+    ['Cheapest option',best],
+    ['Crossover delay',crossText(cr)]
+  ];
+  $('readTable').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+
+  const cmp=[[1,'1 hour'],[24,'1 day'],[48,'2 days'],[72,'3 days'],[168,'7 days']];
+  $('cmpTable').innerHTML=cmp.map(([hr,name])=>{
+    const d=hr/24,cl=clawRaw(d),ro=roll(d),rel=Math.abs(cl-ro)/Math.max(cl,ro);
+    const better=rel<0.03?'About equal':(ro<cl?'Rollback':'Clawback');
+    return `<tr class="${hr===tH?'here':''}"><td>${name}</td><td>${money(X(d))}</td><td>${money(L(d))}</td><td>${(100*L(d)/M).toFixed(1)}%</td><td>${fmt(cl)}</td><td>${fmt(ro)}</td><td>${better}</td></tr>`;
+  }).join('');
+
+  let s;
+  if(cr.t){
+    const ch=Math.round(cr.t*24);
+    s=`Rollback is cheaper until <b>${dur(ch)}</b> (${cr.t.toFixed(2)} days). `;
+    s+= t<cr.t?`You are at ${vt}, before the crossing, so roll back. It costs ${fmt(roll(t))} player-hours against ${fmt(claw(t))} for a clawback.`
+               :`You are at ${vt}, past the crossing, so claw back. Leftover inflation costs ${fmt(claw(t))} player-hours, while a rollback would erase ${fmt(roll(t))}.`;
+  } else if(cr.none==='claw'){
+    s=`With these settings the clawback is cheaper at every delay. Leaked money does less harm than erasing ${fmt(N*h)} player-hours of play per day.`;
+  } else {
+    s=`Rollback stays cheaper for the first 60 days. The economy is small or the shock is large relative to play time.`;
+  }
+  if(freeze) s+=` The freeze stops leakage at ${vt}, so a later clawback costs no more than ${fmt(claw(t))}.`;
+  if(best==='Do nothing') s+=` Doing nothing is cheapest here, because the freeze cost is larger than the inflation it prevents.`;
+  $('insight').innerHTML=s;
+
+  drawMoney();drawHarm(cr);
+}
+
+// events
+const tIn=$('tIn');
+function setT(hr){tH=Math.max(0,Math.min(240,Math.round(hr)));tIn.value=tH;update();}
+tIn.addEventListener('input',e=>setT(+e.target.value));
+document.querySelectorAll('.chip[data-h]').forEach(b=>b.addEventListener('click',()=>setT(+b.dataset.h)));
+$('shock').addEventListener('input',e=>{share=+e.target.value/100;update();});
+$('q').addEventListener('input',e=>{q=+e.target.value;update();});
+$('nIn').addEventListener('input',e=>{
+  const raw=Math.pow(10,NLO+(NHI-NLO)*(+e.target.value)/1000);
+  const mag=Math.pow(10,Math.floor(Math.log10(raw))-1);
+  N=Math.min(500000,Math.max(1000,Math.round(raw/mag)*mag));update();
+});
+$('h').addEventListener('input',e=>{h=+e.target.value;update();});
+$('lam').addEventListener('input',e=>{lam=+e.target.value;update();});
+$('freeze').addEventListener('change',e=>{freeze=e.target.checked;update();});
+$('cf').addEventListener('input',e=>{cf=+e.target.value;update();});
+
+// drag on the money chart
+const cm=$('cMoney');let dragging=false;
+function fromPointer(e){
+  const r=cm.getBoundingClientRect(),pw=r.width-pad.l-pad.r;
+  setT(Math.max(0,Math.min(1,(e.clientX-r.left-pad.l)/pw))*240);
+}
+cm.addEventListener('pointerdown',e=>{dragging=true;cm.setPointerCapture(e.pointerId);fromPointer(e);});
+cm.addEventListener('pointermove',e=>{if(dragging)fromPointer(e);});
+cm.addEventListener('pointerup',()=>{dragging=false;});
+cm.addEventListener('pointercancel',()=>{dragging=false;});
+
+let rz;window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(update);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+window.__dupe={set:o=>{if('t' in o)tH=o.t;if('freeze' in o){freeze=o.freeze;$('freeze').checked=o.freeze;}if('cf' in o)cf=o.cf;tIn.value=tH;update();},claw,roll,L,X,crossover};
+update();
+})();
+</script>
+</body>
+</html>
