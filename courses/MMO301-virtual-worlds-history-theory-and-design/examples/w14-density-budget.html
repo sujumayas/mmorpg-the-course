@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The density budget — MMO301 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.05rem}
+.charts{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;border-radius:6px}
+#cMap{aspect-ratio:1/1;height:auto;max-width:420px;margin:0 auto}
+#cDay{height:300px;cursor:crosshair}
+canvas:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.count{font-variant-numeric:tabular-nums;margin:8px 0 0;font-size:.95rem}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.box{height:12px;width:14px;opacity:.3}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 8px}
+input[type=radio],input[type=checkbox]{width:18px;height:18px;accent-color:var(--steel);margin:0}
+fieldset{border:0;padding:0;margin:0 0 8px}
+legend{font-weight:600;font-size:.92rem;padding:0}
+.radios{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:4px}
+.radios label,label.check{font-weight:400;justify-content:flex-start;align-items:center;gap:6px}
+label.check{font-weight:600}
+.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:600px;width:100%}
+th,td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO301 Virtual Worlds · Week 14 · Worked example</p>
+  <h1>The density budget</h1>
+  <p class="lede">A world sized for one hour of the day is wrong for the others. Players in view follow the daily population curve, unless the number of map copies changes through the day.</p>
+</header>
+
+<section class="panel" aria-label="Density budget model">
+  <p class="insight" id="caption" aria-live="polite"></p>
+  <div class="charts">
+    <figure>
+      <figcaption>What you see<small id="mapSub">Field area to scale. The circle is your view radius. Inset: zoom around you.</small></figcaption>
+      <canvas id="cMap" role="img" aria-label="Top-down map of the field area with player dots and your view circle"></canvas>
+      <p class="count" id="count" aria-live="polite"></p>
+    </figure>
+    <figure>
+      <figcaption>Others in view over 24 hours<small>Click, hover, or focus and use arrow keys to move the hour cursor.</small></figcaption>
+      <canvas id="cDay" tabindex="0" role="img" aria-label="Expected others in view by hour of day. Arrow keys move the hour cursor."></canvas>
+      <div class="legend" id="legend"></div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rA">—</b><span>field area A</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rSide">—</b><span>side of the square</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rE">—</b><span id="rEl">E now</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rN">—</b><span>copies at this hour</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rMin">—</b><span>E min across the day</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rMax">—</b><span>E max across the day</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rRatio">—</b><span>peak-to-trough ratio</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rField">—</b><span>field players this hour</span></div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="sHour">Hour of day <output id="oHour"></output></label>
+      <input id="sHour" type="range" min="0" max="24" step="1">
+      <label for="sP">Peak concurrent players P_peak <output id="oP"></output></label>
+      <input id="sP" type="range" min="100" max="20000" step="100">
+      <label for="sH">Share in hubs and instances h <output id="oH"></output></label>
+      <input id="sH" type="range" min="0" max="0.9" step="0.05">
+      <label for="sR">View radius r <output id="oR"></output></label>
+      <input id="sR" type="range" min="20" max="400" step="10">
+    </div>
+    <div class="ctl">
+      <fieldset>
+        <legend>Area mode</legend>
+        <div class="radios">
+          <label><input type="radio" name="mode" value="peak"> Size for peak (21:00)</label>
+          <label><input type="radio" name="mode" value="trough"> Size for trough (03:00)</label>
+          <label><input type="radio" name="mode" value="manual"> Manual</label>
+        </div>
+      </fieldset>
+      <div id="targetWrap">
+        <label for="sT">Target E_target <output id="oT"></output></label>
+        <input id="sT" type="range" min="0.5" max="20" step="0.5">
+      </div>
+      <div id="areaWrap">
+        <label for="sA">Field area A <output id="oA"></output></label>
+        <input id="sA" type="range" min="0.1" max="200" step="0.1">
+      </div>
+      <label class="check"><input type="checkbox" id="cop"> Dynamic copies (open another copy of the map when crowded)</label>
+      <div id="emaxWrap" style="margin-top:8px">
+        <label for="sEm">Crowded above E_max <output id="oEm"></output></label>
+        <input id="sEm" type="range" min="1" max="20" step="1">
+      </div>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Values at the listed hours">
+      <thead><tr><th>Hour</th><th>Share of peak</th><th>Concurrent P</th><th>Field players</th><th>E, one copy</th><th>Copies</th><th>E per copy</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>All values are invented for teaching. No real game's numbers are used. Model: P = P_peak × share(hour), field = (1 − h) × P, E = field × πr² / A, copies n = ceil(E / E_max) when dynamic copies are on, E per copy = E / n. Share is interpolated linearly between the listed hours and wraps at 24. Dots are placed uniformly at random from a fixed seed (13).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f2=n=>n.toFixed(2);
+const TABLE=[[0,.45],[3,.25],[6,.30],[9,.45],[12,.60],[15,.70],[18,.90],[21,1.00],[24,.45]];
+const DEF={P:3000,h:0.4,r:150,mode:'peak',Et:4,Akm:31.8,hour:21,cop:false,Emax:6};
+let s={...DEF};
+
+function share(hr){
+  hr=((hr%24)+24)%24;
+  for(let i=0;i<TABLE.length-1;i++){const [a,va]=TABLE[i],[b,vb]=TABLE[i+1];if(hr>=a&&hr<=b)return va+(vb-va)*(hr-a)/(b-a);}
+  return TABLE[0][1];
+}
+const view=()=>Math.PI*s.r*s.r;
+function areaM2(){
+  if(s.mode==='manual')return s.Akm*1e6;
+  const ref=s.mode==='peak'?21:3;
+  return (1-s.h)*s.P*share(ref)*view()/s.Et;
+}
+const field=hr=>(1-s.h)*s.P*share(hr);
+const E1=hr=>field(hr)*view()/areaM2();
+const copies=hr=>s.cop?Math.max(1,Math.ceil(E1(hr)/s.Emax-1e-9)):1;
+const E=hr=>E1(hr)/copies(hr);
+const hh=h=>String(h%24).padStart(2,'0')+':00';
+
+// seeded dots
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const DOTS=(()=>{const r=mulberry(13),a=[];for(let i=0;i<20000;i++)a.push([r(),r()]);return a;})();
+
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+
+function drawMap(){
+  const c=setup($('cMap')),g=c.g,W=c.w,H=c.h;
+  const A=areaM2(),side=Math.sqrt(A),n=copies(s.hour),M=Math.round(field(s.hour));
+  const m=8,sz=Math.min(W,H)-2*m-14,ox=m,oy=m;
+  const px=sz/side;
+  g.clearRect(0,0,W,H);
+  g.fillStyle=css('--paper');g.fillRect(ox,oy,sz,sz);
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(ox,oy,sz,sz);
+  // shown dots
+  const cx=0.5,cy=0.5,rr=s.r/side;let inside=0;
+  const shown=[];
+  for(let i=0;i<M&&i<DOTS.length;i++){if(i%n!==0)continue;const [x,y]=DOTS[i];shown.push([x,y]);if((x-cx)**2+(y-cy)**2<=rr*rr)inside++;}
+  const dr=Math.max(0.8,Math.min(2.2,sz/Math.sqrt(Math.max(1,shown.length))/5));
+  g.fillStyle=css('--steel');
+  for(const [x,y] of shown){g.fillRect(ox+x*sz-dr/2,oy+y*sz-dr/2,dr,dr);}
+  // view circle
+  g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.arc(ox+cx*sz,oy+cy*sz,Math.max(2,rr*sz),0,Math.PI*2);g.stroke();
+  // zoom box
+  const zHalf=Math.min(0.5,rr*2.2),zs=sz*0.34,zx=ox+sz-zs-6,zy=oy+6;
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.setLineDash([3,3]);g.strokeRect(ox+(cx-zHalf)*sz,oy+(cy-zHalf)*sz,2*zHalf*sz,2*zHalf*sz);g.setLineDash([]);
+  if(zHalf<0.5-0.34-8/sz-0.01||zHalf<0.12){
+    g.fillStyle=css('--paper-2');g.fillRect(zx,zy,zs,zs);g.strokeStyle=css('--ink');g.lineWidth=1.2;g.strokeRect(zx,zy,zs,zs);
+    const zk=zs/(2*zHalf);
+    g.save();g.beginPath();g.rect(zx,zy,zs,zs);g.clip();
+    g.fillStyle=css('--steel');
+    for(const [x,y] of shown){const X=zx+(x-cx+zHalf)*zk,Y=zy+(y-cy+zHalf)*zk;if(X>zx-4&&X<zx+zs+4&&Y>zy-4&&Y<zy+zs+4){g.beginPath();g.arc(X,Y,2.6,0,Math.PI*2);g.fill();}}
+    g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.arc(zx+zs/2,zy+zs/2,rr*zk,0,Math.PI*2);g.stroke();
+    g.fillStyle=css('--blood');g.beginPath();g.arc(zx+zs/2,zy+zs/2,3.5,0,Math.PI*2);g.fill();
+    g.restore();
+    g.fillStyle=css('--ink');g.font='700 11px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+    g.textBaseline='bottom';g.fillText('zoom ×'+(1/(2*zHalf)).toFixed(0),zx+4,zy+zs-3);
+  }
+  // scale labels
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  g.fillText((side/1000).toFixed(2)+' km',ox+sz/2,oy+sz+2);
+  if(s.cop){g.fillStyle=css('--ink');g.font='700 12px '+css('--sans');g.textAlign='left';g.fillText('copy 1 of '+n,ox+6,oy+6);}
+  $('count').innerHTML=`Dots inside your circle: <b>${inside}</b>. Expected E: <b>${f2(E(s.hour))}</b>. ${s.cop?`Showing copy 1 of ${n}, `:''}${fmt(Math.ceil(M/n))} field players drawn. One random draw varies around E.`;
+}
+
+const pad={l:34,r:12,t:12,b:30};
+function drawDay(){
+  const c=setup($('cDay')),g=c.g,w=c.w,h=c.h,YM=20;
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/24,Y=v=>pad.t+(h-pad.t-pad.b)*(1-Math.min(v,YM)/YM);
+  g.clearRect(0,0,w,h);
+  // bands
+  g.globalAlpha=.13;g.fillStyle=css('--steel');g.fillRect(pad.l,Y(1),w-pad.l-pad.r,Y(0)-Y(1));
+  g.fillStyle=css('--blood');g.fillRect(pad.l,Y(YM),w-pad.l-pad.r,Y(s.Emax)-Y(YM));g.globalAlpha=1;
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let v=0;v<=YM;v+=5){const y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';
+  for(let t=0;t<=24;t+=3)g.fillText(String(t).padStart(2,'0'),X(t),h-pad.b+6);
+  g.font='700 11px '+css('--sans');g.textAlign='left';
+  g.fillStyle=css('--steel');g.textBaseline='bottom';g.textAlign='right';g.fillText('lonely (below 1)',w-pad.r-4,Y(0)-2);g.textAlign='left';
+  g.fillStyle=css('--blood');g.textBaseline='top';if(s.Emax<YM)g.fillText(`crowded (above ${s.Emax})`,pad.l+4,pad.t+3);
+  const plot=(f,color,wd,dash)=>{g.strokeStyle=color;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();let prev=null;
+    for(let i=0;i<=960;i++){const t=24*i/960,v=f(t);const x=X(t),y=Y(v);if(i===0)g.moveTo(x,y);else if(prev!==null&&Math.abs(v-prev)>0.6)g.lineTo(x,Y(prev)),g.lineTo(x,y);else g.lineTo(x,y);prev=v;}
+    g.stroke();g.setLineDash([]);};
+  plot(E1,css('--steel'),s.cop?1.8:3,s.cop?[6,4]:[]);
+  if(s.cop)plot(E,css('--ochre'),3);
+  // clip marks
+  let clip=false;for(let t=0;t<=24;t+=0.25)if(E1(t)>YM)clip=true;
+  if(clip){g.fillStyle=css('--ink');g.font='700 11px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText('▲ clipped above 20',w-pad.r-2,pad.t+2);}
+  // cursor
+  const x=X(s.hour);g.strokeStyle=css('--ink');g.lineWidth=1;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+  const v=E(s.hour);g.fillStyle=s.cop?css('--ochre'):css('--steel');g.beginPath();g.arc(x,Y(v),6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  $('legend').innerHTML=`<span><i style="background:var(--steel)"></i>E with one copy</span>`+(s.cop?`<span><i style="background:var(--ochre)"></i>E per copy</span>`:'')+`<span><i class="box" style="background:var(--steel)"></i>lonely</span><span><i class="box" style="background:var(--blood)"></i>crowded</span>`;
+}
+
+function update(){
+  const A=areaM2(),hrs=[...Array(24).keys()],Es=hrs.map(E);
+  const mn=Math.min(...Es),mx=Math.max(...Es);
+  $('oHour').textContent=hh(s.hour)+(s.hour===24?' (same as 00:00)':'');
+  $('oP').textContent=fmt(s.P);$('oH').textContent=s.h.toFixed(2);$('oR').textContent=s.r+' m';
+  $('oT').textContent=s.Et.toFixed(1);$('oA').textContent=s.Akm.toFixed(1)+' km²';$('oEm').textContent=s.Emax;
+  $('targetWrap').hidden=s.mode==='manual';$('areaWrap').hidden=s.mode!=='manual';$('emaxWrap').hidden=!s.cop;
+  $('rA').textContent=f2(A/1e6)+' km²';$('rSide').textContent=f2(Math.sqrt(A)/1000)+' km';
+  $('rE').textContent=f2(E(s.hour));$('rEl').textContent=`E at ${hh(s.hour)}`+(s.cop?', per copy':'');
+  $('rN').textContent=copies(s.hour);
+  $('rMin').textContent=f2(mn);$('rMax').textContent=f2(mx);
+  $('rRatio').textContent=(mx/mn).toFixed(2)+'×';
+  $('rField').textContent=fmt(field(s.hour));
+  const ref=s.mode==='peak'?'the 21:00 peak':s.mode==='trough'?'the 03:00 trough':'a hand-picked area';
+  $('caption').innerHTML=s.cop
+    ?`With copies opening above ${s.Emax}, players in view stay between <b>${f2(mn)}</b> and <b>${f2(mx)}</b> all day on a map sized for ${ref}. One copy at the trough, ${Math.max(...hrs.map(copies))} at the busiest hour.`
+    :`Sized for ${ref}, you see <b>${f2(E(21))}</b> others at 21:00 and <b>${f2(E(3))}</b> at 03:00. The same map is ${(mx/mn).toFixed(1)}× emptier at the trough, because E follows the population curve exactly.`;
+  const rows=[0,3,6,9,12,15,18,21];
+  $('tbody').innerHTML=rows.map(t=>`<tr class="${t===s.hour%24?'here':''}"><td>${hh(t)}</td><td>${share(t).toFixed(2)}</td><td>${fmt(s.P*share(t))}</td><td>${fmt(field(t))}</td><td>${f2(E1(t))}</td><td>${copies(t)}</td><td>${f2(E(t))}</td></tr>`).join('');
+  drawMap();drawDay();
+}
+function sync(){
+  $('sHour').value=s.hour;$('sP').value=s.P;$('sH').value=s.h;$('sR').value=s.r;$('sT').value=s.Et;$('sA').value=s.Akm;$('sEm').value=s.Emax;$('cop').checked=s.cop;
+  document.querySelectorAll('input[name=mode]').forEach(r=>r.checked=r.value===s.mode);
+}
+const bind=(id,key)=>$(id).addEventListener('input',e=>{s[key]=+e.target.value;update();});
+bind('sHour','hour');bind('sP','P');bind('sH','h');bind('sR','r');bind('sT','Et');bind('sA','Akm');bind('sEm','Emax');
+$('cop').addEventListener('change',e=>{s.cop=e.target.checked;update();});
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',()=>{s.mode=r.value;update();}));
+$('reset').addEventListener('click',()=>{s={...DEF};sync();update();});
+function setHour(v){s.hour=Math.max(0,Math.min(24,Math.round(v)));$('sHour').value=s.hour;update();}
+const cd=$('cDay');
+const toH=e=>{const r=cd.getBoundingClientRect();return (e.clientX-r.left-pad.l)/(r.width-pad.l-pad.r)*24;};
+cd.addEventListener('pointerdown',e=>setHour(toH(e)));
+cd.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||e.buttons)setHour(toH(e));});
+cd.addEventListener('keydown',e=>{const k={ArrowRight:1,ArrowUp:1,ArrowLeft:-1,ArrowDown:-1}[e.key];if(k){e.preventDefault();setHour(s.hour+k);}else if(e.key==='Home'){e.preventDefault();setHour(0);}else if(e.key==='End'){e.preventDefault();setHour(24);}});
+window.__density={get s(){return s;},E,copies,areaM2};
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+sync();update();
+})();
+</script>
+</body>
+</html>

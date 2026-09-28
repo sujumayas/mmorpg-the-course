@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The content race · MMO301 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4.2vw,2.6rem);line-height:1.12;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px;touch-action:none;cursor:ew-resize}
+.banner{margin:12px 0 0;padding:10px 14px;border-radius:10px;border:2px solid var(--blood);color:var(--blood);font-weight:700}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl{margin-bottom:10px}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 .95rem var(--sans);width:7em;padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-top:8px}
+.row label{align-items:center}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip,.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.check{display:inline-flex;gap:8px;align-items:center;font-weight:600;font-size:.9rem;justify-content:flex-start}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:520px){table{font-size:.84rem}th,td{padding:6px 5px}}
+.fine{font-size:.82rem;color:var(--ink-soft);margin:10px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+.legend i{display:inline-block;width:16px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO301 Virtual Worlds · Week 2 · Worked example</p>
+  <h1 id="caption">200 builders never run out of places to go, and fill the disk in 24 weeks.</h1>
+  <p class="lede">Letting players build wins the race against content running out once the population passes N*. Then it starts losing a second race, against storage. Restricting who builds barely moves N* and widens the window between the two enormously.</p>
+</header>
+
+<section class="panel" aria-label="Content race model">
+  <div class="charts">
+    <figure>
+      <figcaption>Weeks until a player runs out<small>Worthwhile new locations arrive at G per week; a player explores v per week. Drag on the chart to set N.</small></figcaption>
+      <canvas id="cOut" role="img" aria-label="Weeks until a player runs out of content, against population"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Weeks until storage is full<small>Everything built counts against the cap K, worthwhile or not.</small></figcaption>
+      <canvas id="cFull" role="img" aria-label="Weeks until storage is full, against population"></canvas>
+    </figure>
+  </div>
+  <div class="legend"><span><i style="background:var(--moss);opacity:.45"></i>Working window, N* to N<sub>max</sub></span><span><i style="background:var(--blood);height:3px"></i>Current N</span></div>
+  <p class="banner" id="banner" hidden role="status">No working window</p>
+  <p class="fine">Only Islandia's 14,000 locations and MUD1's 400-500 are historical. All parameters are illustrative.</p>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--moss)"><b id="rG">—</b><span>worthwhile per week, G</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rTout">—</b><span>weeks until a player runs out</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rNstar">—</b><span>crossover population N*</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rGrow">—</b><span>total built per week, D + bN</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rTfull">—</b><span>weeks until storage full</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rNmax">—</b><span>N<sub>max</sub>, largest population that lasts T<sub>min</sub></span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rWin">—</b><span>window width, N<sub>max</sub> &minus; N*</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rJunk">—</b><span>junk share at full storage</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <div class="ctl"><label for="N">Players N <output id="oN"></output></label>
+        <input id="N" type="range" min="0" max="1000" step="1" value="200"></div>
+      <div class="ctl"><label for="D">Designer output D, per week <output id="oD"></output></label>
+        <input id="D" type="range" min="0" max="100" step="1" value="5"></div>
+      <div class="ctl"><label for="v">Exploration per player v, per week <output id="ov"></output></label>
+        <input id="v" type="range" min="10" max="100" step="1" value="40"></div>
+      <div class="ctl"><label for="b">Built per player b, per week <output id="ob"></output></label>
+        <input id="b" type="range" min="0" max="10" step="0.1" value="4"></div>
+      <div class="ctl"><label for="q">Share worth visiting q <output id="oq"></output></label>
+        <input id="q" type="range" min="0.01" max="1" step="0.01" value="0.1"></div>
+      <div class="ctl"><label for="Tmin"><span>Minimum storage life T<sub>min</sub>, weeks</span> <output id="oTmin"></output></label>
+        <input id="Tmin" type="range" min="4" max="208" step="1" value="52"></div>
+    </div>
+    <div>
+      <span class="lbl">Who builds?</span>
+      <div class="presets" role="group" aria-label="Presets">
+        <button class="chip" data-p="any" aria-pressed="true">Anyone builds (TinyMUD-like)</button>
+        <button class="chip" data-p="exp" aria-pressed="false">Experienced players build (LPMud-like)</button>
+        <button class="chip" data-p="des" aria-pressed="false">Designers only (Diku-like)</button>
+      </div>
+      <p class="fine" id="presetNote"></p>
+      <div class="row" style="margin-top:14px">
+        <label for="S0">Starting locations S0 <input id="S0" type="number" min="50" max="5000" step="10" value="450"></label>
+      </div>
+      <div class="row">
+        <label for="K">Storage cap K <input id="K" type="number" min="1000" max="200000" step="1000" value="20000"></label>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <label class="check" for="logx"><input id="logx" type="checkbox"> Log scale for N</label>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="reset">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Same settings at several populations (current N highlighted)</caption>
+      <thead><tr><th>N</th><th>G</th><th>T<sub>out</sub></th><th>D + bN</th><th>T<sub>full</sub></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model: G = D + q&times;b&times;N; T<sub>out</sub> = S0 / (v &minus; G) while G &lt; v; N* = (v &minus; D) / (q&times;b); T<sub>full</sub> = (K &minus; S0) / (D + b&times;N); N<sub>max</sub> = ((K &minus; S0) / T<sub>min</sub> &minus; D) / b; junk = (1 &minus; q)&times;b&times;N&times;T<sub>full</sub> / K. Families and building rules after Bartle, <i>Designing Virtual Worlds</i> (2003), chapter 1.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f1=x=>x.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const f01=x=>x.toLocaleString('en-US',{maximumFractionDigits:1});
+const PRE={any:{b:4,q:.1,note:'Anyone can build. Most of what gets built is not worth a visit (q = 0.1).'},
+  exp:{b:.5,q:.6,note:'Only players who have earned the right build. They build less, and more of it is worth visiting (q = 0.6).'},
+  des:{b:0,D:5,note:'Only designers add content, 5 locations per week. No crossover exists: every player eventually runs out.'}};
+const DEF={N:200,D:5,v:40,b:4,q:.1,Tmin:52,S0:450,K:20000};
+let P={},preset='any';
+
+function read(){
+  P.N=+$('N').value;P.D=+$('D').value;P.v=+$('v').value;P.b=+$('b').value;P.q=+$('q').value;P.Tmin=+$('Tmin').value;
+  P.S0=Math.min(5000,Math.max(50,+$('S0').value||450));P.K=Math.min(200000,Math.max(1000,+$('K').value||20000));
+  P.log=$('logx').checked;
+}
+const G=N=>P.D+P.q*P.b*N;
+const Tout=N=>G(N)<P.v?P.S0/(P.v-G(N)):Infinity;
+const grow=N=>P.D+P.b*N;
+const Tfull=N=>grow(N)>0?(P.K-P.S0)/grow(N):Infinity;
+function Nstar(){if(P.D>=P.v)return 0;if(P.q*P.b>0)return (P.v-P.D)/(P.q*P.b);return null;}
+function Nmax(){return P.b>0?((P.K-P.S0)/P.Tmin-P.D)/P.b:Infinity;}
+const junk=N=>{const t=Tfull(N);return isFinite(t)?(1-P.q)*P.b*N*t/P.K:0;};
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:44,r:14,t:16,b:36};
+function xmap(w){
+  if(P.log){const a=Math.log10(1),bb=Math.log10(1000);return N=>pad.l+(w-pad.l-pad.r)*(Math.log10(Math.max(1,N))-a)/(bb-a);}
+  return N=>pad.l+(w-pad.l-pad.r)*N/1000;
+}
+function xinv(w,px){const t=Math.min(1,Math.max(0,(px-pad.l)/(w-pad.l-pad.r)));return P.log?Math.round(Math.pow(10,3*t)):Math.round(1000*t);}
+
+function chart(id,yMax,f,color,extra){
+  const {g,w,h}=setupCanvas($(id));g.clearRect(0,0,w,h);
+  const X=xmap(w),Y=y=>pad.t+(h-pad.t-pad.b)*(1-Math.min(y,yMax)/yMax);
+  const ns=Nstar(),nm=Nmax();
+  // window
+  if(ns!==null&&nm>=ns){const x0=X(Math.min(1000,ns)),x1=X(Math.min(1000,nm));
+    g.fillStyle=css('--moss');g.globalAlpha=.3;g.fillRect(x0,pad.t,Math.max(2,x1-x0),h-pad.t-pad.b);g.globalAlpha=1;}
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=Y(yMax*i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(yMax*i/4,pad.l-6,y);}
+  const ticks=P.log?[1,10,100,1000]:[0,250,500,750,1000];
+  g.textAlign='center';g.textBaseline='top';ticks.forEach(t=>g.fillText(t.toLocaleString('en-US'),X(t),h-pad.b+6));
+  g.textAlign='right';g.fillText('players N',w-pad.r,h-16);
+  // curve
+  g.strokeStyle=color;g.lineWidth=2.5;g.beginPath();let on=false;
+  for(let i=0;i<=400;i++){const N=P.log?Math.pow(10,3*i/400):1000*i/400,y=f(N);
+    if(!isFinite(y)){on=false;continue;}
+    const px=X(N),py=Y(y);on?g.lineTo(px,py):g.moveTo(px,py);on=true;}
+  g.stroke();
+  extra&&extra(g,w,h,X,Y);
+  // current N marker
+  const px=X(P.N),y=f(P.N),py=isFinite(y)?Y(y):pad.t;
+  g.strokeStyle=css('--blood');g.lineWidth=1.5;g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,h-pad.b);g.stroke();
+  g.fillStyle=css('--blood');g.beginPath();g.arc(px,py,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+}
+function vline(g,h,x,label,color){
+  g.strokeStyle=color;g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+  g.font='600 12px '+css('--sans');g.fillStyle=color;g.textBaseline='top';
+  const tw=g.measureText(label).width;const lx=x+tw+8>g.canvas.getBoundingClientRect().width-pad.r?x-tw-5:x+5;
+  g.textAlign='left';g.fillText(label,lx,pad.t+20);
+}
+
+function draw(){
+  const ns=Nstar(),nm=Nmax();
+  chart('cOut',200,Tout,css('--steel'),(g,w,h,X,Y)=>{
+    if(ns!==null&&ns<=1000){
+      g.strokeStyle=css('--steel');g.lineWidth=2.5;g.setLineDash([2,4]);g.beginPath();g.moveTo(X(ns),Y(200));g.lineTo(X(1000),Y(200));g.stroke();g.setLineDash([]);
+      g.fillStyle=css('--steel');g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText('never',w-pad.r-2,pad.t+3);
+      vline(g,h,X(ns),'N* = '+f1(ns),css('--ink'));
+    }
+  });
+  chart('cFull',400,Tfull,css('--ochre'),(g,w,h,X,Y)=>{
+    const y=Y(P.Tmin);g.strokeStyle=css('--ink-soft');g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ink-soft');g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('T min = '+P.Tmin+' weeks',w-pad.r-2,y-3);
+    if(isFinite(nm)&&nm>=0&&nm<=1000)vline(g,h,X(nm),'N max = '+f1(nm),css('--ink'));
+  });
+}
+
+function update(){
+  read();
+  const N=P.N,ns=Nstar(),nm=Nmax(),to=Tout(N),tf=Tfull(N);
+  $('oN').textContent=N;$('oD').textContent=P.D;$('ov').textContent=P.v;$('ob').textContent=P.b.toFixed(1);$('oq').textContent=P.q.toFixed(2);$('oTmin').textContent=P.Tmin;
+  $('rG').textContent=f1(G(N));
+  $('rTout').textContent=isFinite(to)?f1(to):'never';
+  $('rNstar').textContent=ns===null?'none':f1(ns);
+  $('rGrow').textContent=f01(grow(N));
+  $('rTfull').textContent=isFinite(tf)?f1(tf):'never';
+  $('rNmax').textContent=isFinite(nm)?f1(nm):'infinite';
+  const hasWin=ns!==null&&nm>=ns;
+  $('rWin').textContent=ns===null?'—':(isFinite(nm)?f1(nm-ns):'infinite');
+  $('rJunk').textContent=f1(junk(N)*100)+'%';
+  $('banner').hidden=!(ns!==null&&nm<ns);
+  if(!$('banner').hidden)$('banner').textContent=`No working window: storage runs out below ${f1(Math.max(0,nm))} players, but content only outpaces players above ${f1(ns)}.`;
+  const who=P.b>0?'builders':'players';
+  $('caption').textContent=`${N.toLocaleString('en-US')} ${N===1?who.slice(0,-1):who} ${isFinite(to)?'run out of places to go in '+Math.round(to)+' weeks':'never run out of places to go'}, and ${isFinite(tf)?'fill the disk in '+Math.round(tf)+' weeks':'never fill the disk'}.`;
+  let s;
+  if(ns===null) s=`Nobody but the designers builds, so G stays at ${f01(P.D)} per week and every player runs out after ${f1(Tout(0))} weeks, whatever the population. Storage lasts ${isFinite(tf)?f1(tf)+' weeks':'forever'}. This world never runs dry of disk and always runs dry of novelty.`;
+  else if(!hasWin) s=`The window has closed. By the time ${f1(ns)} players build faster than they explore, their total output fills ${P.K.toLocaleString('en-US')} locations in under ${P.Tmin} weeks. Lower b or raise q and watch N* barely move while N<sub>max</sub> jumps.`;
+  else {
+    s=`The working window runs from ${f1(ns)} to ${isFinite(nm)?f1(nm):'any number of'} players, ${isFinite(nm)?f1(nm-ns)+' players wide':'unbounded'}. `;
+    if(N<ns) s+=`At ${N} players you are below it: players explore faster than worthwhile rooms appear.`;
+    else if(N>nm) s+=`At ${N} players you are above it: the disk fills in ${f1(tf)} weeks, and ${f1(junk(N)*100)}% of it is rooms nobody wants to visit.`;
+    else s+=`At ${N} players you are inside it: nobody runs out, and storage lasts at least ${P.Tmin} weeks.`;
+  }
+  $('insight').innerHTML=s;
+  const base=[0,25,50,75,88,100,117,200,300,500];if(!base.includes(N))base.push(N);base.sort((a,b)=>a-b);
+  $('tbody').innerHTML=base.map(n=>{const a=Tout(n),t=Tfull(n);
+    return `<tr class="${n===N?'here':''}"><td>${n}</td><td>${f1(G(n))}</td><td>${isFinite(a)?f1(a):'never'}</td><td>${f01(grow(n))}</td><td>${isFinite(t)?f1(t):'never'}</td></tr>`;}).join('');
+  draw();
+}
+function setPreset(p){
+  preset=p;const x=PRE[p];
+  if('b' in x)$('b').value=x.b;if('q' in x)$('q').value=x.q;if('D' in x)$('D').value=x.D;
+  document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.p===p));
+  $('presetNote').textContent=x.note;
+}
+function clearPreset(){document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));$('presetNote').textContent='Custom settings.';}
+['D','b','q'].forEach(id=>$(id).addEventListener('input',()=>{clearPreset();update();}));
+['N','v','Tmin','S0','K'].forEach(id=>$(id).addEventListener('input',update));
+$('logx').addEventListener('change',update);
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{setPreset(c.dataset.p);update();}));
+$('reset').addEventListener('click',()=>{for(const k in DEF)$(k).value=DEF[k];$('logx').checked=false;setPreset('any');update();});
+['cOut','cFull'].forEach(id=>{const c=$(id);let drag=false;
+  const set=e=>{const r=c.getBoundingClientRect();$('N').value=xinv(r.width,e.clientX-r.left);update();};
+  c.addEventListener('pointerdown',e=>{drag=true;c.setPointerCapture(e.pointerId);set(e);});
+  c.addEventListener('pointermove',e=>{if(drag)set(e);});
+  c.addEventListener('pointerup',()=>{drag=false;});c.addEventListener('pointercancel',()=>{drag=false;});
+});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+setPreset('any');
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+})();
+</script>
+</body>
+</html>

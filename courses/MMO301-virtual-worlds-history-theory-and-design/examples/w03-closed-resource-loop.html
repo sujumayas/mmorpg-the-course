@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The closed resource loop · MMO301 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.55rem,4vw,2.5rem);line-height:1.12;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.modebar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:0 0 14px}
+.seg{display:inline-grid;grid-auto-flow:column;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg label{position:relative;padding:8px 14px;font:600 .92rem var(--sans);cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1.5px solid var(--ink)}
+.seg label:last-child{border-right:0}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg label:has(input:checked){background:var(--ink);color:var(--paper)}
+.seg label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:-4px}
+.seg.small{border-color:var(--steel);border-radius:8px}
+.seg.small label{padding:6px 12px;font-size:.85rem;border-color:var(--steel)}
+.seg.small label:has(input:checked){background:var(--steel)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px;touch-action:none;cursor:ew-resize}
+.inspect{margin-top:12px}
+.dayline{font-size:.88rem;font-variant-numeric:tabular-nums;margin:4px 0 0;color:var(--ink-soft)}
+.dayline b{color:var(--ink)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl{margin-bottom:10px}
+label.sl,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=range]:disabled{opacity:.4}
+input[type=number]{font:600 .95rem var(--sans);width:5em;padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:8px}
+.row label{font-weight:600;font-size:.92rem;display:flex;align-items:center;gap:8px}
+.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ochre);border-color:var(--ochre);color:var(--paper)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:520px){table{font-size:.82rem}th,td{padding:6px 4px}}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:860px){.tables{grid-template-columns:1fr}}
+.fine{font-size:.82rem;color:var(--ink-soft);margin:10px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO301 Virtual Worlds · Week 3 · Signature worked example</p>
+  <h1 id="caption">The bank ran dry on day 37. Players hold 99.5% of everything, and the world can only spawn what they give back.</h1>
+  <p class="lede">In a closed loop, daily supply settles at d &times; R: the share players give back each day, times everything that exists. Designers set R. Players set d, and hoarding pushes it toward zero. The faucet-and-drain fix keeps supply up and moves the problem into an ever-growing hoard.</p>
+</header>
+
+<section class="panel" aria-label="Resource loop simulation">
+  <div class="modebar">
+    <div class="seg" role="radiogroup" aria-label="Economy design">
+      <label><input type="radio" name="mode" value="closed" checked>Closed loop</label>
+      <label><input type="radio" name="mode" value="faucet">Faucet and drain</label>
+    </div>
+    <div class="seg small" role="radiogroup" aria-label="Days simulated">
+      <label><input type="radio" name="days" value="90">90 days</label>
+      <label><input type="radio" name="days" value="365" checked>365 days</label>
+      <label><input type="radio" name="days" value="730">730 days</label>
+    </div>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Where the resources are<small id="stockSub">Bank, world and held stocks at each day's end. The stack always sums to R.</small></figcaption>
+      <canvas id="cStock" role="img" aria-label="Stacked area chart of bank, world and held resources over time"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Spawned per day<small>Supply against demand c &times; N. The world is "dry" once players get less than half of what they want.</small></figcaption>
+      <canvas id="cSpawn" role="img" aria-label="Line chart of resources spawned per day against demand"></canvas>
+    </figure>
+  </div>
+  <div class="inspect">
+    <label class="sl" for="day">Inspect day <output id="oDay"></output></label>
+    <input id="day" type="range" min="1" max="365" step="1" value="37">
+    <p class="dayline" id="dayline" aria-live="polite"></p>
+  </div>
+  <p class="fine">Mechanism from Simpson (1999) on Ultima Online's first-year economy. All numbers are illustrative.</p>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rS">—</b><span>steady supply per day</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rMet">—</b><span>share of demand met</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rHeld">—</b><span>held at day's end, steady state</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rDry">—</b><span>dry day</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rHold">—</b><span>average holding time, 1/d</span></div>
+    <div class="stat" style="--c:var(--ochre)" id="stHoard"><b id="rHoard">—</b><span>steady hoard &sigma;(1 &minus; d)/d</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rLast">—</b><span id="rLastLbl">held on the last day</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rR">—</b><span id="rRLbl">total resources R</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <div class="ctl"><label class="sl" for="R">Total resources R <output id="oR"></output></label>
+        <input id="R" type="range" min="50000" max="1500000" step="50000" value="200000"></div>
+      <div class="ctl"><label class="sl" for="sig">Spawn capacity &sigma;, per day <output id="oSig"></output></label>
+        <input id="sig" type="range" min="1000" max="20000" step="500" value="6000"></div>
+      <div class="ctl"><label class="sl" for="N">Players N <output id="oN"></output></label>
+        <input id="N" type="range" min="100" max="5000" step="100" value="1500"></div>
+      <div class="ctl"><label class="sl" for="c">Demand per player c, per day <output id="oc"></output></label>
+        <input id="c" type="range" min="1" max="10" step="0.5" value="4"></div>
+      <div class="ctl"><label class="sl" for="d">Return rate d, per day <output id="od"></output></label>
+        <input id="d" type="range" min="0.001" max="0.1" step="0.001" value="0.005"></div>
+    </div>
+    <div>
+      <span class="lbl">Designers add resources</span>
+      <p class="fine" style="margin-top:2px">Adds 200,000 to R and to the bank on the chosen day, then reruns. Closed loop only.</p>
+      <div class="row">
+        <label for="injDay">On day <input id="injDay" type="number" min="1" max="730" step="1" value="60"></label>
+        <button class="btn primary" id="inject">Add 200,000</button>
+      </div>
+      <p class="fine" id="injList">No resources added.</p>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="reset">Reset</button>
+      </div>
+      <p class="fine" style="margin-top:16px">Each day, in order: spawn s = min(&sigma;, B), harvest h = min(W, c&times;N), return r = d&times;H to the bank. In faucet mode s = &sigma; and returns are destroyed.</p>
+    </div>
+  </div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <table>
+        <caption id="cap1">Checkpoints, current settings</caption>
+        <thead><tr><th>Day</th><th id="thB">Bank B</th><th>World W</th><th>Held H</th><th>Spawned s</th></tr></thead>
+        <tbody id="tb1"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption id="cap2">Return rate sweep, current settings</caption>
+        <thead><tr><th>d</th><th id="thB2">Last-day B</th><th>Last-day H</th><th>Last-day s</th><th>Dry day</th></tr></thead>
+        <tbody id="tb2"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Simulation follows the lecture: B + W + H = R in the closed loop; steady supply min(&sigma;, d&times;R, c&times;N); faucet steady hoard &sigma;(1 &minus; d)/d with &sigma; capped at demand. Source for the mechanism: Simpson, "The In-game Economics of Ultima Online" (GDC 1999). Summary of the later sink problem after Bartle, <i>Designing Virtual Worlds</i> (2003).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const short=v=>v>=1e6?(+(v/1e6).toFixed(2))+'M':v>=1000?Math.round(v/1000)+'k':fmt(v);
+const DEF={R:200000,sig:6000,N:1500,c:4,d:0.005,injDay:60};
+let P={},sim=null,inj=[],dayTouched=false;
+
+function read(){
+  P.mode=document.querySelector('input[name=mode]:checked').value;
+  P.days=+document.querySelector('input[name=days]:checked').value;
+  P.R=+$('R').value;P.sig=+$('sig').value;P.N=+$('N').value;P.c=+$('c').value;P.d=+$('d').value;
+}
+// Exact day loop from the spec.
+function run(mode,R0,sig,N,c,d,days,injections){
+  const closed=mode==='closed',dem=c*N;
+  let R=R0,B=closed?R0:0,W=0,H=0,dry=null;const rec=[{t:0,B,W,H,s:0,h:0,r:0,R}];
+  for(let t=1;t<=days;t++){
+    let s;if(closed){s=Math.min(sig,B);B-=s;}else s=sig;
+    W+=s;const h=Math.min(W,dem);W-=h;H+=h;
+    const r=d*H;H-=r;if(closed)B+=r;
+    if(closed)for(const x of injections)if(x===t){B+=200000;R+=200000;}
+    rec.push({t,B,W,H,s,h,r,R});
+    if(dry===null&&h<0.5*dem)dry=t;
+  }
+  return {rec,dry,R};
+}
+function steady(){
+  const dem=P.c*P.N;
+  if(P.mode==='closed'){const R=sim.R,s=Math.min(P.sig,P.d*R,dem);return {s,dem,held:s*(1-P.d)/P.d};}
+  const s=Math.min(P.sig,dem);return {s,dem,held:s*(1-P.d)/P.d};
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:48,r:14,t:14,b:34};
+function frame(g,w,h,yMax,xMax,yLbl){
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/xMax,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=Y(yMax*i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(short(yMax*i/4),pad.l-6,y);}
+  const step=xMax<=90?30:xMax<=365?90:180;
+  g.textAlign='center';g.textBaseline='top';for(let t=0;t<=xMax;t+=step)g.fillText(t,X(t),h-pad.b+6);
+  g.textAlign='right';g.fillText('day',w-pad.r,h-14);
+  return {X,Y};
+}
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.6,2,2.4,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v)||v;}
+function hline(g,w,Y,v,color,dash,label,below){
+  const y=Y(v);g.strokeStyle=color;g.lineWidth=1.5;g.setLineDash(dash);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.setLineDash([]);
+  g.fillStyle=color;g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline=below?'top':'bottom';g.fillText(label,w-pad.r-2,below?y+3:y-3);
+}
+function cursor(g,h,x){g.strokeStyle=css('--ink');g.globalAlpha=.45;g.lineWidth=1;g.setLineDash([3,3]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+
+function drawStocks(){
+  const {g,w,h}=setupCanvas($('cStock'));g.clearRect(0,0,w,h);
+  const rec=sim.rec,closed=P.mode==='closed',st=steady();
+  let yMax;
+  if(closed)yMax=sim.R;
+  else{let m=0;for(const r of rec)m=Math.max(m,r.H+r.W);yMax=niceMax(Math.max(m*1.1,st.held*1.05,1));}
+  const {X,Y}=frame(g,w,h,yMax,P.days);
+  const bands=closed?[['B','Bank',css('--steel')],['W','World',css('--moss')],['H','Held',css('--ochre')]]:[['W','World',css('--moss')],['H','Held',css('--ochre')]];
+  const base=new Float64Array(rec.length);
+  const labels=[];
+  for(const [k,name,col] of bands){
+    g.fillStyle=col;g.globalAlpha=.78;g.beginPath();
+    rec.forEach((r,i)=>{const x=X(r.t),y=Y(base[i]+r[k]);i?g.lineTo(x,y):g.moveTo(x,y);});
+    for(let i=rec.length-1;i>=0;i--)g.lineTo(X(rec[i].t),Y(base[i]));
+    g.closePath();g.fill();g.globalAlpha=1;
+    // direct label: middle of the stretch where the band is thickest
+    let bv=0;rec.forEach(r=>{if(r[k]>bv)bv=r[k];});
+    const near=[];rec.forEach((r,i)=>{if(r[k]>=bv*.97)near.push(i);});
+    const mi=near[Math.floor(near.length/2)];
+    if((h-pad.t-pad.b)*bv/yMax>=2&&mi!==undefined)labels.push({name,col,x:X(rec[mi].t),y:Y(base[mi]+rec[mi][k]/2)});
+    rec.forEach((r,i)=>base[i]+=r[k]);
+  }
+  g.font='700 12px '+css('--sans');g.textBaseline='middle';g.textAlign='left';
+  const placed=[];
+  for(const L of labels){
+    const tw=g.measureText(L.name).width,bw=tw+24,bh=20;
+    let x=Math.min(Math.max(L.x-bw/2,pad.l+4),w-pad.r-bw-4),y=Math.min(Math.max(L.y-bh/2,pad.t+2),h-pad.b-bh-2);
+    for(const q of placed)if(x<q.x+q.w&&x+bw>q.x&&y<q.y+q.h&&y+bh>q.y)y=q.y+q.h+4;
+    placed.push({x,y,w:bw,h:bh});
+    g.fillStyle=css('--paper');g.strokeStyle=L.col;g.lineWidth=1.5;g.beginPath();
+    if(g.roundRect)g.roundRect(x,y,bw,bh,6);else g.rect(x,y,bw,bh);g.fill();g.stroke();
+    g.fillStyle=L.col;g.fillRect(x+7,y+6,8,8);
+    g.fillStyle=css('--ink');g.fillText(L.name,x+19,y+bh/2+1);
+  }
+  if(closed){
+    for(const t of inj)if(t<=P.days){const x=X(t);g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,pad.t+10);g.stroke();
+      g.fillStyle=css('--ink');g.font='600 11px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('+200k',x+3,pad.t+1);}
+  } else hline(g,w,Y,st.held,css('--ink'),[6,4],'steady hoard '+fmt(st.held),st.held>yMax*.9);
+  cursor(g,h,X(+$('day').value));
+}
+function drawSpawn(){
+  const {g,w,h}=setupCanvas($('cSpawn'));g.clearRect(0,0,w,h);
+  const rec=sim.rec,st=steady(),dem=P.c*P.N;
+  let m=dem;for(const r of rec)m=Math.max(m,r.s);
+  const yMax=niceMax(m*1.15);
+  const {X,Y}=frame(g,w,h,yMax,P.days);
+  hline(g,w,Y,dem,css('--ink'),[6,4],'demand '+fmt(dem),false);
+  if(P.mode==='closed'){const ss=Math.min(P.sig,P.d*sim.R);if(Math.abs(ss-dem)>yMax*.04)hline(g,w,Y,ss,css('--moss'),[2,3],'steady supply '+fmt(ss),ss>dem);}
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  rec.forEach((r,i)=>{if(!i)return;const x=X(r.t),y=Y(r.s);i===1?g.moveTo(x,y):g.lineTo(x,y);});g.stroke();
+  g.font='700 13px '+css('--sans');
+  if(sim.dry!==null){const x=X(sim.dry);g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    const lab='Dry from day '+sim.dry,tw=g.measureText(lab).width;g.fillStyle=css('--blood');g.textBaseline='top';
+    g.textAlign='left';g.fillText(lab,x+tw+8>w-pad.r?x-tw-6:x+6,pad.t+4);}
+  else{g.fillStyle=css('--moss');g.textAlign='left';g.textBaseline='top';g.fillText('Never dry',pad.l+8,pad.t+4);}
+  cursor(g,h,X(+$('day').value));
+}
+
+function update(){
+  read();
+  const closed=P.mode==='closed';
+  sim=run(P.mode,P.R,P.sig,P.N,P.c,P.d,P.days,closed?inj:[]);
+  const dayEl=$('day');dayEl.max=P.days;
+  if(!dayTouched)dayEl.value=Math.min(P.days,sim.dry||P.days);
+  if(+dayEl.value>P.days)dayEl.value=P.days;
+  $('oR').textContent=fmt(P.R);$('oSig').textContent=fmt(P.sig);$('oN').textContent=fmt(P.N);$('oc').textContent=P.c;
+  $('od').textContent=(P.d*100).toFixed(1).replace(/\.0$/,'')+'%';
+  $('R').disabled=!closed;$('inject').disabled=!closed;$('injDay').disabled=!closed;
+  const st=steady(),last=sim.rec[P.days];
+  $('rS').textContent=fmt(st.s);$('rMet').textContent=(st.s/st.dem*100).toFixed(1)+'%';
+  $('rHeld').textContent=fmt(st.held);
+  $('rDry').textContent=sim.dry===null?'never':'day '+sim.dry;
+  $('rHold').textContent=(1/P.d).toFixed(1)+' days';
+  $('stHoard').hidden=closed;$('rHoard').textContent=fmt(st.held);
+  $('rLast').textContent=fmt(last.H);$('rLastLbl').textContent=`held on day ${P.days}`;
+  $('rR').textContent=closed?fmt(sim.R):'unbounded';$('rRLbl').textContent=closed?'total resources R':'total, faucet mode';
+  $('stockSub').textContent=closed?'Bank, world and held stocks at each day’s end. The stack always sums to R.':'World and held stocks at each day’s end. There is no bank: spawns come from nothing and returns are destroyed.';
+  $('injList').textContent=closed?(inj.length?'Added: '+inj.slice().sort((a,b)=>a-b).map(t=>'+200,000 on day '+t).join(', ')+'.':'No resources added.'):'Not used in faucet mode.';
+  // caption and insight
+  const heldShare=st.held/sim.R*100;
+  let cap,ins;
+  if(closed){
+    if(sim.dry!==null){cap=`The bank ran dry on day ${sim.dry}. Players hold ${heldShare.toFixed(1)}% of everything, and the world can only spawn what they give back.`;
+      ins=`Supply settles at d &times; R = ${(P.d*100).toFixed(1)}% &times; ${fmt(sim.R)} = <b>${fmt(Math.min(P.sig,P.d*sim.R))}</b> per day against demand of ${fmt(st.dem)}. To meet demand at this return rate you would need R = c&times;N/d = ${fmt(st.dem/P.d)}, and ${(100*(1-P.d)).toFixed(1)}% of it would sit in players' storage.`;}
+    else{cap=`Never dry: supply settles at ${fmt(st.s)} a day, ${(st.s/st.dem*100).toFixed(1)}% of demand.`;
+      ins=st.s<st.dem?`Players get ${(st.s/st.dem*100).toFixed(1)}% of what they want, above the 50% dry line. Supply is still capped at d &times; R = ${fmt(P.d*sim.R)}.`
+        :`The return rate is high enough that d &times; R = ${fmt(P.d*sim.R)} covers demand. Players give back fast, so the bank never empties. Drag d down to see what hoarding does.`;}
+  } else {
+    cap=`Supply meets demand every day, and players now hold ${fmt(last.H)} units, still growing.`;
+    ins=`The faucet spawns ${fmt(P.sig)} a day whatever players hoard. The hoard heads for ${fmt(st.held)} units, the same order of stock the closed world needed to meet demand. The shortage became a storage problem.`;
+  }
+  $('caption').textContent=cap;$('insight').innerHTML=ins;
+  // inspect line
+  const di=+dayEl.value,r=sim.rec[di];$('oDay').textContent=di;
+  $('dayline').innerHTML=(closed?`Day ${di}: bank <b>${fmt(r.B)}</b>, `:`Day ${di}: `)+`world <b>${fmt(r.W)}</b>, held <b>${fmt(r.H)}</b>, spawned <b>${fmt(r.s)}</b>, harvested <b>${fmt(r.h)}</b>`;
+  // tables
+  $('thB').textContent=closed?'Bank B':'Bank B (none)';
+  const cps=[1,10,20,30,36,37,38,60,90,180,365,730].filter(t=>t<=P.days);if(sim.dry&&!cps.includes(sim.dry))cps.push(sim.dry);cps.sort((a,b)=>a-b);
+  $('tb1').innerHTML=cps.map(t=>{const x=sim.rec[t];return `<tr class="${t===sim.dry?'here':''}"><td>${t}</td><td>${closed?fmt(x.B):'—'}</td><td>${fmt(x.W)}</td><td>${fmt(x.H)}</td><td>${fmt(x.s)}</td></tr>`;}).join('');
+  $('cap1').textContent=`Checkpoints, current settings${sim.dry?' (dry day highlighted)':''}`;
+  $('cap2').textContent=`Return rate sweep, day ${P.days}, other settings as now`;
+  $('thB2').textContent=closed?`Day-${P.days} B`:'B (none)';
+  const ds=[0.005,0.01,0.02,0.03,0.05];if(!ds.some(x=>Math.abs(x-P.d)<1e-9))ds.push(P.d);ds.sort((a,b)=>a-b);
+  $('tb2').innerHTML=ds.map(d=>{const s=run(P.mode,P.R,P.sig,P.N,P.c,d,P.days,closed?inj:[]),x=s.rec[P.days];
+    return `<tr class="${Math.abs(d-P.d)<1e-9?'here':''}"><td>${+d.toFixed(3)}</td><td>${closed?fmt(x.B):'—'}</td><td>${fmt(x.H)}</td><td>${fmt(x.s)}</td><td>${s.dry===null?'never':s.dry}</td></tr>`;}).join('');
+  draw();
+}
+function draw(){drawStocks();drawSpawn();}
+
+document.querySelectorAll('input[name=mode],input[name=days]').forEach(x=>x.addEventListener('change',update));
+['R','sig','N','c','d'].forEach(id=>$(id).addEventListener('input',update));
+$('day').addEventListener('input',()=>{dayTouched=true;update();});
+$('inject').addEventListener('click',()=>{const t=Math.min(730,Math.max(1,Math.round(+$('injDay').value||60)));inj.push(t);update();});
+$('reset').addEventListener('click',()=>{for(const k in DEF)$(k).value=DEF[k];inj=[];dayTouched=false;
+  document.querySelector('input[name=mode][value=closed]').checked=true;document.querySelector('input[name=days][value="365"]').checked=true;update();});
+['cStock','cSpawn'].forEach(id=>{const c=$(id);let drag=false;
+  const set=e=>{const r=c.getBoundingClientRect(),t=(e.clientX-r.left-pad.l)/(r.width-pad.l-pad.r);$('day').value=Math.round(Math.min(1,Math.max(0,t))*P.days)||1;dayTouched=true;update();};
+  c.addEventListener('pointerdown',e=>{drag=true;c.setPointerCapture(e.pointerId);set(e);});
+  c.addEventListener('pointermove',e=>{if(drag)set(e);});
+  c.addEventListener('pointerup',()=>{drag=false;});c.addEventListener('pointercancel',()=>{drag=false;});
+});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+})();
+</script>
+</body>
+</html>

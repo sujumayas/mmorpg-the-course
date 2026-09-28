@@ -102,13 +102,13 @@ flowchart LR
 | GD201 | stub | 0/14 | 0 (2) | 0 | 0 |
 | GD202 | stub | 0/14 | 0 (1) | 0 | 0 |
 | UX201 | finished | 14/14 | 14 (2) | 14 | 4 |
-| CS202 | stub | 12/14 | 0 (2) | 9 | 0 |
+| CS202 | stub | 14/14 | 0 (2) | 13 | 0 |
 | CS203 | stub | 0/14 | 0 (2) | 0 | 0 |
 | GD203 | finished | 14/14 | 14 (3) | 15 | 4 |
-| DB201 | stub | 8/14 | 0 (1) | 3 | 0 |
+| DB201 | stub | 13/14 | 0 (1) | 10 | 0 |
 | PR201 | stub | 0/14 | 0 (0) | 0 | 0 |
-| MMO301 | stub | 14/14 | 14 (2) | 13 | 4 |
-| MMO302 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO301 | finished | 14/14 | 14 (2) | 13 | 4 |
+| MMO302 | stub | 5/14 | 0 (2) | 3 | 0 |
 | MMO303 | finished | 14/14 | 15 (3) | 14 | 4 |
 | MMO304 | finished | 14/14 | 14 (3) | 12 | 4 |
 | MMO305 | finished | 14/14 | 14 (2) | 14 | 4 |
@@ -990,7 +990,7 @@ The foundational MMO course: what makes a world persistent, shared and alive, fr
 **Signature worked examples**
 
 - Bartle's interest graph: what happens to a world's population when killers outnumber socializers (simulation of the 1996 dynamics)
-- Ultima Online's planned resource ecology: why players emptied it (case study, verify sources)
+- Ultima Online's planned resource ecology: why players emptied it (case study, sources verified in MMO301 w03)
 
 **Core readings**
 
