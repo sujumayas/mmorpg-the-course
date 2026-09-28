@@ -10,7 +10,7 @@
 
 **Before class:** Ian Schreiber, *Game Balance Concepts* (blog course, 2010), Level 4, "Probability and Randomness", read up to the section on cards. Schreiber & Romero, *Game Balance* (2021), the chapter on probability and dice, first half.
 
-**Prerequisites from earlier courses:** Fractions, percentages and reading a function's graph from [MA101](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md) weeks 1-2. You will reuse MA101's habit of drawing two views of the same quantity.
+**Prerequisites from earlier courses:** Fractions, percentages and reading a function's graph from MA101 [week 1, functions as machines](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w01-functions-as-machines.md) and [week 2, linear functions and rates](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md). You will reuse MA101's habit of drawing two views of the same quantity.
 
 **Interactive:** [examples/w01-advantage-grid.html](../examples/w01-advantage-grid.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 
@@ -274,7 +274,7 @@ Work in pairs. Each pair needs two d20s (or a dice app), grid paper, and a lapto
 
 ## Sources
 
-- Wizards of the Coast, *Dungeons & Dragons Basic Rules* (2014), "Using Ability Scores", sections on advantage and disadvantage and on passive checks (+5 for advantage, −5 for disadvantage). D&D Beyond, dndbeyond.com/sources/dnd/basic-rules-2014/using-ability-scores. Paraphrased.
+- Wizards of the Coast, *System Reference Document 5.1* (2016), "Using Ability Scores", Passive Checks: "If the character has advantage on the check, add 5." Same rule in the *Dungeons & Dragons Basic Rules* (2014), "Using Ability Scores", sections on advantage and disadvantage and on passive checks (+5 for advantage, −5 for disadvantage). D&D Beyond, dndbeyond.com/sources/dnd/basic-rules-2014/using-ability-scores. Paraphrased.
 - bg3.wiki, "Advantage" (Baldur's Gate 3, release version 2023 and later patches). Roll two d20 and use the higher; applies to attack rolls, ability checks and saving throws; multiple sources do not stack; average kept roll 13.825.
 - Fire Emblem Wiki, "True hit". Two-random-number averaging used from The Binding Blade through Awakening and in Three Houses; true hit table (displayed 50 → 50.50%, 70 → 82.30%, 80 → 92.20%, 90 → 98.10%); Fates, Shadows of Valentia and Engage use a hybrid system. Values recomputed for this lecture by counting the 10,000 pairs.
 - Schreiber, I. (2010). *Game Balance Concepts*, Level 4, "Probability and Randomness". gamebalanceconcepts.wordpress.com.

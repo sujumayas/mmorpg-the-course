@@ -10,7 +10,7 @@
 
 **Before class:** OpenIntro Statistics, 4th edition (Diez, Çetinkaya-Rundel & Barr, 2019, free online), chapter 2, section 2.1 "Examining numerical data". Skim the Wired article on Microsoft's Halo 3 playtest lab (Thompson, 2007), listed in Sources.
 
-**Prerequisites from earlier courses:** [MA102 week 4, expected value](w04-expected-value-comparing-weapons.md), [week 5, variance and standard deviation](w05-variance-and-swingy-designs.md), [week 7, median and percentile waits](w07-geometric-distribution-kills-until-the-drop.md), [week 8, the normal curve](w08-dice-sums-and-the-normal-curve.md), and [week 10, the gacha mean and median](w10-pseudo-random-distribution-and-pity-timers.md). Reading plots from [MA101](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md).
+**Prerequisites from earlier courses:** [MA102 week 4, expected value](w04-expected-value-comparing-weapons.md), [week 5, variance and standard deviation](w05-variance-and-swingy-designs.md), [week 7, median and percentile waits](w07-geometric-distribution-kills-until-the-drop.md), [week 8, the normal curve](w08-dice-sums-and-the-normal-curve.md), and [week 10, the gacha mean and median](w10-pseudo-random-distribution-and-pity-timers.md). Reading plots from [MA101 week 1](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w01-functions-as-machines.md).
 
 **Interactive:** [examples/w12-playtest-spread.html](../examples/w12-playtest-spread.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 

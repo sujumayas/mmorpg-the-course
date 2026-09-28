@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts*, Level 4 ("Probability and Randomness"), the sections on dice and bell curves. Schreiber & Romero, *Game Balance* (2021), the probability chapter, sections on dice and distributions.
 
-**Prerequisites from earlier courses:** Sample spaces and counting outcomes, MA102 week 1. Expected value, MA102 week 4. Variance and standard deviation, MA102 week 5. The binomial distribution, MA102 week 6. (See the [MA102 syllabus](../syllabus.md) for these weeks.) Function graphs and reading curve shapes, MA101 weeks 1 to 4 ([MA101 syllabus](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md)).
+**Prerequisites from earlier courses:** Sample spaces and counting outcomes, [MA102 week 1](w01-sample-spaces-and-events.md). Expected value, [week 4](w04-expected-value-comparing-weapons.md). Variance and standard deviation, [week 5](w05-variance-and-swingy-designs.md). The binomial distribution, [week 6](w06-binomial-crits-over-a-fight.md). Function graphs and reading curve shapes, [MA101 week 1](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w01-functions-as-machines.md) through [MA101 week 4](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md).
 
 **Interactive:** [Dice shapes: 2d6 vs 1d12](../examples/w08-dice-shapes.html) (spec at the end of this lecture). Keep it open during section 2.
 
@@ -241,7 +241,7 @@ Pairs. Paper, two six-sided dice per pair, one twelve-sided die per pair (or a d
 <summary>Answers</summary>
 
 1. On 2d6, 11 has 2 ways and 12 has 1 way, so `3/36 = 8.3%`. On 1d12 it is `2/12 = 16.7%`. The chance doubled.
-2. From the 3d6 cumulative values, `P(3d6 ≤ 12) = 74.1%` and `P(3d6 ≤ 14) = 90.7%`, a gain of 16.6 points. At skill 16, `P(≤ 16) = 98.1%` and `P(≤ 18) = 100%` (before any special failure rules), a gain of 1.9 points. The same item is worth about nine times more to the middle player.
+2. From the 3d6 cumulative values, `P(3d6 ≤ 12) = 74.1%` and `P(3d6 ≤ 14) = 90.7%`, a gain of 16.7 points. At skill 16, `P(≤ 16) = 98.1%` and `P(≤ 18) = 100%` (before any special failure rules), a gain of 1.9 points. The same item is worth about nine times more to the middle player.
 3. Mean `= 4 × 9/2 = 18`. Variance `= 4 × (64 − 1)/12 = 21`, so SD `≈ 4.58`. With the continuity correction, `z = (24.5 − 18)/4.58 ≈ 1.42`, so the estimate is about 7.8%. (The exact value, by enumeration, is 8.1%, so the estimate is close but a little low.)
 4. Many answers work. Examples: `2d6 + 7` has mean 14 and SD `√(2 × 35/12) ≈ 2.42`. `1d4 + 11.5` does not work (fractional). `2d4 + 9` has mean 14 and SD `√(2 × 15/12) ≈ 1.58`. `4d6 − 0` has mean 14 and SD `≈ 3.42`. For "never feels random", the smallest SD wins, so `2d4 + 9` (SD 1.58, range 11 to 17) beats `4d6` (SD 3.42, range 4 to 24). The trade-off is that the hit never surprises anyone.
 
@@ -254,7 +254,7 @@ Pairs. Paper, two six-sided dice per pair, one twelve-sided die per pair (or a d
 ## Sources
 
 - Wikipedia, "Catan". First published 1995 by Kosmos. Two six-sided dice decide which hexes produce; a roll of 7 moves the robber and players with 8 or more resource cards discard half.
-- Catan GmbH, official rulebook downloads (catan.com, "Game Rules"), and secondary summaries at catangenerator.org ("Catan Rules") and playsettlr.com ("Catan Dice Probability"): number tokens carry dots showing relative frequency, and 6 and 8 are printed in red (base game, current edition).
+- Catan GmbH, *CATAN: The Game* rulebook (6th edition, 2025 PDF at catan.com, "Game Rules"): number discs placed on the hexes, hexes produce when their number is rolled, and a player with more than 7 resource cards discards half (rounded down) when a 7 is rolled. The dots under each number and the red 6 and 8 are printed on the components, not described in the rulebook text; secondary summaries at catangenerator.org ("Catan Rules") and playsettlr.com ("Catan Dice Probability") describe them.
 - GURPS Wiki, "Success Roll", summarising *GURPS Basic Set* (4th edition, 2004), p. B343. Success rolls are 3d6 against a target, succeeding on a total equal to or below it; a roll of 3 or 4 is always a success.
 - Wizards of the Coast, *Dungeons & Dragons System Reference Document 5.1*, "Advantage and Disadvantage" (roll a second d20 and use the higher or lower) and the spell "Fireball" (8d6 fire damage on a failed Dexterity save). D&D 5th edition, 2014 rules.
 - Schreiber, I. (2010). *Game Balance Concepts*, Level 4, "Probability and Randomness" (online course).

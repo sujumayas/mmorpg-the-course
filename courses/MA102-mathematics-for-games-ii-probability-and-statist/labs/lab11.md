@@ -8,10 +8,11 @@ Build a validated Monte Carlo simulation of a loot system with bad-luck protecti
 
 ## Starter materials
 
-- `lab11_starter.ipynb` (on the course page). A Python 3 notebook with numpy and matplotlib, a helper `estimate(trial, n, seed)` that returns `p̂` (or `x̄`) with its 95% margin, and a stub `trial_raid(rng, config)` to fill in.
-- `raid_config.json`. The loot rules for a fictional 10-player raid boss: two items drop per kill from a weighted table of 8 items (weights 20, 20, 15, 15, 10, 10, 5, 5), each player needs one specific item, a player who already has their item is removed from eligibility, and a personal pity counter guarantees a player's item after 12 kills without it.
+- [`lab11-starter/`](lab11-starter/README.md). [`lab11_starter.py`](lab11-starter/lab11_starter.py) has a helper `estimate(trial, n, seed)` that returns `p̂` (or `x̄`) with its 95% margin, a `percentile` helper and a stub `trial_raid(rng, config)` to fill in. Run it as a script or paste it into a notebook.
+- [`raid_config.json`](lab11-starter/raid_config.json). The loot rules for a fictional 10-player raid boss: two items drop per kill from a weighted table of 8 items (weights 20, 20, 15, 15, 10, 10, 5, 5), each player needs one specific item, a player who already has their item is removed from eligibility, and a personal pity counter guarantees a player's item on their 12th kill without it. The starter's docstring gives the order of events within one kill.
+- [`validation_config.json`](lab11-starter/validation_config.json), the one-player case for step 1.
 - Your lab 07 and lab 10 code.
-- The week 11 interactive, `examples/w11-monte-carlo-mulligan.html`, as a reference for convergence plots.
+- The week 11 interactive, [`examples/w11-monte-carlo-mulligan.html`](../examples/w11-monte-carlo-mulligan.html), as a reference for convergence plots.
 
 ## Steps
 
@@ -28,7 +29,7 @@ Build a validated Monte Carlo simulation of a loot system with bad-luck protecti
 
 ## Deliverable
 
-The notebook, plus a report of at most 800 words with:
+The notebook or script, plus a report of at most 800 words with:
 
 - The validation table and edge tests (steps 1 and 2).
 - The main results table with margins (step 3) and the precision calculation (step 4).

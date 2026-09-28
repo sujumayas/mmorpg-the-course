@@ -1,6 +1,6 @@
 # MA102 · Lab 12: Summarizing a playtest
 
-Assigned in week 12 ([lecture](../lectures/w12-descriptive-statistics-for-playtests.md)). Due at the start of week 13. Counts toward the problem-set grade. You will reuse the dataset in lab 13.
+Assigned in week 12 ([lecture](../lectures/w12-descriptive-statistics-for-playtests.md)). Due at the start of week 13. Counts toward the problem-set grade.
 
 ## Objective
 
@@ -8,10 +8,10 @@ Turn a raw playtest log into a one-page summary a lead designer can act on: choo
 
 ## Starter materials
 
-- `playtest_w12.csv` (on the course page). One row per tester for 40 testers of a fictional dungeon, with columns `tester_id`, `experience` (new or returning), `clear_minutes`, `deaths`, `minutes_idle` (from the session log), `reached_boss` (yes or no), `beat_boss` (yes or no) and `difficulty_rating` (1 to 7, 4 = about right). The data is synthetic and built to contain one idle outlier, one genuinely lost tester and a two-group split in ratings.
-- `lab12_starter.ipynb` with pandas, numpy and matplotlib imported, and a helper `inclusive_percentile(values, p)` implementing the lecture's rule so your quartiles match the answer key.
-- A spreadsheet version (`lab12_starter.xlsx`) using `PERCENTILE.INC`.
-- The week 12 interactive, `examples/w12-playtest-spread.html`, which accepts pasted values for checking.
+- [`playtest_w12.csv`](lab12-starter/playtest_w12.csv) in [`lab12-starter/`](lab12-starter/README.md). One row per tester for 40 testers of a fictional dungeon, with columns `tester_id`, `experience` (new or returning), `clear_minutes` (entry to boss kill or quitting), `deaths`, `minutes_idle` (from the session log), `reached_boss` (yes or no), `beat_boss` (yes or no) and `difficulty_rating` (1 to 7, 4 = about right). The data is synthetic and built to contain one idle outlier, one genuinely lost tester and a two-group split in ratings.
+- [`lab12_starter.py`](lab12-starter/lab12_starter.py), which loads the CSV and gives you `inclusive_percentile(values, p)`, the lecture's rule, so your quartiles match the answer key. It runs as a script or in a notebook; pandas and numpy also work.
+- Spreadsheet users: open the CSV and use `PERCENTILE.INC`, which follows the same rule.
+- The week 12 interactive, [`examples/w12-playtest-spread.html`](../examples/w12-playtest-spread.html). It has no import box, but you can load the "Boss attempts" preset, add testers and drag values to check a small subset of your numbers.
 
 ## Steps
 
@@ -25,9 +25,9 @@ Turn a raw playtest log into a one-page summary a lead designer can act on: choo
 
 ## Deliverable
 
-The notebook or spreadsheet plus a one-page PDF (at most 450 words and three figures) addressed to the lead designer. It must:
+The notebook, script or spreadsheet plus a one-page PDF (at most 450 words and three figures) addressed to the lead designer. It must:
 
-- Open with the three numbers you think matter most, each with n and the summary type named ("median clear time 22 minutes, IQR 18 to 27, n = 39").
+- Open with the three numbers you think matter most, each with n and the summary type named (in the form "median clear time 22 minutes, IQR 18 to 27, n = 39", with your own numbers).
 - State each outlier decision in one line.
 - Explain the rating distribution without using only its mean.
 - End with one recommended design change supported by a number from your analysis.

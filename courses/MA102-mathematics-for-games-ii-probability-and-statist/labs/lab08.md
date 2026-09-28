@@ -8,12 +8,12 @@ Build a small tool that computes the exact distribution of any dice expression, 
 
 ## Starter materials
 
-- `lab08_starter.ipynb` (on the course page): a Python 3 notebook with numpy and matplotlib, and three empty functions:
+- [`starter/lab08_starter.py`](starter/lab08_starter.py): a Python 3 script (paste it into a notebook if you prefer) with numpy and matplotlib, and three empty functions:
   - `die(F)` returns an array of length F filled with `1/F`.
   - `dice_sum(N, F, bonus)` returns `(values, probs)` for NdF + bonus using `np.convolve` N times.
   - `success_curve(values, probs, mode)` returns `P(roll ≥ t)` or `P(roll ≤ t)` for every target t.
-- `lab08_starter.xlsx` for spreadsheet users: a 2d6 table of all 36 outcomes, an empty sheet for 3d6 by repeated convolution (one column per die), and a chart template.
-- The week 8 interactive, `examples/w08-dice-shapes.html`, for checking values.
+- Spreadsheet users build the sheet themselves from this layout: a 2d6 table of all 36 outcomes ([`starter/lab08_2d6_outcomes.csv`](starter/lab08_2d6_outcomes.csv)), an empty sheet for 3d6 by repeated convolution (one column per die), and a column chart of each distribution that you add yourself.
+- The week 8 interactive, [`examples/w08-dice-shapes.html`](../examples/w08-dice-shapes.html), for checking values.
 
 ## Steps
 

@@ -1,4 +1,4 @@
-# MA102 · Week 04 — Expected Value: Comparing Weapons
+# MA102 · Week 04 — Expected value: comparing weapons
 
 **Why this matters:** Every time a player asks "which weapon is better?", they are asking for an average over outcomes they cannot predict one swing at a time. Expected value is the tool that answers that question, and it is also the number your game prints on the tooltip, so you need to know what it includes and what it quietly leaves out.
 
@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts* (blog course, 2010), Level 4 "Probability and Randomness"; Schreiber & Romero, *Game Balance* (2021), the chapter on probability, the sections on expected value.
 
-**Prerequisites from earlier courses:** MA101 week 2, linear functions and rates, and MA101 week 6, rational functions (see the [MA101 syllabus](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md)). From this course, [week 1, sample spaces](w01-sample-spaces-and-events.md), [week 2, independence](w02-independent-events-and-the-gamblers-fallacy.md) and [week 3, the complement rule](w03-complement-rule-chance-of-at-least-one-drop.md).
+**Prerequisites from earlier courses:** MA101 [week 2, linear functions and rates](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md) and [week 6, rational functions](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w06-rational-functions-and-asymptotes.md). From this course, [week 1, sample spaces](w01-sample-spaces-and-events.md), [week 2, independence](w02-independent-events-and-the-gamblers-fallacy.md) and [week 3, the complement rule](w03-complement-rule-chance-of-at-least-one-drop.md).
 
 **Interactive:** [w04-expected-dps.html](../examples/w04-expected-dps.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 
@@ -146,7 +146,7 @@ Expected DPS = 42.12 / 1.0 = **42.12**.
 
 The ranking flipped. The Maul led by 4.0 on the tooltip and trails by 4.3 in the fight. The shortcut formula gives the same answers: for the Maul, 0.9 × 120 × 1.05 / 3 = 37.8; for the Rapier, 0.9 × 36 × 1.30 / 1 = 42.12.
 
-Notice what caused the flip. Both weapons lost the same 10% to misses, so misses cannot change the order. The crit multiplier is where they differ: 1.05 for the Maul, 1.30 for the Rapier. The Rapier's special is worth 25 percentage points of crit, which at `m = 2` is worth 25% more damage. That is far more than the 10% tooltip gap.
+Notice what caused the flip. Both weapons lost the same 10% to misses, so misses cannot change the order. The crit multiplier is where they differ: 1.05 for the Maul, 1.30 for the Rapier. The Rapier's special adds 25 percentage points of crit, which at `m = 2` lifts its crit multiplier from 1.05 to 1.30, about 24% more damage. That is far more than the 10% tooltip gap.
 
 ### The break-even point
 
@@ -171,11 +171,11 @@ The Rapier ties the Maul when its total crit chance is 16.7%, which means its sp
 | 30% | 42.12 | 37.80 | Rapier |
 | 40% | 45.36 | 37.80 | Rapier |
 
-The Rapier column climbs by exactly 1.62 DPS per 5 points of crit. Expected DPS is a **linear function** of crit chance, the same straight-line shape you met in MA101 week 2. Straight lines are easy to tune: one slope, one intercept, one crossing point.
+The Rapier column climbs by exactly 1.62 DPS per 5 points of crit. Expected DPS is a **linear function** of crit chance, the same straight-line shape you met in [MA101 week 2](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md). Straight lines are easy to tune: one slope, one intercept, one crossing point.
 
 ### A visual you can move
 
-Open the interactive. The left panel shows two pairs of bars: tooltip DPS and expected DPS for each weapon. The right panel plots expected DPS against the Rapier's crit bonus as two lines, a flat one for the Maul and a rising one for the Rapier, with the crossing point marked. Drag the crit bonus slider and watch the left panel's ranking flip exactly when the slider passes the crossing on the right. Then change the character's base crit chance. The Maul's line lifts slightly, the Rapier's lifts by the same fraction, and the crossing moves. Finally drag the miss chance: both bars shrink by the same fraction and the crossing does not move at all. That last behavior is the formula telling you that a shared multiplier cannot change a ranking.
+Open the interactive. The left panel shows two pairs of bars: tooltip DPS and expected DPS for each weapon. The right panel plots expected DPS against the Rapier's crit bonus as two lines, a flat one for the Maul and a rising one for the Rapier, with the crossing point marked. Drag the crit bonus slider and watch the left panel's ranking flip exactly when the slider passes the crossing on the right. Then change the character's base crit chance. Both weapons gain the same number of crit points, but not the same percentage of damage. One extra point lifts the Maul's crit multiplier from 1.05 to 1.06, about 0.95%, and the Rapier's from 1.30 to 1.31, about 0.77%. The Maul gains proportionally more, so the crossing moves slightly to the right. Finally drag the miss chance: both bars shrink by the same fraction and the crossing does not move at all. That last behavior is the formula telling you that a shared multiplier cannot change a ranking.
 
 ### Cross-game recognition
 

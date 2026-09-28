@@ -1,4 +1,3 @@
-<!-- generated-stub: safe to overwrite -->
 # MA102 — Mathematics for Games II: Probability and Statistics
 
 Year 1, semester 2 · 4 credits · Prerequisites: MA101
@@ -39,6 +38,31 @@ Loot, crits, drop rates, matchmaking and A/B tests all run on probability. This 
 - Dota 2 pseudo-random distribution: same average crit rate, far lower streakiness (verify C constants)
 - Gacha pity: soft/hard pity changes the expected pulls (Genshin hard pity at 90; verify soft-pity rates)
 - 2d6 vs 1d12: same range, completely different feel
+
+## Labs
+
+- [MA102 · Lab 01: Sample spaces in a spreadsheet](labs/lab01.md)
+- [MA102 · Lab 02: Streak detective](labs/lab02.md)
+- [MA102 · Lab 03: The drop-rate calculator](labs/lab03.md)
+- [MA102 · Lab 04: The expected-DPS spreadsheet](labs/lab04.md)
+- [MA102 · Lab 05: Swing and overkill](labs/lab05.md)
+- [MA102 · Lab 06: Crit simulator versus the binomial](labs/lab06.md)
+- [MA102 · Lab 07: Dry streaks at scale](labs/lab07.md)
+- [MA102 · Lab 08: Dice by design](labs/lab08.md)
+- [MA102 · Lab 09: Loot table from targets](labs/lab09.md)
+- [MA102 · Lab 10: Design a bad-luck protection rule](labs/lab10.md)
+- [MA102 · Lab 11: Monte Carlo lab](labs/lab11.md)
+- [MA102 · Lab 12: Summarizing a playtest](labs/lab12.md)
+- [MA102 · Lab 13: How many kills until you trust a drop rate?](labs/lab13.md)
+- [MA102 · Lab 14: Analyze an A/B test, and design one](labs/lab14.md)
+
+## Assessment materials
+
+- [MA102 · Exam bank](assessments/exam-bank.md)
+- [MA102 · Final exam brief](assessments/final-exam-brief.md)
+- [MA102 · Loot design brief](assessments/loot-design-brief.md)
+- [MA102 · Monte Carlo lab brief](assessments/monte-carlo-lab-brief.md)
+- [MA102 · Problem sets brief](assessments/problem-sets-brief.md)
 
 ## Readings
 

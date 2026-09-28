@@ -8,9 +8,9 @@ Design a two-tier weighted loot table for a raid boss by working backward from p
 
 ## Starter materials
 
-- `lab09_starter.xlsx` (on the course page). Sheet "Brief" holds the design targets below. Sheet "Table" has columns for tier, entry, weight, probability within tier, overall probability, rolls-adjusted per-kill chance, kills to 50%, kills to 95%, value and EV contribution. The formula cells are empty.
-- `lab09_starter.ipynb` for Python users: a `pick(table, rng)` function using the cumulative-walk algorithm from the lecture, and an empty `simulate_kills(table, kills, rolls, rng)` function.
-- The week 9 interactive, `examples/w09-loot-weights.html`, and the week 7 interactive, `examples/w07-kills-until-drop.html`, for checking values.
+- Spreadsheet users build the workbook themselves from this layout. Sheet "Brief" holds the design targets below ([`starter/lab09_brief.csv`](starter/lab09_brief.csv)). Sheet "Table" has columns for tier, entry, weight, probability within tier, overall probability, rolls-adjusted per-kill chance, kills to 50%, kills to 95%, value and EV contribution. The formula cells are empty. [`starter/lab09_table_template.csv`](starter/lab09_table_template.csv) has these columns and one row per entry.
+- [`starter/lab09_starter.py`](starter/lab09_starter.py) for Python users (paste it into a notebook if you prefer): a `pick(table, rng)` function using the cumulative-walk algorithm from the lecture, and an empty `simulate_kills(table, kills, rolls, rng)` function.
+- The week 9 interactive, [`examples/w09-loot-weights.html`](../examples/w09-loot-weights.html), and the week 7 interactive, [`examples/w07-kills-until-drop.html`](../examples/w07-kills-until-drop.html), for checking values.
 
 ### The brief
 

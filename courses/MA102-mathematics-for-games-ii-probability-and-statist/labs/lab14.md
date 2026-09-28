@@ -11,12 +11,12 @@ You will analyze a simulated A/B test of a game tutorial, confirm by simulation 
 
 ## Starter materials
 
-Provided in the course repository under `labs/lab14-starter/`. Each item is described so you can rebuild it if needed.
+The files are in [`lab14-starter/`](lab14-starter/README.md). Each item is described so you can rebuild it if needed.
 
-- `tutorial_test.csv`. 4,800 rows, one per new player: `player_id`, `group` (A or B), `completed_tutorial` (0/1), `day1_return` (0/1), `sessions_day1` (integer), `platform` (pc or mobile). Assignment was random, 50/50.
-- `ab_template.xlsx` (also `ab_template.py`). Cells for `k_A`, `n_A`, `k_B`, `n_B`, pooled rate, SE, `z`, p-value, and a power calculator tab.
-- Seeded random generator notes (seed 14 for all simulations).
-- The interactive `examples/w14-ab-test-simulator.html` for checking numbers.
+- [`tutorial_test.csv`](lab14-starter/tutorial_test.csv). 4,800 rows, one per new player: `player_id`, `group` (A or B), `completed_tutorial` (0/1), `day1_return` (0/1), `sessions_day1` (integer), `platform` (pc or mobile). Assignment was random, 50/50.
+- [`ab_template.py`](lab14-starter/ab_template.py). Functions to fill in for `k_A`, `n_A`, `k_B`, `n_B`, pooled rate, SE, `z`, p-value, the interval for the difference, the power formula and the A/A simulation. Spreadsheet users build the same cells, with the power formula on a second sheet.
+- [`mulberry32.py`](lab14-starter/mulberry32.py). The seeded random generator (seed 14 for all simulations).
+- The interactive [`examples/w14-ab-test-simulator.html`](../examples/w14-ab-test-simulator.html) for checking numbers.
 
 ## Steps
 

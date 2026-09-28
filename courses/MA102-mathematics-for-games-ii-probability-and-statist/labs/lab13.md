@@ -11,12 +11,13 @@ You will measure, by simulation, how often confidence intervals for a rate conta
 
 ## Starter materials
 
-The instructor provides these in the course repository under `labs/lab13-starter/`. If you work without the repository, each item is described well enough to rebuild in 15 minutes.
+The files are in [`lab13-starter/`](lab13-starter/README.md). Each item is described well enough to rebuild in 15 minutes if you work without the repository.
 
-- `drops.csv`. A drop log of 3,000 simulated boss kills, one row per kill, with columns `kill_id`, `player_id`, `dropped` (0 or 1). The hidden drop rate is set by the instructor and revealed after submission.
-- `intervals_template.xlsx` (also as `intervals_template.py`). A sheet with empty columns `n`, `k`, `p_hat`, `se`, `wald_low`, `wald_high`, `wilson_low`, `wilson_high`, and a tab named `coverage` with rows for `p` in {0.02, 0.10, 0.50, 0.80} and columns for `n` in {5, 20, 100, 1000}.
-- `mulberry32.py` / `RAND()` notes. A seeded random generator so your results are reproducible. Use seed 13 for the main runs.
-- The interactive `examples/w13-sampling-intervals.html` for checking your numbers.
+- [`drops.csv`](lab13-starter/drops.csv). A drop log of 3,000 simulated boss kills (150 players, 20 kills each), one row per kill, with columns `kill_id`, `player_id`, `dropped` (0 or 1). The hidden drop rate is set by the instructor with `make_drops.py` and revealed after submission.
+- [`intervals_template.py`](lab13-starter/intervals_template.py). Functions to fill in for the Wald and Wilson intervals, the growing sample and the coverage simulation. Spreadsheet users build columns `n`, `k`, `p_hat`, `se`, `wald_low`, `wald_high`, `wilson_low`, `wilson_high` instead.
+- [`coverage_template.csv`](lab13-starter/coverage_template.csv). The `coverage` grid: rows for `p` in {0.02, 0.10, 0.50, 0.80} and `n` in {5, 20, 100, 1000}, with empty columns for each method.
+- [`mulberry32.py`](lab13-starter/mulberry32.py). The seeded random generator the course interactives use, so your results are reproducible. Use seed 13 for the main runs. `RAND()` in a spreadsheet cannot be seeded, so paste a fixed column of values generated once.
+- The interactive [`examples/w13-sampling-intervals.html`](../examples/w13-sampling-intervals.html) for checking your numbers.
 
 ## Steps
 

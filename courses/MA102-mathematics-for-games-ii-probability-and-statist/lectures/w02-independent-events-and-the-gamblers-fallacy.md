@@ -10,7 +10,7 @@
 
 **Before class:** Ian Schreiber, *Game Balance Concepts* (blog course, 2010), Level 5, "Probability and Randomness Gone Horribly Wrong", the sections on the gambler's fallacy and on how people perceive random sequences. Schreiber & Romero, *Game Balance* (2021), the chapter on probability, the part on cards and drawing without replacement.
 
-**Prerequisites from earlier courses:** [MA102 week 1](w01-sample-spaces-and-events.md) (sample spaces, events, the addition rule). Powers and exponential decay from [MA101](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md) week 4.
+**Prerequisites from earlier courses:** [MA102 week 1](w01-sample-spaces-and-events.md) (sample spaces, events, the addition rule). Powers and exponential decay from [MA101 week 4, exponentials and the XP curve](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md).
 
 **Interactive:** [examples/w02-dry-streaks.html](../examples/w02-dry-streaks.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 
@@ -124,7 +124,7 @@ Open `examples/w02-dry-streaks.html`. It simulates 1,000 players making 60 attem
 
 The left panel shows the rows. Under "Independent", you see clumps of successes and long dark gaps, some longer than 30 cells. Switch to "Bag" and the rows become regular, with no gap longer than 18.
 
-The right panel answers the gambler's question with data. Pick a streak length `k` with the slider. The simulation finds every moment, across all players, where someone had just failed `k` times in a row, and reports what fraction of the **next** attempts succeeded. Under "Independent" the bar sits at 10% for every `k`, within simulation noise. Under "Bag" it climbs along the curve `1/(10 − k)` when `k` counts failures since the bag was refilled. A streak that crosses a refill resets the count, so the observed bars sit a little off that curve.
+The right panel answers the gambler's question with data. Pick a streak length `k` with the slider. The simulation finds every moment, across all players, where someone had just failed `k` times in a row, and reports what fraction of the **next** attempts succeeded. Under "Independent" the bar sits at 10% for every `k`, within simulation noise. Under "Bag" it climbs along the curve `1/(10 − k)` when `k` counts failures since the bag was refilled, with the winner still inside. The curve does not hold if you count from the last success instead. Right after a win, the rest of that bag holds only losing tickets, so those bars sit much lower.
 
 The two views make one point together. The left panel shows why players feel due. Long droughts are common, and they look like they must be building toward something. The right panel shows that, under independent rolls, nothing is building. The feeling is real. The debt is not.
 
@@ -250,7 +250,7 @@ Work in groups of three. You need a deck of ordinary playing cards, a d10 (or an
 - Hearthstone Wiki (hearthstone.wiki.gg), "Deck". 30-card constructed decks, at most two copies of a card and one of a legendary (current rules as of 2026, with noted card-specific exceptions).
 - Schreiber, I. (2010). *Game Balance Concepts*, Level 5, "Probability and Randomness Gone Horribly Wrong". gamebalanceconcepts.wordpress.com. Source of the made-up-coin-flip demonstration, paraphrased.
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press. Chapter on probability, cards and drawing without replacement.
-- Run-length and drought probabilities in this lecture are computed by exact dynamic programming over the stated models and can be reproduced with the lab's starter script.
+- Run-length and drought probabilities in this lecture are computed by exact dynamic programming over the stated models and can be reproduced with the functions you write in Lab 02.
 
 ## Interactive spec: examples/w02-dry-streaks.html
 
@@ -267,7 +267,7 @@ Work in groups of three. You need a deck of ordinary playing cards, a d10 (or an
 
 **Right panel.** Slider `k` from 0 to 30. For the selected system, scan all histories for positions where exactly `k` consecutive failures have just occurred (since the last success or since start), and plot the observed success rate on the next attempt as a bar, with the count of such moments. Overlay the theoretical value as a line across all k:
 - Independent: `p`.
-- Bag: `1/(N − j)` where `j` is failures since the last refill. Because j and k differ across refills, plot the theoretical curve for "failures since the bag was filled" and note in small text that the observed bar can differ slightly when streaks cross a refill.
+- Bag: `1/(N − j)` where `j` is failures since the last refill. In bag mode, condition on `j` failures since the bag was filled while its winner is still inside, and note in small text that counting from the last success instead gives much lower bars.
 - Streak bonus: `min(1, p + b × k)`.
 Show "n/a" when fewer than 30 moments exist for that k.
 

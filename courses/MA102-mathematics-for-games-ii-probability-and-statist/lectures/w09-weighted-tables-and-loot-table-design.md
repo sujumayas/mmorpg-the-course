@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts*, Level 4 ("Probability and Randomness") for review, and Level 5 ("Probability and Randomness Gone Horribly Wrong"), on how players perceive odds. Schreiber & Romero, *Game Balance* (2021), the probability chapter, sections on loot tables. Minecraft Wiki, "Loot table" (read the sections on pools, rolls and weight).
 
-**Prerequisites from earlier courses:** The complement rule, MA102 week 3. Expected value, MA102 week 4. The geometric distribution and dry-streak percentiles, [MA102 week 7](w07-geometric-distribution-kills-until-the-drop.md). Ratios and rational expressions, MA101 week 6 ([MA101 syllabus](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md)). Data-driven stat tables in JSON and CSV, CS102 week 13 ([CS102 syllabus](../../CS102-programming-for-games-ii-structures-and-patterns/syllabus.md)).
+**Prerequisites from earlier courses:** The complement rule, [MA102 week 3](w03-complement-rule-chance-of-at-least-one-drop.md). Expected value, [MA102 week 4](w04-expected-value-comparing-weapons.md). The geometric distribution and dry-streak percentiles, [MA102 week 7](w07-geometric-distribution-kills-until-the-drop.md). Ratios and rational expressions, [MA101 week 6](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w06-rational-functions-and-asymptotes.md). Data-driven stat tables in JSON and CSV, CS102 week 13 ([CS102 syllabus](../../CS102-programming-for-games-ii-structures-and-patterns/syllabus.md)).
 
 **Interactive:** [examples/w09-loot-weights.html](../examples/w09-loot-weights.html) (spec at the end of this lecture). Keep it open during sections 2 and 3.
 
@@ -265,7 +265,7 @@ Constraints: the legendary ring's 95th-percentile wait must stay at 299 kills or
 
 1. The total rises from 100 to 105, so the original Rare falls from 5% to `5/105 ≈ 4.76%`. Take 5 from Nothing (70 to 65) and the total stays 100, so the original Rare stays at 5%.
 2. `w = 490 × 0.02 / 0.98 = 10`. The new total is 500, so the weight-49 entry goes from `49/490 = 10%` to `49/500 = 9.8%`.
-3. Per roll `p = 3/60 = 0.05`. Per chest `1 − 0.95² = 0.0975`. For 95% of players, `n = ceil(ln 0.05 / ln 0.9025) = ceil(29.23) = 30` chests.
+3. Per roll `p = 3/60 = 0.05`. Per chest `1 − 0.95² = 0.0975`. For 95% of players, `n = ceil(ln 0.05 / ln 0.9025) = ceil(29.20) = 30` chests.
 4. `P₀ = 60/100 = 0.6`. Target `0.6³ = 0.216`. New weight `= 40 × 0.216 / 0.784 = 11.02`, rounded down to 11. New chance of some item `= 40 / 51 ≈ 78.4%` (it was 40%).
 
 </details>

@@ -13,7 +13,7 @@ Build a spreadsheet that computes tooltip DPS and expected DPS for a set of weap
 - A spreadsheet (Google Sheets, LibreOffice Calc or Excel). Python 3 is allowed if you also produce a table and a chart.
 - The weapon list and character profiles below.
 
-> **Weapon list: the Ashfall armory.** A new zone adds five two-handed and one-handed weapons. All numbers are item data.
+> **Weapon list: the Ashfall armory.** A new zone adds six weapons, some two-handed and some one-handed. All numbers are item data.
 >
 > | Weapon | Min | Max | Speed (s) | Special |
 > |---|---|---|---|---|

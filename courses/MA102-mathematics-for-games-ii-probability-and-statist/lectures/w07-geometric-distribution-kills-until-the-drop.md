@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts*, Level 4 ("Probability and Randomness"). Schreiber & Romero, *Game Balance* (2021), the probability chapter, the sections on independent trials and expected value. Rewatch your notes from MA102 weeks 3 and 5.
 
-**Prerequisites from earlier courses:** Logarithms for "how many tries until" questions, MA101 week 5 ([MA101 syllabus](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md)). The complement rule, MA102 week 3, expected value, MA102 week 4, variance, MA102 week 5, and independence, MA102 week 2 (all in the [MA102 syllabus](../syllabus.md)).
+**Prerequisites from earlier courses:** Logarithms for "how many tries until" questions, [MA101 week 5](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w05-logarithms-how-many-levels-until.md). From this course, the complement rule ([week 3](w03-complement-rule-chance-of-at-least-one-drop.md)), expected value ([week 4](w04-expected-value-comparing-weapons.md)), variance ([week 5](w05-variance-and-swingy-designs.md)) and independence ([week 2](w02-independent-events-and-the-gamblers-fallacy.md)).
 
 **Interactive:** [Kills until the drop](../examples/w07-kills-until-drop.html) (spec at the end of this lecture). Keep it open during section 2.
 
@@ -298,7 +298,7 @@ For each reward:
 
 - Old School RuneScape Wiki, "Abyssal whip", drop sources table (current game, accessed September 2026). Abyssal demons drop the whip at 1/512.
 - Bulbapedia, "Shiny Pokémon", and Wikipedia, "Shiny Pokémon". Base shiny odds 1/8,192 in Generations II to V, 1/4,096 from Generation VI (X and Y, 2013) onward, without modifiers such as the Shiny Charm.
-- HoYoverse, "Chronicled Wish Rules & FAQ", Genshin Impact official news, and the in-game wish details for the character event banner (Genshin Impact 1.0 to 5.x era). Base 5-star rate 0.600%, consolidated rate 1.600%, 5-star guaranteed within 90 wishes. Game8, "Gacha Pull Rates", used as a cross-check.
+- HoYoverse, the in-game wish details for the character event banner (Genshin Impact 1.0 to 5.x era). Base 5-star rate 0.600%, consolidated rate 1.600%, 5-star guaranteed within 90 wishes. Game8, "Gacha Pull Rates", used as a cross-check.
 - Old School RuneScape Wiki, general use of "dry" streak terminology and kill-count calculators (community practice, 2013 to present).
 - Schreiber, I. (2010). *Game Balance Concepts*, Level 4, "Probability and Randomness" (online course).
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press. Probability chapter.

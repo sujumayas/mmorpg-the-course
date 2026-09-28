@@ -10,7 +10,7 @@
 
 **Before class:** OpenIntro Statistics (4th ed.), section 5.3 (hypothesis testing) and section 6.2 (difference of two proportions); Kohavi, R. & Thomke, S. (2017), "The Surprising Power of Online Experiments," *Harvard Business Review*.
 
-**Prerequisites from earlier courses:** MA102 week 13, [Sampling, confidence and why n=5 lies](w13-sampling-confidence-and-why-n5-lies.md), and week 8, [Dice sums and the normal curve](w08-dice-sums-and-the-normal-curve.md). Week 3 (complement rule) is listed in the [MA102 syllabus](../syllabus.md). Solving for a variable under a square root, from the [MA101 syllabus](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md).
+**Prerequisites from earlier courses:** MA102 week 13, [Sampling, confidence and why n=5 lies](w13-sampling-confidence-and-why-n5-lies.md), and week 8, [Dice sums and the normal curve](w08-dice-sums-and-the-normal-curve.md). [Week 3](w03-complement-rule-chance-of-at-least-one-drop.md) (complement rule). Solving for a variable under a square root, from [MA101 week 3](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w03-polynomials-and-quadratic-curves.md).
 
 **Interactive:** [A/B test simulator](../examples/w14-ab-test-simulator.html) (built from the spec at the end of this lecture). Keep it open during sections 2 and 4.
 
@@ -37,7 +37,7 @@ This week's math answers one question. **Is the difference between A and B bigge
 
 Before SimCity launched in March 2013, EA's Maxis team tested its pre-order web page using the Optimizely platform. The original page showed a large promotional banner offering a discount on a future purchase to anyone who pre-ordered. Everyone expected the offer to help. The team tested variants that placed and styled the offer differently, plus one with no offer at all.
 
-The version with no offer produced 43.4% more purchases. The banner had pushed the buy button down the page, and removing it did more than any discount. The team's shared intuition was wrong, and only a randomized comparison could show it.
+Optimizely's case study reported that the version with no offer produced 43.4% more purchases. The banner had pushed the buy button down the page, and removing it did more than any discount. The team's shared intuition was wrong, and only a randomized comparison could show it.
 
 Now turn that around. Suppose your own shop test shows a 10% lift. Is that real, or did B get a luckier batch of visitors? The SimCity case study reports the lift but not the visitor counts, so as published you cannot check it. By the end of this section you will know what you would need to check.
 
@@ -95,11 +95,11 @@ The two views together carry the lesson. A test that is too small does not prote
 
 Rewrite each case as "two rates, two sample sizes, compute `z`".
 
-**SimCity pre-order page (EA/Maxis, 2013).** Two conversion rates, `k_A/n_A` visitors who bought with the banner and `k_B/n_B` without it. The published 43.4% is a relative lift, `(p̂_B − p̂_A) / p̂_A`. To judge it you need the visitor counts, which the case study does not give. It does say the team sent all site traffic into the test to get answers fast. That is the right instinct. At the high traffic of a major launch, even a 5% relative lift on a small conversion rate becomes detectable.
+**SimCity pre-order page (EA/Maxis, 2013).** Two conversion rates, `k_A/n_A` visitors who bought with the banner and `k_B/n_B` without it. The reported 43.4% is a relative lift, `(p̂_B − p̂_A) / p̂_A`. To judge it you need the visitor counts, which the case study does not give. It does say the team sent all site traffic into the test to get answers fast. That is the right instinct. At the high traffic of a major launch, even a 5% relative lift on a small conversion rate becomes detectable.
 
 **League of Legends cross-team chat (Riot Games).** Riot's player-behavior lead, Jeffrey Lin, described switching cross-team "/all" chat from on by default to opt-in. Over the following two weeks Riot reported negative chat down 32.7% and positive chat up 34.5%, while the share of games with any cross-team chat barely moved (about 54% to 53%). As described, this was a before-and-after comparison across the whole game, not a randomized split. Put it in the A/B frame and a question appears. Was anything else different in those two weeks? A before-and-after design cannot rule out patches, events or seasonal change. With League's volume, `n` is not the problem, since millions of games make the random error tiny. The design is the risk. A randomized split would have removed it. Note the contrast. SimCity had the control group and did not publish `n`. Riot had huge `n` and, as described, no control group. A trustworthy result needs both.
 
-**Web search (Bing).** Kohavi and Thomke describe a small change to how Bing displayed ad headlines. The idea sat in a backlog for months until an engineer ran an A/B test. It raised revenue by 12%, which they report was worth over $100 million a year in the US. It is the same test on the same kind of rate (clicks per visit), at a scale where a lift of a fraction of a percent is detectable. Kohavi's wider point matches the SimCity story. Experienced teams are poor at predicting which ideas will win, which is why they test.
+**Web search (Bing).** Kohavi and Thomke describe a small change to how Bing displayed ad headlines. The idea sat in a backlog for more than six months until an engineer ran an A/B test. It raised revenue by 12%, which they report was worth over $100 million a year in the US. It is the same comparison of two groups, at a scale where a lift of a fraction of a percent is detectable. Kohavi's wider point matches the SimCity story. Experienced teams are poor at predicting which ideas will win, which is why they test.
 
 One idea underneath all three. Compare two rates, measure the gap in units of its standard error, and only trust the gap if randomization made the groups comparable.
 
@@ -238,9 +238,9 @@ Expected output: a class dot plot with about 5% of `z` values beyond ±1.96, and
 
 ## Sources
 
-- Optimizely customer case study, "Electronic Arts optimizes SimCity game launch for pre-order revenue", and TechCrunch, "Optimizely Explains How It Boosted SimCity Pre-Order Revenue" (14 June 2013). SimCity (2013) pre-order page test, the no-offer variant with 43.4% more purchases, traffic sent to the test. No visitor counts or significance figures are published.
-- Lin, J. (2015). "The first online player behavior experiment at Riot Games." LinkedIn article, 20 April 2015. League of Legends cross-team chat made opt-in; over two weeks negative chat down 32.7%, neutral down 1.9%, positive up 34.5%, games with cross-team chat about 54% to 53%. Described by Lin as Riot's first player-behavior experiment; the article does not give the exact date of the test. Riot later removed cross-team chat entirely (patch 11.21, 2021), reported by PC Gamer.
-- Kohavi, R. & Thomke, S. (2017). "The Surprising Power of Online Experiments." *Harvard Business Review*, September-October 2017. Bing headline test, 12% revenue increase, reported worth over $100 million a year.
+- Optimizely customer case study, "Electronic Arts optimizes SimCity game launch for pre-order revenue", and TechCrunch, "Optimizely Explains How It Boosted SimCity Pre-Order Revenue" (14 June 2013). SimCity (2013) pre-order page test, the no-offer variant with 43.4% more purchases, traffic sent to the test. No visitor counts or significance figures are published. Both pages were unreachable when this lecture was last checked (September 2026), so the 43.4% is quoted as the case study reported it.
+- Lin, J. (2015). "The first online player behavior experiment at Riot Games." LinkedIn article, 20 April 2015. League of Legends cross-team chat made opt-in; over two weeks negative chat down 32.7%, neutral down 1.9%, positive up 34.5%, games with cross-team chat about 54% to 53%. Re-read September 2026. Described by Lin as Riot's first player-behavior experiment; the article does not give the exact date of the test. Riot later removed cross-team chat entirely (patch 11.21, 2021), reported by PC Gamer.
+- Kohavi, R. & Thomke, S. (2017). "The Surprising Power of Online Experiments." *Harvard Business Review*, September-October 2017. Bing headline test, idea shelved for more than six months, 12% revenue increase, reported worth over $100 million a year in the US. Re-read September 2026.
 - Kohavi, R., Tang, D. & Xu, Y. (2020). *Trustworthy Online Controlled Experiments*. Cambridge University Press. A/A tests, peeking, interference.
 - van Belle, G. (2008). *Statistical Rules of Thumb*, 2nd ed. Wiley. Lehr's `16/Δ²` sample-size rule.
 - Diez, D., Çetinkaya-Rundel, M. & Barr, C. (2019). *OpenIntro Statistics*, 4th ed., sections 5.3 and 6.2.

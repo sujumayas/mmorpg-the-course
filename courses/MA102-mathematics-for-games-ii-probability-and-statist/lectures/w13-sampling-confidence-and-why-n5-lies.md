@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts*, Level 5 ("Probability and Randomness Gone Horribly Wrong"); OpenIntro Statistics (4th ed.), sections 5.1 and 5.2 on point estimates and confidence intervals for a proportion.
 
-**Prerequisites from earlier courses:** MA102 weeks 3, 6 and 12 in the [MA102 syllabus](../syllabus.md) (complement rule, binomial distribution, descriptive statistics), plus [week 5 on variance](w05-variance-and-swingy-designs.md) and [week 8 on the normal curve](w08-dice-sums-and-the-normal-curve.md). Square roots and reading curves from MA101, see the [MA101 syllabus](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md).
+**Prerequisites from earlier courses:** MA102 [week 3](w03-complement-rule-chance-of-at-least-one-drop.md), [week 6](w06-binomial-crits-over-a-fight.md) and [week 12](w12-descriptive-statistics-for-playtests.md) (complement rule, binomial distribution, descriptive statistics), plus [week 5 on variance](w05-variance-and-swingy-designs.md) and [week 8 on the normal curve](w08-dice-sums-and-the-normal-curve.md). Square roots and reading curves from [MA101 week 3](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w03-polynomials-and-quadratic-curves.md).
 
 **Interactive:** [w13-sampling-intervals.html](../examples/w13-sampling-intervals.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 

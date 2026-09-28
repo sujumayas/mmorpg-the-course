@@ -7,19 +7,19 @@
 
 ## The task
 
-You build a Monte Carlo simulation of a raid boss's loot system with a personal pity counter, prove that it follows the rules before you trust it, report every estimate with a margin of error, and use it to answer a producer's question that has no convenient formula. The full rules are in `raid_config.json` and summarized in the lab handout: 10 players, 2 drops per kill from a weighted table of 8 items (weights 20, 20, 15, 15, 10, 10, 5, 5), one needed item per player, satisfied players removed from eligibility, and a guarantee after 12 kills without the item.
+You build a Monte Carlo simulation of a raid boss's loot system with a personal pity counter, prove that it follows the rules before you trust it, report every estimate with a margin of error, and use it to answer a producer's question that has no convenient formula. The full rules are in [`raid_config.json`](../labs/lab11-starter/raid_config.json) and summarized in the lab handout: 10 players, 2 drops per kill from a weighted table of 8 items (weights 20, 20, 15, 15, 10, 10, 5, 5), one needed item per player, satisfied players removed from eligibility, and a guarantee on the 12th kill without the item.
 
 This is the course's only graded simulation project. It tests the week 11 skills directly and draws on the weighted tables of week 9 and the pity counters of week 10.
 
 ## Deliverables
 
-1. **Notebook** (`lab11-<name>.ipynb`), runnable top to bottom with the seeds given in the handout. A grader will restart the kernel and run all cells. It must finish in under 10 minutes on a lab machine.
+1. **Notebook or script** (`lab11-<name>.ipynb` or `lab11-<name>.py`, built on the [lab 11 starter](../labs/lab11-starter/README.md)), runnable top to bottom with the seeds given in the handout. A grader will run it from a fresh start. It must finish in under 10 minutes on a lab machine.
 2. **Report** (`lab11-<name>.pdf`), at most 800 words plus tables. It contains, in this order:
    - The validation table and the two edge tests (lab steps 1 and 2).
    - The main results table with 95% margins, and the precision calculation (steps 3 and 4).
    - The pity 12 versus 16 comparison and a recommendation (step 5).
    - One paragraph on model error versus sampling error, using your deliberate bug (step 6).
-3. **Honesty note**, three lines at the top of the report: which lab 07 and lab 10 code you reused, anyone you discussed methods with, and any cell that does not run.
+3. **Honesty note**, three lines at the top of the report: which lab 07 and lab 10 code you reused, anyone you discussed methods with, and any part that does not run.
 
 ## Reference values the grader checks
 
@@ -56,7 +56,7 @@ The pilot milestone exists because the most common failure in this lab is runnin
 
 ## How the grader marks
 
-1. Restart and run the notebook. Any cell that fails costs the dependent criterion its Excellent band.
+1. Run the notebook or script from a fresh start. Any step that fails costs the dependent criterion its Excellent band.
 2. Read `trial_raid` against the config, rule by rule.
 3. Compare the validation table with the reference values.
 4. Rerun step 5 with a different seed. Your conclusion should survive; the numbers should move by about your stated margins.

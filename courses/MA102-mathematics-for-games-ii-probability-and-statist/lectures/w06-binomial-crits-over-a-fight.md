@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts* (blog course, 2010), Level 4 "Probability and Randomness", the sections on independent trials; Schreiber & Romero, *Game Balance* (2021), the chapter on probability, the sections on combinations and repeated trials.
 
-**Prerequisites from earlier courses:** MA101 week 4, exponents and exponential decay (see the [MA101 syllabus](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md)). From this course, [week 2, independence](w02-independent-events-and-the-gamblers-fallacy.md), [week 3, the complement rule](w03-complement-rule-chance-of-at-least-one-drop.md), [week 4, expected value](w04-expected-value-comparing-weapons.md) and [week 5, variance](w05-variance-and-swingy-designs.md).
+**Prerequisites from earlier courses:** [MA101 week 4](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md), exponents and exponential decay. From this course, [week 2, independence](w02-independent-events-and-the-gamblers-fallacy.md), [week 3, the complement rule](w03-complement-rule-chance-of-at-least-one-drop.md), [week 4, expected value](w04-expected-value-comparing-weapons.md) and [week 5, variance](w05-variance-and-swingy-designs.md).
 
 **Interactive:** [Crits over a fight](../examples/w06-crit-binomial.html). Keep it open during section 2.
 
@@ -242,7 +242,7 @@ Expected output: a class tally close to 43/38/15/3/0.5 percent, one sentence per
 
 - Wizards of the Coast, *System Reference Document 5.1* (D&D 5th edition, 2016): natural 20 is a critical hit; Fighter class Extra Attack at 5th level; Champion archetype Improved Critical (critical hit on 19 or 20) at 3rd level. The 2024 revision (SRD 5.2) keeps Improved Critical on 19 or 20.
 - Serebii.net, "Critical Hits" (Pokémon, Generation VII onward): base crit chance 1/24, stage +2 crit chance 1/2. https://www.serebii.net/games/criticalhits.shtml
-- Dota 2 Wiki, "Random Distribution" (accessed September 2026): most chance-based abilities use a pseudo-random distribution whose chance increases after each failed trial. https://dota2.fandom.com/wiki/Random_Distribution
+- Liquipedia Dota 2 Wiki, "Random Distribution" (Dota 2, re-read September 2026). Most chance-based effects use a pseudo-random distribution whose chance increases after each failed trial. https://liquipedia.net/dota2/Random_Distribution
 - League of Legends Wiki, "Critical strike" (accessed September 2026): critical strikes use a pseudo-random algorithm rather than independent rolls. https://wiki.leagueoflegends.com/en-us/Critical_strike
 - Schreiber, I. (2010). *Game Balance Concepts*, Level 4, "Probability and Randomness". https://gamebalanceconcepts.wordpress.com/
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press.

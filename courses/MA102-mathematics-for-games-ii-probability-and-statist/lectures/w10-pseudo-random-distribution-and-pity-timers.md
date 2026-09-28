@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts* (2010 blog course), Level 5, "Probability and Randomness Gone Horribly Wrong", the sections on player perception and pseudo-randomness. Schreiber & Romero, *Game Balance* (2021), the probability chapters, sections on dependent events.
 
-**Prerequisites from earlier courses:** [MA102 week 7, geometric distribution](w07-geometric-distribution-kills-until-the-drop.md), [week 5, variance](w05-variance-and-swingy-designs.md), [week 4, expected value](w04-expected-value-comparing-weapons.md) and [week 2, the gambler's fallacy](w02-independent-events-and-the-gamblers-fallacy.md). [Week 9, weighted loot tables](w09-weighted-tables-and-loot-table-design.md) is where pity attaches. Sequences and sums from [MA101](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md).
+**Prerequisites from earlier courses:** [MA102 week 7, geometric distribution](w07-geometric-distribution-kills-until-the-drop.md), [week 5, variance](w05-variance-and-swingy-designs.md), [week 4, expected value](w04-expected-value-comparing-weapons.md) and [week 2, the gambler's fallacy](w02-independent-events-and-the-gamblers-fallacy.md). [Week 9, weighted loot tables](w09-weighted-tables-and-loot-table-design.md) is where pity attaches. Powers and running totals from [MA101 week 4](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md).
 
 **Interactive:** [examples/w10-prd-streaks.html](../examples/w10-prd-streaks.html) for section 2 and [examples/w10-gacha-pity.html](../examples/w10-gacha-pity.html) for section 4.
 
@@ -121,7 +121,7 @@ Open [examples/w10-prd-streaks.html](../examples/w10-prd-streaks.html). The top 
 
 Rewrite each of these into one form, "the chance on this trial depends on what happened since the last success".
 
-**Warcraft III.** The Dota 2 mechanic comes from the Warcraft III engine, where the original Dota was a custom map. Same model, older engine. Dota 2 kept the rule so that bashes and crits would feel the way players of the original map expected.
+**Warcraft III.** The Dota 2 mechanic comes from the Warcraft III engine, where the original Dota was a custom map. Same model, older engine. The Liquipedia page still lists legacy values from the original Warcraft III map alongside the Dota 2 table.
 
 **Tetris (Guideline games).** Modern Tetris games that follow the Tetris Guideline use the "Random Generator", known to players as the 7-bag. Each bag holds exactly one of each of the seven pieces, shuffled. When the bag empties, a new one is shuffled. The chance of an I piece on the next draw depends on how many pieces have been drawn from the current bag and whether the I has already come out. It rises to 1 when it is the last piece left. The longest possible wait between two I pieces is 12 pieces (I first in one bag, last in the next). Under independent draws with `p = 1/7`, a 12-piece drought has probability `(6/7)^12 ≈ 16%`, and longer ones are always possible.
 
@@ -134,7 +134,7 @@ Three games and three mechanisms share one goal. Each keeps the average and resh
 PRD is a strong default for frequent, visible, per-hit effects. Before you use it, decide these points deliberately.
 
 - **It needs state.** Every unit and every effect carries its own counter. That is cheap on one machine but must be replicated and kept authoritative on a server. In an MMO with thousands of entities, it is a real cost.
-- **It can in principle be farmed.** If a player can make failed attempts cheaply (hitting creeps before turning to a hero), they can "charge up" a proc. The Dota 2 community wiki notes that this works in theory and is hard in practice, and that failures against targets where the effect cannot apply do not advance the counter. Your spec must say which attempts count.
+- **It can in principle be farmed.** If a player can make failed attempts cheaply (hitting creeps before turning to a hero), they can "charge up" a proc. Liquipedia notes that this works in theory and is "nearly impossible" in practice, and that failures against targets where the effect cannot apply do not advance the counter. Your spec must say which attempts count.
 - **It changes what 25% means.** The tooltip number is a long-run rate, not a per-attack chance. For most players this is fine. For theorycrafters, publish the rule.
 - **It does little for rare events.** PRD shines when `p` is between about 10% and 50%. For a 1% drop, the ramp is so slow that the gap distribution still has a long tail. Rare events need a counter with a hard cap, which is section 3.
 
@@ -330,11 +330,11 @@ Expected output: a small table of the three rules with mean, median and worst ca
 
 ## Sources
 
-- Liquipedia Dota 2 Wiki, "Random Distribution" (accessed September 2026). The `P(N) = C × N` rule, the table of C values from 5% to 95%, the 25% bash worked example, and the notes that failed attempts on invalid targets do not advance the counter.
+- Liquipedia Dota 2 Wiki, "Random Distribution" (Dota 2, re-read September 2026). https://liquipedia.net/dota2/Random_Distribution. The `P(N) = C × N` rule, the table of C values from 5% to 95%, the 25% bash worked example, the note that failed attempts on invalid targets do not advance the counter, and the legacy table from the original Warcraft III DotA map.
 - Diplograph, "The Dota 2 Pseudo-Random Distribution Creates Semi-Consistent Effects" (notes on Dota 2 PRD). Origin in the Warcraft III engine.
-- HoYoverse, *Genshin Impact* in-game wish details and the official "Wish Drop Rate Notice" (genshin.hoyoverse.com, versions 1.x to current). Base 0.600%, consolidated 1.600%, 5-star guaranteed at least once per 90 pulls.
-- Paimon.moe community wish tracker and the Genshin Impact Fandom community analyses of pull histories (2021 onward). Source of the community soft-pity model starting at pull 74 with about 6 percentage points per pull. This is a community estimate, labelled as such in the text.
-- Hearthstone-decks.net, "How do card packs work in Hearthstone?" summarizing Blizzard's published pack information. Epic within 10 packs, Legendary within 40 packs, first-10-packs Legendary guarantee introduced with *Knights of the Frozen Throne* (2017).
+- HoYoverse, *Genshin Impact* in-game wish "Details" page (versions 1.x to 7.x). Base 0.600%, consolidated 1.600%, 5-star guaranteed at least once per 90 pulls. The official event wish notices on genshin.hoyoverse.com (for example the Version 7.1 notice, September 2026) do not print the rates and send players to this in-game page. The figures were cross-checked against KeqingMains and community wikis, since the in-game page cannot be fetched from outside the game.
+- Paimon.moe community wish tracker and the Genshin Impact Fandom community analyses of pull histories (2021 onward). Source of the community soft-pity model starting at pull 74 with about 6 percentage points per pull. This is a community estimate, labelled as such in the text. KeqingMains Theorycrafting Library, "Gacha" (accessed September 2026), gives the same 0.6% base, 90-pull guarantee and soft pity from pull 74.
+- Hearthstone Wiki (hearthstone.wiki.gg), "Card pack" (accessed September 2026), citing Blizzard's March 2023 statement on pack rules. Epic within 10 packs, Legendary within 40 packs, first-10-packs Legendary guarantee introduced with *Knights of the Frozen Throne* (10 August 2017).
 - TetrisWiki, "Random Generator" (Tetris Guideline games). The 7-bag rule and the 12-piece maximum gap between I pieces.
 - Fire Emblem Wiki, "True hit". Two-random-number averaging from *The Binding Blade* (2002), with conversions 75 → 87.75%, 90 → 98.10%, 25 → 12.75%.
 - Schreiber, I. (2010). *Game Balance Concepts*, Level 5. Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press.

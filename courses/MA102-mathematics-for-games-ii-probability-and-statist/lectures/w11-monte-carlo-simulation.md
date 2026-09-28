@@ -143,13 +143,13 @@ P(key card by turn 3, going first, no mulligan)  = 1 − 552/870 ≈ 0.3655
 P(key card by turn 3, going second, no mulligan) = 1 − (23 × 22)/(30 × 29) = 1 − 506/870 ≈ 0.4184
 ```
 
-Now run the simulation with seed 42 and a growing number of trials:
+Now run the simulation with seed 42 and a growing number of trials. These values come from the `trial()` above under Python 3's `random` module, so you can reproduce them exactly:
 
 | Trials | Going first, no mulligan | ±margin | Covers 0.3655? |
 |---|---|---|---|
 | 100 | 0.450 | ±0.098 | yes |
-| 1,000 | 0.359 | ±0.030 | yes |
-| 10,000 | 0.364 | ±0.009 | yes |
+| 1,000 | 0.364 | ±0.030 | yes |
+| 10,000 | 0.365 | ±0.009 | yes |
 | 1,000,000 | 0.3650 | ±0.0009 | yes |
 
 At 100 trials the estimate is off by 8.5 points, which is inside its honest margin. By a million trials it matches to three decimals. The program passes validation. Now, and only now, trust it with the question you could not answer by hand.
@@ -158,9 +158,9 @@ At 100 trials the estimate is off by 8.5 points, which is inside its honest marg
 
 | Trials | Going first, hard mulligan | Going second, hard mulligan |
 |---|---|---|
-| 1,000 | 0.495 ± 0.031 | 0.591 ± 0.031 |
-| 10,000 | 0.500 ± 0.010 | 0.585 ± 0.010 |
-| 1,000,000 | 0.5009 ± 0.0010 | 0.5871 ± 0.0010 |
+| 1,000 | 0.502 ± 0.031 | 0.597 ± 0.030 |
+| 10,000 | 0.498 ± 0.010 | 0.587 ± 0.010 |
+| 1,000,000 | 0.5009 ± 0.0010 | 0.5870 ± 0.0010 |
 
 A hard mulligan raises the first player's chance from 36.6% to about 50.1%, and the second player's from 41.8% to about 58.7% (the exact value, by the method below, is 58.66%). Half the time, going first, you throw away a whole hand and still do not have the card on turn 3.
 
@@ -306,7 +306,7 @@ Expected output: a four-row table (validated rate, bugged rate, extended rate, e
 - First, no mulligan: `1 − 552/870 = 0.36552`.
 - Second, no mulligan: `1 − 506/870 = 0.41839`.
 - First, hard mulligan: `0.19310 + 0.80690 × (1 − (2300/2925)^2) = 0.50109`.
-- Second, hard mulligan: compute the same way with 4-card hands: `P0 = 1 − C(28,4)/C(30,4)`, replacement miss `C(24,4)/C(26,4)`, turn-draw miss from a 26-card deck `C(24,3)/C(26,3)`; `P = P0 + (1 − P0)(1 − miss_repl × miss_draw)`. The result is 0.58661; the simulated value at 10^6 trials with seed 42 was 0.5871 ± 0.0010.
+- Second, hard mulligan: compute the same way with 4-card hands: `P0 = 1 − C(28,4)/C(30,4)`, replacement miss `C(24,4)/C(26,4)`, turn-draw miss from a 26-card deck `C(24,3)/C(26,3)`; `P = P0 + (1 − P0)(1 − miss_repl × miss_draw)`. The result is 0.58661; the Python simulation at 10^6 trials with seed 42 gives 0.5870 ± 0.0010 (the page's mulberry32 stream will give a slightly different value).
 
 **Readout table:** n, hits, `p̂`, SE, 95% margin, exact value, and "exact inside band?" (yes/no).
 

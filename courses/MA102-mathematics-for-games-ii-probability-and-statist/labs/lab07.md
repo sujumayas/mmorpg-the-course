@@ -10,12 +10,12 @@ By the end you will have working simulation code that you will reuse in the week
 
 ## Starter materials
 
-- `lab07_starter.ipynb` (on the course page). It contains a Python 3 notebook with numpy and matplotlib imported, a seeded random generator (`rng = np.random.default_rng(102)`), and three empty functions:
+- [`starter/lab07_starter.py`](starter/lab07_starter.py). It is a Python 3 script (paste it into a notebook if you prefer) with numpy and matplotlib imported, a seeded random generator (`rng = np.random.default_rng(102)`), and three empty functions:
   - `simulate_first_success(p, players, rng)` returns an array with the kill number of each player's first drop.
   - `dry_curve(samples, n_max)` returns the share of players still dry after each n from 0 to n_max.
   - `percentile_wait(samples, q)` returns the kill count by which a share q of players have the drop.
-- A spreadsheet version (`lab07_starter.xlsx`) for students who prefer it. It has one row per kill, a column for `(1 − p)^n`, and an empty sheet for 1,000 simulated players using `RAND()`.
-- The week 7 interactive, `examples/w07-kills-until-drop.html`, to check your exact values.
+- A spreadsheet version for students who prefer it. Build the sheet yourself from this layout. It has one row per kill, a column for `(1 − p)^n`, and an empty sheet for 1,000 simulated players using `RAND()`.
+- The week 7 interactive, [`examples/w07-kills-until-drop.html`](../examples/w07-kills-until-drop.html), to check your exact values.
 
 You may use either the notebook or the spreadsheet. The notebook scales to 10,000 players easily; the spreadsheet should use 1,000.
 

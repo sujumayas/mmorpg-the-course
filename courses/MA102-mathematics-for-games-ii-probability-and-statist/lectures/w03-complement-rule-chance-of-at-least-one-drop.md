@@ -10,7 +10,7 @@
 
 **Before class:** Ian Schreiber, *Game Balance Concepts* (blog course, 2010), Level 4, "Probability and Randomness", the section on computing "at least one". Schreiber & Romero, *Game Balance* (2021), the chapter on probability, the section on complementary events.
 
-**Prerequisites from earlier courses:** [MA102 week 1](w01-sample-spaces-and-events.md) (complement of an event), [MA102 week 2](w02-independent-events-and-the-gamblers-fallacy.md) (independence, multiplication rule). Exponentials and logarithms from [MA101](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md) weeks 4 and 5.
+**Prerequisites from earlier courses:** [MA102 week 1](w01-sample-spaces-and-events.md) (complement of an event), [MA102 week 2](w02-independent-events-and-the-gamblers-fallacy.md) (independence, multiplication rule). Exponentials and logarithms from MA101 [week 4](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md) and [week 5](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w05-logarithms-how-many-levels-until.md).
 
 **Interactive:** [Drop curve](../examples/w03-drop-curve.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 
@@ -142,7 +142,7 @@ The formula `1 − (1 − p)^n` appears wherever a game repeats an independent c
 
 **Pokémon shiny encounters.** From Generation VI onward, the base chance that a wild encounter is shiny is 1 in 4,096 (it was 1 in 8,192 in Generations II to V). After 4,096 encounters, 63.2% of hunters have seen one. It takes 2,839 encounters for 50% and 12,270 for 95%. The game series also shows the complement rule running the other way. Several newer boosts work by rolling the shiny check more than once per encounter, and the chance per encounter becomes `1 − (4095/4096)^r` for `r` rolls. That is "at least one success in r tries" inside a single encounter.
 
-**Genshin Impact, 5-star characters on the character event wish.** HoYoverse publishes a base 5-star rate of 0.600% per wish, a consolidated rate of 1.600% once guarantees are included, and a guaranteed 5-star within 90 wishes. Suppose the 0.6% base rate simply held on every wish with no guarantee. Then the chance of at least one 5-star in 90 wishes would be `1 − 0.994^90 ≈ 41.8%`. Most players would reach wish 90 empty-handed. The real system avoids that with a rising rate late in the counter and a hard guarantee. Week 10 models that pity system and computes the expected number of wishes it produces.
+**Genshin Impact, 5-star characters on the character event wish.** HoYoverse publishes a base 5-star rate of 0.600% per wish, a consolidated rate of 1.600% once guarantees are included, and a guaranteed 5-star within 90 wishes. Suppose the 0.6% base rate simply held on every wish with no guarantee. Then the chance of at least one 5-star in 90 wishes would be `1 − 0.994^90 ≈ 41.8%`. Most players would reach wish 90 empty-handed. The real system avoids that with a hard guarantee, and community-collected wish data show the rate rising in the last stretch before it. HoYoverse does not publish that ramp, so treat it as a community estimate. Week 10 models that pity system and computes the expected number of wishes it produces.
 
 **Group loot.** A party of five each has a personal 1% chance at an item from one boss kill. The chance that at least one of them gets it is `1 − 0.99^5 ≈ 4.9%`. The complement rule works over players as well as over time.
 
@@ -245,7 +245,7 @@ Work in pairs with a laptop and a spreadsheet.
 
 - Old School RuneScape Wiki, "Abyssal whip". Drop rate 1/512 from standard abyssal demons (current game, 2026). Kill counts in this lecture are computed from that rate.
 - Bulbapedia, "Shiny Pokémon" and "Shiny Charm". Base shiny encounter rate 1/8,192 in Generations II to V and 1/4,096 from Generation VI onward; modern boosts reroll the shiny check.
-- HoYoverse, *Genshin Impact* Character Event Wish details (in-game "Details" page and HoYoLAB event wish notices, current through version 7.x in 2026). Base 5-star probability 0.600%, consolidated probability 1.600%, guaranteed 5-star within 90 wishes; base rate flat through wish 73. The 41.8% figure is a hypothetical computed in this lecture, not a published rate.
+- HoYoverse, *Genshin Impact* Character Event Wish details (in-game "Details" page, current through version 7.x in 2026; the official event wish notices point players to this page rather than printing the rates). Base 5-star probability 0.600%, consolidated probability 1.600%, guaranteed 5-star within 90 wishes. The late-counter "soft pity" ramp is not published by HoYoverse; it is a community estimate from logged wishes (week 10). The 41.8% figure is a hypothetical computed in this lecture, not a published rate.
 - Schreiber, I. (2010). *Game Balance Concepts*, Level 4, "Probability and Randomness". gamebalanceconcepts.wordpress.com.
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press. Chapter on probability.
 - The limit `(1 − p)^(1/p) → 1/e` is standard calculus; all table values are computed from the stated formulas.

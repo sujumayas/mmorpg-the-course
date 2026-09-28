@@ -503,7 +503,7 @@ Type counts: 41 compute, 8 explain, 8 design, 9 critique. 62 questions are tagge
 
     (b) Damage is a whole number, so use 41.5 as the boundary. `z = (41.5 − 35)/5.40 = 1.20`. `P ≈ 1 − 0.8849 = 0.115`.
 
-    (c) The estimate is off by about 0.15 points. Without the correction, `z = 7/5.40 = 1.30`, and `1 − Φ(1.30) = 1 − 0.9032 = 0.097`, which is off by about 2 points.
+    (c) The estimate, 11.5%, is off by about 0.1 points. Without the correction, `z = 7/5.40 = 1.30`, and `1 − Φ(1.30) = 1 − 0.9032 = 0.097`, which is off by about 2 points.
     </details>
 
 34. **[Week 8 · compute · final]** A game uses 3d6 roll-under: you succeed if the total is at most your skill. The cumulative values are P(3d6 ≤ 9) = 81/216, P(≤ 10) = 108/216, P(≤ 14) = 196/216, P(≤ 15) = 206/216. (a) How much does +1 skill help a player going from 9 to 10? (b) From 14 to 15? (c) Explain the difference in one sentence.

@@ -8,13 +8,13 @@ Implement independent rolls, pseudo-random distribution (PRD) and pity counters 
 
 ## Starter materials
 
-- `lab10_starter.ipynb` (on the course page). A Python 3 notebook with numpy and matplotlib imported and these empty functions:
+- [`starter/lab10_starter.py`](starter/lab10_starter.py). A Python 3 script (paste it into a notebook if you prefer) with numpy and matplotlib imported and these empty functions:
   - `prd_gap_dist(C)` returns a list whose entry `n − 1` is `P(first proc on attempt n)` under `p_n = min(1, C × n)`.
   - `pity_gap_dist(base, soft_start, step, hard)` returns the same list for a soft-and-hard pity rule. Setting `step = 0` gives hard pity only.
   - `mean_sd(dist)` returns the mean and standard deviation of a gap distribution.
   - `solve_C(p)` finds `C` by bisection.
-- A spreadsheet version (`lab10_starter.xlsx`) with one row per attempt and columns for the per-attempt chance, survival and landing probability. Bisection is done by hand with a goal-seek cell.
-- The week 10 interactives, `examples/w10-prd-streaks.html` and `examples/w10-gacha-pity.html`, to check your values.
+- A spreadsheet version, which you build yourself from this layout, with one row per attempt and columns for the per-attempt chance, survival and landing probability. Bisection is done by hand with a goal-seek cell.
+- The week 10 interactives, [`examples/w10-prd-streaks.html`](../examples/w10-prd-streaks.html) and [`examples/w10-gacha-pity.html`](../examples/w10-gacha-pity.html), to check your values.
 
 ## Steps
 

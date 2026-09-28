@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts* (blog course, 2010), Level 5 "Probability and Randomness Gone Horribly Wrong", the parts on how players perceive randomness; Schreiber & Romero, *Game Balance* (2021), the chapter on probability, the sections on variance and on randomness and player perception.
 
-**Prerequisites from earlier courses:** MA101 week 2 (linear functions) and week 4 (exponents and powers), see the [MA101 syllabus](../../MA101-mathematics-for-games-i-algebra-functions-trigon/syllabus.md). From this course, [week 4, expected value](w04-expected-value-comparing-weapons.md), and [week 3, the complement rule](w03-complement-rule-chance-of-at-least-one-drop.md).
+**Prerequisites from earlier courses:** [MA101 week 2](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md) (linear functions) and [MA101 week 4](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md) (exponents and powers). From this course, [week 4, expected value](w04-expected-value-comparing-weapons.md), and [week 3, the complement rule](w03-complement-rule-chance-of-at-least-one-drop.md).
 
 **Interactive:** [Swing meter](../examples/w05-swing-meter.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 
