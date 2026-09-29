@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ban wave timing, MMO309 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px;margin-bottom:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl small{display:block;color:var(--ink-soft);font-size:.8rem;line-height:1.3}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.wrow{display:flex;gap:10px;align-items:center}
+.wrow input{flex:1}
+.btn{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ochre);background:transparent;color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--paper-2)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}#figSess{order:-1}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+.figval{font-size:.9rem;margin:6px 0 0;font-variant-numeric:tabular-nums}
+.figval b{font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;color:var(--ink-soft);margin-top:4px}
+.legend i{display:inline-block;width:18px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+#kv td:first-child{color:var(--ink-soft)}
+#kv td:last-child{font-weight:700}
+tr.here td{font-weight:700;background:var(--paper-2)}
+tr.best td{color:var(--ochre)}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO309 Security, Anti-Cheat and Anti-Bot · Week 5 · Worked example</p>
+  <h1>When should you ban a cheater you already caught?</h1>
+  <p class="lede">Waiting always catches more cheaters, so the left chart only climbs. The right chart counts cheating sessions players suffer. It is a U. Instant bans and long waits both sit above its floor.</p>
+</header>
+
+<section class="panel" aria-label="Ban delay model">
+  <div class="controls">
+    <div class="ctl">
+      <label for="w">Ban delay W (days) <output id="oW">0</output></label>
+      <div class="wrow"><input id="w" type="range" min="0" max="30" step="1" value="0"><button class="btn" id="jump" type="button">Jump to best</button></div>
+      <small>Days between detection and the ban wave.</small>
+    </div>
+    <div class="ctl">
+      <label for="q">Daily play chance q <output id="oQ">0.50</output></label>
+      <input id="q" type="range" min="0.05" max="0.95" step="0.05" value="0.5">
+      <small>Chance a cheating user logs in on a given day.</small>
+    </div>
+    <div class="ctl">
+      <label for="r">Cheat maker reaction R (days) <output id="oR">2</output></label>
+      <input id="r" type="range" min="0.5" max="10" step="0.5" value="2">
+      <small>Days after the first ban until the new build ships.</small>
+    </div>
+    <div class="ctl">
+      <label for="s">Days until next signature S <output id="oS">30</output></label>
+      <input id="s" type="range" min="5" max="60" step="1" value="30">
+      <small>Length of one signature cycle.</small>
+    </div>
+    <div class="ctl">
+      <label for="n">Cheat users N <output id="oN">10,000</output></label>
+      <input id="n" type="range" min="1000" max="100000" step="1000" value="10000">
+      <small>Both charts scale with N; only the labels change.</small>
+    </div>
+  </div>
+
+  <div class="charts">
+    <figure id="figCaught">
+      <figcaption>What the detection team sees<small>caught(W): users banned by the wave</small></figcaption>
+      <canvas id="cCaught" role="img" aria-label="Users caught versus ban delay. The curve rises and flattens near N."></canvas>
+      <p class="figval">At W = <span id="fW1">0</span>: <b id="fCaught">7,500</b> caught of <span id="fN">10,000</span></p>
+    </figure>
+    <figure id="figSess">
+      <figcaption>What players feel<small>sessions(W): cheating sessions over one signature cycle</small></figcaption>
+      <canvas id="cSess" role="img" aria-label="Cheating sessions versus ban delay. A U-shaped curve with a marked minimum."></canvas>
+      <p class="figval">At W = <span id="fW2">0</span>: <b id="fSess">37,500</b> sessions. <span id="fBest"></span></p>
+      <div class="legend">
+        <span><i style="background:var(--blood);height:3px"></i>sessions(W)</span>
+        <span><i style="border-top:2px dashed var(--ink-soft);height:0"></i>instant ban, sessions(0)</span>
+        <span><i style="background:var(--moss);opacity:.35"></i>better than instant</span>
+        <span><i style="background:var(--ochre);border-radius:50%;width:10px"></i>best delay</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight"></div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="table-wrap">
+    <table id="kv" aria-label="Readout at the current settings">
+      <thead><tr><th>Quantity</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Ban delay W (days)</td><td id="kW"></td></tr>
+        <tr><td>caught(W)</td><td id="kCaught"></td></tr>
+        <tr><td>missed = N − caught</td><td id="kMissed"></td></tr>
+        <tr><td>sessions(W)</td><td id="kSess"></td></tr>
+        <tr><td>sessions(0), instant ban</td><td id="kS0"></td></tr>
+        <tr><td>Best W (days)</td><td id="kBest"></td></tr>
+        <tr><td>sessions at best W</td><td id="kSBest"></td></tr>
+        <tr><td>Best vs instant</td><td id="kPct"></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <details>
+    <summary>Every delay from 0 to S</summary>
+    <div class="table-wrap">
+      <table aria-label="caught and sessions for every integer delay">
+        <thead><tr><th>W</th><th>caught</th><th>missed</th><th>sessions</th><th>vs instant</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<footer>Model from the lecture, section 3: caught(W) = N(1 − (1 − q)<sup>W+R</sup>), sessions(W) = qNW + q(N − caught)(S − W). The minimum is searched over whole days. The model ignores sessions in the R days after the wave and users who join mid-cycle.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+let W=0,q=0.5,R=2,S=30,N=10000,lastBest=null;
+
+const caught=w=>N*(1-Math.pow(1-q,w+R));
+const sessions=w=>q*N*w+q*(N-caught(w))*(S-w);
+function best(){let b=0,v=sessions(0);for(let w=1;w<=S;w++){const x=sessions(w);if(x<v-1e-9){v=x;b=w;}}return b;}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function nice(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*m).find(x=>x>=v*1.02)||v;}
+const short=v=>v>=1e6?(v/1e6).toFixed(v%1e6?1:0)+'M':v>=1e4?Math.round(v/1000)+'k':fmt(v);
+const pad={l:48,r:12,t:14,b:34};
+function frame(c,xMax,yMax){
+  const {g,w,h}=c;
+  g.clearRect(0,0,w,h);g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=pad.t+(h-pad.t-pad.b)*(1-i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(short(yMax*i/4),pad.l-6,y);}
+  const step=xMax<=10?1:xMax<=30?5:10;
+  for(let x=0;x<=xMax;x+=step){const px=X(c,x,xMax);g.textAlign='center';g.textBaseline='top';g.fillText(x,px,h-pad.b+6);}
+  g.textAlign='right';g.fillText('W, days',w-pad.r,h-15);
+}
+const X=(c,x,xMax)=>pad.l+(c.w-pad.l-pad.r)*x/xMax;
+const Y=(c,y,yMax)=>pad.t+(c.h-pad.t-pad.b)*(1-y/yMax);
+function curve(c,f,xMax,yMax,color){
+  const g=c.g;g.strokeStyle=color;g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=300;i++){const x=xMax*i/300,px=X(c,x,xMax),py=Y(c,f(x),yMax);i?g.lineTo(px,py):g.moveTo(px,py);}
+  g.stroke();
+}
+function dot(c,x,y,xMax,yMax,color,r){
+  const g=c.g,px=X(c,x,xMax),py=Y(c,y,yMax);
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,c.h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=color;g.beginPath();g.arc(px,py,r||6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+}
+
+function draw(b){
+  // caught
+  let c=setupCanvas($('cCaught'));const yC=nice(N);
+  frame(c,S,yC);
+  const g1=c.g;g1.strokeStyle=css('--ink-soft');g1.setLineDash([5,5]);g1.lineWidth=1.2;g1.beginPath();g1.moveTo(pad.l,Y(c,N,yC));g1.lineTo(c.w-pad.r,Y(c,N,yC));g1.stroke();g1.setLineDash([]);
+  g1.fillStyle=css('--ink-soft');g1.textAlign='left';g1.textBaseline='bottom';g1.fillText('N = '+fmt(N),pad.l+4,Y(c,N,yC)-3);
+  curve(c,caught,S,yC,css('--steel'));
+  dot(c,W,caught(W),S,yC,css('--steel'));
+  label(c,X(c,W,S),Y(c,caught(W),yC)+22,fmt(caught(W))+' caught',css('--steel'));
+  // sessions
+  c=setupCanvas($('cSess'));
+  let mx=0;for(let i=0;i<=300;i++)mx=Math.max(mx,sessions(S*i/300));
+  const yS=nice(Math.min(mx,Math.max(2*sessions(0),1.1*sessions(W))));frame(c,S,yS);
+  const g=c.g,s0=sessions(0),y0=Y(c,s0,yS);
+  g.save();g.beginPath();g.rect(pad.l,pad.t-2,c.w-pad.l-pad.r+2,c.h-pad.t-pad.b+4);g.clip();
+  // shade where sessions < sessions(0)
+  g.fillStyle=css('--moss');g.globalAlpha=.28;
+  const n=300;let open=false;
+  for(let i=0;i<=n;i++){
+    const x=S*i/n,v=sessions(x),inside=v<s0-1e-9&&x>0;
+    const px=X(c,x,S),py=Y(c,v,yS);
+    if(inside&&!open){g.beginPath();g.moveTo(px,y0);g.lineTo(px,py);open=true;}
+    else if(inside){g.lineTo(px,py);}
+    else if(open){g.lineTo(px,y0);g.closePath();g.fill();open=false;}
+  }
+  if(open){g.lineTo(X(c,S,S),y0);g.closePath();g.fill();}
+  g.globalAlpha=1;
+  g.strokeStyle=css('--ink-soft');g.setLineDash([6,5]);g.lineWidth=1.4;g.beginPath();g.moveTo(pad.l,y0);g.lineTo(c.w-pad.r,y0);g.stroke();g.setLineDash([]);
+  curve(c,sessions,S,yS,css('--blood'));
+  g.restore();
+  if(mx>yS*1.001){g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText('↑ '+fmt(sessions(S))+' at W = '+S,c.w-pad.r,pad.t+2);}
+  dot(c,W,sessions(W),S,yS,css('--blood'));
+  // best marker: diamond
+  const bx=X(c,b,S),by=Y(c,sessions(b),yS);
+  g.fillStyle=css('--ochre');g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(bx,by-8);g.lineTo(bx+8,by);g.lineTo(bx,by+8);g.lineTo(bx-8,by);g.closePath();g.fill();g.stroke();
+  label(c,bx,by+24,'best delay: '+b+(b===1?' day, ':' days, ')+fmt(sessions(b))+' sessions',css('--ink'));
+}
+function label(c,x,y,text,color){
+  const g=c.g;g.font='600 12px '+css('--sans');const tw=g.measureText(text).width;
+  let lx=Math.min(Math.max(x-tw/2,pad.l+2),c.w-pad.r-tw-2);
+  let ly=Math.min(y,c.h-pad.b-6);
+  g.fillStyle=css('--paper');g.globalAlpha=.85;g.fillRect(lx-4,ly-12,tw+8,17);g.globalAlpha=1;
+  g.fillStyle=color;g.textAlign='left';g.textBaseline='alphabetic';g.fillText(text,lx,ly);
+}
+
+function update(paramChange){
+  const b=best(),s0=sessions(0),sw=sessions(W),sb=sessions(b),cw=caught(W);
+  $('oW').textContent=W;$('oQ').textContent=q.toFixed(2);$('oR').textContent=R;$('oS').textContent=S;$('oN').textContent=fmt(N);
+  $('fW1').textContent=W;$('fW2').textContent=W;$('fCaught').textContent=fmt(cw);$('fN').textContent=fmt(N);$('fSess').textContent=fmt(sw);
+  $('fBest').textContent='Best delay: '+b+(b===1?' day, ':' days, ')+fmt(sb)+' sessions.';
+  $('kW').textContent=W;$('kCaught').textContent=fmt(cw);$('kMissed').textContent=fmt(N-cw);$('kSess').textContent=fmt(sw);
+  $('kS0').textContent=fmt(s0);$('kBest').textContent=b;$('kSBest').textContent=fmt(sb);
+  const pc=(sb-s0)/s0*100;$('kPct').textContent=(pc>=0?'+':'−')+Math.abs(pc).toFixed(1)+'%';
+  const band=[];for(let w=1;w<=S;w++)if(sessions(w)<s0-1e-9)band.push(w);
+  let t;
+  if(b===0) t=`With these numbers, <b>instant bans are best</b>. Cheaters play so often (q = ${q.toFixed(2)}) or the cheat maker reacts so slowly (R = ${R}) that the first wave already catches ${fmt(caught(0))} of ${fmt(N)}. Every day of waiting only adds ${fmt(q*N)} sessions.`;
+  else t=`Waiting <b>${b} day${b===1?'':'s'}</b> leaves ${fmt(sb)} cheating sessions against ${fmt(s0)} for an instant ban, ${Math.abs(pc).toFixed(1)}% fewer. Any delay from ${band[0]} to ${band[band.length-1]} days beats instant. Past that, every extra day costs ${fmt(q*N)} sessions and catches almost nobody new.`;
+  if(W>0&&W!==b) t+=` Your current delay of ${W} day${W===1?'':'s'} leaves ${fmt(sw)}, ${sw<s0?'better':'worse'} than instant.`;
+  $('insight').innerHTML=t;
+  const rows=[];
+  for(let w=0;w<=S;w++){const cc=caught(w),ss=sessions(w),d=(ss-s0)/s0*100;
+    rows.push(`<tr class="${w===W?'here ':''}${w===b?'best':''}"><td>${w}${w===b?' (best)':''}</td><td>${fmt(cc)}</td><td>${fmt(N-cc)}</td><td>${fmt(ss)}</td><td>${w===0?'—':(d>=0?'+':'−')+Math.abs(d).toFixed(1)+'%'}</td></tr>`);}
+  $('tbody').innerHTML=rows.join('');
+  if(paramChange&&b!==lastBest)$('live').textContent='best delay '+b+(b===1?' day':' days');
+  lastBest=b;
+  draw(b);
+}
+
+$('w').addEventListener('input',e=>{W=+e.target.value;update(false);});
+$('q').addEventListener('input',e=>{q=Math.round(+e.target.value*100)/100;update(true);});
+$('r').addEventListener('input',e=>{R=+e.target.value;update(true);});
+$('s').addEventListener('input',e=>{S=+e.target.value;const w=$('w');w.max=S;if(W>S){W=S;}w.value=W;update(true);});
+$('n').addEventListener('input',e=>{N=+e.target.value;update(true);});
+$('jump').addEventListener('click',()=>{W=best();$('w').value=W;update(false);});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>draw(best()),60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>draw(best()));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>draw(best()));
+update(false);
+})();
+</script>
+</body>
+</html>

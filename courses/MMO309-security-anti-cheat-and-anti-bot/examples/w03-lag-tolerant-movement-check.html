@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lag-tolerant movement check — MMO309 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.tabs{display:flex;gap:6px;margin:16px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.two{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}
+.ctl{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:900px){.ctl{grid-template-columns:1fr 1fr}}
+@media (max-width:700px){.two,.ctl{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:start;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+svg{display:block;width:100%}
+svg text{font-family:var(--sans);fill:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--ink-soft);margin-top:6px}
+.ln{display:inline-block;width:22px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+.mk{display:inline-block;vertical-align:middle;margin-right:5px}
+.sw{display:inline-block;width:12px;height:12px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 14px;margin:14px 0 2px}
+@media (max-width:700px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+fieldset{border:0;padding:0;margin:0 0 8px;min-width:0}
+legend{font-weight:700;font-size:.92rem;padding:0;margin-bottom:2px}
+.radios label{display:flex;gap:8px;align-items:center;font-size:.92rem;padding:3px 0;cursor:pointer}
+.radios input{accent-color:var(--steel);width:18px;height:18px;margin:0}
+label.row{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+label.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+input[type=range]:disabled{opacity:.4}
+.dim{opacity:.55}
+.btn{font:600 .84rem var(--sans);padding:6px 11px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+h2{font-family:var(--serif);font-size:1.08rem;margin:0 0 6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.82rem;color:var(--ink-soft);font-weight:600}
+.cm td b{font-size:1.1rem}
+.fixed{font-size:.88rem;color:var(--ink-soft);margin:8px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO309 Security, Anti-Cheat and Anti-Bot · Week 3 · Worked example</p>
+  <h1 id="caption">Forgive a quarter-second of lag with a rate check and a cheater runs six times faster, unflagged.</h1>
+  <p class="lede">One honest player hits a lag spike. One cheater runs alongside. The server checks every position claim, and whatever lag it forgives the honest player, it also forgives the cheater.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="tA" aria-selected="true" aria-controls="pA">Validation</button>
+  <button class="tab" role="tab" id="tB" aria-selected="false" aria-controls="pB" tabindex="-1">Detection</button>
+</div>
+
+<!-- ============ VALIDATION ============ -->
+<section class="panel" id="pA" role="tabpanel" aria-labelledby="tA">
+  <div class="two">
+    <figure>
+      <figcaption><span>Position over 3 seconds<small id="posSub">Server-accepted positions. Shaded: the honest player's lag spike.</small></span>
+        <button class="btn" id="zoom" type="button" aria-pressed="false">Zoom to the spike</button></figcaption>
+      <svg id="pos" role="img" aria-label="Claimed and accepted position over time for the honest player and the cheater"></svg>
+      <div class="legend">
+        <span><i class="ln" style="border-color:var(--steel);border-top-width:1px"></i>honest claimed</span>
+        <span><i class="ln" style="border-color:var(--steel);border-top-width:4px"></i>honest accepted</span>
+        <span><i class="ln" style="border-color:var(--ochre);border-top-style:dashed;border-top-width:3px"></i>cheater accepted</span>
+        <span><svg class="mk" width="12" height="12" style="display:inline-block;width:12px" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="var(--blood)"/></svg>honest violation</span>
+        <span><svg class="mk" width="12" height="12" style="display:inline-block;width:12px" aria-hidden="true"><path d="M6 1 L11 11 L1 11Z" fill="none" stroke="var(--blood)" stroke-width="2"/></svg>cheater violation</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption><span>What the forgiveness gives away<small>Both checks set to forgive a spike of this length.</small></span></figcaption>
+      <svg id="give" role="img" aria-label="Rate check free speed and credit check largest jump against the spike length forgiven"></svg>
+      <div class="legend">
+        <span><i class="ln" style="border-color:var(--blood);border-top-width:3px"></i>rate: free speed, m/s (left)</span>
+        <span><i class="ln" style="border-color:var(--moss);border-top-width:3px"></i>credit: largest jump, m (right, 0 to 8)</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rTs">50 ms · 0.3 m</b><span>tick T · legal step s</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rSet"></b><span id="rSetL">current setting</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rHv"></b><span>honest violations</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rHp"></b><span>honest pulled back</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rCv"></b><span>cheater violations</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rLead"></b><span>cheater lead over honest at 3 s</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rJump"></b><span>largest single jump the check accepts</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rFree"></b><span>steady speed a cheater can hold</span></div>
+  </div>
+  <div class="insight" id="insA"></div>
+
+  <div class="ctl">
+    <div>
+      <fieldset class="radios"><legend>Check</legend>
+        <label><input type="radio" name="chk" value="rate" checked> Rate check: d ≤ s × (1 + tol)</label>
+        <label><input type="radio" name="chk" value="credit"> Credit check: d ≤ v × min(Δt, T + L)</label>
+      </fieldset>
+      <div id="wrapTol"><label class="row" for="tol">Rate tolerance tol <output id="oTol"></output></label>
+      <input id="tol" type="range" min="0" max="1200" step="10" value="500"></div>
+      <div id="wrapL"><label class="row" for="L">Lag tolerance L <output id="oL"></output></label>
+      <input id="L" type="range" min="0" max="600" step="10" value="250"></div>
+    </div>
+    <div>
+      <h2>Honest player</h2>
+      <label class="row" for="J">Lag spike J at 1,000 ms <output id="oJ"></output></label>
+      <input id="J" type="range" min="0" max="600" step="50" value="250">
+      <p class="fixed">Sends one position per 50 ms tick at 6 m/s. Packets take 40 ms. A spike holds every packet sent during it, then releases them together.</p>
+    </div>
+    <div>
+      <fieldset class="radios"><legend>Cheater</legend>
+        <label><input type="radio" name="cht" value="steady" checked> Steady speed</label>
+        <label><input type="radio" name="cht" value="freeze"> Freeze and jump</label>
+      </fieldset>
+      <div id="wrapM"><label class="row" for="m">Speed multiplier m <output id="oM"></output></label>
+      <input id="m" type="range" min="1" max="8" step="0.1" value="6"></div>
+      <div id="wrapH"><label class="row" for="H">Hold H from 1,000 ms <output id="oH"></output></label>
+      <input id="H" type="range" min="0" max="1000" step="50" value="400"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DETECTION ============ -->
+<section class="panel" id="pB" role="tabpanel" aria-labelledby="tB" hidden>
+  <div class="two">
+    <figure>
+      <figcaption><span id="detTitle">Flagged sessions per day, by threshold k<small id="detSub"></small></span>
+        <span role="group" aria-label="Bar scale" style="display:flex;gap:4px"><button class="btn" id="scCount" type="button" aria-pressed="true">Counts</button><button class="btn" id="scShare" type="button" aria-pressed="false">Share</button></span></figcaption>
+      <svg id="det" role="img" aria-label="Flagged sessions split into cheaters and innocent players for each threshold, with precision above each bar"></svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--steel)"></i>cheaters caught</span>
+        <span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--blood) 0 3px,transparent 3px 5px);border:1.5px solid var(--blood)"></i>innocent flagged</span>
+        <span>% above bar: precision</span>
+      </div>
+    </figure>
+    <div>
+      <h2 id="cmTitle">Confusion table at k = 3</h2>
+      <table class="cm" aria-label="Confusion table">
+        <thead><tr><th></th><th>Flagged</th><th>Not flagged</th></tr></thead>
+        <tbody>
+          <tr><td>Cheating</td><td><b id="cTP"></b><br><small>true positives</small></td><td><b id="cFN"></b><br><small>false negatives</small></td></tr>
+          <tr><td>Honest</td><td><b id="cFP"></b><br><small>false positives</small></td><td><b id="cTN"></b><br><small>true negatives</small></td></tr>
+        </tbody>
+      </table>
+      <div class="readout" style="grid-template-columns:repeat(2,1fr)">
+        <div class="stat" style="--c:var(--steel)"><b id="cPrec"></b><span>precision: flagged who really cheat</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="cRec"></b><span>recall: cheaters flagged</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="cLh"></b><span id="cLhL">honest violations per session λ<sub>h</sub></span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="cLc"></b><span id="cLcL">cheater violations per session λ<sub>c</sub></span></div>
+      </div>
+      <div class="insight" id="insB"></div>
+    </div>
+  </div>
+  <div class="ctl">
+    <div>
+      <label class="row" for="L2">Lag tolerance L (shared) <output id="oL2"></output></label>
+      <input id="L2" type="range" min="0" max="600" step="10" value="250">
+      <label class="row" for="spk">Lag spikes per honest session <output id="oSpk"></output></label>
+      <input id="spk" type="range" min="0" max="20" step="1" value="6">
+      <label class="row" for="mean">Mean spike length <output id="oMean"></output></label>
+      <input id="mean" type="range" min="20" max="300" step="10" value="100">
+    </div>
+    <div>
+      <label class="row" for="blk">Blinks per cheating session <output id="oBlk"></output></label>
+      <input id="blk" type="range" min="0" max="20" step="1" value="5">
+      <label class="row" for="base">Cheater base rate <output id="oBase"></output></label>
+      <input id="base" type="range" min="0" max="8" step="1" value="3" aria-valuetext="0.5%">
+      <p class="fixed">Sessions per day: 100,000 (fixed).</p>
+    </div>
+    <div>
+      <label class="row" for="k">Threshold k (flag at k or more) <output id="oK"></output></label>
+      <input id="k" type="range" min="1" max="8" step="1" value="3">
+      <fieldset class="radios"><legend>Window</legend>
+        <label><input type="radio" name="win" value="1" checked> 1 session</label>
+        <label><input type="radio" name="win" value="7"> 7 sessions (a week, k up to 40)</label>
+      </fieldset>
+    </div>
+  </div>
+</section>
+
+<footer>Model and numbers from the lecture and <code>labs/lab03-starter/movement_validator.py</code>: T = 50 ms, v = 6 m/s, s = 0.3 m, 40 ms latency, one spike from 1,000 ms. Server tick i handles packets that arrived in (iT − T, iT] and takes the newest claim; <code>d = claim − pulled − accepted</code>; a failed claim is clamped to the allowed distance and the client snaps back. Detection: λ<sub>h</sub> = spikes × e<sup>−L / mean</sup>, λ<sub>c</sub> = blinks, flag when Poisson(λ) ≥ k. All values are invented teaching numbers, not measurements from any game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS='http://www.w3.org/2000/svg';
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const m1=x=>(Math.round(x*10)/10).toFixed(1);
+
+/* ================= model: port of the lecture's run() ================= */
+const T=50,V=6,S=V*T/1000,LAT=40,SPIKE0=1000,TICKS=60;
+function honestArrivals(J){const a=[];for(let k=0;k<TICKS;k++){const sent=k*T,held=sent>=SPIKE0&&sent<SPIKE0+J;a.push([(held?SPIKE0+J:sent)+LAT,(k+1)*S]);}return a;}
+function steadyArrivals(m){const a=[];for(let k=0;k<TICKS;k++)a.push([k*T+LAT,(k+1)*m*S]);return a;}
+function freezeArrivals(H){const a=[];for(let k=0;k<TICKS;k++){const sent=k*T;if(sent>=SPIKE0&&sent<SPIKE0+H)continue;a.push([sent+LAT,(k+1)*S]);}return a;}
+function simulate(arr,check,param){
+  let accepted=0,lastOk=0,pulled=0,viol=[],maxD=0;const trace=[[0,0]];
+  for(let i=1;i<TICKS+3;i++){
+    const now=i*T;let claim=null;
+    for(const [t,pos] of arr)if(now-T<t&&t<=now)claim=pos; // newest claim
+    if(claim===null){trace.push([now,accepted]);continue;}
+    let d=claim-pulled-accepted;
+    const allowed=check==='rate'?S*(1+param):V*Math.min(now-lastOk,T+param)/1000;
+    if(d>allowed+1e-9){viol.push(now);pulled+=d-allowed;d=allowed;}
+    accepted+=d;lastOk=now;maxD=Math.max(maxD,d);trace.push([now,accepted]);
+  }
+  return {viol,pulled,trace,maxD,at:t=>{let v=0;for(const [a,b] of trace)if(a<=t)v=b;return v;}};
+}
+const rateFree=J=>V*(1+J/T), creditJump=J=>V*(T+J)/1000;
+/* detection */
+function pAtLeast(k,lam){let s=0,term=Math.exp(-lam);for(let i=0;i<k;i++){s+=term;term*=lam/(i+1);}return Math.max(0,1-s);}
+function detect(o){ // o: L, spikes, mean, blinks, base, k, win
+  const lh=o.spikes*Math.exp(-o.L/o.mean)*o.win,lc=o.blinks*o.win,N=100000,cheat=N*o.base,hon=N-cheat;
+  const fpr=pAtLeast(o.k,lh),tpr=pAtLeast(o.k,lc),tp=cheat*tpr,fp=hon*fpr;
+  return {lh,lc,fpr,tpr,tp,fp,fn:cheat-tp,tn:hon-fp,prec:tp+fp>0?tp/(tp+fp):NaN};
+}
+
+/* ================= self test: spec test values ================= */
+(function selfTest(){
+  const fails=[],ok=(c,m)=>{if(!c)fails.push(m);};
+  const minTol=J=>{for(let p=0;p<=1200;p+=10)if(simulate(honestArrivals(J),'rate',p/100).viol.length===0)return p;return null;};
+  const minL=J=>{for(let l=0;l<=600;l+=10)if(simulate(honestArrivals(J),'credit',l).viol.length===0)return l;return null;};
+  ok(minTol(50)===100,'min tol J=50 should be 100%, got '+minTol(50));
+  ok(minTol(250)===500,'min tol J=250 should be 500%, got '+minTol(250));
+  ok(minTol(500)===1000,'min tol J=500 should be 1000%, got '+minTol(500));
+  [50,100,250,500].forEach(J=>ok(minL(J)===J,`min L for J=${J} should be ${J}, got ${minL(J)}`));
+  const r=simulate(honestArrivals(500),'credit',250);ok(r.viol.length===1&&m1(r.pulled)==='1.5',`credit L=250 J=500: want 1 violation, 1.5 m; got ${r.viol.length}, ${r.pulled}`);
+  ok(m1(creditJump(250))==='1.8','largest jump at L=250 should be 1.8 m');
+  const d={L:250,spikes:6,mean:100,blinks:5,base:.005,win:1};
+  const d3=detect(Object.assign({k:3},d)),d5=detect(Object.assign({k:5},d));
+  ok(d3.lh.toFixed(2)==='0.49','lambda_h should be 0.49, got '+d3.lh);
+  ok(fmt(d3.fp)==='1,376'&&fmt(d3.tp)==='438'&&(d3.prec*100).toFixed(1)==='24.1',`k=3: want 1,376 / 438 / 24.1%, got ${fmt(d3.fp)} / ${fmt(d3.tp)} / ${(d3.prec*100).toFixed(1)}`);
+  ok((d5.prec*100).toFixed(1)==='94.6','k=5 precision should be 94.6%, got '+(d5.prec*100).toFixed(1));
+  const d14=detect(Object.assign({},d,{k:14,win:7}));
+  ok(Math.abs(d14.fp-1.6)<0.1&&d14.prec>0.996,`7-session k=14: want about 1.6 innocent, precision > 99.6%; got ${d14.fp}, ${d14.prec}`);
+  if(fails.length){fails.forEach(f=>console.error('Self-test failed: '+f));document.documentElement.dataset.selftest='fail';}
+  else{console.info('Self-test: all spec test values pass');document.documentElement.dataset.selftest='pass';}
+})();
+
+/* ================= state ================= */
+const st={chk:'rate',tol:500,L:250,J:250,cht:'steady',m:6,H:400,zoom:false,
+  spikes:6,mean:100,blinks:5,baseI:3,k:3,win:1,share:false};
+const BASES=[.001,.002,.003,.005,.01,.02,.03,.05,.1];
+const pctB=b=>(b*100<1?(b*100).toFixed(1):String(+(b*100).toFixed(1)))+'%';
+
+/* ================= svg helpers ================= */
+function el(tag,a,p){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+function tx(p,x,y,s,a){const t=el('text',Object.assign({x,y,'font-size':11},a||{}),p);t.textContent=s;return t;}
+function box(svg,hRatio,minH,maxH){const w=svg.getBoundingClientRect().width||420,h=Math.round(Math.max(minH,Math.min(maxH,w*hRatio)));svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);svg.innerHTML='';return {w,h};}
+function niceStep(span,n){const raw=span/n,mag=Math.pow(10,Math.floor(Math.log10(raw)));return [1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);}
+
+/* ================= validation tab ================= */
+let simH,simC;
+function runSims(){
+  const param=st.chk==='rate'?st.tol/100:st.L;
+  simH=simulate(honestArrivals(st.J),st.chk,param);
+  simC=simulate(st.cht==='steady'?steadyArrivals(st.m):freezeArrivals(st.H),st.chk,param);
+}
+function drawPos(){
+  const svg=$('pos'),{w,h}=box(svg,.72,260,360);
+  const pad={l:40,r:10,t:10,b:54};
+  const soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),ochre=css('--ochre'),blood=css('--blood'),ink=css('--ink'),paper=css('--paper');
+  let x0=0,x1=3000,y0=0,y1=60;
+  if(st.zoom){x0=750;x1=Math.min(3000,Math.max(2000,SPIKE0+Math.max(st.J,st.cht==='freeze'?st.H:0)+500));
+    const pts=simH.trace.filter(p=>p[0]>=x0&&p[0]<=x1).map(p=>p[1]).concat([V*x0/1000,V*x1/1000+S]);
+    if(st.cht==='freeze'||st.m<=1.5||st.chk==='credit')simC.trace.filter(p=>p[0]>=x0&&p[0]<=x1).forEach(p=>pts.push(p[1]));
+    y0=Math.floor(Math.min(...pts))-1;y1=Math.ceil(Math.max(...pts))+1;}
+  const W=w-pad.l-pad.r,H=h-pad.t-pad.b,X=t=>pad.l+(t-x0)/(x1-x0)*W,Y=y=>pad.t+(1-(y-y0)/(y1-y0))*H;
+  const clip=el('clipPath',{id:'pc'},el('defs',{},svg));el('rect',{x:pad.l,y:pad.t,width:W,height:H},clip);
+  // spike shading (honest) and hold shading (cheater)
+  if(st.J>0)el('rect',{x:X(Math.max(x0,SPIKE0)),y:pad.t,width:Math.max(0,X(Math.min(x1,SPIKE0+st.J))-X(Math.max(x0,SPIKE0))),height:H,fill:steel,'fill-opacity':.14},svg);
+  if(st.cht==='freeze'&&st.H>0)el('rect',{x:X(Math.max(x0,SPIKE0)),y:pad.t,width:Math.max(0,X(Math.min(x1,SPIKE0+st.H))-X(Math.max(x0,SPIKE0))),height:H,fill:'none',stroke:ochre,'stroke-dasharray':'3 3'},svg);
+  const ys=niceStep(y1-y0,5);for(let v=Math.ceil(y0/ys)*ys;v<=y1+1e-9;v+=ys){el('line',{x1:pad.l,x2:pad.l+W,y1:Y(v),y2:Y(v),stroke:grid},svg);const t=tx(svg,pad.l-5,Y(v)+4,+v.toFixed(1),{'text-anchor':'end','font-size':10});t.style.fill=soft;}
+  const xs=niceStep(x1-x0,w<420?3:5);for(let v=Math.ceil(x0/xs)*xs;v<=x1;v+=xs){const t=tx(svg,X(v),pad.t+H+14,fmt(v),{'text-anchor':v+xs>x1?'end':v===x0?'start':'middle','font-size':10});t.style.fill=soft;}
+  let t=tx(svg,pad.l+W,h-4,'server time (ms)',{'text-anchor':'end','font-size':10});t.style.fill=soft;
+  t=tx(svg,pad.l+4,pad.t+12,'metres',{'font-size':10});t.style.fill=soft;
+  const g=el('g',{'clip-path':'url(#pc)'},svg);
+  const path=(pts,a)=>el('path',Object.assign({d:pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(''),fill:'none'},a),g);
+  const claimed=[];for(let k=0;k<=TICKS;k++)claimed.push([k*T,(k+1)*S]);
+  path(claimed,{stroke:steel,'stroke-width':1.2});
+  path(simH.trace.filter(p=>p[0]<=3000),{stroke:steel,'stroke-width':4,'stroke-linejoin':'round'});
+  path(simC.trace.filter(p=>p[0]<=3000),{stroke:ochre,'stroke-width':3,'stroke-dasharray':'7 5'});
+  // off-chart label for the cheater
+  const cEnd=simC.at(3000);
+  if(cEnd>y1){const tc=simC.trace.find(p=>p[1]>y1);if(tc){const xl=X(tc[0]),room=pad.l+W-xl>140,lt=tx(svg,room?pad.l+W-4:xl-10,pad.t+14,`cheater: ${m1(cEnd)} m at 3 s ↑`,{'font-size':11,'font-weight':700,'text-anchor':'end'});lt.style.fill=ochre;}}
+  // violation markers below the axis
+  const yH=pad.t+H+26,yC=pad.t+H+40;
+  simH.viol.filter(v=>v>=x0&&v<=x1).forEach(v=>el('circle',{cx:X(v),cy:yH,r:4.5,fill:blood},svg));
+  simC.viol.filter(v=>v>=x0&&v<=x1).forEach(v=>el('path',{d:`M${X(v)},${yC-5} L${X(v)+5},${yC+4} L${X(v)-5},${yC+4}Z`,fill:'none',stroke:blood,'stroke-width':1.6},svg));
+  t=tx(svg,2,yH+4,'H',{'font-size':10,'font-weight':700});t.style.fill=soft;
+  t=tx(svg,2,yC+4,'C',{'font-size':10,'font-weight':700});t.style.fill=soft;
+  if(!simH.viol.length){t=tx(svg,pad.l+4,yH+4,'no honest violations',{'font-size':10});t.style.fill=soft;}
+  if(!simC.viol.length){t=tx(svg,pad.l+4,yC+4,'no cheater violations',{'font-size':10});t.style.fill=soft;}
+}
+function drawGive(){
+  const svg=$('give'),{w,h}=box(svg,.72,250,340);
+  const pad={l:34,r:30,t:14,b:34},W=w-pad.l-pad.r,H=h-pad.t-pad.b;
+  const soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),moss=css('--moss'),ink=css('--ink'),paper=css('--paper');
+  const X=j=>pad.l+j/600*W,YL=v=>pad.t+(1-v/80)*H,YR=v=>pad.t+(1-v/8)*H; // right axis 0-8 m: on 0-4 m the two curves coincide exactly (jump = rate allowance per tick)
+  for(let i=0;i<=4;i++){const y=pad.t+H*i/4;el('line',{x1:pad.l,x2:pad.l+W,y1:y,y2:y,stroke:grid},svg);
+    let t=tx(svg,pad.l-5,y+4,80-20*i,{'text-anchor':'end','font-size':10});t.style.fill=blood;
+    t=tx(svg,pad.l+W+5,y+4,8-2*i,{'font-size':10});t.style.fill=moss;}
+  for(let j=0;j<=600;j+=(w<420?200:100)){const t=tx(svg,X(j),pad.t+H+14,j,{'text-anchor':'middle','font-size':10});t.style.fill=soft;}
+  let t=tx(svg,pad.l+W/2,h-3,'spike forgiven (ms)',{'text-anchor':'middle','font-size':10});t.style.fill=soft;
+  el('line',{x1:pad.l,x2:pad.l+W,y1:YL(V),y2:YL(V),stroke:blood,'stroke-dasharray':'2 3','stroke-opacity':.6},svg);
+  t=tx(svg,pad.l+4,YL(V)-4,'legal 6 m/s',{'font-size':10});t.style.fill=soft;
+  let d='';for(let j=0;j<=600;j+=10)d+=(j?'L':'M')+X(j)+','+YL(rateFree(j));el('path',{d,fill:'none',stroke:blood,'stroke-width':3},svg);
+  d='';for(let j=0;j<=600;j+=10)d+=(j?'L':'M')+X(j)+','+YR(creditJump(j));el('path',{d,fill:'none',stroke:moss,'stroke-width':3},svg);
+  t=tx(svg,X(600)-4,YL(rateFree(600))-10,'rate: m/s, forever',{'font-size':11,'font-weight':700,'text-anchor':'end'});t.style.fill=blood;
+  t=tx(svg,X(600)-4,YR(creditJump(600))-10,'credit: metres, once',{'font-size':11,'font-weight':700,'text-anchor':'end'});t.style.fill=moss;
+  // markers: active check solid, the other faint
+  const mk=(j,active,col,y,label,val)=>{
+    el('line',{x1:X(j),x2:X(j),y1:pad.t,y2:pad.t+H,stroke:ink,'stroke-width':active?1.5:1,'stroke-dasharray':'5 4','stroke-opacity':active?1:.3},svg);
+    el('circle',{cx:X(j),cy:y,r:active?6.5:4,fill:col,stroke:paper,'stroke-width':2,'fill-opacity':active?1:.45},svg);
+    if(active){const right=X(j)<pad.l+W*.6,lt=tx(svg,X(j)+(right?9:-9),y+(label==='rate'?-8:16),val,{'font-size':12,'font-weight':700,'text-anchor':right?'start':'end'});lt.style.fill=col;
+      const bb=lt.getBBox();const bg=el('rect',{x:bb.x-3,y:bb.y-1,width:bb.width+6,height:bb.height+2,rx:3,fill:css('--paper-2')},svg);svg.appendChild(lt);}
+  };
+  const jr=st.tol/100*T,jc=st.L;
+  mk(jr,st.chk==='rate',blood,YL(rateFree(jr)),'rate',`${m1(rateFree(jr)).replace(/\.0$/,'')} m/s forever`);
+  mk(jc,st.chk==='credit',moss,YR(creditJump(jc)),'credit',`${m1(creditJump(jc))} m once`);
+}
+function updateA(){
+  runSims();
+  const rate=st.chk==='rate';
+  $('oTol').textContent=st.tol.toLocaleString('en-US')+'%';$('oL').textContent=st.L+' ms';$('oJ').textContent=st.J+' ms';
+  $('oM').textContent=st.m.toFixed(1)+'×';$('oH').textContent=st.H+' ms';
+  $('wrapTol').classList.toggle('dim',!rate);$('wrapL').classList.toggle('dim',rate);
+  $('wrapM').classList.toggle('dim',st.cht!=='steady');$('wrapH').classList.toggle('dim',st.cht!=='freeze');
+  $('rSet').textContent=rate?`tol ${st.tol.toLocaleString('en-US')}%`:`L ${st.L} ms`;
+  $('rSetL').textContent=rate?`current setting, forgives ${fmt(st.tol/100*T)} ms`:'current setting, forgives that gap';
+  $('rHv').textContent=simH.viol.length;$('rHp').textContent=m1(simH.pulled)+' m';
+  $('rCv').textContent=simC.viol.length;
+  const lead=simC.at(3000)-simH.at(3000);$('rLead').textContent=(lead>0.05?'+':'')+m1(lead)+' m';
+  const jump=rate?S*(1+st.tol/100):creditJump(st.L);$('rJump').textContent=m1(jump)+' m';
+  $('rFree').textContent=rate?`${m1(V*(1+st.tol/100)).replace(/\.0$/,'')} m/s`:'6 m/s';
+  let s;
+  if(rate){
+    s=`The rate check allows ${m1(S*(1+st.tol/100))} m every tick, so any client may hold <b>${m1(V*(1+st.tol/100)).replace(/\.0$/,'')} m/s</b>, ${(1+st.tol/100).toFixed(1).replace(/\.0$/,'')} times the legal speed. `;
+    s+=simH.viol.length?`Even so, this ${st.J} ms spike exceeds what it forgives (${fmt(st.tol/100*T)} ms): the honest player is pulled back ${m1(simH.pulled)} m. `:`It forgives the ${st.J} ms spike, `;
+    s+=st.cht==='steady'?(simC.viol.length?`The ${st.m.toFixed(1)}× cheater trips it ${simC.viol.length} times.`:`and the ${st.m.toFixed(1)}× cheater is never flagged, ending ${m1(lead)} m ahead.`)
+      :(simC.viol.length?`The freeze-and-jump cheater trips it once.`:`and the ${st.H} ms freeze-and-jump passes too.`);
+  }else{
+    s=`The credit check allows only the distance the server's own clock permits, capped at ${T+st.L} ms of travel: one jump of at most <b>${m1(creditJump(st.L))} m</b>, and no steady extra speed. `;
+    s+=simH.viol.length?`The ${st.J} ms spike is longer than L, so the honest player is pulled back ${m1(simH.pulled)} m (${simH.viol.length} violation), false evidence against them. `:`It forgives the honest ${st.J} ms spike. `;
+    s+=st.cht==='steady'?(st.m>1?`The ${st.m.toFixed(1)}× cheater is clamped to 6 m/s and flagged on ${simC.viol.length} ticks.`:'')
+      :(simC.viol.length?`The ${st.H} ms freeze is longer than L, so the catch-up claim is clamped and flagged.`:`The ${st.H} ms freeze fits inside L, so the cheater stands still on other screens for ${st.H} ms and then jumps, unflagged. That is what L gives away.`);
+  }
+  $('insA').innerHTML=s;
+  const times=Number.isInteger(st.m)?['','','two','three','four','five','six','seven','eight'][st.m]:st.m.toFixed(1);
+  $('caption').textContent=rate&&st.cht==='steady'&&!simC.viol.length&&st.m>1
+    ?`Forgive ${st.J===250?'a quarter-second':st.J+' ms'} of lag with a rate check and a cheater runs ${times} times faster, unflagged.`
+    :rate?'Every millisecond of lag a rate check forgives is free speed for every client.'
+    :'Bound totals, not rates: a credit check turns forgiven lag into one small jump.';
+  drawPos();drawGive();
+}
+
+/* ================= detection tab ================= */
+function detOpts(k){return {L:st.L,spikes:st.spikes,mean:st.mean,blinks:st.blinks,base:BASES[st.baseI],k,win:st.win};}
+function drawDet(){
+  const svg=$('det'),{w,h}=box(svg,.75,260,360);
+  const nar=w<480,pad={l:40,r:6,t:nar?38:26,b:30},W=w-pad.l-pad.r,H=h-pad.t-pad.b;
+  const soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),blood=css('--blood'),ink=css('--ink'),paper=css('--paper');
+  const kmax=st.win===1?8:40,start=Math.max(1,Math.min(kmax-7,st.k-3)),ks=[];for(let k=start;k<start+8;k++)ks.push(k);
+  const rows=ks.map(k=>Object.assign({k},detect(detOpts(k))));
+  const defs=el('defs',{},svg),pat=el('pattern',{id:'hb',width:5,height:5,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},defs);el('rect',{width:3,height:5,fill:blood},pat);
+  const ymax=st.share?1:Math.max(1,...rows.map(r=>r.tp+r.fp));
+  const step=st.share?.25:niceStep(ymax,4),top=st.share?1:Math.ceil(ymax/step)*step;
+  const Y=v=>pad.t+(1-v/top)*H;
+  for(let v=0;v<=top+1e-9;v+=step){el('line',{x1:pad.l,x2:pad.l+W,y1:Y(v),y2:Y(v),stroke:grid},svg);
+    const t=tx(svg,pad.l-5,Y(v)+4,st.share?Math.round(v*100)+'%':(v>=1000?fmt(v/1000)+'k':fmt(v)),{'text-anchor':'end','font-size':10});t.style.fill=soft;}
+  const bw=W/8;
+  rows.forEach((r,i)=>{const x=pad.l+i*bw+bw*.16,bwid=bw*.68,tot=r.tp+r.fp,cur=r.k===st.k;
+    const tpv=st.share?(tot?r.tp/tot:0):r.tp,fpv=st.share?(tot?r.fp/tot:0):r.fp;
+    if(cur)el('rect',{x:pad.l+i*bw+1,y:pad.t-(nar?36:24),width:bw-2,height:H+(nar?36:24)+pad.b-2,fill:'none',rx:6,stroke:ink,'stroke-width':1.5,'stroke-dasharray':'4 3'},svg);
+    el('rect',{x,y:Y(tpv),width:bwid,height:Math.max(0,Y(0)-Y(tpv)),fill:steel},svg);
+    el('rect',{x,y:Y(tpv+fpv),width:bwid,height:Math.max(0,Y(tpv)-Y(tpv+fpv)),fill:'url(#hb)',stroke:blood,'stroke-width':1},svg);
+    const pr=isNaN(r.prec)?'—':(r.prec*100>=99.95&&r.prec<1?'>99.9':(r.prec*100).toFixed(1))+(isNaN(r.prec)?'':'%');
+    const lt=tx(svg,x+bwid/2,Math.max(pad.t-6,Y(tpv+fpv)-5)-(nar&&i%2?12:0),pr,{'text-anchor':'middle','font-size':w<420?10:11,'font-weight':cur?700:400});
+    const t=tx(svg,x+bwid/2,pad.t+H+15,'k='+r.k,{'text-anchor':'middle','font-size':10,'font-weight':cur?700:400});t.style.fill=cur?ink:soft;
+  });
+}
+function updateB(){
+  const o=detOpts(st.k),r=detect(o),n=x=>x<10&&x>0&&Math.abs(x-Math.round(x))>.05?x.toFixed(1):fmt(x);
+  $('oL2').textContent=st.L+' ms';$('oSpk').textContent=st.spikes;$('oMean').textContent=st.mean+' ms';$('oBlk').textContent=st.blinks;
+  $('oBase').textContent=pctB(BASES[st.baseI]);$('base').setAttribute('aria-valuetext',pctB(BASES[st.baseI]));$('oK').textContent=st.k;
+  $('k').max=st.win===1?8:40;
+  $('cTP').textContent=n(r.tp);$('cFP').textContent=n(r.fp);$('cFN').textContent=n(r.fn);$('cTN').textContent=fmt(r.tn);
+  $('cPrec').textContent=isNaN(r.prec)?'—':(r.prec*100).toFixed(1)+'%';$('cRec').textContent=(r.tpr*100).toFixed(1)+'%';
+  $('cLh').textContent=r.lh.toFixed(2);$('cLc').textContent=r.lc.toFixed(r.lc%1?2:0);
+  const unit=st.win===1?'session':'week';
+  $('cLhL').innerHTML=`honest violations per ${unit} λ<sub>h</sub>`;$('cLcL').innerHTML=`cheater violations per ${unit} λ<sub>c</sub>`;
+  $('cmTitle').textContent=`Confusion table at k = ${st.k}, ${st.win===1?'one session':'7 sessions'}`;
+  $('detTitle').firstChild.textContent=st.win===1?'Flagged sessions per day, by threshold k':'Flagged players per week, by threshold k';
+  $('detSub').textContent=`100,000 ${st.win===1?'sessions':'players'}, ${pctB(BASES[st.baseI])} cheating. Current k outlined.`;
+  const cheat=100000*BASES[st.baseI];
+  let s;
+  if(isNaN(r.prec))s=`At k = ${st.k} nobody is flagged.`;
+  else if(r.prec<.5)s=`At k = ${st.k} the rule flags only ${(r.fpr*100).toFixed(r.fpr<.01?2:1)}% of honest ${unit}s and catches ${(r.tpr*100).toFixed(1)}% of cheaters. But honest players outnumber cheaters ${fmt((100000-cheat)/cheat)} to 1, so <b>${fmt(r.fp)} innocent flags</b> swamp ${fmt(r.tp)} real ones. ${Math.round((1-r.prec)*100)}% of flagged players are innocent.`;
+  else s=`At k = ${st.k}, ${(r.prec*100).toFixed(1)}% of flags are cheaters (${n(r.fp)} innocent against ${fmt(r.tp)} real), and ${fmt(r.fn)} cheaters slip through. `+(st.win===1?'Try the 7-session window: honest spikes stay random while cheaters keep cheating.':'Waiting a week is what makes this work: honest violations stay random while a cheater\'s pile up.');
+  $('insB').innerHTML=s;
+  $('caption').textContent='A threshold that looks strict on honest players can still flag mostly innocent ones.';
+  drawDet();
+}
+
+/* ================= events ================= */
+const on=(id,ev,f)=>$(id).addEventListener(ev,f);
+document.querySelectorAll('input[name=chk]').forEach(r=>r.addEventListener('change',()=>{st.chk=r.value;updateA();}));
+document.querySelectorAll('input[name=cht]').forEach(r=>r.addEventListener('change',()=>{st.cht=r.value;updateA();}));
+on('tol','input',e=>{st.tol=+e.target.value;updateA();});
+on('L','input',e=>{st.L=+e.target.value;$('L2').value=st.L;updateA();});
+on('J','input',e=>{st.J=+e.target.value;updateA();});
+on('m','input',e=>{st.m=+e.target.value;updateA();});
+on('H','input',e=>{st.H=+e.target.value;updateA();});
+on('zoom','click',()=>{st.zoom=!st.zoom;$('zoom').setAttribute('aria-pressed',st.zoom);$('zoom').textContent=st.zoom?'Show all 3 s':'Zoom to the spike';drawPos();});
+on('L2','input',e=>{st.L=+e.target.value;$('L').value=st.L;updateB();});
+on('spk','input',e=>{st.spikes=+e.target.value;updateB();});
+on('mean','input',e=>{st.mean=+e.target.value;updateB();});
+on('blk','input',e=>{st.blinks=+e.target.value;updateB();});
+on('base','input',e=>{st.baseI=+e.target.value;updateB();});
+on('k','input',e=>{st.k=+e.target.value;updateB();});
+document.querySelectorAll('input[name=win]').forEach(r=>r.addEventListener('change',()=>{st.win=+r.value;st.k=st.win===7?14:3;$('k').max=st.win===1?8:40;$('k').value=st.k;updateB();}));
+on('scCount','click',()=>{st.share=false;$('scCount').setAttribute('aria-pressed','true');$('scShare').setAttribute('aria-pressed','false');drawDet();});
+on('scShare','click',()=>{st.share=true;$('scShare').setAttribute('aria-pressed','true');$('scCount').setAttribute('aria-pressed','false');drawDet();});
+const tabs=[$('tA'),$('tB')];
+function sel(t,focus){tabs.forEach(x=>{const o=x===t;x.setAttribute('aria-selected',o);x.tabIndex=o?0:-1;$(x.getAttribute('aria-controls')).hidden=!o;});if(focus)t.focus();if(t===tabs[0])updateA();else updateB();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t,true));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2],true);}});});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{$('pA').hidden?updateB():updateA();},80);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{$('pA').hidden?updateB():updateA();});
+updateA();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{$('pA').hidden?updateB():updateA();});
+})();
+</script>
+</body>
+</html>

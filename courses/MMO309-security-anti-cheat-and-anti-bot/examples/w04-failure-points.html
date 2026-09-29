@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Failure points — MMO309 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+h2{font-family:var(--serif);font-size:1.08rem;margin:0 0 6px}
+/* verdict patterns: never color alone */
+.v-correct{--vc:var(--ink-soft);--vp:none}
+.v-dupe{--vc:var(--blood);--vp:repeating-linear-gradient(45deg,var(--blood) 0 3px,transparent 3px 7px)}
+.v-double{--vc:var(--ochre);--vp:radial-gradient(var(--ochre) 1.6px,transparent 2px) 0 0/7px 7px}
+.v-loss{--vc:var(--steel);--vp:repeating-linear-gradient(0deg,var(--steel) 0 2px,transparent 2px 6px)}
+.sw{display:inline-block;width:16px;height:16px;border-radius:3px;border:2px solid var(--vc);background:var(--vp);vertical-align:middle;margin-right:6px}
+.top{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start}
+@media (max-width:760px){.top{grid-template-columns:1fr}}
+.radios{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;border:0;padding:0}
+.radios legend{font-weight:700;font-size:.92rem;margin-bottom:4px;padding:0}
+.radios label{font:600 .88rem var(--sans);padding:7px 11px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer;display:flex;gap:6px;align-items:center}
+.radios label:has(input:checked){background:var(--ink);color:var(--paper)}
+.radios input{margin:0;accent-color:var(--steel)}
+.strip{display:flex;align-items:stretch;gap:0;padding:10px 4px;border-radius:10px;background:var(--paper-2);touch-action:none;user-select:none;cursor:pointer;overflow:hidden}
+.box{flex:1 1 0;min-width:0;border:1.5px solid var(--ink);border-radius:8px;padding:10px 4px;text-align:center;font:700 .86rem var(--sans);background:var(--paper);display:flex;align-items:center;justify-content:center;line-height:1.2}
+.box code{font:inherit}
+.gap{flex:0 0 26px;position:relative;display:flex;align-items:center;justify-content:center}
+.gap .cell{width:12px;height:70%;border-radius:4px;border:2px solid var(--vc);background:var(--vp);opacity:.9}
+.gap.sel .cell{width:18px;height:100%;box-shadow:0 0 0 3px var(--paper),0 0 0 5px var(--ink)}
+.gap.sel::after{content:"⚡";position:absolute;top:-14px;font-size:14px}
+.nofail{margin-top:8px;display:flex;align-items:center;gap:8px;font-size:.88rem;flex-wrap:wrap}
+.chip{font:600 .84rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.hint{font-size:.82rem;color:var(--ink-soft)}
+@media (max-width:560px){
+  .strip{flex-direction:column;padding:6px 10px 6px 30px}
+  .box{padding:8px 6px}
+  .gap{flex:0 0 22px}
+  .gap .cell{width:70%;height:10px}
+  .gap.sel .cell{width:100%;height:14px}
+  .gap.sel::after{top:auto;left:-24px}
+}
+.verdict{border:2px solid var(--vc);border-radius:12px;padding:12px 14px;background:var(--paper)}
+.verdict .big{display:flex;align-items:center;gap:8px;font:700 1.25rem var(--sans);color:var(--vc)}
+.verdict .big .sw{width:22px;height:22px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 4px}
+.nums div{border-left:4px solid var(--c,var(--ink));padding:0 0 0 8px}
+.nums b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.nums span{font-size:.78rem;color:var(--ink-soft)}
+.verdict p{margin:6px 0 0;font-family:var(--serif);font-size:.95rem}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child,td.l,th.l{text-align:left}
+th{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.mini{margin-top:12px}
+.controls{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:16px 0}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.controls{grid-template-columns:1fr}}
+label.row{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px}
+label.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.toggle{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.88rem;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--blood);margin:0}
+.charts{display:grid;grid-template-columns:1fr 2fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}.charts .atk{order:-1}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1.02rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+svg{display:block;width:100%}
+svg text{font-family:var(--sans);fill:var(--ink)}
+.note{margin:8px 0 0;padding:8px 10px;border-radius:8px;border:1.5px dashed var(--ochre);font-size:.9rem}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.readout{margin-top:14px}
+.readout table{font-size:.92rem}
+.copy{margin-top:6px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (max-width:560px){
+  #ro thead{display:none} #ro,#ro tbody{display:block}
+  #ro tr{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+  #ro td{text-align:left!important;display:flex;justify-content:space-between;gap:6px}
+  #ro td::before{content:attr(data-k);color:var(--ink-soft);font-size:.82rem}
+  .mini th,.mini td{padding:5px 3px;font-size:.82rem}
+  .mini .sw{width:12px;height:12px;margin-right:3px}
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO309 Security, Anti-Cheat and Anti-Bot · Week 4 · Worked example</p>
+  <h1 id="caption">A few dupes a year, or a dupe in five tries. Same bug.</h1>
+  <p class="lede">Ana sends Bo 100 gold. Put a failure between any two steps, let the client retry once with the same request ID, and see what the world looks like. Then see the same unsafe gap as an engineer's average and as an attacker's odds.</p>
+</header>
+
+<section class="panel">
+  <div class="top">
+    <div>
+      <fieldset class="radios" id="handlers"><legend>Handler</legend>
+        <label><input type="radio" name="h" value="naive" checked> Naive (check, give, take)</label>
+        <label><input type="radio" name="h" value="tx"> Transaction</label>
+        <label><input type="radio" name="h" value="keyed"> Transaction + idempotency key</label>
+      </fieldset>
+      <div class="strip" id="strip" role="slider" tabindex="0" aria-label="Failure point" aria-valuemin="0" aria-valuemax="3" aria-valuenow="2" aria-valuetext=""></div>
+      <div class="nofail">
+        <button class="chip" id="noFail" type="button" aria-pressed="false">No failure</button>
+        <span class="hint">Drag or click a gap, or focus the strip and use the arrow keys (Home = no failure).</span>
+      </div>
+    </div>
+    <div class="verdict" id="verdict" aria-live="polite">
+      <div class="big"><span class="sw"></span><span id="vText"></span></div>
+      <div class="nums">
+        <div style="--c:var(--steel)"><b id="vAna"></b><span>Ana</span></div>
+        <div style="--c:var(--moss)"><b id="vBo"></b><span>Bo</span></div>
+        <div style="--c:var(--ochre)"><b id="vTot"></b><span>total gold</span></div>
+      </div>
+      <p id="vWhy"></p>
+    </div>
+  </div>
+  <table class="mini" aria-label="Every failure point for this handler">
+    <thead><tr><th class="l">Failure point, then one retry</th><th>Ana</th><th>Bo</th><th>Total</th><th class="l">Verdict</th></tr></thead>
+    <tbody id="mini"></tbody>
+  </table>
+
+  <div class="controls">
+    <div><label class="row" for="w">Unsafe window w <output id="oW"></output></label><input id="w" type="range" min="1" max="200" step="1" value="20"></div>
+    <div><label class="row" for="J">Attacker jitter J <output id="oJ"></output></label><input id="J" type="range" min="0" max="22" step="1" value="11"></div>
+    <div><label class="row" for="lam">Transfers per second λ <output id="oLam"></output></label><input id="lam" type="range" min="1" max="100" step="1" value="10"></div>
+    <div><label class="row" for="c">Accidental crashes per week c <output id="oC"></output></label><input id="c" type="range" min="0" max="7" step="0.5" value="1"></div>
+    <div style="align-self:center"><label class="toggle"><input type="checkbox" id="load"> Server under load (w × 3)</label></div>
+  </div>
+
+  <div class="charts">
+    <figure class="eng">
+      <figcaption>As an engineer sees it<small>Expected dupes per year from accidental crashes, 52 × c × λ × w</small></figcaption>
+      <svg id="eng" role="img" aria-label="Bar of expected dupes per year"></svg>
+    </figure>
+    <figure class="atk">
+      <figcaption>As an attacker sees it<small>Chance of at least one dupe within k forced failures, 1 − (1 − p)<sup>k</sup>, p = min(w / J, 1)</small></figcaption>
+      <svg id="atk" role="img" aria-label="Chance of a dupe rising with the number of attempts"></svg>
+      <p class="note" id="txNote" hidden>No dupes. Double execution on lost reply remains: see failure point after COMMIT.</p>
+    </figure>
+  </div>
+  <div class="insight" id="insight"></div>
+
+  <div class="readout">
+    <h2>Readout</h2>
+    <table id="ro" aria-label="Copyable readout">
+      <thead><tr><th class="l">w (ms)</th><th>J (ms)</th><th>p</th><th>mean tries</th><th>k for 50%</th><th>k for 99%</th><th>dupes per crash</th><th>dupes per year</th></tr></thead>
+      <tbody><tr id="roRow"></tr></tbody>
+    </table>
+    <div class="copy"><button class="chip" id="copyBtn" type="button">Copy as tab-separated text</button> <span class="hint" id="copyMsg" aria-live="polite"></span></div>
+  </div>
+</section>
+
+<footer>Handler logic follows the lecture's Python code (Ana 300, Bo 0, transfer 100, one retry with the same request ID after any failure): a naive handler commits each write alone; a transaction rolls back every uncommitted write on a crash; a keyed handler also records the request ID inside the transaction and answers a known ID without doing anything. Rates: dupes per crash = λ × w, attacker's chance per try p = min(w / J, 1). All numbers are invented teaching values, not measurements from any game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS='http://www.w3.org/2000/svg';
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const trim=(x,d)=>String(+x.toFixed(d));
+
+/* ============ handler simulation (port of the lecture's trial()) ============ */
+const HANDLERS={
+  naive:{name:'Naive',steps:['check','give','take','reply'],tx:false,
+    ops:[{k:'check'},{k:'give'},{k:'take'},{k:'reply'}]},
+  tx:{name:'Transaction',steps:['BEGIN','take if ≥ 100','give','COMMIT','reply'],tx:true,
+    ops:[{k:'begin'},{k:'ctake'},{k:'give'},{k:'commit'},{k:'reply'}]},
+  keyed:{name:'Transaction + key',steps:['BEGIN','key seen?','take if ≥ 100','give','save key','COMMIT','reply'],tx:true,
+    ops:[{k:'begin'},{k:'keyseen'},{k:'ctake'},{k:'give'},{k:'savekey'},{k:'commit'},{k:'reply'}]}
+};
+// run one request; crashAfter = index of step after which the process dies (-1 = no crash)
+function runOnce(db,h,crashAfter){
+  let work={ana:db.ana,bo:db.bo,done:new Set(db.done)},inTx=false,reply=null;
+  const commitNow=()=>{db.ana=work.ana;db.bo=work.bo;db.done=new Set(work.done);};
+  const ops=HANDLERS[h].ops;
+  for(let i=0;i<ops.length;i++){
+    const k=ops[i].k;
+    if(k==='check'){if(work.ana<100)return 'refused';}
+    else if(k==='begin'){inTx=true;}
+    else if(k==='keyseen'){if(work.done.has('req-42')){return 'sent';}} // answer again, change nothing
+    else if(k==='ctake'){if(work.ana>=100)work.ana-=100;else return 'refused';}
+    else if(k==='take'){work.ana-=100;}
+    else if(k==='give'){work.bo+=100;}
+    else if(k==='savekey'){work.done.add('req-42');}
+    else if(k==='commit'){commitNow();inTx=false;}
+    else if(k==='reply'){reply='sent';}
+    if(!inTx&&k!=='reply')commitNow();              // autocommit outside a transaction
+    if(i===crashAfter)return 'CRASH';                 // uncommitted transaction work is lost
+  }
+  return reply;
+}
+function trial(h,crashAfter){
+  const db={ana:300,bo:0,done:new Set()};
+  let r=runOnce(db,h,crashAfter);
+  if(r==='CRASH')r=runOnce(db,h,-1);                   // no reply seen, so the client retries
+  const total=db.ana+db.bo;
+  const verdict=total>300?'dupe':total<300?'loss':db.ana!==200?'double':'correct';
+  return {ana:db.ana,bo:db.bo,total,verdict};
+}
+// failure points are the gaps between boxes: after step i, for i = 0 .. n-2 ; value 0 = no failure
+function points(h){const n=HANDLERS[h].steps.length,out=[{label:'No failure',crash:-1}];
+  for(let i=0;i<n-1;i++)out.push({label:`after ${HANDLERS[h].steps[i]}`+(i===n-2?' (reply lost)':''),crash:i});return out;}
+const VERD={correct:'Correct',dupe:'Dupe',double:'Double execution',loss:'Loss'};
+
+/* ============ rates ============ */
+const JS=[10,12,15,20,25,30,40,50,60,70,80,100,120,150,200,250,300,400,500,600,700,800,1000];
+function rates(o){ // o: w, J, lam, c, load, h
+  const wEff=o.h==='naive'?o.w*(o.load?3:1):0,p=Math.min(wEff/o.J,1);
+  const kFor=t=>{if(p<=0)return Infinity;if(p>=1)return 1;const q=1-p;let v=1,k=0;while(k<100000){k++;v*=q;if(v<=t+1e-12)return k;}return Infinity;};
+  return {wEff,p,mean:p>0?1/p:Infinity,k50:kFor(.5),k99:kFor(.01),perCrash:o.lam*wEff/1000,perYear:52*o.c*o.lam*wEff/1000};
+}
+
+/* ============ self test ============ */
+(function selfTest(){
+  const fails=[],ok=(c,m)=>{if(!c)fails.push(m);};
+  const base={w:20,J:100,lam:10,c:1,load:false,h:'naive'};
+  let r=rates(base);ok(r.p===0.2&&r.mean===5&&r.k50===4&&r.k99===21&&trim(r.perCrash,3)==='0.2'&&trim(r.perYear,2)==='10.4',`defaults: ${JSON.stringify(r)}`);
+  r=rates(Object.assign({},base,{load:true}));ok(Math.abs(r.p-.6)<1e-12&&r.k50===1&&r.k99===6&&trim(r.perYear,2)==='31.2',`load: ${JSON.stringify(r)}`);
+  r=rates(Object.assign({},base,{w:5,J:250}));ok(trim(r.p,4)==='0.02'&&Math.round(r.mean)===50&&r.k99===228,`w5 J250: ${JSON.stringify(r)}`);
+  ok(rates(Object.assign({},base,{h:'tx'})).p===0&&rates(Object.assign({},base,{h:'keyed'})).perYear===0,'transaction handlers should have p = 0');
+  let t=trial('naive',1);ok(t.ana===200&&t.bo===200&&t.total===400&&t.verdict==='dupe','naive after give: '+JSON.stringify(t));
+  t=trial('naive',2);ok(t.ana===100&&t.bo===200&&t.verdict==='double','naive after take: '+JSON.stringify(t));
+  t=trial('tx',3);ok(t.ana===100&&t.bo===200&&t.verdict==='double','tx after COMMIT: '+JSON.stringify(t));
+  points('keyed').forEach(pt=>{const x=trial('keyed',pt.crash);ok(x.ana===200&&x.bo===100&&x.verdict==='correct',`keyed ${pt.label}: ${JSON.stringify(x)}`);});
+  ok(points('naive').slice(1).map(pt=>trial('naive',pt.crash).verdict).join()==='correct,dupe,double','naive table');
+  ok(points('tx').slice(1).map(pt=>trial('tx',pt.crash).verdict).join()==='correct,correct,correct,double','transaction table');
+  if(fails.length){fails.forEach(f=>console.error('Self-test failed: '+f));document.documentElement.dataset.selftest='fail';}
+  else{console.info('Self-test: all spec test values pass');document.documentElement.dataset.selftest='pass';}
+})();
+
+/* ============ state ============ */
+const st={h:'naive',fp:2,w:20,Ji:11,lam:10,c:1,load:false};
+const J=()=>JS[st.Ji];
+
+/* ============ strip ============ */
+const strip=$('strip');
+function buildStrip(){
+  const h=HANDLERS[st.h],pts=points(st.h);strip.innerHTML='';
+  h.steps.forEach((s,i)=>{
+    const b=document.createElement('div');b.className='box';b.innerHTML=`<code>${s}</code>`;strip.appendChild(b);
+    if(i<h.steps.length-1){const g=document.createElement('div');const v=trial(st.h,i).verdict;
+      g.className='gap v-'+v;g.dataset.fp=i+1;g.innerHTML='<span class="cell"></span>';g.title=`${pts[i+1].label}: ${VERD[v]}`;strip.appendChild(g);}
+  });
+  strip.setAttribute('aria-valuemax',pts.length-1);
+}
+function renderFP(announce){
+  const pts=points(st.h);st.fp=Math.max(0,Math.min(pts.length-1,st.fp));
+  strip.querySelectorAll('.gap').forEach(g=>g.classList.toggle('sel',+g.dataset.fp===st.fp));
+  $('noFail').setAttribute('aria-pressed',String(st.fp===0));
+  const pt=pts[st.fp],t=trial(st.h,pt.crash);
+  strip.setAttribute('aria-valuenow',st.fp);strip.setAttribute('aria-valuetext',`${pt.label}: ${VERD[t.verdict]}, Ana ${t.ana}, Bo ${t.bo}`);
+  const v=$('verdict');v.className='verdict v-'+t.verdict;
+  $('vText').textContent=`${pt.label}: ${VERD[t.verdict]}`;
+  $('vAna').textContent=t.ana;$('vBo').textContent=t.bo;$('vTot').textContent=t.total;
+  const why={
+    correct:st.fp===0?'Nothing fails. Ana 200, Bo 100, gold conserved.':(st.h==='keyed'&&pt.crash===HANDLERS.keyed.steps.length-2?'The work committed with the key. The retry finds the key and answers "sent" without touching gold.':'The failure left nothing half-done, so the retry runs the transfer exactly once.'),
+    dupe:'Bo was paid but Ana was not charged. The retry sees Ana still at 300, passes the check and pays Bo again: 100 gold created from nothing.',
+    double:'The transfer committed but the reply was lost. The retry is judged against the new state, and Ana still has enough, so it runs twice. Gold is conserved here, but on a path whose retry cannot see the first run, this is a dupe.',
+    loss:'Ana was charged but Bo was never paid: gold destroyed.'
+  }[t.verdict];
+  $('vWhy').textContent=why;
+  $('mini').innerHTML=pts.map((p,i)=>{const x=trial(st.h,p.crash);return `<tr class="${i===st.fp?'here':''}"><td class="l">${p.label}</td><td>${x.ana}</td><td>${x.bo}</td><td>${x.total}</td><td class="l v-${x.verdict}"><span class="sw" aria-hidden="true"></span>${VERD[x.verdict]}</td></tr>`;}).join('');
+}
+function fpFromPointer(e){
+  const gaps=[...strip.querySelectorAll('.gap')],col=getComputedStyle(strip).flexDirection==='column';
+  let best=null,bd=1e9;gaps.forEach(g=>{const r=g.getBoundingClientRect(),c=col?(r.top+r.bottom)/2:(r.left+r.right)/2,d=Math.abs((col?e.clientY:e.clientX)-c);if(d<bd){bd=d;best=g;}});
+  if(best&&+best.dataset.fp!==st.fp){st.fp=+best.dataset.fp;renderFP();}
+}
+let dragging=false;
+strip.addEventListener('pointerdown',e=>{dragging=true;strip.setPointerCapture(e.pointerId);fpFromPointer(e);strip.focus();});
+strip.addEventListener('pointermove',e=>{if(dragging)fpFromPointer(e);});
+strip.addEventListener('pointerup',()=>{dragging=false;});
+strip.addEventListener('keydown',e=>{const n=points(st.h).length-1;let v=st.fp;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')v++;else if(e.key==='ArrowLeft'||e.key==='ArrowUp')v--;else if(e.key==='Home')v=0;else if(e.key==='End')v=n;else return;
+  e.preventDefault();st.fp=Math.max(0,Math.min(n,v));renderFP();});
+$('noFail').addEventListener('click',()=>{st.fp=0;renderFP();});
+
+/* ============ charts ============ */
+function el(tag,a,p){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+function tx(p,x,y,s,a){const t=el('text',Object.assign({x,y,'font-size':11},a||{}),p);t.textContent=s;return t;}
+function box(svg,ratio,minH,maxH){const w=svg.getBoundingClientRect().width||300,h=Math.round(Math.max(minH,Math.min(maxH,w*ratio)));svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);svg.innerHTML='';return {w,h};}
+function drawEng(r){
+  const svg=$('eng'),{w,h}=box(svg,.9,240,300),pad={l:36,r:10,t:28,b:26},W=w-pad.l-pad.r,H=h-pad.t-pad.b;
+  const soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),ink=css('--ink');
+  const top=Math.max(50,Math.ceil(r.perYear/50)*50),Y=v=>pad.t+(1-v/top)*H;
+  for(let i=0;i<=5;i++){const v=top*i/5,y=Y(v);el('line',{x1:pad.l,x2:pad.l+W,y1:y,y2:y,stroke:grid},svg);const t=tx(svg,pad.l-5,y+4,trim(v,1),{'text-anchor':'end','font-size':10});t.style.fill=soft;}
+  const bw=Math.min(90,W*.45),x=pad.l+(W-bw)/2;
+  el('rect',{x,y:Y(r.perYear),width:bw,height:Math.max(0,Y(0)-Y(r.perYear)),fill:blood,'fill-opacity':.85},svg);
+  tx(svg,x+bw/2,Y(r.perYear)-8,`${trim(r.perYear,1)} a year`,{'text-anchor':'middle','font-size':14,'font-weight':700});
+  const t=tx(svg,x+bw/2,h-8,`${trim(r.perCrash,3)} per crash × 52 × ${trim(st.c,1)}`,{'text-anchor':'middle','font-size':10});t.style.fill=soft;
+}
+function drawAtk(r){
+  const svg=$('atk'),{w,h}=box(svg,.5,240,320),pad={l:40,r:14,t:16,b:40},W=w-pad.l-pad.r,H=h-pad.t-pad.b;
+  const soft=css('--ink-soft'),grid=css('--grid'),blood=css('--blood'),ink=css('--ink'),ochre=css('--ochre'),paper=css('--paper-2');
+  const X=k=>pad.l+(k-1)/99*W,Y=v=>pad.t+(1-v)*H;
+  for(let i=0;i<=4;i++){const y=Y(i/4);el('line',{x1:pad.l,x2:pad.l+W,y1:y,y2:y,stroke:grid},svg);const t=tx(svg,pad.l-5,y+4,(i*25)+'%',{'text-anchor':'end','font-size':10});t.style.fill=soft;}
+  [1,20,40,60,80,100].forEach(k=>{const t=tx(svg,X(k),pad.t+H+14,k,{'text-anchor':k===100?'end':k===1?'start':'middle','font-size':10});t.style.fill=soft;});
+  let t=tx(svg,pad.l+W,h-4,'forced failures k',{'text-anchor':'end','font-size':10});t.style.fill=soft;
+  el('line',{x1:pad.l,x2:pad.l+W,y1:Y(.99),y2:Y(.99),stroke:ink,'stroke-dasharray':'6 4','stroke-width':1.2},svg);
+  t=tx(svg,pad.l+W-2,Y(.99)+13,'99%',{'text-anchor':'end','font-size':10,'font-weight':700});
+  let d='';for(let k=1;k<=100;k++)d+=(k>1?'L':'M')+X(k).toFixed(1)+','+Y(1-Math.pow(1-r.p,k)).toFixed(1);
+  el('path',{d,fill:'none',stroke:blood,'stroke-width':3,'stroke-linejoin':'round'},svg);
+  const mark=(k,lab,yv,below)=>{if(!isFinite(k)||k>100)return;
+    el('line',{x1:X(k),x2:X(k),y1:Y(yv),y2:pad.t+H,stroke:ink,'stroke-dasharray':'3 3','stroke-opacity':.6},svg);
+    el('circle',{cx:X(k),cy:Y(yv),r:5,fill:blood,stroke:css('--paper'),'stroke-width':2},svg);
+    const right=X(k)<pad.l+W*.7,lt=tx(svg,X(k)+(right?8:-8),Y(yv)+(below?16:-7),lab,{'font-size':11,'font-weight':700,'text-anchor':right?'start':'end'});
+    const bb=lt.getBBox();const bg=el('rect',{x:bb.x-2,y:bb.y-1,width:bb.width+4,height:bb.height+2,fill:paper,rx:2},svg);svg.appendChild(lt);};
+  if(r.p>0){
+    const same=r.k50===r.k99;
+    mark(r.k50,`50% by k = ${r.k50}`,1-Math.pow(1-r.p,r.k50),true);
+    if(!same)mark(r.k99,`99% by k = ${r.k99}`,1-Math.pow(1-r.p,r.k99),false);
+    else{const lt=tx(svg,X(r.k99)+8,Y(1)+14,`99% by k = ${r.k99}`,{'font-size':11,'font-weight':700});}
+    // mean tries: triangle on the x axis
+    if(r.mean<=100){const mx=X(Math.max(1,r.mean));el('path',{d:`M${mx},${pad.t+H-1} l-6,-10 h12z`,fill:ochre},svg);
+      const mt=tx(svg,mx,pad.t+H+27,`mean 1/p = ${trim(r.mean,1)}`,{'text-anchor':mx<pad.l+60?'start':mx>pad.l+W-60?'end':'middle','font-size':10,'font-weight':700});mt.style.fill=ochre;}
+    if(r.k99>100){const lt=tx(svg,pad.l+W-2,Y(.99)-6,`99% needs k = ${r.k99}, off the chart`,{'text-anchor':'end','font-size':11,'font-weight':700});lt.style.fill=blood;}
+  }else{const lt=tx(svg,pad.l+W/2,Y(.5),'p = 0: no unsafe window to aim at',{'text-anchor':'middle','font-size':13,'font-weight':700});}
+}
+const inf=x=>isFinite(x)?String(x):'never';
+function updateRates(){
+  const o={w:st.w,J:J(),lam:st.lam,c:st.c,load:st.load,h:st.h},r=rates(o);
+  $('oW').textContent=st.w+' ms'+(st.load&&st.h==='naive'?` (×3 = ${st.w*3})`:'');$('oJ').textContent=J()+' ms';$('oLam').textContent=st.lam;$('oC').textContent=trim(st.c,1);
+  $('J').setAttribute('aria-valuetext',J()+' ms');
+  $('txNote').hidden=st.h!=='tx';
+  const cells=[trim(r.wEff,1),J(),trim(r.p,4),isFinite(r.mean)?trim(r.mean,2):'—',inf(r.k50),inf(r.k99),trim(r.perCrash,3),trim(r.perYear,2)];
+  const keys=['w (ms)','J (ms)','p','mean tries','k for 50%','k for 99%','dupes per crash','dupes per year'];
+  $('roRow').innerHTML=cells.map((c,i)=>`<td data-k="${keys[i]}"${i===0?' class="l"':''}>${c}</td>`).join('');
+  $('roRow').dataset.tsv=['w','J','p','mean tries','k50','k99','dupes per crash','dupes per year'].join('\t')+'\n'+cells.join('\t');
+  let s;
+  if(r.p>0)s=`As an average this bug is <b>${trim(r.perYear,1)} dupes a year</b>, a ticket nobody escalates. As an attack it is a coin an attacker flips on demand: p = ${trim(r.p,4)} per forced failure, a dupe after ${trim(r.mean,1)} tries on average, and 99% certain by try ${r.k99}.`+(st.load?' Load triples the window, and attackers crowd a busy server.':'');
+  else s=st.h==='tx'?'The transaction has no gap between give and take, so there is nothing to aim at and both charts drop to zero. One amber point remains: a lost reply after COMMIT makes the retry run again.':'Every failure point is correct. Both charts are zero because a safe handler has no unsafe window at all.';
+  $('insight').innerHTML=s;
+  drawEng(r);drawAtk(r);
+}
+
+/* ============ events ============ */
+document.querySelectorAll('input[name=h]').forEach(r=>r.addEventListener('change',()=>{st.h=r.value;
+  st.fp=st.h==='naive'?2:st.h==='tx'?4:points('keyed').length-1;buildStrip();renderFP();updateRates();}));
+$('w').addEventListener('input',e=>{st.w=+e.target.value;updateRates();});
+$('J').addEventListener('input',e=>{st.Ji=+e.target.value;updateRates();});
+$('lam').addEventListener('input',e=>{st.lam=+e.target.value;updateRates();});
+$('c').addEventListener('input',e=>{st.c=+e.target.value;updateRates();});
+$('load').addEventListener('change',e=>{st.load=e.target.checked;updateRates();});
+$('copyBtn').addEventListener('click',()=>{const t=$('roRow').dataset.tsv;
+  const done=()=>{$('copyMsg').textContent='Copied.';};
+  try{navigator.clipboard.writeText(t).then(done,()=>{$('copyMsg').textContent='Select the table and copy it.';});}catch(e){$('copyMsg').textContent='Select the table and copy it.';}});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(updateRates,80);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',updateRates);
+buildStrip();renderFP();updateRates();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(updateRates);
+})();
+</script>
+</body>
+</html>

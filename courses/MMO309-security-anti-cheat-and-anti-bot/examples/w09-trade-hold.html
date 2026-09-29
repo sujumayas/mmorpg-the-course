@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trade hold: recovery vs friction · MMO309 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:250px}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 0}
+.readout.one{grid-template-columns:1fr}
+@media (max-width:420px){.readout{grid-template-columns:1fr 1fr}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.eff{margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--paper-2);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.eff b{font-size:1.3rem;font-variant-numeric:tabular-nums}
+.eff span{color:var(--ink-soft);font-size:.9rem}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px 26px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl{margin-bottom:12px}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0}
+input[type=number]{font:600 1rem var(--sans);width:100%;max-width:220px;padding:7px 9px;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:600 .9rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+#goalMsg{font-size:.9rem;color:var(--ink-soft)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+td{white-space:nowrap}
+@media (max-width:480px){table{font-size:.82rem}th,td{padding:5px 4px}.panel{padding:12px}}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO309 Security, Anti-Cheat and Anti-Bot · Week 9 · Worked example</p>
+  <h1>A longer trade hold stops paying. Its cost keeps rising.</h1>
+  <p class="lede">A hold of <var>H</var> days lets support cancel a theft if the owner reports it in time. Recovery flattens after a few multiples of the noticing time. The waiting you impose on honest traders grows in a straight line. Raise 2FA adoption and only the cost line moves.</p>
+</header>
+
+<section class="panel" aria-label="Trade hold model">
+  <div class="charts">
+    <figure>
+      <figcaption>Thefts you can reverse<small>Share reported before the hold ends, r(H). Dashed lines at 90% and 95%.</small></figcaption>
+      <canvas id="cRec" role="img" aria-label="Recoverable share of thefts versus hold length in days"></canvas>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--moss)"><b id="rRec">—</b><span>recoverable</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rKeep">—</b><span>thief keeps</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rMarg">—</b><span>gain from 1 more day</span></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>What honest traders pay<small>Trade-days of delay per day of trading, (1 − a) × D × H</small></figcaption>
+      <canvas id="cCost" role="img" aria-label="Delay cost in trade-days versus hold length in days"></canvas>
+      <div class="legend"><span><i style="border-color:var(--blood)"></i>at current 2FA adoption</span><span><i style="border-color:var(--ink-soft);opacity:.5"></i>if nobody used 2FA (a = 0)</span></div>
+      <div class="readout one" aria-live="polite">
+        <div class="stat" style="--c:var(--blood)"><b id="rCost">—</b><span>trade-days of delay per day</span></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="eff" aria-live="polite"><span>Efficiency at this hold:</span><b id="rEff">—</b><span id="rEffUnit">recovery points per million trade-days</span></div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div>
+      <div class="ctl">
+        <label for="hold"><span>Hold <var>H</var></span> <output id="oHold">3 days</output></label>
+        <input id="hold" type="range" min="0" max="30" step="0.5" value="3">
+        <div class="row"><button class="btn" id="goal" type="button">Hold for 90% recovery</button><span id="goalMsg" aria-live="polite"></span></div>
+      </div>
+      <div class="ctl">
+        <label for="adopt"><span>2FA adoption <var>a</var> (exempt from the hold)</span> <output id="oAdopt">40%</output></label>
+        <input id="adopt" type="range" min="0" max="95" step="1" value="40">
+      </div>
+      <div class="ctl">
+        <label for="trades"><span>Trades per day <var>D</var></span></label>
+        <input id="trades" type="number" min="0" max="100000000" step="1000" value="200000" inputmode="numeric">
+      </div>
+    </div>
+    <div>
+      <span class="lbl" id="vmLbl">Victims</span>
+      <div class="seg" role="group" aria-labelledby="vmLbl">
+        <button class="chip" id="vmOne" type="button" aria-pressed="false">One group</button>
+        <button class="chip" id="vmMix" type="button" aria-pressed="true">Active + lapsed</button>
+      </div>
+      <div id="oneWrap" hidden>
+        <div class="ctl">
+          <label for="m1"><span>Mean hours to notice <var>m</var></span> <output id="oM1">48 h</output></label>
+          <input id="m1" type="range" min="2" max="240" step="1" value="48">
+        </div>
+      </div>
+      <div id="mixWrap">
+        <div class="ctl">
+          <label for="share">Active share <output id="oShare">70%</output></label>
+          <input id="share" type="range" min="0" max="100" step="1" value="70">
+        </div>
+        <div class="ctl">
+          <label for="mA">Active players notice in <output id="oMA">12 h</output></label>
+          <input id="mA" type="range" min="2" max="1000" step="1" value="12">
+        </div>
+        <div class="ctl">
+          <label for="mL">Lapsed players notice in <output id="oML">480 h</output></label>
+          <input id="mL" type="range" min="2" max="1000" step="1" value="480">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>The lecture's checkpoints for the current settings</caption>
+      <thead><tr><th>Hold</th><th>Recoverable</th><th>Thief keeps</th><th>Delay cost<br><small>trade-days/day</small></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model: noticing time is exponential (one group) or a mix of two exponentials, r(H) = Σ sᵢ (1 − e^(−24H/mᵢ)). All noticing times, trade volumes and adoption rates are invented for teaching. The Steam hold history (December 2015, March 2016) and the RuneScape Bank PIN delays are cited in the lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const days=h=>(h%1?h.toFixed(1):String(h))+(h===1?' day':' days');
+const S={H:3,mode:'mix',m:48,share:0.7,mA:12,mL:480,a:0.4,D:200000};
+
+function groups(){return S.mode==='one'?[[1,S.m]]:[[S.share,S.mA],[1-S.share,S.mL]];}
+function r(H){return groups().reduce((t,[s,m])=>t+s*(1-Math.exp(-24*H/m)),0);}
+function cost(H,a){return (1-(a===undefined?S.a:a))*S.D*H;}
+const p1=x=>(x*100).toFixed(1)+'%';
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,b=c.getBoundingClientRect();
+  c.width=Math.max(1,b.width*dpr);c.height=Math.max(1,b.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:b.width,h:b.height};
+}
+const pad={l:50,r:10,t:10,b:34};
+function X(c,x){return pad.l+(c.w-pad.l-pad.r)*x/30;}
+function Y(c,y,yM){return pad.t+(c.h-pad.t-pad.b)*(1-y/yM);}
+function axes(c,yM,yFmt,xLabel){
+  const g=c.g;g.clearRect(0,0,c.w,c.h);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=Y(c,yM*i/4,yM);g.beginPath();g.moveTo(pad.l,y);g.lineTo(c.w-pad.r,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(yM*i/4),pad.l-6,y);}
+  for(let d=0;d<=30;d+=5){g.textAlign='center';g.textBaseline='top';g.fillText(d,X(c,d),c.h-pad.b+6);}
+  g.textAlign='right';g.fillText(xLabel,c.w-pad.r,c.h-15);
+}
+function line(c,yM,f,color,w,dash,alpha){
+  const g=c.g;g.strokeStyle=color;g.lineWidth=w||2.5;g.setLineDash(dash||[]);g.globalAlpha=alpha||1;g.beginPath();
+  for(let i=0;i<=300;i++){const x=30*i/300,px=X(c,x),py=Y(c,f(x),yM);i?g.lineTo(px,py):g.moveTo(px,py);}
+  g.stroke();g.setLineDash([]);g.globalAlpha=1;
+}
+function marker(c,yM,x,y,color){
+  const g=c.g,px=X(c,x),py=Y(c,y,yM);
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.lineWidth=1.5;g.setLineDash([4,4]);g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,c.h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=color;g.beginPath();g.arc(px,py,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+}
+function niceMax(v){if(v<=0)return 1;const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*mag).find(k=>k>=v*1.001);}
+const kfmt=v=>v>=1e6?(v/1e6).toFixed(v%1e6?1:0)+'M':v>=1e3?Math.round(v/1e3)+'k':fmt(v);
+
+function draw(){
+  let c=setupCanvas($('cRec'));const g=c.g;
+  axes(c,1,v=>Math.round(v*100)+'%','hold (days)');
+  // shade under curve left of H
+  if(S.H>0){g.beginPath();g.moveTo(X(c,0),Y(c,0,1));const n=Math.max(2,Math.round(S.H*10));
+    for(let i=0;i<=n;i++){const x=S.H*i/n;g.lineTo(X(c,x),Y(c,r(x),1));}
+    g.lineTo(X(c,S.H),Y(c,0,1));g.closePath();g.fillStyle=css('--moss');g.globalAlpha=.16;g.fill();g.globalAlpha=1;}
+  [0.9,0.95].forEach(t=>{g.strokeStyle=css('--ink-soft');g.lineWidth=1.2;g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,Y(c,t,1));g.lineTo(c.w-pad.r,Y(c,t,1));g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline=t>0.92?'bottom':'top';g.fillText(Math.round(t*100)+'%',c.w-pad.r-2,Y(c,t,1)+(t>0.92?-1:2));});
+  line(c,1,r,css('--moss'));
+  marker(c,1,S.H,r(S.H),css('--moss'));
+
+  c=setupCanvas($('cCost'));
+  const yM=niceMax(cost(30,0));
+  axes(c,yM,kfmt,'hold (days)');
+  line(c,yM,x=>cost(x,0),css('--ink-soft'),2,[],.45);
+  line(c,yM,x=>cost(x),css('--blood'));
+  marker(c,yM,S.H,cost(S.H),css('--blood'));
+}
+
+function hold90(){for(let h=0;h<=30;h+=0.5){if(r(h)>=0.9-1e-12)return h;}return null;}
+
+function readouts(){
+  const R=r(S.H),C=cost(S.H);
+  $('rRec').textContent=p1(R);$('rKeep').textContent=p1(1-R);
+  $('rMarg').textContent='+'+((r(S.H+1)-R)*100).toFixed(1)+' pts';
+  $('rCost').textContent=fmt(C);
+  if(S.H===0||C<=0){$('rEff').textContent='—';$('rEffUnit').textContent=S.H===0?'no hold, no cost and no recovery':'no one pays the hold, so the ratio is undefined';}
+  else{$('rEff').textContent=(100*R/(C/1e6)).toFixed(1);$('rEffUnit').textContent='recovery points per million trade-days';}
+  $('oHold').textContent=days(S.H);$('oAdopt').textContent=Math.round(S.a*100)+'%';
+  $('oM1').textContent=S.m+' h';$('oShare').textContent=Math.round(S.share*100)+'%';$('oMA').textContent=S.mA+' h';$('oML').textContent=S.mL+' h';
+  // insight
+  const H2=Math.min(30,S.H*2),gain=(r(H2)-R)*100,extra=cost(H2)-C;
+  let s;
+  if(S.H===0) s='With no hold every theft is final. The thief keeps 100% of what they take. Drag the hold up.';
+  else if(S.H>=30) s=`At the 30-day maximum you recover ${p1(R)} and impose ${fmt(C)} trade-days of waiting every day.`;
+  else{const dbl=H2===2*S.H;s=`At ${days(S.H)} you recover <b>${p1(R)}</b>. ${dbl?'Doubling':'Stretching'} the hold to ${days(H2)} adds <b>${gain.toFixed(1)} points</b> of recovery and <b>${fmt(extra)}</b> more trade-days of waiting per day.`+(dbl?' The cost doubles. The recovery does not.':'');}
+  if(S.mode==='mix'&&S.H>0) s+=` Active players supply ${p1(S.share*(1-Math.exp(-24*S.H/S.mA)))} of the ${p1(R)}. Lapsed accounts supply the rest.`;
+  $('insight').innerHTML=s;
+  // table
+  const rows=[0,1,3,7,15,30].map(h=>{const v=r(h);return `<tr class="${h===S.H?'here':''}"><td>${days(h)}</td><td>${p1(v)}</td><td>${p1(1-v)}</td><td>${fmt(cost(h))}</td></tr>`;});
+  if(![0,1,3,7,15,30].includes(S.H)){const v=r(S.H);rows.push(`<tr class="here"><td>${days(S.H)} (yours)</td><td>${p1(v)}</td><td>${p1(1-v)}</td><td>${fmt(cost(S.H))}</td></tr>`);}
+  $('tbody').innerHTML=rows.join('');
+}
+function update(){readouts();draw();}
+
+$('hold').addEventListener('input',e=>{S.H=+e.target.value;$('goalMsg').textContent='';update();});
+$('adopt').addEventListener('input',e=>{S.a=+e.target.value/100;update();});
+$('trades').addEventListener('input',e=>{const v=+e.target.value;S.D=isFinite(v)&&v>=0?v:0;update();});
+$('m1').addEventListener('input',e=>{S.m=+e.target.value;update();});
+$('share').addEventListener('input',e=>{S.share=+e.target.value/100;update();});
+$('mA').addEventListener('input',e=>{S.mA=+e.target.value;update();});
+$('mL').addEventListener('input',e=>{S.mL=+e.target.value;update();});
+function setMode(m){S.mode=m;$('vmOne').setAttribute('aria-pressed',m==='one');$('vmMix').setAttribute('aria-pressed',m==='mix');
+  $('oneWrap').hidden=m!=='one';$('mixWrap').hidden=m!=='mix';$('goalMsg').textContent='';update();}
+$('vmOne').addEventListener('click',()=>setMode('one'));
+$('vmMix').addEventListener('click',()=>setMode('mix'));
+$('goal').addEventListener('click',()=>{const h=hold90();
+  if(h===null){$('goalMsg').textContent='90% is not reachable within 30 days.';return;}
+  S.H=h;$('hold').value=h;update();$('goalMsg').textContent=`Smallest half-day hold: ${days(h)} (r = ${p1(r(h))}).`;});
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+})();
+</script>
+</body>
+</html>

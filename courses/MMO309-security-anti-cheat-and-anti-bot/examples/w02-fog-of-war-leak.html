@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fog-of-war leak — MMO309 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.lower{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:700px){.views,.lower{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--sans);fill:var(--ink)}
+.screens{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.screen{background:var(--paper);border-radius:8px;padding:6px}
+.screen p{margin:0 0 2px;font-size:.8rem;font-weight:700}
+.screen p span{font-weight:400;color:var(--ink-soft)}
+.player{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:.86rem}
+.btn{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+select{font:600 .88rem var(--sans);padding:6px 8px;border-radius:8px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--ink-soft);margin-top:6px}
+.sw{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:420px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+fieldset{border:0;padding:0;margin:0 0 10px}
+legend{font-weight:700;font-size:.92rem;padding:0;margin-bottom:4px}
+.radios label{display:flex;gap:8px;align-items:center;font-size:.92rem;padding:3px 0;cursor:pointer}
+.radios input{accent-color:var(--steel);width:18px;height:18px;margin:0}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+label.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.inline{display:flex;gap:16px;flex-wrap:wrap;align-items:end;margin-top:8px}
+.inline > div{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.92rem}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:34px;height:34px;padding:0;font-size:1.1rem}
+.stepper output{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums;font-weight:700}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:6px 6px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+h2{font-family:var(--serif);font-size:1.1rem;margin:0 0 8px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (max-width:520px){.sent{display:none}td,th{padding:5px 4px;font-size:.84rem}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO309 Security, Anti-Cheat and Anti-Bot · Week 2 · Worked example</p>
+  <h1>How much does fog of war leak?</h1>
+  <p class="lede" id="caption">Reveal later and honest players get shot by enemies they cannot see. Reveal earlier and cheaters see them first.</p>
+</header>
+
+<section class="panel">
+  <div class="views">
+    <figure>
+      <figcaption>What each screen shows<small>Top-down corridor. Shaded area: where the server sends the enemy's position under this policy.</small></figcaption>
+      <svg id="map" role="img" aria-label="Top-down L-shaped corridor with the player in one arm and an enemy walking toward the corner in the other"></svg>
+      <div class="screens">
+        <div class="screen"><p>Honest screen <span>line of sight only</span></p><svg id="scrH" role="img" aria-label="Honest player's view of the corner"></svg></div>
+        <div class="screen"><p>Cheater's screen <span>everything sent</span></p><svg id="scrC" role="img" aria-label="Cheater's view of the corner, including enemies drawn through walls"></svg></div>
+      </div>
+      <svg id="tl" role="img" aria-label="Timeline of the last loop: when the enemy was sent and when it was visible" style="margin-top:8px"></svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--steel)"></i>visible</span>
+        <span><i class="sw" style="border:2px solid var(--ochre)"></i>sent to client</span>
+        <span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--ochre) 0 2px,transparent 2px 5px)"></i>leak: sent, not visible</span>
+        <span><i class="sw" style="background:var(--blood);width:3px;height:12px"></i>honest pop-in</span>
+      </div>
+      <div class="player">
+        <button class="btn" id="play" type="button" aria-pressed="false">Pause</button>
+        <button class="btn" id="step" type="button">Step 50 ms</button>
+        <label for="speed">Speed</label>
+        <select id="speed"><option value="1">1×</option><option value="0.25" selected>¼×</option><option value="0.05">1/20×</option></select>
+        <span id="clock" style="font-variant-numeric:tabular-nums;color:var(--ink-soft)"></span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Leak vs pop-in<small>Line-of-sight policy. Left axis: leak per round (s). Right axis: pop-in on the honest screen (ms).</small></figcaption>
+      <svg id="plot" role="img" aria-label="Leak rises and pop-in falls as look-ahead grows; they cross zero pop-in at tau min"></svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--ochre);height:3px"></i>leak = peeks × τ / 1000</span>
+        <span><i class="sw" style="background:var(--blood);height:3px"></i>pop-in = max(0, τ<sub>min</sub> − τ)</span>
+      </div>
+      <div class="insight" id="insight" aria-live="polite"></div>
+    </figure>
+  </div>
+
+  <div class="lower">
+    <div>
+      <h2>Controls</h2>
+      <fieldset class="radios">
+        <legend>Reveal policy</legend>
+        <label><input type="radio" name="pol" value="all"> Send everything</label>
+        <label><input type="radio" name="pol" value="aoi"> Area of interest 50 m</label>
+        <label><input type="radio" name="pol" value="pvs"> Visibility table (PVS)</label>
+        <label><input type="radio" name="pol" value="los" checked> Line of sight + look-ahead</label>
+      </fieldset>
+      <label class="row" for="tau">Look-ahead τ <output id="oTau"></output></label>
+      <input id="tau" type="range" min="0" max="250" step="1" value="60">
+      <label class="row" for="ping">Ping (round trip) <output id="oPing"></output></label>
+      <input id="ping" type="range" min="0" max="300" step="5" value="150">
+      <div class="inline">
+        <div><label for="tick">Tick rate</label><select id="tick"><option>20</option><option>30</option><option>64</option><option selected>128</option></select></div>
+        <div><span id="pkLbl">Peeks per round</span><div class="stepper" role="group" aria-labelledby="pkLbl"><button class="btn" id="pkDn" type="button" aria-label="Fewer peeks">−</button><output id="oPk" aria-live="polite">4</output><button class="btn" id="pkUp" type="button" aria-label="More peeks">+</button></div></div>
+      </div>
+    </div>
+    <div>
+      <h2>Numbers</h2>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rT"></b><span>tick T</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rTm"></b><span>τ<sub>min</sub></span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rTau"></b><span>current τ</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rPop"></b><span>pop-in</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rLeak"></b><span>leak per round</span></div>
+      </div>
+      <table aria-label="Leak per round for each policy">
+        <thead><tr><th>Policy</th><th class="sent">Sent</th><th>Leak per round</th><th>Pop-in</th><th>Server cost</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <p style="font-size:.82rem;color:var(--ink-soft);margin:6px 0 0">One enemy, 100 s round: visible 3 s in total, within 50 m for 40 s, in "could be visible" PVS cells for 10 s.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Model from the lecture: <code>T = 1000 / tick rate</code>, <code>τ<sub>min</sub> = ping / 2 + T</code>, <code>pop-in = max(0, τ<sub>min</sub> − τ)</code>, line-of-sight leak <code>= peeks × τ</code>. It ignores interpolation delay and assumes an exact visibility test. The look-ahead design follows Riot Games' April 2020 post on VALORANT's fog of war; the corridor, enemy path and round numbers are invented for teaching. The corridor view is schematic, and its loop timings are not to scale with the round table.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS='http://www.w3.org/2000/svg';
+const f1=x=>(Math.round(x*10)/10).toFixed(1);
+const f2=x=>(Math.round(x*100)/100).toFixed(2);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+
+/* ---------- pure model (lecture section 2) ---------- */
+const tickMs=hz=>1000/hz;
+const tauMin=(ping,hz)=>ping/2+tickMs(hz);
+const popIn=(ping,hz,tau,pol)=>pol==='los'?Math.max(0,tauMin(ping,hz)-tau):0;
+const ROUND={len:100,vis:3,aoi:40,pvs:10};
+function leak(pol,peeks,tau){return pol==='all'?ROUND.len-ROUND.vis:pol==='aoi'?ROUND.aoi-ROUND.vis:pol==='pvs'?ROUND.pvs-ROUND.vis:peeks*tau/1000;}
+
+(function selfTest(){
+  const fails=[],eq=(a,b,m)=>{if(a!==b)fails.push(`${m}: got ${a}, want ${b}`);};
+  eq(f1(tauMin(60,128)),'37.8','tau_min 128 Hz ping 60');eq(popIn(60,128,60,'los'),0,'pop-in 128 Hz ping 60 tau 60');
+  eq(f1(tauMin(150,128)),'82.8','tau_min 128 Hz ping 150');eq(f1(popIn(150,128,60,'los')),'22.8','pop-in ping 150 tau 60');
+  eq(f1(tauMin(80,64)),'55.6','tau_min 64 Hz ping 80');
+  eq(f2(leak('los',4,60)),'0.24','LOS leak 4 peeks');eq(leak('all',4,60),97,'send all');eq(leak('aoi',4,60),37,'AOI');eq(leak('pvs',4,60),7,'PVS');
+  eq(f2(leak('los',6,150)),'0.90','LOS leak 6 peeks tau 150');
+  if(fails.length){fails.forEach(x=>console.error('Self-test failed: '+x));document.documentElement.dataset.selftest='fail';}
+  else{console.info('Self-test: all spec test values pass');document.documentElement.dataset.selftest='pass';}
+})();
+
+/* ---------- state ---------- */
+let S={pol:'los',tau:60,ping:150,hz:128,peeks:4};
+let tLoop=2000-300,playing=!reduce.matches,speed=.25,last=null;
+
+/* ---------- corridor geometry, metres ---------- */
+// Horizontal arm y in [-2,2], x in [0,47]. Vertical arm x in [43,47], y in [-2,40]. Player at (2,0) looking +x.
+const P={x:2,y:0},EX=45;
+const Y_VIS=2*(EX-P.x)/(43-P.x); // ray from player through inner corner (43,2) reaches x=45 at about 2.1 m
+const LOOP=4000,TV0=2000,TV1=2750;
+function enemyY(t){ // ms in loop
+  if(t<2000)return Y_VIS+10-5*t/1000;
+  if(t<2375)return Y_VIS-5*(t-2000)/1000;
+  if(t<2750)return Y_VIS-1.875+5*(t-2375)/1000;
+  return Y_VIS+8*(t-2750)/1000;
+}
+const PVS_Y=8;
+const tPvs0=(Y_VIS+10-PVS_Y)/5*1000, tPvs1=2750+(PVS_Y-Y_VIS)/8*1000;
+function visible(t){return t>TV0&&t<TV1;}
+function sentInterval(){ // loop ms
+  if(S.pol==='all'||S.pol==='aoi')return [0,LOOP];
+  if(S.pol==='pvs')return [tPvs0,tPvs1];
+  return [TV0-S.tau,TV1];
+}
+function sent(t){const [a,b]=sentInterval();return t>=a&&t<b;}
+function honestShows(t){return visible(t)&&t>=TV0+popIn(S.ping,S.hz,S.tau,S.pol);}
+
+/* ---------- svg helpers ---------- */
+function el(tag,a,parent){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,a){const t=el('text',Object.assign({x,y,'font-size':11},a||{}),parent);t.textContent=s;return t;}
+
+/* map: x -1..49, y -4..42 (flipped) */
+const map=$('map');const MX0=-1,MX1=49,MY0=-5,MY1=16;
+map.setAttribute('viewBox',`0 0 ${(MX1-MX0)*10} ${(MY1-MY0)*10}`);
+const mx=x=>(x-MX0)*10,my=y=>(MY1-y)*10;
+let mapDyn;
+function drawMapStatic(){
+  map.innerHTML='';
+  const ink=css('--ink'),p2=css('--paper-2'),paper=css('--paper'),soft=css('--ink-soft');
+  el('rect',{x:0,y:0,width:(MX1-MX0)*10,height:(MY1-MY0)*10,fill:css('--grid')},map);
+  // floor
+  el('rect',{x:mx(0),y:my(2),width:470,height:40,fill:paper},map);
+  el('rect',{x:mx(43),y:my(MY1),width:40,height:(MY1+2)*10,fill:paper},map);
+  mapDyn=el('g',{},map);
+  // walls outline
+  el('path',{d:`M${mx(0)},${my(2)} L${mx(43)},${my(2)} L${mx(43)},${my(MY1)} M${mx(47)},${my(MY1)} L${mx(47)},${my(-2)} L${mx(0)},${my(-2)}`,fill:'none',stroke:ink,'stroke-width':4},map);
+  const s=el('g',{},map);
+  txt(s,mx(2),my(-2)+24,'you',{'font-size':22,fill:soft});
+  txt(s,mx(43)-6,my(PVS_Y)+6,'8 m',{'font-size':18,'text-anchor':'end'}).style.fill=soft;
+  txt(s,mx(20),my(9),'wall',{'font-size':22}).style.fill=soft;
+  mapDyn.s=s;
+}
+function drawMap(t){
+  const g=mapDyn;g.innerHTML='';
+  const ochre=css('--ochre'),steel=css('--steel'),blood=css('--blood'),ink=css('--ink'),paper=css('--paper');
+  // shaded send region
+  const fill={fill:ochre,'fill-opacity':.22};
+  if(S.pol==='all'){el('rect',Object.assign({x:mx(0),y:my(2),width:470,height:40},fill),g);el('rect',Object.assign({x:mx(43),y:my(MY1),width:40,height:(MY1-2)*10},fill),g);}
+  else if(S.pol==='aoi'){el('rect',Object.assign({x:mx(0),y:my(2),width:470,height:40},fill),g);const yl=Math.min(MY1,Math.sqrt(50*50-(43-P.x)**2));el('rect',Object.assign({x:mx(43),y:my(yl),width:40,height:(yl-2)*10},fill),g);
+    el('circle',{cx:mx(P.x),cy:my(P.y),r:500,fill:'none',stroke:ochre,'stroke-dasharray':'8 6','stroke-width':2},g);}
+  else if(S.pol==='pvs'){el('rect',Object.assign({x:mx(0),y:my(2),width:470,height:40},fill),g);el('rect',Object.assign({x:mx(43),y:my(PVS_Y),width:40,height:(PVS_Y-2)*10},fill),g);}
+  else{el('rect',Object.assign({x:mx(0),y:my(2),width:470,height:40},fill),g);const ext=5*S.tau/1000;el('rect',Object.assign({x:mx(43),y:my(Y_VIS+ext),width:40,height:Math.max(0,(Y_VIS+ext-2)*10)},fill),g);}
+  // sight line from player through corner
+  el('line',{x1:mx(P.x),y1:my(P.y),x2:mx(47),y2:my(Y_VIS*(47-P.x)/(EX-P.x)),stroke:steel,'stroke-width':1.5,'stroke-dasharray':'6 5'},g);
+  // player
+  el('circle',{cx:mx(P.x),cy:my(P.y),r:9,fill:steel,stroke:paper,'stroke-width':2},g);
+  el('path',{d:`M${mx(P.x)+11},${my(P.y)-6} L${mx(P.x)+20},${my(P.y)} L${mx(P.x)+11},${my(P.y)+6}Z`,fill:steel},g);
+  // enemy (map is the omniscient view)
+  const y=enemyY(t),v=visible(t);
+  el('circle',{cx:mx(EX),cy:my(y),r:9,fill:v?blood:'none',stroke:blood,'stroke-width':3},g);
+  g.appendChild(mapDyn.s);
+}
+/* the two screens: crop of the corner area x 30..49, y -3..12 */
+function drawScreen(svgEl,t,cheat){
+  const W=190,H=120;svgEl.setAttribute('viewBox',`0 0 ${W} ${H}`);svgEl.innerHTML='';
+  const X=x=>(x-30)/19*W,Y=y=>(12-y)/15*H;
+  const ink=css('--ink'),grid=css('--grid'),paper=css('--paper-2'),blood=css('--blood'),soft=css('--ink-soft');
+  el('rect',{x:0,y:0,width:W,height:H,fill:grid},svgEl);
+  el('rect',{x:0,y:Y(2),width:W,height:Y(-2)-Y(2),fill:paper},svgEl);
+  el('rect',{x:X(43),y:0,width:X(47)-X(43),height:Y(2),fill:paper},svgEl);
+  el('path',{d:`M0,${Y(2)} L${X(43)},${Y(2)} L${X(43)},0 M${X(47)},0 L${X(47)},${Y(-2)} L0,${Y(-2)}`,fill:'none',stroke:ink,'stroke-width':2.5},svgEl);
+  const y=enemyY(t),v=visible(t),s=sent(t);
+  let label='';
+  if(cheat){
+    if(s&&v){el('circle',{cx:X(EX),cy:Y(y),r:6,fill:blood},svgEl);}
+    else if(s){el('rect',{x:X(EX)-9,y:Y(y)-9,width:18,height:18,fill:'none',stroke:blood,'stroke-width':1.5,'stroke-dasharray':'3 2'},svgEl);
+      el('circle',{cx:X(EX),cy:Y(y),r:6,fill:'none',stroke:blood,'stroke-width':2.5},svgEl);label='drawn through wall';}
+    else label='not sent';
+  }else{
+    if(honestShows(t))el('circle',{cx:X(EX),cy:Y(y),r:6,fill:blood},svgEl);
+    else if(v){label='pop-in: not here yet';}
+    else label='nothing to see';
+  }
+  if(label){const tx=txt(svgEl,5,18,label,{'font-size':14});tx.style.fill=soft;}
+}
+
+/* timeline: whole loop + zoom around the peek */
+const tl=$('tl');
+function drawTimeline(t){
+  const w=tl.getBoundingClientRect().width||360,h=132;tl.setAttribute('viewBox',`0 0 ${w} ${h}`);tl.setAttribute('height',h);tl.innerHTML='';
+  const ochre=css('--ochre'),steel=css('--steel'),blood=css('--blood'),soft=css('--ink-soft'),ink=css('--ink');
+  let defs=el('defs',{},tl);const pat=el('pattern',{id:'hatch',width:5,height:5,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},defs);el('rect',{width:2,height:5,fill:ochre},pat);
+  const [sa,sb]=sentInterval(),pop=popIn(S.ping,S.hz,S.tau,S.pol);
+  function strip(y0,t0,t1,title,ticks,unitFmt){
+    const L=4,R=w-4,X=v=>L+(Math.max(t0,Math.min(t1,v))-t0)/(t1-t0)*(R-L);
+    txt(tl,L,y0-4,title,{'font-size':11,'font-weight':700});
+    // sent bar
+    const a=Math.max(sa,t0),b=Math.min(sb,t1);
+    if(b>a){el('rect',{x:X(a),y:y0,width:X(b)-X(a),height:12,fill:'url(#hatch)',stroke:ochre,'stroke-width':1.5},tl);}
+    // visible bar
+    const va=Math.max(TV0,t0),vb=Math.min(TV1,t1);
+    if(vb>va)el('rect',{x:X(va),y:y0+16,width:X(vb)-X(va),height:12,fill:steel},tl);
+    if(pop>0&&TV0+pop>=t0&&TV0+pop<=t1)el('rect',{x:X(TV0+pop)-1.5,y:y0+13,width:3,height:19,fill:blood},tl);
+    if(t>=t0&&t<=t1)el('line',{x1:X(t),x2:X(t),y1:y0-1,y2:y0+30,stroke:ink,'stroke-width':1,'stroke-dasharray':'2 2'},tl);
+    ticks.forEach((v,i)=>{const tx=txt(tl,X(v),y0+42,unitFmt(v),{'font-size':10,'text-anchor':i===0?'start':i===ticks.length-1?'end':'middle'});tx.style.fill=soft;});
+  }
+  strip(14,0,LOOP,'Last loop (4 s)',[0,1000,2000,3000,4000],v=>v/1000+' s');
+  const z0=TV0-300,z1=TV0+150;
+  strip(80,z0,z1,w<420?'Zoom: ms around the peek':'Zoom: ms relative to the enemy becoming visible',(w<420?[-300,-200,-100,0,150]:[-300,-200,-100,0,100,150]).map(v=>TV0+v),v=>{const r=v-TV0;return (r>0?'+':'')+r;});
+}
+
+/* right plot */
+const plot=$('plot');
+function drawPlot(){
+  const w=plot.getBoundingClientRect().width||420,h=Math.max(240,Math.min(320,w*.72));
+  plot.setAttribute('viewBox',`0 0 ${w} ${h}`);plot.setAttribute('height',h);plot.innerHTML='';
+  const pad={l:40,r:44,t:14,b:34},W=w-pad.l-pad.r,H=h-pad.t-pad.b;
+  const grid=css('--grid'),soft=css('--ink-soft'),ochre=css('--ochre'),blood=css('--blood'),ink=css('--ink'),paper=css('--paper-2');
+  const tm=tauMin(S.ping,S.hz),leakMax=Math.max(1.2,+(S.peeks*0.3).toFixed(1)),popMax=tm<=150?150:300;
+  const X=v=>pad.l+v/250*W,YL=v=>pad.t+H*(1-v/leakMax),YR=v=>pad.t+H*(1-v/popMax);
+  for(let i=0;i<=6;i++){const y=pad.t+H*i/6;el('line',{x1:pad.l,x2:pad.l+W,y1:y,y2:y,stroke:grid},plot);
+    let t=txt(plot,pad.l-5,y+4,(leakMax*(1-i/6)).toFixed(2).replace(/0$/,''),{'text-anchor':'end','font-size':10});t.style.fill=ochre;
+    t=txt(plot,pad.l+W+5,y+4,Math.round(popMax*(1-i/6)),{'font-size':10});t.style.fill=blood;}
+  for(let v=0;v<=250;v+=50){const t=txt(plot,X(v),pad.t+H+15,v,{'text-anchor':'middle','font-size':10});t.style.fill=soft;}
+  const tx=txt(plot,pad.l+W/2,h-4,'look-ahead τ (ms)',{'text-anchor':'middle','font-size':11});tx.style.fill=soft;
+  let t2=txt(plot,pad.l,pad.t-3,'leak, s',{'font-size':10});t2.style.fill=ochre;
+  t2=txt(plot,pad.l+W,pad.t-3,'pop-in, ms',{'font-size':10,'text-anchor':'end'});t2.style.fill=blood;
+  // lines
+  let d='';for(let v=0;v<=250;v+=5)d+=(v?'L':'M')+X(v)+','+YL(S.peeks*v/1000);
+  el('path',{d,fill:'none',stroke:ochre,'stroke-width':3},plot);
+  d=`M${X(0)},${YR(Math.min(popMax,tm))} L${X(Math.min(250,tm))},${YR(Math.max(0,tm-Math.min(250,tm)))} L${X(250)},${YR(Math.max(0,tm-250))}`;
+  el('path',{d,fill:'none',stroke:blood,'stroke-width':3},plot);
+  if(tm<=250){el('line',{x1:X(tm),x2:X(tm),y1:pad.t,y2:pad.t+H,stroke:ink,'stroke-dasharray':'5 4','stroke-width':1.2},plot);
+    const lab=txt(plot,X(tm)+(X(tm)>pad.l+W*.7?-5:5),pad.t+12,'τmin = '+f1(tm)+' ms',{'font-size':11,'font-weight':700,'text-anchor':X(tm)>pad.l+W*.7?'end':'start'});
+    const bb=lab.getBBox();el('rect',{x:bb.x-2,y:bb.y-1,width:bb.width+4,height:bb.height+2,fill:paper},plot);plot.appendChild(lab);}
+  const pop=Math.max(0,tm-S.tau);
+  el('circle',{cx:X(S.tau),cy:YL(S.peeks*S.tau/1000),r:6,fill:ochre,stroke:css('--paper'),'stroke-width':2},plot);
+  el('circle',{cx:X(S.tau),cy:YR(Math.min(pop,popMax)),r:6,fill:blood,stroke:css('--paper'),'stroke-width':2},plot);
+  plot.style.opacity=S.pol==='los'?1:.45;
+}
+
+/* numbers */
+const POL=[['all','Send everything','Always','None'],['aoi','Area of interest 50 m','Within 50 m','1 distance check'],['pvs','Visibility table (PVS)','In PVS cells','1 table lookup'],['los','Line of sight + τ','τ before each peek','Several ray tests']];
+function numbers(){
+  const T=tickMs(S.hz),tm=tauMin(S.ping,S.hz),pop=popIn(S.ping,S.hz,S.tau,S.pol),lk=leak(S.pol,S.peeks,S.tau);
+  $('rT').textContent=f1(T)+' ms';$('rTm').textContent=f1(tm)+' ms';$('rTau').textContent=S.tau+' ms';
+  $('rPop').textContent=f1(pop)+' ms';$('rLeak').textContent=(S.pol==='los'?f2(lk):String(lk))+' s';
+  $('oTau').textContent=S.tau+' ms';$('oPing').textContent=S.ping+' ms';$('oPk').textContent=S.peeks;
+  $('tbody').innerHTML=POL.map(([k,n,s,c])=>{const l=leak(k,S.peeks,S.tau),p=popIn(S.ping,S.hz,S.tau,k);
+    return `<tr class="${k===S.pol?'here':''}"><td>${n}</td><td class="sent">${s}</td><td>${k==='los'?f2(l):l} s</td><td>${f1(p)} ms</td><td>${c}</td></tr>`;}).join('');
+  let s;
+  if(S.pol!=='los')s=`This policy sends the enemy for ${lk} s of a 100 s round while it is out of sight, so a wallhack draws it for all that time. Pop-in is 0 because the data is always there early.`;
+  else if(pop>0)s=`At ${S.ping} ms ping the data needs ${f1(tm)} ms to arrive, and τ gives only ${S.tau}. The enemy <b>pops in ${f1(pop)} ms late</b> on the honest screen. The cheater still gets ${S.tau} ms of look-ahead each peek, ${f2(lk)} s a round.`;
+  else s=`τ = ${S.tau} ms covers the ${f1(tm)} ms trip, so no pop-in. The price: a cheater sees the enemy ${S.tau} ms before each peek, <b>${f2(lk)} s per round</b>${S.tau-tm>20?`, of which ${f1(S.tau-tm)} ms per peek buys nothing for honest players`:''}.`;
+  $('insight').innerHTML=s;
+}
+
+function frame(){drawMap(tLoop);drawScreen($('scrH'),tLoop,false);drawScreen($('scrC'),tLoop,true);drawTimeline(tLoop);$('clock').textContent='t = '+(tLoop/1000).toFixed(2)+' s of 4';}
+function all(){numbers();drawPlot();frame();}
+function loop(now){if(playing){if(last!==null)tLoop=(tLoop+(now-last)*speed)%LOOP;last=now;frame();}requestAnimationFrame(loop);}
+
+/* events */
+document.querySelectorAll('input[name=pol]').forEach(r=>r.addEventListener('change',()=>{S.pol=r.value;all();}));
+$('tau').addEventListener('input',e=>{S.tau=+e.target.value;all();});
+$('ping').addEventListener('input',e=>{S.ping=+e.target.value;all();});
+$('tick').addEventListener('change',e=>{S.hz=+e.target.value;all();});
+$('pkDn').addEventListener('click',()=>{S.peeks=Math.max(1,S.peeks-1);all();});
+$('pkUp').addEventListener('click',()=>{S.peeks=Math.min(10,S.peeks+1);all();});
+$('speed').addEventListener('change',e=>{speed=+e.target.value;});
+function setPlay(p){playing=p;last=null;$('play').textContent=p?'Pause':'Play';$('play').setAttribute('aria-pressed',String(!p));}
+$('play').addEventListener('click',()=>setPlay(!playing));
+$('step').addEventListener('click',()=>{setPlay(false);tLoop=(tLoop+50)%LOOP;frame();});
+reduce.addEventListener('change',()=>setPlay(!reduce.matches));
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(all,80);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawMapStatic();all();});
+drawMapStatic();setPlay(!reduce.matches);
+if(reduce.matches)tLoop=TV0+10; // paused on the moment of the peek
+all();requestAnimationFrame(loop);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(all);
+})();
+</script>
+</body>
+</html>

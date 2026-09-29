@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bot farm profit, MMO309 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.top{display:grid;grid-template-columns:minmax(220px,1fr) 2.4fr;gap:14px}
+@media (max-width:760px){.top{grid-template-columns:1fr}#figChart{order:-1}}
+.tiles{display:flex;flex-direction:column;gap:12px}
+.tile{border-radius:10px;padding:14px;background:var(--paper-2);border-left:6px solid var(--c)}
+.tile .cap{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin:0}
+.tile .big{font-size:2.6rem;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--c);margin:4px 0 2px}
+.tile .sub{font-size:.95rem;margin:0}
+.tile.good{--c:var(--moss)}
+.tile.bad{--c:var(--blood)}
+.tile.neutral{--c:var(--ink-soft)}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:320px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;color:var(--ink-soft);margin-top:6px}
+.legend svg{vertical-align:middle;margin-right:5px}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 22px;margin-top:18px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:22px 0 8px}
+.levers{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .86rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.reset{border-color:var(--ink-soft)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+td:not(:first-child){white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+#kv td:first-child{color:var(--ink-soft)}
+#kv td:last-child{font-weight:700}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.neg{color:var(--blood)}
+.pos{color:var(--moss)}
+.tables{display:grid;grid-template-columns:1fr 1.3fr;gap:18px}
+@media (max-width:760px){.tables{grid-template-columns:1fr}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO309 Security, Anti-Cheat and Anti-Bot · Week 6 · Worked example</p>
+  <h1>A green dashboard, a profitable bot farm</h1>
+  <p class="lede">The detection team catches 20% of bots a day, and the tile is green. The farm still clears $7.50 per account, because weekly waves keep each bot alive 8.5 days and it only needs 7 to break even.</p>
+</header>
+
+<section class="panel" aria-label="Bot farm profit model">
+  <div class="top">
+    <div class="tiles">
+      <div class="tile good" id="tileD">
+        <p class="cap">What the detection team reports</p>
+        <p class="big" id="bigD">20%</p>
+        <p class="sub">Bots detected per day</p>
+        <p class="sub">Mean days to detection: <b id="meanD">5.0</b></p>
+      </div>
+      <div class="tile good" id="tileP">
+        <p class="cap">What the farm operator sees</p>
+        <p class="big" id="bigP">$7.50</p>
+        <p class="sub">Expected profit per account</p>
+        <p class="sub"><b id="verdict">Farm profitable</b>: bots live <b id="tileL">8.5</b> days, need <b id="tileBE">7.0</b></p>
+      </div>
+    </div>
+    <figure id="figChart">
+      <figcaption>Expected profit per account<small>x: mean days to detection 1/d (log scale). One curve per ban-wave interval W.</small></figcaption>
+      <canvas id="chart" role="img" aria-label="Expected profit per account versus mean days to detection, for several wave intervals"></canvas>
+      <div class="legend" id="legend"></div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight"></div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="controls">
+    <div class="ctl"><label for="d">Daily detection d <output id="oD">20%</output></label><input id="d" type="range" min="0" max="26" step="1" value="0"></div>
+    <div class="ctl"><label for="w">Wave interval W (days) <output id="oW">7</output></label><input id="w" type="range" min="0" max="30" step="1" value="7"></div>
+    <div class="ctl"><label for="g">Gold per bot-hour g <output id="oG">20,000</output></label><input id="g" type="range" min="5000" max="50000" step="1000" value="20000"></div>
+    <div class="ctl"><label for="h">Hours per day H <output id="oH">20</output></label><input id="h" type="range" min="1" max="24" step="1" value="20"></div>
+    <div class="ctl"><label for="p">Price per 100,000 gold p <output id="oP">$1.50</output></label><input id="p" type="range" min="0.25" max="5" step="0.05" value="1.5"></div>
+    <div class="ctl"><label for="c">Running cost per day c <output id="oC">$1.00</output></label><input id="c" type="range" min="0" max="5" step="0.1" value="1"></div>
+    <div class="ctl"><label for="a">Setup cost per account A <output id="oA">$35</output></label><input id="a" type="range" min="1" max="150" step="1" value="35"></div>
+  </div>
+
+  <h2>Pull one lever from the baseline</h2>
+  <div class="levers" role="group" aria-label="Defender levers">
+    <button class="chip" data-lever="price" aria-pressed="false">Halve price</button>
+    <button class="chip" data-lever="setup" aria-pressed="false">Double setup</button>
+    <button class="chip" data-lever="gold" aria-pressed="false">Cut gold/hour 25%</button>
+    <button class="chip" data-lever="detect" aria-pressed="false">Double detection</button>
+    <button class="chip" data-lever="waves" aria-pressed="false">Waves off</button>
+    <button class="chip reset" data-lever="reset" aria-pressed="false">Reset</button>
+  </div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <table id="kv" aria-label="Readout at the current settings">
+        <thead><tr><th>Quantity</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Margin per day m</td><td id="kM"></td></tr>
+          <tr><td>Break-even lifetime A/m (days)</td><td id="kBE"></td></tr>
+          <tr><td>Expected lifetime L = 1/d + W/2 (days)</td><td id="kL"></td></tr>
+          <tr><td>Profit per account</td><td id="kP"></td></tr>
+          <tr><td>Profit, 500-account farm</td><td id="kF"></td></tr>
+          <tr><td>d needed to break even at this W</td><td id="kDB"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table aria-label="Each lever applied alone to the baseline">
+        <thead><tr><th>Lever (from baseline)</th><th>Profit</th><th>Change</th><th>A/m</th></tr></thead>
+        <tbody id="lever"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Model from the lecture, sections 1 and 4: m = g × H × p / 100,000 − c, L = 1/d + W/2, profit = m × L − A. Baseline: d = 0.2, W = 7, g = 20,000, H = 20, p = $1.50, c = $1.00, A = $35. The dashboard tile turns green at d ≥ 10% whatever the profit, on purpose.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const money=(v,dp=2)=>(v<0?'−':'')+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});
+const signed=v=>(v<0?'−':'+')+'$'+Math.abs(v).toFixed(2);
+// log-ish slider with exact stops
+const D=[];[0.01,0.1].forEach(dec=>[1,1.2,1.5,2,2.5,3,3.5,4,5,6,7,8,9].forEach(k=>D.push(Math.round(k*dec*1e4)/1e4)));D.push(1);
+const BASE={d:0.2,W:7,g:20000,H:20,p:1.5,c:1,A:35};
+let st={...BASE},lastSign=null;
+const margin=s=>s.g*s.H*s.p/100000-s.c;
+const life=(s,d=s.d,W=s.W)=>1/d+W/2;
+const profit=(s,d=s.d,W=s.W)=>margin(s)*life(s,d,W)-s.A;
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:54,r:14,t:14,b:36};
+const LX0=Math.log10(0.5),LX1=Math.log10(100);
+const DASH={0:[],7:[8,5],14:[2,4]},CUSTOM=[10,4,2,4];
+function curves(){const ws=[0,7,14];if(!ws.includes(st.W))ws.push(st.W);return ws;}
+function colorFor(W){return W===st.W?css('--ink'):css('--ink-soft');}
+function draw(){
+  const c=setupCanvas($('chart')),g=c.g,{w,h}=c;
+  const X=x=>pad.l+(w-pad.l-pad.r)*(Math.log10(x)-LX0)/(LX1-LX0);
+  const ws=curves(),m=margin(st);
+  // y range: bottom = lowest value, top = capped so the zero crossing stays readable
+  let lo=Infinity,hi=-Infinity;
+  ws.forEach(W=>{[0.5,100].forEach(x=>{const v=profit(st,1/x,W);lo=Math.min(lo,v);hi=Math.max(hi,v);});});
+  ws.forEach(W=>{const v=profit(st,st.d,W);hi=Math.max(hi,v*1.15);lo=Math.min(lo,v*1.15);});
+  const top=Math.min(hi,Math.max(2*st.A,40,profit(st)*1.3));
+  const step=niceStep((top-Math.min(lo,0))/5);
+  const yMin=Math.floor(Math.min(lo,0)/step)*step,yMax=Math.ceil(Math.max(top,step)/step)*step;
+  const Y=y=>pad.t+(h-pad.t-pad.b)*(1-(y-yMin)/(yMax-yMin));
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  // negative region
+  g.fillStyle=css('--blood');g.globalAlpha=.1;g.fillRect(pad.l,Y(0),w-pad.l-pad.r,Y(yMin)-Y(0));g.globalAlpha=1;
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');
+  for(let y=yMin;y<=yMax+1e-9;y+=step){const py=Y(y);g.beginPath();g.moveTo(pad.l,py);g.lineTo(w-pad.r,py);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(money(y,0),pad.l-6,py);}
+  [0.5,1,2,5,10,20,50,100].forEach(x=>{const px=X(x);g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,h-pad.b);g.stroke();g.textAlign='center';g.textBaseline='top';g.fillText(x,px,h-pad.b+6);});
+  g.textAlign='right';g.fillText('1/d, days',w-pad.r,h-15);
+  g.fillStyle=css('--blood');g.textAlign='right';g.textBaseline='bottom';g.fillText('below zero: farm loses money',w-pad.r-4,Y(yMin)-4);
+  // zero line
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(0));g.lineTo(w-pad.r,Y(0));g.stroke();
+  // break-even marker
+  if(m>0){const be=st.A/m;if(be>=0.5&&be<=100){const px=X(be);g.strokeStyle=css('--ochre');g.lineWidth=2;g.setLineDash([3,3]);g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,h-pad.b);g.stroke();g.setLineDash([]);
+    const t=(w<500?'break-even (W = 0): ':'break-even lifetime (W = 0): ')+be.toFixed(1)+' d';g.font='600 12px '+css('--sans');const tw=g.measureText(t).width;
+    let lx=px+6;if(lx+tw>w-pad.r)lx=px-6-tw;if(lx<pad.l)lx=pad.l+2;
+    const ly=Y(yMin)-24;g.fillStyle=css('--paper-2');g.fillRect(lx-3,ly-15,tw+6,17);g.fillStyle=css('--ochre');g.textAlign='left';g.textBaseline='bottom';g.fillText(t,lx,ly);g.font='12px '+css('--sans');}}
+  // curves, clipped
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  ws.forEach(W=>{g.strokeStyle=colorFor(W);g.lineWidth=W===st.W?3:1.8;g.setLineDash(DASH[W]||CUSTOM);g.beginPath();
+    for(let i=0;i<=200;i++){const lx=LX0+(LX1-LX0)*i/200,x=Math.pow(10,lx),px=X(x),py=Y(profit(st,1/x,W));i?g.lineTo(px,py):g.moveTo(px,py);}g.stroke();});
+  g.setLineDash([]);g.restore();
+  // direct labels at the right edge (or top clip) and dots
+  const lab=[];
+  ws.forEach(W=>{const v=profit(st,1/0.62,W);lab.push({W,py:Y(Math.min(Math.max(v,yMin),yMax))});});
+  lab.sort((a,b)=>a.py-b.py);for(let i=1;i<lab.length;i++)if(lab[i].py-lab[i-1].py<15)lab[i].py=lab[i-1].py+15;
+  g.font='600 12px '+css('--sans');
+  lab.forEach(L=>{const t='W = '+L.W,tw=g.measureText(t).width,lx=pad.l+6,ly=Math.max(L.py-4,pad.t+14);
+    g.fillStyle=css('--paper-2');g.globalAlpha=.85;g.fillRect(lx-2,ly-13,tw+4,15);g.globalAlpha=1;g.fillStyle=colorFor(L.W);g.textAlign='left';g.textBaseline='bottom';g.fillText(t,lx,ly);});
+  const cx=X(Math.min(100,Math.max(0.5,1/st.d)));
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(cx,pad.t);g.lineTo(cx,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  ws.forEach(W=>{const v=profit(st,st.d,W);if(v>yMax||v<yMin)return;const py=Y(v);g.fillStyle=v<0?css('--blood'):css('--moss');g.beginPath();g.arc(cx,py,W===st.W?7:5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+  // legend
+  $('legend').innerHTML=ws.map(W=>{const dash=(DASH[W]||CUSTOM).join(' ');return `<span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="currentColor" stroke-width="${W===st.W?3:2}" stroke-dasharray="${dash}"/></svg>W = ${W}${W===st.W?' (current)':''}: ${money(profit(st,st.d,W))}</span>`;}).join('')+'<span>dots: profit at the current d; green above zero, red below</span>';
+}
+function niceStep(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,2,2.5,5,10].map(k=>k*m).find(x=>x>=v)||v;}
+
+function update(){
+  const m=margin(st),L=life(st),P=profit(st),be=m>0?st.A/m:null;
+  $('oD').textContent=fmtPct(st.d);$('oW').textContent=st.W;$('oG').textContent=st.g.toLocaleString('en-US');$('oH').textContent=st.H;
+  $('oP').textContent=money(st.p);$('oC').textContent=money(st.c);$('oA').textContent=money(st.A,0);
+  $('d').setAttribute('aria-valuetext',fmtPct(st.d)+' per day');
+  $('bigD').textContent=fmtPct(st.d);$('meanD').textContent=(1/st.d).toFixed(1)+' days';
+  $('tileD').className='tile '+(st.d>=0.1?'good':'neutral');
+  $('bigP').textContent=money(P);$('tileP').className='tile '+(P>0?'good':'bad');
+  $('verdict').textContent=P>0?'Farm profitable':'Farm closed';$('tileL').textContent=L.toFixed(1);$('tileBE').textContent=be===null?'never breaks even':be.toFixed(1);
+  $('kM').textContent=money(m);$('kBE').textContent=be===null?'never':be.toFixed(1);$('kL').textContent=L.toFixed(1);
+  $('kP').innerHTML=`<span class="${P<0?'neg':'pos'}">${money(P)}</span>`;$('kF').innerHTML=`<span class="${P<0?'neg':'pos'}">${money(P*500)}</span>`;
+  let db;if(be===null)db='never profitable, no detection needed';else if(be<=st.W/2+1e-9)db='no detection rate is enough';else{const x=1/(be-st.W/2);db=x.toFixed(4)+' ('+(x*100).toFixed(1)+'% a day)'+(x>1?', above 100%':'');}
+  $('kDB').textContent=db;
+  let t;
+  if(be===null) t=`Each bot loses money every day it runs (m = ${money(m)}). No detection is needed; the price and cost levers already closed the farm.`;
+  else if(P>0) t=`The tile says ${fmtPct(st.d)} a day. The operator sees bots living ${L.toFixed(1)} days against a break-even of ${be.toFixed(1)}, so each account clears ${money(P)} and 500 accounts clear ${money(P*500,0)}. `+(be<=st.W/2?`With W = ${st.W}, waves alone add ${(st.W/2).toFixed(1)} days, at least the whole break-even lifetime. Even instant detection cannot close this farm.`:`To close it by detection alone you need d above ${(1/(be-st.W/2)*100).toFixed(1)}% a day. Or move A/m instead: try the price and setup levers.`);
+  else t=`Farm closed. Bots live ${L.toFixed(1)} days but need ${be.toFixed(1)} to repay the ${money(st.A,0)} setup, so each account loses ${money(-P)}.`+(st.d<0.1?' The dashboard tile is grey, and the farm is closed anyway.':'');
+  $('insight').innerHTML=t;
+  const sign=P>0;if(lastSign!==null&&sign!==lastSign)$('live').textContent=sign?'farm profitable':'farm closed';lastSign=sign;
+  draw();
+}
+function fmtPct(d){const v=d*100;return (v<10&&v%1?v.toFixed(1):Math.round(v))+'%';}
+
+const LEVERS={price:{name:'Halve price',f:s=>({...s,p:s.p/2})},setup:{name:'Double setup',f:s=>({...s,A:s.A*2})},gold:{name:'Cut gold/hour 25%',f:s=>({...s,g:s.g*0.75})},detect:{name:'Double detection',f:s=>({...s,d:s.d*2})},waves:{name:'Waves off',f:s=>({...s,W:0})}};
+function leverTable(active){
+  const b0=profit(BASE);
+  let rows=`<tr class="${active?'':'here'}"><td>Baseline</td><td>${money(b0)}</td><td>—</td><td>${(BASE.A/margin(BASE)).toFixed(1)}</td></tr>`;
+  for(const k in LEVERS){const s=LEVERS[k].f(BASE),P=profit(s),m=margin(s);rows+=`<tr class="${active===k?'here':''}"><td>${LEVERS[k].name}</td><td class="${P<0?'neg':'pos'}">${money(P)}</td><td>${signed(P-b0)}</td><td>${m>0?(s.A/m).toFixed(1):'never'}</td></tr>`;}
+  $('lever').innerHTML=rows;
+}
+function syncSliders(){$('d').value=nearestD(st.d);$('w').value=st.W;$('g').value=st.g;$('h').value=st.H;$('p').value=st.p;$('c').value=st.c;$('a').value=st.A;}
+function nearestD(d){let bi=0;D.forEach((v,i)=>{if(Math.abs(v-d)<Math.abs(D[bi]-d))bi=i;});return bi;}
+$('d').max=D.length-1;
+function clearLever(){document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));leverTable(null);}
+$('d').addEventListener('input',e=>{st.d=D[+e.target.value];clearLever();update();});
+[['w','W'],['g','g'],['h','H'],['p','p'],['c','c'],['a','A']].forEach(([id,k])=>$(id).addEventListener('input',e=>{st[k]=Math.round(+e.target.value*100)/100;clearLever();update();}));
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.lever;clearLever();
+  if(k==='reset'){st={...BASE};}else{st=LEVERS[k].f(BASE);b.setAttribute('aria-pressed','true');leverTable(k);}
+  syncSliders();update();
+}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+syncSliders();leverTable(null);update();
+})();
+</script>
+</body>
+</html>

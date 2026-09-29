@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rollback, trace or ban, MMO309 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}#figHarm{order:-1}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+canvas.drag{cursor:ew-resize;touch-action:pan-y}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.sw{display:inline-block;width:16px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:2px;border:1px solid var(--ink-soft)}
+.ln{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.bars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+@media (max-width:760px){.bars{grid-template-columns:1fr}.bars canvas{height:140px}}
+.bars canvas{height:170px}
+.tline{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:16px}
+.tline .ctl{flex:1 1 260px}
+.chip,.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ochre)}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 22px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl small{display:block;color:var(--ink-soft);font-size:.8rem;line-height:1.3}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.toggle{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;justify-content:flex-start!important}
+.toggle input{width:20px;height:20px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:600px;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding:0 0 6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.best td{font-weight:700;background:var(--paper-2)}
+.neg{color:var(--moss)}.pos{color:var(--blood)}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:18px 0 4px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO309 Security, Anti-Cheat and Anti-Bot · Week 11 · Worked example</p>
+  <h1>Rollback, trace or ban</h1>
+  <p class="lede">A rollback's cost climbs in a straight line with every hour of delay and lands on the whole server. A trace's cost shoots up, then levels off, lands on a few buyers and always leaves the vendored share behind. They cross at one delay. Neither one touches what the ring keeps. Only a ban sized to its proceeds does.</p>
+</header>
+
+<section class="panel" aria-label="Dupe response model">
+  <div class="charts">
+    <figure id="figItems">
+      <figcaption>Where the duped items are<small>Share of the D duped items, by hours since the exploit began. Drag the chart to move T.</small></figcaption>
+      <canvas id="cItems" class="drag" role="img" aria-label="Stacked area of duped items still with the ring, bought by honest players, and gone, over 48 hours"></canvas>
+      <div class="legend">
+        <span><i class="sw" id="swHeld"></i>Still with the ring (1 − m)</span>
+        <span><i class="sw" id="swBought"></i>Bought by honest players (b m)</span>
+        <span><i class="sw" id="swGone"></i>Gone: vendored or crafted ((1 − b) m)</span>
+      </div>
+    </figure>
+    <figure id="figHarm">
+      <figcaption>Harm against detection delay<small>Honest player-hours lost + λ × residual inflation. Drag to move T.</small></figcaption>
+      <canvas id="cHarm" class="drag" role="img" aria-label="Total harm of rollback, trace and ring-only responses against detection delay"></canvas>
+      <div class="legend">
+        <span><i class="ln" style="border-color:var(--steel)"></i>Rollback</span>
+        <span><i class="ln" style="border-color:var(--ochre);border-top-style:dashed"></i>Trace and delete</span>
+        <span><i class="ln" style="border-color:var(--blood);border-top-style:dotted"></i>Ring only</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="bars">
+    <figure><figcaption>Honest player-hours lost<small>at the current T</small></figcaption><canvas id="bHours" role="img" aria-label="Honest player-hours lost per response"></canvas></figure>
+    <figure><figcaption>Residual inflation<small>% of the money supply M</small></figcaption><canvas id="bInfl" role="img" aria-label="Residual inflation per response"></canvas></figure>
+    <figure><figcaption>Ring's net after bans<small>gold; cross-hatched bars are below zero</small></figcaption><canvas id="bNet" role="img" aria-label="Ring net gold per response"></canvas></figure>
+  </div>
+  <div class="legend" aria-hidden="true">
+    <span><i class="sw" id="swR"></i>Rollback</span>
+    <span><i class="sw" id="swT"></i>Trace</span>
+    <span><i class="sw" id="swO"></i>Ring only</span>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="rMoved">—</b><span>share moved, m(T)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rBought">—</b><span>items bought by honest players</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rGone">—</b><span>items gone</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rCross">—</b><span>rollback-trace crossover</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="tline">
+    <div class="ctl">
+      <label for="sT">Detection delay T <output id="oT">6 h</output></label>
+      <input id="sT" type="range" min="0" max="48" step="0.1" value="6">
+    </div>
+    <div class="presets" role="group" aria-label="Delay presets">
+      <button class="chip" data-t="0.3333333333333333">20 min</button>
+      <button class="chip" data-t="1">1 h</button>
+      <button class="chip" data-t="6">6 h</button>
+      <button class="chip" data-t="24">24 h</button>
+      <button class="btn" id="reset">Reset defaults</button>
+    </div>
+  </div>
+
+  <h2>Model inputs</h2>
+  <div class="controls" id="controls"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tCap">Each response at the current T</caption>
+      <thead><tr><th scope="col">Response</th><th scope="col">Honest hours lost</th><th scope="col">Residual inflation</th><th scope="col">Total harm</th><th scope="col">Ring keeps</th><th scope="col">Ring net</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from MMO309 week 11 (the same one the lab 11 starter implements). m(T) = 1 − e<sup>−kT</sup>. Rollback hours = P T. Trace hours = w b m D, or w × max(0, b m D − debit / p) with debit on. Trace inflation = 100 (1 − b) m D p / M. Ring net = keeps − A − debit, where debit = min(wallet, keeps). Crossover is the first T on a 0.01 h grid where the rollback's harm exceeds the trace's. Numbers are a teaching model, not data from any game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const MINUS='−';
+function gold(n,sign){
+  const a=Math.abs(n);let s;
+  if(a>=1e9)s=(a/1e9).toFixed(2)+'B';else if(a>=1e6)s=(a/1e6).toFixed(1)+'M';else if(a>=1e3)s=(a/1e3).toFixed(1)+'k';else s=fmt(a);
+  if(n<0&&s!=='0'&&s!=='0.0M')return MINUS+s;
+  return (sign&&n>0?'+':'')+s;
+}
+function num(n){return n<0?MINUS+fmt(-n):fmt(n);}
+
+// Inputs. Money values in the sliders are in millions where noted.
+const DEF={T:6,D:50000,p:1000,M:500,k:0.2,b:0.6,P:4000,w:0.5,lam:20000,A:0,debit:false,wallet:0};
+const SPEC=[
+  {id:'D',label:'Duped items D',min:1000,max:200000,step:1000,show:v=>fmt(v)},
+  {id:'p',label:'Gold per item p',min:100,max:10000,step:100,show:v=>fmt(v)},
+  {id:'M',label:'Money supply M',min:50,max:5000,step:50,show:v=>v>=1000?(v/1000).toFixed(2).replace(/\.?0+$/,'')+'B':fmt(v)+'M',hint:'gold on the server'},
+  {id:'k',label:'Leave rate k',min:0.01,max:1,step:0.01,show:v=>v.toFixed(2)+'/h',hint:'share of held items leaving per hour'},
+  {id:'b',label:'Bought share b',min:0,max:1,step:0.01,show:v=>v.toFixed(2),hint:'of items that left, bought by honest players'},
+  {id:'P',label:'Players online P',min:100,max:100000,step:100,show:v=>fmt(v)},
+  {id:'w',label:'Hours per item w',min:0.1,max:5,step:0.1,show:v=>v.toFixed(1)+' h',hint:'play needed to earn one item’s price'},
+  {id:'lam',label:'Harm rate λ',min:0,max:100000,step:1000,show:v=>fmt(v),hint:'player-hours per point of inflation'},
+  {id:'A',label:'Banned account value A',min:0,max:100,step:1,show:v=>fmt(v)+'M',hint:'gold, in millions'},
+];
+const S=Object.assign({},DEF);
+const box=$('controls');
+SPEC.forEach(c=>{
+  const d=document.createElement('div');d.className='ctl';
+  d.innerHTML=`<label for="s${c.id}">${c.label} <output id="o${c.id}"></output></label><input id="s${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${DEF[c.id]}">${c.hint?`<small>${c.hint}</small>`:''}`;
+  box.appendChild(d);
+  d.querySelector('input').addEventListener('input',e=>{S[c.id]=+e.target.value;update();});
+});
+const dv=document.createElement('div');dv.className='ctl';
+dv.innerHTML=`<label class="toggle" for="sDebit"><input id="sDebit" type="checkbox"> Debit proceeds and refund buyers</label>
+<label for="sWallet">Ring wallet <output id="oWallet"></output></label><input id="sWallet" type="range" min="0" max="100" step="1" value="0" disabled><small>gold still in the ring's wallets, in millions</small>`;
+box.appendChild(dv);
+$('sDebit').addEventListener('change',e=>{S.debit=e.target.checked;$('sWallet').disabled=!S.debit;update();});
+$('sWallet').addEventListener('input',e=>{S.wallet=+e.target.value;update();});
+
+// Model, exactly as the lecture spec states it.
+function model(T){
+  const D=S.D,p=S.p,M=S.M*1e6,A=S.A*1e6,wallet=S.debit?S.wallet*1e6:0;
+  const m=1-Math.exp(-S.k*T),bought=S.b*m*D,gone=(1-S.b)*m*D,keeps=m*D*p;
+  const debitOf=kp=>S.debit?Math.min(wallet,kp):0;
+  const dT=debitOf(keeps);
+  const r={
+    rollback:{hours:S.P*T,infl:0,keeps:0,debit:0},
+    trace:{hours:S.debit?S.w*Math.max(0,bought-dT/p):S.w*bought,infl:100*gone*p/M,keeps:keeps,debit:dT},
+    ring:{hours:0,infl:100*m*D*p/M,keeps:keeps,debit:dT},
+  };
+  for(const x of Object.values(r)){x.harm=x.hours+S.lam*x.infl;x.net=x.keeps-A-x.debit;}
+  return {m,bought,gone,r};
+}
+function crossover(){
+  for(let i=1;i<=4800;i++){const T=i/100,r=model(T).r;if(r.rollback.harm>r.trace.harm)return T;}
+  return null;
+}
+
+// Canvas helpers
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function pattern(g,color,kind){
+  const s=8,pc=document.createElement('canvas'),dpr=window.devicePixelRatio||1;
+  pc.width=pc.height=s*dpr;const q=pc.getContext('2d');q.scale(dpr,dpr);
+  q.fillStyle=color;q.globalAlpha=kind==='solid'?.85:.28;q.fillRect(0,0,s,s);q.globalAlpha=1;
+  q.strokeStyle=color;q.fillStyle=color;q.lineWidth=1.6;
+  if(kind==='hatch'){q.beginPath();q.moveTo(0,s);q.lineTo(s,0);q.moveTo(-2,2);q.lineTo(2,-2);q.moveTo(s-2,s+2);q.lineTo(s+2,s-2);q.stroke();}
+  if(kind==='dots'){q.beginPath();q.arc(2,2,1.5,0,7);q.arc(6,6,1.5,0,7);q.fill();}
+  if(kind==='cross'){q.globalAlpha=1;q.beginPath();q.moveTo(0,0);q.lineTo(s,s);q.moveTo(s,0);q.lineTo(0,s);q.stroke();}
+  if(kind==='light'){q.globalAlpha=.25;q.fillRect(0,0,s,s);}
+  const p=g.createPattern(pc,'repeat');if(p&&p.setTransform)p.setTransform(new DOMMatrix().scale(1/dpr));return p;
+}
+function swatch(el,color,kind){
+  const c=document.createElement('canvas');c.width=16;c.height=12;const g=c.getContext('2d');
+  g.fillStyle=pattern(g,color,kind);g.fillRect(0,0,16,12);el.style.backgroundImage=`url(${c.toDataURL()})`;
+}
+const pad={l:56,r:12,t:14,b:34};
+const X=(w,t)=>pad.l+(w-pad.l-pad.r)*t/48;
+const Y=(h,v,yMax)=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+function axes(g,w,h,yMax,yFmt){
+  g.clearRect(0,0,w,h);g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=Y(h,yMax*i/4,yMax);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(yMax*i/4),pad.l-6,y);}
+  for(let t=0;t<=48;t+=12){g.textAlign='center';g.textBaseline='top';g.fillText(t,X(w,t),h-pad.b+6);}
+  g.textAlign='right';g.fillText('hours since exploit',w-pad.r,h-15);
+}
+function niceMax(v){if(v<=0)return 4;const st=v*1.02/4,mag=Math.pow(10,Math.floor(Math.log10(st)));return 4*[1,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=st);}
+function tLine(g,w,h,T){
+  const x=X(w,T);g.strokeStyle=css('--ink');g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink');g.beginPath();g.moveTo(x-6,pad.t-2);g.lineTo(x+6,pad.t-2);g.lineTo(x,pad.t+6);g.fill();
+}
+function label(g,w,x,y,lines){
+  g.font='600 12px '+css('--sans');const lh=15,bw=Math.max(...lines.map(s=>g.measureText(s).width))+12,bh=lines.length*lh+8;
+  let bx=x+8;if(bx+bw>w-pad.r)bx=x-8-bw;bx=Math.max(pad.l+2,bx);
+  g.fillStyle=css('--paper');g.globalAlpha=.92;g.fillRect(bx,y,bw,bh);g.globalAlpha=1;g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.strokeRect(bx,y,bw,bh);
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='top';lines.forEach((s,i)=>g.fillText(s,bx+6,y+5+i*lh));
+}
+const tStr=T=>Math.abs(T-1/3)<1e-9?'0.33':(Math.round(T*10)/10).toString();
+
+function drawItems(T,m){
+  const c=setup($('cItems')),g=c.g,w=c.w,h=c.h;axes(g,w,h,1,v=>v.toFixed(2).replace(/0$/,''));
+  const n=240,pts=[];for(let i=0;i<=n;i++){const t=48*i/n,mm=1-Math.exp(-S.k*t);pts.push([t,mm]);}
+  const band=(lo,hi,fill)=>{g.beginPath();pts.forEach(([t,mm],i)=>{const x=X(w,t),y=Y(h,hi(mm),1);i?g.lineTo(x,y):g.moveTo(x,y);});
+    for(let i=n;i>=0;i--){const [t,mm]=pts[i];g.lineTo(X(w,t),Y(h,lo(mm),1));}g.closePath();g.fillStyle=fill;g.fill();};
+  // bottom: gone, then bought, then held on top
+  band(()=>0,mm=>(1-S.b)*mm,pattern(g,css('--blood'),'dots'));
+  band(mm=>(1-S.b)*mm,mm=>mm,pattern(g,css('--ochre'),'hatch'));
+  band(mm=>mm,()=>1,pattern(g,css('--steel'),'light'));
+  g.strokeStyle=css('--ink');g.lineWidth=1.2;g.beginPath();pts.forEach(([t,mm],i)=>{const x=X(w,t),y=Y(h,mm,1);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+  tLine(g,w,h,T);
+  label(g,w,X(w,T),pad.t+10,[`T = ${tStr(T)} h`,`ring ${(1-m).toFixed(3)}`,`bought ${(S.b*m).toFixed(3)}`,`gone ${((1-S.b)*m).toFixed(3)}`]);
+}
+function drawHarm(T,cur,cross){
+  const c=setup($('cHarm')),g=c.g,w=c.w,h=c.h;
+  const n=240,rows=[];let mx=0;for(let i=0;i<=n;i++){const t=48*i/n,r=model(t).r;rows.push([t,r]);mx=Math.max(mx,r.rollback.harm,r.trace.harm,r.ring.harm);}
+  const yMax=niceMax(mx);axes(g,w,h,yMax,v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(v%1e3?1:0)+'k':fmt(v));
+  const line=(key,color,dash,width)=>{g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash);g.beginPath();rows.forEach(([t,r],i)=>{const x=X(w,t),y=Y(h,r[key].harm,yMax);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.setLineDash([]);};
+  line('ring',css('--blood'),[2,4],2.5);line('trace',css('--ochre'),[8,5],2.8);line('rollback',css('--steel'),[],2.8);
+  tLine(g,w,h,T);
+  g.font='600 12px '+css('--sans');
+  if(cross!==null){
+    const hx=model(cross).r.rollback.harm,x=X(w,cross),y=Y(h,hx,yMax);
+    g.fillStyle=css('--ink');g.beginPath();g.arc(x,y,6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.fillStyle=css('--ink');g.textBaseline='bottom';g.textAlign=x>w-120?'right':'left';g.fillText(`crossover ${cross.toFixed(1)} h`,x+(x>w-120?-10:10),y-6);
+  }else{g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='top';g.fillText('no crossover before 48 h',pad.l+8,pad.t+4);}
+  [['rollback','--steel'],['trace','--ochre']].forEach(([k,col])=>{const x=X(w,T),y=Y(h,cur[k].harm,yMax);g.fillStyle=css(col);g.beginPath();g.arc(x,y,5,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+}
+const RESP=[['rollback','Rollback','--steel','solid'],['trace','Trace','--ochre','hatch'],['ring','Ring only','--blood','dots']];
+function drawBars(id,cur,key,f){
+  const c=setup($(id)),g=c.g,w=c.w,h=c.h;g.clearRect(0,0,w,h);
+  const vals=RESP.map(r=>cur[r[0]][key]);let hi=Math.max(0,...vals),lo=Math.min(0,...vals);
+  if(hi===lo)hi=1;const span=hi-lo,top=22,bot=h-24,zy=top+(bot-top)*hi/span;
+  const slot=(w-16)/3,bw=Math.min(56,slot*.55);
+  g.font='600 12px '+css('--sans');g.textAlign='center';
+  RESP.forEach(([k,name,col,kind],i)=>{
+    const v=cur[k][key],x=8+slot*i+slot/2,y=top+(bot-top)*(hi-v)/span,y0=Math.min(y,zy),hh=Math.max(Math.abs(zy-y),v===0?0:1);
+    g.fillStyle=pattern(g,css(col),v<0?'cross':kind);g.fillRect(x-bw/2,y0,bw,hh);
+    g.strokeStyle=css(col);g.lineWidth=1.5;if(v<0)g.setLineDash([4,3]);g.strokeRect(x-bw/2,y0,bw,hh);g.setLineDash([]);
+    g.fillStyle=css('--ink');g.textBaseline=v<0?'top':'bottom';g.fillText(f(v),x,v<0?y0+hh+3:y0-3);
+    g.fillStyle=css('--ink-soft');g.textBaseline='bottom';g.font='12px '+css('--sans');g.fillText(name,x,h-4);g.font='600 12px '+css('--sans');
+  });
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(4,zy);g.lineTo(w-4,zy);g.stroke();
+}
+
+function update(){
+  const T=S.T,cur=model(T),r=cur.r,cross=crossover();
+  SPEC.forEach(c=>{$('o'+c.id).textContent=c.show(S[c.id]);});
+  $('oWallet').textContent=S.wallet+'M';
+  $('oT').textContent=Math.abs(T-1/3)<1e-9?'0.33 h (20 min)':tStr(T)+' h';
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(Math.abs(+b.dataset.t-T)<1e-9)));
+  $('rMoved').textContent=cur.m.toFixed(3);
+  $('rBought').textContent=fmt(cur.bought);
+  $('rGone').textContent=fmt(cur.gone);
+  $('rCross').textContent=cross===null?'none by 48 h':cross.toFixed(1)+' h';
+  const best=Object.keys(r).filter(k=>k!=='ring').reduce((a,b)=>r[a].harm<=r[b].harm?a:b);
+  $('tCap').textContent=`Each response at T = ${tStr(T)} h`;
+  $('tbody').innerHTML=RESP.map(([k,name])=>{const x=r[k];
+    return `<tr class="${k===best?'best':''}"><td>${name}${k===best?' (cheaper)':''}</td><td>${fmt(x.hours)}</td><td>${x.infl.toFixed(2)}%</td><td>${fmt(x.harm)}</td><td>${gold(x.keeps)}</td><td class="${x.net<0?'neg':x.net>0?'pos':''}">${gold(x.net,true)}</td></tr>`;}).join('');
+  const ratio=r.trace.harm>0?r.rollback.harm/r.trace.harm:Infinity;
+  let s;
+  if(cross!==null&&T<cross) s=`At ${tStr(T)} h the rollback costs <b>${fmt(r.rollback.harm)}</b> player-hours, spread across all ${fmt(S.P)} players online. The trace costs <b>${fmt(r.trace.harm)}</b>, because ${fmt(cur.gone)} items were already vendored or crafted and no serial can find them. Rolling back is cheaper until <b>${cross.toFixed(1)} h</b>.`;
+  else if(cross!==null) s=`Past the crossover at <b>${cross.toFixed(1)} h</b>. The rollback now costs <b>${fmt(r.rollback.harm)}</b> player-hours and keeps climbing by ${fmt(S.P)} an hour. The trace has flattened at <b>${fmt(r.trace.harm)}</b>, and those hours fall on the buyers of ${fmt(cur.bought)} items.`;
+  else s=`No crossover within 48 hours. The rollback (<b>${fmt(r.rollback.harm)}</b> player-hours at ${tStr(T)} h) stays cheaper than the trace (<b>${fmt(r.trace.harm)}</b>) the whole time.`;
+  const net=r.trace.net;
+  s+=` After a trace the ring keeps <b>${gold(r.trace.keeps)}</b> gold; with bans${S.debit?' and the wallet debit':''} its net is <b>${gold(net,true)}</b>, so exploiting ${net>0?'still paid':'did not pay'}.`;
+  $('insight').innerHTML=s;
+  drawItems(T,cur.m);drawHarm(T,r,cross);
+  drawBars('bHours',r,'hours',v=>fmt(v));
+  drawBars('bInfl',r,'infl',v=>v.toFixed(2)+'%');
+  drawBars('bNet',r,'net',v=>gold(v,true));
+}
+
+function setT(T){S.T=Math.max(0,Math.min(48,T));$('sT').value=S.T;update();}
+$('sT').addEventListener('input',e=>setT(+e.target.value));
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>setT(+b.dataset.t)));
+$('reset').addEventListener('click',()=>{Object.assign(S,DEF);SPEC.forEach(c=>{$('s'+c.id).value=DEF[c.id];});$('sDebit').checked=false;$('sWallet').value=0;$('sWallet').disabled=true;setT(DEF.T);});
+['cItems','cHarm'].forEach(id=>{
+  const c=$(id);let drag=false;
+  const at=e=>{const r=c.getBoundingClientRect();const t=48*(e.clientX-r.left-pad.l)/(r.width-pad.l-pad.r);setT(Math.round(t*10)/10);};
+  c.addEventListener('pointerdown',e=>{drag=true;c.setPointerCapture(e.pointerId);at(e);});
+  c.addEventListener('pointermove',e=>{if(drag)at(e);});
+  c.addEventListener('pointerup',()=>{drag=false;});c.addEventListener('pointercancel',()=>{drag=false;});
+});
+function paintSwatches(){
+  swatch($('swHeld'),css('--steel'),'light');swatch($('swBought'),css('--ochre'),'hatch');swatch($('swGone'),css('--blood'),'dots');
+  swatch($('swR'),css('--steel'),'solid');swatch($('swT'),css('--ochre'),'hatch');swatch($('swO'),css('--blood'),'dots');
+}
+let rq;window.addEventListener('resize',()=>{cancelAnimationFrame(rq);rq=requestAnimationFrame(update);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{paintSwatches();update();});
+paintSwatches();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>
