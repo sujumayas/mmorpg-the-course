@@ -64,7 +64,7 @@ The social science of MMOs: groups, guilds, trust, status, toxicity and how syst
 - Taylor — Play Between Worlds (2006)
 - Ducheneaut, Yee, Nickell & Moore (2006) — 'Alone Together?'
 - Steinkuehler & Williams (2006) — Where Everybody Knows Your (Screen) Name
-- Kou (2020) — Toxic behaviors in team-based competitive gaming (verify)
+- Kou (2020) — Toxic behaviors in team-based competitive gaming: the case of League of Legends. CHI PLAY 2020, doi:10.1145/3410404.3414243
 
 ## Assessment
 
