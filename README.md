@@ -37,3 +37,24 @@ templates/           shared design tokens for interactives
 tools/               generators
 .claude/agents/      subagent definitions for scaling the work
 ```
+
+## Website
+
+`tools/build_site.py` turns the repository into a static website in `site/`. The site has:
+
+- a home page with the curriculum map
+- a page for each course
+- every lecture, lab and assessment rendered from Markdown
+- each interactive in a viewer page
+- starter code and data files shown with syntax highlighting
+- a gallery of all interactives, an index of labs and assessments, a bibliography you can filter, and site-wide search
+
+All links are relative, so the site works on any host and from disk.
+
+```
+pip install -r requirements.txt
+python tools/build_site.py
+python -m http.server -d site 8000   # then open http://localhost:8000
+```
+
+Netlify runs the same build on every push (`netlify.toml`). The output folder `site/` is not committed.

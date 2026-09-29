@@ -7,3 +7,4 @@ This repo is a university curriculum: BSc Game Development with an MMORPG specia
 - Run plan and QA checklist: `ORCHESTRATION.md`. Subagents live in `.claude/agents/`.
 - Log progress and unverified facts in `docs/BUILD_LOG.md`.
 - Real-game facts must be verified and cited with version/era. No copyrighted art, characters or long quotes.
+- Website: `python tools/build_site.py` renders everything into `site/` (gitignored). Netlify runs it on push via `netlify.toml`. Styles and scripts live in `tools/site/`.

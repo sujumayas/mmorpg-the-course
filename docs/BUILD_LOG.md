@@ -241,3 +241,15 @@ Owner decisions still open:
 - Confirm that GD203 lab 10 has no late window.
 - The em dash in the lecture title line (`# CODE · Week NN — Title`) conflicts with the plain-writing rule.
 - Approve the studio-course template in BUILD_CONVENTIONS.md.
+
+## Owner decisions and the website (29 Sep 2026)
+
+- The owner deleted `h.html`.
+- The unused MMO303 example is now `examples/__old-w10-counter-triangle.html`. The site builder skips files whose names start with `__`.
+- GD203 lab 10 keeps no late window.
+- The em dash in lecture title lines stays.
+- The owner approved the studio-course template.
+- Added `tools/build_site.py`, `tools/site/` (CSS, JS, icon), `requirements.txt` and `netlify.toml`.
+  - The build writes 4,086 HTML files in about 13 s.
+  - A link check found 0 broken links and 0 broken anchors out of 187,509.
+  - Layout was checked at 390 and 1280 px in light and dark. Search, filters, the mobile menu and the theme sync into interactives were tested headless.
