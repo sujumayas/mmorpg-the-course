@@ -45,3 +45,14 @@
 
 - Several agents write the same course at once. Touch only your assigned weeks, their labs and their examples. Do not edit `syllabus.md`, `PLAN.md`, `docs/BUILD_LOG.md` or other agents' files; the orchestrator does that.
 - Keep your final report under 200 words: files written, facts you could not verify, cross-course links to check.
+
+## Studio courses (PR201, PR301, PR401, PR402)
+
+Studio courses are team projects. Per ORCHESTRATION.md they are mostly briefs, milestones and rubrics, so each week is a studio session guide, not a lecture.
+
+- `lectures/wNN-<slug>.md` is the session guide, 1,500 to 4,000 words. Header block as for lectures. Sections: `## 1.` to `## N.` short teaching blocks, one `## N. Worked example` (a real production calculation: burn-down, velocity, scope cut, bug triage, playtest sample size), `## Studio session plan` (timed agenda for the class meeting), `## Deliverables` (what the team hands in this week and how it is checked), `## Common failure modes`, `## Review checklist` (what the instructor checks at the milestone), `## Sources`.
+- An `## Interactive spec` is optional. Add one only where a model helps (burn-down, scope, risk).
+- `labs/labNN.md` is a sprint worksheet or template (at least 6), with a checkable output.
+- `assessments/` holds one brief per milestone with a rubric totalling 100, a peer-assessment brief, and `exam-bank.md` as a viva and reflection bank of at least 40 numbered questions with model answers or marking guidance.
+- Link to the courses that teach each skill (CS202 networking, PR101 production, GD201 levels) instead of re-teaching them.
+- `tools/check_course.py` applies these rules to the studio course codes.

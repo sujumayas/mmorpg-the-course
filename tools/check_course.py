@@ -25,6 +25,20 @@ REQUIRED = [
     (r"^## (Lab|Lab / assignment) hook", "## Lab hook"),
     (r"^## Sources", "## Sources"),
 ]
+# Studio courses (wave 7) use week session guides, not lectures.
+STUDIO = {"PR201", "PR301", "PR401", "PR402"}
+STUDIO_REQUIRED = [
+    (r"^\*\*Why this matters:\*\*", "Why this matters"),
+    (r"^\*\*You will be able to:\*\*", "You will be able to"),
+    (r"^\*\*Before class:\*\*", "Before class"),
+    (r"^\*\*Prerequisites", "Prerequisites"),
+    (r"^## \d+\. Worked example", "## N. Worked example"),
+    (r"^## Studio session plan", "## Studio session plan"),
+    (r"^## Deliverables", "## Deliverables"),
+    (r"^## Common failure modes", "## Common failure modes"),
+    (r"^## Review checklist", "## Review checklist"),
+    (r"^## Sources", "## Sources"),
+]
 LINK = re.compile(r"\]\(([^)#\s]+)(#[^)]*)?\)")
 
 
@@ -42,12 +56,13 @@ def check_links(path, text, problems):
             problems.append(f"{path.name}: broken link -> {target}")
 
 
-def check_lecture(path, problems):
+def check_lecture(path, problems, studio=False):
     text = path.read_text()
     n = words(text.split("## Interactive spec")[0])
-    if not 2500 <= n <= 5000:
-        problems.append(f"{path.name}: {n} words (target 2,500-5,000, spec excluded)")
-    for pat, label in REQUIRED:
+    lo, hi = (1500, 4000) if studio else (2500, 5000)
+    if not lo <= n <= hi:
+        problems.append(f"{path.name}: {n} words (target {lo:,}-{hi:,}, spec excluded)")
+    for pat, label in (STUDIO_REQUIRED if studio else REQUIRED):
         if not re.search(pat, text, re.M):
             problems.append(f"{path.name}: missing section '{label}'")
     if not text.startswith("# "):
@@ -65,13 +80,14 @@ def check_lecture(path, problems):
 
 def check_course(d):
     problems = []
+    studio = d.name.split("-")[0] in STUDIO
     lec = sorted((d / "lectures").glob("w*.md"))
     ex = sorted((d / "examples").glob("*.html"))
     labs = sorted((d / "labs").glob("*.md"))
     asm = [p for p in (d / "assessments").glob("*.md")]
     counts = []
     for p in lec:
-        counts.append(check_lecture(p, problems))
+        counts.append(check_lecture(p, problems, studio))
     for p in labs + asm + [d / "syllabus.md"]:
         if p.exists():
             check_links(p, p.read_text(), problems)
