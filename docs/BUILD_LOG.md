@@ -145,3 +145,15 @@ Owner decisions still open: delete orphaned courses/MMO303-*/examples/w10-counte
 - Wave 6 complete: AR101, AU101, CS201, MA201, PR101, MMO403, MMO405, MMO406.
 - PR301 assessments written 2026-09-29: 6 milestone briefs (milestones 50%: pitch 4, architecture 6, sprint reviews 1-5 14, alpha weekend 10, telemetry review 7, beta 9), final world brief (30%, stabilization + showcase), post-mortem and viva brief (10%), peer-assessment brief (10%, course's own scheme: 0.7 normalised peer share + 0.3 records share from personal focus factor, operations duty rated; worked example run with .venv Python 3.13), exam bank (53 questions). No new real-game facts. check_course PR301 passes except the syllabus stub markers. Saltmarsh inconsistencies between guides reported to the orchestrator (w10 vs w13 alpha turnout, tick rule w06 vs w12/w13, sprint 2 velocity w06 vs w11, reed mat vs iron dagger and copper vs gold in w11, w08 go/no-go tick check at 50 bots spread, w01 pointing to syllabus weights that do not exist).
 - Link sweep: 76 cross-course syllabus links upgraded to specific lectures; 30 left on syllabus.md where the whole course or a 3+ week range is meant, or no lecture covers the topic (CS101 "2D arrays", DB201 "content pipelines", MMO404 rewind for area checks, MMO403 time-gate obligation). 44 lecture files in 18 courses now phrase later-semester courses as "Looking ahead" references instead of prerequisites.
+
+## Handoff at the weekly usage limit (29 Sep 2026)
+
+Every running agent stopped with the weekly limit (HTTP 429). The limit resets on 4 Oct 2026 at 04:00 Lima time. The work tree has uncommitted partial edits. Nothing below has been committed.
+
+- PR201: the fix agent for the open review items stopped partway through week 2. It was fixing w09 scope 220 vs 311, the hours estimates in w08 and w12, and the M2 move to file-based saves. Rerun it, then finish_syllabus, check_course, check_examples and commit.
+- PR301: the review stopped while it spot-checked facts. Rerun the review with docs/handoff/notes-PR301.md.
+- PR401: all six examples are built and pass check_examples. The review stopped after it checked facts and before it made edits. Rerun it with docs/handoff/notes-PR401.md, which lists the must-fix items.
+- PR402: the review stopped after it matched the examples to the guides. Still to do are the link check, the WoW Classic date, the Halo source wording and the folder convention statement.
+- Fact sweep: five agents, one per wave, stopped partway through. Some committed courses have partial edits (git status lists them). Before rerunning, review the diffs with `git diff courses/`. Then rerun each wave's sweep, which checks every "still unverified" item and hedges or removes the ones it can't confirm.
+- `h.html` in the repo root is a Blizzard page that a fact-sweep agent downloaded. It is not part of the curriculum. Delete it once the owner approves.
+- After the four studio courses are committed and the sweep is done, write "Wave 7 complete" here.
