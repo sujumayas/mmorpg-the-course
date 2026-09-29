@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Navmesh funnel: CS203 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.stage{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:880px){.stage{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#map{display:block;width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 2px 2px}
+.legend i{display:inline-block;width:22px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid}
+.lg-mid{border-color:var(--ochre)!important;border-top-style:dashed!important}
+.lg-fun{border-color:var(--steel)!important}
+.lg-alt{border-color:var(--ink-soft)!important;border-top-style:dotted!important}
+.lg-clr{border-color:var(--blood)!important;border-top-width:6px!important;opacity:.4}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 12px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:clamp(1.05rem,4.4vw,1.4rem);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.side h2{font-family:var(--serif);font-weight:600;font-size:1.02rem;margin:14px 0 4px}
+.corr{margin:0;font-size:.92rem}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:4px 8px;text-align:left;border-bottom:1px solid var(--grid)}
+td.num,th.num{text-align:right}
+tr.pick td{font-weight:700;background:var(--paper-2)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
+@media (max-width:880px){.controls{grid-template-columns:minmax(0,1fr)}}
+.ctl-title{font-weight:600;font-size:.92rem;margin:0 0 6px}
+label.slider{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+input[type=range]:disabled{opacity:.45}
+.check{display:flex;align-items:center;gap:8px;font-size:.92rem;margin:4px 0}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip,.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,.handle:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.handle:focus{outline:none}
+.handle:focus-visible .ring{stroke:var(--focus);stroke-width:3}
+.note{font-size:.86rem;color:var(--ink-soft);margin:6px 0 0}
+.steptext{font-family:var(--serif);font-size:.95rem;margin:8px 0 0;min-height:3em}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+/* svg */
+.hatch-line{stroke:var(--ink-soft);stroke-width:1;opacity:.45}
+.wallbg{fill:var(--paper-2)}
+.poly{fill:var(--paper);stroke:var(--ink-soft);stroke-width:1}
+.poly.faint{stroke-dasharray:3 3;opacity:.9}
+.wall{stroke:var(--ink);stroke-width:3;stroke-linecap:square;fill:none}
+.clear{stroke:var(--blood);opacity:.22;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.portal{stroke:var(--ink-soft);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.portal.blocked{stroke:var(--blood);stroke-dasharray:2 3}
+.portal.hot{stroke:var(--focus);stroke-width:4;stroke-dasharray:none}
+.pend{fill:var(--ink-soft)}
+.plabel{fill:var(--ink-soft);font:600 10px var(--sans)}
+.pname{fill:var(--ink-soft);font:12px var(--sans)}
+.mid{stroke:var(--ochre);stroke-width:2.5;stroke-dasharray:7 5;fill:none}
+.midpt{fill:var(--ochre)}
+.fun{stroke:var(--steel);stroke-width:3.5;fill:none;stroke-linejoin:round}
+.funpt{fill:var(--steel);stroke:var(--paper);stroke-width:1.5}
+.alt{stroke:var(--ink-soft);stroke-width:2;stroke-dasharray:2 4;fill:none}
+.ray{stroke:var(--focus);stroke-width:1.5;fill:none}
+.ray.r{stroke-dasharray:6 3}
+.apex{fill:var(--focus);stroke:var(--paper);stroke-width:2}
+.raylabel{fill:var(--focus);font:700 11px var(--sans)}
+.steppath{stroke:var(--focus);stroke-width:4;fill:none;opacity:.55}
+.corner{fill:none;stroke:var(--blood);stroke-width:3}
+.flash{animation:flash .9s ease-out 2}
+@keyframes flash{0%{stroke-width:8;opacity:.3}100%{stroke-width:3;opacity:1}}
+.hs{fill:var(--moss);stroke:var(--paper);stroke-width:2}
+.hg{fill:var(--blood);stroke:var(--paper);stroke-width:2}
+.ring{fill:none;stroke:transparent;stroke-width:2}
+.htext{fill:#fff;font:700 11px var(--sans);pointer-events:none}
+.handle{cursor:grab}
+.axis{fill:var(--ink-soft);font:10px var(--sans)}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS203 Artificial Intelligence for Games · Week 5 · Worked example</p>
+  <h1>Pull the string through the doorways</h1>
+  <p class="lede">Both paths use the same five polygons and the same four portals. The dashed one walks through the middle of every portal. The solid one is the funnel algorithm&rsquo;s path, and it bends only at real corners.</p>
+</header>
+
+<section class="panel" aria-label="Navigation mesh and paths">
+  <div class="stage">
+    <figure>
+      <figcaption>Top-down level, meters<small>Drag S and G, or Tab to them and use arrow keys (Shift for 1 m steps).</small></figcaption>
+      <svg id="map" role="group" aria-label="Map of the navigation mesh with start and goal handles"></svg>
+      <div class="legend" aria-hidden="true">
+        <span><i class="lg-mid"></i>Midpoint path</span>
+        <span><i class="lg-fun"></i>Funnel path</span>
+        <span id="lgAlt" hidden><i class="lg-alt"></i>Funnel path through the other door</span>
+        <span><i class="lg-clr"></i>Clearance lost to agent radius</span>
+      </div>
+    </figure>
+    <div class="side">
+      <div class="stats" aria-live="polite" id="live">
+        <div class="stat" style="--c:var(--ochre)"><b id="rMid">—</b><span id="rMidT">midpoint path</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rFun">—</b><span id="rFunT">funnel path</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rDiff">—</b><span>midpoint path is longer by</span></div>
+      </div>
+      <h2>Corridor</h2>
+      <p class="corr" id="corr"></p>
+      <div id="doorsWrap" hidden>
+        <h2>Which door does A* pick?</h2>
+        <div class="table-wrap"><table aria-label="Corridors compared">
+          <thead><tr><th>Corridor</th><th class="num">Midpoint cost</th><th class="num">Funnel length</th></tr></thead>
+          <tbody id="doorsBody"></tbody>
+        </table></div>
+      </div>
+      <h2>Path points</h2>
+      <div class="table-wrap"><table aria-label="Path points">
+        <thead><tr><th>#</th><th>Midpoint path</th><th>Funnel path</th></tr></thead>
+        <tbody id="ptsBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <p class="ctl-title" id="presetLbl">Scenes</p>
+      <div class="chips" role="group" aria-labelledby="presetLbl">
+        <button class="chip" data-preset="default" aria-pressed="true">Default level</button>
+        <button class="chip" data-preset="g912" aria-pressed="false">Goal (9, 12)</button>
+        <button class="chip" data-preset="doors" aria-pressed="false">Two doors</button>
+      </div>
+      <div style="margin-top:10px">
+        <label class="check"><input type="checkbox" id="showMid" checked> Show midpoint path</label>
+        <label class="check"><input type="checkbox" id="showFun" checked> Show funnel path</label>
+      </div>
+    </div>
+    <div>
+      <label class="slider" for="door">Door east edge <output id="oDoor">x = 12</output></label>
+      <input id="door" type="range" min="10.5" max="14" step="0.5" value="12">
+      <label class="slider" for="rad">Agent radius <output id="oRad">0 m</output></label>
+      <input id="rad" type="range" min="0" max="0.8" step="0.1" value="0">
+      <p class="note" id="doorNote">The door is 2 m wide. The north room and Room B do not change.</p>
+    </div>
+    <div>
+      <p class="ctl-title">Funnel stepper</p>
+      <div class="chips">
+        <button class="btn" id="step">Step</button>
+        <button class="btn" id="reset">Reset</button>
+      </div>
+      <p class="steptext" id="stepText" aria-live="polite">Press Step to run the funnel one portal side at a time.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Model and code: CS203 week 5 lecture, after Mikko Mononen's "simple stupid funnel algorithm" (2010) and the Recast/Detour split of corridor search and string pulling. The level is invented for teaching. Corridor choice here ranks corridors by the length of the start → portal midpoints → goal line, as Detour's A* does.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const f2=n=>(Math.round(n*100)/100).toFixed(2);
+const fc=n=>{const s=(Math.round(n*100)/100).toFixed(2).replace(/\.?0+$/,'');return s==='-0'?'0':s;};
+const P=p=>`(${fc(p[0])}, ${fc(p[1])})`;
+const eq=(a,b)=>Math.abs(a[0]-b[0])<1e-9&&Math.abs(a[1]-b[1])<1e-9;
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const len=pts=>pts.slice(1).reduce((s,p,i)=>s+dist(pts[i],p),0);
+
+// ---- the lecture's cross and funnel, ported line by line, plus a step log
+function cross(o,a,b){return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);}
+function funnel(start,goal,portals){
+  portals=portals.concat([[goal,goal]]);
+  const path=[start],steps=[];
+  let apex=start,left=start,right=start,apex_i=-1,left_i=-1,right_i=-1,i=0;
+  const snap=(side,kind,pt,corner)=>steps.push({i,side,kind,pt,corner,apex,left,right,path:path.slice(),n:portals.length});
+  while(i<portals.length){
+    const [nl,nr]=portals[i];
+    if(cross(apex,right,nr)>=0){
+      if(eq(apex,right)||cross(apex,left,nr)<0){right=nr;right_i=i;snap('right','tighten',nr);}
+      else{path.push(left);const c=left;apex=right=left;apex_i=right_i=left_i;snap('right','collapse',nr,c);i=apex_i+1;continue;}
+    } else snap('right','outside',nr);
+    if(cross(apex,left,nl)<=0){
+      if(eq(apex,left)||cross(apex,right,nl)>0){left=nl;left_i=i;snap('left','tighten',nl);}
+      else{path.push(right);const c=right;apex=left=right;apex_i=left_i=right_i;snap('left','collapse',nl,c);i=apex_i+1;continue;}
+    } else snap('left','outside',nl);
+    i+=1;
+  }
+  if(!eq(path[path.length-1],goal))path.push(goal);
+  return {path,steps};
+}
+
+// ---- levels
+function defaultLevel(E){
+  return {name:'default',rects:[
+    {n:'Room A',x0:0,y0:0,x1:4,y1:4},{n:'Corridor',x0:4,y0:1,x1:10,y1:3},{n:'Room B',x0:10,y0:0,x1:14,y1:8,lab:'bottom'},
+    {n:'Door',x0:10,y0:8,x1:E,y1:9},{n:'North room',x0:8,y0:9,x1:14,y1:13}],portals:null,bounds:[-0.6,-0.6,14.6,13.6]};
+}
+function doorsLevel(){
+  return {name:'doors',rects:[{n:'West room',x0:-1,y0:-4,x1:5,y1:10},{n:'East room',x0:5,y0:-4,x1:11,y1:10}],
+    portals:[{a:0,b:1,axis:'x',c:5,lo:1,hi:9,n:'Door A (wide)'},{a:0,b:1,axis:'x',c:5,lo:-3,hi:-2,n:'Door B (narrow)'}],bounds:[-1.6,-4.6,11.6,10.6]};
+}
+function autoPortals(R){
+  const out=[];
+  for(let a=0;a<R.length;a++)for(let b=a+1;b<R.length;b++){
+    const A=R[a],B=R[b];
+    for(const [c,ok] of [[A.x1,A.x1===B.x0],[A.x0,A.x0===B.x1]]) if(ok){const lo=Math.max(A.y0,B.y0),hi=Math.min(A.y1,B.y1);if(hi-lo>1e-9)out.push({a,b,axis:'x',c,lo,hi});}
+    for(const [c,ok] of [[A.y1,A.y1===B.y0],[A.y0,A.y0===B.y1]]) if(ok){const lo=Math.max(A.x0,B.x0),hi=Math.min(A.x1,B.x1);if(hi-lo>1e-9)out.push({a,b,axis:'y',c,lo,hi});}
+  }
+  return out;
+}
+
+// ---- state
+const S={preset:'default',E:12,r:0,start:[1,1],goal:[13,11],showMid:true,showFun:true,step:0};
+let L,res;
+
+function contains(R,p,m){return p[0]>=R.x0+m-1e-9&&p[0]<=R.x1-m+1e-9&&p[1]>=R.y0+m-1e-9&&p[1]<=R.y1-m+1e-9;}
+function clampPt(p){
+  let best=null,bd=Infinity;
+  for(const R of L.rects){
+    const mx=Math.min(S.r,(R.x1-R.x0)/2),my=Math.min(S.r,(R.y1-R.y0)/2);
+    const q=[Math.min(R.x1-mx,Math.max(R.x0+mx,p[0])),Math.min(R.y1-my,Math.max(R.y0+my,p[1]))];
+    const d=dist(p,q);if(d<bd-1e-12){bd=d;best=q;}
+  }
+  return [Math.round(best[0]*1000)/1000,Math.round(best[1]*1000)/1000];
+}
+function locate(p){return L.rects.findIndex(R=>contains(R,p,0));}
+function center(R){return [(R.x0+R.x1)/2,(R.y0+R.y1)/2];}
+function leftRight(pt,fromIdx,toIdx,useEff){
+  const lo=useEff?pt.lo+S.r:pt.lo,hi=useEff?pt.hi-S.r:pt.hi,Q=center(L.rects[toIdx]);
+  if(pt.axis==='x') return Q[0]>pt.c?[[pt.c,hi],[pt.c,lo]]:[[pt.c,lo],[pt.c,hi]];
+  return Q[1]>pt.c?[[lo,pt.c],[hi,pt.c]]:[[hi,pt.c],[lo,pt.c]];
+}
+function corridors(s,g){
+  const out=[];
+  const open=L.portals.filter(p=>p.hi-p.lo-2*S.r>=-1e-9);
+  (function dfs(cur,seen,chain){
+    if(cur===g){out.push(chain.slice());return;}
+    for(const p of open){
+      let nx=-1;if(p.a===cur)nx=p.b;else if(p.b===cur)nx=p.a;
+      if(nx<0||seen.has(nx))continue;
+      seen.add(nx);chain.push({p,from:cur,to:nx});dfs(nx,seen,chain);chain.pop();seen.delete(nx);
+    }
+  })(s,new Set([s]),[]);
+  return out;
+}
+function solve(){
+  L=S.preset==='doors'?doorsLevel():defaultLevel(S.E);
+  if(!L.portals)L.portals=autoPortals(L.rects);
+  L.portals.forEach(p=>{if(!p.n)p.n=L.rects[p.a].n+' / '+L.rects[p.b].n;});
+  S.start=clampPt(S.start);S.goal=clampPt(S.goal);
+  const s=locate(S.start),g=locate(S.goal);
+  const cs=corridors(s,g).map(chain=>{
+    const portals=chain.map(c=>leftRight(c.p,c.from,c.to,true));
+    const mids=[S.start].concat(portals.map(([l,r])=>[(l[0]+r[0])/2,(l[1]+r[1])/2]),[S.goal]);
+    const fn=funnel(S.start,S.goal,portals);
+    const polys=[L.rects[s].n].concat(chain.map(c=>L.rects[c.to].n));
+    return {chain,portals,mids,midLen:len(mids),fun:fn.path,funLen:len(fn.path),steps:fn.steps,polys,label:chain.map(c=>c.p.n).join(', ')||'same polygon'};
+  });
+  cs.sort((a,b)=>a.midLen-b.midLen);
+  res={s,g,cs,pick:cs[0]||null};
+}
+
+// ---- drawing
+const svg=$('map');let scale=40,bx0,by1;
+const X=x=>(x-bx0)*scale,Y=y=>(by1-y)*scale;
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+function line(a,b,cls,par){return el('line',{x1:X(a[0]),y1:Y(a[1]),x2:X(b[0]),y2:Y(b[1]),class:cls},par);}
+function poly(pts,cls,par){return el('polyline',{points:pts.map(p=>X(p[0])+','+Y(p[1])).join(' '),class:cls},par);}
+function subtract(lo,hi,cuts){
+  let segs=[[lo,hi]];
+  for(const [a,b] of cuts){const n=[];for(const [s,e] of segs){if(b<=s||a>=e){n.push([s,e]);continue;}if(a>s)n.push([s,a]);if(b<e)n.push([b,e]);}segs=n;}
+  return segs.filter(([s,e])=>e-s>1e-9);
+}
+function walls(){
+  const out=[];
+  for(const R of L.rects){
+    const edges=[['x',R.x0,R.y0,R.y1],['x',R.x1,R.y0,R.y1],['y',R.y0,R.x0,R.x1],['y',R.y1,R.x0,R.x1]];
+    for(const [ax,c,lo,hi] of edges){
+      const cuts=L.portals.filter(p=>p.axis===ax&&Math.abs(p.c-c)<1e-9).map(p=>[p.lo,p.hi]);
+      for(const [s,e] of subtract(lo,hi,cuts)) out.push(ax==='x'?[[c,s],[c,e]]:[[s,c],[e,c]]);
+    }
+  }
+  return out;
+}
+function draw(){
+  const w=svg.parentElement.clientWidth-20;
+  const [x0,y0,x1,y1]=L.bounds;bx0=x0;by1=y1;
+  scale=Math.max(10,w/(x1-x0));
+  const W=(x1-x0)*scale,H=(y1-y0)*scale;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width',W);svg.setAttribute('height',H);
+  svg.style.height=H+'px';
+  svg.textContent='';
+  const defs=el('defs',{});
+  const pat=el('pattern',{id:'hatch',patternUnits:'userSpaceOnUse',width:8,height:8,patternTransform:'rotate(45)'},defs);
+  el('line',{x1:0,y1:0,x2:0,y2:8,class:'hatch-line'},pat);
+  const clip=el('clipPath',{id:'walk'},defs);
+  L.rects.forEach(R=>el('rect',{x:X(R.x0),y:Y(R.y1),width:(R.x1-R.x0)*scale,height:(R.y1-R.y0)*scale},clip));
+  el('rect',{x:0,y:0,width:W,height:H,class:'wallbg'});
+  el('rect',{x:0,y:0,width:W,height:H,fill:'url(#hatch)'});
+  L.rects.forEach(R=>el('rect',{x:X(R.x0),y:Y(R.y1),width:(R.x1-R.x0)*scale,height:(R.y1-R.y0)*scale,class:'poly'+(S.r>0?' faint':'')}));
+  const W_=walls();
+  if(S.r>0){const g=el('g',{'clip-path':'url(#walk)'});W_.forEach(([a,b])=>{const l=line(a,b,'clear',g);l.setAttribute('stroke-width',2*S.r*scale);});}
+  // polygon names
+  L.rects.forEach(R=>{const h=(R.y1-R.y0)*scale;if(h<18||(R.n==='Door'&&scale<30))return;const t=R.lab==='bottom'?el('text',{x:X((R.x0+R.x1)/2),y:Y(R.y0)-7,'text-anchor':'middle',class:'pname'}):el('text',{x:X(R.x0)+5,y:Y(R.y1)+13,class:'pname'});t.textContent=R.n;});
+  // portals with L/R for the picked corridor's travel direction
+  const pickSet=new Map();if(res.pick)res.pick.chain.forEach((c,k)=>pickSet.set(c.p,k));
+  L.portals.forEach(p=>{
+    const a=p.axis==='x'?[p.c,p.lo]:[p.lo,p.c],b=p.axis==='x'?[p.c,p.hi]:[p.hi,p.c];
+    const blocked=p.hi-p.lo-2*S.r<-1e-9;
+    const ln=line(a,b,'portal'+(blocked?' blocked':''));ln.dataset.key=L.portals.indexOf(p);
+  });
+  W_.forEach(([a,b])=>line(a,b,'wall'));
+  if(res.pick){
+    res.pick.portals.forEach(([l,r],k)=>{
+      for(const [pt,lab] of [[l,'L'],[r,'R']]){
+        el('circle',{cx:X(pt[0]),cy:Y(pt[1]),r:3,class:'pend'});
+        const p=res.pick.chain[k].p,off=p.axis==='x'?[8,(pt[1]===Math.max(l[1],r[1])?-4:12)]:[(pt[0]===Math.max(l[0],r[0])?5:-12),-5];
+        const t=el('text',{x:X(pt[0])+off[0],y:Y(pt[1])+off[1],class:'plabel'});t.textContent=lab;
+      }
+    });
+  }
+  // other corridors (two-door preset)
+  res.cs.slice(1).forEach(c=>{if(S.showFun)poly(c.fun,'alt');});
+  if(res.pick){
+    if(S.showMid){poly(res.pick.mids,'mid');res.pick.mids.slice(1,-1).forEach(p=>el('circle',{cx:X(p[0]),cy:Y(p[1]),r:3.5,class:'midpt'}));}
+    if(S.showFun){poly(res.pick.fun,'fun');res.pick.fun.slice(1,-1).forEach(p=>el('circle',{cx:X(p[0]),cy:Y(p[1]),r:5,class:'funpt'}));}
+  }
+  drawStep();
+  handle('start',S.start,'S','hs','Start point');
+  handle('goal',S.goal,'G','hg','Goal point');
+}
+function ray(apex,through,cls,lab){
+  if(eq(apex,through))return;
+  const d=[through[0]-apex[0],through[1]-apex[1]],k=40/Math.hypot(d[0],d[1]);
+  el('line',{x1:X(apex[0]),y1:Y(apex[1]),x2:X(apex[0]+d[0]*k),y2:Y(apex[1]+d[1]*k),class:cls});
+  const t=el('text',{x:X(through[0])+6,y:Y(through[1])+(lab==='left ray'?-6:14),class:'raylabel'});t.textContent=lab;
+}
+function drawStep(){
+  if(!res.pick||S.step===0)return;
+  const st=res.pick.steps[S.step-1],n=res.pick.portals.length;
+  if(st.i<n){
+    const k=L.portals.indexOf(res.pick.chain[st.i].p);
+    const ln=svg.querySelector(`line.portal[data-key="${k}"]`);if(ln)ln.setAttribute('class','portal hot');
+  }
+  if(st.path.length>1)poly(st.path,'steppath');
+  ray(st.apex,st.left,'ray','left ray');ray(st.apex,st.right,'ray r','right ray');
+  el('circle',{cx:X(st.apex[0]),cy:Y(st.apex[1]),r:6,class:'apex'});
+  if(st.corner){el('circle',{cx:X(st.corner[0]),cy:Y(st.corner[1]),r:11,class:'corner'+(reduce.matches?'':' flash')});}
+}
+function handle(key,p,txt,cls,name){
+  const g=el('g',{class:'handle',tabindex:0,role:'button','aria-label':`${name} at x ${fc(p[0])}, y ${fc(p[1])}. Arrow keys move it 0.25 m, Shift plus arrow 1 m.`});
+  g.dataset.key=key;
+  el('circle',{cx:X(p[0]),cy:Y(p[1]),r:18,class:'ring'},g);
+  el('circle',{cx:X(p[0]),cy:Y(p[1]),r:11,class:cls},g);
+  const t=el('text',{x:X(p[0]),y:Y(p[1])+4,'text-anchor':'middle',class:'htext'},g);t.textContent=txt;
+  g.addEventListener('keydown',e=>{
+    const m=e.shiftKey?1:0.25,d={ArrowLeft:[-m,0],ArrowRight:[m,0],ArrowUp:[0,m],ArrowDown:[0,-m]}[e.key];
+    if(!d)return;e.preventDefault();
+    S[key]=[S[key][0]+d[0],S[key][1]+d[1]];S.step=0;update(key);
+  });
+  g.addEventListener('pointerdown',e=>{e.preventDefault();g.focus();dragging=key;svg.setPointerCapture(e.pointerId);});
+}
+let dragging=null;
+function toWorld(e){const r=svg.getBoundingClientRect();const sx=(e.clientX-r.left)*(parseFloat(svg.getAttribute('width'))/r.width),sy=(e.clientY-r.top)*(parseFloat(svg.getAttribute('height'))/r.height);return [sx/scale+bx0,by1-sy/scale];}
+svg.addEventListener('pointermove',e=>{if(!dragging)return;const w=toWorld(e);S[dragging]=[Math.round(w[0]*4)/4,Math.round(w[1]*4)/4];S.step=0;update(dragging);});
+svg.addEventListener('pointerup',()=>{dragging=null;});
+svg.addEventListener('pointercancel',()=>{dragging=null;});
+
+// ---- readouts
+function stepText(){
+  const pk=res.pick;
+  if(!pk){return 'No corridor fits this agent.';}
+  if(S.step===0)return `Press Step to run the funnel one portal side at a time (${pk.steps.length} steps on this corridor).`;
+  const st=pk.steps[S.step-1],n=pk.portals.length;
+  const where=st.i<n?`portal ${st.i+1} of ${n} (${pk.polys[st.i]} to ${pk.polys[st.i+1]})`:'the goal';
+  let s=`Step ${S.step} of ${pk.steps.length}. ${where[0].toUpperCase()+where.slice(1)}, ${st.side} point ${P(st.pt)}: `;
+  if(st.kind==='tighten')s+=`inside the funnel, so the ${st.side} ray moves to it.`;
+  else if(st.kind==='outside')s+=`outside the funnel on the ${st.side}, so the ${st.side} ray stays.`;
+  else s+=`it crosses the ${st.side==='right'?'left':'right'} ray. The funnel collapses and ${P(st.corner)} becomes a corner and the new apex.`;
+  if(S.step===pk.steps.length)s+=` Done: ${pk.fun.length-2} corner${pk.fun.length-2===1?'':'s'}, ${f2(pk.funLen)} m.`;
+  return s;
+}
+function readouts(){
+  const pk=res.pick;
+  if(!pk){
+    ['rMid','rFun','rDiff'].forEach(id=>$(id).textContent='—');
+    $('corr').textContent='No corridor: every route has a portal narrower than the agent (2 × radius).';
+    $('ptsBody').innerHTML='';$('insight').textContent=`At radius ${fc(S.r)} m the agent needs portals at least ${fc(2*S.r)} m wide. Narrow the agent or widen the door.`;
+    $('doorsWrap').hidden=true;$('stepText').textContent=stepText();return;
+  }
+  const tm=pk.mids.length-2,tf=pk.fun.length-2;
+  $('rMid').textContent=f2(pk.midLen)+' m';$('rMidT').textContent=`midpoint path, ${tm} turn${tm===1?'':'s'}`;
+  $('rFun').textContent=f2(pk.funLen)+' m';$('rFunT').textContent=`funnel path, ${tf} turn${tf===1?'':'s'}`;
+  $('rDiff').textContent=pk.funLen>0?'+'+((pk.midLen/pk.funLen-1)*100).toFixed(1)+'%':'0%';
+  $('corr').textContent=pk.polys.join(' → ');
+  const rows=[],n=Math.max(pk.mids.length,pk.fun.length);
+  for(let i=0;i<n;i++)rows.push(`<tr><td>${i}</td><td>${pk.mids[i]?P(pk.mids[i]):''}</td><td>${pk.fun[i]?P(pk.fun[i]):''}</td></tr>`);
+  rows.push(`<tr><td>Σ</td><td><b>${f2(pk.midLen)} m</b></td><td><b>${f2(pk.funLen)} m</b></td></tr>`);
+  $('ptsBody').innerHTML=rows.join('');
+  const multi=res.cs.length>1;$('doorsWrap').hidden=!multi;$('lgAlt').hidden=!multi;
+  if(multi)$('doorsBody').innerHTML=res.cs.map((c,i)=>`<tr class="${i===0?'pick':''}"><td>${c.label}${i===0?' (A* picks)':''}</td><td class="num">${f2(c.midLen)}</td><td class="num">${f2(c.funLen)}</td></tr>`).join('');
+  const corners=pk.fun.slice(1,-1);
+  let s;
+  if(multi){
+    const best=res.cs.reduce((a,b)=>b.funLen<a.funLen?b:a);
+    s=best===pk?`Midpoint costs pick ${pk.label}, which is also the shortest after string pulling.`
+      :`Midpoint costs pick ${pk.label} (${f2(pk.midLen)} vs ${f2(best.midLen)}), but after string pulling ${best.label} is shorter: ${f2(best.funLen)} m against ${f2(pk.funLen)} m. The funnel only fixes the path inside the corridor A* chose.`;
+  } else if(corners.length===0){
+    s=`The goal is in plain sight through every portal, so the funnel path is one straight line of ${f2(pk.funLen)} m. The midpoint path still turns ${tm} time${tm===1?'':'s'}.`;
+  } else {
+    s=`The funnel path bends only at ${corners.map(P).join(' and ')}, ${corners.length===1?'a portal endpoint':'each one a portal endpoint'}. The midpoint path bends at every portal and is ${f2(pk.midLen-pk.funLen)} m longer.`;
+  }
+  if(S.r>0)s+=` Every portal shrank by ${fc(S.r)} m at each end, so the corners sit ${fc(S.r)} m off the walls.`;
+  $('insight').textContent=s;
+  $('stepText').textContent=stepText();
+  $('step').disabled=S.step>=pk.steps.length;
+}
+function update(focusKey){
+  solve();
+  if(res.pick)S.step=Math.min(S.step,res.pick.steps.length);else S.step=0;
+  draw();readouts();
+  if(focusKey){const h=svg.querySelector(`.handle[data-key="${focusKey}"]`);if(h&&!dragging)h.focus();else if(h&&dragging)h.focus({preventScroll:true});}
+}
+
+// ---- controls
+function setPreset(p){
+  S.preset=p;S.step=0;S.r=0;$('rad').value=0;$('oRad').textContent='0 m';
+  document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.preset===p)));
+  if(p==='doors'){S.start=[0,0];S.goal=[10,0];}
+  else{S.start=[1,1];S.goal=p==='g912'?[9,12]:[13,11];}
+  $('door').disabled=p==='doors';
+  doorNote();update();
+}
+function doorNote(){
+  $('doorNote').textContent=S.preset==='doors'?'The two-door level has a fixed wall at x = 5 with gaps y ∈ [1, 9] and y ∈ [−3, −2].'
+    :`The door spans x = 10 to ${fc(S.E)}, ${fc(S.E-10)} m wide. The north room and Room B do not change.`;
+}
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.preset)));
+$('door').addEventListener('input',e=>{S.E=+e.target.value;$('oDoor').textContent='x = '+fc(S.E);S.step=0;doorNote();update();});
+$('rad').addEventListener('input',e=>{S.r=Math.round(+e.target.value*10)/10;$('oRad').textContent=fc(S.r)+' m';S.step=0;update();});
+$('showMid').addEventListener('change',e=>{S.showMid=e.target.checked;draw();});
+$('showFun').addEventListener('change',e=>{S.showFun=e.target.checked;draw();});
+$('step').addEventListener('click',()=>{if(res.pick&&S.step<res.pick.steps.length){S.step++;draw();readouts();}});
+$('reset').addEventListener('click',()=>{S.step=0;draw();readouts();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,60);});
+// test hook for automated checks
+doorNote();
+window.__navmesh={S,get res(){return res;},update,setPreset,funnel};
+update();
+})();
+</script>
+</body>
+</html>

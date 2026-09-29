@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seek vs arrive — CS203 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.layout{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+figure{margin:0 0 12px;background:var(--paper-2);border-radius:10px;padding:10px 10px 6px}
+figure:last-child{margin-bottom:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+canvas{display:block;width:100%}
+#cTrack{height:150px}#cSpeed{height:280px}#cPursue{aspect-ratio:1/1;height:auto;max-height:620px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--ink-soft);margin:6px 0 2px}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.legend .dot{width:9px;height:9px;border-radius:50%;border:none;vertical-align:0}
+.legend .ring{width:10px;height:10px;border-radius:50%;border:2px solid var(--blood);vertical-align:0}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.ctl{margin-bottom:10px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 12px}
+button.btn{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+button.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+select{font:600 .88rem var(--sans);padding:6px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+.readout{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:4px 0 8px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.insight{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:.96rem}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.86rem;width:100%}
+th,td{padding:4px 6px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.76rem;color:var(--ink-soft);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+td button{font:600 .84rem var(--sans);background:none;border:none;color:var(--steel);text-decoration:underline;cursor:pointer;padding:2px 0}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.warn{color:var(--blood)}
+label.zoom{display:inline-flex;justify-content:flex-start;gap:6px;align-items:center;font-size:.86rem;margin:4px 0 2px;cursor:pointer}
+label.zoom input{width:18px;height:18px;accent-color:var(--steel)}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS203 Artificial Intelligence for Games · Week 2 · Worked example</p>
+  <h1>Seek overshoots by <i>v</i>²&thinsp;/&thinsp;2<i>a</i></h1>
+  <p class="lede" id="lede">Slowing radius smaller than the braking distance: the soldier cannot stop in time. Drag r up to 1.5.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Mode">
+  <button class="tab" role="tab" id="tA" aria-selected="true" aria-controls="vA">Arrive</button>
+  <button class="tab" role="tab" id="tP" aria-selected="false" aria-controls="vP" tabindex="-1">Pursue</button>
+</div>
+
+<div class="layout">
+  <section class="panel">
+    <div id="vA" role="tabpanel" aria-labelledby="tA">
+      <figure>
+        <figcaption>Track<small>Flag at 20 m. Ticks every 0.25 s. Shaded band is the slowing radius r, hatched band is the braking distance b.</small></figcaption>
+        <canvas id="cTrack" role="img" aria-label="One-dimensional track showing the agent, its trail, the slowing radius and braking distance bands"></canvas>
+      </figure>
+      <figure>
+        <figcaption>Speed vs distance left<small>Above the dashed curve the soldier is too fast to stop before the flag.</small></figcaption>
+        <canvas id="cSpeed" role="img" aria-label="Speed against distance left, with the arrive ramp, the maximum braking curve and the agent's trace"></canvas>
+        <div class="legend">
+          <span><i style="border-color:var(--ochre)"></i>arrive ramp</span>
+          <span><i style="border-color:var(--steel);border-top-style:dashed"></i>max braking √(2ad)</span>
+          <span><i class="dot" style="background:var(--ink-soft)"></i>trace, one per frame</span>
+          <span><i class="ring"></i>too fast to stop (hollow)</span>
+        </div>
+        <label class="zoom"><input type="checkbox" id="zoom"> Zoom near the flag</label>
+      </figure>
+    </div>
+    <div id="vP" role="tabpanel" aria-labelledby="tP" hidden>
+      <figure>
+        <figcaption>Seek vs pursue<small>Quarry starts at (10, 0) running up at s m/s. Both pursuers start at rest at (0, 0). The cross is where pursue is aiming.</small></figcaption>
+        <canvas id="cPursue" role="img" aria-label="Top-down view of the seek and pursue chasers following a quarry"></canvas>
+        <div class="legend">
+          <span><i style="border-color:var(--blood)"></i>seek (aims at the quarry)</span>
+          <span><i style="border-color:var(--steel)"></i>pursue (aims ahead)</span>
+          <span><i style="border-color:var(--ink-soft);border-top-style:dashed"></i>quarry</span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <aside class="panel" aria-label="Controls and readouts">
+    <div class="ctl"><label for="ms">max_speed <output id="oMs">6</output></label><input id="ms" type="range" min="2" max="12" step="0.5" value="6"></div>
+    <div class="ctl"><label for="ma">max_accel <output id="oMa">12</output></label><input id="ma" type="range" min="2" max="40" step="1" value="12"></div>
+    <div class="ctl" id="rWrap"><label for="rr">Slowing radius r <output id="oR">1.00</output></label><input id="rr" type="range" min="0" max="10" step="0.05" value="1"></div>
+    <div class="ctl" id="sWrap" hidden><label for="qs">Quarry speed s <output id="oS">4.5</output></label><input id="qs" type="range" min="0" max="5.5" step="0.5" value="4.5"></div>
+    <div class="row">
+      <button class="btn" id="play" aria-pressed="false">Play</button>
+      <button class="btn" id="restart">Restart</button>
+      <label for="spd" style="font-weight:600">Speed</label>
+      <select id="spd"><option value="0.25">0.25×</option><option value="1" selected>1×</option><option value="4">4×</option></select>
+    </div>
+
+    <div id="rdA">
+      <div class="readout">
+        <div class="stat" style="--c:var(--steel)"><b id="rB">—</b><span>b = v²/(2a)</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="r2B">—</b><span>2b</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rPred">—</b><span>predicted overshoot max(0, b − r)</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rOver">—</b><span>simulated overshoot</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rSettle">—</b><span>settle time</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rEx">—</b><span id="rExL">largest excess over braking curve</span></div>
+      </div>
+      <div class="insight" id="insA"></div>
+      <div class="table-wrap">
+        <table aria-label="Overshoot and settle time for the lecture's radii at the current speed and acceleration">
+          <thead><tr><th>r (m)</th><th>predicted</th><th>overshoot</th><th>settle</th></tr></thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="rdP" hidden>
+      <div class="readout">
+        <div class="stat" style="--c:var(--blood)"><b id="rCS">—</b><span>seek catches at</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rCP">—</b><span>pursue catches at</span></div>
+      </div>
+      <div class="insight" id="insP"></div>
+    </div>
+  </aside>
+</div>
+<p class="sr" aria-live="polite" id="live"></p>
+<footer>Model after Craig Reynolds, &ldquo;Steering Behaviors For Autonomous Characters&rdquo; (GDC 1999). The simulation runs the lecture's code frame by frame at 60 Hz: steer the velocity toward the desired velocity, limited to max_accel × dt per frame, then move. Settle means within 5 cm and under 0.05 m/s until the 8 s run ends. Catch means closer than 0.5 m.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DT=1/60,TARGET=20,RADII=[0,0.75,1,1.25,1.5,2,3,6];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+let ms=6,ma=12,r=1,qs=4.5,mode='arrive';
+
+// ---------- arrive (1D), mirrors the lecture's run()
+function runArrive(r){
+  let x=0,v=0,fur=0,settled=null;const xs=[0],vs=[0];
+  for(let f=0;f<480;f++){
+    const d=TARGET-x;let want;
+    if(r===0)want=TARGET>x?ms:-ms;
+    else{const sp=ms*Math.min(1,Math.abs(d)/r);want=d>0?sp:-sp;}
+    const lim=ma*DT;let dv=Math.max(-lim,Math.min(lim,want-v));v+=dv;x+=v*DT;
+    fur=Math.max(fur,x);const near=Math.abs(TARGET-x)<0.05&&Math.abs(v)<0.05;
+    if(!near)settled=null;else if(settled===null)settled=(f+1)*DT;
+    xs.push(x);vs.push(v);
+  }
+  let exMax=-Infinity,nWarn=0,n01=0;const warn=xs.map(()=>false);
+  for(let i=1;i<xs.length;i++){const d=TARGET-xs[i];if(d>0&&vs[i]>0){const e=vs[i]-Math.sqrt(2*ma*d);exMax=Math.max(exMax,e);if(e>0.01)n01++;if(e>0.15){warn[i]=true;nWarn++;}}}
+  return{xs,vs,over:Math.max(0,fur-TARGET),settled,exMax:exMax===-Infinity?0:exMax,nWarn,n01,warn};
+}
+// ---------- pursue (2D), mirrors the lecture's chase()
+function hyp(x,y){return Math.hypot(x,y);}
+function clampLen(x,y,l){const n=hyp(x,y);return n<=l?[x,y]:[x*l/n,y*l/n];}
+function runChase(s,predict){
+  let p=[0,0],v=[0,0],q=[10,0];const qv=[0,s];const P=[p],Q=[q],A=[q];let caught=null;
+  for(let f=1;f<1200;f++){
+    const T=predict?hyp(p[0]-q[0],p[1]-q[1])/ms:0;
+    const aim=[q[0]+qv[0]*T,q[1]+qv[1]*T];const dx=aim[0]-p[0],dy=aim[1]-p[1],n=hyp(dx,dy);
+    const want=[dx/n*ms,dy/n*ms];const dv=clampLen(want[0]-v[0],want[1]-v[1],ma*DT);
+    v=clampLen(v[0]+dv[0],v[1]+dv[1],ms);p=[p[0]+v[0]*DT,p[1]+v[1]*DT];q=[q[0]+qv[0]*DT,q[1]+qv[1]*DT];
+    P.push(p);Q.push(q);A.push(aim);
+    if(hyp(p[0]-q[0],p[1]-q[1])<0.5){caught=f*DT;break;}
+  }
+  return{P,Q,A,caught};
+}
+window.CS203W02={runArrive:rr=>runArrive(rr),runChase:(s,pr)=>runChase(s,pr).caught,set:(a,b)=>{ms=a;ma=b;}};
+
+let A=null,PS=null,PP=null,frame=0,endFrame=480,playing=false,raf=null,last=0;
+const f2=x=>x.toFixed(2);
+function setup(c){const dpr=window.devicePixelRatio||1,rc=c.getBoundingClientRect();c.width=Math.max(1,Math.round(rc.width*dpr));c.height=Math.max(1,Math.round(rc.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:rc.width,h:rc.height};}
+
+// ---------- track view
+function drawTrack(){
+  const c=setup($('cTrack')),g=c.g,w=c.w,h=c.h,l=14,rp=14,X=m=>l+(w-l-rp)*(m+2)/26,ty=92;
+  g.clearRect(0,0,w,h);const b=ms*ms/(2*ma);
+  // slowing radius band
+  if(r>0){g.fillStyle=css('--ochre');g.globalAlpha=.22;g.fillRect(X(Math.max(-2,TARGET-r)),ty-34,X(TARGET)-X(Math.max(-2,TARGET-r)),34);g.globalAlpha=1;}
+  // braking band hatched
+  const bx0=X(Math.max(-2,TARGET-b)),bx1=X(TARGET);
+  g.save();g.beginPath();g.rect(bx0,ty-18,bx1-bx0,18);g.clip();g.strokeStyle=css('--steel');g.lineWidth=1.2;
+  for(let x=bx0-20;x<bx1+20;x+=6){g.beginPath();g.moveTo(x,ty);g.lineTo(x+18,ty-18);g.stroke();}
+  g.restore();g.strokeStyle=css('--steel');g.lineWidth=1;g.strokeRect(bx0,ty-18,bx1-bx0,18);
+  // track line and scale
+  g.strokeStyle=css('--ink-soft');g.lineWidth=2;g.beginPath();g.moveTo(X(-2),ty);g.lineTo(X(24),ty);g.stroke();
+  g.fillStyle=css('--ink-soft');g.font=`11px ${css('--sans')}`;g.textAlign='center';g.textBaseline='top';
+  for(let m=0;m<=24;m+=4){g.fillRect(X(m)-.5,ty,1,5);g.fillText(m+' m',X(m),ty+22);}
+  // labels for bands
+  g.font=`600 11px ${css('--sans')}`;g.textBaseline='bottom';g.textAlign='right';
+  g.fillStyle=css('--ochre');if(r>0)g.fillText(`r = ${f2(r)}`,X(TARGET)-3,ty-36);
+  g.fillStyle=css('--steel');g.fillText(`b = ${f2(b)}`,X(TARGET)-3,ty-20);
+  // overshoot bar
+  const upto=Math.min(Math.floor(frame),A.xs.length-1);let fur=0;for(let i=0;i<=upto;i++)fur=Math.max(fur,A.xs[i]);
+  const ov=Math.max(0,fur-TARGET);
+  if(ov>0.005){g.fillStyle=css('--blood');g.fillRect(X(TARGET),ty+8,X(TARGET+ov)-X(TARGET),8);
+    g.font=`700 12px ${css('--sans')}`;g.textAlign='left';g.textBaseline='top';g.fillText(`overshoot ${f2(ov)} m`,Math.min(X(TARGET)+4,w-110),ty+38);}
+  // flag
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(X(TARGET),ty);g.lineTo(X(TARGET),ty-58);g.stroke();
+  g.fillStyle=css('--moss');g.beginPath();g.moveTo(X(TARGET),ty-58);g.lineTo(X(TARGET)+16,ty-52);g.lineTo(X(TARGET),ty-46);g.closePath();g.fill();
+  // trail ticks every 15 frames
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;
+  for(let i=15;i<=upto;i+=15){const x=X(Math.max(-2,Math.min(24,A.xs[i])));g.beginPath();g.moveTo(x,ty-6);g.lineTo(x,ty+6);g.stroke();}
+  // agent
+  const ax=X(Math.max(-2,Math.min(24,A.xs[upto])));g.fillStyle=css('--steel');g.beginPath();g.arc(ax,ty,8,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.fillStyle=css('--ink');g.font=`600 11px ${css('--sans')}`;g.textAlign='left';g.textBaseline='top';g.fillText(`t = ${f2(upto*DT)} s`,4,2);
+}
+// ---------- speed plot
+function drawSpeed(){
+  const c=setup($('cSpeed')),g=c.g,w=c.w,h=c.h,pad={l:40,r:12,t:10,b:30};
+  const b=ms*ms/(2*ma),zoom=$('zoom').checked,D0=zoom?Math.min(22,Math.max(3,3*b,1.3*r)):22,D1=zoom?-D0/5:-2;
+  const yMax=ms+1,X=d=>pad.l+(w-pad.l-pad.r)*(D0-d)/(D0-D1),Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  const span=D0-D1,stp=[0.25,0.5,1,2,4,5,10].find(k=>span/k<=7)||10;
+  g.clearRect(0,0,w,h);g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font=`11px ${css('--sans')}`;
+  for(let v=0;v<=yMax;v+=(yMax>8?2:1)){g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-5,Y(v));}
+  g.textAlign='center';g.textBaseline='top';for(let d=Math.floor(D0/stp)*stp;d>=D1-1e-9;d-=stp){g.fillText(+d.toFixed(2),X(d),h-pad.b+5);}
+  g.textAlign='right';g.fillText('distance left (m)',w-pad.r,h-13);
+  g.save();g.translate(11,pad.t+4);g.rotate(-Math.PI/2);g.textAlign='right';g.textBaseline='middle';g.fillText('speed (m/s)',0,0);g.restore();
+  // flag line
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([3,3]);g.beginPath();g.moveTo(X(0),pad.t);g.lineTo(X(0),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  const curve=(f,col,dash)=>{g.strokeStyle=col;g.lineWidth=2.2;g.setLineDash(dash);g.beginPath();for(let i=0;i<=960;i++){const d=D0-span*i/960,y=f(d);i?g.lineTo(X(d),Y(y)):g.moveTo(X(d),Y(y));}g.stroke();g.setLineDash([]);};
+  curve(d=>r===0?ms:ms*Math.min(1,Math.abs(d)/r),css('--ochre'),[]);
+  curve(d=>Math.sqrt(2*ma*Math.abs(d)),css('--steel'),[7,5]);
+  // trace
+  const upto=Math.min(Math.floor(frame),A.xs.length-1),ink=css('--ink-soft'),bl=css('--blood');
+  for(let pass=0;pass<2;pass++)for(let i=1;i<A.xs.length;i++){
+    const d=TARGET-A.xs[i],sp=Math.abs(A.vs[i]),done=i<=upto;
+    const x=X(d),y=Y(sp);
+    if(A.warn[i]){g.strokeStyle=bl;g.globalAlpha=done?1:.3;g.lineWidth=1.8;g.beginPath();g.arc(x,y,3.6,0,Math.PI*2);g.stroke();}
+    else if(pass===0){g.fillStyle=ink;g.globalAlpha=done?.9:.22;g.beginPath();g.arc(x,y,1.9,0,Math.PI*2);g.fill();}
+  }
+  g.globalAlpha=1;
+  const cx=X(TARGET-A.xs[upto]),cy=Y(Math.abs(A.vs[upto]));g.fillStyle=css('--steel');g.beginPath();g.arc(cx,cy,5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.restore();
+}
+// ---------- pursue view
+function drawPursue(){
+  const c=setup($('cPursue')),g=c.g,w=c.w,h=c.h,pad=30,S=(Math.min(w,h)-2*pad)/24,X=x=>pad+(x+2)*S,Y=y=>h-pad-(y+2)*S;
+  g.clearRect(0,0,w,h);g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font=`11px ${css('--sans')}`;
+  for(let m=-2;m<=22;m+=4){g.beginPath();g.moveTo(X(m),Y(-2));g.lineTo(X(m),Y(22));g.stroke();g.beginPath();g.moveTo(X(-2),Y(m));g.lineTo(X(22),Y(m));g.stroke();
+    g.textAlign='center';g.textBaseline='top';g.fillText(m,X(m),Y(-2)+4);g.textAlign='right';g.textBaseline='middle';g.fillText(m,X(-2)-4,Y(m));}
+  g.save();g.beginPath();g.rect(X(-2),Y(22),24*S,24*S);g.clip();
+  const path=(pts,n,col,dash,wd)=>{g.strokeStyle=col;g.lineWidth=wd;g.setLineDash(dash);g.beginPath();for(let i=0;i<=n&&i<pts.length;i++){i?g.lineTo(X(pts[i][0]),Y(pts[i][1])):g.moveTo(X(pts[i][0]),Y(pts[i][1]));}g.stroke();g.setLineDash([]);};
+  const nS=Math.min(Math.floor(frame),PS.P.length-1),nP=Math.min(Math.floor(frame),PP.P.length-1),nQ=Math.min(Math.floor(frame),Math.max(PS.Q.length,PP.Q.length)-1);
+  const Qall=PS.Q.length>=PP.Q.length?PS.Q:PP.Q;
+  // faint full paths
+  g.globalAlpha=.25;path(PS.P,1e9,css('--blood'),[],2);path(PP.P,1e9,css('--steel'),[],2);g.globalAlpha=1;
+  path(Qall,nQ,css('--ink-soft'),[5,4],2);
+  path(PS.P,nS,css('--blood'),[],2.6);path(PP.P,nP,css('--steel'),[],2.6);
+  // aim point for pursue
+  if(nP<PP.A.length){const a=PP.A[nP],q=PP.Q[nP];g.strokeStyle=css('--steel');g.lineWidth=1;g.beginPath();g.moveTo(X(q[0]),Y(q[1]));g.lineTo(X(a[0]),Y(a[1]));g.stroke();
+    g.lineWidth=2;const k=6;g.beginPath();g.moveTo(X(a[0])-k,Y(a[1])-k);g.lineTo(X(a[0])+k,Y(a[1])+k);g.moveTo(X(a[0])+k,Y(a[1])-k);g.lineTo(X(a[0])-k,Y(a[1])+k);g.stroke();}
+  const dot=(p,col,rad)=>{g.fillStyle=col;g.beginPath();g.arc(X(p[0]),Y(p[1]),rad,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();};
+  dot(PS.P[nS],css('--blood'),7);dot(PP.P[nP],css('--steel'),7);
+  const q=Qall[nQ];g.fillStyle=css('--ink-soft');g.strokeStyle=css('--paper');g.lineWidth=1.5;g.fillRect(X(q[0])-5,Y(q[1])-5,10,10);g.strokeRect(X(q[0])-5,Y(q[1])-5,10,10);
+  g.font=`700 12px ${css('--sans')}`;g.textBaseline='middle';g.textAlign='left';
+  const lab=(p,t,col,dy)=>{g.fillStyle=col;g.lineWidth=3;g.strokeStyle=css('--paper');const x=Math.min(X(p[0])+10,w-70),y=Y(p[1])+dy;g.strokeText(t,x,y);g.fillText(t,x,y);};
+  lab(PS.P[nS],'seek'+(PS.caught&&frame>=PS.P.length-1?' ✓':''),css('--blood'),10);lab(PP.P[nP],'pursue'+(PP.caught&&frame>=PP.P.length-1?' ✓':''),css('--steel'),-10);
+  g.restore();
+  g.fillStyle=css('--ink');g.font=`600 11px ${css('--sans')}`;g.textAlign='left';g.textBaseline='top';g.fillText(`t = ${f2(frame*DT)} s`,X(-2)+4,Y(22)+4);
+}
+
+// ---------- readouts
+function readoutsA(){
+  const b=ms*ms/(2*ma);
+  $('rB').textContent=f2(b)+' m';$('r2B').textContent=f2(2*b)+' m';$('rPred').textContent=f2(Math.max(0,b-r))+' m';
+  $('rOver').textContent=f2(A.over)+' m';$('rSettle').textContent=A.settled===null?'never':f2(A.settled)+' s';
+  $('rEx').textContent=f2(Math.max(0,A.exMax))+' m/s';
+  $('rExL').textContent=`largest excess over braking curve; ${A.nWarn} frame${A.nWarn===1?'':'s'} marked too fast`;
+  let s;
+  if(r===0)s=`Seek never plans to stop. It passes the flag at full speed and overshoots by exactly b = ${f2(b)} m, then oscillates forever.`;
+  else if(r<b-1e-9)s=`r = ${f2(r)} m is inside b = ${f2(b)} m. The soldier enters the radius too fast to stop, the trace climbs above the braking curve, and it overshoots by ${f2(A.over)} m.`;
+  else if(r<=2*b+1e-9)s=`r is between b and 2b. The trace stays under the braking curve and the soldier stops without overshoot, settling at ${A.settled===null?'never':f2(A.settled)+' s'}.`;
+  else s=`r is beyond 2b = ${f2(2*b)} m. No overshoot, but speed now falls in proportion to distance left, so the soldier creeps in. Settle time ${A.settled===null?'never':f2(A.settled)+' s'}, slower than at r = b.`;
+  $('insA').textContent=s;
+  const rows=RADII.slice();if(!rows.some(x=>Math.abs(x-r)<1e-9))rows.push(r);rows.sort((a,b)=>a-b);
+  $('tb').innerHTML=rows.map(x=>{const R=runArrive(x),here=Math.abs(x-r)<1e-9;
+    return `<tr class="${here?'here':''}"><td><button data-r="${x}" aria-label="Set r to ${x}">${x===0?'0 (seek)':f2(x)}</button></td><td>${f2(Math.max(0,b-x))}</td><td class="${R.over>0.005?'warn':''}">${f2(R.over)}</td><td>${R.settled===null?'never':f2(R.settled)}</td></tr>`;}).join('');
+  $('tb').querySelectorAll('button').forEach(bt=>bt.addEventListener('click',()=>{$('rr').value=bt.dataset.r;onSlider();}));
+}
+function readoutsP(){
+  const t=R=>R.caught===null?'no catch in 20 s':f2(R.caught)+' s';
+  $('rCS').textContent=t(PS);$('rCP').textContent=t(PP);
+  let s;
+  if(PS.caught!==null&&PP.caught!==null)s=`Pursue aims where the quarry will be in T = D / max_speed seconds and catches it ${f2(PS.caught-PP.caught)} s sooner. Seek chases the quarry's current position and ends up trailing behind it.`;
+  else if(PP.caught!==null)s='Seek never catches up in 20 s: it keeps turning toward where the quarry was. Pursue cuts the corner.';
+  else s='Neither pursuer catches the quarry in 20 s at these settings.';
+  $('insP').textContent=s;
+}
+let liveT=null;
+function announce(){clearTimeout(liveT);liveT=setTimeout(()=>{$('live').textContent=mode==='arrive'?`Overshoot ${f2(A.over)} metres, settle ${A.settled===null?'never':f2(A.settled)+' seconds'}.`:`Seek ${$('rCS').textContent}, pursue ${$('rCP').textContent}.`;},450);}
+
+function compute(){
+  if(mode==='arrive'){A=runArrive(r);endFrame=480;}
+  else{PS=runChase(qs,false);PP=runChase(qs,true);endFrame=Math.max(PS.P.length,PP.P.length)-1;}
+}
+function draw(){if(mode==='arrive'){drawTrack();drawSpeed();}else drawPursue();}
+function refresh(){compute();mode==='arrive'?readoutsA():readoutsP();}
+
+function loop(ts){
+  if(!playing)return;
+  const sp=+$('spd').value;const dtw=Math.min(0.1,(ts-last)/1000);last=ts;
+  frame=Math.min(endFrame,frame+dtw*sp*60);
+  draw();
+  if(frame>=endFrame){stopPlay();return;}
+  raf=requestAnimationFrame(loop);
+}
+function startPlay(){if(reduce.matches){frame=endFrame;draw();return;}if(frame>=endFrame)frame=0;playing=true;$('play').textContent='Pause';$('play').setAttribute('aria-pressed','true');last=performance.now();raf=requestAnimationFrame(loop);}
+function stopPlay(){playing=false;cancelAnimationFrame(raf);frame=Math.round(frame);$('play').textContent='Play';$('play').setAttribute('aria-pressed','false');draw();}
+function onSlider(){
+  ms=+$('ms').value;ma=+$('ma').value;r=+$('rr').value;qs=+$('qs').value;
+  $('oMs').textContent=ms;$('oMa').textContent=ma;$('oR').textContent=r===0?'0 (seek)':f2(r);$('oS').textContent=qs;
+  refresh();
+  if(reduce.matches){frame=endFrame;draw();}else{frame=0;if(!playing)startPlay();else draw();}
+  announce();
+}
+['ms','ma','rr','qs'].forEach(id=>$(id).addEventListener('input',onSlider));
+$('zoom').addEventListener('change',draw);
+$('play').addEventListener('click',()=>playing?stopPlay():startPlay());
+$('restart').addEventListener('click',()=>{stopPlay();frame=0;startPlay();if(reduce.matches)draw();});
+
+// tabs
+const tabs=[$('tA'),$('tP')];
+function sel(t){
+  tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});
+  mode=t.id==='tA'?'arrive':'pursue';
+  $('rWrap').hidden=mode!=='arrive';$('sWrap').hidden=mode==='arrive';$('rdA').hidden=mode!=='arrive';$('rdP').hidden=mode==='arrive';
+  $('lede').textContent=mode==='arrive'?'Slowing radius smaller than the braking distance: the soldier cannot stop in time. Drag r up to 1.5.':'Seek aims at where the quarry is. Pursue aims at where it will be. Raise the quarry speed and watch seek fall behind.';
+  if(playing)stopPlay();refresh();frame=endFrame;draw();
+}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>{sel(t);t.focus();});t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const n=tabs[(i+1)%2];sel(n);n.focus();}});});
+
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+// first screen: arrive, r = 1.0, run already complete
+refresh();frame=endFrame;draw();
+})();
+</script>
+</body>
+</html>

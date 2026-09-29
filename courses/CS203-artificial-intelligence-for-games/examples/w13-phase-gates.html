@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HP gates vs time gates, CS203 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-top:14px;min-width:0}
+.ctl{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px 24px;align-items:end}
+@media (max-width:700px){.ctl{grid-template-columns:1fr}}
+.dpsrow{display:flex;gap:12px;align-items:center}
+label.sl{font-weight:600;font-size:.92rem;display:block;margin-bottom:2px}
+input[type=range]{flex:1;min-width:0;accent-color:var(--steel);height:28px;margin:0}
+input[type=number]{font:600 1rem var(--sans);width:6.2em;padding:6px 8px;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.toggles{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.toggles label{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.92rem}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--steel);margin:0}
+button{font:600 .9rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:38px}
+button:focus-visible,input:focus-visible,.cast:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.guardnote{font-size:.86rem;color:var(--ink-soft);margin:6px 0 0;min-height:1.3em}
+.kills{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+@media (max-width:560px){.kills{grid-template-columns:1fr 1fr}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.tlwrap{position:relative}
+#tl{display:block;width:100%}
+#tl text{font-family:var(--sans)}
+.cast{cursor:default}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-size:.8rem;padding:4px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-100%);z-index:2}
+.caption{font-family:var(--serif);font-size:1rem;margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--paper-2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend svg{vertical-align:middle;margin-right:4px}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-weight:600;padding-bottom:6px;font-size:1.02rem}
+caption small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.8rem}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--grid);vertical-align:top}
+td.n{text-align:right;font-weight:700}
+.badge{display:inline-block;font-size:.72rem;font-weight:700;border:1.5px solid var(--ink-soft);color:var(--ink-soft);border-radius:999px;padding:0 7px;margin-top:2px;white-space:nowrap}
+.zero{color:var(--blood)}
+.custom{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px;margin-top:12px}
+@media (max-width:700px){.custom{grid-template-columns:1fr 1fr}}
+.custom label{font-size:.82rem;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.custom input{width:100%}
+.custom h3{grid-column:1/-1;margin:6px 0 0;font-size:.9rem;font-family:var(--serif)}
+.err{color:var(--blood);font-size:.86rem;margin:8px 0 0;min-height:1.2em}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS203 Artificial Intelligence for Games · Week 13 · Worked example</p>
+  <h1>HP gates shrink phases. Time gates cut the ending.</h1>
+  <p class="lede">The Warden, one invented boss, scripted two ways. HP gates end a phase when its health is gone. Time gates start each phase at a fixed second. At the design DPS of 2,000 they match exactly.</p>
+</header>
+
+<section class="panel" aria-label="Controls">
+  <div class="ctl">
+    <div>
+      <label class="sl" for="dps">Group DPS</label>
+      <div class="dpsrow">
+        <input id="dps" type="range" min="1000" max="8000" step="100" value="2000" aria-describedby="dpsHelp">
+        <input id="dpsN" type="number" min="1000" max="8000" step="1" value="2000" aria-label="Group DPS, exact value">
+      </div>
+      <span id="dpsHelp" class="sr">Arrow keys step 100, Page Up and Page Down step 1,000.</span>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" id="guard">Guard Meteor</label>
+      <label><input type="checkbox" id="customOn">Custom boss</label>
+      <button id="reset">Reset</button>
+    </div>
+  </div>
+  <p class="guardnote" id="guardNote"></p>
+  <div id="customBox" hidden>
+    <div class="custom" id="customGrid">
+      <label>Boss health H<input type="number" id="cH" min="10000" max="10000000" step="1000" value="600000"></label>
+      <label>Enrage E (s)<input type="number" id="cE" min="30" max="1000" step="1" value="360"></label>
+      <label>Time gate: P1 length (s)<input type="number" id="cT1" min="1" max="1000" step="1" value="120"></label>
+      <label>Time gate: P2 length (s)<input type="number" id="cT2" min="1" max="1000" step="1" value="90"></label>
+      <h3>Phase share of health (%), must sum to 100</h3>
+      <label>P1 %<input type="number" id="cP1" min="1" max="98" step="1" value="40"></label>
+      <label>P2 %<input type="number" id="cP2" min="1" max="98" step="1" value="30"></label>
+      <label>P3 %<input type="number" id="cP3" min="1" max="98" step="1" value="30"></label>
+      <span></span>
+      <h3>Abilities: first cast a and period p (s), from the start of their phase</h3>
+      <label>Summon adds a<input type="number" id="cA1" min="0" max="1000" step="1" value="20"></label>
+      <label>Summon adds p<input type="number" id="cQ1" min="1" max="1000" step="1" value="45"></label>
+      <label>Meteor a<input type="number" id="cA2" min="0" max="1000" step="1" value="40"></label>
+      <label>Meteor p<input type="number" id="cQ2" min="1" max="1000" step="1" value="40"></label>
+      <label>Firestorm a<input type="number" id="cA3" min="0" max="1000" step="1" value="15"></label>
+      <label>Firestorm p<input type="number" id="cQ3" min="1" max="1000" step="1" value="25"></label>
+    </div>
+    <p class="err" id="err" role="alert"></p>
+  </div>
+  <div class="kills">
+    <div class="stat" style="--c:var(--blood)"><b id="kHP">—</b><span>HP-gated kill</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="kT">—</b><span>time-gated kill</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="dMin">—</b><span>minimum DPS to beat enrage</span></div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="h-tl">
+  <h2 id="h-tl" class="sr">Two timelines</h2>
+  <div class="tlwrap" id="tlwrap">
+    <svg id="tl" role="group" aria-label="Boss timelines under HP gates and time gates"></svg>
+    <div class="tip" id="tip" hidden></div>
+  </div>
+  <div class="legend" aria-hidden="true">
+    <span><svg width="14" height="18"><line x1="7" y1="2" x2="7" y2="18" stroke="currentColor" stroke-width="2"/></svg>S Summon adds (P1)</span>
+    <span><svg width="18" height="18"><path d="M9 1 L17 9 L9 17 L1 9Z" fill="currentColor"/></svg>Meteor, signature (P2)</span>
+    <span><svg width="14" height="18"><line x1="7" y1="2" x2="7" y2="18" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"/></svg>F Firestorm (P3)</span>
+    <span><svg width="14" height="18"><line x1="7" y1="0" x2="7" y2="18" stroke="currentColor" stroke-width="3"/></svg>kill line</span>
+  </div>
+  <p class="caption" id="caption">Same boss, same DPS. Drag DPS up and watch what each rule takes away.</p>
+  <p class="sr" aria-live="polite" id="live"></p>
+</section>
+
+<div class="tables" id="tables"></div>
+
+<footer>The Warden and its numbers are invented for the lecture. Cast rule for HP gates: a cast at phase time t happens if t &times; D &lt; H<sub>i</sub>, all integers, so thresholds land exactly. Time gates: a cast at absolute time T happens if it is inside its phase window and T &times; D &lt; H. Both fights end at the kill or the enrage, whichever comes first. Onyxia (HP-gated, 65% and 40%) and Ragnaros (time-gated, submerge at 3 minutes) in the lecture are the classic World of Warcraft examples; nothing here draws them.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f1=x=>x.toFixed(1);
+const NS='http://www.w3.org/2000/svg';
+
+const DEF={H:600000,E:360,T:[120,90],pct:[40,30,30],ab:[['Summon adds',20,45],['Meteor',40,40],['Firestorm',15,25]]};
+let B=JSON.parse(JSON.stringify(DEF));   // current boss
+let D=2000,guard=false;
+
+function phaseHP(b){const h1=Math.round(b.H*b.pct[0]/100),h2=Math.round(b.H*b.pct[1]/100);return [h1,h2,b.H-h1-h2];}
+
+// HP-gated model. Times are kept as numerators over D, so every comparison is an integer one.
+function hpModel(b,D,guard){
+  const Hs=phaseHP(b),ph=[],casts=[];let startN=0;
+  for(let i=0;i<3;i++){
+    const [name,a,p]=b.ab[i];
+    const g=(guard&&i===1)?a+5:0;                     // guard: P2 cannot end before a+5 s
+    const lenN=Math.max(Hs[i],g*D);                  // phase length × D
+    const list=[];
+    for(let t=a;;t+=p){
+      const inPhase=t*D<Hs[i]||t<g;
+      if(!inPhase)break;
+      if(startN+t*D>=b.E*D)break;                    // enrage cuts the fight
+      list.push({t,abs:(startN+t*D)/D});
+      if(list.length>500)break;
+    }
+    ph.push({start:startN/D,end:(startN+lenN)/D,len:lenN/D,guarded:g*D>Hs[i]});
+    casts.push(list);startN+=lenN;
+  }
+  const killN=startN;
+  return {ph,casts,kill:killN/D,enrage:killN>b.E*D,end:Math.min(killN/D,b.E),Hs};
+}
+function timeModel(b,D){
+  const starts=[0,b.T[0],b.T[0]+b.T[1]],ends=[b.T[0],b.T[0]+b.T[1],Infinity];
+  const enr=b.H>b.E*D,end=enr?b.E:b.H/D,ph=[],casts=[];
+  for(let i=0;i<3;i++){
+    const [name,a,p]=b.ab[i],list=[];
+    for(let T=starts[i]+a;T<ends[i];T+=p){
+      if(T*D>=b.H||T>=b.E)break;
+      list.push({t:T-starts[i],abs:T});
+      if(list.length>500)break;
+    }
+    ph.push({start:starts[i],end:ends[i]});casts.push(list);
+  }
+  return {ph,casts,kill:b.H/D,enrage:enr,end};
+}
+
+// ---------- drawing ----------
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+const TONES=['--steel','--ochre','--blood'];
+function draw(hm,tm){
+  const svg=$('tl'),w=Math.max(300,$('tlwrap').clientWidth);
+  const narrow=w<560;
+  const padL=8,padR=8,trackH=narrow?64:72,labelH=22,gap=18,axisH=26;
+  const h=2*(labelH+trackH)+gap+axisH+6;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);
+  svg.innerHTML='';
+  const xmax=Math.max(400,Math.ceil(Math.max(hm.end,tm.end)/50)*50);
+  const X=s=>padL+(w-padL-padR)*Math.min(s,xmax)/xmax;
+  const ink=css('--ink'),soft=css('--ink-soft'),paper=css('--paper'),blood=css('--blood'),grid=css('--grid');
+  const casts=[];
+  [[hm,'HP gates (phase ends when its HP is gone)'],[tm,'Time gates (phase starts at a fixed time)']].forEach(([m,label],k)=>{
+    const y0=k*(labelH+trackH+gap)+labelH;
+    el('text',{x:padL,y:y0-7,fill:ink,'font-size':narrow?12:13.5,'font-weight':700},svg).textContent=narrow?label.split(' (')[0]:label;
+    el('rect',{x:padL,y:y0,width:w-padL-padR,height:trackH,fill:css('--paper-2'),rx:6},svg);
+    m.ph.forEach((p,i)=>{
+      const a=X(p.start),b=X(Math.min(p.end,xmax));if(b<=a)return;
+      el('rect',{x:a,y:y0,width:b-a,height:trackH,fill:css(TONES[i]),'fill-opacity':.22},svg);
+      el('line',{x1:a,y1:y0,x2:a,y2:y0+trackH,stroke:css(TONES[i]),'stroke-width':1.5},svg);
+      if(b-a>22)el('text',{x:a+4,y:y0+trackH-6,fill:ink,'font-size':11,'font-weight':700},svg).textContent='P'+(i+1);
+      if(p.guarded){el('text',{x:Math.max(a+26,b-4),y:y0+trackH-6,fill:ink,'font-size':10,'text-anchor':'end'},svg).textContent='locked';}
+    });
+    // casts
+    m.casts.forEach((list,i)=>{
+      const nm=B.ab[i][0];
+      list.forEach(c=>{
+        const x=X(c.abs),g=el('g',{class:'cast',tabindex:0,role:'img','aria-label':`${nm}, phase time ${f1(c.t)} s, absolute ${f1(c.abs)} s`},svg);
+        el('rect',{x:x-9,y:y0,width:18,height:trackH,fill:'transparent'},g);
+        if(i===1){
+          const cy=y0+trackH/2-4,r=11;
+          el('path',{d:`M${x} ${cy-r} L${x+r} ${cy} L${x} ${cy+r} L${x-r} ${cy}Z`,fill:css('--ochre'),stroke:ink,'stroke-width':1.5},g);
+          el('text',{x:x,y:cy+4,fill:ink,'font-size':10,'font-weight':700,'text-anchor':'middle'},g).textContent='M';
+        }else{
+          el('line',{x1:x,y1:y0+18,x2:x,y2:y0+trackH-20,stroke:ink,'stroke-width':2,'stroke-dasharray':i===2?'4 3':''},g);
+          el('text',{x:x,y:y0+14,fill:ink,'font-size':11,'font-weight':700,'text-anchor':'middle'},g).textContent=nm[0];
+        }
+        casts.push([g,x,y0,`${nm}, phase time ${f1(c.t)} s, absolute ${f1(c.abs)} s`]);
+      });
+    });
+    // grey out after end, kill line or enrage marker
+    const ex=X(m.end);
+    if(ex<w-padR)el('rect',{x:ex,y:y0,width:w-padR-ex,height:trackH,fill:paper,'fill-opacity':.72},svg);
+    el('line',{x1:ex,y1:y0-2,x2:ex,y2:y0+trackH+2,stroke:blood,'stroke-width':3},svg);
+    const lab=m.enrage?`ENRAGE: wipe at ${fmt(B.E)} s`:`kill ${f1(m.kill)} s`;
+    const right=ex+8+lab.length*6.4<w-padR;
+    const tx=right?el('text',{x:ex+6,y:y0+15,fill:blood,'font-size':12,'font-weight':700,'text-anchor':'start'},svg):el('text',{x:w-padR,y:y0-7,fill:blood,'font-size':12,'font-weight':700,'text-anchor':'end'},svg);tx.textContent=lab;
+  });
+  // axis
+  const ay=h-axisH+4;
+  el('line',{x1:padL,y1:ay-4,x2:w-padR,y2:ay-4,stroke:grid},svg);
+  const stepS=narrow?100:50;
+  for(let s=0;s<=xmax;s+=stepS){const x=X(s);el('line',{x1:x,y1:ay-8,x2:x,y2:ay-2,stroke:soft},svg);
+    el('text',{x:x,y:ay+12,fill:soft,'font-size':11,'text-anchor':s===0?'start':(s===xmax?'end':'middle')},svg).textContent=s+(s===xmax?' s':'');}
+  // tooltips
+  const tip=$('tip');
+  casts.forEach(([g,x,y0,text])=>{
+    const show=()=>{tip.textContent=text;tip.hidden=false;
+      const sw=$('tl').getBoundingClientRect().width,scale=sw/w;let px=x*scale;
+      const half=110;px=Math.max(half,Math.min(sw-half,px));tip.style.left=px+'px';tip.style.top=(y0*scale-4)+'px';};
+    const hide=()=>{tip.hidden=true;};
+    g.addEventListener('mouseenter',show);g.addEventListener('mouseleave',hide);g.addEventListener('focus',show);g.addEventListener('blur',hide);
+  });
+}
+
+// ---------- numbers ----------
+function tableFor(title,sub,m,withBadge){
+  const rows=B.ab.map(([nm,a,p],i)=>{
+    const list=m.casts[i],n=list.length;
+    const hs=phaseHP(B)[i];
+    const badge=withBadge?`<br><span class="badge" title="DPS at which the first cast is skipped">skip at ${fmt(Math.ceil(hs/Math.max(a,1e-9)))} DPS${i===0?' (first cast)':''}</span>`:'';
+    return `<tr><td>${nm}${badge}</td><td class="n ${n?'':'zero'}">${n}</td><td>${n?list.map(c=>f1(c.abs)).join(', '):'none'}</td></tr>`;
+  }).join('');
+  return `<div class="panel table-wrap"><table><caption>${title}<small>${sub}</small></caption>
+  <thead><tr><th scope="col">Ability</th><th scope="col">Casts</th><th scope="col">Cast times, absolute (s)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+let liveTimer=null,livePending='';
+function announce(s){livePending=s;if(liveTimer)return;$('live').textContent=s;liveTimer=setTimeout(()=>{liveTimer=null;if($('live').textContent!==livePending)$('live').textContent=livePending;},500);}
+
+function render(){
+  const hm=hpModel(B,D,guard),tm=timeModel(B,D);
+  draw(hm,tm);
+  const cH=hm.casts.map(l=>l.length),cT=tm.casts.map(l=>l.length);
+  $('kHP').textContent=hm.enrage?`wipe at ${fmt(B.E)} s`:f1(hm.kill)+' s';
+  $('kT').textContent=tm.enrage?`wipe at ${fmt(B.E)} s`:f1(tm.kill)+' s';
+  $('dMin').textContent=(B.H/B.E).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+  const hsub=`Counts [${cH.join(', ')}]. Phase lengths ${hm.ph.map(p=>f1(p.len)+' s').join(', ')}.`;
+  const tsub=`Counts [${cT.join(', ')}]. Phases start at 0, ${B.T[0]} and ${B.T[0]+B.T[1]} s.`;
+  $('tables').innerHTML=tableFor('HP-gated',hsub,hm,true)+tableFor('Time-gated',tsub,tm,false);
+  // guard note
+  if(guard){const p2=hm.ph[1],nat=phaseHP(B)[1]/D;
+    $('guardNote').textContent=p2.guarded?`Guard on: P2 lasts ${f1(p2.len)} s instead of ${f1(nat)} s (+${f1(p2.len-nat)} s of wasted damage). HP-gated kill ${f1(hm.kill)} s.`
+      :`Guard on, but at ${fmt(D)} DPS P2 already lasts ${f1(nat)} s, longer than the ${B.ab[1][1]+5} s lock. No effect.`;}
+  else $('guardNote').textContent='Guard Meteor holds P2 open until 5 s after Meteor’s first cast (HP-gated view only).';
+  // caption
+  const same=cH.join()===cT.join()&&!guard;
+  let cap;
+  if(hm.enrage||tm.enrage) cap=`${fmt(D)} DPS is below ${fmt(Math.ceil(B.H/B.E))}, so the boss enrages at ${fmt(B.E)} s and the group wipes. The enrage is the only rule that punishes low DPS.`;
+  else if(same&&D===2000) cap='Same boss, same DPS. Drag DPS up and watch what each rule takes away.';
+  else {
+    const lostH=B.ab.map((ab,i)=>cH[i]===0?ab[0]:null).filter(Boolean),lostT=[0,1,2].filter(i=>cT[i]===0).map(i=>'P'+(i+1));
+    cap=`HP gates: every phase still happens, ${cH.reduce((a,b)=>a+b,0)} casts in all${lostH.length?`, and ${lostH.join(' and ')} never fires`:''}. Time gates: ${cT.reduce((a,b)=>a+b,0)} casts${lostT.length?`, ${lostT.join(' and ')} cut from the end`:''}.`;
+  }
+  $('caption').textContent=cap;
+  announce(`${fmt(D)} DPS. HP-gated casts ${cH.join(', ')}. Time-gated casts ${cT.join(', ')}.`);
+  window.__w13={hm,tm,cH,cT};
+}
+
+// ---------- controls ----------
+function setD(v,from){
+  v=Math.round(+v);if(!isFinite(v))return;v=Math.max(1000,Math.min(8000,v));D=v;
+  if(from!=='range')$('dps').value=v;
+  if(from!=='num')$('dpsN').value=v;
+  render();
+}
+$('dps').addEventListener('input',e=>setD(e.target.value,'range'));
+$('dps').addEventListener('keydown',e=>{if(e.key==='PageUp'||e.key==='PageDown'){e.preventDefault();setD(D+(e.key==='PageUp'?1000:-1000));}});
+$('dpsN').addEventListener('change',e=>setD(e.target.value,'num'));
+$('dpsN').addEventListener('input',e=>{const v=+e.target.value;if(Number.isInteger(v)&&v>=1000&&v<=8000){D=v;$('dps').value=v;render();}});
+$('guard').addEventListener('change',e=>{guard=e.target.checked;render();});
+$('customOn').addEventListener('change',e=>{$('customBox').hidden=!e.target.checked;if(!e.target.checked){B=JSON.parse(JSON.stringify(DEF));$('err').textContent='';render();}else readCustom();});
+function readCustom(){
+  const g=id=>+$(id).value,ints=['cH','cE','cT1','cT2','cP1','cP2','cP3','cA1','cQ1','cA2','cQ2','cA3','cQ3'];
+  const errs=[];
+  ints.forEach(id=>{const e=$(id),v=+e.value,ok=e.value!==''&&Number.isInteger(v)&&v>=+e.min&&v<=+e.max;e.setAttribute('aria-invalid',!ok);
+    if(!ok)errs.push(`${e.parentElement.firstChild.textContent.trim()} must be a whole number from ${fmt(+e.min)} to ${fmt(+e.max)}.`);});
+  const sum=g('cP1')+g('cP2')+g('cP3');
+  if(sum!==100)errs.push(`Phase shares add up to ${sum}%, not 100%.`);
+  $('err').textContent=errs.slice(0,2).join(' ');
+  if(errs.length)return;
+  B={H:g('cH'),E:g('cE'),T:[g('cT1'),g('cT2')],pct:[g('cP1'),g('cP2'),g('cP3')],
+     ab:[['Summon adds',g('cA1'),g('cQ1')],['Meteor',g('cA2'),g('cQ2')],['Firestorm',g('cA3'),g('cQ3')]]};
+  render();
+}
+document.querySelectorAll('#customGrid input').forEach(e=>e.addEventListener('input',readCustom));
+$('reset').addEventListener('click',()=>{
+  B=JSON.parse(JSON.stringify(DEF));guard=false;$('guard').checked=false;$('customOn').checked=false;$('customBox').hidden=true;$('err').textContent='';
+  const vals={cH:600000,cE:360,cT1:120,cT2:90,cP1:40,cP2:30,cP3:30,cA1:20,cQ1:45,cA2:40,cQ2:40,cA3:15,cQ3:25};
+  for(const k in vals){$(k).value=vals[k];$(k).removeAttribute('aria-invalid');}
+  setD(2000);
+});
+let rT=null;window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(render,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Threat table and the healer margin, CS203 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.views{display:grid;grid-template-columns:1.05fr 1fr;gap:14px}
+@media (max-width:900px){.views{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:0 0 2px}
+.sub{font-size:.84rem;color:var(--ink-soft);margin:0 0 12px}
+.clock{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.clock b{font-size:1.5rem;font-variant-numeric:tabular-nums}
+.bars{display:grid;gap:18px}
+.row{display:grid;grid-template-columns:7.2em 1fr;gap:8px;align-items:center}
+.who{font-weight:600;font-size:.9rem;line-height:1.2}
+.who small{display:block;font-weight:400;color:var(--ink-soft);font-size:.78rem}
+.track{position:relative;height:40px;background:var(--paper-2);border-radius:8px}
+.fill{position:absolute;left:0;top:6px;bottom:6px;border-radius:5px;background:var(--c);transition:width .25s ease}
+.val{position:absolute;top:50%;transform:translateY(-50%);font-weight:700;font-variant-numeric:tabular-nums;font-size:.92rem;white-space:nowrap;margin-left:5px;padding:0 4px;border-radius:4px;background:var(--paper-2);transition:left .25s ease}
+.row.target .track{outline:3px solid var(--ink);outline-offset:2px}
+.tag{display:inline-block;font:700 .68rem var(--sans);letter-spacing:.06em;background:var(--ink);color:var(--paper);border-radius:4px;padding:1px 5px;margin-top:3px}
+.tick{position:absolute;top:-3px;bottom:-3px;width:0;border-left:2px dashed var(--ink);transition:left .25s ease}
+.tick span{position:absolute;bottom:100%;transform:translateX(-50%);font-size:.7rem;font-weight:700;white-space:nowrap;color:var(--ink);background:var(--paper);padding:0 3px;border-radius:3px;line-height:1.3}
+.tick.t110 span{transform:translateX(-100%)}
+.tick.t130 span{transform:translateX(0);bottom:auto;top:100%}
+.row.off{opacity:.45}
+.tickgap{height:14px}
+.tl{margin-top:16px}
+.tl canvas{display:block;width:100%;height:58px}
+.switches{font-size:.86rem;margin:6px 0 0;font-variant-numeric:tabular-nums}
+.switches i{color:var(--ink-soft)}
+.play{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+button{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+button.primary{background:var(--ink);color:var(--paper)}
+button.taunt{border-color:var(--steel);color:var(--ink)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 10px 6px}
+#cPull{display:block;width:100%;height:320px}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 4px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 22px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label.sl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.checks{display:flex;flex-direction:column;gap:8px;font-size:.92rem}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-weight:600}
+.checks small{display:block;font-weight:400;color:var(--ink-soft)}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--steel);margin:2px 0 0;flex:none}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:900px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-weight:600;padding-bottom:6px}
+caption small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.8rem}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.bad{color:var(--blood)} .good{color:var(--moss)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS203 Artificial Intelligence for Games · Week 12 · Worked example</p>
+  <h1>The healer never hit the boss. The boss&rsquo;s damage did this.</h1>
+  <p class="lede">The healer heals what the boss deals, so healing threat grows with boss damage. Whether the boss ever turns to the healer depends on one ratio, <b>S = 2.6 &times; m &times; d &times; N / B</b>. Below 1 the healer always pulls in the end. Above 1, never.</p>
+</header>
+
+<div class="views">
+  <section class="panel" aria-labelledby="h-table">
+    <h2 id="h-table">The boss&rsquo;s threat table</h2>
+    <p class="sub">Dashed ticks on the target&rsquo;s bar: what a melee (110%) and a ranged (130%) challenger must beat.</p>
+    <div class="clock"><span>Second <b id="tNow">0</b></span><span id="forced" class="sub" style="margin:0"></span></div>
+    <div class="tickgap"></div>
+    <div class="bars" id="bars">
+      <div class="row" id="row-tank" style="--c:var(--steel)"><div class="who">Tank (melee)<small id="tag-tank"></small></div><div class="track"><div class="fill"></div><span class="val"></span></div></div>
+      <div class="row" id="row-healer" style="--c:var(--moss)"><div class="who">Healer (ranged)<small id="tag-healer"></small></div><div class="track"><div class="fill"></div><span class="val"></span></div></div>
+      <div class="row" id="row-rogue" style="--c:var(--blood)"><div class="who">Rogue (melee)<small id="tag-rogue"></small></div><div class="track"><div class="fill"></div><span class="val"></span></div></div>
+    </div>
+    <p class="switches" id="need"></p>
+    <div class="tl">
+      <div class="sub" style="margin:0 0 4px">Who the boss attacks, second by second. Faded part: what happens next if nothing changes.</div>
+      <canvas id="cTl" role="img" aria-label="Timeline of the boss's target"></canvas>
+      <p class="switches" id="switches"></p>
+    </div>
+    <div class="play">
+      <button id="bPlay" class="primary" aria-pressed="false">Play</button>
+      <button id="bStep">Step 1 s</button>
+      <button id="bTaunt" class="taunt">Taunt</button>
+      <button id="bReset">Reset</button>
+    </div>
+    <p class="sr" aria-live="polite" id="live"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-pull">
+    <h2 id="h-pull">When does the healer pull?</h2>
+    <p class="sub">First second the boss turns to the healer, rogue off, for every tank multiplier m.</p>
+    <figure>
+      <canvas id="cPull" role="img" aria-label="First pull second versus tank multiplier"></canvas>
+    </figure>
+    <div class="readout">
+      <div class="stat" style="--c:var(--ochre)"><b id="rS">—</b><span id="rSlab">margin S</span></div>
+      <div class="stat" style="--c:var(--ink)"><b id="rM">—</b><span>break-even m*</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="rPull">—</b><span>healer pulls at</span></div>
+    </div>
+    <div class="insight" id="insight"></div>
+  </section>
+</div>
+
+<section class="panel" style="margin-top:14px" aria-label="Controls">
+  <div class="controls">
+    <div>
+      <label class="sl" for="m">Tank multiplier m <output id="oM">1.00</output></label>
+      <input id="m" type="range" min="0.5" max="6" step="0.05" value="1">
+    </div>
+    <div>
+      <label class="sl" for="B">Boss DPS on tank B <output id="oB">600</output></label>
+      <input id="B" type="range" min="200" max="1500" step="50" value="600">
+    </div>
+    <div>
+      <label class="sl" for="d">Tank DPS d <output id="oD">200</output></label>
+      <input id="d" type="range" min="50" max="500" step="10" value="200">
+    </div>
+    <div>
+      <label class="sl" for="N">Mobs in combat N <output id="oN">1</output></label>
+      <input id="N" type="range" min="1" max="5" step="1" value="1">
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="rogue"><span>Rogue joins<small>250 threat per second from second 1, melee</small></span></label>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="thr" checked><span>Switch thresholds<small>Off: any challenger over 100% takes the boss</small></span></label>
+    </div>
+  </div>
+</section>
+
+<div class="tables">
+  <div class="panel table-wrap">
+    <table>
+      <caption>Pull second by multiplier<small id="cap1"></small></caption>
+      <thead><tr><th>m</th><th>Tank threat/s</th><th>S</th><th>Healer pulls at</th></tr></thead>
+      <tbody id="tb1"></tbody>
+    </table>
+  </div>
+  <div class="panel table-wrap">
+    <table>
+      <caption>Margin S as the boss hits harder<small id="cap2"></small></caption>
+      <thead><tr><th>Boss DPS B</th><th>S at m 1.0</th><th>S at 1.3</th><th>S at 5.0</th><th>m*</th></tr></thead>
+      <tbody id="tb2"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Rules from Warcraft Wiki, "Threat" (read September 2026): 1 threat per damage times the multiplier, 0.5 threat per point of healing split across the N mobs in combat, switch at 110% in melee and 130% at range, taunt sets threat to the table's highest. Classic Defensive Stance multiplier 1.3; tank threat 500% from the August 16, 2011 hotfix. Tank and boss damage values are invented for teaching. The simulation matches the lecture's <code>healer_pull</code>, including Python's round-half-to-even.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f3=x=>x.toFixed(3);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const ORDER=['tank','rogue','healer'];             // tie-break order (first added wins)
+const NAME={tank:'Tank',healer:'Healer',rogue:'Rogue'};
+const COL={tank:'--steel',healer:'--moss',rogue:'--blood'};
+const MAXT=600;
+
+// Python's round(): nearest integer, ties to even. JS doubles equal Python floats, so results match.
+function pyRound(x){const f=Math.floor(x),r=x-f;if(r>0.5)return f+1;if(r<0.5)return f;return f%2===0?f:f+1;}
+
+let P={m:1,B:600,d:200,N:1,rogue:false,thr:true};
+let t=8,taunts=new Set(),timer=null;
+
+function kOf(who,thr){return !thr?10:(who==='healer'?13:11);}
+function coef(){return P.thr?2.6:2.0;}          // 1.3/0.5 with thresholds, 1.0/0.5 without
+
+// Full simulation to second T. Returns threat, target, history (target per second) and events.
+function simulate(p,T,tauntSet){
+  const th={tank:0,healer:0,rogue:0},hist=[null],ev=[];
+  let target=null,forcedUntil=0;
+  const tankRate=pyRound(p.m*p.d),healRate=pyRound(0.5*p.B/p.N);
+  for(let s=1;s<=T;s++){
+    th.tank+=tankRate;
+    if(s>=2)th.healer+=healRate;
+    if(p.rogue)th.rogue+=250;
+    const present=ORDER.filter(w=>(w==='tank')||(w==='healer'&&s>=2)||(w==='rogue'&&p.rogue));
+    const prev=target;
+    if(target===null){
+      target=present.reduce((a,b)=>th[b]>th[a]?b:a);
+    }else if(s>forcedUntil){
+      const cur=th[target];
+      const ch=present.filter(w=>w!==target&&th[w]*10>cur*kOf(w,p.thr));
+      if(ch.length)target=ch.reduce((a,b)=>th[b]>th[a]?b:a);
+    }
+    if(target!==prev)ev.push({s,who:target,kind:'switch'});
+    if(tauntSet&&tauntSet.has(s)){
+      th.tank=Math.max(th.tank,th.healer,th.rogue);
+      const was=target;target='tank';forcedUntil=s+3;
+      ev.push({s,who:'tank',kind:'taunt',changed:was!=='tank'});
+    }
+    hist.push(target);
+  }
+  return {th,target,hist,ev,forcedUntil,tankRate,healRate};
+}
+// The lecture's healer_pull: rogue off, no taunts.
+function healerPull(m,p){
+  const q=Object.assign({},p,{m,rogue:false});
+  const tr=pyRound(m*q.d),hr=pyRound(0.5*q.B/q.N);
+  let tk=0,hl=0,target=null;const k=q.thr?13:10;
+  for(let s=1;s<=MAXT;s++){
+    tk+=tr;if(s>=2)hl+=hr;
+    if(target===null)target=hl>tk?'healer':'tank';
+    else if(target==='tank'&&hl*10>tk*k)target='healer';
+    else if(target==='healer'&&tk*10>hl*(q.thr?11:10))target='tank';
+    if(target==='healer')return s;
+  }
+  return null;
+}
+const S=(m,p)=>coef()*m*p.d*p.N/p.B;
+const mStar=p=>p.B/(coef()*p.d*p.N);
+
+// ---------- left view ----------
+let lastTarget=null;
+function drawTable(){
+  const r=simulate(P,t,taunts);
+  const shown=['tank','healer','rogue'];
+  const tg=r.target;
+  const cur=tg?r.th[tg]:0;
+  const scale=Math.max(1,r.th.tank,r.th.healer,P.rogue?r.th.rogue:0,cur*1.3)*1.32;
+  shown.forEach(w=>{
+    const row=$('row-'+w),fill=row.querySelector('.fill'),val=row.querySelector('.val');
+    const v=r.th[w],pc=v/scale*100;
+    row.classList.toggle('off',w==='rogue'&&!P.rogue);
+    row.classList.toggle('target',w===tg);
+    fill.style.width=pc+'%';val.style.left=(w===tg?Math.max(pc,cur*(P.thr?1.3:1)/scale*100):pc)+'%';
+    val.textContent=(w==='rogue'&&!P.rogue)?'off':fmt(v);
+    $('tag-'+w).innerHTML=w===tg?'<span class="tag">TARGET</span>':'';
+    row.querySelectorAll('.tick').forEach(x=>x.remove());
+    if(w===tg){
+      const tr=row.querySelector('.track');
+      const ks=P.thr?[[1.1,'t110'],[1.3,'t130']]:[[1.0,'t130']];
+      ks.forEach(([k,c])=>{const d=document.createElement('div');d.className='tick '+c;d.style.left=(cur*k/scale*100)+'%';
+        d.innerHTML=`<span>${Math.round(k*100)}%</span>`;tr.appendChild(d);});
+    }
+  });
+  $('need').innerHTML=tg?(P.thr?`To take the boss from ${NAME[tg]} (${fmt(cur)}): melee needs over <b>${fmt(cur*1.1)}</b>, ranged over <b>${fmt(cur*1.3)}</b>.`:`Thresholds off: anyone over <b>${fmt(cur)}</b> takes the boss.`):'No target yet.';
+  $('tNow').textContent=t;
+  $('forced').textContent=(t>0&&t<r.forcedUntil)?`Taunt forces the tank until second ${r.forcedUntil}`:'';
+  // timeline: projection to at least 60 s
+  const win0=Math.max(0,t-60)+1,win1=win0+59;
+  const proj=simulate(P,Math.max(win1,t),taunts);
+  drawTimeline(proj.hist,win0,win1);
+  const past=proj.ev.filter(e=>e.s<=t),fut=proj.ev.filter(e=>e.s>t&&e.s<=win1);
+  const txt=e=>e.kind==='taunt'?`Tank taunts at ${e.s} s`:`${NAME[e.who]} from ${e.s} s`;
+  $('switches').innerHTML=(t===0?'Press Play or Step. ':'')+past.map(txt).join(' · ')+(fut.length?` · <i>next: ${fut.map(txt).join(' · ')}</i>`:'');
+  // live announcements
+  if(lastTarget!==null&&tg&&tg!==lastTarget)$('live').textContent=`Boss turns to ${NAME[tg]} at ${t} s`;
+  lastTarget=tg;
+  $('bTaunt').disabled=t===0;
+  return r;
+}
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function drawTimeline(hist,a,b){
+  const {g,w,h}=setupCanvas($('cTl'));g.clearRect(0,0,w,h);
+  const bw=w/60,y0=4,bh=30;
+  g.font='600 11px '+css('--sans');g.textBaseline='middle';g.textAlign='center';
+  for(let s=a;s<=b;s++){
+    const who=hist[s];if(!who)continue;
+    const x=(s-a)*bw;
+    g.globalAlpha=s<=t?1:.3;g.fillStyle=css(COL[who]);g.fillRect(x,y0,Math.ceil(bw),bh);
+    // letter on first second of a run, for colour-independent reading
+    if(hist[s-1]!==who||s===a){g.globalAlpha=s<=t?1:.6;g.fillStyle=css('--paper');g.fillText(who[0].toUpperCase(),x+Math.max(6,bw/2),y0+bh/2);}
+  }
+  g.globalAlpha=1;
+  if(t>=a&&t<=b){const x=(t-a+1)*bw;g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(x,0);g.lineTo(x,y0+bh+4);g.stroke();}
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textBaseline='top';
+  for(let s=a-1;s<=b;s+=10){const x=(s-a+1)*bw;g.textAlign=s===a-1?'left':(s>=b-1?'right':'center');g.fillText(s+' s',x,y0+bh+6);}
+}
+
+// ---------- right view ----------
+const pad={l:44,r:12,t:10,b:34};
+function drawPull(){
+  const {g,w,h}=setupCanvas($('cPull'));g.clearRect(0,0,w,h);
+  const x0=pad.l,x1=w-pad.r,YMAX=120;
+  const neverY=pad.t+12,offY=pad.t+38,plotTop=pad.t+56,plotBot=h-pad.b;
+  const X=m=>x0+(x1-x0)*(m-0.5)/5.5;
+  const Y=s=>plotBot-(plotBot-plotTop)*s/YMAX;
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid');
+  g.font='11px '+css('--sans');g.lineWidth=1;
+  // grid and y labels
+  for(let i=0;i<=4;i++){const s=YMAX*i/4,y=Y(s);g.strokeStyle=grid;g.beginPath();g.moveTo(x0,y);g.lineTo(x1,y);g.stroke();
+    g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText(s+' s',x0-5,y);}
+  // bands
+  g.fillStyle=css('--paper');g.globalAlpha=.7;g.fillRect(x0,neverY-10,x1-x0,20);g.fillRect(x0,offY-10,x1-x0,20);g.globalAlpha=1;
+  g.fillStyle=soft;g.textAlign='right';g.textBaseline='middle';g.fillText('never',x0-5,neverY);g.fillText('>120 s',x0-5,offY);
+  // x labels
+  g.textBaseline='top';
+  [0.5,1,2,3,4,5,6].forEach(m=>{g.textAlign='center';g.fillText(m,X(m),plotBot+4);});
+  g.textAlign='right';g.fillText('tank multiplier m',x1,plotBot+18);
+  // reference markers
+  [[1.3,'1.3 classic stance'],[5.0,'5.0 from Aug 2011']].forEach(([m,l],i)=>{
+    const x=X(m);g.strokeStyle=soft;g.setLineDash([2,3]);g.beginPath();g.moveTo(x,plotTop);g.lineTo(x,plotBot);g.stroke();g.setLineDash([]);
+    g.fillStyle=soft;g.textBaseline='middle';g.textAlign=m>4?'right':'left';g.fillText(l,x+(m>4?-4:4),Y(i?30:60));
+  });
+  // data
+  const pts=[];for(let i=0;i<=110;i++){const m=+(0.5+i*0.05).toFixed(2);pts.push([m,healerPull(m,P)]);}
+  const onPlot=s=>s!==null&&s<=YMAX;
+  g.strokeStyle=css('--moss');g.lineWidth=2.5;g.beginPath();let pen=false;
+  pts.forEach(([m,s])=>{if(onPlot(s)){const x=X(m),y=Y(s);pen?g.lineTo(x,y):g.moveTo(x,y);pen=true;}else pen=false;});g.stroke();
+  pts.forEach(([m,s])=>{let y;if(s===null)y=neverY;else if(s>YMAX)y=offY;else y=Y(s);
+    g.fillStyle=s===null?css('--ochre'):css('--moss');g.beginPath();g.arc(X(m),y,s!==null&&s<=YMAX?2:2.2,0,7);g.fill();});
+  // m* line
+  const ms=mStar(P);
+  if(ms>=0.5&&ms<=6){const x=X(ms);g.strokeStyle=ink;g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,plotBot);g.stroke();g.setLineDash([]);
+    const lab='m* = '+f3(ms);g.font='700 12px '+css('--sans');const tw=g.measureText(lab).width;
+    const right=x+6+tw<x1;g.fillStyle=css('--paper');g.fillRect(right?x+4:x-8-tw,plotTop+2,tw+6,16);
+    g.fillStyle=ink;g.textAlign=right?'left':'right';g.textBaseline='top';g.fillText(lab,right?x+7:x-5,plotTop+4);}
+  // current dot
+  const s=healerPull(P.m,P),x=X(P.m);let y,lab;
+  if(s===null){y=neverY;lab='never';}else if(s>YMAX){y=offY;lab=s+' s, off chart';}else{y=Y(s);lab=s+' s';}
+  g.fillStyle=css('--ochre');g.beginPath();g.arc(x,y,7,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.font='700 12px '+css('--sans');const tw=g.measureText(lab).width;const right=x+12+tw<x1;
+  g.fillStyle=css('--paper');g.globalAlpha=.85;g.fillRect(right?x+9:x-13-tw,y-9,tw+6,18);g.globalAlpha=1;
+  g.fillStyle=ink;g.textAlign=right?'left':'right';g.textBaseline='middle';g.fillText(lab,right?x+12:x-10,y);
+  return s;
+}
+
+// ---------- numbers ----------
+function numbers(pull){
+  const s=S(P.m,P),ms=mStar(P);
+  $('rS').textContent=f3(s);$('rS').className=s>1?'good':'bad';
+  $('rSlab').textContent=P.thr?'margin S':'margin S (2.0, no thresholds)';
+  $('rM').textContent=f3(ms);
+  $('rPull').textContent=pull===null?'never':pull+' s';
+  const tr=pyRound(P.m*P.d),hr=pyRound(0.5*P.B/P.N);
+  const kk=P.thr?'1.3':'1.0';
+  $('insight').innerHTML=pull===null
+    ?`S = ${f3(s)} is above 1. The tank gains ${fmt(tr)} threat a second; the healer gains ${fmt(hr)}, which is less than ${kk} × ${fmt(tr)} = ${fmt(tr*+kk)}. The healer never catches up. Now raise boss DPS and watch m* slide right.`
+    :`S = ${f3(s)} is below 1. The healer gains ${fmt(hr)} threat a second (half of the boss's ${fmt(P.B)} DPS${P.N>1?` split over ${P.N} mobs`:''}), more than ${kk} × the tank's ${fmt(tr)} = ${fmt(tr*+kk)}. A head start only delays the pull, here to <b>${pull} s</b>. The tank needs m above ${f3(ms)}.`;
+  const cur=P.m;
+  const ms1=[1.0,1.1,1.15,1.2,1.3,5.0];if(!ms1.some(v=>Math.abs(v-cur)<1e-9))ms1.push(cur);ms1.sort((a,b)=>a-b);
+  $('tb1').innerHTML=ms1.map(m=>{const p=healerPull(m,P),sv=S(m,P);
+    return `<tr class="${Math.abs(m-cur)<1e-9?'here':''}"><td>${Number.isInteger(m)?m.toFixed(1):m}</td><td>${fmt(pyRound(m*P.d))}</td><td class="${sv>1?'good':'bad'}">${f3(sv)}</td><td>${p===null?'never':p+' s'}</td></tr>`;}).join('');
+  $('cap1').textContent=`B = ${fmt(P.B)}, d = ${P.d}, N = ${P.N}, rogue off${P.thr?'':', thresholds off'}. Bold row: your m.`;
+  const bs=[400,600,800,1200];if(!bs.includes(P.B))bs.push(P.B);bs.sort((a,b)=>a-b);
+  $('tb2').innerHTML=bs.map(B=>{const q=Object.assign({},P,{B});
+    return `<tr class="${B===P.B?'here':''}"><td>${fmt(B)}</td>${[1.0,1.3,5.0].map(m=>{const v=S(m,q);return `<td class="${v>1?'good':'bad'}">${f3(v)}</td>`;}).join('')}<td>${f3(mStar(q))}</td></tr>`;}).join('');
+  $('cap2').textContent=`d = ${P.d}, N = ${P.N}. At d = 200, N = 1 this is the lecture's table.`;
+}
+
+function render(){drawTable();numbers(drawPull());}
+
+// ---------- controls ----------
+function readParams(){
+  P.m=Math.round(+$('m').value*100)/100;P.B=+$('B').value;P.d=+$('d').value;P.N=+$('N').value;
+  P.rogue=$('rogue').checked;P.thr=$('thr').checked;
+  $('oM').textContent=P.m.toFixed(2);$('oB').textContent=fmt(P.B);$('oD').textContent=P.d;$('oN').textContent=P.N;
+}
+['m','B','d','N','rogue','thr'].forEach(id=>$(id).addEventListener('input',()=>{readParams();lastTarget=null;render();}));
+function step(){if(t>=MAXT){stop();return;}t++;render();}
+function stop(){clearInterval(timer);timer=null;$('bPlay').textContent='Play';$('bPlay').setAttribute('aria-pressed','false');}
+$('bPlay').addEventListener('click',()=>{
+  if(timer){stop();return;}
+  $('bPlay').textContent='Pause';$('bPlay').setAttribute('aria-pressed','true');
+  timer=setInterval(step,reduce.matches?700:350);
+});
+$('bStep').addEventListener('click',()=>{stop();step();});
+$('bReset').addEventListener('click',()=>{stop();t=0;taunts=new Set();lastTarget=null;$('live').textContent='Reset to second 0';render();});
+$('bTaunt').addEventListener('click',()=>{if(t===0)return;taunts.add(t);const r=simulate(P,t,taunts);
+  $('live').textContent=`Tank taunts at ${t} s, threat set to ${fmt(r.th.tank)}`;lastTarget='tank';render();});
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+readParams();render();
+// expose for tests
+window.__w12={simulate,healerPull,S,mStar,P:()=>P,setT:v=>{t=v;render();}};
+})();
+</script>
+</body>
+</html>

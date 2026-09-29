@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Behavior tree tick trace: CS203 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr);gap:16px;align-items:start}
+@media (max-width:980px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 12px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#tree{display:block;width:100%}
+.treecap{font-family:var(--serif);font-size:.95rem;margin:6px 0 0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.seg label{display:flex;align-items:center;gap:6px;font-size:.9rem;padding:5px 10px;border:1.5px solid var(--steel);border-radius:8px;cursor:pointer}
+.seg input{accent-color:var(--steel)}
+.seg label:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.tlwrap{overflow-x:auto;padding-bottom:4px;position:relative}
+.tlgrid .rl{position:sticky;left:0;background:var(--paper-2);z-index:1}
+.tlgrid{display:grid;grid-template-columns:78px repeat(12,minmax(34px,1fr));gap:2px;min-width:500px;font-variant-numeric:tabular-nums}
+.rl{font-weight:600;font-size:.82rem;display:flex;align-items:center;padding-right:4px;line-height:1.1}
+.rl.res{color:var(--ink)}
+.hd{font-size:.72rem;color:var(--ink-soft);text-align:center;line-height:1.15;padding:2px 0;border-radius:4px}
+.hd b{display:block;font-size:.85rem;color:var(--ink)}
+.fact{height:30px;border:1.5px solid var(--grid);border-radius:5px;background:var(--paper);cursor:pointer;padding:0;font:600 .7rem var(--sans);color:var(--paper)}
+.fact[aria-pressed="true"]{background:var(--steel);border-color:var(--steel)}
+.cell{height:42px;border-radius:5px;background:var(--paper);border:1.5px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;font-size:.78rem;font-weight:700;position:relative}
+.cell small{font-weight:400;font-size:.66rem;color:var(--ink-soft)}
+.cell.wrong{border:2px dashed var(--blood)}
+.cell.wrong::after{content:"!";position:absolute;top:1px;right:3px;font-size:.62rem;color:var(--blood)}
+.a-Run{box-shadow:inset 0 -4px 0 var(--blood)}
+.a-Sho,.a-Cha{box-shadow:inset 0 -4px 0 var(--steel)}
+.a-GoN,.a-Look{box-shadow:inset 0 -4px 0 var(--ochre)}
+.a-Pat{box-shadow:inset 0 -4px 0 var(--ink-soft)}
+.cur{outline:2px solid var(--focus);outline-offset:0}
+.hd.cur{background:var(--focus);color:var(--paper)}
+.hd.cur b{color:var(--paper)}
+.sep{grid-column:1/-1;height:6px}
+.readouts{margin:10px 0 0;padding:0;list-style:none;font-size:.9rem}
+.readouts li{padding:3px 0;border-bottom:1px solid var(--grid)}
+.readouts b{display:inline-block;min-width:74px}
+.keyline{font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+.controls{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:16px;align-items:start}
+@media (max-width:880px){.controls{grid-template-columns:minmax(0,1fr)}}
+label.slider{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.btn{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+select{font:600 .9rem var(--sans);padding:6px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+.ctl-title{font-weight:600;font-size:.92rem;margin:0 0 6px;display:block}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* tree svg */
+.edge{stroke:var(--ink-soft);stroke-width:1.2;fill:none}
+.nbox{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
+.ncomp{fill:var(--paper-2);stroke:var(--ink);stroke-width:1.5}
+.ntext{fill:var(--ink);font:600 12.5px var(--sans)}
+.nsub{fill:var(--ink-soft);font:11.5px var(--sans)}
+.dim{opacity:.4}
+.bS{fill:var(--moss)}.bF{fill:var(--blood)}.bR{fill:var(--ochre)}
+.btxt{fill:var(--paper);font:700 11px var(--sans)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS203 Artificial Intelligence for Games · Week 7 · Worked example</p>
+  <h1>Same tree, three guards</h1>
+  <p class="lede">Same tree, same world. The memory guard never looks at the fight branch. At tick 5 the player is in plain view, and the memory guard is still looking around because it only ticks the branch that was running.</p>
+</header>
+
+<section class="panel" aria-label="Behavior tree trace">
+  <div class="views">
+    <figure>
+      <figcaption>Tree<small>Visited nodes carry a badge: S success, F failure, R running. Unvisited nodes are faded.</small></figcaption>
+      <div class="seg" role="radiogroup" aria-label="Tree view shows">
+        <label><input type="radio" name="view" value="reactive"> Reactive</label>
+        <label><input type="radio" name="view" value="memory" checked> Memory</label>
+        <label><input type="radio" name="view" value="hybrid"> Hybrid</label>
+      </div>
+      <svg id="tree" role="img" aria-label="Guard behavior tree with node statuses for the chosen tick rule"></svg>
+      <p class="treecap" id="treecap"></p>
+    </figure>
+    <figure>
+      <figcaption>Timeline<small>World facts are buttons: click or press Space to toggle, arrow keys to move. Every change reruns all three guards from tick 0.</small></figcaption>
+      <div class="tlwrap"><div class="tlgrid" id="grid"></div></div>
+      <p class="keyline">Dashed red cell: the guard is doing the wrong thing (hover or focus for why). Small number: nodes visited that tick.</p>
+      <ul class="readouts" id="readouts" aria-live="polite"></ul>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label class="slider" for="tick">Tick <output id="oTick">5</output></label>
+      <input id="tick" type="range" min="0" max="11" step="1" value="5">
+      <div class="btns">
+        <button class="btn" id="prev">Prev</button>
+        <button class="btn" id="next">Next</button>
+        <button class="btn" id="play" aria-pressed="false">Play</button>
+      </div>
+    </div>
+    <div>
+      <label class="ctl-title" for="rate">Tick rate</label>
+      <select id="rate"><option value="5" selected>5 Hz (0.2 s per tick)</option><option value="10">10 Hz (0.1 s per tick)</option></select>
+    </div>
+    <div>
+      <span class="ctl-title">Timeline</span>
+      <div class="btns"><button class="btn" id="reset">Reset to the lecture's timeline</button></div>
+    </div>
+  </div>
+  <p class="sr" aria-live="polite" id="announce"></p>
+</section>
+
+<footer>Tree, tick rules and timeline: CS203 week 7 lecture and <code>labs/lab07-starter/bt.py</code> (reference solution). A visit is one call to any node's tick, root included. Selector/sequence vocabulary after Champandard and Dunstan; the priority-list tree after Damian Isla's GDC 2005 talk on Halo 2. Shapes are generic; no game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const SUCCESS='S',FAILURE='F',RUNNING='R';
+const MODES=['reactive','memory','hybrid'],MN={reactive:'Reactive',memory:'Memory',hybrid:'Hybrid'};
+const FACTS=[['noise','noise'],['sees','sees'],['in_range','in range'],['hurt','hurt']];
+const ABBR={Patrol:'Pat',GoToNoise:'GoN',LookAround:'Look',Chase:'Cha',Shoot:'Sho',RunToSafety:'Run','-':'—'};
+const LECTURE={noise:[2,3,4,5,6],sees:[5,6,7,8],in_range:[7,8],hurt:[9,10,11]};
+const N=12;
+
+// ---- the lab's classes, reference solution
+let visits=0,rec=null;
+class Condition{constructor(key,label){this.key=key;this.label=label;this.kind='cond';}
+  tick(bb){visits++;const s=bb[this.key]?SUCCESS:FAILURE;rec.st[this.id]=s;return s;} halt(){}}
+class Action{constructor(name,ticks){this.name=name;this.ticks=ticks||0;this.done=0;this.kind='act';}
+  tick(bb){visits++;bb.acted=this.name;this.done+=1;rec.prog[this.id]=this.done;let s=RUNNING;
+    if(this.ticks&&this.done>=this.ticks){this.done=0;s=SUCCESS;}rec.st[this.id]=s;return s;}
+  halt(){this.done=0;}}
+class Composite{constructor(children,mode){this.children=children;this.mode=mode;this.running=null;}
+  halt(){for(const c of this.children)c.halt();this.running=null;}
+  finish(i,status){if(this.running!==null&&this.running!==i)this.children[this.running].halt();
+    this.running=status===RUNNING?i:null;rec.st[this.id]=status;return status;}}
+class Selector extends Composite{constructor(c,m){super(c,m);this.kind='sel';}
+  tick(bb){visits++;const start=(this.mode==='memory'&&this.running!==null)?this.running:0;
+    for(let i=start;i<this.children.length;i++){const s=this.children[i].tick(bb);if(s!==FAILURE)return this.finish(i,s);}
+    return this.finish(null,FAILURE);}}
+class Sequence extends Composite{constructor(c,m){super(c,m);this.kind='seq';}
+  tick(bb){visits++;const r=this.running;
+    for(let i=0;i<this.children.length;i++){const c=this.children[i];
+      if(r!==null&&i<r){if(this.mode==='memory')continue;if(this.mode==='hybrid'&&!(c instanceof Condition))continue;}
+      const s=c.tick(bb);if(s!==SUCCESS)return this.finish(i,s);}
+    return this.finish(null,SUCCESS);}}
+
+function guard(mode){
+  const Seq=(...c)=>new Sequence(c,mode),Sel=(...c)=>new Selector(c,mode);
+  const root=Sel(
+    Seq(new Condition('hurt','hurt?'),new Action('RunToSafety',3)),
+    Seq(new Condition('sees','sees?'),Sel(Seq(new Condition('in_range','in range?'),new Action('Shoot')),new Action('Chase'))),
+    Seq(new Condition('noise','heard noise?'),new Action('GoToNoise',2),new Action('LookAround',2)),
+    new Action('Patrol',4));
+  const nodes=[];(function walk(n,d,parent,idx){n.id=nodes.length;n.depth=d;n.parent=parent;n.idx=idx;nodes.push(n);(n.children||[]).forEach((c,i)=>walk(c,d+1,n,i));})(root,0,null,0);
+  return {root,nodes};
+}
+
+// ---- world and runs
+let world={};
+function resetWorld(){world={};for(const [k] of FACTS)world[k]=new Array(N).fill(false).map((_,t)=>LECTURE[k].includes(t));}
+function runMode(mode){
+  const g=guard(mode),out=[];
+  for(let t=0;t<N;t++){
+    const bb={acted:'-'};for(const [k] of FACTS)bb[k]=world[k][t];
+    visits=0;rec={st:{},prog:{}};
+    g.root.tick(bb);
+    const done={};g.nodes.forEach(n=>{if(n.kind==='act')done[n.id]=n.done;});
+    const actNode=g.nodes.find(n=>n.kind==='act'&&n.name===bb.acted)||null;
+    out.push({acted:bb.acted,visits,st:rec.st,prog:rec.prog,done,actNode});
+  }
+  return {nodes:g.nodes,ticks:out};
+}
+const RANK={RunToSafety:0,Shoot:1,Chase:2,GoToNoise:3,LookAround:3,Patrol:4};
+function gateOK(name,t){const w=k=>world[k][t];
+  return {RunToSafety:w('hurt'),Shoot:w('sees')&&w('in_range'),Chase:w('sees'),GoToNoise:w('noise'),LookAround:w('noise'),Patrol:true}[name];}
+function judge(run){
+  return run.ticks.map((x,t)=>{
+    if(x.acted==='-')return null;
+    const prev=t>0?run.ticks[t-1].actNode:null,cur=x.actNode;
+    if(prev&&cur&&prev.parent===cur.parent&&cur.parent.kind==='seq'&&cur.idx<prev.idx)
+      return `stutter: re-runs ${cur.name}, a step this sequence already finished`;
+    const better=Object.keys(RANK).filter(n=>RANK[n]<RANK[x.acted]&&gateOK(n,t));
+    if(better.length){const b=better.sort((a,c)=>RANK[a]-RANK[c])[0];return `ignoring: ${x.acted} runs while ${b}, a higher priority, is possible`;}
+    return null;
+  });
+}
+function firstReact(run,fact,names){
+  const f=world[fact].indexOf(true);if(f<0)return {none:true};
+  for(let t=f;t<N;t++)if(names.includes(run.ticks[t].acted))return {n:t-f};
+  return {never:true};
+}
+
+// ---- state
+const S={tick:5,view:'memory',rate:5,playing:null};
+let RUNS={},WRONG={};
+function recompute(){for(const m of MODES){RUNS[m]=runMode(m);WRONG[m]=judge(RUNS[m]);}}
+
+// ---- timeline grid
+const grid=$('grid');let factBtns=[];
+function buildGrid(){
+  grid.textContent='';factBtns=[];
+  const add=(cls,html,attrs)=>{const d=document.createElement('div');d.className=cls;if(html!==undefined)d.innerHTML=html;if(attrs)for(const k in attrs)d.setAttribute(k,attrs[k]);grid.appendChild(d);return d;};
+  add('rl','tick');
+  for(let t=0;t<N;t++)add('hd','',{'data-t':t});
+  FACTS.forEach(([k,lab],r)=>{
+    add('rl',lab);
+    for(let t=0;t<N;t++){
+      const b=document.createElement('button');b.className='fact';b.dataset.k=k;b.dataset.t=t;b.dataset.r=r;
+      b.tabIndex=(r===0&&t===0)?0:-1;
+      b.addEventListener('click',()=>toggle(b));
+      b.addEventListener('keydown',e=>nav(e,r,t));
+      grid.appendChild(b);factBtns.push(b);
+    }
+  });
+  add('sep');
+  MODES.forEach(m=>{add('rl res',MN[m]);for(let t=0;t<N;t++)add('cell','',{'data-m':m,'data-t':t,tabindex:'-1'});});
+}
+function nav(e,r,t){
+  const d={ArrowRight:[0,1],ArrowLeft:[0,-1],ArrowDown:[1,0],ArrowUp:[-1,0]}[e.key];
+  if(!d)return;e.preventDefault();
+  const nr=Math.max(0,Math.min(FACTS.length-1,r+d[0])),nt=Math.max(0,Math.min(N-1,t+d[1]));
+  const b=factBtns[nr*N+nt];factBtns.forEach(x=>x.tabIndex=-1);b.tabIndex=0;b.focus();
+}
+function toggle(b){const k=b.dataset.k,t=+b.dataset.t;world[k][t]=!world[k][t];factBtns.forEach(x=>x.tabIndex=-1);b.tabIndex=0;recompute();render();}
+const secs=t=>(t/S.rate).toFixed(S.rate===5?1:1);
+function renderGrid(){
+  grid.querySelectorAll('.hd').forEach(h=>{const t=+h.dataset.t;h.innerHTML=`<b>${t}</b>${secs(t)} s`;h.classList.toggle('cur',t===S.tick);});
+  factBtns.forEach(b=>{const on=world[b.dataset.k][+b.dataset.t];b.setAttribute('aria-pressed',String(on));b.textContent=on?'yes':'';
+    b.setAttribute('aria-label',`${FACTS[+b.dataset.r][1]} at tick ${b.dataset.t}: ${on?'true':'false'}`);b.classList.toggle('cur',+b.dataset.t===S.tick);});
+  grid.querySelectorAll('.cell').forEach(c=>{
+    const m=c.dataset.m,t=+c.dataset.t,x=RUNS[m].ticks[t],w=WRONG[m][t],ab=ABBR[x.acted]||x.acted;
+    c.className='cell a-'+ab+(w?' wrong':'')+(t===S.tick?' cur':'');
+    c.innerHTML=`${ab}<small>${x.visits}</small>`;
+    const lab=`${MN[m]}, tick ${t}: ${x.acted}, ${x.visits} visits${w?'. Wrong, '+w:''}`;
+    c.title=lab;c.setAttribute('aria-label',lab);c.setAttribute('role','img');
+    c.tabIndex=w?0:-1;
+  });
+}
+function renderReadouts(){
+  $('readouts').innerHTML=MODES.map(m=>{
+    const r=RUNS[m],re=firstReact(r,'sees',['Chase','Shoot']),fl=firstReact(r,'hurt',['RunToSafety']);
+    const tot=r.ticks.reduce((s,x)=>s+x.visits,0);
+    const fmt=(o,verb,never)=>o.none?`${verb}: never happens`:o.never?never:`${verb} after ${o.n} tick${o.n===1?'':'s'} (${(o.n/S.rate).toFixed(1)} s)`;
+    return `<li><b>${MN[m]}</b> ${fmt(re,'reacts to sees','never reacts to sees')} · ${fmt(fl,'flees','never flees')} · visits: ${tot} total</li>`;
+  }).join('');
+}
+
+// ---- tree view
+function drawTree(){
+  const svg=$('tree'),run=RUNS[S.view],x=run.ticks[S.tick],nodes=run.nodes;
+  const W=Math.max(280,svg.parentElement.clientWidth-24),rh=36,ind=Math.min(24,W/16),H=nodes.length*rh+6;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.textContent='';
+  const el=(tag,a,p)=>{const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e;};
+  const bw=Math.min(210,W-4*ind-40);
+  const pos=n=>({x:4+n.depth*ind,y:4+n.id*rh});
+  nodes.forEach(n=>{if(!n.parent)return;const p=pos(n.parent),c=pos(n);
+    el('path',{d:`M${p.x+10} ${p.y+28}V${c.y+14}H${c.x}`,class:'edge'+(x.st[n.id]?'':' dim')});});
+  nodes.forEach(n=>{
+    const p=pos(n),st=x.st[n.id],g=el('g',{class:st?'':'dim'});
+    const h=28;
+    if(n.kind==='cond')el('rect',{x:p.x,y:p.y,width:bw,height:h,rx:14,class:'nbox'},g);
+    else if(n.kind==='act')el('rect',{x:p.x,y:p.y,width:bw,height:h,rx:2,class:'nbox'},g);
+    else el('rect',{x:p.x,y:p.y,width:bw,height:h,rx:8,class:'ncomp'},g);
+    let label;
+    if(n.kind==='sel')label='? Selector';else if(n.kind==='seq')label='→ Sequence';else if(n.kind==='cond')label=n.label;else label=n.name;
+    const t=el('text',{x:p.x+10,y:p.y+18,class:'ntext'},g);t.textContent=label;
+    if(n.kind==='act'){
+      const d=st?(x.prog[n.id]!==undefined?x.prog[n.id]:x.done[n.id]):x.done[n.id];
+      const s=el('text',{x:p.x+bw-36,y:p.y+18,'text-anchor':'end',class:'nsub'},g);s.textContent=`${d}/${n.ticks||'∞'}`;
+    }
+    if(st){const cx=p.x+bw-16,cy=p.y+14;el('circle',{cx,cy,r:10,class:'b'+st},g);const b=el('text',{x:cx,y:cy+4,'text-anchor':'middle',class:'btxt'},g);b.textContent=st;}
+  });
+  const vis=Object.keys(x.st).length;
+  const fight=nodes[4],fightSeen=!!x.st[fight.id];
+  let cap=`Tick ${S.tick}, ${MN[S.view]} guard: ${x.acted}. ${x.visits} visit${x.visits===1?'':'s'} this tick.`;
+  if(world.sees[S.tick]&&!fightSeen)cap+=' The guard sees the player, but the fight branch was never ticked.';
+  else if(world.hurt[S.tick]&&!x.st[1])cap+=' The guard is hurt, but the flee branch was never ticked.';
+  $('treecap').textContent=cap;
+}
+
+// ---- insight + announce
+function render(){
+  $('tick').value=S.tick;$('oTick').textContent=`${S.tick} (${secs(S.tick)} s)`;
+  renderGrid();renderReadouts();drawTree();
+  const wrap=grid.parentElement,hd=grid.querySelector(`.hd[data-t="${S.tick}"]`);
+  if(hd&&wrap.scrollWidth>wrap.clientWidth){const l=hd.offsetLeft,r=l+hd.offsetWidth;
+    if(r>wrap.scrollLeft+wrap.clientWidth)wrap.scrollLeft=r-wrap.clientWidth+4;else if(l<wrap.scrollLeft+80)wrap.scrollLeft=Math.max(0,l-80);}
+  $('announce').textContent=`Tick ${S.tick}. `+MODES.map(m=>`${MN[m]} ${RUNS[m].ticks[S.tick].acted}`).join(', ')+'.';
+  const w=MODES.map(m=>WRONG[m].filter(Boolean).length);
+  const tot=MODES.map(m=>RUNS[m].ticks.reduce((s,x)=>s+x.visits,0));
+  $('insight').textContent=`Wrong ticks over the 12: reactive ${w[0]}, memory ${w[1]}, hybrid ${w[2]}. Visits: reactive ${tot[0]}, memory ${tot[1]}, hybrid ${tot[2]}. The memory rule is cheaper because it skips everything above the running branch, which is exactly why it misses the player.`;
+}
+
+// ---- controls
+$('tick').addEventListener('input',e=>{S.tick=+e.target.value;render();});
+$('prev').addEventListener('click',()=>{S.tick=Math.max(0,S.tick-1);render();});
+$('next').addEventListener('click',()=>{S.tick=Math.min(N-1,S.tick+1);render();});
+function stop(){clearInterval(S.playing);S.playing=null;$('play').textContent='Play';$('play').setAttribute('aria-pressed','false');}
+$('play').addEventListener('click',()=>{
+  if(S.playing){stop();return;}
+  if(S.tick>=N-1)S.tick=0;render();
+  $('play').textContent='Pause';$('play').setAttribute('aria-pressed','true');
+  S.playing=setInterval(()=>{if(S.tick>=N-1){stop();return;}S.tick++;render();},1000);
+});
+$('rate').addEventListener('change',e=>{S.rate=+e.target.value;render();});
+$('reset').addEventListener('click',()=>{stop();resetWorld();recompute();render();});
+document.querySelectorAll('input[name=view]').forEach(r=>r.addEventListener('change',()=>{S.view=r.value;render();}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(drawTree,60);});
+
+resetWorld();buildGrid();recompute();render();
+window.__bt={S,world,get runs(){return RUNS;},recompute,render,resetWorld};
+})();
+</script>
+</body>
+</html>

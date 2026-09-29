@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BFS vs Dijkstra — CS203 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--t-open:#f6f8f2;--t-woods:#cfe0c6;--t-hills:#ead9b4;--t-wh:#c9c79a;--t-mtn:#5d6577;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;
+--t-open:#223048;--t-woods:#2a4538;--t-hills:#4a4130;--t-wh:#454a30;--t-mtn:#0e1422}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;
+--t-open:#223048;--t-woods:#2a4538;--t-hills:#4a4130;--t-wh:#454a30;--t-mtn:#0e1422}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lbl{font-weight:600;font-size:.9rem}
+button{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:disabled{opacity:.45;cursor:not-allowed}
+select{font:600 .88rem var(--sans);padding:6px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+button:focus-visible,select:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.budget{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:10px}
+.budget input[type=range]{width:180px;accent-color:var(--steel);height:28px}
+.budget output{font-variant-numeric:tabular-nums;font-weight:700}
+label.chk{display:inline-flex;gap:6px;align-items:center;font-weight:600;font-size:.9rem;cursor:pointer}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--steel)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin-top:10px;color:var(--ink-soft)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:22px;height:22px;border-radius:4px;border:1px solid var(--grid);font:700 .8rem/20px var(--sans);text-align:center;color:var(--ink)}
+.grids{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:820px){.grids{grid-template-columns:1fr}}
+h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:0 0 2px}
+.sub{font-size:.82rem;color:var(--ink-soft);margin:0 0 8px}
+canvas{display:block;width:100%;aspect-ratio:6/5;height:auto;border-radius:8px;touch-action:manipulation}
+.readout{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 10px;margin-top:10px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:8px 0 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS203 Artificial Intelligence for Games · Week 3 · Worked example</p>
+  <h1>Rings of steps, rings of cost</h1>
+  <p class="lede">Same map. BFS counts tiles, Dijkstra counts cost. Press Reset, then Step.</p>
+</header>
+
+<section class="panel" aria-label="Controls">
+  <div class="controls">
+    <div class="group">
+      <button id="step">Step</button><button id="run">Run to end</button><button id="play" aria-pressed="false">Play</button><button id="reset">Reset</button>
+      <label class="lbl" for="spd">Speed</label>
+      <select id="spd"><option value="1">1 per second</option><option value="4" selected>4 per second</option><option value="16">16 per second</option></select>
+    </div>
+    <div class="group">
+      <label class="lbl" for="brush">Brush</label>
+      <select id="brush"><option value=".">Open (1)</option><option value="f">Woods (2)</option><option value="h">Hills (2)</option><option value="H">Wooded hills (3)</option><option value="M">Mountain (impassable)</option></select>
+      <button id="mvS" aria-pressed="false">Move start</button><button id="mvG" aria-pressed="false">Move goal</button>
+    </div>
+    <div class="group">
+      <label class="lbl" for="preset">Preset</label>
+      <select id="preset"><option value="lecture">Lecture map</option><option value="open">Open field</option></select>
+      <button id="restore">Restore preset</button>
+    </div>
+  </div>
+  <div class="budget">
+    <label class="chk"><input type="checkbox" id="range"> Movement range</label>
+    <label class="lbl" for="bud">MP budget <output id="oBud">4</output></label>
+    <input id="bud" type="range" min="0" max="15" step="1" value="4">
+    <span id="reach" style="font-variant-numeric:tabular-nums"></span>
+  </div>
+  <div class="legend" aria-label="Terrain costs">
+    <span><i class="sw" style="background:var(--t-open)">.</i>Open 1</span>
+    <span><i class="sw" style="background:var(--t-woods)">f</i>Woods 2</span>
+    <span><i class="sw" style="background:var(--t-hills)">h</i>Hills 2</span>
+    <span><i class="sw" style="background:var(--t-wh)">H</i>Wooded hills 3</span>
+    <span><i class="sw" style="background:var(--t-mtn);color:#fff">M</i>Mountain, impassable</span>
+    <span>Dashed outline: on the open list. Corner number: expansion order.</span>
+  </div>
+  <p class="hint">Click a tile, or focus a grid and use the arrow keys and Enter, to paint with the brush. Painting reruns both searches to the end.</p>
+</section>
+
+<div class="grids">
+  <section class="panel" aria-labelledby="hB">
+    <h2 id="hB">BFS: fewest tiles</h2>
+    <p class="sub">Center number: steps from the start.</p>
+    <canvas id="cB" tabindex="0" role="application" aria-label="BFS grid. Arrow keys move the cursor, Enter paints."></canvas>
+    <div class="readout">
+      <div class="stat" style="--c:var(--blood)"><b id="bW">—</b><span>tiles walked</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="bC">—</b><span>cost (MP)</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="bE">—</b><span>tiles expanded before the goal</span></div>
+    </div>
+  </section>
+  <section class="panel" aria-labelledby="hD">
+    <h2 id="hD">Dijkstra: lowest cost</h2>
+    <p class="sub">Center number: g, the cheapest known cost from the start.</p>
+    <canvas id="cD" tabindex="0" role="application" aria-label="Dijkstra grid. Arrow keys move the cursor, Enter paints."></canvas>
+    <div class="readout">
+      <div class="stat" style="--c:var(--blood)"><b id="dW">—</b><span>tiles walked</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="dC">—</b><span>cost (MP)</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="dE">—</b><span>tiles expanded before the goal</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="dS">—</b><span>stale entries skipped</span></div>
+    </div>
+  </section>
+</div>
+<div class="insight" id="insight" aria-live="polite"></div>
+<p class="sr" aria-live="polite" id="live"></p>
+<footer>Algorithms as in the week 3 lecture code: neighbours in N, E, S, W order, pay the terrain cost to enter a tile, mountains are not neighbours. Dijkstra uses a binary min-heap ordered by (cost, column, row) with lazy deletion and runs until the heap is empty. Terrain costs follow the hex-and-counter wargame convention the lecture uses; all tiles are flat colors and letters.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COST={'.':1,f:2,h:2,H:3,M:null};
+const FILL={'.':'--t-open',f:'--t-woods',h:'--t-hills',H:'--t-wh',M:'--t-mtn'};
+const PRESETS={lecture:{map:['......','.ffh..','.hHHf.','.fMf..','......'],S:[0,2],G:[5,2]},open:{map:['......','......','......','......','......'],S:[0,2],G:[5,2]}};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+let MAP,S,G,cols,rows,B,D,k=0,maxK=0,timer=null,cursor=[0,0],place=null;
+const key=(x,y)=>x+','+y;
+
+function loadPreset(n){const p=PRESETS[n];MAP=p.map.map(r=>r.split(''));S=p.S.slice();G=p.G.slice();rows=MAP.length;cols=MAP[0].length;}
+function neighbours(x,y){const out=[];for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){const nx=x+dx,ny=y+dy;if(ny>=0&&ny<rows&&nx>=0&&nx<cols&&COST[MAP[ny][nx]])out.push([nx,ny,COST[MAP[ny][nx]]]);}return out;}
+
+// binary min-heap on [cost, x, y]
+function less(a,b){return a[0]!==b[0]?a[0]<b[0]:a[1]!==b[1]?a[1]<b[1]:a[2]<b[2];}
+function hpush(h,v){h.push(v);let i=h.length-1;while(i>0){const p=(i-1)>>1;if(less(h[i],h[p])){[h[i],h[p]]=[h[p],h[i]];i=p;}else break;}}
+function hpop(h){const top=h[0],last=h.pop();if(h.length){h[0]=last;let i=0;for(;;){const l=2*i+1,r=l+1;let m=i;if(l<h.length&&less(h[l],h[m]))m=l;if(r<h.length&&less(h[r],h[m]))m=r;if(m===i)break;[h[i],h[m]]=[h[m],h[i]];i=m;}}return top;}
+
+// Each search records a snapshot after every expansion.
+function dijkstra(budget){
+  const g=new Map([[key(...S),0]]),prev=new Map([[key(...S),null]]),closed=new Set(),order=[],heap=[[0,S[0],S[1]]],snaps=[];let stale=0;
+  const snap=()=>snaps.push({order:order.slice(),val:new Map(g),open:new Set(heap.map(e=>key(e[1],e[2])).filter(q=>!closed.has(q))),stale});
+  snap();
+  while(heap.length){
+    const [c,x,y]=hpop(heap),u=key(x,y);
+    if(closed.has(u)){stale++;continue;}
+    closed.add(u);order.push(u);
+    for(const [nx,ny,st] of neighbours(x,y)){const w=key(nx,ny),n=c+st;if(n<=budget&&(!g.has(w)||n<g.get(w))){g.set(w,n);prev.set(w,u);hpush(heap,[n,nx,ny]);}}
+    snap();
+  }
+  return{g,prev,order,snaps,stale};
+}
+function bfs(){
+  const prev=new Map([[key(...S),null]]),depth=new Map([[key(...S),0]]),q=[S.slice()],order=[],snaps=[];let head=0;
+  const snap=()=>snaps.push({order:order.slice(),val:new Map(depth),open:new Set(q.slice(head).map(p=>key(...p))),stale:0});
+  snap();
+  while(head<q.length){
+    const [x,y]=q[head++],u=key(x,y);order.push(u);
+    for(const [nx,ny] of neighbours(x,y)){const w=key(nx,ny);if(!prev.has(w)){prev.set(w,u);depth.set(w,depth.get(u)+1);q.push([nx,ny]);}}
+    snap();
+  }
+  return{prev,order,snaps,depth};
+}
+function walk(prev,goal){const p=[];let t=key(...goal);if(!prev.has(t))return null;while(t!==null){p.push(t);t=prev.get(t);}return p.reverse();}
+function costOf(p){return p.slice(1).reduce((s,q)=>{const [x,y]=q.split(',').map(Number);return s+COST[MAP[y][x]];},0);}
+window.CS203W03={get:()=>({B,D,MAP}),walk,costOf,dijkstra,paint:(x,y,t)=>{MAP[y][x]=t;recompute(true);}};
+
+function recompute(toEnd){B=bfs();D=dijkstra(Infinity);maxK=Math.max(B.snaps.length,D.snaps.length)-1;k=toEnd?maxK:0;render();}
+
+// ---------- drawing
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.height};}
+function drawGrid(cv,R,isD){
+  const c=setup(cv),g=c.g,ts=c.w/cols,sn=R.snaps[Math.min(k,R.snaps.length-1)],sans=css('--sans');
+  const orderIdx=new Map(sn.order.map((q,i)=>[q,i+1]));
+  g.clearRect(0,0,c.w,c.h);
+  const cells=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    const t=MAP[y][x],X=x*ts,Y=y*ts,q=key(x,y);cells.push([x,y,t,X,Y,q]);
+    g.fillStyle=css(FILL[t]);g.fillRect(X,Y,ts,ts);
+    g.strokeStyle=css('--grid');g.lineWidth=1;g.strokeRect(X+.5,Y+.5,ts-1,ts-1);
+    if(t!=='M'&&orderIdx.get(q)){g.fillStyle=css(isD?'--steel':'--blood');g.globalAlpha=.09;g.fillRect(X+1,Y+1,ts-2,ts-2);g.globalAlpha=1;}
+  }
+  const labels=()=>{for(const [x,y,t,X,Y,q] of cells){
+    g.fillStyle=t==='M'?'#fff':css('--ink-soft');g.font=`600 ${Math.max(10,ts*0.16)}px ${sans}`;g.textAlign='left';g.textBaseline='top';g.fillText(t,X+5,Y+3);
+    if(t==='M')continue;
+    const exp=orderIdx.get(q),known=sn.val.has(q);
+    if(exp){g.font=`700 ${Math.max(9,ts*0.15)}px ${sans}`;g.textAlign='right';g.fillStyle=css(isD?'--steel':'--blood');g.fillText('#'+exp,X+ts-5,Y+4);}
+    if(known){g.font=`${exp?700:600} ${Math.max(12,ts*0.32)}px ${sans}`;g.textAlign='center';g.textBaseline='middle';
+      g.lineWidth=4;g.strokeStyle=css('--paper');g.lineJoin='round';g.strokeText(sn.val.get(q),X+ts/2,Y+ts/2+2);
+      g.fillStyle=css('--ink');g.globalAlpha=exp?1:.55;g.fillText(sn.val.get(q),X+ts/2,Y+ts/2+2);g.globalAlpha=1;}
+    if(sn.open.has(q)){g.strokeStyle=css('--ink');g.lineWidth=2;g.setLineDash([5,4]);g.strokeRect(X+4,Y+4,ts-8,ts-8);g.setLineDash([]);}
+  }};
+  // movement range overlay
+  if(isD&&$('range').checked){
+    const Rg=dijkstra(+$('bud').value).g;
+    g.fillStyle=css('--moss');g.globalAlpha=.25;
+    for(const q of Rg.keys()){const [x,y]=q.split(',').map(Number);g.fillRect(x*ts,y*ts,ts,ts);}g.globalAlpha=1;
+    g.strokeStyle=css('--moss');g.lineWidth=3.5;g.lineCap='round';g.beginPath();
+    for(const q of Rg.keys()){const [x,y]=q.split(',').map(Number);
+      if(!Rg.has(key(x,y-1))){g.moveTo(x*ts,y*ts);g.lineTo((x+1)*ts,y*ts);}
+      if(!Rg.has(key(x+1,y))){g.moveTo((x+1)*ts,y*ts);g.lineTo((x+1)*ts,(y+1)*ts);}
+      if(!Rg.has(key(x,y+1))){g.moveTo(x*ts,(y+1)*ts);g.lineTo((x+1)*ts,(y+1)*ts);}
+      if(!Rg.has(key(x-1,y))){g.moveTo(x*ts,y*ts);g.lineTo(x*ts,(y+1)*ts);}}
+    g.stroke();g.lineCap='butt';
+  }
+  // path once the goal is expanded
+  const done=sn.order.includes(key(...G)),path=done?walk(R.prev,G):null;
+  if(path){
+    const pts=path.map(q=>q.split(',').map(Number).map(v=>(v+0.5)*ts));
+    for(const [col,wd] of [[css('--paper'),ts*0.1+4],[css('--ochre'),ts*0.1]]){g.strokeStyle=col;g.lineWidth=wd;g.lineJoin='round';g.lineCap='round';g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();}
+    g.lineCap='butt';
+  }
+  labels();
+  // start and goal badges
+  for(const [p,l] of [[S,'S'],[G,'G']]){const cx=(p[0]+.5)*ts,cy=(p[1]+.5)*ts,rr=ts*0.2;
+    const bx=p[0]*ts+ts-rr-5,by=p[1]*ts+ts-rr-5;
+    g.fillStyle=css('--paper');g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.arc(bx,by,rr,0,Math.PI*2);g.fill();g.stroke();
+    g.fillStyle=css('--ink');g.font=`700 ${Math.max(10,rr*1.2)}px ${sans}`;g.textAlign='center';g.textBaseline='middle';g.fillText(l,bx,by+1);}
+  // keyboard cursor
+  if(document.activeElement===cv){g.strokeStyle=css('--focus');g.lineWidth=3;g.strokeRect(cursor[0]*ts+2,cursor[1]*ts+2,ts-4,ts-4);}
+  return{done,path};
+}
+function render(){
+  const rb=drawGrid($('cB'),B,false),rd=drawGrid($('cD'),D,true);
+  const snB=B.snaps[Math.min(k,B.snaps.length-1)],snD=D.snaps[Math.min(k,D.snaps.length-1)],gk=key(...G);
+  const fill=(pre,r,sn,R)=>{
+    $(pre+'W').textContent=r.path?String(r.path.length-1):(r.done?'no path':'—');
+    $(pre+'C').textContent=r.path?costOf(r.path)+' MP':'—';
+    $(pre+'E').textContent=r.done?`${sn.order.indexOf(gk)+1} of ${R.order.length}`:`${sn.order.length} so far`;
+  };
+  fill('b',rb,snB,B);fill('d',rd,snD,D);$('dS').textContent=snD.stale;
+  const reach=dijkstra(+$('bud').value).g.size;$('oBud').textContent=$('bud').value;
+  $('reach').textContent=`${reach} tile${reach===1?'':'s'} within ${$('bud').value} MP, start included`;
+  const pb=walk(B.prev,G),pd=walk(D.prev,G);
+  let s;
+  if(!pb||!pd)s='The goal cannot be reached: mountains wall it off.';
+  else{
+    const cb=costOf(pb),cd=costOf(pd);
+    s=`At the end, BFS walks ${pb.length-1} tiles for ${cb} MP and Dijkstra walks ${pd.length-1} tiles for ${cd} MP. `;
+    s+=cb>cd?`BFS's route is ${cb-cd} MP more expensive because every step looks the same to it. `:'Here the two agree on cost. ';
+    s+=`Dijkstra expanded the goal as number ${D.order.indexOf(gk)+1}${D.order.indexOf(gk)+1===D.order.length?', last of all '+D.order.length+' tiles':' of '+D.order.length}: it has no idea where the goal is.`;
+  }
+  $('insight').textContent=s;
+  $('step').disabled=k>=maxK;$('run').disabled=k>=maxK;
+}
+function announce(){
+  const f=(R,name,unit)=>{const sn=R.snaps[Math.min(k,R.snaps.length-1)],u=sn.order[sn.order.length-1];if(!u||k>R.snaps.length-1)return `${name} finished`;return `${name} expands ${u} at ${unit} ${sn.val.get(u)}`;};
+  $('live').textContent=`${f(B,'BFS','step')}. ${f(D,'Dijkstra','cost')}.`;
+}
+
+// ---------- controls
+function stepOnce(){if(k<maxK){k++;render();announce();}else stopPlay();}
+function stopPlay(){clearInterval(timer);timer=null;$('play').textContent='Play';$('play').setAttribute('aria-pressed','false');}
+$('step').addEventListener('click',()=>{stopPlay();stepOnce();});
+$('run').addEventListener('click',()=>{stopPlay();k=maxK;render();announce();});
+$('reset').addEventListener('click',()=>{stopPlay();k=0;render();$('live').textContent='Reset. Both searches start at S.';});
+$('play').addEventListener('click',()=>{if(timer){stopPlay();return;}if(k>=maxK)k=0;timer=setInterval(stepOnce,1000/+$('spd').value);$('play').textContent='Pause';$('play').setAttribute('aria-pressed','true');});
+$('spd').addEventListener('change',()=>{if(timer){stopPlay();$('play').click();}});
+function syncReduce(){$('play').disabled=reduce.matches;if(reduce.matches)stopPlay();$('play').title=reduce.matches?'Auto-play is off because reduced motion is on. Use Step.':'';}
+reduce.addEventListener('change',syncReduce);
+$('preset').addEventListener('change',()=>{stopPlay();loadPreset($('preset').value);recompute(true);});
+$('restore').addEventListener('click',()=>{stopPlay();loadPreset($('preset').value);recompute(true);});
+$('bud').addEventListener('input',render);$('range').addEventListener('change',render);
+function setPlace(m){place=place===m?null:m;$('mvS').setAttribute('aria-pressed',String(place==='S'));$('mvG').setAttribute('aria-pressed',String(place==='G'));}
+$('mvS').addEventListener('click',()=>setPlace('S'));$('mvG').addEventListener('click',()=>setPlace('G'));
+function act(x,y){
+  if(place){if(MAP[y][x]==='M')return;if(place==='S')S=[x,y];else G=[x,y];setPlace(place);stopPlay();recompute(true);$('live').textContent=`${place==='S'?'Start':'Goal'} moved to ${x},${y}.`;return;}
+  const b=$('brush').value;if(b==='M'&&((x===S[0]&&y===S[1])||(x===G[0]&&y===G[1])))return;
+  MAP[y][x]=b;stopPlay();recompute(true);$('live').textContent=`Painted ${x},${y} ${$('brush').selectedOptions[0].text}. ${$('insight').textContent}`;
+}
+for(const id of ['cB','cD']){
+  const cv=$(id);
+  cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),ts=r.width/cols,x=Math.floor((e.clientX-r.left)/ts),y=Math.floor((e.clientY-r.top)/ts);if(x>=0&&x<cols&&y>=0&&y<rows){cursor=[x,y];act(x,y);}});
+  cv.addEventListener('keydown',e=>{const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.key];
+    if(m){e.preventDefault();cursor=[Math.min(cols-1,Math.max(0,cursor[0]+m[0])),Math.min(rows-1,Math.max(0,cursor[1]+m[1]))];render();$('live').textContent=`Tile ${cursor[0]},${cursor[1]}, ${MAP[cursor[1]][cursor[0]]}`;}
+    else if(e.key==='Enter'||e.key===' '){e.preventDefault();act(cursor[0],cursor[1]);}});
+  cv.addEventListener('focus',render);cv.addEventListener('blur',render);
+}
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+loadPreset('lecture');syncReduce();recompute(true);
+})();
+</script>
+</body>
+</html>

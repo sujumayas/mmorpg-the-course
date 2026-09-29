@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A* vs Dijkstra — CS203 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--cell:#f7f9f4;--wall:#2d3850;--road:#c9ccd4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--cell:#1c2739;--wall:#8a93a6;--road:#3a465c}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--cell:#1c2739;--wall:#8a93a6;--road:#3a465c}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+.bar{display:grid;grid-template-columns:auto auto 1fr;gap:12px 22px;align-items:end}
+@media (max-width:900px){.bar{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.bar{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field>label,.field>.lbl{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px}
+.field output{font-variant-numeric:tabular-nums;font-weight:700}
+.field small{color:var(--ink-soft);font-size:.78rem}
+select{font:600 .9rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);min-height:38px}
+input[type=range]{width:100%;min-width:160px;accent-color:var(--ochre);height:28px}
+.play{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+button{font:600 .9rem var(--sans);padding:7px 13px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:38px}
+button.primary{background:var(--ink);color:var(--paper)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,select:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:10px 0 0}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"ctl ctl" "d a" "ins ins";gap:14px}
+#ctl{grid-area:ctl}#pD{grid-area:d}#pA{grid-area:a}#ins{grid-area:ins}
+@media (max-width:820px){.stage{grid-template-columns:minmax(0,1fr);grid-template-areas:"a" "d" "ins" "ctl"}}
+h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:0}
+.sub{font-size:.82rem;color:var(--ink-soft);margin:0 0 8px}
+.tag{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:0}
+canvas{display:block;width:100%;height:auto;border-radius:6px;touch-action:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.78rem;color:var(--ink-soft)}
+.line{font-size:.86rem;font-variant-numeric:tabular-nums;margin:8px 0 0;min-height:1.3em}
+.line b{font-weight:700}
+.insight{padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.cmp{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;font-family:var(--sans);font-size:.86rem;margin-top:10px;font-variant-numeric:tabular-nums}
+.cmp .track{height:14px;border-radius:3px;background:var(--grid);overflow:hidden}
+.cmp .fill{height:100%;background:var(--c)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.8rem;color:var(--ink-soft);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:78ch}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS203 Artificial Intelligence for Games · Week 4 · Signature example</p>
+  <h1>The diamond and the beam</h1>
+  <p class="lede">Same map, same code, same 17-step path. Dijkstra (h = 0) expands every cell closer than the goal. A* adds h and heads for the goal, and it only spreads out where the wall hides the goal from its heuristic. Press Replay.</p>
+</header>
+
+<div class="stage">
+<section class="panel" id="ctl" aria-label="Controls">
+  <div class="bar">
+    <div class="field">
+      <label for="map">Map</label>
+      <select id="map"><option value="wall">Wall (lecture, 8 × 12)</option><option value="lake">Lake (9 × 14)</option><option value="roads">Roads (5 × 11)</option><option value="custom">Custom (12 × 16)</option></select>
+    </div>
+    <div class="field" id="hWrap">
+      <label for="heur">Heuristic (A* only)</label>
+      <select id="heur"><option value="man">Manhattan</option><option value="euc">Euclidean</option><option value="zero">Zero</option></select>
+    </div>
+    <div class="field" id="kWrap" hidden>
+      <label for="kf">Cost per tile in h <output id="oK">1</output></label>
+      <input id="kf" type="range" min="0" max="2" step="0.5" value="1">
+      <small id="kNote">Cheapest step is 1 (road), so 1 is the largest admissible factor.</small>
+    </div>
+    <div class="field">
+      <label for="w">Weight w (A* only) <output id="oW">1.0</output></label>
+      <input id="w" type="range" min="1" max="3" step="0.1" value="1">
+      <small id="bound">path cost ≤ w × optimal</small>
+    </div>
+  </div>
+  <div class="play">
+    <button id="play" class="primary" aria-pressed="false">Play</button>
+    <button id="step">Step</button>
+    <button id="replay">Replay</button>
+    <label for="spd" style="font-weight:600;font-size:.88rem">Speed</label>
+    <select id="spd"><option value="1">1 per second</option><option value="5" selected>5 per second</option><option value="20">20 per second</option><option value="0">Instant</option></select>
+    <button id="resetMap">Reset map</button>
+  </div>
+  <p class="hint">Click or tap cells to toggle walls, drag S or G to move them. Keyboard: focus a grid, move the cursor with the arrow keys, Enter toggles a wall, S and G place the start and goal. Step from the finished state starts over at expansion 1.</p>
+  <div class="legend">
+    <span><i style="background:linear-gradient(90deg,color-mix(in srgb,var(--steel) 20%,var(--cell)),var(--steel))"></i>Dijkstra closed, early to late</span>
+    <span><i style="background:linear-gradient(90deg,color-mix(in srgb,var(--ochre) 20%,var(--cell)),var(--ochre))"></i>A* closed, early to late</span>
+    <span><i style="border:2px solid var(--ink);background:transparent"></i>on the open list</span>
+    <span><i style="background:var(--blood);height:5px"></i>final path</span>
+    <span><i style="background:var(--wall)"></i>wall</span>
+    <span id="roadKey" hidden><i style="background:var(--road)"></i>road (costs 1; ground costs 2)</span>
+  </div>
+</section>
+
+  <section class="panel" id="pD" aria-labelledby="hD">
+    <h2 id="hD"><span class="tag" style="background:var(--steel)"></span>Dijkstra</h2>
+    <p class="sub">Same search with h = 0: f = g.</p>
+    <canvas id="cD" tabindex="0" role="application" aria-label="Dijkstra grid. Arrow keys move the cursor, Enter toggles a wall, S and G place start and goal."></canvas>
+    <div class="stats">
+      <div class="stat" style="--c:var(--steel)"><b id="dX">—</b><span>expanded</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="dO">—</b><span>open list</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="dC">—</b><span>path cost</span></div>
+    </div>
+    <p class="line" id="dLast"></p>
+    <p class="line" id="dHover"></p>
+  </section>
+  <section class="panel" id="pA" aria-labelledby="hA">
+    <h2 id="hA"><span class="tag" style="background:var(--ochre)"></span>A*</h2>
+    <p class="sub" id="aSub">f = g + w × h, ties broken by h, then row, then column.</p>
+    <canvas id="cA" tabindex="0" role="application" aria-label="A star grid. Arrow keys move the cursor, Enter toggles a wall, S and G place start and goal."></canvas>
+    <div class="stats">
+      <div class="stat" style="--c:var(--ochre)"><b id="aX">—</b><span>expanded</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="aO">—</b><span>open list</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="aC">—</b><span>path cost</span></div>
+    </div>
+    <p class="line" id="aLast"></p>
+    <p class="line" id="aHover"></p>
+  </section>
+
+<div class="insight" id="ins">
+  <div id="insight"></div>
+  <div class="cmp" id="cmp"></div>
+</div>
+</div>
+<p class="sr" aria-live="polite" id="live"></p>
+<footer>Search code follows the week 4 lecture exactly: 4-connected moves, open-list key (f, h, row, column) compared in that order, duplicates allowed, stale entries skipped when popped, and the expanded count is the size of the closed set when the goal is popped, goal included. Cells are (row, column) from the top left. The Roads map is the lecture's miniature of Civilization VI's road costs; everything is drawn as flat shapes.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MAPS={
+  wall:["............","............","....#.......","....#.......","S...#......G","....#.......","....#.......","............"],
+  lake:["..............","..............","......####....",".........#....","..S......#..G.",".........#....","......####....","..............",".............."],
+  roads:["===========","=.........=","=.........=","S.........G","..........."],
+  custom:(()=>{const m=[];for(let r=0;r<12;r++)m.push('.'.repeat(16));m[5]='..S..........G..';return m;})()
+};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+let mapName='wall',M,R,C,S,G,Dres,Ares,k=0,timer=null,hover=null,cursor=[0,0],drag=null,paintTo=null,lastLive=0;
+
+function load(name){mapName=name;M=MAPS[name].map(r=>r.split(''));R=M.length;C=M[0].length;findSG();}
+function findSG(){for(let r=0;r<R;r++)for(let c=0;c<C;c++){if(M[r][c]==='S')S=[r,c];if(M[r][c]==='G')G=[r,c];}}
+const roads=()=>mapName==='roads';
+function stepCost(r,c){return roads()?('=SG'.includes(M[r][c])?1:2):1;}
+function heur(){
+  if(roads()){const kf=+$('kf').value;return(r,c)=>kf*(Math.abs(r-G[0])+Math.abs(c-G[1]));}
+  const t=$('heur').value;
+  if(t==='man')return(r,c)=>Math.abs(r-G[0])+Math.abs(c-G[1]);
+  if(t==='euc')return(r,c)=>Math.hypot(r-G[0],c-G[1]);
+  return()=>0;
+}
+// heap on [f, h, r, c]
+function less(a,b){for(let i=0;i<4;i++){if(a[i]!==b[i])return a[i]<b[i];}return false;}
+function hpush(H,v){H.push(v);let i=H.length-1;while(i>0){const p=(i-1)>>1;if(less(H[i],H[p])){[H[i],H[p]]=[H[p],H[i]];i=p;}else break;}}
+function hpop(H){const top=H[0],last=H.pop();if(H.length){H[0]=last;let i=0;for(;;){const l=2*i+1,rr=l+1;let m=i;if(l<H.length&&less(H[l],H[m]))m=l;if(rr<H.length&&less(H[rr],H[m]))m=rr;if(m===i)break;[H[i],H[m]]=[H[m],H[i]];i=m;}}return top;}
+
+// The lecture's search(), plus snapshots after each expansion for playback.
+function search(h,w){
+  const N=R*C,idx=(r,c)=>r*C+c,g=new Float64Array(N).fill(Infinity),prev=new Int32Array(N).fill(-1),closed=new Uint8Array(N);
+  const order=[],snaps=[];let found=false;
+  g[idx(...S)]=0;const hs=h(...S);const H=[[w*hs,hs,S[0],S[1]]];
+  const snap=()=>{const open=new Set();for(const e of H){const q=idx(e[2],e[3]);if(!closed[q])open.add(q);}snaps.push({n:order.length,open,g:g.slice()});};
+  snap();
+  while(H.length){
+    const [f,hh,r,c]=hpop(H),q=idx(r,c);
+    if(closed[q])continue;
+    closed[q]=1;order.push({q,r,c,g:g[q],h:hh,f});
+    if(r===G[0]&&c===G[1]){found=true;snap();break;}
+    for(const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){
+      const nr=r+dr,nc=c+dc;if(nr<0||nr>=R||nc<0||nc>=C||M[nr][nc]==='#')continue;
+      const nq=idx(nr,nc),ng=g[q]+stepCost(nr,nc);
+      if(ng<g[nq]){g[nq]=ng;prev[nq]=q;const hn=h(nr,nc);hpush(H,[ng+w*hn,hn,nr,nc]);}
+    }
+    snap();
+  }
+  let path=null;if(found){path=[];let q=idx(...G);while(q!==-1){path.push(q);q=prev[q];}path.reverse();}
+  return{order,snaps,found,cost:found?g[idx(...G)]:null,expanded:order.length,path,h};
+}
+window.CS203W04={state:()=>({D:Dres,A:Ares,k,M,S,G}),closedAt:(n)=>Ares.order.slice(0,n).map(o=>[o.r,o.c])};
+
+function compute(){
+  const w=+$('w').value;
+  Dres=search(()=>0,1);Ares=search(heur(),w);
+}
+const maxK=()=>Math.max(Dres.order.length,Ares.order.length);
+const fmt=x=>Number.isInteger(x)?String(x):(Math.round(x*100)/100).toFixed(2).replace(/0$/,'');
+
+// ---------- drawing
+function setup(cv){const dpr=window.devicePixelRatio||1;cv.style.aspectRatio=C+' / '+R;const r=cv.getBoundingClientRect();cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.width*R/C*dpr));const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.width*R/C};}
+function drawSide(cv,res,colVar){
+  const c=setup(cv),g=c.g,ts=c.w/C,col=css(colVar),cell=css('--cell');
+  const kk=Math.min(k,res.order.length),sn=res.snaps[Math.min(kk,res.snaps.length-1)];
+  g.clearRect(0,0,c.w,c.h);
+  const total=Math.max(1,res.order.length-1);
+  const rank=new Map();for(let i=0;i<kk;i++)rank.set(res.order[i].q,i);
+  for(let r=0;r<R;r++)for(let cc=0;cc<C;cc++){
+    const q=r*C+cc,x=cc*ts,y=r*ts,t=M[r][cc];
+    g.fillStyle=t==='#'?css('--wall'):(t==='='?css('--road'):cell);g.fillRect(x,y,ts,ts);
+    if(t==='='){g.strokeStyle=cell;g.lineWidth=1;g.setLineDash([3,3]);g.beginPath();g.moveTo(x+ts*0.2,y+ts/2);g.lineTo(x+ts*0.8,y+ts/2);g.stroke();g.setLineDash([]);}
+    if(rank.has(q)){g.fillStyle=col;g.globalAlpha=0.1+0.8*rank.get(q)/total;g.fillRect(x,y,ts,ts);g.globalAlpha=1;}
+  }
+  // grid lines
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();
+  for(let r=0;r<=R;r++){g.moveTo(0,r*ts+.5);g.lineTo(c.w,r*ts+.5);}for(let cc=0;cc<=C;cc++){g.moveTo(cc*ts+.5,0);g.lineTo(cc*ts+.5,c.h);}g.stroke();
+  // open list
+  g.strokeStyle=css('--ink');g.lineWidth=Math.max(1.5,ts*0.045);g.globalAlpha=.7;
+  for(const q of sn.open){const r=Math.floor(q/C),cc=q%C;g.strokeRect(cc*ts+ts*0.2,r*ts+ts*0.2,ts*0.6,ts*0.6);}g.globalAlpha=1;
+  // path
+  const done=kk>=res.order.length&&res.found;
+  if(done){
+    const pts=res.path.map(q=>[(q%C+.5)*ts,(Math.floor(q/C)+.5)*ts]);
+    for(const [cl,wd] of [[css('--paper'),ts*0.2+4],[css('--blood'),ts*0.2]]){g.strokeStyle=cl;g.lineWidth=wd;g.lineJoin='round';g.lineCap='round';g.beginPath();pts.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p));g.stroke();}
+    g.lineCap='butt';
+  }
+  // S and G badges
+  for(const [p,l] of [[S,'S'],[G,'G']]){
+    const x=(p[1]+.5)*ts,y=(p[0]+.5)*ts,rad=ts*0.4;
+    g.fillStyle=css('--ink');g.beginPath();g.arc(x,y,rad,0,Math.PI*2);g.fill();
+    g.fillStyle=css('--paper');g.font=`700 ${Math.max(10,ts*0.46)}px ${css('--sans')}`;g.textAlign='center';g.textBaseline='middle';g.fillText(l,x,y+1);
+  }
+  // hover or keyboard cursor
+  const hc=hover||(document.activeElement===$('cD')||document.activeElement===$('cA')?cursor:null);
+  if(hc){g.strokeStyle=css('--focus');g.lineWidth=3;g.strokeRect(hc[1]*ts+1.5,hc[0]*ts+1.5,ts-3,ts-3);}
+  return sn;
+}
+function statsFor(res,pre){
+  const kk=Math.min(k,res.order.length),sn=res.snaps[Math.min(kk,res.snaps.length-1)],done=kk>=res.order.length;
+  $(pre+'X').textContent=kk;$(pre+'O').textContent=sn.open.size;
+  $(pre+'C').textContent=done?(res.found?fmt(res.cost):'no path'):'—';
+  const last=kk>0?res.order[kk-1]:null;
+  $(pre+'Last').innerHTML=last?`last expanded: <b>(${last.r}, ${last.c})</b> g ${fmt(last.g)} &nbsp;h ${fmt(last.h)} &nbsp;f ${fmt(last.f)}`:'last expanded: none yet';
+}
+function hoverLines(){
+  const hc=hover||((document.activeElement===$('cD')||document.activeElement===$('cA'))?cursor:null);
+  if(!hc){$('dHover').textContent='Hover or focus a cell to see its values.';$('aHover').textContent='Hover or focus a cell to see its values.';return;}
+  const [r,c]=hc,q=r*C+c,w=+$('w').value;
+  if(M[r][c]==='#'){$('dHover').textContent=$('aHover').textContent=`Cell (${r}, ${c}): wall`;return;}
+  const gs=res=>{const kk=Math.min(k,res.order.length),sn=res.snaps[Math.min(kk,res.snaps.length-1)];return sn.g[q];};
+  const gd=gs(Dres),ga=gs(Ares),h=Ares.h(r,c);
+  $('dHover').innerHTML=`Cell (${r}, ${c}): g <b>${gd===Infinity?'not reached':fmt(gd)}</b>`;
+  $('aHover').innerHTML=`Cell (${r}, ${c}): g <b>${ga===Infinity?'—':fmt(ga)}</b> &nbsp;h <b>${fmt(h)}</b> &nbsp;f <b>${ga===Infinity?'—':fmt(ga+w*h)}</b>`;
+}
+function insight(){
+  const w=+$('w').value,d=Dres,a=Ares;
+  $('bound').textContent=d.found?`path cost ≤ w × optimal = ${w.toFixed(1)} × ${fmt(d.cost)} = ${fmt(Math.round(w*d.cost*100)/100)}`:'path cost ≤ w × optimal';
+  let s;
+  if(!d.found)s='No path: the start and goal are walled apart. Both searches empty their open lists and expand every reachable cell.';
+  else{
+    const pct=Math.round(100*a.expanded/d.expanded);
+    s=`A* expanded ${a.expanded} cells where Dijkstra expanded ${d.expanded}, ${pct}% of the work. `;
+    if(a.cost===d.cost)s+=`Both paths cost ${fmt(d.cost)}. `;
+    else s+=`But A*'s path costs ${fmt(a.cost)}, worse than the optimal ${fmt(d.cost)}. `;
+    if(roads()){const kf=+$('kf').value;
+      if(kf>1)s+=`h = ${kf} per tile overestimates every road tile, which costs only 1. A* marches across the ground and ignores the road: no crash, just a unit that looks dumb.`;
+      else if(kf===0)s+='With h = 0, A* is Dijkstra.';
+      else s+=`h = ${kf} per tile never exceeds the true cost, since no tile costs less than 1, so A* keeps the road.`;}
+    else if($('heur').value==='zero')s+='With h = 0 the two searches are the same function, so they do the same work.';
+    else if(w>1)s+=`With w = ${w.toFixed(1)} A* leans harder on h. Its cost is guaranteed to be at most ${w.toFixed(1)} × ${fmt(d.cost)}.`;
+    else if($('heur').value==='euc')s+='Euclidean distance is admissible here but less informed than Manhattan on a 4-way grid, so A* expands more cells.';
+    else if(mapName==='wall')s+='On open ground h is exact and A* walks a beam. The bulge is the pocket in front of the wall, where h points into stone.';
+    else if(mapName==='lake')s+='The lake opens away from the goal, so h keeps pulling A* into the pocket. That is the Factorio problem from the lecture.';
+  }
+  $('insight').textContent=s;
+  const mx=Math.max(d.expanded,a.expanded,1);
+  $('cmp').innerHTML=`<span>Dijkstra</span><span class="track"><span class="fill" style="display:block;--c:var(--steel);width:${100*d.expanded/mx}%"></span></span><span><b>${d.expanded}</b> expanded</span>`+
+    `<span>A*</span><span class="track"><span class="fill" style="display:block;--c:var(--ochre);width:${100*a.expanded/mx}%"></span></span><span><b>${a.expanded}</b> expanded</span>`;
+}
+function render(){drawSide($('cD'),Dres,'--steel');drawSide($('cA'),Ares,'--ochre');statsFor(Dres,'d');statsFor(Ares,'a');hoverLines();}
+function live(force){
+  const now=performance.now();if(!force&&now-lastLive<1000)return;lastLive=now;
+  $('live').textContent=`Dijkstra expanded ${$('dX').textContent}, open ${$('dO').textContent}, cost ${$('dC').textContent}. A* expanded ${$('aX').textContent}, open ${$('aO').textContent}, cost ${$('aC').textContent}.`;
+}
+// every control change: rerun both, show the final state
+function rerun(){stop();compute();k=maxK();render();insight();live(true);}
+
+// ---------- playback
+function stop(){clearInterval(timer);timer=null;$('play').textContent='Play';$('play').setAttribute('aria-pressed','false');}
+function tick(){if(k>=maxK()){stop();live(true);return;}k++;render();live(false);if(k>=maxK()){stop();live(true);}}
+function play(){
+  if(k>=maxK())k=0;
+  const sp=+$('spd').value;
+  if(sp===0){k=maxK();render();live(true);return;}
+  timer=setInterval(tick,1000/sp);$('play').textContent='Pause';$('play').setAttribute('aria-pressed','true');render();
+}
+$('play').addEventListener('click',()=>timer?stop():play());
+$('replay').addEventListener('click',()=>{stop();k=0;render();play();});
+$('step').addEventListener('click',()=>{stop();if(k>=maxK())k=0;k++;render();live(true);});
+$('spd').addEventListener('change',()=>{if(timer){stop();play();}});
+$('map').addEventListener('change',()=>{load($('map').value);syncMapUI();rerun();});
+$('resetMap').addEventListener('click',()=>{load(mapName);rerun();});
+$('heur').addEventListener('change',rerun);
+$('w').addEventListener('input',()=>{$('oW').textContent=(+$('w').value).toFixed(1);rerun();});
+$('kf').addEventListener('input',()=>{$('oK').textContent=$('kf').value;rerun();});
+function syncMapUI(){const rd=roads();$('hWrap').hidden=rd;$('kWrap').hidden=!rd;$('roadKey').hidden=!rd;
+  $('aSub').textContent=rd?'h = (cost per tile) × Manhattan. f = g + w × h.':'f = g + w × h, ties broken by h, then row, then column.';cursor=[0,0];}
+
+// ---------- editing
+function cellAt(cv,e){const r=cv.getBoundingClientRect(),ts=r.width/C;const c=Math.floor((e.clientX-r.left)/ts),rr=Math.floor((e.clientY-r.top)/ts);return(rr>=0&&rr<R&&c>=0&&c<C)?[rr,c]:null;}
+function base(r,c){const o=(MAPS[mapName][r]||'')[c];if(o==='S'||o==='G')return roads()?'=':'.';if(o==='='&&roads())return '=';return '.';}
+function setCell(r,c,v){if(M[r][c]==='S'||M[r][c]==='G')return false;if(M[r][c]===v)return false;M[r][c]=v;return true;}
+function moveSG(which,r,c){if(M[r][c]==='#'||M[r][c]===(which==='S'?'G':'S'))return false;const p=which==='S'?S:G;
+  M[p[0]][p[1]]=base(p[0],p[1]);M[r][c]=which;findSG();return true;}
+for(const id of ['cD','cA']){
+  const cv=$(id);
+  cv.addEventListener('pointerdown',e=>{const p=cellAt(cv,e);if(!p)return;cursor=p;const t=M[p[0]][p[1]];
+    if(t==='S'||t==='G'){drag=t;}else{paintTo=t==='#'?base(...p):'#';if(setCell(p[0],p[1],paintTo))rerun();}
+    cv.setPointerCapture(e.pointerId);});
+  cv.addEventListener('pointermove',e=>{const p=cellAt(cv,e);
+    if(drag&&p){if((drag==='S'?S:G).join()!==p.join()&&moveSG(drag,...p))rerun();return;}
+    if(paintTo&&p){if(setCell(p[0],p[1],paintTo))rerun();return;}
+    const old=hover;hover=p;if(String(old)!==String(p))render();});
+  cv.addEventListener('pointerup',()=>{drag=null;paintTo=null;});
+  cv.addEventListener('pointercancel',()=>{drag=null;paintTo=null;});
+  cv.addEventListener('pointerleave',()=>{if(!drag&&!paintTo){hover=null;render();}});
+  cv.addEventListener('keydown',e=>{
+    const m={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[e.key];
+    if(m){e.preventDefault();cursor=[Math.min(R-1,Math.max(0,cursor[0]+m[0])),Math.min(C-1,Math.max(0,cursor[1]+m[1]))];hover=null;render();
+      $('live').textContent=`Cell ${cursor[0]}, ${cursor[1]}. ${$(id==='cA'?'aHover':'dHover').textContent.replace(/^Cell \(\d+, \d+\): /,'')}`;return;}
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();const [r,c]=cursor;if(setCell(r,c,M[r][c]==='#'?base(r,c):'#'))rerun();return;}
+    const kk=e.key.toLowerCase();if(kk==='s'||kk==='g'){e.preventDefault();if(moveSG(kk.toUpperCase(),...cursor))rerun();}
+  });
+  cv.addEventListener('focus',render);cv.addEventListener('blur',render);
+}
+
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(reduce.matches)$('spd').value='0';
+reduce.addEventListener('change',()=>{if(reduce.matches)$('spd').value='0';});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+load('wall');syncMapUI();compute();k=maxK();render();insight();
+})();
+</script>
+</body>
+</html>

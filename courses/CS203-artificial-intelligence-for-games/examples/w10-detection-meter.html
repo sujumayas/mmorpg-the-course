@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Detection meter · CS203 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:64ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0}
+h2 small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem;margin-bottom:6px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 14px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:14px}
+@media (max-width:820px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+#room{display:block;width:100%;max-width:440px;aspect-ratio:1/1;margin:0 auto;touch-action:none;cursor:grab;border-radius:6px}
+#plot{display:block;width:100%;height:300px}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 0}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:1fr}}
+label,.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:center}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number],select{font:600 .95rem var(--sans);padding:5px 7px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=number]{width:76px}
+select{width:100%;margin-top:4px}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.92rem;justify-content:flex-start}
+.check input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+.pair{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.pair label{font-weight:500;justify-content:flex-start}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.btn{font:600 .9rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:820px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-weight:600;padding-bottom:4px}
+th,td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+td{white-space:nowrap}
+th{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.note{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS203 Artificial Intelligence for Games · Week 10 · Worked example</p>
+  <h1>Same guard, same eyes</h1>
+  <p class="lede">His memory decides whether peeking works. A peek pattern is safe exactly when its exposed share stays at or under <i>f*</i> = T / (T + F). Drag the forget time and watch the sawtooth either stay flat or climb.</p>
+</header>
+
+<div class="presets" role="group" aria-label="Scenarios from the lecture">
+  <button class="chip" data-p="a" aria-pressed="true">Peek 1.5 s, hide 2 s</button>
+  <button class="chip" data-p="b" aria-pressed="false">Peek 1 s, hide 3 s</button>
+  <button class="chip" data-p="c" aria-pressed="false">Peek 1 s, hide 3 s, F = 10</button>
+  <button class="chip" data-p="d" aria-pressed="false">Stand in view</button>
+  <button class="chip" data-p="e" aria-pressed="false">Stand in view, half light</button>
+</div>
+
+<section class="panel" aria-label="Guard and awareness meter">
+  <div class="charts">
+    <figure>
+      <h2>Room<small>24 m × 24 m, seen from above. Drag the player, or focus the map and use arrow keys (0.5 m).</small></h2>
+      <canvas id="room" tabindex="0" role="img" aria-label="Room map"></canvas>
+    </figure>
+    <figure>
+      <h2>Awareness<small>Meter against time. Shaded bands are ticks when the guard senses the player.</small></h2>
+      <canvas id="plot" role="img" aria-label="Awareness meter plotted against time"></canvas>
+      <div class="readout">
+        <div class="stat" style="--c:var(--steel)"><b id="rD">—</b><span>distance d</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rT">—</b><span>fill time T</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rF">—</b><span>forget time F</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rFs">—</b><span>break-even f*</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rExp">—</b><span>exposure share</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rDet">—</b><span>first detection</span></div>
+      </div>
+      <p class="note" id="rNow"></p>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="light">Light level ℓ <output id="oLight">1.00</output></label>
+      <input id="light" type="range" min="0.1" max="1" step="0.05" value="1">
+      <label for="forget" style="margin-top:8px">Forget time F <output id="oF">6 s</output></label>
+      <input id="forget" type="range" min="1" max="40" step="0.5" value="6">
+    </div>
+    <div>
+      <label class="check" for="peek"><input type="checkbox" id="peek" checked> Auto-peek</label>
+      <div class="pair">
+        <label for="eIn">exposed e <input type="number" id="eIn" min="0.1" max="5" step="0.1" value="1.5"> s</label>
+        <label for="hIn">hidden h <input type="number" id="hIn" min="0.1" max="10" step="0.1" value="2"> s</label>
+      </div>
+      <label for="model" style="margin-top:10px">Awareness model</label>
+      <select id="model">
+        <option value="fill">Fill and drain</option>
+        <option value="instant">Instant</option>
+        <option value="never">Never forgets</option>
+        <option value="reset">Reset on hide</option>
+      </select>
+    </div>
+    <div>
+      <span class="lab">Clock <output id="oClock" style="font-variant-numeric:tabular-nums">0.0 s</output></span>
+      <div class="row">
+        <button class="btn" id="play">Pause</button>
+        <button class="btn" id="reset">Reset</button>
+      </div>
+      <div class="row" role="group" aria-label="Speed">
+        <button class="chip" data-speed="1" aria-pressed="true">1×</button>
+        <button class="chip" data-speed="2" aria-pressed="false">2×</button>
+        <button class="chip" data-speed="4" aria-pressed="false">4×</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="tables">
+    <div class="table-wrap"><table>
+      <caption>Break-even by distance, at the current ℓ and F</caption>
+      <thead><tr><th>Distance</th><th>Fill T</th><th>f*</th><th id="thPeek">Safe peek, hide 2 s</th></tr></thead>
+      <tbody id="tDist"></tbody>
+    </table></div>
+    <div class="table-wrap"><table>
+      <caption>Meter at the end of each phase</caption>
+      <thead><tr><th>Moment</th><th>Time</th><th>Meter</th></tr></thead>
+      <tbody id="tPhase"></tbody>
+    </table></div>
+  </div>
+  <div class="sr" aria-live="polite" id="live"></div>
+</section>
+
+<footer>Fill-time rule after Walsh, "Modeling Perception and Awareness in Tom Clancy's Splinter Cell Blacklist", <i>Game AI Pro 2</i> (2015), ch. 28: a timer set by the vision shape and scaled linearly with distance. The drain, the parameters (T<sub>near</sub> 1 s, T<sub>far</sub> 4 s, range 20 m, F 6 s, tick 0.1 s) and the room are invented for teaching and match the lecture's <code>first_detection</code>.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DT=0.1,RANGE=20,HALF=30*Math.PI/180,GUARD={x:12,y:4},COVER={x0:10.5,x1:13.5,y0:14,y1:15},ROOM=24;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let P={x:12,y:14},light=1,F=6,peek=true,E=1.5,H=2,model='fill',speed=1,playing=true;
+let run;
+
+function detectTime(d,l){return (1+3*Math.min(d,RANGE)/RANGE)/l}
+function dist(){return Math.hypot(P.x-GUARD.x,P.y-GUARD.y)}
+function blocked(){ // segment guard->player passes through the cover block's interior
+  let t0=0,t1=1;const dx=P.x-GUARD.x,dy=P.y-GUARD.y;
+  const clip=(p,q)=>{if(Math.abs(p)<1e-12)return q>0;const r=q/p;if(p<0){if(r>t1)return false;if(r>t0)t0=r}else{if(r<t0)return false;if(r<t1)t1=r}return true};
+  if(!clip(-dx,GUARD.x-COVER.x0)||!clip(dx,COVER.x1-GUARD.x)||!clip(-dy,GUARD.y-COVER.y0)||!clip(dy,COVER.y1-GUARD.y))return false;
+  return t1-t0>1e-6;
+}
+function inView(){
+  const d=dist();if(d<1e-9)return true;if(d>RANGE+1e-9)return false;
+  const cos=(P.y-GUARD.y)/d;if(cos<Math.cos(HALF)-1e-9)return false;
+  return !blocked();
+}
+function eT(){return Math.round(E/DT)} function hT(){return Math.round(H/DT)}
+function exposedAt(i){if(!peek)return true;return ((i-1)%(eT()+hT()))<eT()}
+function stepMeter(a,sensed,T){
+  if(sensed){if(model==='instant')return 1;return Math.min(1,a+DT/T)}
+  if(model==='never')return a;if(model==='reset')return 0;return Math.max(0,a-DT/F);
+}
+// one run from zero; returns meter per tick, sensed per tick, detection tick
+function simulate(ticks){
+  const view=inView(),T=detectTime(dist(),light);
+  const a=[0],s=[false];let m=0,det=null,sus=null;
+  for(let i=1;i<=ticks;i++){
+    const sensed=view&&exposedAt(i);
+    if(det===null){m=stepMeter(m,sensed,T);if(m>=1-1e-9){det=i;m=1}if(sus===null&&m>=0.5-1e-9)sus=i}
+    a.push(m);s.push(sensed);
+  }
+  return{a,s,det,sus};
+}
+function prediction(){const r=simulate(600);return r} // 60 s limit, like the lecture
+function restart(t){run={t:t,res:simulate(Math.round(t/DT))};announced={sus:false,det:false}}
+let announced={sus:false,det:false};
+
+// ---- drawing ----
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.height}}
+function drawRoom(){
+  const {g,w}=setup($('room')),s=w/ROOM;
+  g.fillStyle=css('--paper');g.fillRect(0,0,w,w);
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let i=1;i<ROOM;i++){g.beginPath();g.moveTo(i*s,0);g.lineTo(i*s,w);g.stroke();g.beginPath();g.moveTo(0,i*s);g.lineTo(w,i*s);g.stroke()}
+  const gx=GUARD.x*s,gy=GUARD.y*s;
+  // cone
+  g.fillStyle=css('--steel');g.globalAlpha=.16;g.beginPath();g.moveTo(gx,gy);g.arc(gx,gy,RANGE*s,Math.PI/2-HALF,Math.PI/2+HALF);g.closePath();g.fill();g.globalAlpha=1;
+  g.strokeStyle=css('--steel');g.lineWidth=1.5;g.beginPath();g.moveTo(gx,gy);g.arc(gx,gy,RANGE*s,Math.PI/2-HALF,Math.PI/2+HALF);g.closePath();g.stroke();
+  // range rings
+  g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='middle';
+  for(const r of [5,10,15,20]){g.setLineDash([3,4]);g.strokeStyle=css('--ink-soft');g.globalAlpha=.55;g.beginPath();g.arc(gx,gy,r*s,0,Math.PI*2);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    g.fillStyle=css('--ink-soft');const ang=Math.PI/2-HALF-0.12;g.fillText(r+' m',gx+Math.cos(ang)*r*s+3,gy+Math.sin(ang)*r*s)}
+  // cover
+  g.fillStyle=css('--ink');g.fillRect(COVER.x0*s,COVER.y0*s,(COVER.x1-COVER.x0)*s,(COVER.y1-COVER.y0)*s);
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.fillText('cover',(COVER.x0+COVER.x1)/2*s,COVER.y1*s+10);
+  // light dims the room
+  if(light<1){g.fillStyle='#000';g.globalAlpha=(1-light)*.5;g.fillRect(0,0,w,w);g.globalAlpha=1}
+  // guard: triangle pointing +y
+  g.fillStyle=css('--blood');g.beginPath();g.moveTo(gx,gy+.9*s);g.lineTo(gx-.7*s,gy-.6*s);g.lineTo(gx+.7*s,gy-.6*s);g.closePath();g.fill();
+  g.fillStyle=css('--ink');g.textAlign='center';g.textBaseline='bottom';g.fillText('guard',gx,gy-.7*s);
+  // player
+  const i=Math.round(run.t/DT);const exposed=exposedAt(Math.max(1,i)),sensedNow=inView()&&exposed;
+  const px=P.x*s,py=P.y*s;
+  if(sensedNow){g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(gx,gy);g.lineTo(px,py);g.stroke();
+    g.fillStyle=css('--blood');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='middle';g.fillText('sensed',(gx+px)/2+6,(gy+py)/2)}
+  g.lineWidth=2.5;g.strokeStyle=css('--ochre');g.fillStyle=css('--ochre');
+  g.beginPath();g.arc(px,py,.55*s,0,Math.PI*2);exposed?g.fill():g.stroke();
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--ink');g.textBaseline='middle';const lab=peek?(exposed?'player (peeking)':'player (hidden)'):'player';
+  const right=px+.8*s+g.measureText(lab).width<w-4;g.textAlign=right?'left':'right';g.fillText(lab,right?px+.8*s:px-.8*s,py-.9*s);
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.strokeRect(1,1,w-2,w-2);
+}
+function drawPlot(){
+  const {g,w,h}=setup($('plot')),pad={l:40,r:12,t:12,b:30};
+  const tShow=reduce?Math.floor(run.t):run.t;
+  const x1=Math.max(30,tShow),x0=x1-30,yM=1.1;
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t-x0)/30,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yM);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  // sensed bands
+  const res=run.res,n=Math.round(tShow/DT);
+  g.fillStyle=css('--steel');g.globalAlpha=.18;
+  for(let i=1;i<=n;i++){if(res.s[i]){const t=i*DT;if(t<x0)continue;g.fillRect(X(t-DT),pad.t,X(t)-X(t-DT)+.5,h-pad.t-pad.b)}}
+  g.globalAlpha=1;
+  // axes
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(const v of [0,.25,.5,.75,1]){g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v.toFixed(2).replace(/0$/,''),pad.l-6,Y(v))}
+  for(let t=Math.ceil(x0/5)*5;t<=x1;t+=5){g.textAlign='center';g.textBaseline='top';g.fillText(t+' s',X(t),h-pad.b+6)}
+  // thresholds
+  for(const [v,lab,c] of [[.5,'suspicious','--ochre'],[1,'alert','--blood']]){g.strokeStyle=css(c);g.setLineDash([6,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.setLineDash([]);g.fillStyle=css(c);g.textAlign='right';g.textBaseline='bottom';g.font='600 12px '+css('--sans');g.fillText(lab,w-pad.r-2,Y(v)-2)}
+  // meter
+  g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();let started=false;
+  for(let i=Math.max(0,Math.floor(x0/DT));i<=n;i++){const px=X(i*DT),py=Y(res.a[i]);started?g.lineTo(px,py):(g.moveTo(px,py),started=true)}
+  g.stroke();
+  if(res.det!==null&&res.det<=n&&res.det*DT>=x0){const tx=X(res.det*DT);g.fillStyle=css('--blood');g.beginPath();g.arc(tx,Y(1),5,0,Math.PI*2);g.fill();
+    g.font='600 12px '+css('--sans');g.textAlign=tx>w-110?'right':'left';g.textBaseline='top';g.fillText(`alert at ${(res.det*DT).toFixed(1)} s`,tx+(tx>w-110?-8:8),Y(1)+6)}
+}
+const fmtS=v=>(Math.round(v*100)/100).toFixed(2)+' s';
+const pct=v=>(v*100).toFixed(1)+'%';
+function readouts(){
+  const d=dist(),T=detectTime(d,light),view=inView();
+  $('rD').textContent=d.toFixed(1)+' m';
+  $('rT').textContent=view?fmtS(T):fmtS(T)+'*';
+  $('rF').textContent=model==='never'?'∞':model==='reset'?'0 s':model==='instant'?(F+' s'):(F+' s');
+  let fs;if(model==='fill')fs=pct(T/(T+F));else if(model==='instant'||model==='never')fs='0%';else fs='—';
+  $('rFs').textContent=fs;
+  $('rExp').textContent=peek?pct(E/(E+H)):'100%';
+  const pr=prediction();
+  $('rDet').textContent=pr.det!==null?`at ${(pr.det*DT).toFixed(1)} s`:'never (safe)';
+  const i=Math.round(run.t/DT),m=run.res.a[i]||0,state=run.res.det!==null&&run.res.det<=i?'alert':(m>=.5-1e-9||(run.res.sus!==null&&run.res.sus<=i&&false))?'suspicious':'unaware';
+  $('rNow').textContent=`${view?'':'The player is outside the cone, out of range or behind cover, so nothing is sensed. * T shown for reference. '}Meter now ${m.toFixed(3)}, guard ${state}.`;
+  $('oClock').textContent=run.t.toFixed(1)+' s';
+  // insight
+  let s='';
+  if(!view)s='The guard cannot sense the player here at all, so the meter never moves. Drag the player into the cone.';
+  else if(model==='fill'){
+    const f=peek?E/(E+H):1,fsv=T/(T+F);
+    if(!peek)s=`Standing in view at ${d.toFixed(1)} m fills the meter in ${fmtS(T).replace(' s','')} s. Turn on auto-peek to see the forget time matter.`;
+    else if(f<=fsv+1e-9)s=`Exposed ${pct(f)} of the time, under the ${pct(fsv)} break-even. Each hide drains everything the peek added, so this pattern is <b>safe forever</b>. To make it dangerous, raise F above ${(H*T/E).toFixed(2)} s.`;
+    else s=`Exposed ${pct(f)} of the time, over the ${pct(fsv)} break-even. Each peek adds ${(E/T).toFixed(3)} and each hide removes at most ${(H/F).toFixed(3)}, so the meter climbs and the guard is <b>alert at ${pr.det!==null?(pr.det*DT).toFixed(1)+' s':'—'}</b>. Standing still in view would take ${fmtS(T)}. Drop F below ${(H*T/E).toFixed(2)} s and this pattern becomes safe.`;
+  }
+  else if(model==='instant')s='Instant: the first sensed tick sets the meter to 1. Every peek is a detection, so the player\'s timing stops mattering.';
+  else if(model==='never')s='Never forgets: the meter only climbs. Any pattern with some exposure is caught eventually; timing only changes when.';
+  else s=`Reset on hide: the meter drops to 0 the moment the player hides. Any peek shorter than T = ${fmtS(T)} is safe forever, however often it repeats.`;
+  $('insight').innerHTML=s;
+  // tables
+  $('thPeek').textContent=`Safe peek, hide ${H} s`;
+  $('tDist').innerHTML=[0,5,10,15,20].map(dd=>{const t=detectTime(dd,light),here=Math.abs(dd-d)<2.5;
+    return `<tr class="${here?'here':''}"><td>${dd} m</td><td>${t.toFixed(2)} s</td><td>${pct(t/(t+F))}</td><td>${(H*t/F).toFixed(2)} s</td></tr>`}).join('');
+  const rows=[];
+  if(peek&&view){const c=eT()+hT();let k=0;
+    for(let i=1;i<=600&&rows.length<8;i++){
+      const pos=(i-1)%c;const endPeek=pos===eT()-1,endHide=pos===c-1;
+      if(pr.det!==null&&i===pr.det){rows.push(`<tr class="here"><td>alert, during peek ${Math.floor((i-1)/c)+1}</td><td>${(i*DT).toFixed(1)} s</td><td>1.000</td></tr>`);break}
+      if(endPeek||endHide){const cyc=Math.floor((i-1)/c)+1;rows.push(`<tr><td>end of ${endPeek?'peek':'hide'} ${cyc}</td><td>${(i*DT).toFixed(1)} s</td><td>${pr.a[i].toFixed(3)}</td></tr>`)}
+    }
+  } else rows.push(`<tr><td colspan="3">${view?'Auto-peek is off: one long exposure.':'Not sensed.'}</td></tr>`);
+  $('tPhase').innerHTML=rows.join('');
+  $('room').setAttribute('aria-label',`Room map. Player at x ${P.x.toFixed(1)} m, y ${P.y.toFixed(1)} m, ${d.toFixed(1)} m from the guard, ${view?'inside the vision cone and not behind cover':'not sensed'}.`);
+}
+function announce(){
+  const i=Math.round(run.t/DT),r=run.res;
+  if(!announced.sus&&r.sus!==null&&r.sus<=i){announced.sus=true;$('live').textContent=`suspicious at ${(r.sus*DT).toFixed(1)} s`}
+  if(!announced.det&&r.det!==null&&r.det<=i){announced.det=true;$('live').textContent=`alert at ${(r.det*DT).toFixed(1)} s`}
+}
+function draw(){drawRoom();drawPlot();readouts()}
+function changed(){restart(run.t);announced={sus:true,det:true};draw()}
+
+// ---- animation ----
+let last=null,lastSec=-1;
+function frame(ts){
+  if(playing){
+    if(last!==null){const dt=Math.min(.25,(ts-last)/1000)*speed;const before=Math.round(run.t/DT);run.t=Math.min(run.t+dt,600);
+      const n=Math.round(run.t/DT);if(n>before){run.res=simulate(n)}announce();
+      if(!reduce||Math.floor(run.t)!==lastSec){lastSec=Math.floor(run.t);draw()}else{$('oClock').textContent=run.t.toFixed(1)+' s'}}
+    last=ts;
+  } else last=null;
+  requestAnimationFrame(frame);
+}
+
+// ---- controls ----
+function clearPreset(){document.querySelectorAll('.presets .chip').forEach(x=>x.setAttribute('aria-pressed','false'))}
+$('light').addEventListener('input',e=>{light=+e.target.value;$('oLight').textContent=light.toFixed(2);clearPreset();changed()});
+$('forget').addEventListener('input',e=>{F=+e.target.value;$('oF').textContent=F+' s';clearPreset();changed()});
+$('peek').addEventListener('change',e=>{peek=e.target.checked;clearPreset();restart(0);draw()});
+function numIn(id,min,max,set){$(id).addEventListener('input',e=>{const v=+e.target.value;if(e.target.value!==''&&v>=min&&v<=max){set(Math.round(v*10)/10);clearPreset();restart(0);draw()}});
+  $(id).addEventListener('change',e=>{let v=+e.target.value;if(!(v>=min))v=min;if(v>max)v=max;v=Math.round(v*10)/10;e.target.value=v;set(v);restart(0);draw()})}
+numIn('eIn',0.1,5,v=>E=v);numIn('hIn',0.1,10,v=>H=v);
+$('model').addEventListener('change',e=>{model=e.target.value;clearPreset();changed()});
+$('play').addEventListener('click',()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play'});
+$('reset').addEventListener('click',()=>{restart(0);draw()});
+document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{speed=+b.dataset.speed;document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'))}));
+// dragging
+const room=$('room');let drag=false;
+function toWorld(e){const r=room.getBoundingClientRect(),s=r.width/ROOM;return{x:Math.min(23.5,Math.max(.5,Math.round((e.clientX-r.left)/s*10)/10)),y:Math.min(23.5,Math.max(.5,Math.round((e.clientY-r.top)/s*10)/10))}}
+room.addEventListener('pointerdown',e=>{drag=true;room.setPointerCapture(e.pointerId);P=toWorld(e);clearPreset();changed()});
+room.addEventListener('pointermove',e=>{if(drag){P=toWorld(e);changed()}});
+room.addEventListener('pointerup',()=>{drag=false});
+room.addEventListener('keydown',e=>{const m={ArrowLeft:[-.5,0],ArrowRight:[.5,0],ArrowUp:[0,-.5],ArrowDown:[0,.5]}[e.key];if(!m)return;e.preventDefault();
+  P={x:Math.min(23.5,Math.max(.5,P.x+m[0])),y:Math.min(23.5,Math.max(.5,P.y+m[1]))};clearPreset();changed()});
+// presets
+const PRE={a:{e:1.5,h:2,F:6,l:1,peek:true},b:{e:1,h:3,F:6,l:1,peek:true},c:{e:1,h:3,F:10,l:1,peek:true},d:{e:1.5,h:2,F:6,l:1,peek:false},e:{e:1.5,h:2,F:6,l:.5,peek:false}};
+function preset(k,t){const p=PRE[k];E=p.e;H=p.h;F=p.F;light=p.l;peek=p.peek;model='fill';P={x:12,y:14};
+  $('eIn').value=E;$('hIn').value=H;$('forget').value=F;$('oF').textContent=F+' s';$('light').value=light;$('oLight').textContent=light.toFixed(2);$('peek').checked=peek;$('model').value='fill';
+  document.querySelectorAll('.presets .chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.p===k?'true':'false'));
+  restart(t);announced={sus:t>0,det:t>0};draw()}
+document.querySelectorAll('.presets .chip').forEach(b=>b.addEventListener('click',()=>preset(b.dataset.p,0)));
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+// first screen: the default pattern, already running for 12 s
+preset('a',12);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
