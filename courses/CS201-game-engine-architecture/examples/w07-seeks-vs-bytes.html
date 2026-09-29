@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seeks vs bytes — CS201 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.seg button{font:600 .9rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.chip{font:600 .82rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:820px){.charts{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:260px;touch-action:none;cursor:ew-resize}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 0}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px;min-width:0}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+@media (max-width:480px){.stats .stat b{font-size:1.05rem}}
+.barhead{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;margin:10px 0 3px}
+.barhead b{font-weight:600}
+.barhead span{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.track{position:relative;height:44px;background:var(--paper);border-radius:6px;box-shadow:inset 0 0 0 1px var(--grid);overflow:hidden}
+.fill{position:absolute;top:0;bottom:0;left:0;right:0;display:flex}
+.s{height:100%;min-width:0;overflow:hidden;display:flex;align-items:center;padding:0 6px;font-size:.78rem;font-weight:600;color:var(--paper);white-space:nowrap;font-variant-numeric:tabular-nums;transition:width .25s}
+.s.wait{background:var(--blood);background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(255,255,255,.18) 6px 9px)}
+.s.xfer{background:var(--steel)}
+.s.disk{background:var(--ochre)}
+.tick{position:absolute;top:-2px;bottom:-2px;width:0;border-left:2px dashed var(--ink)}
+.total{position:absolute;top:50%;transform:translateY(-50%);font-size:.82rem;font-weight:700;font-variant-numeric:tabular-nums;padding-left:6px;white-space:nowrap}
+.axis{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;margin-top:2px}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin-top:6px;font-variant-numeric:tabular-nums}
+.key i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.readrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,2fr);gap:8px;margin-top:12px}
+@media (max-width:1000px){.readrow{grid-template-columns:repeat(2,minmax(0,1fr))}.readrow .wide{grid-column:1/-1}}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 22px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:minmax(0,1fr)}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input:disabled{opacity:.55}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:0}
+.const{font-size:.88rem;margin:14px 0 0;color:var(--ink-soft)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS201 Game Engine Architecture · Week 7 · Worked example</p>
+  <h1>Every read pays a wait before the first byte</h1>
+  <p class="lede">Load time is seeks times access time plus bytes over bandwidth. On a hard drive the waiting dominates, so duplicating shared files to cut reads pays off. On an SSD the same trick buys almost nothing.</p>
+</header>
+
+<section class="panel" aria-label="Seek and transfer model">
+  <div class="seg" role="group" aria-label="Drive preset">
+    <button data-d="laptop" aria-pressed="true">Laptop HDD</button>
+    <button data-d="desktop" aria-pressed="false">Desktop HDD</button>
+    <button data-d="nvme" aria-pressed="false">NVMe SSD</button>
+    <button data-d="custom" aria-pressed="false">Custom</button>
+  </div>
+  <p class="insight" id="insight"></p>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Effective rate<small>R<sub>eff</sub>(b) = R × b / (b + t<sub>a</sub> × R). Drag the dot or use the read-size slider.</small></figcaption>
+      <canvas id="cRate" role="img" aria-label="Effective transfer rate against read size, log scale"></canvas>
+      <div class="stats" aria-live="polite">
+        <div class="stat" style="--c:var(--ink)"><b id="rB">—</b><span>read size b</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rEff">—</b><span>effective rate</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rPct">—</b><span>of rated speed</span></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption>Entering a district<small>20 districts, 140 MB unique each, 60 MB shared in 300 files. Duplicate a share f of the shared files into every district.</small></figcaption>
+      <div class="barhead"><b>Load time</b><span id="scaleLbl">scale 0 to 8 s</span></div>
+      <div class="track" id="tTrack"><div class="fill"><div class="s wait" id="sWait"></div><div class="s xfer" id="sXfer"></div></div><span class="total" id="tTotal"></span></div>
+      <div class="axis" id="tAxis"></div>
+      <div class="key"><span><i style="background:var(--blood)"></i>waiting S × t<sub>a</sub> = <b id="kWait">—</b></span><span><i style="background:var(--steel)"></i>transferring B / R = <b id="kXfer">—</b></span></div>
+      <div class="barhead" style="margin-top:14px"><b>Disk used</b><span>scale 0 to 4,500 MB</span></div>
+      <div class="track"><div class="fill"><div class="s disk" id="sDisk"></div></div><span class="tick" id="dTick" title="store once: 2,860 MB"></span><span class="total" id="dTotal"></span></div>
+      <div class="axis"><span>0</span><span>store once 2,860 ┆</span><span>4,500 MB</span></div>
+    </figure>
+  </div>
+
+  <div class="readrow" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="oS">—</b><span>reads S</span></div>
+    <div class="stat" style="--c:var(--steel)"><b>200 MB</b><span>bytes B</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="oT">—</b><span>load time T</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="oDisk">—</b><span>disk used</span></div>
+    <div class="stat wide" style="--c:var(--moss)"><b id="oSave">—</b><span>saved vs store-once</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="bIn">Read size b <output id="oB">64 KB</output></label>
+      <input id="bIn" type="range" min="0" max="1" step="1" value="0" aria-describedby="bHint">
+      <p class="hint" id="bHint">16 KB to 64 MB, log scale. <button class="chip" id="knee" type="button">Jump to knee</button></p>
+    </div>
+    <div>
+      <label for="fIn">Duplicated share f <output id="oF">0.00</output></label>
+      <input id="fIn" type="range" min="0" max="1" step="0.01" value="0">
+      <p class="hint">S = 1 + round(300 × (1 − f)), B = 200 MB</p>
+    </div>
+    <div>
+      <label for="taIn"><span>Access time t<sub>a</sub></span> <output id="oTa">15 ms</output></label>
+      <input id="taIn" type="range" min="0" max="1000" step="1" disabled>
+    </div>
+    <div>
+      <label for="rIn">Rated speed R <output id="oR">100 MB/s</output></label>
+      <input id="rIn" type="range" min="0" max="1000" step="1" disabled>
+    </div>
+  </div>
+  <p class="const">Drive sliders unlock under Custom. They always show the current drive. 1 MB = 1,000 KB here, so 64 KB = 0.064 MB.</p>
+</section>
+
+<footer>Drive figures are round classroom values: laptop HDD 15 ms and 100 MB/s, desktop HDD 13 ms and 150 MB/s, NVMe SSD 0.1 ms and 5,500 MB/s. The district scenario is invented for the lecture. See lecture section 2 for the derivation and sources.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fx=(x,d)=>{const p=Math.pow(10,d);return (Math.round(x*p+1e-7)/p).toFixed(d);};
+const grp=s=>s.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const num=(x,d)=>{const s=fx(x,d),[i,f]=s.split('.');return grp(i)+(f?'.'+f:'');};
+const DRIVES={laptop:{ta:15,R:100,scale:8,name:'laptop HDD'},desktop:{ta:13,R:150,scale:8,name:'desktop HDD'},nvme:{ta:0.1,R:5500,scale:0.1,name:'NVMe SSD'}};
+let drive='laptop',ta=15,R=100,f=0,b=0.064;
+// read sizes in MB (1 MB = 1000 KB)
+const SIZES=[0.016,0.024,0.032,0.048,0.064,0.096,0.128,0.192,0.256,0.384,0.5,0.75,1,1.5,2,3,4,6,8,12,16,24,32,48,64];
+const bIn=$('bIn');bIn.max=SIZES.length-1;
+const BMIN=0.016,BMAX=64;
+const TA=[0.05,30],RR=[20,7000];
+const toLog=(v,[a,c])=>1000*Math.log(v/a)/Math.log(c/a);
+const fromLog=(s,[a,c])=>a*Math.pow(c/a,s/1000);
+const sig2=v=>{const m=Math.pow(10,Math.floor(Math.log10(v))-1);return Math.round(v/m)*m;};
+
+const reff=x=>R*x/(x+ta*R/1000);
+const knee=()=>ta*R/1000;
+const S=ff=>1+Math.round(300*(1-ff));
+const T=ff=>S(ff)*ta/1000+200/R;
+const disk=ff=>140*20+60*(1-ff)+60*ff*20;
+
+function sizeLbl(x){return x<1?num(x*1000,x*1000<100&&x*1000%1?1:0)+' KB':num(x,x%1?(x*100%10?2:1):0)+' MB';}
+function secs(x){const d=x<1?3:3;return fx(x,d)+' s';}
+function scaleMax(){if(drive!=='custom')return DRIVES[drive].scale;const t0=T(0);for(const m of [0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50])if(m>=t0)return m;return 100;}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:54,r:12,t:22,b:34};
+let geom=null;
+function xPx(x){const {w}=geom;return pad.l+(w-pad.l-pad.r)*Math.log(x/BMIN)/Math.log(BMAX/BMIN);}
+function xVal(px){const {w}=geom;const t=Math.min(1,Math.max(0,(px-pad.l)/(w-pad.l-pad.r)));return BMIN*Math.pow(BMAX/BMIN,t);}
+function yPx(y){const {h}=geom;return pad.t+(h-pad.t-pad.b)*(1-y/R);}
+function draw(){
+  const c=setupCanvas($('cRate'));geom=c;const g=c.g,w=c.w,h=c.h;
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+(h-pad.t-pad.b)*(1-i/4);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(num(R*i/4,R*i/4%1?1:0),pad.l-6,y);}
+  const labs=[[0.016,'16K'],[0.064,'64K'],[0.256,'256K'],[1,'1M'],[4,'4M'],[16,'16M'],[64,'64M']];
+  const narrow=w<360;
+  labs.forEach(([v,l],i)=>{if(narrow&&i%2)return;const x=xPx(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign=i===labs.length-1?'right':'center';g.textBaseline='top';g.fillText(l+'B',i===labs.length-1?x+2:x,h-pad.b+6);});
+  g.save();g.translate(12,pad.t+(h-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillText('MB/s',0,0);g.restore();
+  // rated line
+  g.strokeStyle=css('--ink');g.setLineDash([6,5]);g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,yPx(R));g.lineTo(w-pad.r,yPx(R));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='bottom';g.fillText('rated speed '+num(R,R%1?1:0)+' MB/s',pad.l+4,yPx(R)-3);
+  // knee
+  const k=knee();
+  if(k>=BMIN&&k<=BMAX){const x=xPx(k);g.strokeStyle=css('--ochre');g.lineWidth=1.5;g.setLineDash([3,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ochre');g.font='600 12px '+css('--sans');const t='knee: b* = '+kneeLbl()+' MB, 50% of rated';
+    const tw=g.measureText(t).width;let tx=x+5;g.textAlign='left';if(tx+tw>w-pad.r){tx=x-5-tw;}tx=Math.max(pad.l+2,Math.min(tx,w-pad.r-tw));
+    const ty=yPx(R*0.5)+(b>k?18:-18);g.fillStyle=css('--paper-2');g.fillRect(tx-3,ty-9,tw+6,18);g.fillStyle=css('--ochre');
+    g.textBaseline='middle';g.fillText(t,tx,ty);g.font='12px '+css('--sans');}
+  // curve
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=240;i++){const x=BMIN*Math.pow(BMAX/BMIN,i/240),px=xPx(x),py=yPx(reff(x));i?g.lineTo(px,py):g.moveTo(px,py);}g.stroke();
+  // dot
+  const px=xPx(b),py=yPx(reff(b));
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--steel');g.beginPath();g.arc(px,py,8,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2.5;g.stroke();
+}
+function kneeLbl(){const k=knee();return k>=10?num(k,1):k>=0.1?num(k,2):num(k,4);}
+
+function update(){
+  // left
+  const e=reff(b);
+  $('rB').textContent=sizeLbl(b);$('oB').textContent=sizeLbl(b);
+  $('rEff').textContent=num(e,1)+' MB/s';
+  $('rPct').textContent=fx(100*e/R,e/R<0.01?1:0)+'%';
+  // right
+  const s=S(f),tw=S(f)*ta/1000,tx=200/R,tt=tw+tx,sm=scaleMax();
+  $('scaleLbl').textContent='scale 0 to '+(sm<1?fx(sm,sm<0.1?2:1):sm)+' s';
+  const W=$('sWait'),X=$('sXfer');W.style.width=(100*Math.min(tw,sm)/sm)+'%';X.style.width=(100*Math.min(tx,Math.max(0,sm-tw))/sm)+'%';
+  const trk=$('tTrack').clientWidth;
+  const lab=(px,long,short)=>px>long[1]?long[0]:px>short[1]?short[0]:'';
+  W.textContent=lab(trk*tw/sm,['waiting '+secs(tw),125],[secs(tw),62]);
+  X.textContent=lab(trk*tx/sm,['transferring '+secs(tx),150],[secs(tx),62]);
+  const tot=$('tTotal'),room=trk*(1-Math.min(tt,sm)/sm);tot.textContent='total '+secs(tt);tot.style.left=Math.min(100*tt/sm,100)+'%';
+  if(room<110){tot.style.transform='translate(-100%,-50%)';tot.style.padding='0 6px 0 0';tot.style.color='var(--paper)';X.textContent='';if(trk*tw/sm<220)W.textContent=W.textContent.replace('waiting ','');}
+  else{tot.style.transform='translateY(-50%)';tot.style.padding='0 0 0 6px';tot.style.color='var(--ink)';}
+  $('tAxis').innerHTML=[0,.25,.5,.75,1].map(q=>'<span>'+(sm<1?fx(sm*q,3):num(sm*q,sm*q%1?1:0))+'</span>').join('');
+  $('kWait').textContent=secs(tw);$('kXfer').textContent=secs(tx);
+  const d=disk(f);$('sDisk').style.width=(100*d/4500)+'%';$('sDisk').textContent=num(d,0)+' MB';
+  $('dTick').style.left=(100*2860/4500)+'%';
+  $('oS').textContent=num(s,0);$('oT').textContent=secs(tt);$('oDisk').textContent=num(d,0)+' MB';
+  const sv=T(0)-tt,ex=d-2860;
+  $('oSave').textContent=fx(sv,3)+' s for '+num(ex,0)+' MB extra';
+  $('oF').textContent=fx(f,2);
+  $('oTa').textContent=(ta<1?fx(ta,ta<0.1?3:2).replace(/0+$/,''):num(ta,ta%1?1:0))+' ms';
+  $('oR').textContent=num(R,0)+' MB/s';
+  // insight
+  const share=tw/tt;
+  let msg;
+  if(f===0) msg=`On the ${drive==='custom'?'custom drive':DRIVES[drive].name}, entering a district costs <b>${secs(tt)}</b>, and <b>${Math.round(share*100)}%</b> of it is waiting on ${num(s,0)} separate reads. `+(share>0.5?`Slide f to 1 and the waiting nearly vanishes.`:`Waiting is the smaller part here, so duplication has little to remove.`);
+  else msg=`Duplicating ${Math.round(f*100)}% of the shared files cuts load time from ${secs(T(0))} to <b>${secs(tt)}</b> (${Math.round(100*sv/T(0))}% faster) and costs <b>${num(ex,0)} MB</b> of disk (+${fx(100*ex/2860,1)}%).`+(share<0.5&&f>0.5&&T(0)<0.5?` On this drive that is a bad trade.`:'');
+  $('insight').innerHTML=msg;
+  bIn.value=nearestIdx(b);
+  draw();
+}
+function nearestIdx(x){let bi=0,bd=1e9;SIZES.forEach((v,i)=>{const dd=Math.abs(Math.log(v/x));if(dd<bd){bd=dd;bi=i;}});return bi;}
+function setDrive(d){
+  drive=d;document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.d===d));
+  if(d!=='custom'){ta=DRIVES[d].ta;R=DRIVES[d].R;}
+  $('taIn').disabled=$('rIn').disabled=(d!=='custom');
+  $('taIn').value=Math.round(toLog(ta,TA));$('rIn').value=Math.round(toLog(R,RR));
+  update();
+}
+document.querySelectorAll('.seg button').forEach(x=>x.addEventListener('click',()=>setDrive(x.dataset.d)));
+bIn.addEventListener('input',()=>{b=SIZES[+bIn.value];update();});
+$('fIn').addEventListener('input',e=>{f=Math.round(+e.target.value*100)/100;update();});
+$('taIn').addEventListener('input',e=>{ta=sig2(fromLog(+e.target.value,TA));update();});
+$('rIn').addEventListener('input',e=>{R=sig2(fromLog(+e.target.value,RR));update();});
+$('knee').addEventListener('click',()=>{b=Math.min(BMAX,Math.max(BMIN,knee()));update();});
+const cv=$('cRate');let drag=false;
+function fromPtr(ev){const r=cv.getBoundingClientRect();b=SIZES[nearestIdx(xVal(ev.clientX-r.left))];update();}
+cv.addEventListener('pointerdown',ev=>{drag=true;cv.setPointerCapture(ev.pointerId);fromPtr(ev);});
+cv.addEventListener('pointermove',ev=>{if(drag)fromPtr(ev);});
+cv.addEventListener('pointerup',()=>{drag=false;});
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+bIn.value=nearestIdx(b);setDrive('laptop');
+})();
+</script>
+</body>
+</html>

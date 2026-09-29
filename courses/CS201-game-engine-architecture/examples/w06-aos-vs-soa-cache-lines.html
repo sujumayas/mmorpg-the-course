@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AoS vs SoA cache lines — CS201 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--cold:#c3cbc2;--fetch:#f3dfb4;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--cold:#3a475e;--fetch:#4a3f25}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--cold:#3a475e;--fetch:#4a3f25}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1240px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:70ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+h2{font-family:var(--serif);font-size:1.12rem;margin:0 0 4px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+.controls{display:grid;gap:12px 20px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-bottom:14px}
+.ctl-h{font-weight:600;font-size:.9rem;display:block;margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button{font:600 .85rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:34px}
+button[aria-pressed="true"],button.primary{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+label.rl{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px}
+label.rl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+input[type=number]{font:600 .9rem var(--sans);padding:5px 8px;border-radius:8px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);width:9.5em;font-variant-numeric:tabular-nums}
+.more{grid-column:1/-1}
+.more summary{font-weight:600;font-size:.9rem;cursor:pointer;margin-bottom:6px}
+.more summary span{font-weight:400;color:var(--ink-soft)}
+.moregrid{display:grid;gap:12px 20px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+@media (min-width:900px){.more summary{display:none}}
+.views{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){.views{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);font-weight:400;color:var(--ink-soft);font-size:.82rem}
+.mem{max-height:470px;overflow:auto;padding:4px 2px;border-radius:6px}
+.line{display:grid;grid-template-columns:34px minmax(0,1fr) 54px;align-items:center;gap:6px;margin:3px 0}
+.line .ln{font-size:.7rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;text-align:right}
+.line .en{font-size:.68rem;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cells{display:grid;gap:1px;padding:2px;border-radius:4px;border:2px solid transparent}
+.line.fetched .cells{border-color:var(--ink);background:var(--fetch)}
+.line.fetched .ln{color:var(--ink);font-weight:700}
+.c{height:15px;border-radius:2px;position:relative}
+.c.hot{background:var(--ochre)}
+.c.later{background:var(--ochre);opacity:.5}
+.c.cold{background-color:var(--cold);background-image:radial-gradient(var(--ink-soft) .8px,transparent 1.1px);background-size:4px 4px}
+.c.pad{background:transparent;border:1px dashed var(--grid)}
+.c.start{box-shadow:inset 2px 0 0 var(--ink)}
+.c.cur{outline:2px solid var(--focus);outline-offset:0;z-index:1}
+.arrname{font-size:.72rem;font-weight:700;color:var(--ink-soft);margin:6px 0 0 40px}
+.coldnote{margin:10px 0 0 40px;padding:8px 10px;border:1.5px dashed var(--ink-soft);border-radius:8px;font-size:.85rem;color:var(--ink-soft)}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:0 0 8px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+.player{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 0}
+.player .spd{flex:1 1 140px;min-width:120px}
+.counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px 12px;margin-top:10px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px;min-width:0}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.78rem;color:var(--ink-soft)}
+.nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.nums .stat b{font-size:1.3rem}
+.bars{margin:14px 0 4px}
+.bar{margin:6px 0}
+.bar .t{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums}
+.bar .track{height:18px;background:var(--paper);border-radius:4px;overflow:hidden;border:1px solid var(--grid)}
+.bar .fill{height:100%}
+.bar .fill.a{background:repeating-linear-gradient(90deg,var(--ochre) 0 var(--u),var(--cold) var(--u) 100%)}
+.bar .fill.s{background:var(--ochre)}
+.warn{font-size:.85rem;color:var(--blood);font-weight:600;margin:8px 0 0}
+.insight{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--paper);border:1.5px solid var(--ink);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.86rem;width:100%;min-width:0}
+th,td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper)}
+caption{caption-side:bottom;text-align:left;font-size:.8rem;color:var(--ink-soft);padding-top:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS201 Game Engine Architecture · Week 6 · Worked example</p>
+  <h1>Array of structs vs struct of arrays</h1>
+  <p class="lede">A loop over one million entities pays for whole cache lines. With the lecture's 128-byte entity, AoS fetches 128 bytes to use 24. SoA fetches 24 and uses all of them. Predicted speed-up: 5.33× on 128-byte lines, 2.67× on 64-byte lines.</p>
+</header>
+
+<section class="panel controls" aria-label="Controls">
+  <div>
+    <span class="ctl-h" id="presetH">Presets</span>
+    <div class="chips" role="group" aria-labelledby="presetH" id="presets">
+      <button data-p="0" aria-pressed="true">Lecture entity</button>
+      <button data-p="1" aria-pressed="false">x86 line</button>
+      <button data-p="2" aria-pressed="false">Small struct</button>
+      <button data-p="3" aria-pressed="false">Every field</button>
+    </div>
+  </div>
+  <div>
+    <span class="ctl-h" id="layH">Layout in the memory view</span>
+    <div class="chips" role="group" aria-labelledby="layH" id="layG">
+      <button data-v="aos" aria-pressed="true">AoS</button>
+      <button data-v="soa" aria-pressed="false">SoA</button>
+    </div>
+    <span class="ctl-h" id="lH" style="margin-top:8px">Cache line L</span>
+    <div class="chips" role="group" aria-labelledby="lH" id="lG">
+      <button data-v="64" aria-pressed="false">64 bytes</button>
+      <button data-v="128" aria-pressed="true">128 bytes</button>
+    </div>
+  </div>
+  <details id="more" open class="more">
+  <summary>Struct, N and bandwidth <span id="moreSum"></span></summary>
+  <div class="moregrid">
+  <div>
+    <label class="rl" for="s">Struct size s <output id="os"></output></label>
+    <input type="range" id="s" min="16" max="256" step="4" value="128">
+    <label class="rl" for="h">Hot bytes h <output id="oh"></output></label>
+    <input type="range" id="h" min="4" max="128" step="4" value="24">
+  </div>
+  <div>
+    <span class="ctl-h" id="nH">Entities N</span>
+    <div class="chips" role="group" aria-labelledby="nH" id="nG">
+      <button data-v="10000" aria-pressed="false">10,000</button>
+      <button data-v="100000" aria-pressed="false">100,000</button>
+      <button data-v="1000000" aria-pressed="true">1,000,000</button>
+      <button data-v="10000000" aria-pressed="false">10,000,000</button>
+    </div>
+    <label class="rl" for="nIn" style="margin-top:6px;align-items:center">Other N <input type="number" id="nIn" min="1000" max="100000000" step="1000" value="1000000"></label>
+    <label class="rl" for="bw" style="margin-top:6px">Bandwidth <output id="obw"></output></label>
+    <input type="range" id="bw" min="10" max="200" step="1" value="30">
+  </div>
+  </div>
+  </details>
+</section>
+
+<div class="views">
+  <figure>
+    <p class="caption">The loop is the same. The grey is what you pay for and never use.</p>
+    <figcaption id="memTitle">Memory, first 12 entities<small id="memSub"></small></figcaption>
+    <div class="mem" id="mem" tabindex="0" aria-label="Memory view, scrollable"></div>
+    <div class="legend">
+      <span><i style="background:var(--ochre)"></i>hot, used by the loop</span>
+      <span><i class="c cold" style="display:inline-block"></i>cold, fetched and never used</span>
+      <span><i style="border:2px solid var(--ink);background:var(--fetch)"></i>line fetched</span>
+      <span><i style="outline:2px solid var(--focus)"></i>current entity</span>
+    </div>
+    <div class="player">
+      <button id="play" class="primary" aria-pressed="false">Play</button>
+      <button id="stepB">Step</button>
+      <button id="resetB">Reset loop</button>
+      <label class="rl spd" for="spd">Speed <output id="ospd"></output><input type="range" id="spd" min="1" max="10" step="1" value="3" style="flex:1"></label>
+    </div>
+    <div class="counters" id="counters"></div>
+    <p class="sr" id="live" aria-live="polite"></p>
+  </figure>
+
+  <figure>
+    <figcaption>Traffic for N entities<small>The model counts bytes read into the cache when the data does not fit in it.</small></figcaption>
+    <div class="nums" id="nums"></div>
+    <div class="bars" id="bars"></div>
+    <p class="warn" id="warn" hidden></p>
+    <div class="insight" id="insight"></div>
+    <div class="table-wrap">
+      <table id="meas">
+        <thead><tr><th>N</th><th>AoS set</th><th>AoS</th><th>Hot/cold</th><th>SoA</th><th>AoS ÷ SoA</th></tr></thead>
+        <tbody>
+          <tr data-n="10000"><td>10,000</td><td>1.28 MB</td><td>0.010</td><td>0.006</td><td>0.003</td><td>3.7</td></tr>
+          <tr data-n="100000"><td>100,000</td><td>12.8 MB</td><td>0.097</td><td>0.054</td><td>0.027</td><td>3.5</td></tr>
+          <tr data-n="1000000"><td>1,000,000</td><td>128 MB</td><td>4.09</td><td>0.61</td><td>0.27</td><td>15.2</td></tr>
+          <tr data-n="10000000"><td>10,000,000</td><td>1.28 GB</td><td>44.1</td><td>6.2</td><td>3.0</td><td>14.6</td></tr>
+        </tbody>
+        <caption>Times in ms for the lecture's 128-byte entity (s 128, h 24), measured on the reference machine (Apple M4 Pro, 128-byte lines, 16 MB L2); the model predicts the jump between 100,000 and 1,000,000.</caption>
+      </table>
+    </div>
+  </figure>
+</div>
+
+<footer>Model from the week 6 lecture, section 2: AoS with s ≥ L fetches <code>L × ceil(h / L)</code> bytes per entity, AoS with s &lt; L fetches s, SoA fetches h. It assumes each struct starts on a line boundary and the data is too big to stay cached. It leaves out write-back of modified lines and SIMD, which is why the measured 1,000,000 row shows 15× where the model says 5.33×. Measured times are from <code>bench_layouts.cpp</code> in lab 06's starter, Apple clang 17, September 2026.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const ENT=12;
+const PRE=[{s:128,h:24,L:128},{s:128,h:24,L:64},{s:48,h:16,L:64},{s:128,h:128,L:128}];
+const st={lay:'aos',L:128,s:128,h:24,N:1e6,bw:30,cur:-1,timer:null,speed:3};
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const trim=(x,d)=>{let t=x.toFixed(d);if(t.includes('.'))t=t.replace(/0+$/,'').replace(/\.$/,'');return t;};
+const mb=x=>{const v=x/1e6;return (v>=100?fmt(v):trim(v,2))+' MB';};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const FIELDS=['px','py','pz','vx','vy','vz','health','armor','flags','team'];
+for(let i=0;i<16;i++)FIELDS.push('world['+i+']');
+for(let i=0;i<6;i++)FIELDS.push('name['+i*4+'..'+(i*4+3)+']');
+const fname=k=>k<FIELDS.length&&st.s===128?FIELDS[k]:(k<6?FIELDS[k]:'field '+k);
+
+function model(){
+  const {s,h,L,N,bw}=st;
+  const Ba=s>=L?L*Math.ceil(h/L):s,Bs=h;
+  return {Ba,Bs,u:h/Ba,ta:N*Ba,ts:N*Bs,sp:Ba/Bs,ma:N*Ba/(bw*1e6),ms:N*Bs/(bw*1e6),straddle:s>=L&&s%L!==0};
+}
+/* ---------- memory geometry ---------- */
+function aosLinesFor(i){const {s,h,L}=st;const a=Math.floor(i*s/L),b=Math.floor((i*s+h-1)/L);const r=[];for(let k=a;k<=b;k++)r.push(k);return r;}
+function geometry(){
+  const {s,h,L,lay}=st,cpl=L/4;
+  const lines=[];
+  if(lay==='aos'){
+    const n=Math.ceil(ENT*s/L);
+    for(let k=0;k<n;k++){
+      const cells=[];const ents=new Set();
+      for(let c=0;c<cpl;c++){
+        const byte=k*L+c*4,e=Math.floor(byte/s),off=byte-e*s,idx=off/4;
+        const hot=off<h,beyond=e>=ENT;
+        if(!beyond)ents.add(e);
+        cells.push({e,hot,beyond,start:off===0,title:`entity ${e}, ${fname(idx)}${hot?' (hot)':' (cold)'}`});
+      }
+      lines.push({k,cells,ents:[...ents]});
+    }
+  } else {
+    const nArr=h/4;
+    for(let f=0;f<nArr;f++){
+      const cells=[];
+      for(let c=0;c<cpl;c++)cells.push({e:c,hot:true,beyond:c>=ENT,start:false,title:`${fname(f)}[${c}]${c>=ENT?' (entity '+c+', used later in the loop)':''}`});
+      lines.push({k:f,cells,arr:fname(f),ents:[]});
+    }
+  }
+  return lines;
+}
+function touched(){
+  const set=new Set();
+  for(let i=0;i<=st.cur;i++){
+    if(st.lay==='aos')aosLinesFor(i).forEach(k=>set.add(k));
+    else for(let f=0;f<st.h/4;f++)set.add(f);   /* 12 floats fit in one line of each array */
+  }
+  return set;
+}
+function renderMem(){
+  const lines=geometry(),fet=touched(),cpl=st.L/4;
+  const curCells=new Set();
+  let html='';
+  lines.forEach(ln=>{
+    const f=fet.has(ln.k);
+    const used=ln.cells.filter(c=>c.hot).length;
+    const lab=`line ${ln.k}: ${used} of ${cpl} cells used${st.lay==='soa'?' ('+ln.arr+' array)':''}${f?', fetched':''}`;
+    if(st.lay==='soa')html+=`<div class="arrname">${ln.arr}[ ] array</div>`;
+    html+=`<div class="line${f?' fetched':''}" role="img" aria-label="${lab}"><span class="ln">L${ln.k}</span><div class="cells" style="grid-template-columns:repeat(${cpl},minmax(0,1fr))">`+
+      ln.cells.map(c=>{
+        let cls=c.hot?(c.beyond?'later':'hot'):(c.beyond?'cold':'cold');
+        if(st.lay==='aos'&&c.beyond&&!c.hot)cls='cold';
+        if(c.start)cls+=' start';
+        if(c.e===st.cur&&c.hot&&!c.beyond)cls+=' cur';
+        return `<div class="c ${cls}" title="${c.title}"></div>`;
+      }).join('')+
+      `</div><span class="en">${st.lay==='aos'?(ln.ents.length?'e'+ln.ents[0]+(ln.ents.length>1?'–'+ln.ents[ln.ents.length-1]:''):''):'e0–'+(cpl-1)}</span></div>`;
+  });
+  if(st.lay==='soa')html+=`<div class="coldnote">cold fields (${fmt(st.s-st.h)} bytes per entity): separate arrays, never touched by this loop</div>`;
+  $('mem').innerHTML=html;
+  const a=st.lay==='aos';
+  $('memTitle').firstChild.textContent=(a?'AoS':'SoA')+' memory, first 12 entities';
+  $('memSub').textContent=a?`One row per ${st.L}-byte cache line, one cell per 4 bytes. Entity i starts at byte i × ${st.s}; a dark tick marks each entity's first cell.`
+    :`${st.h/4} dense arrays, one per hot float, each starting on a new ${st.L}-byte line. Faded cells are entities 12 to ${cpl-1}, used later in the same loop.`;
+  // counters
+  const lf=fet.size,bf=lf*st.L,bu=(st.cur+1)*st.h;
+  let grey=0;lines.forEach(ln=>{if(fet.has(ln.k))grey+=ln.cells.filter(c=>!c.hot).length*4;});
+  const later=bf-bu-grey;
+  $('counters').innerHTML=[
+    ['--ink','Entities done',`${st.cur+1} / ${ENT}`],
+    ['--steel','Lines fetched',String(lf)],
+    ['--steel','Bytes fetched',fmt(bf)],
+    ['--ochre','Bytes used',fmt(bu)],
+    ['--blood','Grey bytes carried',fmt(grey)],
+    ['--moss','Used later',fmt(Math.max(0,later))]
+  ].map(([c,k,v])=>`<div class="stat" style="--c:var(${c})"><b>${v}</b><span>${k}</span></div>`).join('');
+  return {lf,bf,bu,grey};
+}
+/* ---------- numbers ---------- */
+function renderNums(){
+  const m=model();
+  $('nums').innerHTML=[
+    ['--blood','B_AoS',m.Ba+' B','bytes fetched per entity'],
+    ['--ochre','B_SoA',m.Bs+' B','= h'],
+    ['--steel','Useful, AoS',trim(m.u*100,2)+'%','u = h / B_AoS'],
+    ['--moss','Speed-up',trim(m.sp,2)+'×','B_AoS / B_SoA'],
+    ['--blood','Traffic AoS',mb(m.ta),'N × B_AoS'],
+    ['--ochre','Traffic SoA',mb(m.ts),'N × B_SoA'],
+    ['--blood','Time AoS',m.ma.toFixed(2)+' ms','at '+st.bw+' GB/s'],
+    ['--ochre','Time SoA',m.ms.toFixed(2)+' ms','at '+st.bw+' GB/s']
+  ].map(([c,k,v,n])=>`<div class="stat" style="--c:var(${c})"><span>${k}</span><b>${v}</b><span>${n}</span></div>`).join('');
+  const max=Math.max(m.ta,m.ts);
+  $('bars').innerHTML=`<div class="bar"><div class="t"><span>AoS</span><span>${mb(m.ta)}</span></div><div class="track" role="img" aria-label="AoS traffic ${mb(m.ta)}, ${trim(m.u*100,2)} percent used"><div class="fill a" style="width:${m.ta/max*100}%;--u:${m.u*100}%"></div></div></div>
+  <div class="bar"><div class="t"><span>SoA</span><span>${mb(m.ts)}</span></div><div class="track" role="img" aria-label="SoA traffic ${mb(m.ts)}, all used"><div class="fill s" style="width:${m.ts/max*100}%"></div></div></div>`;
+  const w=$('warn');w.hidden=!m.straddle;w.textContent=m.straddle?'Some entities straddle lines; real cost is higher.':'';
+  const hotC=st.h/4,cpl=st.L/4;
+  let ins;
+  if(st.s>=st.L&&st.s%st.L===0&&st.h<st.L)ins=`In AoS each fetched ${st.L}-byte line holds ${hotC} hot cells and ${cpl-hotC} grey ones. SoA lines are hot from edge to edge. Same loop, ${trim(m.sp,2)}× less traffic.`;
+  else if(m.sp<=1.0001)ins=`The loop uses every byte it fetches in both layouts, so SoA predicts no gain (1×). SoA helps only loops that use a few fields of many entities.`;
+  else if(st.s<st.L)ins=`The struct is smaller than a line, so entities share lines and AoS fetches all ${st.s} bytes of each one. SoA fetches ${st.h}. Predicted ${trim(m.sp,2)}×.`;
+  else ins=`AoS fetches ${m.Ba} bytes per entity to use ${st.h}. Predicted ${trim(m.sp,2)}×.`;
+  $('insight').textContent=ins;
+  document.querySelectorAll('#meas tbody tr').forEach(r=>r.classList.toggle('here',+r.dataset.n===st.N));
+}
+function sync(){
+  $('os').textContent=st.s+' bytes';$('oh').textContent=st.h+' bytes';$('obw').textContent=st.bw+' GB/s';$('ospd').textContent=st.speed+' / s';
+  const hs=$('h');hs.max=st.s;hs.value=st.h;$('s').value=st.s;
+  const pr=(id,v)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===String(v))));
+  pr('layG',st.lay);pr('lG',st.L);pr('nG',st.N);
+  document.querySelectorAll('#presets button').forEach(b=>{const p=PRE[+b.dataset.p];b.setAttribute('aria-pressed',String(p.s===st.s&&p.h===st.h&&p.L===st.L));});
+}
+function update(){sync();$('moreSum').textContent=`s ${st.s}, h ${st.h}, N ${fmt(st.N)}, ${st.bw} GB/s`;const c=renderMem();renderNums();return c;}
+function announce(c){$('live').textContent=`${st.lay==='aos'?'AoS':'SoA'}: entity ${st.cur+1} of ${ENT}. ${c.lf} lines fetched, ${fmt(c.bf)} bytes fetched, ${fmt(c.bu)} used, ${fmt(c.grey)} grey.`;}
+function step(){if(st.cur>=ENT-1){stop();return;}st.cur++;announce(update());if(st.cur>=ENT-1)stop();}
+function stop(){clearInterval(st.timer);st.timer=null;$('play').textContent='Play';$('play').setAttribute('aria-pressed','false');}
+function resetLoop(){stop();st.cur=-1;update();}
+function rerun(){stop();st.cur=ENT-1;update();}
+$('play').onclick=()=>{
+  if(st.timer){stop();return;}
+  if(st.cur>=ENT-1)st.cur=-1;
+  $('play').textContent='Pause';$('play').setAttribute('aria-pressed','true');
+  st.timer=setInterval(step,1000/st.speed);step();
+};
+$('stepB').onclick=()=>{stop();if(st.cur>=ENT-1)st.cur=-1;step();};
+$('resetB').onclick=resetLoop;
+$('spd').oninput=e=>{st.speed=+e.target.value;$('ospd').textContent=st.speed+' / s';if(st.timer){clearInterval(st.timer);st.timer=setInterval(step,1000/st.speed);}};
+document.querySelectorAll('#layG button').forEach(b=>b.onclick=()=>{st.lay=b.dataset.v;rerun();});
+document.querySelectorAll('#lG button').forEach(b=>b.onclick=()=>{st.L=+b.dataset.v;rerun();});
+document.querySelectorAll('#nG button').forEach(b=>b.onclick=()=>{st.N=+b.dataset.v;$('nIn').value=st.N;update();});
+$('nIn').addEventListener('change',e=>{let v=Math.round(+e.target.value);if(!isFinite(v)||v<1000)v=1000;if(v>1e8)v=1e8;e.target.value=v;st.N=v;update();});
+$('s').oninput=e=>{st.s=+e.target.value;if(st.h>st.s)st.h=st.s;rerun();};
+$('h').oninput=e=>{st.h=Math.min(+e.target.value,st.s);rerun();};
+$('bw').oninput=e=>{st.bw=+e.target.value;update();};
+document.querySelectorAll('#presets button').forEach(b=>b.onclick=()=>{const p=PRE[+b.dataset.p];st.s=p.s;st.h=p.h;st.L=p.L;rerun();});
+if(matchMedia('(max-width:899px)').matches)$('more').open=false;
+matchMedia('(min-width:900px)').addEventListener('change',e=>{if(e.matches)$('more').open=true;});
+/* first screen: show the loop already run over all 12 entities */
+st.cur=ENT-1;update();
+window.__cl={st,model,update};
+})();
+</script>
+</body>
+</html>

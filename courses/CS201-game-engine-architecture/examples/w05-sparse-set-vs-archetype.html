@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sparse set vs archetype — CS201 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--plum:#7a5a8c;--slate:#8b93a3;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--plum:#b99bd0;--slate:#8e98ab}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--plum:#b99bd0;--slate:#8e98ab}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1320px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:70ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+h2{font-family:var(--serif);font-size:1.12rem;margin:0 0 4px}
+h3{font-size:.95rem;margin:0 0 4px}
+.headline{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px 14px;margin:0 0 14px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.layout{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);grid-template-areas:"store" "controls" "chart"}
+@media (min-width:980px){.layout{grid-template-columns:minmax(0,1fr) 290px;grid-template-areas:"store controls" "chart controls";align-items:start}}
+.store{grid-area:store}.controls{grid-area:controls}.chartp{grid-area:chart}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+.sides{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:720px){.sides{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.side{background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+.side small{display:block;color:var(--ink-soft);font-size:.82rem;margin-bottom:8px}
+.pool{margin-bottom:12px}
+.pool h3 span{font-weight:400;color:var(--ink-soft)}
+.arr{display:flex;align-items:flex-end;gap:3px;margin:2px 0;flex-wrap:nowrap}
+.arr .lbl{flex:none;width:52px;font-size:.78rem;color:var(--ink-soft);align-self:center}
+.cells{display:flex;gap:3px;flex-wrap:wrap}
+.cell{position:relative;width:30px;height:30px;border:1.5px solid var(--ink-soft);border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;background:var(--paper)}
+.cell.none{color:var(--ink-soft);font-weight:400}
+.cell .ix{position:absolute;top:-15px;left:0;right:0;text-align:center;font-size:.64rem;font-weight:400;color:var(--ink-soft)}
+.arr.idx{margin-top:14px}
+.cell.hole{border:2.5px dashed var(--blood);background:transparent;color:var(--blood)}
+.cell.moved{outline:3px solid var(--ochre);outline-offset:1px}
+.cell.moved::after{content:"moved";position:absolute;bottom:-14px;left:-4px;right:-4px;text-align:center;font-size:.6rem;font-weight:700;color:var(--ochre)}
+.cell.gone{opacity:.35}
+.data .cell{height:18px;font-size:.66rem;border:none;color:var(--paper)}
+@media (max-width:480px){.cell{width:26px!important;height:28px;font-size:.82rem}.data .cell{height:18px;font-size:.56rem}.arr .lbl{width:42px}.cells{gap:2px}}
+.tbl{margin-bottom:12px}
+.tbl h3{font-family:var(--sans);font-size:.85rem}
+.trow{display:flex;gap:2px;margin:2px 0;align-items:stretch}
+.trow>div{height:24px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;overflow:hidden;color:var(--paper);min-width:0}
+.trow .id{flex:0 0 38px;background:var(--ink);font-variant-numeric:tabular-nums}
+.trow.head>div{background:transparent!important;color:var(--ink-soft);font-weight:600;height:18px}
+.trow .tag{flex:0 0 8px!important}
+.trow.hole>div{background:transparent!important;border:2px dashed var(--blood);color:var(--blood)}
+.trow.moved{outline:3px solid var(--ochre);outline-offset:1px;border-radius:3px;position:relative}
+.trow.added{outline:3px solid var(--moss);outline-offset:1px;border-radius:3px;position:relative}
+.trow.added::after{content:"new row";position:absolute;right:16px;top:-15px;font-size:.6rem;font-weight:700;color:var(--moss)}
+.cell.added{outline:3px solid var(--moss);outline-offset:1px}
+.cell.added::after{content:"new";position:absolute;bottom:-14px;left:-4px;right:-4px;text-align:center;font-size:.6rem;font-weight:700;color:var(--moss)}
+.trow.moved::after{content:"moved";position:absolute;right:16px;top:-15px;font-size:.6rem;font-weight:700;color:var(--ochre)}
+.counter{border-top:1px solid var(--grid);padding-top:8px;margin-top:6px;font-variant-numeric:tabular-nums}
+.counter b{font-size:1.15rem}
+.counter .brk{font-size:.8rem;color:var(--ink-soft)}
+.ctl{margin-bottom:14px}
+.ctl-h{font-weight:600;font-size:.9rem;display:block;margin-bottom:4px}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button{font:600 .85rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:34px}
+button.primary{background:var(--steel);color:var(--paper)}
+button:disabled{opacity:.45;cursor:default}
+button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+select{font:600 .95rem var(--sans);padding:6px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+label.rl{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px}
+label.rl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0 0 6px}
+.handles{display:flex;flex-wrap:wrap;gap:4px;font-size:.8rem;font-variant-numeric:tabular-nums;margin-top:6px}
+.handles span{border:1px solid var(--grid);border-radius:6px;padding:1px 6px}
+.handles .dead{text-decoration:line-through;color:var(--ink-soft)}
+.pin{margin-top:6px;font-size:.88rem}
+.log{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.78rem;background:var(--paper-2);border-radius:8px;padding:8px;max-height:160px;overflow:auto;white-space:pre-wrap;margin:6px 0 0}
+.chk{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.88rem}
+.chk input{width:18px;height:18px;accent-color:var(--steel)}
+#chart{display:block;width:100%}
+#chartWrap{width:100%}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 14px;margin-top:8px}
+.note{font-family:var(--serif);font-size:.98rem;margin:10px 0 0;max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS201 Game Engine Architecture · Week 5 · Worked example</p>
+  <h1>Where does Stunned live?</h1>
+  <p class="lede">Press Add and Remove Stunned on one entity. The sparse set writes 8 bytes each time. The archetype copies the whole unit, up to 2 × 112 = 224 bytes. The chart below shows the price the sparse set pays back on every join.</p>
+</header>
+
+<div class="headline" id="headline"></div>
+
+<div class="layout">
+  <section class="store panel" aria-label="Storage view">
+    <div class="sides">
+      <div class="side">
+        <h2>Sparse sets</h2>
+        <small>One pool per component type. <code>sparse[entity]</code> gives the slot, <code>dense[slot]</code> gives the entity.</small>
+        <div id="pools"></div>
+        <div class="counter" id="cntSparse"></div>
+      </div>
+      <div class="side">
+        <h2>Archetype tables</h2>
+        <small>One table per exact component set. Cell width is proportional to component size.</small>
+        <div id="tables"></div>
+        <div class="counter" id="cntArch"></div>
+      </div>
+    </div>
+    <p class="sr" id="live" aria-live="polite"></p>
+    <div class="log" id="log" aria-label="Operation log" tabindex="0"></div>
+  </section>
+
+  <aside class="controls panel" aria-label="Controls">
+    <div class="ctl">
+      <label class="ctl-h" for="sel">Entity</label>
+      <select id="sel"></select>
+      <div class="btns" style="margin-top:8px">
+        <button id="bAdd" class="primary">Add Stunned</button>
+        <button id="bRem" class="primary">Remove Stunned</button>
+      </div>
+      <div class="btns" style="margin-top:6px">
+        <button id="bDestroy">Destroy entity</button>
+        <button id="bCreate">Create entity</button>
+        <button id="bPin">Pin handle</button>
+      </div>
+      <div class="pin" id="pin"></div>
+      <div class="handles" id="handles" aria-label="Handles issued"></div>
+    </div>
+    <div class="ctl">
+      <span class="ctl-h">Scenes</span>
+      <div class="btns">
+        <button id="bTrace">Lecture trace</button>
+        <button id="bReset">Reset, 8 entities</button>
+      </div>
+      <label class="chk" style="margin-top:8px"><input type="checkbox" id="step"> Step through swap-and-pop</label>
+    </div>
+    <div class="ctl">
+      <label class="rl" for="S">Unit size S <output id="oS"></output></label>
+      <input type="range" id="S" min="32" max="512" step="4" value="112">
+      <p class="brk" style="font-size:.8rem;color:var(--ink-soft);margin:0">Position 12 + Velocity 12 + the rest (Health, Sprite, AI in the ratio 8 : 16 : 64).</p>
+    </div>
+    <div class="ctl">
+      <span class="ctl-h">Break-even chart</span>
+      <label class="rl" for="cA">Toggle cost, archetype <output id="ocA"></output></label>
+      <input type="range" id="cA" min="5" max="100" step="1" value="40">
+      <label class="rl" for="cS">Toggle cost, sparse set <output id="ocS"></output></label>
+      <input type="range" id="cS" min="1" max="50" step="1" value="7">
+      <label class="rl" for="sav">Join saving per system <output id="osav"></output></label>
+      <input type="range" id="sav" min="0.01" max="0.5" step="0.001" value="0.111">
+      <label class="rl" for="sys">Systems that join <output id="osys"></output></label>
+      <input type="range" id="sys" min="1" max="12" step="1" value="1">
+      <label class="rl" for="tog">Toggles per frame (readout) <output id="otog"></output></label>
+      <input type="range" id="tog" min="0" max="20000" step="100" value="1000">
+    </div>
+  </aside>
+
+  <section class="chartp panel" aria-label="Break-even chart">
+    <h2>Per-frame cost: iterate plus toggle</h2>
+    <div id="chartWrap"><svg id="chart" role="img" aria-label="Break-even chart"></svg></div>
+    <div class="readout" id="readout"></div>
+    <p class="note" id="chartNote"></p>
+  </section>
+</div>
+
+<footer>Byte model and measured costs from the week 5 lecture, section 2: sparse-set toggle about 8 bytes (one <code>dense</code> and one <code>sparse</code> entry) plus the component, archetype toggle up to 2S (copy the row out, move the source table's last row into the hole). Default costs 40 ns and 7 ns per toggle and 0.022 ms archetype movement per system are the lecture's typical values from <code>bench_storage.cpp</code> on an Apple M4 Pro, September 2026. Your machine will differ.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NONE=-1;
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const POOLS=[{k:'Position',short:'Pos',size:12,c:'--steel'},{k:'Velocity',short:'Vel',size:12,c:'--moss'},{k:'Stunned',short:'Stun',size:0,c:'--blood'}];
+let W, beats=[], timers=[], unitS=112;
+const P={cA:40,cS:7,sav:0.111,sys:1,tog:1000};
+
+function mkPool(){return {sparse:[],dense:[]};}
+function poolAdd(p,e){while(p.sparse.length<=e)p.sparse.push(NONE);p.sparse[e]=p.dense.length;p.dense.push(e);}
+function newWorld(n,withPV){
+  const w={gen:[],alive:[],free:[],handles:[],pools:{Position:mkPool(),Velocity:mkPool(),Stunned:mkPool()},tables:{base:[],stun:[]},
+    cnt:{sl:0,st:0,al:0,at:0,sb:'',ab:''},trace:!withPV,pin:null,log:[]};
+  for(let i=0;i<n;i++){w.gen.push(0);w.alive.push(true);w.handles.push([i,0]);w.tables.base.push(i);}
+  if(withPV){
+    for(let i=0;i<n;i++)poolAdd(w.pools.Position,i);
+    [3,0,6,1,7,4,2,5].forEach(e=>poolAdd(w.pools.Velocity,e));
+  } else {
+    for(let i=0;i<n;i++){poolAdd(w.pools.Position,i);poolAdd(w.pools.Velocity,i);}
+  }
+  return w;
+}
+const clone=o=>JSON.parse(JSON.stringify(o));
+function beat(marks){beats.push({w:clone(W),marks});}
+
+/* sparse-set remove with swap-and-pop; returns bytes and the moved entity */
+function poolRemove(name,e,size){
+  const p=W.pools[name],slot=p.sparse[e],lastSlot=p.dense.length-1,last=p.dense[lastSlot];
+  beat({pool:name,hole:slot});
+  let moved=null;
+  if(slot!==lastSlot){p.dense[slot]=last;p.sparse[last]=slot;moved={e:last,slot};beat({pool:name,moved:slot,gone:lastSlot});}
+  p.dense.pop();p.sparse[e]=NONE;
+  return {bytes:8+(moved?size:0),moved};
+}
+/* archetype: remove row of entity from table with swap-and-pop; returns moved entity */
+function tableRemove(t,e){
+  const rows=W.tables[t],r=rows.indexOf(e),lr=rows.length-1;
+  beat({table:t,hole:r});
+  let moved=null;
+  if(r!==lr){rows[r]=rows[lr];moved={e:rows[r],row:r};beat({table:t,moved:r,gone:lr});}
+  rows.pop();
+  return moved;
+}
+function has(name,e){const p=W.pools[name];return e<p.sparse.length&&p.sparse[e]!==NONE;}
+function setCnt(sb,ab,sBrk,aBrk){W.cnt.sl=sb;W.cnt.st+=sb;W.cnt.al=ab;W.cnt.at+=ab;W.cnt.sb=sBrk;W.cnt.ab=aBrk;}
+function arrStr(a){return '['+a.map(x=>x===NONE?'-':x).join(' ')+']';}
+
+function addStun(e){
+  beats=[];
+  poolAdd(W.pools.Stunned,e);
+  const r=tableRemove('base',e);W.tables.stun.push(e);
+  const hole=r?unitS:0;
+  setCnt(8,unitS+hole,'8 = one dense entry + one sparse entry (tag, no data)',
+    `${fmt(unitS)} row copy + ${fmt(hole)} hole fill`+(r?` (entity ${r.e} moved to row ${r.row})`:' (it was the last row)'));
+  const msg=`Added Stunned to ${e}.`+(r?` Archetype: entity ${r.e} moved to row ${r.row}.`:'')+` Sparse set 8 bytes, archetype ${fmt(unitS+hole)} bytes.`;
+  logLine(`add Stunned to ${e}`);beat({pool:'Stunned',added:W.pools.Stunned.dense.length-1,addT:'stun',addR:W.tables.stun.length-1,fill:r?['base',r.row]:null,msg});
+}
+function remStun(e){
+  beats=[];
+  const s=poolRemove('Stunned',e,0);
+  const r=tableRemove('stun',e);W.tables.base.push(e);
+  const hole=r?unitS:0;
+  setCnt(s.bytes,unitS+hole,`8 = dense entry + sparse entry`+(s.moved?` (entity ${s.moved.e} moved to slot ${s.moved.slot})`:' (it was last, nothing moved)'),
+    `${fmt(unitS)} row copy + ${fmt(hole)} hole fill`+(r?` (entity ${r.e} moved to row ${r.row})`:' (it was the last row)'));
+  const msg=`Removed Stunned from ${e}.`+(s.moved?` Entity ${s.moved.e} moved to slot ${s.moved.slot}.`:'')+` Sparse set ${s.bytes} bytes, archetype ${fmt(unitS+hole)} bytes.`;
+  logLine(`remove Stunned from ${e}`);beat({pool:'Stunned',moved:s.moved?s.moved.slot:null,addT:'base',addR:W.tables.base.length-1,fill:r?['stun',r.row]:null,msg});
+}
+function destroy(e){
+  beats=[];let sb=0,parts=[];
+  for(const p of POOLS){if(has(p.k,e)){const r=poolRemove(p.k,e,p.size);sb+=r.bytes;parts.push(p.short+' '+r.bytes);}}
+  const t=W.tables.stun.includes(e)?'stun':'base';const r=tableRemove(t,e);const ab=r?unitS:0;W.lastFill=r?[t,r.row]:null;
+  W.gen[e]++;W.alive[e]=false;W.free.push(e);
+  setCnt(sb,ab,parts.join(' + ')+' bytes',`${fmt(ab)} hole fill`+(r?` (entity ${r.e} moved to row ${r.row})`:' (it was the last row)'));
+  const msg=`Destroyed entity ${e}. Slot ${e} generation is now ${W.gen[e]}. Sparse set ${sb} bytes, archetype ${fmt(ab)} bytes.`;
+  logLine(`destroy (${e}, ${W.gen[e]-1})`);beat({msg,fill:W.lastFill});
+}
+function create(){
+  beats=[];let e;
+  if(W.free.length)e=W.free.pop();else{if(W.gen.length>=12)return null;e=W.gen.length;W.gen.push(0);W.alive.push(false);}
+  W.alive[e]=true;W.handles.push([e,W.gen[e]]);
+  poolAdd(W.pools.Position,e);poolAdd(W.pools.Velocity,e);W.tables.base.push(e);
+  setCnt(40,unitS,'Pos 8 + 12, Vel 8 + 12',`${fmt(unitS)} new row`);
+  const msg=`Created entity (${e}, ${W.gen[e]}). Sparse set 40 bytes, archetype ${fmt(unitS)} bytes.`;
+  logLine(`create -> (${e}, ${W.gen[e]})`);beat({msg,addT:'base',addR:W.tables.base.length-1});
+  return e;
+}
+function logLine(op){W.pendingLog=op;}
+function finishLog(){
+  if(!W.pendingLog)return;const s=W.pools.Stunned;
+  W.log.push(`${W.pendingLog.padEnd(24)} Stunned dense ${arrStr(s.dense)}  sparse ${arrStr(s.sparse)}`);W.pendingLog=null;
+  beats[beats.length-1].w=clone(W);
+}
+
+/* ---------- rendering ---------- */
+function restSizes(){const r=unitS-24;return [r*8/88,r*16/88,r*64/88];}
+function renderStore(b){
+  const w=b.w,m=b.marks||{};
+  // pools
+  $('pools').innerHTML=POOLS.filter(p=>!w.trace||p.k==='Stunned').map(p=>{
+    const pl=w.pools[p.k],mk=m.pool===p.k?m:{};
+    const sp=pl.sparse.map((v,i)=>`<div class="cell ${v===NONE?'none':''}" role="img" aria-label="${p.k} sparse index ${i}: ${v===NONE?'none':'slot '+v}"><span class="ix">${i}</span>${v===NONE?'–':v}</div>`).join('')||'<span class="brk" style="font-size:.78rem;color:var(--ink-soft)">empty (grows on demand)</span>';
+    const dn=pl.dense.map((v,i)=>{const cls=(mk.hole===i?' hole':'')+(mk.moved===i?' moved':'')+(mk.added===i?' added':'')+(mk.gone===i?' gone':'');
+      return `<div class="cell${cls}" role="img" aria-label="${p.k} dense slot ${i}: entity ${v}${mk.moved===i?', moved':''}${mk.hole===i?', hole':''}"><span class="ix">${i}</span>${mk.hole===i?'×':v}</div>`;}).join('')||'<span style="font-size:.78rem;color:var(--ink-soft)">empty</span>';
+    const dt=p.size?`<div class="arr data"><span class="lbl">data</span><div class="cells">${pl.dense.map((v,i)=>`<div class="cell" style="width:30px;background:var(${p.c})" role="img" aria-label="${p.k} data slot ${i}: entity ${v}">${p.short}${v}</div>`).join('')}</div></div>`:'';
+    return `<div class="pool"><h3>${p.k} <span>${p.size?p.size+' bytes':'tag, 0 bytes'} · sparse ${arrStr(pl.sparse)} · dense ${arrStr(pl.dense)}</span></h3>
+      <div class="arr idx"><span class="lbl">sparse</span><div class="cells">${sp}</div></div>
+      <div class="arr idx"><span class="lbl">dense</span><div class="cells">${dn}</div></div>${dt}</div>`;
+  }).join('');
+  // tables
+  const [hp,sprite,ai]=restSizes();
+  const cols=[['Pos',12,'--steel'],['Vel',12,'--moss'],['HP',hp,'--ochre'],['Sprite',sprite,'--plum'],['AI',ai,'--slate']];
+  $('tables').innerHTML=['base','stun'].filter(t=>w.tables[t].length).map(t=>{
+    const st=t==='stun',set='{Pos, Vel, HP, Sprite, AI'+(st?', Stunned':'')+'}';
+    const head=`<div class="trow head"><div class="id">ID</div>${cols.map(c=>`<div style="flex:${c[1]} 1 0">${c[0]}</div>`).join('')}${st?'<div class="tag"></div>':''}</div>`;
+    const rows=w.tables[t].map((e,r)=>{
+      const hole=m.table===t&&m.hole===r,mv=(m.table===t&&m.moved===r)||(m.fill&&m.fill[0]===t&&m.fill[1]===r),ad=m.addT===t&&m.addR===r,gone=m.table===t&&m.gone===r;
+      return `<div class="trow${hole?' hole':''}${mv?' moved':''}${ad?' added':''}" style="${gone?'opacity:.35':''}" role="img" aria-label="${st?'Stunned table':'Base table'} row ${r}: entity ${e}${mv?', moved':''}${ad?', new row':''}${hole?', hole':''}"><div class="id">${hole?'×':'E'+e}</div>${cols.map(c=>`<div style="flex:${c[1]} 1 0;background:var(${c[2]})"></div>`).join('')}${st?'<div class="tag" style="background:var(--blood)"></div>':''}</div>`;
+    }).join('');
+    return `<div class="tbl"><h3>${set} · ${w.tables[t].length} row${w.tables[t].length>1?'s':''}, ${fmt(unitS)} bytes each</h3>${head}${rows}</div>`;
+  }).join('');
+  const c=w.cnt;
+  $('cntSparse').innerHTML=`Last operation <b>${fmt(c.sl)} bytes</b><div class="brk">${c.sb||'—'}</div>Total <b>${fmt(c.st)} bytes</b>`;
+  $('cntArch').innerHTML=`Last operation <b>${fmt(c.al)} bytes</b><div class="brk">${c.ab||'—'}</div>Total <b>${fmt(c.at)} bytes</b>`;
+  $('log').textContent=w.log.length?w.log.join('\n'):'Operation log: each line shows the Stunned pool after the operation.';
+}
+function renderControls(){
+  const sel=$('sel'),cur=+sel.value;
+  const alive=W.alive.map((a,i)=>a?i:-1).filter(i=>i>=0);
+  sel.innerHTML=alive.map(i=>`<option value="${i}">Entity ${i} (gen ${W.gen[i]})</option>`).join('');
+  if(alive.includes(cur))sel.value=cur;
+  const e=+sel.value,ok=alive.length>0;
+  $('bAdd').disabled=!ok||has('Stunned',e);$('bRem').disabled=!ok||!has('Stunned',e);
+  $('bDestroy').disabled=!ok;$('bCreate').disabled=!W.free.length&&W.gen.length>=12;$('bPin').disabled=!ok;
+  $('handles').innerHTML='Handles issued: '+W.handles.map(([i,g])=>{const a=W.alive[i]&&W.gen[i]===g;return `<span class="${a?'':'dead'}">(${i}, ${g})</span>`;}).join('');
+  if(W.pin){const [i,g]=W.pin,a=W.alive[i]&&W.gen[i]===g;
+    $('pin').innerHTML=`Pinned handle <b>(${i}, ${g})</b>: alive? <b style="color:var(${a?'--moss':'--blood'})">${a?'yes':'no'}</b>, slot ${i} is at generation ${W.gen[i]}.`;}
+  else $('pin').textContent='Pin a handle, destroy that entity, create a new one: the old handle reports dead.';
+}
+function play(){
+  timers.forEach(clearTimeout);timers=[];
+  const fin=beats[beats.length-1];
+  if($('step').checked&&!reduce&&beats.length>1){
+    beats.forEach((b,i)=>timers.push(setTimeout(()=>renderStore(b),i*550)));
+  } else renderStore(fin);
+  if(fin.marks&&fin.marks.msg)$('live').textContent=fin.marks.msg;
+  renderControls();headline();
+}
+function run(fn){fn();finishLog();play();}
+
+/* ---------- chart ---------- */
+function totals(t){return {a:0.022*P.sys+t*P.cA*1e-6,s:(0.022+P.sav)*P.sys+t*P.cS*1e-6};}
+function crossing(){return P.cA>P.cS?P.sys*P.sav*1e6/(P.cA-P.cS):null;}
+function el(tag,a,par,txt){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;par.appendChild(e);return e;}
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v);}
+function drawChart(){
+  const svg=$('chart'),w=Math.max(280,$('chartWrap').clientWidth),h=w<500?260:300;svg.innerHTML='';
+  svg.setAttribute('width',w);svg.setAttribute('height',h);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  const pad={l:50,r:14,t:14,b:40},XM=20000,end=totals(XM),YM=niceMax(Math.max(end.a,end.s)*1.02);
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/XM,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/YM);
+  for(let i=0;i<=4;i++){const v=YM*i/4;el('line',{x1:pad.l,x2:w-pad.r,y1:Y(v),y2:Y(v),style:'stroke:var(--grid)'},svg);
+    el('text',{x:pad.l-6,y:Y(v)+4,'text-anchor':'end','font-size':11.5,style:'fill:var(--ink-soft)'},svg,v.toFixed(YM<=2?2:1));}
+  for(let i=0;i<=4;i++){const t=XM*i/4;el('text',{x:X(t),y:h-pad.b+16,'text-anchor':i===0?'start':i===4?'end':'middle','font-size':11.5,style:'fill:var(--ink-soft)'},svg,fmt(t));}
+  el('text',{x:w-pad.r,y:h-6,'text-anchor':'end','font-size':11.5,style:'fill:var(--ink-soft)'},svg,'toggles per frame');
+  el('text',{x:4,y:pad.t+2,'font-size':11.5,style:'fill:var(--ink-soft)'},svg,'ms');
+  const line=(f,c,dash)=>el('line',{x1:X(0),y1:Y(f(0)),x2:X(XM),y2:Y(f(XM)),style:`stroke:var(${c});stroke-width:3`,'stroke-dasharray':dash||''},svg);
+  line(t=>totals(t).a,'--steel');line(t=>totals(t).s,'--ochre','8 5');
+  const lab=(t,f,c,txt)=>{const y=Y(f(t));el('text',{x:X(t)-4,y:y-8,'text-anchor':'end','font-size':12.5,'font-weight':700,style:`fill:var(${c})`},svg,txt);};
+  const ea=totals(XM).a,es=totals(XM).s;
+  lab(XM,t=>totals(t).a,'--steel','Archetype');
+  el('text',{x:X(XM)-4,y:Y(es)+(es>ea?-8:18),'text-anchor':'end','font-size':12.5,'font-weight':700,style:'fill:var(--ochre)'},svg,'Sparse set');
+  const x=crossing();
+  if(x!==null&&x<=XM){
+    el('line',{x1:X(x),x2:X(x),y1:pad.t,y2:h-pad.b,style:'stroke:var(--ink);stroke-width:1.5','stroke-dasharray':'4 3'},svg);
+    const right=X(x)<w*0.6;
+    el('text',{x:X(x)+(right?6:-6),y:pad.t+14,'text-anchor':right?'start':'end','font-size':12.5,'font-weight':700},svg,'≈ '+fmt(Math.round(x/100)*100)+' toggles');
+  }
+  // readout marker
+  const t=P.tog,tt=totals(t);
+  el('line',{x1:X(t),x2:X(t),y1:pad.t,y2:h-pad.b,style:'stroke:var(--ink-soft);stroke-width:1',opacity:.6},svg);
+  el('circle',{cx:X(t),cy:Y(tt.a),r:5,style:'fill:var(--steel);stroke:var(--paper);stroke-width:2'},svg);
+  el('circle',{cx:X(t),cy:Y(tt.s),r:5,style:'fill:var(--ochre);stroke:var(--paper);stroke-width:2'},svg);
+  const txt=x===null?'no crossing':'≈ '+fmt(Math.round(x/100)*100)+' toggles per frame';
+  svg.setAttribute('aria-label',`Break-even chart. Archetype line 0.022 × ${P.sys} ms plus ${P.cA} ns per toggle; sparse line ${(0.022+P.sav).toFixed(3)} × ${P.sys} ms plus ${P.cS} ns per toggle. Crossing ${txt}.`);
+}
+function readout(){
+  const x=crossing(),t=P.tog,tt=totals(t);
+  $('ocA').textContent=P.cA+' ns';$('ocS').textContent=P.cS+' ns';$('osav').textContent=P.sav.toFixed(3)+' ms';$('osys').textContent=P.sys;$('otog').textContent=fmt(t);
+  const win=Math.abs(tt.a-tt.s)<5e-7?'tie':(tt.a<tt.s?'archetype':'sparse set');
+  $('readout').innerHTML=[
+    ['--ink','Break-even x*',x===null?'none':'≈ '+fmt(Math.round(x/100)*100),x===null?'archetype toggles are not dearer':`= ${P.sys} × ${P.sav.toFixed(3)} ms / (${P.cA} − ${P.cS}) ns = ${fmt(x)}`],
+    ['--steel','Archetype at '+fmt(t),tt.a.toFixed(3)+' ms',`0.022 × ${P.sys} + ${fmt(t)} × ${P.cA} ns`],
+    ['--ochre','Sparse set at '+fmt(t),tt.s.toFixed(3)+' ms',`${(0.022+P.sav).toFixed(3)} × ${P.sys} + ${fmt(t)} × ${P.cS} ns`],
+    ['--moss','Cheaper at '+fmt(t),win,'lower per-frame total']
+  ].map(([c,k,v,n])=>`<div class="stat" style="--c:var(${c})"><span>${k}</span><b>${v}</b><span>${n}</span></div>`).join('');
+  $('chartNote').textContent=x===null?'With archetype toggles no dearer than sparse ones, archetypes win at every rate.':
+    `Below ${fmt(x)} toggles per frame the archetype layout wins, because its ${P.sys} join${P.sys>1?'s save':' saves'} ${(P.sys*P.sav).toFixed(3)} ms. Above it, the ${P.cA-P.cS} ns extra per toggle adds up to more.`+(x>20000?' The crossing is off this chart.':'');
+  drawChart();headline();
+}
+function headline(){
+  const x=crossing();
+  $('headline').innerHTML=[
+    ['--blood','Sparse set, last op',fmt(W.cnt.sl)+' B',W.cnt.sl?'bytes moved':'no operation yet'],
+    ['--steel','Archetype, last op',fmt(W.cnt.al)+' B',W.cnt.al?'bytes moved':'no operation yet'],
+    ['--ochre','Archetype toggle, model',fmt(2*unitS)+' B','2 × S = 2 × '+fmt(unitS)],
+    ['--moss','Break-even',x===null?'none':'≈ '+fmt(Math.round(x/100)*100),'toggles per frame, '+P.sys+' system'+(P.sys>1?'s':'')]
+  ].map(([c,k,v,n])=>`<div class="stat" style="--c:var(${c})"><span>${k}</span><b>${v}</b><span>${n}</span></div>`).join('');
+}
+
+/* ---------- events ---------- */
+const selE=()=>+$('sel').value;
+$('bAdd').onclick=()=>run(()=>addStun(selE()));
+$('bRem').onclick=()=>run(()=>remStun(selE()));
+$('bDestroy').onclick=()=>run(()=>destroy(selE()));
+$('bCreate').onclick=()=>{let e;run(()=>{e=create();});if(e!=null)$('sel').value=e;renderControls();};
+$('bPin').onclick=()=>{const e=selE();W.pin=[e,W.gen[e]];renderControls();$('live').textContent=`Pinned handle (${e}, ${W.gen[e]}).`;};
+$('sel').onchange=renderControls;
+$('bReset').onclick=()=>{W=newWorld(8,true);beats=[{w:clone(W),marks:{}}];play();$('live').textContent='Reset to 8 entities.';};
+$('bTrace').onclick=()=>{
+  W=newWorld(5,false);
+  const ops=[()=>addStun(1),()=>addStun(3),()=>addStun(4),()=>remStun(1)];
+  const all=[];ops.forEach(o=>{o();finishLog();all.push(...beats);});
+  beats=all;beats[beats.length-1].marks.msg='Lecture trace done. Stunned dense [4 3], sparse [- - - 1 0].';
+  play();$('sel').value=1;renderControls();
+};
+$('S').oninput=e=>{unitS=+e.target.value;$('oS').textContent=unitS+' bytes';W.cnt.sb=W.cnt.sb;renderStore({w:W,marks:{}});headline();};
+[['cA','cA'],['cS','cS'],['sav','sav'],['sys','sys'],['tog','tog']].forEach(([id,k])=>$(id).addEventListener('input',e=>{P[k]=+e.target.value;readout();}));
+let raf=0;const redraw=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(drawChart);};
+if(window.ResizeObserver)new ResizeObserver(redraw).observe($('chartWrap'));else addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+
+W=newWorld(8,true);$('oS').textContent=unitS+' bytes';
+beats=[{w:clone(W),marks:{}}];play();readout();
+window.__ecs={get W(){return W;},P,readout};
+})();
+</script>
+</body>
+</html>

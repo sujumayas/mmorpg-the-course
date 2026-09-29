@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Missed taps — CS201 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:14px}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.scroller{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;border-radius:6px;background:var(--paper)}
+svg{display:block}
+svg text{font-family:var(--sans);fill:var(--ink)}
+.rowlbl{font-size:12px;font-weight:700}
+.axlbl{font-size:11px;fill:var(--ink-soft)}
+.miss{font-size:10px;font-weight:700;fill:var(--blood)}
+.dl{opacity:0;font-size:11px;font-weight:700;pointer-events:none}
+g.tap:hover .dl,g.tap:focus .dl{opacity:1}
+g.tap:focus{outline:none}
+g.tap:focus .hit{stroke:var(--focus);stroke-width:3}
+.summary{font-size:.92rem;margin:8px 0 0;font-variant-numeric:tabular-nums}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--ink-soft);margin-top:6px}
+.key i{display:inline-block;width:14px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+.nums{background:var(--paper-2);border-radius:10px;padding:12px;font-variant-numeric:tabular-nums}
+.nums h2{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:0 0 6px}
+.nums dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:.88rem}
+.nums dt{color:var(--ink-soft)}
+.nums dd{margin:0;font-weight:700;text-align:right}
+.nums dd.big{font-size:1.1rem}
+.nums hr{grid-column:1/-1;border:0;border-top:1px solid var(--grid);margin:4px 0;width:100%}
+.hl{color:var(--ochre)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 22px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.controls{grid-template-columns:minmax(0,1fr)}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:12px}
+.opts label{display:inline-flex;align-items:center;gap:8px;justify-content:flex-start}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--ochre)}
+select{font:600 .9rem var(--sans);padding:6px 9px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+button{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible,.scroller:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS201 Game Engine Architecture · Week 9 · Worked example</p>
+  <h1>Polling once a frame misses short taps</h1>
+  <p class="lede">A tap that starts and ends between two frame samples never shows up as "held". An event queue records the key-down itself, so it keeps every tap and its true time.</p>
+</header>
+
+<section class="panel" aria-label="Polling versus events">
+  <p class="insight" id="insight"></p>
+  <div class="layout">
+    <figure>
+      <figcaption><span>Two seconds of input <small id="scrollHint">Scroll sideways, or fit the whole axis.</small></span> <button id="fit" aria-pressed="false" type="button">Fit to width</button></figcaption>
+      <div class="scroller" id="scroller" tabindex="0" aria-label="Timeline, scrolls sideways">
+        <svg id="tl" role="group" aria-label="Timeline of taps, frame samples, polling and event views"></svg>
+      </div>
+      <p class="summary" id="summary"></p>
+      <div class="key">
+        <span><i style="background:var(--steel)"></i>tap, caught</span>
+        <span><i style="border:1.5px dashed var(--blood)"></i>tap, missed by polling</span>
+        <span><i style="background:var(--ink-soft);width:2px"></i>frame sample</span>
+        <span><i style="background:var(--moss)"></i>event, delay to next frame</span>
+        <span id="hitchKey" hidden><i style="background:var(--ochre);opacity:.35"></i>hitch frame</span>
+      </div>
+    </figure>
+    <aside class="nums" aria-live="polite">
+      <h2>Numbers</h2>
+      <dl id="dl"></dl>
+    </aside>
+  </div>
+
+  <div class="controls">
+    <div><label for="fps">Frame rate <output id="oFps"></output></label><input id="fps" type="range" min="10" max="240" step="1" value="30"></div>
+    <div><label for="dur">Tap duration d <output id="oDur"></output></label><input id="dur" type="range" min="2" max="100" step="1" value="10"></div>
+    <div><label for="rate">Tap rate <output id="oRate"></output></label><input id="rate" type="range" min="2" max="10" step="1" value="5"></div>
+    <div><label for="omega">Flick speed ω <output id="oOm"></output></label><input id="omega" type="range" min="100" max="1500" step="50" value="600"></div>
+    <div><label for="src">Timestamp source for aim <select id="src"><option value="frame">frame (T)</option><option value="1">mouse 1,000 Hz (1 ms)</option><option value="2">mouse 500 Hz (2 ms)</option></select></label></div>
+    <div class="opts" style="margin:0"><label><input type="checkbox" id="hitch"> Hitch: frame at 1,000 ms lasts 100 ms</label><button id="reroll" type="button">Re-roll taps</button></div>
+  </div>
+</section>
+
+<footer>Taps are placed by a seeded random generator (mulberry32, seed 9, plus one per re-roll) with uniform, non-overlapping start times. The observed miss rate and mean delay come from a hidden 200-second run with the same settings. Formulas: miss rate max(0, 1 − d/T), mean delay T/2, aim error ω × T / 2 on average and ω × T at worst.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const fx=(x,d)=>{const p=Math.pow(10,d);return (Math.round(x*p+1e-7)/p).toFixed(d);};
+const grp=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let seed=9,fit=false;
+const S={};
+function read(){S.fps=+$('fps').value;S.T=1000/S.fps;S.d=+$('dur').value;S.rate=+$('rate').value;S.om=+$('omega').value;S.src=$('src').value;S.hitch=$('hitch').checked;}
+// uniform, non-overlapping taps on [0, span]
+function taps(r,n,span,d){
+  const out=[];let guard=0;
+  while(out.length<n&&guard<n*200){guard++;
+    const s=r()*(span-d);
+    let lo=0,hi=out.length;while(lo<hi){const m=(lo+hi)>>1;if(out[m]<s)lo=m+1;else hi=m;}
+    if((lo>0&&out[lo-1]+d>s)||(lo<out.length&&s+d>out[lo]))continue;
+    out.splice(lo,0,s);
+  }
+  return out;
+}
+function hitchFrame(){const k0=Math.floor(1000/S.T);const h0=k0*S.T;return S.hitch&&S.T<100?[h0,h0+100]:null;}
+function nextSample(t){
+  const T=S.T,h=hitchFrame(),c=x=>Math.ceil(x/T-1e-9)*T;
+  if(!h||t<=h[0])return c(t);
+  if(t<=h[1])return h[1];
+  return h[1]+c(t-h[1]);
+}
+function samples(end){const out=[];let t=0;while(t<=end){out.push(t);t=nextSample(t+1e-6);}return out;}
+function classify(s){const n=nextSample(s);return {s,e:s+S.d,next:n,caught:n<s+S.d,delay:n-s};}
+
+let vis=[],long=null;
+function compute(){
+  read();
+  vis=taps(mulberry32(seed+100000),S.rate*2,2000,S.d).map(classify);
+  const L=taps(mulberry32(seed),S.rate*200,200000,S.d).map(classify);
+  const miss=L.filter(x=>!x.caught).length;
+  long={n:L.length,miss,rate:miss/L.length,delay:L.reduce((a,x)=>a+x.delay,0)/L.length};
+}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function render(){
+  const svg=$('tl'),sc=$('scroller');
+  const W=fit?Math.max(300,sc.clientWidth):Math.max(sc.clientWidth,960);
+  const H=262,L=8,R=8,x=t=>L+(W-L-R)*t/2000;
+  svg.setAttribute('width',W);svg.setAttribute('height',H);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML='';
+  const rows=[[18,'1 · What the player did'],[92,'2 · What polling sees'],[176,'3 · What the event queue sees']],rh=44;
+  const h=hitchFrame();
+  if(h)el('rect',{x:x(h[0]),y:14,width:x(h[1])-x(h[0]),height:rows[2][0]+rh-10,fill:'var(--ochre)',opacity:.2},svg);
+  rows.forEach(([y,t])=>{el('rect',{x:L,y:y+14,width:W-L-R,height:rh-14,fill:'var(--paper-2)',opacity:.6},svg);const tx=el('text',{x:L+2,y:y+10,class:'rowlbl'},svg);tx.textContent=t;});
+  const smp=samples(2000);
+  const sg=el('g',{stroke:'var(--ink-soft)','stroke-width':1,opacity:smp.length>150?.35:.6},svg);
+  smp.forEach(t=>el('line',{x1:x(t),x2:x(t),y1:rows[0][0]+14,y2:rows[2][0]+rh},sg));
+  // row 2 sample squares
+  const gap=(W-L-R)*S.T/2000,sq=Math.max(2,Math.min(7,gap*0.6)),y2=rows[1][0]+14+(rh-14)/2;
+  smp.forEach(t=>{const held=vis.some(v=>v.s<=t&&t<v.e);el('rect',{x:x(t)-sq/2,y:y2+6,width:sq,height:sq,fill:held?'var(--ink)':'none',stroke:'var(--ink-soft)','stroke-width':held?0:1},svg);});
+  const minW=4;let lastMiss=-1e9;
+  vis.forEach((v,i)=>{
+    const bx=x(v.s),bw=Math.max(minW,x(v.e)-bx),inH=h&&v.s>=h[0]&&v.s<h[1];
+    // row 1
+    el('rect',{x:bx,y:rows[0][0]+18,width:bw,height:rh-22,fill:'var(--steel)',rx:1.5},svg);
+    if(inH)el('rect',{x:bx-2,y:rows[0][0]+15,width:bw+4,height:rh-16,fill:'none',stroke:'var(--ochre)','stroke-width':2},svg);
+    // row 2
+    const ry=rows[1][0]+16;
+    if(v.caught)el('rect',{x:bx,y:ry,width:bw,height:10,fill:'var(--steel)',rx:1.5},svg);
+    else{el('rect',{x:bx,y:ry,width:bw,height:10,fill:'none',stroke:'var(--blood)','stroke-width':1.5,'stroke-dasharray':'3 2'},svg);
+      const cx=bx+bw/2,lift=cx-lastMiss<38?11:0;lastMiss=lift?-1e9:cx;
+      const t=el('text',{x:cx,y:rows[1][0]+rh+9+lift,'text-anchor':'middle',class:'miss'},svg);t.textContent='missed';}
+    if(inH)el('rect',{x:bx-2,y:ry-3,width:bw+4,height:16,fill:'none',stroke:'var(--ochre)','stroke-width':2},svg);
+    // row 3
+    const g=el('g',{class:'tap',tabindex:0,'aria-label':`Tap ${i+1} at ${fx(v.s,1)} ms, delivered at next frame after ${fx(v.delay,1)} ms`},svg);
+    const y3=rows[2][0]+18;
+    el('rect',{class:'hit',x:bx,y:y3,width:bw,height:rh-22,fill:'var(--steel)',rx:1.5},g);
+    el('line',{x1:bx,x2:bx,y1:y3-4,y2:y3+rh-18,stroke:'var(--ink)','stroke-width':2},g);
+    el('line',{x1:bx,x2:x(v.next),y1:y3+rh-26,y2:y3+rh-26,stroke:'var(--moss)','stroke-width':2.5},g);
+    el('circle',{cx:x(v.next),cy:y3+rh-26,r:3,fill:'var(--moss)'},g);
+    el('rect',{x:bx-4,y:y3-6,width:Math.max(bw,x(v.next)-bx)+8,height:rh-12,fill:'transparent'},g);
+    const lbl=el('text',{x:Math.min(bx,W-120),y:y3-6,class:'dl'},g);lbl.textContent=`delay ${fx(v.delay,1)} ms`;
+    const tt=el('title',{},g);tt.textContent=`delay ${fx(v.delay,1)} ms`;
+  });
+  $('scrollHint').hidden=sc.scrollWidth<=sc.clientWidth+1;
+  // axis
+  for(let t=0;t<=2000;t+=250){const tx=el('text',{x:x(t),y:H-4,'text-anchor':t===0?'start':t===2000?'end':'middle',class:'axlbl'},svg);tx.textContent=t===2000?'2,000 ms':grp(t);}
+}
+function panel(){
+  const miss=vis.filter(v=>!v.caught).length,n=vis.length;
+  const formula=Math.max(0,1-S.d/S.T);
+  const Ts=S.src==='frame'?S.T:+S.src;
+  const h=hitchFrame();
+  const inH=h?vis.filter(v=>v.s>=h[0]&&v.s<h[1]):[];
+  let rows=[
+    ['Taps generated',n],['Caught by polling',n-miss],['Missed by polling',miss],['Missed by events',0],['hr'],
+    ['Observed miss rate',fx(long.rate,2),'big'],[`Formula max(0, 1 − d/T)`,fx(formula,2),'big'],[`(long run: ${grp(long.miss)} of ${grp(long.n)} taps)`,''],['hr'],
+    ['Mean delay observed',fx(long.delay,1)+' ms'],['Formula T/2',fx(S.T/2,1)+' ms'],['hr'],
+    [`Aim error, mean ω×T/2`,fx(S.om*Ts/2000,1)+'°','big'],[`Aim error, worst ω×T`,fx(S.om*Ts/1000,1)+'°','big'],
+    ['Timestamp step',fx(Ts,Ts<10?Ts%1?2:0:1)+' ms']
+  ];
+  if(h)rows.push(['hr'],[`<span class="hl">Taps in hitch frame</span>`,`${inH.length}, ${inH.filter(v=>!v.caught).length} missed`]);
+  $('dl').innerHTML=rows.map(r=>r[0]==='hr'?'<hr>':`<dt>${r[0]}</dt><dd class="${r[2]||''}">${r[1]}</dd>`).join('');
+  $('summary').textContent=`${miss} of ${n} taps missed by polling, 0 by events.`+(h?` ${inH.length} tap${inH.length===1?'':'s'} started inside the 100 ms hitch frame.`:'');
+  $('hitchKey').hidden=!h;
+  let m;
+  if(formula>0.5)m=`At ${S.fps} fps a frame lasts ${fx(S.T,1)} ms, so a ${S.d} ms tap slips between samples ${Math.round(formula*100)}% of the time. Polling missed <b>${miss} of ${n}</b> taps here; the event queue missed none.`;
+  else if(formula>0)m=`Faster frames help only gradually: at ${fx(S.T,1)} ms per frame, ${Math.round(formula*100)}% of ${S.d} ms taps still fall between samples. Polling missed <b>${miss} of ${n}</b>.`;
+  else m=`The tap (${S.d} ms) now outlasts the frame (${fx(S.T,1)} ms), so every tap contains a sample and polling misses nothing`+(h&&inH.some(v=>!v.caught)?`, except inside the hitch frame.`:`.`)+` Events still carry the better timestamp: polling rounds each press up to the next frame, ${fx(S.T/2,1)} ms late on average.`;
+  $('insight').innerHTML=m;
+  $('oFps').textContent=S.fps+' fps · T = '+fx(S.T,1)+' ms';$('oDur').textContent=S.d+' ms';$('oRate').textContent=S.rate+' per s';$('oOm').textContent=grp(S.om)+' °/s';
+}
+function update(){compute();render();panel();}
+['fps','dur','rate','omega'].forEach(id=>$(id).addEventListener('input',update));
+$('src').addEventListener('change',update);$('hitch').addEventListener('change',update);
+$('reroll').addEventListener('click',()=>{seed++;update();});
+$('fit').addEventListener('click',()=>{fit=!fit;$('fit').setAttribute('aria-pressed',fit);render();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,80);});
+if(matchMedia('(min-width: 1000px)').matches){fit=true;$('fit').setAttribute('aria-pressed','true');}
+update();
+})();
+</script>
+</body>
+</html>

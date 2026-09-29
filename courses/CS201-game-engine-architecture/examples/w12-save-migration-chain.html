@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Save migration chain — CS201 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+code,pre{font-family:var(--mono);font-size:.9em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.05rem}
+.views{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px}
+@media (max-width:860px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:8px 0;padding:4px 0}
+.vbox{flex:none;min-width:46px;padding:8px 6px;text-align:center;font:700 .95rem var(--sans);font-variant-numeric:tabular-nums;border:2px solid var(--steel);border-radius:8px;background:var(--paper);color:var(--ink)}
+.vbox.gap{border-style:dashed;border-color:var(--ink-soft);color:var(--ink-soft);font-weight:600;font-size:.8rem;min-width:0}
+.vbox.cur{background:var(--steel);color:var(--paper)}
+.vbox.start{box-shadow:0 0 0 3px var(--ochre)}
+.vbox.flash{animation:fl 1s ease-out}
+@keyframes fl{0%{background:var(--ochre);color:var(--paper)}100%{}}
+.arrow{flex:none;display:flex;flex-direction:column;align-items:center;padding:0 4px;max-width:118px;min-width:48px}
+.arrow .ln{width:100%;height:0;border-top:2.5px solid var(--ink-soft);position:relative;margin:3px 0}
+.arrow .ln::after{content:"";position:absolute;right:-2px;top:-7px;border:6px solid transparent;border-left:8px solid var(--ink-soft);border-right:0}
+.arrow.dash .ln{border-top-style:dashed}
+.arrow .t{font-size:.72rem;line-height:1.15;text-align:center;color:var(--ink-soft)}
+.arrow .tag{font-size:.66rem;font-weight:700;line-height:1.1;text-align:center}
+.arrow .tag.need{color:var(--blood)}.arrow .tag.free{color:var(--moss)}
+.arrow.used .ln{border-color:var(--ochre)}.arrow.used .ln::after{border-left-color:var(--ochre)}
+.arrow.used .t{color:var(--ink);font-weight:700}
+@media (max-width:560px){
+ .chain{flex-direction:column;align-items:flex-start;flex-wrap:nowrap}
+ .arrow{flex-direction:row;max-width:none;min-width:0;padding:0 0 0 18px;gap:10px;align-items:center}
+ .arrow .ln{order:-1;flex:none;width:0;height:26px;border-top:0;border-left:2.5px solid var(--ink-soft);margin:0}
+ .arrow .ln::after{right:auto;left:-8px;top:auto;bottom:-3px;border:6px solid transparent;border-top:8px solid var(--ink-soft);border-bottom:0}
+ .arrow.dash .ln{border-left-style:dashed}
+ .arrow.used .ln{border-left-color:var(--ochre)}.arrow.used .ln::after{border-top-color:var(--ochre);border-left-color:transparent}
+ .arrow .t,.arrow .tag{text-align:left}
+}
+.json{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:var(--paper);border:1.5px solid var(--ink-soft);white-space:pre-wrap;overflow-wrap:anywhere;min-height:3.2em;font-size:.86rem}
+.status{margin:8px 0 0;font-size:.9rem;font-weight:600}
+.status.bad{color:var(--blood);border-left:5px solid var(--blood);padding:6px 10px;background:var(--paper);border-radius:6px}
+canvas{display:block;width:100%;height:280px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:20px;height:0;border-top:3px solid;vertical-align:3px;margin-right:6px}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;margin:10px 0 0}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block;line-height:1.25}
+.delta{font-size:.9rem;font-weight:600;color:var(--blood);min-height:1.4em;margin:8px 0 0}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 22px;margin-top:16px;align-items:start}
+@media (max-width:860px){.controls{grid-template-columns:minmax(0,1fr)}}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+label,.lbl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+select{font:600 .95rem var(--sans);padding:6px 9px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);max-width:100%}
+button{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sub{font-size:.8rem;color:var(--ink-soft);margin:4px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS201 Game Engine Architecture · Week 12 · Worked example</p>
+  <h1>A save from version 1 still opens at version 20</h1>
+  <p class="lede">Each release adds one small migration to a chain. Old saves walk the chain one step at a time. Direct converters would need a rewrite of every old one at every release.</p>
+</header>
+
+<section class="panel" aria-label="Save migration chain">
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <div class="views">
+    <figure>
+      <figcaption>The chain<small>One box per save version. Each arrow is one migration function, written once in the patch that changed the format.</small></figcaption>
+      <div class="chain" id="chain"></div>
+      <pre class="json" id="json" aria-label="Current save JSON"></pre>
+      <p class="status" id="status" role="status"></p>
+    </figure>
+    <figure>
+      <figcaption>The cost<small>Functions written in total (y) against save versions shipped, N (x)</small></figcaption>
+      <canvas id="chart" role="img" aria-label="Functions written: chain N minus 1 versus direct N times N minus 1 over 2"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><i style="border-color:var(--steel)"></i>chain: N − 1</span>
+        <span><i style="border-color:var(--blood)"></i>direct: N(N − 1)/2</span>
+      </div>
+      <div class="readout">
+        <div class="stat" style="--c:var(--ink)"><b id="rN">—</b><span>versions shipped N</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rChain">—</b><span>chain functions, N − 1</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rDirect">—</b><span>direct converters in total</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rLatest">—</b><span>direct written at the latest release</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rRun">—</b><span>migrations run for this save, N − v</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rTag">—</b><span>functions needed with tagged fields</span></div>
+      </div>
+      <p class="delta" id="delta" aria-live="polite"></p>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="start">Starting save version</label>
+      <div class="row" style="margin-top:4px">
+        <select id="start"></select>
+        <button class="primary" id="load">Load</button>
+      </div>
+      <p class="sub">Load walks the save along the chain, 600 ms per step.</p>
+    </div>
+    <div>
+      <label for="nShip"><span>Versions shipped <code>N</code></span> <output id="oN"></output></label>
+      <input id="nShip" type="range" min="4" max="50" step="1" value="20">
+      <div class="row"><button id="patch">New patch</button></div>
+    </div>
+    <div>
+      <span class="lbl">Tagged fields</span>
+      <div class="row" style="margin-top:4px"><button id="tags" aria-pressed="false">Tagged fields: off</button></div>
+      <p class="sub">With tags, a patch that only adds a field with a default needs no migration. Renames, unit changes and restructures still do.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Migrations from lecture section 2: v1→v2 renames <code>hp</code> to <code>health</code>, v2→v3 turns tile <code>pos</code> into pixels at 16 px per tile, v3→v4 moves <code>gold</code> into a wallet with <code>gems: 0</code>. Later versions are "patch k" stand-ins that only bump the version. Cost model: a chain writes one function per release (<code>N − 1</code> in total); direct converters must write <code>k − 1</code> new ones at release <code>k</code> (<code>N(N − 1)/2</code> in total). When <code>N</code> &gt; 8 the chain shows the four built-in versions, a gap box for the middle patches (one animation step), and the last four versions.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>n.toLocaleString('en-US');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const LABELS={1:'hp → health',2:'tiles × 16 → pixels',3:'gold → wallet'};
+let N=20,startV=1,tags=false,save=null,atV=null,busy=null,future=false;
+
+// JSON printed like the lecture: {"a": 1, "b": [3, 4]}
+function js(o){
+  if(Array.isArray(o))return '['+o.map(js).join(', ')+']';
+  if(o&&typeof o==='object')return '{'+Object.keys(o).map(k=>JSON.stringify(k)+': '+js(o[k])).join(', ')+'}';
+  return JSON.stringify(o);
+}
+function migrate(s,from){ // returns a new object at version from+1, same key order as the Python
+  s=JSON.parse(JSON.stringify(s));
+  if(from===1){const hp=s.hp;delete s.hp;s.health=hp;}
+  else if(from===2){const p=s.pos;delete s.pos;s.x=p[0]*16;s.y=p[1]*16;}
+  else if(from===3){const g=s.gold;delete s.gold;s.wallet={gold:g,gems:0};}
+  s.version=from+1;return s;
+}
+const V1={version:1,hp:35,gold:120,pos:[3,4]};
+function saveAt(v){let s=V1;for(let i=1;i<v;i++)s=migrate(s,i);return s;}
+
+// visible layout: list of items {type:'box',v} | {type:'gap',from,to}
+function layout(){
+  if(N<=8){const a=[];for(let v=1;v<=N;v++)a.push({type:'box',v});return a;}
+  const a=[1,2,3,4].map(v=>({type:'box',v}));
+  a.push({type:'gap',from:5,to:N-4});
+  for(let v=N-3;v<=N;v++)a.push({type:'box',v});
+  return a;
+}
+function arrowFor(from,to){ // arrow leaving version `from`, arriving at `to`
+  const built=from<=3;let t,cls='arrow';
+  if(built)t=LABELS[from];
+  else t=to-from>1?`patches ${from}–${to-1}`:`patch ${from}`;
+  if(tags&&!built)cls+=' dash';
+  let tag='';
+  if(tags)tag=built?'<span class="tag need">needs a migration</span>':'<span class="tag free">free with tags</span>';
+  return `<div class="${cls}" data-from="${from}"><span class="t">${t}</span><span class="ln"></span>${tag}</div>`;
+}
+function drawChain(flash){
+  const items=layout();let h='';
+  items.forEach((it,i)=>{
+    if(i>0){
+      const prev=items[i-1],from=prev.type==='box'?prev.v:prev.to,to=it.type==='box'?it.v:it.from;
+      h+=arrowFor(from,to);
+    }
+    if(it.type==='box'){
+      const cls='vbox'+(atV===it.v?' cur':'')+(!future&&startV===it.v?' start':'');
+      h+=`<div class="${cls}" data-v="${it.v}">v${it.v}</div>`;
+    }else{
+      const cur=atV!==null&&atV>=it.from&&atV<=it.to;
+      h+=`<div class="vbox gap${cur?' cur':''}" title="versions ${it.from} to ${it.to}">v${it.from}…v${it.to}</div>`;
+    }
+  });
+  $('chain').innerHTML=h;
+  if(flash&&!reduce.matches)$('chain').querySelectorAll('.vbox').forEach(b=>{if(+b.dataset.v!==N)b.classList.add('flash');});
+}
+function setUsed(){ // mark arrows between start and atV
+  $('chain').querySelectorAll('.arrow').forEach(a=>{const f=+a.dataset.from;a.classList.toggle('used',atV!==null&&!future&&f>=startV&&f<atV);});
+}
+
+// ---------- chart ----------
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function drawChart(){
+  const {g,w,h}=setupCanvas($('chart')),pad={l:48,r:12,t:12,b:30},yM=1250;
+  const X=n=>pad.l+(w-pad.l-pad.r)*(n-1)/49,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yM);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let v=0;v<=1250;v+=250){g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(v),pad.l-6,Y(v));}
+  [1,10,20,30,40,50].forEach(n=>{g.textAlign='center';g.textBaseline='top';g.fillText(n,X(n),h-pad.b+6);});
+  function line(f,c){g.strokeStyle=c;g.lineWidth=2.5;g.beginPath();for(let n=1;n<=50;n++){const px=X(n),py=Y(f(n));n===1?g.moveTo(px,py):g.lineTo(px,py);}g.stroke();}
+  const ch=n=>n-1,di=n=>n*(n-1)/2;
+  line(ch,css('--steel'));line(di,css('--blood'));
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(N),pad.t);g.lineTo(X(N),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  [[ch(N),css('--steel')],[di(N),css('--blood')]].forEach(([v,c],i)=>{
+    g.fillStyle=c;g.beginPath();g.arc(X(N),Y(v),6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.font='700 12px '+css('--sans');g.fillStyle=c;g.textBaseline='bottom';
+    const left=i===0||X(N)>w-60;g.textAlign=left?'right':'left';
+    const lx=X(N)+(left?-9:9),ly=Y(v)-(i===0?6:4);g.strokeStyle=css('--paper-2');g.lineWidth=4;g.lineJoin='round';g.strokeText(fmt(v),lx,ly);g.fillText(fmt(v),lx,ly);
+  });
+}
+
+// ---------- readouts ----------
+function readouts(){
+  $('oN').textContent=N;
+  $('rN').textContent=N;$('rChain').textContent=fmt(N-1);$('rDirect').textContent=fmt(N*(N-1)/2);$('rLatest').textContent=fmt(N-1);
+  $('rRun').textContent=future?'refused':fmt(N-startV);
+  $('rTag').textContent=tags?'3':'—';
+  $('insight').innerHTML=`At <b>N = ${N}</b> the chain has <b>${fmt(N-1)}</b> migration functions, each written once and then frozen. Direct converters would have cost <b>${fmt(N*(N-1)/2)}</b>, and the next release would add ${fmt(N)} more.`+(tags?` With tagged fields, only the 3 built-in changes need code at all.`:'');
+}
+function showJSON(){$('json').textContent=save?js(save):'';}
+
+// ---------- load ----------
+function cancel(){if(busy){clearTimeout(busy);busy=null;}$('load').disabled=false;}
+function prepare(){
+  cancel();future=$('start').value==='future';startV=future?N+1:+$('start').value;
+  save=future?{version:N+1,health:1}:saveAt(startV);atV=future?null:startV;
+  $('status').textContent='';$('status').className='status';
+  drawChain();setUsed();showJSON();readouts();
+}
+function nextStop(v){ // next visible stop after version v
+  if(N>8&&v>=4&&v<N-4)return N-4; // the whole gap is one step
+  return v+1;
+}
+function load(instant){
+  prepare();
+  if(future){
+    $('status').textContent=`Refused: save is version ${N+1}, this build only knows up to ${N}.`;$('status').className='status bad';
+    return;
+  }
+  if(startV===N){$('status').textContent='Already current. No migrations run.';return;}
+  const go=()=>{
+    const to=nextStop(atV);
+    while(atV<to){save=migrate(save,atV);atV++;}
+    drawChain();setUsed();showJSON();
+    if(atV<N){$('status').textContent=`Migrating… now at v${atV}`;busy=setTimeout(go,600);}
+    else{busy=null;$('load').disabled=false;$('status').textContent=`Loaded: ${N-startV} migration${N-startV===1?'':'s'} ran, v${startV} → v${N}.`;}
+  };
+  if(instant||reduce.matches){while(atV<N){save=migrate(save,atV);atV++;}drawChain();setUsed();showJSON();$('status').textContent=`Loaded: ${N-startV} migration${N-startV===1?'':'s'} ran, v${startV} → v${N}.`;return;}
+  $('load').disabled=true;busy=setTimeout(go,600);
+}
+
+// ---------- controls ----------
+function fillStart(){
+  const cur=$('start').value;
+  $('start').innerHTML=[1,2,3,4].map(v=>`<option value="${v}">v${v}</option>`).join('')+`<option value="future">v${N+1}: from the future</option>`;
+  $('start').value=cur||'1';
+}
+function setN(n,flash){
+  N=Math.max(4,Math.min(50,n));$('nShip').value=N;fillStart();prepare();drawChart();
+  if(flash)drawChain(true),setUsed();
+  $('patch').disabled=N>=50;
+}
+$('nShip').addEventListener('input',e=>{$('delta').textContent='';setN(+e.target.value);});
+$('patch').addEventListener('click',()=>{if(N>=50)return;setN(N+1,true);$('delta').textContent=`New patch v${N}: chain +1 function. Direct: +${fmt(N-1)} converters to rewrite.`;});
+$('start').addEventListener('change',prepare);
+$('load').addEventListener('click',()=>load(false));
+$('tags').addEventListener('click',()=>{tags=!tags;$('tags').setAttribute('aria-pressed',tags);$('tags').textContent='Tagged fields: '+(tags?'on':'off');drawChain();setUsed();readouts();});
+window.addEventListener('resize',drawChart);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawChart);
+
+// first screen: N = 20, v1 loaded to the end
+fillStart();setN(20);load(true);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawChart);
+})();
+</script>
+</body>
+</html>

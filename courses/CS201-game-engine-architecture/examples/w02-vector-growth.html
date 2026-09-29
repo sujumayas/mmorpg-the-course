@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vector growth — CS201 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+code{font-family:var(--mono);font-size:.92em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.05rem}
+.verdict{font-weight:700;font-family:var(--sans);font-size:.95rem;margin:0 0 12px}
+.verdict .tag{display:inline-block;padding:1px 8px;border-radius:6px;color:var(--paper);margin:0 2px}
+.verdict small{font-weight:400;color:var(--ink-soft);font-size:.9rem}
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:260px}
+.under{font-size:.88rem;font-variant-numeric:tabular-nums;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:4px 16px}
+.under b{font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:4px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+@media (max-width:460px){.totals{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.totals .stat:last-child{grid-column:1/-1}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{display:block;font-size:.8rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.seg{font-family:var(--sans);display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;font-size:.82rem}
+.seg label{padding:3px 10px;cursor:pointer;font-weight:600}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg label:has(input:checked){background:var(--ink);color:var(--paper)}
+.seg label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:-3px}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:minmax(0,1fr)}}
+.ctl-title{font-weight:600;font-size:.92rem;display:block;margin-bottom:4px}
+.nrow{display:flex;gap:10px;align-items:center}
+input[type=range]{flex:1;min-width:0;accent-color:var(--steel);height:28px}
+input[type=number]{width:92px;font:600 .95rem var(--sans);padding:5px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+select{font:600 .95rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);max-width:100%}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.opt{display:flex;align-items:center;gap:8px;font-size:.95rem;cursor:pointer;margin:3px 0}
+input[type=radio],input[type=checkbox]{width:18px;height:18px;accent-color:var(--steel);flex:none}
+input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS201 Game Engine Architecture · Week 2 · Worked example</p>
+  <h1>Same staircase, 2,700 times the bytes</h1>
+  <p class="lede">The container decides how many elements move when it grows. The element type decides how many bytes each move costs. One missing <code>noexcept</code> turns 24 bytes into the whole payload.</p>
+</header>
+
+<section class="panel">
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <p class="verdict" id="verdict" aria-live="polite"></p>
+
+  <div class="charts">
+    <figure>
+      <figcaption><span>Size and capacity<small>Element slots as you <code>push_back</code>. Dots mark reallocations.</small></span></figcaption>
+      <canvas id="cCap" role="img" aria-label="Size line and capacity staircase"></canvas>
+      <div class="legend"><span><i style="background:var(--ink-soft)"></i>size</span><span><i style="background:var(--steel)"></i>capacity</span></div>
+      <p class="under" aria-live="polite"><span>Reallocations: <b id="rRe">—</b></span><span>Relocations R(n): <b id="rR">—</b></span><span>Final capacity: <b id="rCap">—</b></span></p>
+    </figure>
+    <figure>
+      <figcaption><span>Bytes relocated<small>Cumulative bytes written into new blocks</small></span>
+        <span class="seg" role="radiogroup" aria-label="Y axis scale">
+          <label><input type="radio" name="scale" value="lin" checked>Linear</label>
+          <label><input type="radio" name="scale" value="log">Log</label>
+        </span>
+      </figcaption>
+      <canvas id="cBytes" role="img" aria-label="Cumulative bytes relocated, copy and move"></canvas>
+      <div class="legend"><span><i style="background:var(--blood)"></i>copy (whole payload)</span><span><i style="background:var(--steel)"></i>move (24 bytes)</span><span style="color:var(--ink-soft)">active line solid, other dashed</span></div>
+      <div class="totals" aria-live="polite">
+        <div class="stat" style="--c:var(--blood)"><b id="tCopy">—</b><span id="tCopyB">—</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="tMove">—</b><span id="tMoveB">—</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="tRatio">—</b><span>ratio copy/move</span></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label class="ctl-title" for="n">Elements <code>n</code></label>
+      <div class="nrow">
+        <input id="n" type="range" min="1" max="10000" step="1" value="1000" aria-label="Elements n, slider">
+        <input id="nNum" type="number" min="1" max="10000" step="1" value="1000" aria-label="Elements n, exact value">
+      </div>
+      <label class="ctl-title" for="payload" style="margin-top:12px">Payload per element</label>
+      <select id="payload">
+        <option value="1024">1 KiB</option>
+        <option value="16384">16 KiB</option>
+        <option value="65536" selected>64 KiB (128×128 RGBA icon)</option>
+        <option value="262144">256 KiB</option>
+        <option value="4194304">4 MiB (1024×1024 RGBA)</option>
+      </select>
+    </div>
+    <div>
+      <fieldset>
+        <legend>Growth policy</legend>
+        <label class="opt"><input type="radio" name="grow" value="2" checked>×2 (libc++, libstdc++)</label>
+        <label class="opt"><input type="radio" name="grow" value="1.5">×1.5 (Microsoft STL)</label>
+      </fieldset>
+      <label class="opt" style="margin-top:10px"><input type="checkbox" id="nx">Move constructor is <code>noexcept</code></label>
+      <label class="opt"><input type="checkbox" id="res"><span><code>reserve(n)</code> first</span></label>
+    </div>
+  </div>
+</section>
+
+<footer>Model: capacity grows to <code>max(grow(c), size + 1)</code> when full, with <code>grow(c) = 2c</code> (libc++, libstdc++) or <code>c + c/2</code> (Microsoft STL), and every existing element is relocated. A moved element costs its 24-byte object (three pointers). A copied one costs its whole heap payload. The library picks copy or move with <code>std::move_if_noexcept</code>.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const OBJ=24;
+let n=1000,g=2,pay=65536,nx=false,res=false,logY=false;
+
+function sim(){
+  let size=0,cap=res?n:0,rel=0,re=0;const ev=[];
+  for(let i=0;i<n;i++){
+    if(size===cap){const nc=Math.max(g===2?2*cap:cap+Math.floor(cap/2),size+1);rel+=size;re++;ev.push({at:size,from:cap,to:nc,rel});cap=nc;}
+    size++;
+  }
+  return {rel,re,cap,ev,start:res?n:0};
+}
+function human(b){
+  if(b===0)return '0 B';
+  if(b>=1048576)return (b/1048576).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' MiB';
+  if(b>=1024)return (b/1024).toFixed(2)+' KiB';
+  return fmt(b)+' B';
+}
+function payName(p){return p>=1048576?(p/1048576)+' MiB':(p/1024)+' KiB';}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g2=c.getContext('2d');g2.setTransform(dpr,0,0,dpr,0,0);return {g:g2,w:r.width,h:r.height};}
+const pad={l:60,r:12,t:12,b:36};
+function niceMax(v){if(v<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*m).find(x=>x>=v*1.0001)||v;}
+function frame(o,xMax,yTicks,yFmt,yPos){
+  const {g:c,w,h}=o;c.clearRect(0,0,w,h);c.strokeStyle=css('--grid');c.lineWidth=1;c.fillStyle=css('--ink-soft');c.font='12px '+css('--sans');
+  yTicks.forEach(v=>{const y=yPos(v);c.beginPath();c.moveTo(pad.l,y);c.lineTo(w-pad.r,y);c.stroke();c.textAlign='right';c.textBaseline='middle';c.fillText(yFmt(v),pad.l-6,y);});
+  for(let i=0;i<=4;i++){const x=pad.l+(w-pad.l-pad.r)*i/4;c.textAlign=i===4?'right':'center';c.textBaseline='top';c.fillText(fmt(xMax*i/4),i===4?x+4:x,h-pad.b+6);}
+  c.textAlign='right';c.fillText('elements pushed',w-pad.r,h-15);
+}
+function short(v){return v>=1e6?(v/1e6).toFixed(v%1e6?1:0)+'M':v>=1e4?Math.round(v/1000)+'k':fmt(v);}
+
+function drawCap(S){
+  const o=setup($('cCap')),{g:c,w,h}=o,xMax=n,yMax=niceMax(Math.max(S.cap,n));
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/xMax,Y=y=>pad.t+(h-pad.t-pad.b)*(1-y/yMax);
+  frame(o,xMax,[0,.25,.5,.75,1].map(k=>k*yMax),short,Y);
+  // realloc ticks
+  c.strokeStyle=css('--steel');c.globalAlpha=.3;c.lineWidth=1;
+  S.ev.forEach(e=>{c.beginPath();c.moveTo(X(e.at),pad.t);c.lineTo(X(e.at),h-pad.b);c.stroke();});c.globalAlpha=1;
+  // size
+  c.strokeStyle=css('--ink-soft');c.lineWidth=2;c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(n),Y(n));c.stroke();
+  // capacity staircase
+  c.strokeStyle=css('--steel');c.lineWidth=2.5;c.beginPath();c.moveTo(X(0),Y(S.start));let cur=S.start;
+  S.ev.forEach(e=>{c.lineTo(X(e.at),Y(cur));c.lineTo(X(e.at),Y(e.to));cur=e.to;});c.lineTo(X(n),Y(cur));c.stroke();
+  c.fillStyle=css('--steel');S.ev.forEach(e=>{c.beginPath();c.arc(X(e.at),Y(e.to),3.5,0,7);c.fill();});
+}
+function drawBytes(S){
+  const o=setup($('cBytes')),{g:c,w,h}=o,xMax=n,maxCopy=S.rel*pay;
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/xMax;let Y,ticks,yF;
+  const units=['B','KiB','MiB','GiB','TiB'];
+  if(logY){
+    const top=Math.max(1024,maxCopy*1.5),lt=Math.log(top);
+    Y=y=>pad.t+(h-pad.t-pad.b)*(1-Math.log(Math.max(1,y))/lt);
+    ticks=[];for(let k=0;Math.pow(1024,k)<=top;k++)ticks.push(Math.pow(1024,k));
+    yF=v=>'1 '+units[Math.round(Math.log(v)/Math.log(1024))];
+  }else{
+    const u=maxCopy>=1048576*1.2?1048576:maxCopy>=1024*1.2?1024:1,un=u===1048576?'MiB':u===1024?'KiB':'B';
+    const yMax=niceMax(Math.max(maxCopy,1)/u)*u;
+    Y=y=>pad.t+(h-pad.t-pad.b)*(1-y/yMax);ticks=[0,.25,.5,.75,1].map(k=>k*yMax);
+    yF=v=>v===0?'0':(v/u>=100?fmt(v/u):+(v/u).toFixed(1))+' '+un;
+  }
+  frame(o,xMax,ticks,yF,Y);
+  function line(per,color,active){
+    c.strokeStyle=color;c.lineWidth=active?2.8:2;c.globalAlpha=active?1:.45;c.setLineDash(active?[]:[6,5]);
+    c.beginPath();c.moveTo(X(0),Y(0));let cum=0;
+    S.ev.forEach(e=>{c.lineTo(X(e.at),Y(cum));cum=e.rel*per;c.lineTo(X(e.at),Y(cum));});
+    c.lineTo(X(n),Y(cum));c.stroke();c.setLineDash([]);c.globalAlpha=1;
+  }
+  line(nx?pay:OBJ,nx?css('--blood'):css('--steel'),false);
+  line(nx?OBJ:pay,nx?css('--steel'):css('--blood'),true);
+}
+
+function update(){
+  const S=sim(),copyB=S.rel*pay,moveB=S.rel*OBJ;
+  $('rRe').textContent=fmt(S.re);$('rR').textContent=fmt(S.rel);$('rCap').textContent=fmt(S.cap);
+  $('tCopy').textContent=human(copyB);$('tCopyB').textContent='copy, '+fmt(copyB)+' B';
+  $('tMove').textContent=human(moveB);$('tMoveB').textContent='move, '+fmt(moveB)+' B';
+  $('tRatio').textContent=S.rel?(copyB/moveB).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1}):'—';
+  const vb=nx?'MOVE':'COPY',why=nx?'noexcept move':'move constructor not noexcept, type is copyable';
+  $('verdict').innerHTML=`This vector will <span class="tag" style="background:var(${nx?'--steel':'--blood'})">${vb}</span> when it grows <small>(${why})</small>`;
+  let s;
+  if(res) s=`<code>reserve(${fmt(n)})</code> allocates once up front, so nothing relocates. Reallocations 0, R(n) 0, both totals 0 bytes, copy or move.`;
+  else if(!nx) s=`${fmt(S.rel)} relocations × ${payName(pay)} = <b>${human(copyB)}</b>. Tick <code>noexcept</code> to make each one 24 bytes.`;
+  else s=`${fmt(S.rel)} relocations × 24 bytes = <b>${human(moveB)}</b>. The staircase on the left did not change. Only the price of each step did, ${(copyB/moveB).toLocaleString('en-US',{maximumFractionDigits:1})} times cheaper.`;
+  $('insight').innerHTML=s;
+  drawCap(S);drawBytes(S);
+}
+
+function setN(v,from){v=Math.max(1,Math.min(10000,Math.round(+v||1)));n=v;if(from!=='range')$('n').value=v;if(from!=='num')$('nNum').value=v;update();}
+$('n').addEventListener('input',e=>setN(e.target.value,'range'));
+$('nNum').addEventListener('input',e=>{if(e.target.value!=='')setN(e.target.value,'num');});
+$('nNum').addEventListener('change',e=>setN(e.target.value));
+document.querySelectorAll('input[name=grow]').forEach(r=>r.addEventListener('change',e=>{g=+e.target.value;update();}));
+document.querySelectorAll('input[name=scale]').forEach(r=>r.addEventListener('change',e=>{logY=e.target.value==='log';update();}));
+$('payload').addEventListener('change',e=>{pay=+e.target.value;update();});
+$('nx').addEventListener('change',e=>{nx=e.target.checked;update();});
+$('res').addEventListener('change',e=>{res=e.target.checked;update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

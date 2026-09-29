@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sleeping islands — CS201 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+--sleep:#aab2a6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--sleep:#4a5568}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--sleep:#4a5568}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+code{font-family:var(--mono);font-size:.92em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.05rem}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:820px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.room{display:grid;gap:6px}
+.row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;border-bottom:3px solid var(--ink);padding:0 2px}
+.stack{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:0;padding:4px 0 2px;border:1.5px solid transparent;border-radius:6px;background:transparent;color:var(--ink);cursor:pointer;font:600 .7rem var(--sans);min-width:0}
+.stack:hover{border-color:var(--ink-soft)}
+.stack:focus-visible{outline:3px solid var(--focus);outline-offset:1px}
+.crate{display:flex;flex-direction:column;align-items:center;width:100%}
+.box{display:block;width:min(70%,34px);height:15px;border-radius:2px;background:var(--ochre);border:1.5px solid var(--ink)}
+.box.jit{background:repeating-linear-gradient(135deg,var(--blood) 0 3px,var(--ochre) 3px 6px)}
+.stack.asleep .box{background:var(--sleep);border-color:var(--ink-soft)}
+.stack.asleep .box.jit{background:repeating-linear-gradient(135deg,var(--ink-soft) 0 3px,var(--sleep) 3px 6px)}
+.bar{display:block;width:min(70%,34px);height:4px;margin:1px 0 2px;background:var(--paper);border-radius:2px;overflow:hidden}
+.bar b{display:block;height:100%;width:0;background:var(--steel)}
+.bar b.full{background:var(--moss)}
+.stack .lbl{color:var(--ink-soft);font-variant-numeric:tabular-nums;line-height:1.1;margin-top:2px}
+.stack.asleep .lbl::after{content:" z"}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;margin-top:8px;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:5px;border:1.5px solid var(--ink)}
+.legend i.line{height:0;border:0;border-top:3px solid;width:20px;vertical-align:3px;border-radius:0}
+canvas{display:block;width:100%;height:300px}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;margin:10px 0 0}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft);display:block;line-height:1.25}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:14px 0 4px}
+button{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.seg{display:inline-flex;border:1.5px solid var(--steel);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:7px 10px}
+.seg button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.seglbl{font-size:.85rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 22px;margin-top:10px}
+@media (max-width:820px){.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.controls{grid-template-columns:minmax(0,1fr)}}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.sub{font-size:.8rem;color:var(--ink-soft);margin:0}
+.table-wrap{overflow-x:auto;margin-top:6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:460px}
+.tcap{font-family:var(--serif);font-size:.98rem;margin:16px 0 0}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS201 Game Engine Architecture · Week 11 · Worked example</p>
+  <h1>One trembling crate keeps its whole stack awake</h1>
+  <p class="lede">Twenty stacks of five crates, 1.5 s after a knock. An island sleeps only when its slowest body is ready, so the striped crate in stack 1 keeps four calm crates awake with it, forever.</p>
+</header>
+
+<section class="panel" aria-label="Sleeping islands simulation">
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <div class="views">
+    <figure>
+      <figcaption>The room<small>Each square is a crate, top to bottom v0 = 4, 2, 1, 0.5, 0.25 m/s. The bar under it is its still-timer s / t_sleep. Click or press Enter on a stack to bump it.</small></figcaption>
+      <div class="room" id="room"></div>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:var(--ochre)"></i>awake</span>
+        <span><i style="background:var(--sleep)"></i>asleep</span>
+        <span><i style="background:repeating-linear-gradient(135deg,var(--blood) 0 3px,var(--ochre) 3px 6px)"></i>jittery crate</span>
+        <span><i style="background:var(--moss);height:5px"></i>timer full</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>The cost<small>Awake bodies out of 100 against time since the knock</small></figcaption>
+      <canvas id="chart" role="img" aria-label="Awake bodies over time for the island rule and the per-body rule"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><i class="line" style="border-color:var(--ochre)"></i>island rule</span>
+        <span><i class="line" style="border-color:var(--steel);border-top-style:dashed"></i>per body (if bodies could sleep alone)</span>
+      </div>
+      <div class="readout">
+        <div class="stat" style="--c:var(--ink)"><b id="rT">—</b><span>time since knock</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rIsl">—</b><span>awake, island rule</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rPer">—</b><span>awake, per body</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rSleepN">—</b><span>normal stack sleeps at</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rSleepJ">—</b><span>jittery stack sleeps at</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rBS">—</b><span>awake body-seconds per stack, island / per body</span></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="toolbar">
+    <button class="primary" id="knock">Knock over</button>
+    <button id="play" aria-pressed="false">Play</button>
+    <span class="seglbl" id="spdLbl">Speed</span>
+    <div class="seg" role="group" aria-labelledby="spdLbl">
+      <button data-speed="0.25" aria-pressed="false">0.25×</button>
+      <button data-speed="1" aria-pressed="true">1×</button>
+      <button data-speed="4" aria-pressed="false">4×</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="vSleep"><span><code>v_sleep</code> threshold</span> <output id="oVSleep"></output></label>
+      <input id="vSleep" type="range" min="0.01" max="0.2" step="0.01" value="0.05">
+      <p class="sub">Box2D v3.1 default 0.05 m/s</p>
+    </div>
+    <div>
+      <label for="tSleep"><span><code>t_sleep</code> still time</span> <output id="oTSleep"></output></label>
+      <input id="tSleep" type="range" min="0.1" max="2" step="0.1" value="0.5">
+      <p class="sub">Box2D and Godot default 0.5 s</p>
+    </div>
+    <div>
+      <label for="kDecay"><span>Decay <code>k</code></span> <output id="oK"></output></label>
+      <input id="kDecay" type="range" min="0.5" max="5" step="0.5" value="2">
+      <p class="sub">speed = v0 × e^(−k t), per second</p>
+    </div>
+    <div>
+      <label for="nJit"><span>Jittery crates</span> <output id="oJit"></output></label>
+      <input id="nJit" type="range" min="0" max="5" step="1" value="1">
+      <p class="sub">Middle crate of stacks 1, 5, 9, 13, 17</p>
+    </div>
+    <div>
+      <label for="jFloor"><span>Jitter floor</span> <output id="oFloor"></output></label>
+      <input id="jFloor" type="range" min="0.01" max="0.2" step="0.01" value="0.06">
+      <p class="sub">A jittery crate never slows below this</p>
+    </div>
+  </div>
+
+  <p class="tcap" id="tcap">One normal stack at the current settings, counted in 60 Hz ticks</p>
+  <div class="table-wrap">
+    <table aria-labelledby="tcap">
+      <thead><tr><th>Crate</th><th>v0 (m/s)</th><th>Goes still at</th><th>Sleeps alone at</th><th>Sleeps in the island at</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from lecture section 2: 60 Hz ticks, speed <code>max(v0 × e^(−k × t), floor)</code>, still-timer <code>s</code> grows by one tick while speed &lt; <code>v_sleep</code> and resets otherwise, and a stack sleeps when every timer reaches <code>round(t_sleep × 60)</code> ticks. Defaults are Box2D v3.1's (0.05 m/s, 0.5 s). The decay curve and the jitter floor are teaching stand-ins for a real solver. Body-seconds count ticks 0 to t−1, as the lecture's code does.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const HZ=60, V0=[4,2,1,0.5,0.25], NST=20, JIT_STACKS=[0,4,8,12,16], TMAX=60*HZ;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const fmt3=x=>x.toFixed(3);
+const fmt2=x=>x.toFixed(2);
+let P={vs:0.05,ts:0.5,k:2,nj:1,fl:0.06};
+
+// ---------- simulation ----------
+function isJit(st,j){return j===2 && JIT_STACKS.indexOf(st)>=0 && JIT_STACKS.indexOf(st)<P.nj;}
+function need(){return Math.round(P.ts*HZ);}
+function speed(st,j,age){const v=V0[j]*Math.exp(-P.k*age/HZ);return Math.max(v,isJit(st,j)?P.fl:0);}
+let S; // state
+function reset(){
+  S={T:0,stacks:[],isl:[100],per:[100],bsIsl:0,bsPer:0,bumps:[]};
+  for(let i=0;i<NST;i++)S.stacks.push({k0:0,tm:[0,0,0,0,0],asleep:false});
+}
+function counts(){
+  const nd=need();let isl=0,per=0;
+  S.stacks.forEach(s=>{if(!s.asleep){isl+=5;s.tm.forEach(t=>{if(t<nd)per++;});}});
+  return [isl,per];
+}
+function bumpNow(i){const s=S.stacks[i];s.k0=S.T;s.tm=[0,0,0,0,0];s.asleep=false;}
+function step(){
+  // body-seconds: count the state at tick T (ticks 0..T-1 are summed)
+  S.bsIsl+=S.isl[S.T]/HZ;S.bsPer+=S.per[S.T]/HZ;
+  S.T++;
+  const nd=need();
+  S.stacks.forEach((s,i)=>{
+    if(s.asleep)return;
+    for(let j=0;j<5;j++){s.tm[j]=speed(i,j,S.T-s.k0)<P.vs?s.tm[j]+1:0;}
+    if(Math.min.apply(null,s.tm)>=nd)s.asleep=true;
+  });
+  S.bumps.forEach(b=>{if(b.t===S.T)bumpNow(b.i);});
+  const c=counts();S.isl[S.T]=c[0];S.per[S.T]=c[1];
+}
+function replay(T){const b=S.bumps;reset();S.bumps=b;while(S.T<T)step();}
+function bump(i){
+  S.bumps.push({t:S.T,i});bumpNow(i);
+  const c=counts();S.isl[S.T]=c[0];S.per[S.T]=c[1];
+  render();
+}
+// one isolated stack: returns [alone ticks per crate, island tick or null]
+function oneStack(st){
+  const nd=need(),tm=[0,0,0,0,0],alone=[null,null,null,null,null];
+  for(let n=1;n<=TMAX;n++){
+    for(let j=0;j<5;j++){tm[j]=speed(st,j,n)<P.vs?tm[j]+1:0;if(tm[j]>=nd&&alone[j]===null)alone[j]=n;}
+    if(Math.min.apply(null,tm)>=nd)return [alone,n];
+  }
+  return [alone,null];
+}
+
+// ---------- room ----------
+const room=$('room'),stackEls=[];
+for(let r=0;r<4;r++){
+  const row=document.createElement('div');row.className='row';room.appendChild(row);
+  for(let c=0;c<5;c++){
+    const i=r*5+c,b=document.createElement('button');b.className='stack';b.type='button';
+    let h='';for(let j=0;j<5;j++)h+='<span class="crate"><i class="box"></i><i class="bar"><b></b></i></span>';
+    b.innerHTML=h+'<span class="lbl">'+(i+1)+'</span>';
+    b.addEventListener('click',()=>bump(i));
+    row.appendChild(b);stackEls.push({b,boxes:[...b.querySelectorAll('.box')],bars:[...b.querySelectorAll('.bar b')],lab:''});
+  }
+}
+function drawRoom(){
+  const nd=need(),still=reduce.matches||!playing;
+  S.stacks.forEach((s,i)=>{
+    const el=stackEls[i];
+    el.b.classList.toggle('asleep',s.asleep);
+    for(let j=0;j<5;j++){
+      const bx=el.boxes[j],jt=isJit(i,j);bx.classList.toggle('jit',jt);
+      const f=Math.min(1,s.tm[j]/nd);el.bars[j].style.width=(f*100)+'%';el.bars[j].classList.toggle('full',f>=1);
+      let off=0;
+      if(!s.asleep&&!reduce.matches){const v=speed(i,j,S.T-s.k0);const a=Math.min(3,v*3);off=still?a*((i*7+j*3)%5-2)/2:(Math.random()*2-1)*a;}
+      bx.style.transform=off?'translateX('+off.toFixed(1)+'px)':'';
+    }
+    const jn=[0,1,2,3,4].some(j=>isJit(i,j));
+    const lab='Stack '+(i+1)+(jn?', has a jittery crate':'')+(s.asleep?', asleep':', awake')+'. Press to bump.';
+    if(lab!==el.lab){el.b.setAttribute('aria-label',lab);el.lab=lab;}
+  });
+}
+
+// ---------- chart ----------
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function drawChart(){
+  const {g,w,h}=setupCanvas($('chart')),pad={l:40,r:10,t:10,b:30};
+  const tNow=S.T/HZ,x0=Math.max(0,tNow-10),x1=x0+10;
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t-x0)/(x1-x0),Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/100);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let v=0;v<=100;v+=25){g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,Y(v));}
+  for(let t=Math.ceil(x0);t<=x1+1e-9;t++){if(t%2&&w<500)continue;g.textAlign='center';g.textBaseline='top';g.fillText(t+' s',X(t),h-pad.b+6);}
+  function line(arr,color,dash){
+    g.strokeStyle=color;g.lineWidth=2.5;g.setLineDash(dash);g.beginPath();
+    const n0=Math.round(x0*HZ);
+    for(let n=n0;n<=S.T;n++){const px=X(n/HZ),py=Y(arr[n]);n===n0?g.moveTo(px,py):g.lineTo(px,py);}
+    g.stroke();g.setLineDash([]);
+  }
+  line(S.isl,css('--ochre'),[]);
+  line(S.per,css('--steel'),[7,5]);
+  const cx=X(tNow);g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.beginPath();g.moveTo(cx,pad.t);g.lineTo(cx,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  [[S.isl[S.T],css('--ochre')],[S.per[S.T],css('--steel')]].forEach(([v,c])=>{g.fillStyle=c;g.beginPath();g.arc(cx,Y(v),5,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+}
+
+// ---------- readouts ----------
+let cacheKey='',normal,jit;
+function readouts(){
+  const key=JSON.stringify(P);
+  if(key!==cacheKey){cacheKey=key;normal=oneStack(1);jit=P.nj>0?oneStack(0):null;tableRows();}
+  const tNow=S.T/HZ;
+  $('rT').textContent=tNow.toFixed(2)+' s';
+  $('rIsl').textContent=S.isl[S.T];
+  $('rPer').textContent=S.per[S.T];
+  $('rSleepN').textContent=normal[1]===null?'never':fmt3(normal[1]/HZ)+' s';
+  $('rSleepJ').textContent=jit?(jit[1]===null?'never':fmt3(jit[1]/HZ)+' s'):'no jitter';
+  $('rBS').textContent=fmt2(S.bsIsl/NST)+' / '+fmt2(S.bsPer/NST);
+  const isl=S.isl[S.T],per=S.per[S.T];
+  let s;
+  if(isl===0)s=`Every stack is asleep. The island rule cost <b>${fmt2(S.bsIsl/NST)}</b> awake body-seconds per stack against <b>${fmt2(S.bsPer/NST)}</b> if each crate could sleep alone.`;
+  else if(normal[1]!==null&&S.T>=normal[1]&&S.bumps.length===0&&P.nj>0&&jit[1]===null)s=`The normal stacks slept at ${fmt3(normal[1]/HZ)} s. The ${P.nj} stack${P.nj>1?'s':''} with a jittery crate never will: its speed floor ${P.fl.toFixed(2)} m/s is not below <code>v_sleep</code> ${P.vs.toFixed(2)}, so <b>${isl}</b> bodies stay awake to keep ${P.nj} crate${P.nj>1?'s':''} company. Raise <code>v_sleep</code> above the floor.`;
+  else s=`At ${tNow.toFixed(2)} s, <b>${isl}</b> bodies are awake under the island rule and <b>${per}</b> would be under a per-body rule. The gap is calm crates waiting for the slowest crate in their stack.`;
+  $('insight').innerHTML=s;
+}
+function tableRows(){
+  const [alone,isl]=normal,names=['top','2','3 (middle)','4','bottom'];
+  $('tbody').innerHTML=V0.map((v,j)=>{
+    const still=Math.log(v/P.vs)/P.k;
+    return `<tr><td>${names[j]}</td><td>${v}</td><td>${still<=0?'0.00 s':still.toFixed(2)+' s'}</td><td>${alone[j]===null?'never':fmt3(alone[j]/HZ)+' s'}</td><td>${isl===null?'never':fmt3(isl/HZ)+' s'}</td></tr>`;
+  }).join('');
+}
+function render(){drawRoom();drawChart();readouts();}
+
+// ---------- playback ----------
+let playing=false,spd=1,last=0,acc=0;
+function setPlaying(on){
+  playing=on;$('play').textContent=on?'Pause':'Play';$('play').setAttribute('aria-pressed',on);
+  if(on){last=performance.now();acc=0;requestAnimationFrame(frame);}
+  render();
+}
+function frame(now){
+  if(!playing)return;
+  acc+=Math.min(0.1,(now-last)/1000)*spd*HZ;last=now;
+  while(acc>=1&&S.T<TMAX){step();acc--;}
+  if(S.T>=TMAX){setPlaying(false);return;}
+  render();requestAnimationFrame(frame);
+}
+$('knock').addEventListener('click',()=>{reset();setPlaying(true);});
+$('play').addEventListener('click',()=>{if(S.T>=TMAX)reset();setPlaying(!playing);});
+document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x===b));spd=+b.dataset.speed;}));
+
+// ---------- controls ----------
+const ctl=[['vSleep','vs','oVSleep',v=>v.toFixed(2)+' m/s'],['tSleep','ts','oTSleep',v=>v.toFixed(1)+' s'],['kDecay','k','oK',v=>v.toFixed(1)+' /s'],['nJit','nj','oJit',v=>String(v)],['jFloor','fl','oFloor',v=>v.toFixed(2)+' m/s']];
+function syncOut(){ctl.forEach(([id,key,o,f])=>{$(o).textContent=f(P[key]);});}
+ctl.forEach(([id,key])=>$(id).addEventListener('input',e=>{P[key]=+e.target.value;syncOut();replay(S.T);render();}));
+window.addEventListener('resize',drawChart);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawChart);
+
+// first screen: 1.5 s after a knock, paused, one jittery crate
+reset();syncOut();replay(90);render();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawChart);
+// test hook
+window.__sim={set(p){Object.assign(P,p);ctl.forEach(([id,key])=>{$(id).value=P[key];});syncOut();},run(T){reset();replay(T);render();},get S(){return S;},get P(){return P;}};
+})();
+</script>
+</body>
+</html>

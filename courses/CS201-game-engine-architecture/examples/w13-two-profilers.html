@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Two profilers — CS201 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--plum:#7a4f8a;--teal:#2c7a78;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--plum:#c39bd3;--teal:#6cc3bf}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--plum:#c39bd3;--teal:#6cc3bf}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.caption{margin:0 0 6px;font-family:var(--serif);font-size:1.15rem;font-weight:600}
+.insight{margin:0 0 14px;padding:10px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1rem}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:860px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 10px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.bars{display:grid;gap:9px}
+.br{display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:6px;align-items:center}
+.rk{font-weight:700;font-variant-numeric:tabular-nums;font-size:.95rem;text-align:right;color:var(--ink-soft)}
+.nm{font:600 .82rem var(--mono);display:flex;gap:6px;align-items:center;flex-wrap:wrap;line-height:1.2}
+.badge{font:700 .7rem var(--sans);padding:1px 6px;border-radius:999px;background:var(--ink-soft);color:var(--paper)}
+.badge.warn{background:var(--blood)}
+.note{font:600 .72rem var(--sans);color:var(--ink-soft)}
+.trk{position:relative;height:18px;margin-top:3px;display:flex;align-items:center}
+.seg{height:100%;flex:none}
+.seg.ov{background-image:repeating-linear-gradient(135deg,var(--c) 0 3px,transparent 3px 7px);box-shadow:inset 0 0 0 1.5px var(--c)}
+.val{font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums;padding-left:6px;white-space:nowrap}
+.err{position:relative;height:18px;margin-top:3px}
+.err .whisk{position:absolute;top:8px;height:2.5px}
+.err .whisk::before,.err .whisk::after{content:"";position:absolute;top:-5px;width:2.5px;height:12px;background:inherit}
+.err .whisk::before{left:0}.err .whisk::after{right:0}
+.err .whisk.clip::before{display:none}
+.err .dot{position:absolute;top:3px;width:12px;height:12px;border-radius:50%;margin-left:-6px;border:2px solid var(--paper-2)}
+.errlbl{font-family:var(--sans);font-size:.78rem;font-variant-numeric:tabular-nums;color:var(--ink-soft);font-weight:600}
+.axis{position:relative;height:20px;margin:6px 0 0 28px;border-top:1px solid var(--ink-soft);font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;top:2px;transform:translateX(-50%);white-space:nowrap}
+.axis span:last-child{transform:translateX(-100%)}
+.axis.part span:last-child{transform:translateX(-50%)}
+.sum{margin:10px 0 0;font-size:.95rem;font-variant-numeric:tabular-nums}
+.sum b{font-size:1.15rem}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 26px;margin-top:16px}
+@media (max-width:700px){.controls{grid-template-columns:minmax(0,1fr)}}
+label,.lbl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.marks{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+button{font:600 .85rem var(--sans);padding:6px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+select{font:600 .95rem var(--sans);padding:6px 9px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+.radios{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.92rem;margin-top:4px}
+.radios label{font-weight:500;display:inline-flex;gap:6px;align-items:center}
+input[type=radio]{accent-color:var(--steel);width:18px;height:18px;margin:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0}
+.table-wrap{overflow-x:auto;margin-top:6px}
+.tcap{font-family:var(--serif);font-size:.98rem;margin:18px 0 0}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;min-width:640px;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left;font-family:var(--mono);font-size:.84rem;white-space:nowrap}
+tfoot td{font-weight:700;border-bottom:0}
+td i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS201 Game Engine Architecture · Week 13 · Worked example</p>
+  <h1>The cheapest function looks like the third most expensive</h1>
+  <p class="lede">One 12.4 ms game-thread frame, measured two ways. Instrumentation adds a fixed cost to every call, so a 10 ns helper called 40,000 times climbs the list. Sampling adds nothing per call, but its numbers carry an error of 1 / √samples.</p>
+</header>
+
+<section class="panel" aria-label="Two profilers">
+  <p class="caption">Same frame, two profilers. One adds cost per call; the other needs time.</p>
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <div class="views">
+    <figure>
+      <figcaption>Instrumented (every call scoped)<small>Sorted by measured time. Solid is the true time; hatched is the overhead n × o.</small></figcaption>
+      <div class="bars" id="left"></div>
+      <div class="axis" id="axL"></div>
+      <p class="sum" id="sumL"></p>
+    </figure>
+    <figure>
+      <figcaption>Sampled<small>Sorted by true time, which is also the expected ranking. Dot at the true time, bar ±1 standard error.</small></figcaption>
+      <div class="bars" id="right"></div>
+      <div class="axis" id="axR"></div>
+      <p class="sum" id="sumR"></p>
+    </figure>
+  </div>
+
+  <div class="presets" role="group" aria-label="Presets">
+    <button data-p="lecture">Lecture table</button>
+    <button data-p="tracy">Tracy-like (o = 2.25 ns)</button>
+    <button data-p="slow">Slow timer (o = 300 ns)</button>
+    <button data-p="one">One frame (F = 1)</button>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="oS"><span>Scope cost <code>o</code> per call</span> <output id="oO"></output></label>
+      <input id="oS" type="range" min="0" step="1" aria-describedby="oHint">
+      <div class="marks" role="group" aria-label="Snap marks" id="oMarks"></div>
+      <p class="note" id="oHint" style="margin:4px 0 0">Log scale, 1 to 500 ns</p>
+    </div>
+    <div>
+      <span class="lbl" id="depthLbl">Instrumentation depth</span>
+      <div class="radios" role="radiogroup" aria-labelledby="depthLbl">
+        <label><input type="radio" name="depth" value="all" checked> every function</label>
+        <label><input type="radio" name="depth" value="skip"> skip helpers</label>
+      </div>
+      <p class="note" style="margin:4px 0 0">"Skip helpers" removes the scopes from <code>update_transform</code> and <code>vec_normalize</code>.</p>
+    </div>
+    <div>
+      <label for="rate"><span>Sampling rate</span></label>
+      <select id="rate"><option value="1000">1 kHz</option><option value="8000" selected>8 kHz</option><option value="10000">10 kHz</option></select>
+    </div>
+    <div>
+      <label for="fS"><span>Capture length <code>F</code></span> <output id="oF"></output></label>
+      <input id="fS" type="range" min="0" step="1">
+      <p class="note" style="margin:4px 0 0">Log scale, 1 to 600 frames</p>
+    </div>
+  </div>
+
+  <p class="tcap" id="tcap">Readout, current settings</p>
+  <div class="table-wrap">
+    <table aria-labelledby="tcap">
+      <thead><tr><th>function</th><th>true ms</th><th>calls</th><th>ns per call</th><th>measured ms</th><th>inflation</th><th>samples</th><th>±%</th></tr></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot><tr><td>frame</td><td id="fTrue"></td><td id="fCalls"></td><td></td><td id="fMeas"></td><td id="fInf"></td><td id="fK"></td><td></td></tr></tfoot>
+    </table>
+  </div>
+</section>
+
+<footer>Model from lecture section 2: <code>measured = t + n × o</code> for each instrumented function, <code>k = rate × F × t</code> expected samples, relative error <code>1 / √k</code>. The frame data is invented for teaching. The 2.25 ns scope cost is the zone overhead in the Tracy profiler manual's benchmark; 8 and 10 kHz are Tracy's default sampling rates on Windows and on Linux or Android. Sampling here shows the expected count, not one random draw.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const DATA=[
+  ['script_update',3600000,600,'--steel'],
+  ['solver',3000000,8,'--ochre'],
+  ['anim_sample',2200000,300,'--moss'],
+  ['ai_think',2000000,50,'--plum'],
+  ['update_transform',1200000,20000,'--teal'],
+  ['vec_normalize',400000,40000,'--blood'],
+];
+const HELPERS=['update_transform','vec_normalize'];
+const TRUE_TOTAL=DATA.reduce((a,d)=>a+d[1],0);
+const OV=[1,1.5,2,2.25,3,5,7,10,15,20,30,50,70,100,150,200,300,400,500];
+const FR=[1,2,3,5,10,20,30,50,60,100,200,300,600];
+const SNAPS=[2.25,20,50,300];
+let st={o:50,skip:false,rate:8000,F:60};
+const fmt=n=>n.toLocaleString('en-US');
+const ms=ns=>(ns/1e6).toFixed(2);
+const infl=x=>'×'+x.toPrecision(3);
+const kfmt=k=>k<100?k.toFixed(1):fmt(Math.round(k));
+const efmt=e=>(e*100<10?(e*100).toFixed(1):(e*100).toFixed(0))+'%';
+const oTxt=o=>(o%1?o.toFixed(2):o)+' ns';
+
+function compute(){
+  return DATA.map(([name,t,n,c],i)=>{
+    const inst=!(st.skip&&HELPERS.includes(name));
+    const meas=t+(inst?n*st.o:0);
+    const k=st.rate*st.F*t/1e9;
+    return {name,t,n,c,i,inst,meas,inf:meas/t,k,err:1/Math.sqrt(k)};
+  });
+}
+function nice(x){const m=Math.pow(10,Math.floor(Math.log10(x)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(v=>v*m).find(v=>v>=x);}
+function axis(el,max,f){f=f||1;const n=4;let h='';for(let i=0;i<=n;i++){const v=max*i/n;h+=`<span style="left:${100*f*i/n}%">${+(v/1e6).toFixed(2)}${i===n?' ms':''}</span>`;}el.innerHTML=h;el.classList.toggle('part',f<1);}
+
+function render(){
+  const R=compute();
+  const trueOrder=[...R].sort((a,b)=>b.t-a.t),trueRank={};trueOrder.forEach((r,i)=>trueRank[r.name]=i+1);
+  const measOrder=[...R].sort((a,b)=>b.meas-a.meas);
+  const frame=R.reduce((a,r)=>a+r.meas,0),scopes=R.reduce((a,r)=>a+(r.inst?r.n:0),0);
+  // left
+  const maxL=nice(Math.max(...R.map(r=>r.meas))*1.02);
+  $('left').innerHTML=measOrder.map((r,i)=>{
+    const wT=100*r.t/maxL,wO=100*(r.meas-r.t)/maxL,moved=trueRank[r.name]!==i+1;
+    return `<div class="br"><span class="rk">${i+1}</span><div>
+      <div class="nm">${r.name}${moved?`<span class="badge">true #${trueRank[r.name]}</span>`:''}${r.inst?'':'<span class="note">not instrumented</span>'}</div>
+      <div class="trk" style="--c:var(${r.c})"><span class="seg" style="width:${wT}%;background:var(${r.c})"></span><span class="seg ov" style="width:${wO}%"></span><span class="val">${ms(r.meas)} ms ${r.inst?infl(r.inf):''}</span></div>
+    </div></div>`;
+  }).join('');
+  // leave room for the value label: shrink bars to 72% of the track
+  $('left').querySelectorAll('.seg').forEach(s=>s.style.width=(parseFloat(s.style.width)*0.72)+'%');
+  axis($('axL'),maxL,0.72);
+  $('sumL').innerHTML=`frame measured <b>${ms(frame)} ms</b> (true ${ms(TRUE_TOTAL)} ms), ${fmt(scopes)} scopes`;
+  // right
+  const maxR=nice(Math.max(...R.map(r=>r.t*(1+r.err)))*1.02);
+  $('right').innerHTML=trueOrder.map((r,i)=>{
+    const lo=Math.max(0,r.t*(1-r.err)),hi=r.t*(1+r.err);
+    const l=100*lo/maxR,w=100*(hi-lo)/maxR,d=100*r.t/maxR;
+    return `<div class="br"><span class="rk">${i+1}</span><div>
+      <div class="nm">${r.name} <span class="errlbl">${kfmt(r.k)} samples, ±${efmt(r.err)}</span></div>
+      <div class="err"><span class="whisk${r.t*(1-r.err)<0?' clip':''}" style="left:${l}%;width:${w}%;background:var(${r.c})"></span><span class="dot" style="left:${d}%;background:var(${r.c})"></span></div>
+    </div></div>`;
+  }).join('');
+  axis($('axR'),maxR);
+  const total=st.rate*st.F*TRUE_TOTAL/1e9;
+  $('sumR').innerHTML=`total samples <b>${kfmt(total)}</b> over ${fmt(st.F)} frame${st.F>1?'s':''} at ${st.rate/1000} kHz`;
+  // table
+  $('tbody').innerHTML=R.map(r=>`<tr><td><i style="background:var(${r.c})"></i>${r.name}</td><td>${ms(r.t)}</td><td>${fmt(r.n)}</td><td>${fmt(Math.round(r.t/r.n))}</td><td>${ms(r.meas)}</td><td>${r.inst?infl(r.inf):'not instrumented'}</td><td>${kfmt(r.k)}</td><td>±${efmt(r.err)}</td></tr>`).join('');
+  $('fTrue').textContent=ms(TRUE_TOTAL);$('fCalls').textContent=fmt(scopes)+' scopes';$('fMeas').textContent=ms(frame);$('fInf').textContent=infl(frame/TRUE_TOTAL);$('fK').textContent=kfmt(total);
+  // insight
+  const same=measOrder.every((r,i)=>trueRank[r.name]===i+1);
+  const worst=R.filter(r=>r.inst).sort((a,b)=>b.inf-a.inf)[0];
+  const vec=R[5];
+  let s;
+  if(same)s=`At o = ${oTxt(st.o)} the instrumented ranking matches the truth. The frame still reads ${ms(frame)} ms instead of 12.40.`;
+  else s=`At o = ${oTxt(st.o)}, <code>${worst.name}</code> measures ${ms(worst.meas)} ms, ${infl(worst.inf)} its true cost, and the instrumented list is out of order. The frame reads ${ms(frame)} ms instead of 12.40.`;
+  s+=` Sampling for ${fmt(st.F)} frame${st.F>1?'s':''} puts ±${efmt(vec.err)} on <code>vec_normalize</code>`+(vec.err>0.3?', too noisy to rank it.':'.');
+  $('insight').innerHTML=s;
+  // outputs
+  $('oO').textContent=oTxt(st.o);$('oF').textContent=fmt(st.F)+' frame'+(st.F>1?'s':'');
+  $('oS').setAttribute('aria-valuetext',oTxt(st.o));$('fS').setAttribute('aria-valuetext',st.F+' frames');
+  $('oMarks').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.o===st.o));
+}
+function setAll(p){
+  Object.assign(st,p);
+  $('oS').value=OV.indexOf(st.o);$('fS').value=FR.indexOf(st.F);$('rate').value=st.rate;
+  document.querySelector(`input[name=depth][value=${st.skip?'skip':'all'}]`).checked=true;
+  render();
+}
+$('oS').max=OV.length-1;$('fS').max=FR.length-1;
+$('oMarks').innerHTML=SNAPS.map(o=>`<button data-o="${o}">${oTxt(o)}</button>`).join('');
+$('oMarks').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setAll({o:+b.dataset.o})));
+$('oS').addEventListener('input',e=>{st.o=OV[+e.target.value];render();});
+$('fS').addEventListener('input',e=>{st.F=FR[+e.target.value];render();});
+$('rate').addEventListener('change',e=>{st.rate=+e.target.value;render();});
+document.querySelectorAll('input[name=depth]').forEach(r=>r.addEventListener('change',e=>{st.skip=e.target.value==='skip';render();}));
+const PRE={lecture:{o:50,skip:false,rate:8000,F:60},tracy:{o:2.25},slow:{o:300},one:{F:1}};
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>setAll(PRE[b.dataset.p])));
+setAll(PRE.lecture);
+})();
+</script>
+</body>
+</html>

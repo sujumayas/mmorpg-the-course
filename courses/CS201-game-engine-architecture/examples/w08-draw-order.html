@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Draw order — CS201 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.order{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.order button{font:600 .92rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.order button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:1.02rem}
+figure{margin:0 0 14px;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:124px}
+.caption{font-size:.9rem;margin:6px 0 0;font-variant-numeric:tabular-nums}
+.key{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.82rem;margin-top:6px;color:var(--ink-soft)}
+.key i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.hatch{background:repeating-linear-gradient(135deg,var(--ink-soft) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 1px var(--ink-soft)}
+.barhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 8px;font-size:.84rem;margin:6px 0 3px}
+.barhead b{font-weight:600}
+.barhead span{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.track{position:relative;height:44px;background:var(--paper);border-radius:6px;box-shadow:inset 0 0 0 1px var(--grid);overflow:hidden}
+.track.small{height:30px}
+.fill{position:absolute;top:0;bottom:0;left:0;right:0;display:flex}
+.s{height:100%;min-width:0;overflow:hidden;display:flex;align-items:center;padding:0 6px;font-size:.78rem;font-weight:600;color:var(--paper);white-space:nowrap;font-variant-numeric:tabular-nums}
+.s.draw{background:var(--steel)}
+.s.sw{background:var(--blood);background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(255,255,255,.2) 6px 9px)}
+.s.od{background:var(--ochre)}
+.line{position:absolute;top:0;bottom:0;border-left:2px dashed var(--ink)}
+.axis{padding-bottom:18px}.hz{position:absolute;top:15px;transform:translateX(-7px);font-size:.74rem;font-weight:700;color:var(--ink);white-space:nowrap}
+.off{position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:.75rem;font-weight:700;color:var(--paper)}
+.axis{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0 0}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 22px;margin-top:6px}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.controls{grid-template-columns:minmax(0,1fr)}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input:disabled{opacity:.5}
+.opts{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin-top:12px}
+.opts label{display:inline-flex;align-items:center;gap:8px;justify-content:flex-start}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--steel)}
+select{font:600 .9rem var(--sans);padding:6px 9px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">CS201 Game Engine Architecture · Week 8 · Worked example</p>
+  <h1>The CPU pays for every material change</h1>
+  <p class="lede">Each bar is one draw call, colored by its material. Every time the color changes, the driver has to switch state. Sort the list and the same draws cost a fraction of the time.</p>
+</header>
+
+<section class="panel" aria-label="Draw order model">
+  <div class="order" role="group" aria-label="Draw order">
+    <button data-o="shuffle" aria-pressed="true">Shuffle</button>
+    <button data-o="material" aria-pressed="false">Sort by material</button>
+    <button data-o="key" aria-pressed="false">Sort by key</button>
+  </div>
+  <p class="insight" id="insight"></p>
+
+  <figure>
+    <figcaption>View A · Draw list<small>Submission order, left to right. Top row: a tick at every material switch. Hatched bars are translucent draws.</small></figcaption>
+    <canvas id="strip" role="img" aria-label="Draw calls in submission order, colored by material"></canvas>
+    <p class="caption" id="stripCap"></p>
+    <div class="key"><span><i style="background:var(--ink)"></i>switch tick</span><span><i class="hatch"></i>translucent draw</span></div>
+  </figure>
+
+  <figure>
+    <figcaption>View B · CPU submit time<small>draws = N × c<sub>draw</sub>, switches = W × c<sub>switch</sub></small></figcaption>
+    <div class="barhead"><b>Submit time</b><span>scale 0 to 30 ms</span></div>
+    <div class="track"><div class="fill"><div class="s draw" id="sDraw"></div><div class="s sw" id="sSw"></div></div><span class="off" id="off" hidden>off scale →</span><div class="line" style="left:55.57%"></div></div>
+    <div class="axis" style="position:relative"><span>0</span><span>10</span><span>20</span><span>30 ms</span><b class="hz" style="left:55.57%">▲ 60 Hz frame, 16.67 ms</b></div>
+    <div class="barhead" style="margin-top:12px"><b>Overdraw at d = 4</b><span>shaded fragments per pixel, scale 0 to 4</span></div>
+    <div class="track small"><div class="fill"><div class="s od" id="sOd"></div></div></div>
+    <div class="stats" aria-live="polite">
+      <div class="stat" style="--c:var(--blood)"><b id="oW">—</b><span>switches W, counted</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="oWf">—</b><span id="oWfL">formula</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="oT">—</b><span id="oTL">submit time</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="oOd">—</b><span id="oOdL">fragments per pixel</span></div>
+    </div>
+  </figure>
+
+  <div class="controls">
+    <div><label for="n">Draws N <output id="oN"></output></label><input id="n" type="range" min="100" max="4000" step="100" value="2000"></div>
+    <div><label for="mo"><span>Opaque materials M<sub>o</sub></span> <output id="oMo"></output></label><input id="mo" type="range" min="1" max="200" step="1" value="40"></div>
+    <div><label for="tr">Translucent share <output id="oTr"></output></label><input id="tr" type="range" min="0" max="50" step="5" value="0"></div>
+    <div><label for="mt"><span>Translucent materials M<sub>t</sub></span> <output id="oMt"></output></label><input id="mt" type="range" min="1" max="40" step="1" value="10"></div>
+    <div><label for="cd"><span>c<sub>draw</sub> per draw</span> <output id="oCd"></output></label><input id="cd" type="range" min="0.5" max="10" step="0.5" value="2"></div>
+    <div><label for="cs"><span>c<sub>switch</sub> per switch</span> <output id="oCs"></output></label><input id="cs" type="range" min="0" max="50" step="1" value="10"></div>
+  </div>
+  <div class="opts">
+    <label><input type="checkbox" id="shared"> One shared material (Hitman GO style)</label>
+    <label for="depth">Opaque depth order <select id="depth"><option value="auto">auto (set by order)</option><option value="f2b">front to back</option><option value="rand">random</option><option value="b2f">back to front</option></select></label>
+  </div>
+</section>
+
+<footer>Costs per draw and per switch are round classroom values, not measurements of any one GPU driver. Draws get materials and depths from a seeded random generator (mulberry32, seed 7), so the same settings always give the same strip. Hitman GO is named for its one-material art style described in the lecture; nothing here is taken from the game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fx=(x,d)=>{const p=Math.pow(10,d);return (Math.round(x*p+1e-7)/p).toFixed(d);};
+const grp=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let order='shuffle';
+const P={};
+function read(){
+  P.N=+$('n').value;P.shared=$('shared').checked;
+  P.Mo=P.shared?1:+$('mo').value;P.Mt=P.shared?1:+$('mt').value;
+  P.share=+$('tr').value/100;P.cd=+$('cd').value;P.cs=+$('cs').value;
+  P.Nt=Math.round(P.N*P.share);P.No=P.N-P.Nt;
+}
+let list=[];
+function build(){
+  const r=mulberry32(7),d=[];
+  for(let i=0;i<P.No;i++)d.push({m:i%P.Mo,z:r(),t:false});
+  for(let j=0;j<P.Nt;j++)d.push({m:P.Mo+(j%P.Mt),z:r(),t:true});
+  d.forEach((x,i)=>x.i=i);
+  let o=d.slice();
+  if(order==='shuffle'){for(let i=o.length-1;i>0;i--){const k=Math.floor(r()*(i+1));[o[i],o[k]]=[o[k],o[i]];}}
+  else if(order==='material'){o.sort((a,b)=>a.m-b.m||a.i-b.i);}
+  else{const op=o.filter(x=>!x.t).sort((a,b)=>a.m-b.m||a.z-b.z),tr=o.filter(x=>x.t).sort((a,b)=>b.z-a.z);o=op.concat(tr);}
+  list=o;
+}
+function countW(){let w=0;for(let i=1;i<list.length;i++)if(list[i].m!==list[i-1].m)w++;return w;}
+function formulaW(){
+  const M=P.Mo+(P.Nt>0?P.Mt:0);
+  if(order==='shuffle')return {v:P.N*(1-1/M),s:`N(1 − 1/M) = ${grp(P.N)} × (1 − 1/${M})`};
+  if(order==='material')return {v:M-1,s:`M − 1 = ${M} − 1`};
+  if(P.Nt>0){const t=P.Nt*(1-1/P.Mt);return {v:(P.Mo-1)+1+t,s:`${P.Mo-1} + 1 + ${fx(t,0)}`};}
+  return {v:P.Mo-1,s:`M<sub>o</sub> − 1`};
+}
+function depthMode(){const v=$('depth').value;if(v!=='auto')return v;return order==='key'?'f2b':'rand';}
+const OD={f2b:[1,'front to back'],rand:[1+1/2+1/3+1/4,'random'],b2f:[4,'back to front']};
+
+let hatchPat=null,hatchCol='';
+function color(m){
+  const total=P.Mo+P.Mt;
+  if(m>=P.Mo){const j=m-P.Mo;return `hsl(${(j*360/Math.max(P.Mt,1)+20)%360} 55% ${50+(j%2)*10}%)`;}
+  const h=(m*360/40+ (Math.floor(m/40)*9))%360,L=[46,60,38,54][Math.floor(m/40)%4];
+  return `hsl(${h} 52% ${L}%)`;
+}
+function draw(){
+  const c=$('strip'),dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);const w=r.width,h=r.height;
+  g.clearRect(0,0,w,h);
+  const tickH=18,top=tickH+6,bh=h-top,n=list.length,bw=w/n;
+  g.fillStyle=css('--paper');g.fillRect(0,0,w,tickH);
+  // bars
+  for(let i=0;i<n;i++){g.fillStyle=color(list[i].m);g.fillRect(i*bw,top,bw+0.6,bh);}
+  // hatch translucent
+  const ink=css('--ink');
+  if(!hatchPat||hatchCol!==ink){const pc=document.createElement('canvas');pc.width=pc.height=8;const pg=pc.getContext('2d');pg.strokeStyle=ink;pg.globalAlpha=.55;pg.lineWidth=1.5;pg.beginPath();pg.moveTo(0,8);pg.lineTo(8,0);pg.moveTo(-2,2);pg.lineTo(2,-2);pg.moveTo(6,10);pg.lineTo(10,6);pg.stroke();hatchPat=g.createPattern(pc,'repeat');hatchCol=ink;}
+  g.fillStyle=hatchPat;
+  let s=-1;for(let i=0;i<=n;i++){const t=i<n&&list[i].t;if(t&&s<0)s=i;if(!t&&s>=0){g.fillRect(s*bw,top,(i-s)*bw,bh);s=-1;}}
+  // ticks
+  g.fillStyle=ink;
+  for(let i=1;i<n;i++)if(list[i].m!==list[i-1].m)g.fillRect(Math.round(i*bw)-0.5,2,1,tickH-4);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.strokeRect(0.5,top+0.5,w-1,bh-1);
+}
+function update(){
+  read();build();const W=countW(),F=formulaW();
+  const tD=P.N*P.cd/1000,tS=W*P.cs/1000,T=tD+tS,Tf=tD+F.v*P.cs/1000,M=P.Mo+(P.Nt>0?P.Mt:0);
+  $('oN').textContent=grp(P.N);$('oMo').textContent=P.Mo;$('oMt').textContent=P.Mt;$('oTr').textContent=Math.round(P.share*100)+'%';
+  $('oCd').textContent=fx(P.cd,1)+' µs';$('oCs').textContent=P.cs+' µs';
+  $('mo').disabled=$('mt').disabled=P.shared;
+  $('stripCap').textContent=`${grp(P.N)} draws, ${grp(W)} switches, ${M} material${M>1?'s':''}`+(P.Nt?` (${grp(P.Nt)} translucent)`:'');
+  const sc=30,pD=Math.min(tD,sc),pS=Math.min(tS,sc-pD);
+  $('sDraw').style.width=100*pD/sc+'%';$('sSw').style.width=100*pS/sc+'%';
+  const tw=$('sDraw').parentNode.clientWidth;
+  $('sDraw').textContent=tw*pD/sc>118?'draws '+fx(tD,2)+' ms':tw*pD/sc>60?fx(tD,2)+' ms':'';
+  $('sSw').textContent=tw*pS/sc>140?'switches '+fx(tS,2)+' ms':tw*pS/sc>60?fx(tS,2)+' ms':'';
+  $('off').hidden=T<=sc;
+  const dm=depthMode(),od=OD[dm];
+  $('sOd').style.width=100*od[0]/4+'%';$('sOd').textContent=fx(od[0],2)+' · '+od[1];
+  $('oW').textContent=grp(W);$('oWf').textContent=grp(Math.round(F.v));$('oWfL').innerHTML='formula '+F.s;
+  $('oT').textContent=fx(T,2)+' ms';$('oTL').textContent=`submit time (formula ${fx(Tf,2)} ms)`;
+  $('oOd').textContent=fx(od[0],2);$('oOdL').textContent='fragments per pixel, '+od[1];
+  let m;
+  const over=T>16.67;
+  if(order==='shuffle')m=`Shuffled, ${grp(W)} of ${grp(P.N-1)} neighbors differ, so switches cost <b>${fx(tS,2)} ms</b> and the total is <b>${fx(T,2)} ms</b>`+(over?`, past the 16.67 ms frame at 60 Hz. Press Sort by material.`:'.');
+  else if(order==='material')m=`Same ${grp(P.N)} draws, now only <b>${grp(W)}</b> switches: <b>${fx(T,2)} ms</b> in total. The switch cost fell by ${fx(100*(1-W/Math.max(1,P.N*(1-1/M))),0)}% against a shuffle.`+(P.Nt?` But translucent draws are grouped by material, not by depth, so they would blend in the wrong order.`:` Try a translucent share above 0 and Sort by key.`);
+  else m=`Sorted by key, opaque draws stay banded (${P.Mo-1} switches) and front to back. `+(P.Nt?`The ${grp(P.Nt)} translucent draws must go far to near, which scatters their ${P.Mt} materials and adds back about <b>${fx(P.Nt*(1-1/P.Mt),0)}</b> switches. Total <b>${fx(T,2)} ms</b>.`:`Total <b>${fx(T,2)} ms</b>.`);
+  $('insight').innerHTML=m;
+  draw();
+}
+document.querySelectorAll('.order button').forEach(b=>b.addEventListener('click',()=>{order=b.dataset.o;document.querySelectorAll('.order button').forEach(x=>x.setAttribute('aria-pressed',x===b));update();}));
+['n','mo','tr','mt','cd','cs'].forEach(id=>$(id).addEventListener('input',update));
+$('shared').addEventListener('change',update);$('depth').addEventListener('change',update);
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>
