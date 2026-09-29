@@ -222,7 +222,7 @@ Every item below is something `step` might read that is not in `state` or `comma
 
 **Iteration order you did not choose.** In Python, the iteration order of a `set` of strings changes from one run of the interpreter to the next, because string hashing is randomized per process. Run `print(list({"wolf", "boar", "bandit", "spider", "slime"}))` three times and you will likely get three different orders. If "fire at the first enemy in the set" is a rule, replays diverge on the first shot. Use lists, dicts (which keep insertion order) or sort by a stable key.
 
-**Floating-point differences across machines.** The same float operations in a different order can round differently, and some platforms and compilers reorder them. Within one Python build on one machine you are safe. Across platforms, lockstep games often switch the simulation to fixed-point integers. MA201 week 14, determinism and floating point, covers why (see the [MA201 syllabus](../../MA201-linear-algebra-and-physics-for-games/syllabus.md)).
+**Floating-point differences across machines.** The same float operations in a different order can round differently, and some platforms and compilers reorder them. Within one Python build on one machine you are safe. Across platforms, lockstep games often switch the simulation to fixed-point integers. MA201 week 14, determinism and floating point, covers why (see the [MA201 week 14 lecture](../../MA201-linear-algebra-and-physics-for-games/lectures/w14-determinism-and-floating-point.md)).
 
 **Input sampled outside the command.** If the fire direction is read from the live mouse position inside `step`, it is not in the recording. Everything the player controls must be packed into `command[t]`.
 

@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts*, level 3 ("Transitive Mechanics and Cost Curves"); Schreiber & Romero, *Game Balance* (2021), the chapter on transitive mechanics and cost curves.
 
-**Prerequisites from earlier courses:** GD203 week 1, [stats as design language](w01-stats-as-design-language.md), for stat exchange rates. MMO303 week 2, [armor and damage mitigation](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md), section 5, for splitting a defensive budget between armor and health. MA102 week 4, [expected value](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md), for pricing procs. GD203 week 8, [power curves and level scaling](w08-power-curves-and-level-scaling.md), for how budgets grow with item level.
+**Prerequisites from earlier courses:** GD203 week 1, [stats as design language](w01-stats-as-design-language.md), for stat exchange rates. Looking ahead, MMO303 week 2, [armor and damage mitigation](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md) (year 3), section 5, splits a defensive budget between armor and health. MA102 week 4, [expected value](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md), for pricing procs. GD203 week 8, [power curves and level scaling](w08-power-curves-and-level-scaling.md), for how budgets grow with item level.
 
 **Interactive:** [examples/w09-item-budget.html](../examples/w09-item-budget.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 

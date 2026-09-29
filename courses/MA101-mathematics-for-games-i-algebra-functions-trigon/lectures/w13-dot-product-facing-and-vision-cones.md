@@ -252,7 +252,7 @@ For our 30° guard, `c = 0.866`:
 
 A detection meter that fills at `focus × base_rate` per second gives the player a warning band near the edge. Look at the shape of the column, though. Focus drops slowly near the center and quickly near the edge, because cosine is flat near 0°. If you want detection to fall off evenly with angle, you would need the angle itself, `acos(f̂ · d̂)`, and that costs more. Often the cosine shape is what you want anyway. Players standing near the center get caught fast, and the edge is a narrow danger zone. Decide which shape you want. Do not inherit one by accident.
 
-Distance can be folded in the same way. `range_factor = clamp(invlerp(R, R_near, |d|), 0, 1)` is 1 when the player is closer than `R_near` and falls to 0 at `R`. Multiply the two factors and you have a two-input detection rate. This is the start of the perception systems CS203 builds on (see the [CS203 syllabus](../../CS203-artificial-intelligence-for-games/syllabus.md), week 10, perception systems).
+Distance can be folded in the same way. `range_factor = clamp(invlerp(R, R_near, |d|), 0, 1)` is 1 when the player is closer than `R_near` and falls to 0 at `R`. Multiply the two factors and you have a two-input detection rate. This is the start of the perception systems CS203 builds on (see [CS203 week 10, perception systems](../../CS203-artificial-intelligence-for-games/lectures/w10-perception-systems.md)).
 
 ## 5. Making it cheap: skip the normalize
 

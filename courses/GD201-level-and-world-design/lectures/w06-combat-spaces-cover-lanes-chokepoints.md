@@ -10,7 +10,7 @@
 
 **Before class:** Christopher Totten, *An Architectural Approach to Level Design* (2nd ed., CRC Press, 2019), chapter 6, the sections on prospect and refuge. The Level Design Book (book.leveldesignbook.com), the pages "Cover" and "Map balance," in the section on combat.
 
-**Prerequisites from earlier courses:** [GD203 week 4, time-to-kill](../../GD203-combat-and-progression-design/lectures/w04-time-to-kill-and-time-to-die.md) (a kill rate is the inverse of time-to-kill). [MA102 week 4, expected value](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md) (hit chance times damage gives average damage). From this course, [week 4, landmarks and sightlines](w04-guiding-the-player-landmarks-light-weenies.md). Week 12 of this course returns to sightlines around spawn points.
+**Prerequisites from earlier courses:** Looking ahead, [GD203 week 4, time-to-kill](../../GD203-combat-and-progression-design/lectures/w04-time-to-kill-and-time-to-die.md) (next semester) treats time-to-kill in full. This week needs only that a kill rate is the inverse of time-to-kill. [MA102 week 4, expected value](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md) (hit chance times damage gives average damage). From this course, [week 4, landmarks and sightlines](w04-guiding-the-player-landmarks-light-weenies.md). Week 12 of this course returns to sightlines around spawn points.
 
 **Interactive:** [`examples/w06-chokepoint-law.html`](../examples/w06-chokepoint-law.html). Keep it open during section 2.
 

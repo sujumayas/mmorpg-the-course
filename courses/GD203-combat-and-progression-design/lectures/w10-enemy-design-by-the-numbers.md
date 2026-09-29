@@ -8,7 +8,7 @@
 - Build an enemy stat block from a role template (fodder, soldier, elite, boss) at any player level.
 
 **Before class:** Schreiber & Romero, *Game Balance* (2021), the chapters on combat and on characters and enemies; Schreiber, *Game Balance Concepts*, level 3 (transitive mechanics and cost curves).
-**Prerequisites from earlier courses:** GD203 week 4, [time-to-kill and time-to-die](w04-time-to-kill-and-time-to-die.md); GD203 week 8, [power curves and level scaling](w08-power-curves-and-level-scaling.md); MMO303 week 2, [armor and damage mitigation](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md), for effective HP; GD102 week 3, positive feedback loops ([syllabus](../../GD102-systems-design-and-game-mechanics/syllabus.md)).
+**Prerequisites from earlier courses:** GD203 week 4, [time-to-kill and time-to-die](w04-time-to-kill-and-time-to-die.md); GD203 week 8, [power curves and level scaling](w08-power-curves-and-level-scaling.md); GD102 week 3, positive feedback loops ([lecture](../../GD102-systems-design-and-game-mechanics/lectures/w03-positive-feedback-loops-snowballing.md)). Looking ahead, MMO303 week 2, [armor and damage mitigation](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md) (year 3), treats effective HP in depth.
 **Interactive:** [Encounter cost](../examples/w10-encounter-cost.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 
 ---
@@ -193,7 +193,7 @@ Two enemies can have identical `h` and `d` and feel nothing alike. Two extra num
 
 **Hit size relative to player health.** An enemy with 4 DPS might hit for 4 every second or for 40 every ten seconds. The cost formula gives the same answer. The player does not experience it the same way. A hit worth 20% of the player's health is a spike, and spikes need warning. Big hits should come with a **telegraph**, a visible wind-up the player can read and react to. As a rule for your spec, if one hit exceeds about a quarter of the player's health, write down the telegraph time next to it. If one hit can exceed the player's full health, you have designed a one-shot, and it must be avoidable or it is a coin flip.
 
-**Attack interval and the reaction window.** A telegraph shorter than the player's reaction time is not a telegraph. UX201 covers reaction-time measurements and how they change with cue type and cognitive load ([syllabus](../../UX201-game-ux-and-player-psychology/syllabus.md)). The slower the attack, the bigger the hit can be while keeping `d` fixed, and the more the enemy tests reading rather than endurance.
+**Attack interval and the reaction window.** A telegraph shorter than the player's reaction time is not a telegraph. UX201 covers reaction-time measurements and how they change with cue type and cognitive load ([UX201 week 1](../../UX201-game-ux-and-player-psychology/lectures/w01-perception-attention-memory.md)). The slower the attack, the bigger the hit can be while keeping `d` fixed, and the more the enemy tests reading rather than endurance.
 
 **Effective health against the player's damage type.** Armor and resistances change `h` into effective health, exactly as in MMO303 week 2. An enemy with 100 health and 100 armor under `K = 100` has 200 effective health against physical damage. Put effective health, not raw health, into `h = P × t`, or your TTK targets will drift the moment you add armor.
 

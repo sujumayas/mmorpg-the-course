@@ -83,7 +83,7 @@ Bartle later set out a definition that most of the field still uses. In paraphra
 5. The world is persistent. It is still there when you log off.
 6. It is not the real world.
 
-Colossal Cave has the first three and the last one. It fails "shared" and "persistent." MUD1 has all six, although its persistence has a twist. Characters and scores persist, while the treasure layout persists only until the next reset. MMO301 week 1 studies this definition in depth ([MMO301 syllabus](../../MMO301-virtual-worlds-history-theory-and-design/syllabus.md)).
+Colossal Cave has the first three and the last one. It fails "shared" and "persistent." MUD1 has all six, although its persistence has a twist. Characters and scores persist, while the treasure layout persists only until the next reset. MMO301 week 1 studies this definition in depth ([MMO301 week 1 lecture](../../MMO301-virtual-worlds-history-theory-and-design/lectures/w01-what-is-a-virtual-world-bartles-definition.md)).
 
 The definition is a tool, not a verdict. Use it to ask precise questions. A battle-royale match is shared and real-time but not persistent. A single-player open world is persistent but not shared. Each missing property removes a set of design problems, and the rest of this lecture shows what the "shared" property adds.
 

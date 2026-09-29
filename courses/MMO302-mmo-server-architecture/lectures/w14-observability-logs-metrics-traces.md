@@ -289,7 +289,7 @@ The principle generalises. Your observability stack must not share a failure mod
 - The metrics system runs in a different failure domain (another cluster, and for the most important alerts another region or provider) from the zone servers.
 - There is at least one outside probe, a small bot that logs in from outside your network every minute and reports whether it succeeded, so that "everything is down" still produces an alert.
 
-MMO308 week 13 on incident response (see the [MMO308 syllabus](../../MMO308-live-operations-analytics-and-experimentation/syllabus.md)) picks up from the moment the alert fires.
+MMO308 week 13 on incident response (see the [MMO308 week 13 lecture](../../MMO308-live-operations-analytics-and-experimentation/lectures/w13-incident-response.md)) picks up from the moment the alert fires.
 
 ## In-class activity (25 minutes)
 

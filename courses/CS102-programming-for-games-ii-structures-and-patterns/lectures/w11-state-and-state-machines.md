@@ -276,7 +276,7 @@ The MA101 [lab on range queries](../../MA101-mathematics-for-games-i-algebra-fun
 - **Timers are part of the state.** Two Marios both in `grounded`, one with timer 3 and one with timer 0, respond to the same press differently. When you save, replay or network a state machine, the countdown goes with it. Next week's replay system depends on this.
 - **Remembered history is state too, so keep it small.** `prev_land` is one value. The alternative is more explicit states, `grounded_after_single` and `grounded_after_double`, which make the table longer but put every case on screen. SM64 stores `prevAction` instead because it has more than 200 actions and many landings. Pick explicit states while the count is small.
 - **Guards hide the reason for a result.** The same visible hop has two causes here. Log the guard that failed, and give designers a debug overlay that shows the countdown. Tuning a window you cannot see is guesswork.
-- **FSMs do not scale forever.** Twenty states with ten inputs is a 200-cell table. Past that, split the machine (section 3) or move to behaviour trees, which CS203 covers in week 7 (see the [CS203 syllabus](../../CS203-artificial-intelligence-for-games/syllabus.md)).
+- **FSMs do not scale forever.** Twenty states with ten inputs is a 200-cell table. Past that, split the machine (section 3) or move to behaviour trees, which CS203 covers in week 7 (see the [CS203 week 7 lecture](../../CS203-artificial-intelligence-for-games/lectures/w07-behavior-trees.md)).
 
 ## 3. When one flat machine is not enough
 

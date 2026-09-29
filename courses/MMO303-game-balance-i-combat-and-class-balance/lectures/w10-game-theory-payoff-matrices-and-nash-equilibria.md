@@ -218,7 +218,7 @@ Put the pieces together into a workflow you can run on any class roster or rewar
 4. Solve for the equilibrium. For classes, every class should appear with a share you can live with. A common target is that no class falls below half its "fair" share (for five classes, below 10%) and none rises above twice it. For shared content, ask whether the equilibrium behavior is the one you want.
 5. Before shipping a change, re-solve with the new numbers. Write down what you expect to rise and what to fall. After the patch, compare against telemetry over several weeks, not several days.
 
-Remember the limits. Duels and two-guild standoffs are the clean cases. In a battleground a class's value depends on its allies as well as its enemies, and a world boss may draw five guilds, not two. MMO307 takes these ideas into PvP ladders and rating systems ([MMO307 syllabus](../../MMO307-game-balance-ii-pvp-progression-and-endgame/syllabus.md)).
+Remember the limits. Duels and two-guild standoffs are the clean cases. In a battleground a class's value depends on its allies as well as its enemies, and a world boss may draw five guilds, not two. MMO307 takes these ideas into PvP ladders and rating systems ([MMO307 week 8](../../MMO307-game-balance-ii-pvp-progression-and-endgame/lectures/w08-elo-and-expected-score.md) and [week 9](../../MMO307-game-balance-ii-pvp-progression-and-endgame/lectures/w09-glicko-and-trueskill.md)).
 
 ## In-class activity (25 minutes)
 

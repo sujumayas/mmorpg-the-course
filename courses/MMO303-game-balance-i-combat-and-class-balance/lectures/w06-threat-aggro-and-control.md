@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber & Romero, *Game Balance* (2021), the chapter on combat and AI-driven opponents. Read the Warcraft Wiki "Threat" article for the classic-era rules (listed in Sources).
 
-**Prerequisites from earlier courses:** [MMO303 week 5, the holy trinity](w05-the-holy-trinity-tank-healer-dps.md) (why a tank must be the target). [CS203, AI for games](../../CS203-artificial-intelligence-for-games/syllabus.md) (target selection as a decision rule). [MA101 week 2, linear functions and rates](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md) (lines and where two of them cross).
+**Prerequisites from earlier courses:** [MMO303 week 5, the holy trinity](w05-the-holy-trinity-tank-healer-dps.md) (why a tank must be the target). [CS203 week 12, MMO mob AI](../../CS203-artificial-intelligence-for-games/lectures/w12-mmo-mob-ai-leashing-aggro-threat-tables.md) (target selection as a decision rule). [MA101 week 2, linear functions and rates](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md) (lines and where two of them cross).
 
 **Interactive:** [`examples/w06-threat-race.html`](../examples/w06-threat-race.html). Keep it open during section 2.
 

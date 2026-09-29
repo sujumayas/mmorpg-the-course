@@ -182,7 +182,7 @@ Two cautions. Correlation at population scale says nothing about any single play
 | April 2020 | PEGI (Europe) | Adds the notice "Includes Paid Random Items." |
 | February 2023 (enforced March 2024) | South Korea | Law requires published odds, with fines for non-compliance. |
 
-Rules keep changing, and enforcement is uneven. A 2023 study by Leon Xiao found that in July 2022, 82 of the 100 highest-grossing iPhone games in Belgium were still selling loot boxes despite the ban. MMO403 weeks 6 and 7 cover the current state of regulation in detail (see the [MMO403 syllabus](../../MMO403-business-monetization-and-ethics-of-live-games/syllabus.md)). For this course, the point is that regulators across very different legal systems looked at the same mechanism and found the same features worrying. The prize is random, the player pays real money for the draw, and the odds are hidden.
+Rules keep changing, and enforcement is uneven. A 2023 study by Leon Xiao found that in July 2022, 82 of the 100 highest-grossing iPhone games in Belgium were still selling loot boxes despite the ban. MMO403 weeks 6 and 7 cover the current state of regulation in detail (see [MMO403 week 6](../../MMO403-business-monetization-and-ethics-of-live-games/lectures/w06-loot-boxes-and-probability-disclosure.md) and [week 7](../../MMO403-business-monetization-and-ethics-of-live-games/lectures/w07-regulation-belgium-netherlands-china-others.md)). For this course, the point is that regulators across very different legal systems looked at the same mechanism and found the same features worrying. The prize is random, the player pays real money for the draw, and the odds are hidden.
 
 ### An ethics checklist for any reward schedule
 

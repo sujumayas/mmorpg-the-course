@@ -8,7 +8,7 @@
 - Run a sensitivity test and a goal seek to find which input a balance problem depends on.
 
 **Before class:** Schreiber, *Game Balance Concepts*, level 10 ("Final Boss", which includes the course's spreadsheet tutorial); Schreiber & Romero, *Game Balance* (2021), the chapter on spreadsheets. Bring a laptop with Google Sheets, Excel or LibreOffice Calc, and your lab 10 sheet.
-**Prerequisites from earlier courses:** GD102 week 14, tuning with spreadsheets ([syllabus](../../GD102-systems-design-and-game-mechanics/syllabus.md)); GD203 week 4, [time-to-kill and time-to-die](w04-time-to-kill-and-time-to-die.md); GD203 week 8, [power curves and level scaling](w08-power-curves-and-level-scaling.md); GD203 week 10, [enemy design by the numbers](w10-enemy-design-by-the-numbers.md); MMO303 week 2, [armor and damage mitigation](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md).
+**Prerequisites from earlier courses:** GD102 week 14, tuning with spreadsheets ([lecture](../../GD102-systems-design-and-game-mechanics/lectures/w14-tuning-with-spreadsheets.md)); GD203 week 4, [time-to-kill and time-to-die](w04-time-to-kill-and-time-to-die.md); GD203 week 8, [power curves and level scaling](w08-power-curves-and-level-scaling.md); GD203 week 10, [enemy design by the numbers](w10-enemy-design-by-the-numbers.md). Looking ahead, MMO303 week 2, [armor and damage mitigation](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md), follows in year 3.
 **Interactive:** [Level sweep](../examples/w11-level-sweep.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 
 ---

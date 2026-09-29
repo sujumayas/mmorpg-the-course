@@ -308,7 +308,7 @@ What it costs:
 - **Latency.** A queued event is handled up to one frame late, 16.7 ms at 60 fps. Fine for achievements, wrong for "the player pressed block, cancel the incoming hit."
 - **Ordering across queues.** Two queues drained in different places can deliver events out of causal order.
 
-A good default is synchronous events for gameplay rules that must resolve within the step, and queued events for presentation (audio, UI, effects) and bookkeeping (telemetry, achievements). CS201 [week 9, input and event systems](../../CS201-game-engine-architecture/syllabus.md) builds an engine-level version with fixed-size ring buffers.
+A good default is synchronous events for gameplay rules that must resolve within the step, and queued events for presentation (audio, UI, effects) and bookkeeping (telemetry, achievements). CS201 [week 9, input and event systems](../../CS201-game-engine-architecture/lectures/w09-input-and-event-systems.md) builds an engine-level version with fixed-size ring buffers.
 
 ## In-class activity (25 minutes)
 

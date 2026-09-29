@@ -254,7 +254,7 @@ Pity changes spending and planning, so choose each parameter with that in mind.
 
 - **The hard cap is a promise about the worst case.** It turns "you might never get it" into a known maximum cost. In a game that sells pulls, that maximum is the most important number on the page, and players will plan around it.
 - **Soft pity moves the typical experience.** In the model above, almost everyone who reaches pull 74 gets the 5-star by pull 82. The experience is "save up about 75 pulls", not "1.6% per pull". If you want players to feel the base rate, keep the soft pity late and gentle.
-- **Pity creates a sunk-cost cliff.** A player at pull 70 knows the ramp is close and is pushed to keep pulling. That is a design lever with ethical weight when real money is involved. MMO403 covers the business and ethics side in depth (see the [MMO403 syllabus](../../MMO403-business-monetization-and-ethics-of-live-games/syllabus.md)).
+- **Pity creates a sunk-cost cliff.** A player at pull 70 knows the ramp is close and is pushed to keep pulling. That is a design lever with ethical weight when real money is involved. MMO403 covers the business and ethics side in depth (see [MMO403 week 6](../../MMO403-business-monetization-and-ethics-of-live-games/lectures/w06-loot-boxes-and-probability-disclosure.md)).
 - **Publish what you compute.** The consolidated rate hides the shape. A clear statement of the counter rule treats players as adults and saves your community from reverse-engineering it.
 
 ### Check this example

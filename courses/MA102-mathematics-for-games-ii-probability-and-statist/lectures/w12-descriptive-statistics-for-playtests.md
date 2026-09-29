@@ -176,7 +176,7 @@ Playtest counts need a denominator before they mean anything.
 
 Suppose tester A died 6 times and tester B died 3 times. If A played for 60 minutes and B for 15, then A died 6 times per hour and B 12 times per hour. B had the harder time. Before you compare, divide by exposure: time played, attempts made or rooms reached. Choose the denominator that matches the design question. "Deaths per attempt" answers "is this boss too punishing per try?". "Deaths per hour" answers "how often does a session get interrupted?".
 
-Completion is a rate too. "8 of 12 testers beat the boss" is a completion rate of 67%. A **funnel** tracks a rate at each step: 12 entered, 11 reached room 3, 9 reached the boss, 8 won. The biggest drop between steps shows where to look first. Live-game analytics ([MMO308](../../MMO308-live-operations-analytics-and-experimentation/syllabus.md)) runs exactly this on millions of players. The arithmetic is the same.
+Completion is a rate too. "8 of 12 testers beat the boss" is a completion rate of 67%. A **funnel** tracks a rate at each step: 12 entered, 11 reached room 3, 9 reached the boss, 8 won. The biggest drop between steps shows where to look first. Live-game analytics ([MMO308 week 4](../../MMO308-live-operations-analytics-and-experimentation/lectures/w04-funnels-and-churn.md)) runs exactly this on millions of players. The arithmetic is the same.
 
 When comparing two versions of a level, compare the same summary computed the same way on the same kind of player. Mixing experienced and new testers is the fastest way to invent a difference that is not there. Week 14's A/B tests formalize this.
 

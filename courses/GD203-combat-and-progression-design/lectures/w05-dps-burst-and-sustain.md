@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber & Romero, *Game Balance* (2021), the chapter on combat, sections on damage over time and resource pacing; Schreiber, *Game Balance Concepts*, level 6 (situational balance). Re-read your notes from GD203 week 4.
 
-**Prerequisites from earlier courses:** Time-to-kill and breakpoints from [GD203 week 4](w04-time-to-kill-and-time-to-die.md). Stocks and flows from [GD102 week 2](../../GD102-systems-design-and-game-mechanics/syllabus.md), because health under regeneration is a stock with an inflow and an outflow. Expected value from [MA102 week 4](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md).
+**Prerequisites from earlier courses:** Time-to-kill and breakpoints from [GD203 week 4](w04-time-to-kill-and-time-to-die.md). Stocks and flows from [GD102 week 2](../../GD102-systems-design-and-game-mechanics/lectures/w02-stocks-and-flows.md), because health under regeneration is a stock with an inflow and an outflow. Expected value from [MA102 week 4](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md).
 
 **Interactive:** [examples/w05-burst-vs-sustain.html](../examples/w05-burst-vs-sustain.html) (specified at the end of this lecture). Keep it open during section 2.
 

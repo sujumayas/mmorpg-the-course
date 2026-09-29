@@ -160,7 +160,7 @@ Tools here include spending limits the player sets, a visible monthly total, dis
 
 - **Remove the penalty for absence.** Missed events come back. Seasonal rewards can be earned later at a cost in time, not gone forever.
 - **Make social commitments visible and negotiable.** Raid schedules are the strongest obligation in most MMOs, and they come from players, not from your reward tables. You can still help. Lockouts that allow a raid on any night of the week remove the need to all be online on Tuesday.
-- **Watch the right metric.** Session length is easy to log and tells you little. Ask about obligation directly, with a validated survey item on why people play, and look at how much of your daily activity is players doing only the daily task and leaving. A high share of logins that last under 10 minutes and touch only the daily reward is a signal of obligation, not engagement. MMO308 week 3 teaches cohort and retention analysis; see the [MMO308 syllabus](../../MMO308-live-operations-analytics-and-experimentation/syllabus.md).
+- **Watch the right metric.** Session length is easy to log and tells you little. Ask about obligation directly, with a validated survey item on why people play, and look at how much of your daily activity is players doing only the daily task and leaving. A high share of logins that last under 10 minutes and touch only the daily reward is a signal of obligation, not engagement. MMO308 week 3 teaches cohort and retention analysis; see the [MMO308 week 3 lecture](../../MMO308-live-operations-analytics-and-experimentation/lectures/w03-cohorts-and-retention-curves.md).
 
 ### Where responsibility sits
 

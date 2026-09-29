@@ -203,7 +203,7 @@ This is why gatherers often complain that "gathering doesn't pay." In a free mar
 
 Most MMOs place resource nodes in the open world, where they respawn at a fixed rate. If a zone produces `N_r` ore per hour across all its nodes, and `n` gatherers share it, each gets at most `N_r / n` ore per hour. When the zone is crowded, `u` falls, and by the formula above the price must rise before gathering pays again. Crowding on a new expansion's first day is why fresh raw materials sell for many times their later price.
 
-Bots break this. A bot's "best other activity" is nothing, so its `W` is close to zero. Bots will gather at any positive price, and they crowd human gatherers out of nodes. The result is low raw prices, cheap crafting and humans who stop gathering. MMO309 returns to this ([syllabus](../../MMO309-security-anti-cheat-and-anti-bot/syllabus.md)).
+Bots break this. A bot's "best other activity" is nothing, so its `W` is close to zero. Bots will gather at any positive price, and they crowd human gatherers out of nodes. The result is low raw prices, cheap crafting and humans who stop gathering. MMO309 returns to this ([MMO309 week 6](../../MMO309-security-anti-cheat-and-anti-bot/lectures/w06-botting-economics.md)).
 
 ### Profession structure: who can do what
 

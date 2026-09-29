@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber & Romero, *Game Balance* (2021), the chapter on combat and the chapter on the math of time and pacing; Schreiber, *Game Balance Concepts*, level 3 (transitive relationships and cost curves). Skim the Minecraft Wiki pages "Sword" and "Zombie" (Java Edition).
 
-**Prerequisites from earlier courses:** Expected value and damage per second from [MA102 week 4](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md). Feedback loops and pacing from [GD102 weeks 3-4](../../GD102-systems-design-and-game-mechanics/syllabus.md). Mitigation and effective HP from [GD203 week 3](w03-mitigation-curves-and-effective-hp.md). You will meet effective HP again, in depth, in [MMO303 week 3](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w03-effective-hp-and-effective-dps.md).
+**Prerequisites from earlier courses:** Expected value and damage per second from [MA102 week 4](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md). Feedback loops and pacing from GD102 [week 3](../../GD102-systems-design-and-game-mechanics/lectures/w03-positive-feedback-loops-snowballing.md) and [week 4](../../GD102-systems-design-and-game-mechanics/lectures/w04-negative-feedback-loops-rubber-banding.md). Mitigation and effective HP from [GD203 week 3](w03-mitigation-curves-and-effective-hp.md). You will meet effective HP again, in depth, in [MMO303 week 3](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w03-effective-hp-and-effective-dps.md).
 
 **Interactive:** [examples/w04-breakpoint-staircase.html](../examples/w04-breakpoint-staircase.html) (specified at the end of this lecture). Keep it open during section 2.
 

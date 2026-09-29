@@ -206,7 +206,7 @@ With `r_aggro = 10` and `r_leash = 30`, the mob starts chasing at 10 meters and 
 
 The player stood at 12 meters twice, and at 25 meters twice, and got a different mob state each time. That is hysteresis working. The squared thresholds 100 and 900 are what the code stores.
 
-Minecraft's despawn rule has the same two-radius shape, used for a different reason. The 32-to-128 band stops mobs from vanishing the instant you look away, while the 128 boundary puts a hard limit on how many far-away mobs the game must keep. CS203 builds full aggro, leash and threat systems on this idea (see the [CS203 syllabus](../../CS203-artificial-intelligence-for-games/syllabus.md), week 12, MMO mob AI). MMO302 uses the same two-radius pattern to decide which players a server sends updates about (see the [MMO302 syllabus](../../MMO302-mmo-server-architecture/syllabus.md), week 3, area of interest with hysteresis).
+Minecraft's despawn rule has the same two-radius shape, used for a different reason. The 32-to-128 band stops mobs from vanishing the instant you look away, while the 128 boundary puts a hard limit on how many far-away mobs the game must keep. CS203 builds full aggro, leash and threat systems on this idea (see [CS203 week 12, MMO mob AI](../../CS203-artificial-intelligence-for-games/lectures/w12-mmo-mob-ai-leashing-aggro-threat-tables.md)). MMO302 uses the same two-radius pattern to decide which players a server sends updates about (see [MMO302 week 3, area of interest with hysteresis](../../MMO302-mmo-server-architecture/lectures/w03-area-of-interest-grids-radius-hysteresis.md)).
 
 ## 5. Range checks at scale
 
@@ -214,7 +214,7 @@ The squared-distance trick removes a square root per check. The number of checks
 
 If `n` objects each check every other object, that is `n × (n − 1) / 2` pairs. For 100 objects, 4,950 pairs. For 1,000 objects, 499,500 pairs. For 10,000, almost 50 million, every tick. The cost grows with the square of the population. Removing a square root makes each check a little cheaper. It does not change how many checks there are.
 
-The standard remedy is to avoid checking pairs that cannot possibly be close. Divide the world into a grid of cells at least as wide as the largest range you care about. An object only needs to check objects in its own cell and the neighboring cells. If objects are spread out, each cell holds a handful, and the work grows roughly in proportion to `n` instead of `n²`. MA201 covers grids and quadtrees in detail (see the [MA201 syllabus](../../MA201-linear-algebra-and-physics-for-games/syllabus.md), week 11, spatial partitioning).
+The standard remedy is to avoid checking pairs that cannot possibly be close. Divide the world into a grid of cells at least as wide as the largest range you care about. An object only needs to check objects in its own cell and the neighboring cells. If objects are spread out, each cell holds a handful, and the work grows roughly in proportion to `n` instead of `n²`. MA201 covers grids and quadtrees in detail (see [MA201 week 11, spatial partitioning](../../MA201-linear-algebra-and-physics-for-games/lectures/w11-spatial-partitioning-grids-and-quadtrees.md)).
 
 Two more range tests you will use constantly, both in squared form:
 

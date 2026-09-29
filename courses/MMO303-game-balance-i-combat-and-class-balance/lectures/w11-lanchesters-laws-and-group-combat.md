@@ -190,7 +190,7 @@ The reference simulation keeps side A at 10 damage dealers and gives side B 6 da
 
 With these rules, the outcome flips between 200 and 250 HP/s per healer. Two things are worth noticing. First, near the threshold fights get very long. Healing does not add linearly to a side's strength; it trades against incoming focus damage, and when the two nearly balance, deaths almost stop. That is the stalemate PvP players complain about when healers are strong. Second, the result depends on the targeting rule. If side A kills the healers first, the flip point moves a long way. Lab 11 asks you to find out how far.
 
-This gives a designer two levers against stalled PvP fights: lower healing in PvP only, or give attackers an effect that reduces the healing their target receives. In Lanchester terms, both push healers below the threshold. MMO307 covers split PvP and PvE tuning in detail ([MMO307 syllabus](../../MMO307-game-balance-ii-pvp-progression-and-endgame/syllabus.md)).
+This gives a designer two levers against stalled PvP fights: lower healing in PvP only, or give attackers an effect that reduces the healing their target receives. In Lanchester terms, both push healers below the threshold. MMO307 covers split PvP and PvE tuning in detail ([MMO307 week 7](../../MMO307-game-balance-ii-pvp-progression-and-endgame/lectures/w07-pvp-vs-pve-split-tuning.md)).
 
 ## 6. A checklist for group-combat design
 

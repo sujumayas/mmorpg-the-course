@@ -157,7 +157,7 @@ A practical check for your own design: at each major boss, compute the mistake b
 
 In persistent online games, skill and power also change who can play with whom. Power is visible and compared: gear scores and item levels are used to decide who gets invited to a group. Skill is hard to see, so groups use power as a stand-in for it. A game with large power gaps will split its players by power even if skill matters more to success.
 
-Two consequences follow. First, catch-up mechanics (which raise new players' power quickly) are often social tools more than balance tools: they let new players join groups. Second, normalizing power in some modes (as Guild Wars 2 does in structured PvP) is a way to make skill visible, because once power is equal, results come from skill. MMO307 treats catch-up and progression in endgame play in detail (see the [MMO307 syllabus](../../MMO307-game-balance-ii-pvp-progression-and-endgame/syllabus.md)).
+Two consequences follow. First, catch-up mechanics (which raise new players' power quickly) are often social tools more than balance tools: they let new players join groups. Second, normalizing power in some modes (as Guild Wars 2 does in structured PvP) is a way to make skill visible, because once power is equal, results come from skill. MMO307 treats catch-up and progression in endgame play in detail (see [MMO307 week 6](../../MMO307-game-balance-ii-pvp-progression-and-endgame/lectures/w06-catch-up-mechanics.md)).
 
 ## In-class activity (25 minutes)
 

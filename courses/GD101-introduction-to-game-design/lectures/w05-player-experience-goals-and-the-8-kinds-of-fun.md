@@ -41,7 +41,7 @@ Three points about this list.
 
 ### Other lists you will meet
 
-MDA's eight are not the only taxonomy. In MMO301 week 8 you will study Richard Bartle's 1996 paper "Hearts, Clubs, Diamonds, Spades: Players Who Suit MUDs," which sorts players rather than feelings. Bartle's four types are achievers, explorers, socialisers and killers, placed on two axes: acting versus interacting, and players versus world. See the [MMO301 syllabus](../../MMO301-virtual-worlds-history-theory-and-design/syllabus.md). The two lists overlap. Bartle's explorers want discovery, and his socialisers want fellowship. The difference is that MDA describes what a game offers, while player-type models describe what a person seeks. You need both. A game rich in discovery will find the players who want it.
+MDA's eight are not the only taxonomy. In MMO301 week 8 you will study Richard Bartle's 1996 paper "Hearts, Clubs, Diamonds, Spades: Players Who Suit MUDs," which sorts players rather than feelings. Bartle's four types are achievers, explorers, socialisers and killers, placed on two axes: acting versus interacting, and players versus world. See [MMO301 week 8](../../MMO301-virtual-worlds-history-theory-and-design/lectures/w08-player-types-bartle-1996-and-the-heros-journey.md). The two lists overlap. Bartle's explorers want discovery, and his socialisers want fellowship. The difference is that MDA describes what a game offers, while player-type models describe what a person seeks. You need both. A game rich in discovery will find the players who want it.
 
 ## 2. Player experience goals
 

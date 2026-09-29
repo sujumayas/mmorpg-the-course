@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber, *Game Balance Concepts*, Level 1 ("Intro to Game Balance") and Level 2 ("Numeric Relationships"); Schreiber & Romero, *Game Balance* (2021), chapter 9 (characters), first half.
 
-**Prerequisites from earlier courses:** functions as input-output machines ([MA101 week 1](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w01-functions-as-machines.md)), linear functions and rates ([MA101 week 2](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md)), and progression systems of skill versus power ([GD102 week 9](../../GD102-systems-design-and-game-mechanics/syllabus.md)).
+**Prerequisites from earlier courses:** functions as input-output machines ([MA101 week 1](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w01-functions-as-machines.md)), linear functions and rates ([MA101 week 2](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md)), and progression systems of skill versus power ([GD102 week 9](../../GD102-systems-design-and-game-mechanics/lectures/w09-progression-systems-skill-vs-power.md)).
 
 **Interactive:** [examples/w01-modifier-stacking.html](../examples/w01-modifier-stacking.html) (built from the spec at the end of this lecture). Keep it open during section 2.
 

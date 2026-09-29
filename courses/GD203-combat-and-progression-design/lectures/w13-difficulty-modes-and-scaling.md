@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber & Romero, *Game Balance* (2021), the chapter "Progression in PvE Games" (the sections on difficulty curves and pacing). Schreiber, *Game Balance Concepts*, Level 7, "Advancement, Progression and Pacing" (2010, free online).
 
-**Prerequisites from earlier courses:** GD203 [week 4, time-to-kill and time-to-die](w04-time-to-kill-and-time-to-die.md) (the safety ratio), [week 8, power curves and level scaling](w08-power-curves-and-level-scaling.md) (power ratio and scaling schemes) and [week 10, enemy design by the numbers](w10-enemy-design-by-the-numbers.md) (health cost of an encounter). UX201 week 3 (flow and difficulty), in the [UX201 syllabus](../../UX201-game-ux-and-player-psychology/syllabus.md). The effective-HP idea from [MMO303 week 2](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md) is used once in section 3.
+**Prerequisites from earlier courses:** GD203 [week 4, time-to-kill and time-to-die](w04-time-to-kill-and-time-to-die.md) (the safety ratio), [week 8, power curves and level scaling](w08-power-curves-and-level-scaling.md) (power ratio and scaling schemes) and [week 10, enemy design by the numbers](w10-enemy-design-by-the-numbers.md) (health cost of an encounter). UX201 week 3 (flow and difficulty), in the [UX201 week 3 lecture](../../UX201-game-ux-and-player-psychology/lectures/w03-flow-and-difficulty.md). The effective-HP idea, which [MMO303 week 2](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md) develops in year 3, is used once in section 3.
 
 **Interactive:** [Difficulty ladder](../examples/w13-difficulty-ladder.html). Keep it open during section 2.
 

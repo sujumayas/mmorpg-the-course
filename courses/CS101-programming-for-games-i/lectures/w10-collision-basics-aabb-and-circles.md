@@ -137,7 +137,7 @@ Boxes are the default for good reasons. They are cheap, they tile, and they matc
 
 - **Corners stick out.** A box around a round character has corners the character doesn't. Enemies clip the empty corner and players feel cheated. Shrink the hitbox a few pixels inside the sprite, or use a circle.
 - **Touching versus overlapping is a rule, and you have to pick it.** Strict comparisons stop a player from snagging on the seam between two floor tiles. Inclusive comparisons make pickups easier to grab. Decide once, write it in your design notes, and use the same rule everywhere.
-- **A box can't turn.** A long rotated sword swing doesn't fit a non-rotating box. You either use a stack of small boxes along the blade, or you move to oriented boxes and a heavier test ([MA201 week 9](../../MA201-linear-algebra-and-physics-for-games/syllabus.md) covers the separating axis test that generalizes this one).
+- **A box can't turn.** A long rotated sword swing doesn't fit a non-rotating box. You either use a stack of small boxes along the blade, or you move to oriented boxes and a heavier test ([MA201 week 9](../../MA201-linear-algebra-and-physics-for-games/lectures/w09-collision-detection-spheres-aabb-sat.md) covers the separating axis test that generalizes this one).
 - **The hitbox is part of the game feel.** A hitbox smaller than the sprite makes the player feel lucky. A bigger one makes enemies feel unfair. That's a tuning knob, and Celeste shows a studio turning it on purpose.
 
 ## 3. Circles: one comparison and no square root

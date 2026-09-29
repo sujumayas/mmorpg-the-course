@@ -230,7 +230,7 @@ Fixes, each with a cost:
 - **Raise `ω` as the missile gets close.** The circle shrinks and the missile connects, but it can look like it bends unnaturally.
 - **Lower `v` when turning hard.** Real aircraft do this. The missile feels heavier and more readable.
 - **Give it a lifetime or a maximum turn total.** Orbiting stops, but the missile may simply fizzle next to the target.
-- **Aim at a predicted point, not the current one.** That is interception, which you meet in CS203 (see the [CS203 syllabus](../../CS203-artificial-intelligence-for-games/syllabus.md)).
+- **Aim at a predicted point, not the current one.** That is interception, which you meet in CS203 (see [CS203 week 2](../../CS203-artificial-intelligence-for-games/lectures/w02-steering-behaviors.md)).
 
 ## 6. Smooth turning versus capped turning
 

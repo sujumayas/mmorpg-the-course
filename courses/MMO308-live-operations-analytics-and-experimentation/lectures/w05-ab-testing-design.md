@@ -203,7 +203,7 @@ Put the pieces into the plan. The crafting test needs 1,374 triggered players pe
 A game test is run on people who talk to each other, and some of them pay you.
 
 - **Visible differences get noticed.** If B's crafting recipe is cheaper, players will compare notes, and a forum thread will say the game charges some players more. Test changes players cannot directly compare (interfaces, pacing, onboarding order) at the player level. For prices and power, prefer a test server or a whole-game switchback.
-- **Do not test harm.** A variant you believe makes the game worse for some players, or pushes vulnerable players to spend, should not run just to measure how much worse. [MMO402 week 12](../../MMO402-emergent-society-governance-and-ethics/lectures/w12-research-ethics-in-online-worlds.md) covers the ethics of research in online worlds, including consent, and [MMO403](../../MMO403-business-monetization-and-ethics-of-live-games/syllabus.md) covers monetization tests in detail.
+- **Do not test harm.** A variant you believe makes the game worse for some players, or pushes vulnerable players to spend, should not run just to measure how much worse. [MMO402 week 12](../../MMO402-emergent-society-governance-and-ethics/lectures/w12-research-ethics-in-online-worlds.md) covers the ethics of research in online worlds, including consent, and [MMO403 week 10](../../MMO403-business-monetization-and-ethics-of-live-games/lectures/w10-pricing-experiments.md) covers monetization tests in detail.
 - **Guardrails are promises.** If a guardrail breaks mid-test, such as a crash rate rising in B, stop B. That is a decision you make before launch and write in the plan.
 
 ## In-class activity (25 minutes)

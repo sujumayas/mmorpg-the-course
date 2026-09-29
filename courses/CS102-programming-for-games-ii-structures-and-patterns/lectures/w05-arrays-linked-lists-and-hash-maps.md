@@ -225,7 +225,7 @@ The cost table says linked lists win at inserting and removing in the middle. Pr
 
 Modern CPUs read memory in chunks called **cache lines** (typically 64 bytes) and keep recently used lines in a small, fast **cache**. Walking an array reads memory in order, so each cache line brings in several upcoming elements for free. Walking a linked list jumps to wherever each node happens to live. Nystrom's "Data Locality" chapter explains the consequence. A **cache miss**, where the data isn't in the cache, stalls the CPU for a few hundred cycles while it waits for main memory.
 
-In Python you won't see the full effect, because a Python list stores references to objects rather than the values themselves, so even list traversal chases pointers. On the reference machine, summing 100,000 integers takes 1.3 ms from a list and 1.7 ms from a linked list, only 1.3× apart. In C# or C++, where an array of structs stores values contiguously, the gap is much wider. CS201 week 6 measures it directly (see the [CS201 syllabus](../../CS201-game-engine-architecture/syllabus.md)).
+In Python you won't see the full effect, because a Python list stores references to objects rather than the values themselves, so even list traversal chases pointers. On the reference machine, summing 100,000 integers takes 1.3 ms from a list and 1.7 ms from a linked list, only 1.3× apart. In C# or C++, where an array of structs stores values contiguously, the gap is much wider. CS201 week 6 measures it directly (see the [CS201 week 6 lecture](../../CS201-game-engine-architecture/lectures/w06-cache-locality-and-data-oriented-design.md)).
 
 ### Finding the spot is the real cost
 

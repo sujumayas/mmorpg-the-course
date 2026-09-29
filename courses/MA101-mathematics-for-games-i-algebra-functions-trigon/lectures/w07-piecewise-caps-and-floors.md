@@ -10,7 +10,7 @@
 
 **Before class:** Schreiber & Romero, *Game Balance* (CRC Press, 2021), the chapter "Numeric Relationships"; skim the Fextralife Elden Ring wiki page "HP" (the table only).
 
-**Prerequisites from earlier courses:** MA101 has no prerequisite course. This week uses slope from [MA101 week 2](w02-linear-functions-and-rates.md) and the rational curve `A / (A + K)` from [MA101 week 6](w06-rational-functions-and-asymptotes.md). The armor cap discussion builds on [MMO303 week 2, Armor and damage mitigation](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md), which you will meet in year 3.
+**Prerequisites from earlier courses:** MA101 has no prerequisite course. This week uses slope from [MA101 week 2](w02-linear-functions-and-rates.md) and the rational curve `A / (A + K)` from [MA101 week 6](w06-rational-functions-and-asymptotes.md). The armor cap discussion leads into [MMO303 week 2, Armor and damage mitigation](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w02-armor-and-damage-mitigation.md), which you will meet in year 3.
 
 **Interactive:** [Soft cap curve](../examples/w07-soft-cap-curve.html). Keep it open during section 2.
 

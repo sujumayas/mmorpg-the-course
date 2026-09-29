@@ -177,7 +177,7 @@ Run the SRM check first, on every test, automatically. It is one line of arithme
 
 ### Whales
 
-Revenue per player is the metric studios care about and the hardest one to test. Spending in most free-to-play games is highly concentrated. A small share of players, often called **whales**, account for a large share of revenue ([MMO403](../../MMO403-business-monetization-and-ethics-of-live-games/syllabus.md) studies the spending distribution in detail). For testing, this means the mean is dominated by a handful of players, and its standard error is huge (MA102 week 12 on means and heavy tails).
+Revenue per player is the metric studios care about and the hardest one to test. Spending in most free-to-play games is highly concentrated. A small share of players, often called **whales**, account for a large share of revenue ([MMO403 week 9](../../MMO403-business-monetization-and-ethics-of-live-games/lectures/w09-whales-and-spending-distributions.md) studies the spending distribution in detail). For testing, this means the mean is dominated by a handful of players, and its standard error is huge (MA102 week 12 on means and heavy tails).
 
 A made-up but typical case. Each arm has 10,000 players. A earns $19,000, B earns $22,000, so revenue per player is $1.90 against $2.20, a 16% lift. One player in B spent $4,000. Remove that one player and B's revenue per player is $18,000 / 9,999 = $1.80, below A. The whole "lift" was one person, who was assigned to B by a coin flip.
 

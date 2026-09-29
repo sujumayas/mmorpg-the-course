@@ -218,7 +218,7 @@ Three habits keep segment readouts honest:
 
 Segments are also for acting: showing a returning-player offer, tuning an event for new players, adjusting a store for one region. In a single-player mobile game, one segment rarely sees another segment's treatment. In an MMO, players stand in the same town and read the same forums. A discount shown only to lapsed players is visible to the loyal players who paid full price the week before. GW2's free-account limits worked partly because they were public, stated and applied by rule to everyone in the segment.
 
-When you target a segment, write down what players outside it will see and whether they would consider it fair. [MMO403](../../MMO403-business-monetization-and-ethics-of-live-games/syllabus.md) covers the ethics of price targeting. For now, keep one test: could you explain the rule on the official forum without embarrassment?
+When you target a segment, write down what players outside it will see and whether they would consider it fair. [MMO403 week 10](../../MMO403-business-monetization-and-ethics-of-live-games/lectures/w10-pricing-experiments.md) covers the ethics of price targeting. For now, keep one test: could you explain the rule on the official forum without embarrassment?
 
 ## In-class activity (25 minutes)
 

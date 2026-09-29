@@ -187,7 +187,7 @@ For a small studio this has a hard consequence. If your game has 300 new players
 
 ### Peeking
 
-A tempting habit is to watch the dashboard and stop the test the first day `|z|` crosses 1.96. Each look is another chance for noise to cross the line, so the real false-positive rate climbs well above 5%. Fix the sample size in advance and look once, or use methods built for repeated looks. The live-ops course MMO308 (week 6, "A/B testing: statistics and pitfalls", see the [MMO308 syllabus](../../MMO308-live-operations-analytics-and-experimentation/syllabus.md)) builds a simulation of exactly this problem.
+A tempting habit is to watch the dashboard and stop the test the first day `|z|` crosses 1.96. Each look is another chance for noise to cross the line, so the real false-positive rate climbs well above 5%. Fix the sample size in advance and look once, or use methods built for repeated looks. The live-ops course MMO308 (week 6, "A/B testing: statistics and pitfalls", see the [MMO308 week 6 lecture](../../MMO308-live-operations-analytics-and-experimentation/lectures/w06-ab-testing-statistics-and-pitfalls.md)) builds a simulation of exactly this problem.
 
 ## 5. What makes A/B testing hard in an MMO
 
