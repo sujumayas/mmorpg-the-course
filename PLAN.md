@@ -91,14 +91,14 @@ flowchart LR
 | CS101 | finished | 14/14 | 15 (3) | 14 | 4 |
 | MA101 | finished | 14/14 | 14 (4) | 14 | 5 |
 | GS101 | finished | 14/14 | 14 (2) | 13 | 4 |
-| AR101 | stub | 14/14 | 0 (2) | 14 | 0 |
+| AR101 | stub | 14/14 | 14 (2) | 14 | 0 |
 | GD102 | finished | 14/14 | 14 (3) | 14 | 4 |
 | CS102 | finished | 14/14 | 15 (2) | 14 | 4 |
 | MA102 | finished | 14/14 | 15 (4) | 14 | 5 |
-| AU101 | stub | 14/14 | 0 (2) | 14 | 0 |
-| PR101 | stub | 0/14 | 0 (1) | 0 | 0 |
-| CS201 | stub | 0/14 | 0 (2) | 0 | 0 |
-| MA201 | stub | 0/14 | 0 (2) | 0 | 0 |
+| AU101 | stub | 14/14 | 14 (2) | 14 | 4 |
+| PR101 | stub | 1/14 | 0 (1) | 0 | 0 |
+| CS201 | stub | 14/14 | 0 (2) | 14 | 0 |
+| MA201 | stub | 12/14 | 0 (2) | 12 | 0 |
 | GD201 | finished | 14/14 | 14 (2) | 14 | 4 |
 | GD202 | finished | 14/14 | 14 (1) | 14 | 3 |
 | UX201 | finished | 14/14 | 14 (2) | 14 | 4 |
@@ -113,8 +113,8 @@ flowchart LR
 | MMO304 | finished | 14/14 | 14 (3) | 12 | 4 |
 | MMO305 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO306 | finished | 14/14 | 14 (2) | 14 | 3 |
-| MMO307 | stub | 14/14 | 14 (3) | 14 | 4 |
-| MMO308 | stub | 14/14 | 13 (2) | 14 | 1 |
+| MMO307 | finished | 14/14 | 14 (3) | 14 | 4 |
+| MMO308 | stub | 14/14 | 14 (2) | 14 | 4 |
 | MMO309 | finished | 14/14 | 14 (2) | 11 | 4 |
 | PR301 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO401 | finished | 14/14 | 14 (2) | 14 | 4 |
@@ -124,7 +124,7 @@ flowchart LR
 | PR401 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO405 | stub | 0/14 | 0 (1) | 0 | 0 |
 | MMO406 | stub | 0/14 | 0 (0) | 0 | 0 |
-| MMO407 | stub | 14/14 | 7 (1) | 14 | 0 |
+| MMO407 | stub | 14/14 | 14 (1) | 14 | 3 |
 | PR402 | stub | 0/14 | 0 (0) | 0 | 0 |
 
 ## Course details
@@ -1246,7 +1246,7 @@ Long-term balance: rating systems, gear treadmills, power creep, catch-up mechan
 **Signature worked examples**
 
 - Elo expected score: 1/(1+10^(diff/400)) — slider from 0 to 800 rating gap
-- Power creep chart: item level over expansions and the stat squish reset (verify WoW figures)
+- Power creep chart: item level over expansions and the stat squish reset (verified: Warcraft Wiki stat squish, 8.0.1, 9.0.1, 12.0.0)
 - Queue time vs match fairness trade-off curve
 
 **Core readings**

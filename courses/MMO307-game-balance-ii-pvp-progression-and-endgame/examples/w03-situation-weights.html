@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Situation weights — MMO307 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:260px}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+label,.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output,.lab output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.stepper{display:flex;align-items:center;gap:6px;margin-top:4px}
+.stepper button{font:700 1.1rem var(--sans);width:38px;height:36px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.stepper button:disabled{opacity:.35;cursor:default}
+.stepper output{min-width:3ch;text-align:center;font:700 1.15rem var(--sans);font-variant-numeric:tabular-nums}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;border:0;padding:0}
+.seg legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.seg label{position:relative;display:inline-block}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg span{display:inline-block;font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);cursor:pointer}
+.seg input:checked+span{background:var(--steel);color:var(--paper)}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.custom{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;margin-top:10px}
+.custom label{display:block;font-size:.8rem;font-weight:600}
+.custom input{width:100%;font:600 .95rem var(--sans);padding:6px;border-radius:6px;border:1.5px solid var(--steel);background:var(--paper);color:var(--ink)}
+.norm{font-size:.8rem;color:var(--blood);font-weight:600;margin:6px 0 0}
+.toggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .9rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+.tcap{font-family:var(--serif);margin:0 0 6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:100%}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.84rem;vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+tr.below td{color:var(--ink-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.capt{font-family:var(--serif);font-size:1.02rem;margin:10px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.84rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO307 Game Balance II · Week 3 · Worked example</p>
+  <h1>Same tooltip, different worth</h1>
+  <p class="lede">Six rewards, each "+30% in its situation". On the left they look equal. On the right each is scaled by how often its situation comes up. Under a natural content mix, most fall below the smallest gain players will chase.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Bonuses</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Gates</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="charts">
+    <figure>
+      <figcaption>What the tooltip says<small>Power in the tool's own situation, b</small></figcaption>
+      <canvas id="cTip" role="img" aria-label="Equal bars, one per tool, showing the tooltip bonus"></canvas>
+    </figure>
+    <figure>
+      <figcaption>What it's worth<small>Expected power b × f'<sub>i</sub>, sorted by frequency. Numbers on top are f'<sub>i</sub>. Dashed line is the upgrade margin u.</small></figcaption>
+      <canvas id="cVal" role="img" aria-label="Bars of expected value per tool with the upgrade margin line"></canvas>
+      <div class="legend"><span><i style="background:var(--ochre)"></i>clears the upgrade margin</span><span><i style="background:var(--grid);outline:1px solid var(--ink-soft)"></i>below upgrade margin</span><span><i style="background:var(--blood);height:2px"></i>u</span></div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rN">—</b><span>N<sub>eff</sub>, effective situations</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rK">—</b><span>tools clearing u</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rNew">—</b><span>newcomer power, 1 + b f'<sub>1</sub></span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rFull">—</b><span>full collection, 1 + b</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rG">—</b><span>gap ceiling G<sub>max</sub></span></div>
+  </div>
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div class="ctl">
+      <fieldset class="seg" id="mix"><legend>Content mix</legend>
+        <label><input type="radio" name="mix" value="even"><span>Even</span></label>
+        <label><input type="radio" name="mix" value="zipf" checked><span>Zipf</span></label>
+        <label><input type="radio" name="mix" value="custom"><span>Custom</span></label>
+      </fieldset>
+      <div id="customWrap" hidden>
+        <div class="custom" id="customIn"></div>
+        <p class="norm" id="normNote" hidden>normalised to sum to 1</p>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lab" id="lN">Situations n</span>
+      <div class="stepper" role="group" aria-labelledby="lN"><button type="button" data-k="n" data-d="-1" aria-label="Fewer situations">−</button><output id="oN">6</output><button type="button" data-k="n" data-d="1" aria-label="More situations">+</button></div>
+      <label for="b" style="margin-top:12px"><span>Tooltip bonus b</span><output id="oB">30%</output></label>
+      <input id="b" type="range" min="0.05" max="1" step="0.05" value="0.3">
+    </div>
+    <div class="ctl">
+      <label for="lam"><span>Rotation λ</span><output id="oL">0.00</output></label>
+      <input id="lam" type="range" min="0" max="1" step="0.05" value="0">
+      <label for="u" style="margin-top:12px"><span>Upgrade margin u</span><output id="oU">5.0%</output></label>
+      <input id="u" type="range" min="0" max="15" step="0.5" value="5">
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <p class="tcap">Owning the top k tools (most common situations first)</p>
+    <table>
+      <thead><tr><th>k</th><th>Tool added</th><th>f'</th><th>Its value b f'</th><th>Power with top k</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <div class="charts">
+    <figure>
+      <figcaption>Marginal value of each counter<small>Share of activities opened by adding counters in order 1, 2, …, m</small></figcaption>
+      <canvas id="cGate" role="img" aria-label="Bars of marginal value per counter added"></canvas>
+      <p class="capt">Bonus values fall as you collect. Gate values can rise.</p>
+    </figure>
+    <div>
+      <div class="controls" style="grid-template-columns:1fr 1fr;margin-top:0">
+        <div class="ctl"><span class="lab" id="lM">Counter types m</span><div class="stepper" role="group" aria-labelledby="lM"><button type="button" data-k="m" data-d="-1" aria-label="Fewer counter types">−</button><output id="oM">3</output><button type="button" data-k="m" data-d="1" aria-label="More counter types">+</button></div></div>
+        <div class="ctl"><span class="lab" id="lR">Required per activity r</span><div class="stepper" role="group" aria-labelledby="lR"><button type="button" data-k="r" data-d="-1" aria-label="Fewer required">−</button><output id="oR">2</output><button type="button" data-k="r" data-d="1" aria-label="More required">+</button></div></div>
+      </div>
+      <p style="font-weight:600;font-size:.92rem;margin:16px 0 0">Counters you own</p>
+      <div class="toggles" id="own" role="group" aria-label="Counters owned"></div>
+      <div class="readout" style="grid-template-columns:1fr 1fr" aria-live="polite">
+        <div class="stat" style="--c:var(--moss)"><b id="rOpen">—</b><span>of activities open to you</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rAct">—</b><span>activities, all size-r subsets, equally common</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Counters owned j</th><th>Share open C(j, r) / C(m, r)</th><th>Added by the j-th</th></tr></thead>
+          <tbody id="gbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>Model from the lecture: tool i gives +b in situation i, which occurs a share f<sub>i</sub> of play. A rotation mixes the natural frequencies with an even schedule, f'<sub>i</sub> = λ/n + (1 − λ) f<sub>i</sub>. Zipf frequencies are (1/i)/H<sub>n</sub>. Gate activities follow the Destiny 2 champion structure the lecture cites (each hard activity needs two of three counter types), with invented equal frequencies.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const st={mix:'zipf',n:6,b:0.3,lam:0,u:0.05,custom:[0.5,0.25,0.15,0.10,0,0,0,0,0,0],normed:false,m:3,r:2,own:[]};
+const lim={n:[2,10],m:[2,5],r:[1,5]};
+const EPS=1e-9;
+
+function base(){
+  const n=st.n;
+  if(st.mix==='even')return new Array(n).fill(1/n);
+  if(st.mix==='zipf'){let H=0;for(let j=1;j<=n;j++)H+=1/j;return Array.from({length:n},(_,i)=>(1/(i+1))/H);}
+  const raw=st.custom.slice(0,n).map(v=>Math.max(0,+v||0)),s=raw.reduce((a,b)=>a+b,0);
+  st.normed=Math.abs(s-1)>1e-6;
+  return s>0?raw.map(v=>v/s):new Array(n).fill(1/n);
+}
+function calc(){
+  const f=base(),fp=f.map(x=>st.lam/st.n+(1-st.lam)*x);
+  const tools=fp.map((x,i)=>({i:i+1,f:x,v:st.b*x})).sort((a,b)=>b.f-a.f||a.i-b.i);
+  const neff=1/fp.reduce((a,x)=>a+x*x,0),fmax=Math.max(...fp),G=(1+st.b)/(1+st.b*fmax);
+  const clear=tools.filter(t=>t.v>=st.u-EPS).length;
+  return {tools,neff,G,clear,newc:1+st.b*fmax};
+}
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function bars(canvas,vals,yMax,opt){
+  const {g,w,h}=setup(canvas),pad={l:44,r:10,t:opt.top||18,b:30},n=vals.length,band=(w-pad.l-pad.r)/n,bw=Math.min(46,band*.66);
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';
+  opt.ticks.forEach(v=>{g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.fillText(opt.fmt(v),pad.l-6,Y(v));});
+  vals.forEach((v,k)=>{const x=pad.l+band*(k+.5);g.fillStyle=opt.color(k);g.fillRect(x-bw/2,Y(v),bw,Y(0)-Y(v));
+    g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.font='12px '+css('--sans');g.fillText(band<44&&opt.xs?opt.xs(k):opt.xl(k),x,h-pad.b+6);
+    if(opt.inside){g.save();g.translate(x,Y(0)-6);g.rotate(-Math.PI/2);g.font='600 '+(bw<22?10:12)+'px '+css('--sans');g.fillStyle=css('--paper');g.textAlign='left';g.textBaseline='middle';g.fillText(opt.inside(k),0,0);g.restore();}
+    if(opt.lab){const t=opt.lab(k),fs=band<34?9:band<48?10:12;g.font='600 '+fs+'px '+css('--sans');g.fillStyle=css('--ink');g.textBaseline='bottom';
+      if(band<30){g.save();g.translate(x,Y(v)-3);g.rotate(-Math.PI/2);g.textAlign='left';g.textBaseline='middle';g.fillText(t,0,0);g.restore();}else g.fillText(t,x,Y(v)-3);}
+    if(opt.above){const fs=band<40?9:11;g.font=fs+'px '+css('--sans');g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+      if(band<36){g.save();g.translate(x,4);g.rotate(-Math.PI/2);g.textAlign='right';g.textBaseline='middle';g.fillText(opt.above(k),0,0);g.restore();}else g.fillText(opt.above(k),x,3);}
+  });
+  if(opt.after)opt.after(g,w,h,pad,Y);
+}
+const pct=v=>(v*100).toFixed(2)+'%';
+function nice(v){const c=[.02,.05,.1,.15,.2,.25,.3,.4,.5,.6,.8,1,1.2];return c.find(x=>x>=v*1.08)||v*1.1;}
+function upd(){
+  const K=calc(),T=K.tools,n=st.n;
+  $('oN').textContent=n;$('oB').textContent=Math.round(st.b*100)+'%';$('oL').textContent=st.lam.toFixed(2);$('oU').textContent=(st.u*100).toFixed(1)+'%';
+  document.querySelectorAll('#p1 [data-k]').forEach(b=>{const k=b.dataset.k,d=+b.dataset.d;b.disabled=st[k]+d<lim[k][0]||st[k]+d>lim[k][1];});
+  $('customWrap').hidden=st.mix!=='custom';$('normNote').hidden=!(st.mix==='custom'&&st.normed);
+  const tipMax=nice(st.b);
+  bars($('cTip'),T.map(()=>st.b),tipMax,{ticks:[0,tipMax/2,tipMax],fmt:v=>Math.round(v*100)+'%',color:()=>css('--steel'),xl:k=>'tool '+T[k].i,xs:k=>String(T[k].i),inside:k=>'+'+Math.round(st.b*100)+'% in situation '+T[k].i});
+  const vMax=nice(Math.max(T[0].v,st.u));
+  bars($('cVal'),T.map(t=>t.v),vMax,{top:34,ticks:[0,vMax/2,vMax],fmt:v=>(v*100).toFixed(v*100%1?1:0)+'%',
+    color:k=>T[k].v>=st.u-EPS?css('--ochre'):css('--grid'),xl:k=>'tool '+T[k].i,xs:k=>String(T[k].i),lab:k=>(T[k].v*100).toFixed(2),above:k=>T[k].f.toFixed(3),
+    after:(g,w,h,pad,Y)=>{g.strokeStyle=css('--blood');g.lineWidth=1.8;g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,Y(st.u));g.lineTo(w-pad.r,Y(st.u));g.stroke();g.setLineDash([]);
+      g.fillStyle=css('--blood');g.font='600 11px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('u = '+(st.u*100).toFixed(1)+'%',w-pad.r,Y(st.u)-2);
+}});
+  $('rN').textContent=K.neff.toFixed(2);$('rG').textContent=K.G.toFixed(3);$('rK').textContent=K.clear+' of '+n;$('rNew').textContent=K.newc.toFixed(3);$('rFull').textContent=(1+st.b).toFixed(3);
+  let cum=1;$('tbody').innerHTML=T.map((t,k)=>{cum+=t.v;return `<tr class="${t.v<st.u-EPS?'below':''}"><td>${k+1}</td><td>tool ${t.i}</td><td>${t.f.toFixed(3)}</td><td>${pct(t.v)}</td><td>${cum.toFixed(3)}</td></tr>`;}).join('');
+  const top=T[0],last=T[T.length-1];
+  $('insight').innerHTML=`Every tooltip says +${Math.round(st.b*100)}%. Tool ${top.i} is worth <b>${pct(top.v)}</b> of expected power and tool ${last.i} only <b>${pct(last.v)}</b>, ${(top.v/last.v).toFixed(1)} times less. <b>${K.clear} of ${n}</b> clear the ${(st.u*100).toFixed(1)}% margin. `+
+    (st.lam>0?`The rotation lifts N<sub>eff</sub> to ${K.neff.toFixed(2)}; the price is a gap ceiling of ${K.G.toFixed(3)}, still bounded by 1 + b = ${(1+st.b).toFixed(2)}.`:`Drag the rotation up to see more tools clear the line and the gap ceiling rise.`);
+}
+function customInputs(){
+  $('customIn').innerHTML=Array.from({length:st.n},(_,i)=>`<label>f<sub>${i+1}</sub><input type="number" min="0" max="1" step="0.01" data-i="${i}" value="${(+st.custom[i]).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')||0}"></label>`).join('');
+  $('customIn').querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{st.custom[+inp.dataset.i]=Math.max(0,+inp.value||0);
+    const s=st.custom.slice(0,st.n).reduce((a,b)=>a+b,0);upd();
+    if(s>0&&Math.abs(s-1)>1e-6){for(let i=0;i<st.n;i++)st.custom[i]/=s;customInputs();$('normNote').hidden=false;}}));
+}
+document.querySelectorAll('input[name=mix]').forEach(r=>r.addEventListener('change',()=>{st.mix=r.value;if(st.mix==='custom')customInputs();upd();}));
+document.querySelectorAll('#p1 [data-k]').forEach(b=>b.addEventListener('click',()=>{st.n+= +b.dataset.d;if(st.mix==='custom')customInputs();upd();}));
+$('b').addEventListener('input',e=>{st.b=Math.round(+e.target.value*100)/100;upd();});
+$('lam').addEventListener('input',e=>{st.lam=Math.round(+e.target.value*100)/100;upd();});
+$('u').addEventListener('input',e=>{st.u=Math.round(+e.target.value*10)/1000;upd();});
+
+// ---- gates
+function C(n,k){if(k<0||k>n)return 0;let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+const L='ABCDE';
+function ownButtons(){
+  st.own=st.own.filter(i=>i<st.m);
+  $('own').innerHTML=Array.from({length:st.m},(_,i)=>`<button type="button" class="chip" data-o="${i}" aria-pressed="${st.own.includes(i)}">Counter ${L[i]}</button>`).join('');
+  $('own').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.o;st.own=st.own.includes(i)?st.own.filter(x=>x!==i):st.own.concat(i);b.setAttribute('aria-pressed',st.own.includes(i));updGate();}));
+}
+function updGate(){
+  st.r=Math.min(st.r,st.m);
+  $('oM').textContent=st.m;$('oR').textContent=st.r;
+  document.querySelectorAll('#p2 [data-k]').forEach(b=>{const k=b.dataset.k,d=+b.dataset.d,max=k==='r'?st.m:lim[k][1];b.disabled=st[k]+d<lim[k][0]||st[k]+d>max;});
+  const tot=C(st.m,st.r),share=j=>C(j,st.r)/tot,j=st.own.length;
+  $('rOpen').textContent=(share(j)*100).toFixed(1)+'%';$('rAct').textContent=tot;
+  const marg=Array.from({length:st.m},(_,k)=>share(k+1)-share(k));
+  bars($('cGate'),marg,1,{ticks:[0,.25,.5,.75,1],fmt:v=>Math.round(v*100),color:k=>k<j?css('--moss'):css('--steel'),xl:k=>ordinal(k+1),lab:k=>(marg[k]*100).toFixed(1)});
+  $('gbody').innerHTML=Array.from({length:st.m+1},(_,k)=>`<tr${k===j?' style="font-weight:700"':''}><td>${k}</td><td>${(share(k)*100).toFixed(1)}%</td><td>${k?(marg[k-1]*100).toFixed(1)+' pts':'—'}</td></tr>`).join('');
+}
+const ordinal=k=>k+(k===1?'st':k===2?'nd':k===3?'rd':'th');
+document.querySelectorAll('#p2 [data-k]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k;st[k]+= +b.dataset.d;ownButtons();updGate();}));
+
+const tabs=[$('t1'),$('t2')];
+function redraw(){if($('p1').hidden)updGate();else upd();}
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();redraw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2]);}});});
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+window.__w03={st,upd,updGate,ownButtons,customInputs,calc,sel:i=>sel(tabs[i])};
+ownButtons();upd();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Power creep and the squish — MMO307 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cChart{height:360px}#cLad{height:320px}#cPow{height:200px}
+@media (max-width:560px){#cChart{height:320px}#cLad{height:280px}}
+.src{font-size:.78rem;color:var(--ink-soft);margin:6px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.toggles{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
+.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip:disabled{opacity:.4;cursor:default}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 20px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+label,.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output,.lab output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.stepper{display:flex;align-items:center;gap:6px;margin-top:4px}
+.stepper button{font:700 1.1rem var(--sans);width:38px;height:36px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.stepper button:disabled{opacity:.35;cursor:default}
+.stepper output{min-width:3ch;text-align:center;font:700 1.15rem var(--sans);font-variant-numeric:tabular-nums}
+.hint{font-size:.78rem;color:var(--ink-soft);margin:2px 0 0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:100%}
+.tcap{font-family:var(--serif);margin:0 0 6px}
+td{white-space:nowrap}td:first-child{white-space:normal}
+@media (max-width:560px){.rng{display:none}}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.84rem;vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+tr.squish td{color:var(--blood);font-size:.84rem;text-align:left;background:var(--paper-2)}
+tr.post td:nth-child(3){font-weight:700}
+.capt{font-family:var(--serif);font-size:1.02rem;margin:10px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.84rem;color:var(--ink-soft);max-width:74ch}
+footer p{margin:0 0 6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO307 Game Balance II · Week 2 · Signature worked example</p>
+  <h1>The squish resets the label. The ratchet keeps turning.</h1>
+  <p class="lede">World of Warcraft's top item level climbed to 1000, then was cut three times. Press "Increments" to see what each expansion added on the scale in use at the time. The steps after every squish are as big as the steps before it.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">The chart</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">The ratchet</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <figure>
+    <figcaption id="chartCap">Top item level by expansion<small id="chartSub">Native scale at the time. Light bars run from the first normal-raid item level to the highest reachable one.</small></figcaption>
+    <canvas id="cChart" role="img" aria-label="World of Warcraft item level tops by expansion with three squishes"></canvas>
+    <div class="legend" id="legLines"><span><i style="background:var(--steel)"></i>WoW top</span><span><i style="background:var(--steel);opacity:.3"></i>WoW range (entry to top)</span><span><i style="background:var(--blood)"></i>Squish</span><span id="legFf" hidden><i style="background:var(--ochre)"></i>FFXIV top</span></div>
+    <div class="legend" id="legInc" hidden><span><i style="background:var(--steel)"></i>WoW, before any squish</span><span><i style="background:transparent;border:2px dashed var(--blood)"></i>WoW, after a squish</span><span id="legFf2" hidden><i style="background:var(--ochre)"></i>FFXIV</span></div>
+    <p class="src" id="sqNote">Red drops are squishes: patch 8.0.1 took 1000 to 265, 9.0.1 took 485 to 140, and 12.0.0 took 730 to 170.</p>
+    <p class="capt" id="incCap" hidden>After each squish the steps are as big as before. The label reset; the ratchet didn't.</p>
+    <p class="src" id="ffNote" hidden>FFXIV is plotted by its own expansion index (A Realm Reborn = 1 to Dawntrail = 6); its exact values are in the table below. The two games' release dates do not line up.</p>
+    <p class="src">WoW data: Warcraft Wiki, "Stat squish", item level squish table (native ranges; squishes in patches 8.0.1, 9.0.1 and 12.0.0; accessed September 2026). FFXIV data: Final Fantasy XIV Online Wiki, "Item Level", maximum item level per level cap (Dawntrail era).</p>
+  </figure>
+  <div class="toggles" role="group" aria-label="Chart options">
+    <button class="chip" id="bInc" aria-pressed="false">Increments</button>
+    <button class="chip" id="bLog" aria-pressed="false">Log axis</button>
+    <button class="chip" id="bFf" aria-pressed="false">Show FFXIV</button>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b>73 to 265</b><span>item levels per expansion, Burning Crusade to Legion</span></div>
+    <div class="stat" style="--c:var(--blood)"><b>220</b><span>Battle for Azeroth's step, right after the 8.0.1 squish</span></div>
+    <div class="stat" style="--c:var(--blood)"><b>171, 217, 202</b><span>Shadowlands to The War Within, after the 9.0.1 squish</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b>130</b><span>FFXIV's step every expansion since Heavensward's 140</span></div>
+  </div>
+
+  <div class="table-wrap">
+    <p class="tcap">World of Warcraft tops, increments and ratios (native scale at the time)</p>
+    <table>
+      <thead><tr><th>Expansion</th><th class="rng">Range</th><th>Top</th><th>Increment</th><th>Ratio to previous top</th></tr></thead>
+      <tbody id="wowBody"></tbody>
+    </table>
+  </div>
+  <div class="table-wrap" id="ffTable" hidden>
+    <p class="tcap">Final Fantasy XIV maximum item level per level cap</p>
+    <table>
+      <thead><tr><th>Expansion</th><th>Top</th><th>Increment</th><th>Ratio to previous top</th></tr></thead>
+      <tbody id="ffBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <figure>
+    <figcaption>Ladders, tier by tier<small>Each column is one tier's D rungs, s apart. The next tier's entry must sit u above rung o (red). That arrow is the creep c = o × s + u.</small></figcaption>
+    <canvas id="cLad" role="img" aria-label="Difficulty ladders per tier with the ratchet arrows"></canvas>
+  </figure>
+  <figure style="margin-top:12px">
+    <figcaption>Power gap after t tiers, (1 + g)<sup>c t</sup><small>Log axis. The green band is gaps content can still serve (at most F). The marker is the shelf life t*.</small></figcaption>
+    <canvas id="cPow" role="img" aria-label="Power multiplier against tiers on a log axis"></canvas>
+  </figure>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rc">—</b><span>creep per tier c = o s + u</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rC">—</b><span>per expansion C = T c; over the plan E C</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rr">—</b><span>power per tier r = (1 + g)<sup>c</sup></span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rt">—</b><span>shelf life t* = ln F / (c ln(1 + g)), tiers</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rPlan">—</b><span>plan power multiplier (1 + g)<sup>E T c</sup></span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rMax">—</b><span id="rMaxLab">largest c that keeps t* ≥ 3</span></div>
+  </div>
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div class="ctl"><span class="lab" id="lD">Rungs D</span><div class="stepper" role="group" aria-labelledby="lD"><button type="button" data-k="D" data-d="-1" aria-label="Fewer rungs">−</button><output id="oD">4</output><button type="button" data-k="D" data-d="1" aria-label="More rungs">+</button></div></div>
+    <div class="ctl"><span class="lab" id="lO">Overlap o (rung to beat)</span><div class="stepper" role="group" aria-labelledby="lO"><button type="button" data-k="o" data-d="-1" aria-label="Lower overlap">−</button><output id="oO">1</output><button type="button" data-k="o" data-d="1" aria-label="Higher overlap">+</button></div><p class="hint">0 = bottom rung, D − 1 = top rung</p></div>
+    <div class="ctl"><span class="lab" id="lT">Tiers per expansion T</span><div class="stepper" role="group" aria-labelledby="lT"><button type="button" data-k="T" data-d="-1" aria-label="Fewer tiers">−</button><output id="oT">3</output><button type="button" data-k="T" data-d="1" aria-label="More tiers">+</button></div></div>
+    <div class="ctl"><span class="lab" id="lE">Expansions E</span><div class="stepper" role="group" aria-labelledby="lE"><button type="button" data-k="E" data-d="-1" aria-label="Fewer expansions">−</button><output id="oE">4</output><button type="button" data-k="E" data-d="1" aria-label="More expansions">+</button></div></div>
+    <div class="ctl"><label for="s"><span>Rung spacing s</span><output id="os">10</output></label><input id="s" type="range" min="1" max="30" step="1" value="10"></div>
+    <div class="ctl"><label for="u"><span>Upgrade margin u</span><output id="ou">5</output></label><input id="u" type="range" min="0" max="20" step="1" value="5"></div>
+    <div class="ctl"><label for="g"><span>Power per item level g</span><output id="og">1.0%</output></label><input id="g" type="range" min="0.2" max="2" step="0.1" value="1"></div>
+    <div class="ctl"><label for="F"><span>Shareable band F</span><output id="oF">2.0</output></label><input id="F" type="range" min="1.2" max="4" step="0.1" value="2"></div>
+    <div class="ctl"><span class="lab" id="lN">Shelf-life target (tiers)</span><div class="stepper" role="group" aria-labelledby="lN"><button type="button" data-k="N" data-d="-1" aria-label="Shorter target">−</button><output id="oN">3</output><button type="button" data-k="N" data-d="1" aria-label="Longer target">+</button></div></div>
+  </div>
+</section>
+
+<footer>
+  <p>Model from the lecture: rungs of tier t sit at L<sub>t</sub> + j s with L<sub>0</sub> = 100, and L<sub>t+1</sub> = L<sub>t</sub> + o s + u. The power conversion (1 + g) per item level is a modelling assumption, not a published figure.</p>
+  <p>Real data is item level only, as listed on the wikis. Patch 8.0.1 is the Battle for Azeroth pre-patch (2018), 9.0.1 the Shadowlands pre-patch (2020), 12.0.0 the Midnight pre-patch (January 2026). Each WoW range runs from the first normal-difficulty raid of the expansion to the highest item level reachable in it.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+// ---- real data (Warcraft Wiki "Stat squish"; FFXIV Online Wiki "Item Level")
+const WOW=[
+ {n:'Classic',full:'World of Warcraft (Classic era)',lo:66,top:86},
+ {n:'TBC',full:'The Burning Crusade',lo:120,top:159},
+ {n:'Wrath',full:'Wrath of the Lich King',lo:213,top:284},
+ {n:'Cata',full:'Cataclysm',lo:359,top:416},
+ {n:'MoP',full:'Mists of Pandaria',lo:496,top:580},
+ {n:'WoD',full:'Warlords of Draenor',lo:670,top:735},
+ {n:'Legion',full:'Legion',lo:835,top:1000,sq:{p:'8.0.1',to:265}},
+ {n:'BfA',full:'Battle for Azeroth',lo:340,top:485,sq:{p:'9.0.1',to:140},post:true},
+ {n:'SL',full:'Shadowlands',lo:184,top:311,post:true},
+ {n:'DF',full:'Dragonflight',lo:376,top:528,post:true},
+ {n:'TWW',full:'The War Within',lo:623,top:730,sq:{p:'12.0.0',to:170},post:true}];
+const FF=[['ARR','A Realm Reborn',130],['HW','Heavensward',270],['SB','Stormblood',400],['ShB','Shadowbringers',530],['EW','Endwalker',660],['DT','Dawntrail',790]];
+WOW.forEach((e,i)=>{if(i){const p=WOW[i-1],base=p.sq?p.sq.to:p.top;e.base=base;e.inc=e.top-base;e.ratio=e.top/base;}});
+const st={log:false,ff:false,inc:false,D:4,o:1,T:3,E:4,s:10,u:5,g:0.01,F:2,N:3};
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function yTicks(g,w,h,pad,Y,ticks,fmt){g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='middle';
+  ticks.forEach(v=>{const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(fmt(v),pad.l-6,y);});}
+
+// ---- tab 1
+function drawChart(){
+  const C=setup($('cChart')),{g,w,h}=C,narrow=w<520;
+  const pad={l:46,r:14,t:18,b:narrow?48:34};
+  const n=WOW.length,band=(w-pad.l-pad.r)/n,X=i=>pad.l+band*(i+.5);
+  g.clearRect(0,0,w,h);
+  let Y,ticks;
+  if(st.inc){
+    const yMax=300;Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);ticks=[0,50,100,150,200,250,300];
+    yTicks(g,w,h,pad,Y,ticks,v=>v);
+    const bw=Math.min(34,band*(st.ff?.38:.6));
+    WOW.forEach((e,i)=>{if(!i)return;const x=X(i)-(st.ff&&i<=5?bw/2+1:0);
+      g.fillStyle=css('--steel');g.globalAlpha=e.post?.25:1;g.fillRect(x-bw/2,Y(e.inc),bw,Y(0)-Y(e.inc));g.globalAlpha=1;
+      if(e.post){g.strokeStyle=css('--blood');g.lineWidth=2;g.setLineDash([5,3]);g.strokeRect(x-bw/2,Y(e.inc),bw,Y(0)-Y(e.inc));g.setLineDash([]);}
+      g.fillStyle=css('--ink');g.font='600 '+(narrow?10:12)+'px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText(e.inc,x,Y(e.inc)-3);});
+    if(st.ff)FF.forEach((f,i)=>{if(!i)return;const v=f[2]-FF[i-1][2],x=X(i)+bw/2+1;g.fillStyle=css('--ochre');g.fillRect(x-bw/2,Y(v),bw,Y(0)-Y(v));
+      if(!narrow){g.fillStyle=css('--ochre');g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText(v,x,Y(v)-3);}});
+    // squish markers between eras
+    [[6.5,'8.0.1'],[7.5,'9.0.1']].forEach(([i,p])=>{const x=pad.l+band*(i+.5);g.strokeStyle=css('--blood');g.lineWidth=1.5;g.setLineDash([3,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,Y(0));g.stroke();g.setLineDash([]);
+      g.fillStyle=css('--blood');g.font='600 11px '+css('--sans');g.textAlign=narrow?(p==='8.0.1'?'right':'left'):'center';g.textBaseline='top';g.fillText(p,x+(narrow?(p==='8.0.1'?-2:2):0),pad.t-14);});
+  } else {
+    if(st.log){const lo=Math.log(25),hi=Math.log(1300);Y=v=>pad.t+(h-pad.t-pad.b)*(1-(Math.log(v)-lo)/(hi-lo));ticks=[25,50,100,200,500,1000];}
+    else{Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/1100);ticks=[0,200,400,600,800,1000];}
+    yTicks(g,w,h,pad,Y,ticks,v=>v);
+    const bw=Math.min(26,band*.45);
+    WOW.forEach((e,i)=>{g.fillStyle=css('--steel');g.globalAlpha=.25;g.fillRect(X(i)-bw/2,Y(e.top),bw,Y(e.lo)-Y(e.top));g.globalAlpha=1;});
+    // top line with squish drops
+    g.strokeStyle=css('--steel');g.lineWidth=2.8;g.beginPath();
+    WOW.forEach((e,i)=>{const x=X(i);if(!i)g.moveTo(x,Y(e.top));else g.lineTo(x,Y(e.top));if(e.sq&&i<n-1)g.moveTo(x,Y(e.sq.to));});
+    g.stroke();
+    WOW.forEach((e,i)=>{g.fillStyle=css('--steel');g.beginPath();g.arc(X(i),Y(e.top),4,0,7);g.fill();});
+    WOW.forEach((e,i)=>{if(!e.sq)return;const x=X(i);
+      g.strokeStyle=css('--blood');g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();g.moveTo(x,Y(e.top)+5);g.lineTo(x,Y(e.sq.to));g.stroke();g.setLineDash([]);
+      g.fillStyle=css('--blood');g.beginPath();g.moveTo(x-5,Y(e.sq.to)-8);g.lineTo(x+5,Y(e.sq.to)-8);g.lineTo(x,Y(e.sq.to));g.fill();
+      g.beginPath();g.arc(x,Y(e.sq.to),3,0,7);g.fill();
+      const lab=e.sq.p+': '+e.top+' → '+e.sq.to,fs=narrow?10:12;g.font='600 '+fs+'px '+css('--sans');
+      const right=i<n-1&&!narrow,ym=Y(e.top)+(Y(e.sq.to)-Y(e.top))*(i===n-1?.5:.3);
+      if(narrow){g.fillStyle=css('--blood');g.textAlign='center';g.textBaseline='top';g.fillText(e.sq.p,x,Y(e.sq.to)+7);return;}
+      g.textBaseline='middle';
+      const lines=narrow?[e.sq.p,e.top+'→'+e.sq.to]:[lab],left=narrow||i===n-1,lh=fs+3;
+      const tw=Math.max(...lines.map(t=>g.measureText(t).width)),bx=left?x-8-tw-4:x+8-4,by=ym-lines.length*lh/2-3;
+      g.fillStyle=css('--paper-2');g.globalAlpha=.92;g.fillRect(bx,by,tw+8,lines.length*lh+6);g.globalAlpha=1;
+      g.strokeStyle=css('--blood');g.lineWidth=1;g.strokeRect(bx+.5,by+.5,tw+7,lines.length*lh+5);
+      g.fillStyle=css('--blood');g.textAlign='left';lines.forEach((t,k)=>g.fillText(t,bx+4,by+3+lh*(k+.5)));
+    });
+    if(st.ff){g.strokeStyle=css('--ochre');g.lineWidth=2.5;g.beginPath();FF.forEach((f,i)=>{i?g.lineTo(X(i),Y(f[2])):g.moveTo(X(i),Y(f[2]));});g.stroke();
+      FF.forEach((f,i)=>{g.fillStyle=css('--ochre');g.beginPath();g.arc(X(i),Y(f[2]),4,0,7);g.fill();});}
+  }
+  // x labels
+  g.fillStyle=css('--ink-soft');g.font=(narrow?'11px ':'12px ')+css('--sans');
+  WOW.forEach((e,i)=>{const x=X(i),y=h-pad.b+6;if(narrow){g.save();g.translate(x,y);g.rotate(-Math.PI/4);g.textAlign='right';g.textBaseline='middle';g.fillText(e.n,0,0);g.restore();}else{g.textAlign='center';g.textBaseline='top';g.fillText(e.n,x,y);}});
+}
+function tables(){
+  const rows=[];
+  WOW.forEach((e,i)=>{
+    rows.push(`<tr class="${e.post?'post':''}"><td>${e.full}</td><td class="rng">${e.lo}–${e.top}</td><td>${e.top}</td><td>${i?'+'+e.inc:'—'}</td><td>${i?e.ratio.toFixed(3):'—'}</td></tr>`);
+    if(e.sq)rows.push(`<tr class="squish"><td colspan="5">Patch ${e.sq.p} squish: ${e.top} becomes ${e.sq.to}${i===WOW.length-1?' (Midnight pre-patch)':''}</td></tr>`);
+  });
+  $('wowBody').innerHTML=rows.join('');
+  $('ffBody').innerHTML=FF.map((f,i)=>`<tr><td>${f[1]}</td><td>${f[2]}</td><td>${i?'+'+(f[2]-FF[i-1][2]):'—'}</td><td>${i?(f[2]/FF[i-1][2]).toFixed(3):'—'}</td></tr>`).join('');
+}
+function syncChart(){
+  $('bInc').setAttribute('aria-pressed',st.inc);$('bLog').setAttribute('aria-pressed',st.log);$('bFf').setAttribute('aria-pressed',st.ff);
+  $('bLog').disabled=st.inc;
+  $('legLines').hidden=st.inc;$('sqNote').hidden=st.inc;$('legInc').hidden=!st.inc;$('incCap').hidden=!st.inc;
+  $('legFf').hidden=!st.ff;$('legFf2').hidden=!st.ff;$('ffNote').hidden=!st.ff;$('ffTable').hidden=!st.ff;
+  $('chartCap').firstChild.textContent=st.inc?'Item levels added per expansion':'Top item level by expansion';
+  $('chartSub').textContent=st.inc?'Each bar is top minus the previous top, on the scale in use at the time. After a squish the previous top is its squished value (265, then 140).':(st.log?'Log axis: equal heights are equal ratios. ':'')+'Native scale at the time. Light bars run from the first normal-raid item level to the highest reachable one.';
+  drawChart();
+}
+$('bInc').addEventListener('click',()=>{st.inc=!st.inc;syncChart();});
+$('bLog').addEventListener('click',()=>{st.log=!st.log;syncChart();});
+$('bFf').addEventListener('click',()=>{st.ff=!st.ff;syncChart();});
+
+// ---- tab 2
+const lim={D:[2,6],o:[0,5],T:[1,5],E:[1,6],N:[1,10]};
+const fmtBig=v=>{if(!isFinite(v))return '∞';if(v<1e6)return v.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});const e=Math.floor(Math.log10(v));return (v/Math.pow(10,e)).toFixed(1)+' × 10^'+e;};
+function calc(){const c=st.o*st.s+st.u,C=st.T*c,r=Math.pow(1+st.g,c),t=c===0?Infinity:Math.log(st.F)/(c*Math.log(1+st.g)),plan=Math.pow(1+st.g,st.E*st.T*c),cmax=Math.log(st.F)/(st.N*Math.log(1+st.g));return {c,C,r,t,plan,cmax};}
+function drawLadder(K){
+  const {g,w,h}=setup($('cLad')),pad={l:46,r:14,t:14,b:32},nt=st.T*st.E;
+  const top=100+nt*K.c+(st.D-1)*st.s,yMin=90,yMax=top+Math.max(10,(top-100)*.05);
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t+.5)/(nt+1),Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-yMin)/(yMax-yMin));
+  g.clearRect(0,0,w,h);
+  const span=yMax-yMin,raw=span/5,mag=Math.pow(10,Math.floor(Math.log10(raw))),stp=[1,2,5,10].map(m=>m*mag).find(v=>v>=raw),ticks=[];
+  for(let v=Math.ceil(yMin/stp)*stp;v<=yMax;v+=stp)ticks.push(v);
+  yTicks(g,w,h,pad,Y,ticks,v=>Math.round(v));
+  // expansion separators
+  g.font='11px '+css('--sans');
+  for(let e=0;e<st.E;e++){const x0=X(e*st.T)-(X(1)-X(0))/2;g.strokeStyle=css('--ink-soft');g.globalAlpha=.35;g.setLineDash([2,4]);g.beginPath();g.moveTo(x0,pad.t);g.lineTo(x0,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+  const dx=X(1)-X(0),rad=Math.max(2.5,Math.min(5,dx/7));
+  for(let t=0;t<=nt;t++){
+    const L=100+t*K.c;
+    if(t<nt){ // arrow
+      const x1=X(t)+rad,y1=Y(L+st.o*st.s),x2=X(t+1)-rad-2,y2=Y(L+K.c);
+      g.strokeStyle=css('--blood');g.lineWidth=1.6;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();
+      const a=Math.atan2(y2-y1,x2-x1);g.fillStyle=css('--blood');g.beginPath();g.moveTo(x2,y2);g.lineTo(x2-7*Math.cos(a-.4),y2-7*Math.sin(a-.4));g.lineTo(x2-7*Math.cos(a+.4),y2-7*Math.sin(a+.4));g.fill();
+      if(dx>44&&st.u>0){g.fillStyle=css('--blood');g.font='600 11px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText('+'+st.u,(x1+x2)/2,(y1+y2)/2-4);}
+    }
+    for(let j=0;j<st.D;j++){g.fillStyle=j===st.o?css('--blood'):css('--steel');g.beginPath();g.arc(X(t),Y(L+j*st.s),rad,0,7);g.fill();}
+  }
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  const every=nt>16?Math.ceil(nt/8):nt>8&&dx<30?2:1;
+  for(let t=0;t<=nt;t+=every)g.fillText(t,X(t),h-pad.b+6);
+  g.textAlign='right';g.fillText('tier',w-pad.r,h-13);
+}
+function drawPow(K){
+  const {g,w,h}=setup($('cPow')),pad={l:52,r:14,t:10,b:30},nt=st.T*st.E;
+  const vmax=Math.max(st.F*1.5,Math.pow(1+st.g,K.c*nt)),lo=0,hi=Math.log10(vmax)*1.05;
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/nt,Y=v=>pad.t+(h-pad.t-pad.b)*(1-(Math.log10(v)-lo)/(hi-lo));
+  g.clearRect(0,0,w,h);
+  const ticks=[];const dec=hi>3?Math.ceil(hi/4):0;
+  if(dec){for(let e=0;e<=hi;e+=dec)ticks.push(Math.pow(10,e));}else{[1,2,5,10,20,50,100,200,500].forEach(v=>{if(Math.log10(v)<=hi)ticks.push(v);});}
+  const tf=v=>v>=1e4?'10^'+Math.round(Math.log10(v)):String(v);
+  yTicks(g,w,h,pad,Y,ticks,tf);
+  g.fillStyle=css('--moss');g.globalAlpha=.18;g.fillRect(pad.l,Y(st.F),w-pad.l-pad.r,Y(1)-Y(st.F));g.globalAlpha=1;
+  g.strokeStyle=css('--moss');g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,Y(st.F));g.lineTo(w-pad.r,Y(st.F));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--moss');g.font='600 11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText('F = '+st.F.toFixed(1),pad.l+4,Y(st.F)-2);
+  g.strokeStyle=css('--ochre');g.lineWidth=2.6;g.beginPath();for(let i=0;i<=100;i++){const t=nt*i/100,v=Math.pow(1+st.g,K.c*t);i?g.lineTo(X(t),Y(v)):g.moveTo(X(t),Y(v));}g.stroke();
+  if(isFinite(K.t)&&K.t<=nt){const x=X(K.t);g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    g.fillStyle=css('--moss');g.beginPath();g.arc(x,Y(st.F),6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign=x>w*.7?'right':'left';g.textBaseline='bottom';g.fillText('t* = '+K.t.toFixed(2),x+(x>w*.7?-8:8),Y(st.F)-8);}
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  const every=Math.max(1,Math.ceil(nt/10));for(let t=0;t<=nt;t+=every)g.fillText(t,X(t),h-pad.b+6);
+  g.textAlign='right';g.fillText('tiers apart',w-pad.r,h-13);
+}
+function updRatchet(){
+  st.o=Math.min(st.o,st.D-1);
+  const K=calc();
+  $('oD').textContent=st.D;$('oO').textContent=st.o;$('oT').textContent=st.T;$('oE').textContent=st.E;$('oN').textContent=st.N;
+  $('os').textContent=st.s;$('ou').textContent=st.u;$('og').textContent=(st.g*100).toFixed(1)+'%';$('oF').textContent=st.F.toFixed(1);
+  document.querySelectorAll('[data-k]').forEach(b=>{const k=b.dataset.k,d=+b.dataset.d,max=k==='o'?st.D-1:lim[k][1];b.disabled=st[k]+d<lim[k][0]||st[k]+d>max;});
+  $('rc').textContent=K.c;$('rC').textContent=K.C+' · '+(st.E*K.C);$('rr').textContent=K.r.toFixed(3);
+  $('rt').textContent=isFinite(K.t)?K.t.toFixed(2):'unlimited';$('rPlan').textContent=fmtBig(K.plan);
+  $('rMax').textContent=K.cmax.toFixed(1);$('rMaxLab').textContent='largest c that keeps t* ≥ '+st.N+' tiers';
+  const ok=K.c<=K.cmax+1e-9;
+  $('insight').innerHTML=K.c===0?`With c = 0 the ratchet has stopped: no tier ever outdates another, as in Guild Wars 2 after ascended gear. The endgame then needs rank and breadth to carry it.`:
+    `New gear must beat rung ${st.o} of ${st.D} by ${st.u}, so each tier adds <b>c = ${st.o} × ${st.s} + ${st.u} = ${K.c}</b> item levels, the same at item level 100 or 1,000. At ${(st.g*100).toFixed(1)}% per level that is ×${K.r.toFixed(3)} power per tier, and a tier stays shareable for <b>${isFinite(K.t)?K.t.toFixed(2):'unlimited'} tiers</b>. `+(ok?`That meets your ${st.N}-tier target.`:`That misses your ${st.N}-tier target; c would need to be ${K.cmax.toFixed(1)} or less.`);
+  drawLadder(K);drawPow(K);
+}
+document.querySelectorAll('[data-k]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k;st[k]+= +b.dataset.d;updRatchet();}));
+const readSlider={s:v=>Math.round(v),u:v=>Math.round(v),g:v=>Math.round(v*10)/1000,F:v=>Math.round(v*10)/10};
+Object.keys(readSlider).forEach(id=>$(id).addEventListener('input',e=>{st[id]=readSlider[id](+e.target.value);updRatchet();}));
+
+// ---- tabs
+const tabs=[$('t1'),$('t2')];
+function redraw(){if($('p1').hidden)updRatchet();else drawChart();}
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();redraw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2]);}});});
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+window.__w02={st,sel:i=>sel(tabs[i]),updRatchet,calc,syncChart};
+tables();syncChart();
+})();
+</script>
+</body>
+</html>

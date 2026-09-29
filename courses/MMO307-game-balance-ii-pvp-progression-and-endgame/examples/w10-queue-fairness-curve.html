@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Queue time vs fairness · MMO307 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.headline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}
+@media (max-width:760px){.headline{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 4px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--ink-soft) 0 5px,transparent 5px 9px)!important;height:2px}
+.legend i.dot{width:10px;height:10px;border-radius:50%}
+.legend i.dia{width:10px;height:10px;border-radius:1px;transform:rotate(45deg)}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+label.check{justify-content:flex-start;align-items:center;margin-top:4px}
+label.check input{width:18px;height:18px;accent-color:var(--steel)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.expand{grid-column:1/-1;background:var(--paper-2);border-radius:10px;padding:10px 12px}
+.expand-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 18px;margin-top:8px}
+@media (max-width:760px){.expand-grid{grid-template-columns:1fr}}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+@media (max-width:480px){table{font-size:.84rem}th,td{padding:6px 5px}}
+caption{text-align:left;font-family:var(--serif);font-size:1.02rem;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td:first-child{color:var(--ink-soft)}
+td code{font-size:.85em}
+tr.exp td{background:var(--paper-2)}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO307 Game Balance II · Week 10 · Worked example</p>
+  <h1>Same window, different world</h1>
+  <p class="lede">The matchmaker gives every player the same window. The population does not give every player the same neighbours. A player three standard deviations up waits about 90 times longer, and a wide window there matches them against people far below.</p>
+</header>
+
+<section class="panel">
+  <div class="headline">
+    <div class="stat" style="--c:var(--blood)"><b id="hWait">—</b><span>mean wait for this player</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="hFair">—</b><span>favourite's expected score</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="hRatio">—</b><span>times the median player's wait, same window</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="hTarget">—</b><span>targets: 90% under 60 s, fairness ≤ 0.60</span></div>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Who can you play?<small>Rating density, μ = 1,500. Shaded: opponents inside [r − w, r + w]. Its area is p(r, w), the share of arrivals you can accept.</small></figcaption>
+      <canvas id="cDen" role="img" aria-label="Normal rating density with the player's window shaded"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Wait vs fairness<small>Each point is one window size, w = 10 to 600. Mean wait on a log scale. The green box meets both targets.</small></figcaption>
+      <canvas id="cTrade" role="img" aria-label="Trade-off curve of mean wait against fairness"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>this player</span>
+        <span><i style="background:var(--ink-soft);opacity:.6"></i>median player (r = μ)</span>
+        <span><i class="dot" style="background:var(--blood)"></i>current w</span>
+        <span id="lgDia" hidden><i class="dia" style="background:var(--steel)"></i>expanding window</span>
+        <span><i class="dash"></i>targets</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="r">Player rating r <output id="oR"></output></label>
+      <input id="r" type="range" min="900" max="2300" step="10" value="2100">
+      <div class="presets" role="group" aria-label="Rating presets">
+        <button class="chip" data-r="1500">Median (1,500)</button>
+        <button class="chip" data-r="1900">2σ up (1,900)</button>
+        <button class="chip" data-r="2100">3σ up (2,100)</button>
+      </div>
+    </div>
+    <div>
+      <label for="w">Window w <output id="oW"></output></label>
+      <input id="w" type="range" min="10" max="600" step="5" value="50">
+      <div class="presets" role="group" aria-label="Window presets">
+        <button class="chip" data-w="50">50</button>
+        <button class="chip" data-w="100">100</button>
+        <button class="chip" data-w="200">200</button>
+        <button class="chip" data-w="400">400</button>
+      </div>
+    </div>
+    <div>
+      <label for="lam">Arrival rate λ (players per minute) <output id="oLam"></output></label>
+      <input id="lam" type="range" min="1" max="60" step="1" value="12">
+      <div class="presets" role="group" aria-label="Arrival presets">
+        <button class="chip" data-lam="12">Peak (12)</button>
+        <button class="chip" data-lam="3">Off-peak (3)</button>
+      </div>
+    </div>
+    <div>
+      <label for="sig">Population σ <output id="oSig"></output></label>
+      <input id="sig" type="range" min="100" max="400" step="10" value="200">
+      <p style="margin:2px 0 0;font-size:.84rem;color:var(--ink-soft)">μ is fixed at 1,500.</p>
+    </div>
+    <div class="expand">
+      <label class="check"><input type="checkbox" id="exp"> Expanding window: start strict, widen while waiting</label>
+      <div class="expand-grid" id="expCtl" hidden>
+        <div><label for="w0">Start w₀ <output id="oW0"></output></label><input id="w0" type="range" min="5" max="200" step="5" value="25"></div>
+        <div><label for="v">Widening v (points/s) <output id="oV"></output></label><input id="v" type="range" min="0.5" max="40" step="0.5" value="5"></div>
+        <div><label for="wmax">Cap w_max <output id="oWmax"></output></label><input id="wmax" type="range" min="50" max="600" step="10" value="400"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Readout for the current settings</caption>
+      <thead><tr><th scope="col">Quantity</th><th scope="col" id="thMe">This player</th><th scope="col">Median, r = 1,500</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 10 lecture: normal rating population, arrivals as a steady random stream (mean wait 60 / (λp), 90th percentile ln 10 times the mean), fairness as the Elo expected score of the favourite averaged over accepted opponents. It counts only new arrivals, so it overstates waits for quiet queues. Φ uses the Abramowitz and Stegun 7.1.26 approximation to erf. Framing after the Microsoft Research TrueSkill project page on waiting time against match quality.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MU=1500;
+let r=2100,w=50,lam=12,sig=200,exp=false,w0=25,v=5,wmax=400;
+
+// ---------- model ----------
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
+  return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));}
+const Phi=z=>0.5*(1+erf(z/Math.SQRT2));
+const p=(r,w)=>Phi((r+w-MU)/sig)-Phi((r-w-MU)/sig);
+const meanWait=(r,w)=>60/(lam*p(r,w));
+function fairness(r,w,steps=2000){
+  let num=0,den=0;const dx=2*w/steps;
+  for(let i=0;i<steps;i++){const x=r-w+(i+0.5)*dx,d=Math.exp(-0.5*((x-MU)/sig)**2);num+=d/(1+Math.pow(10,-Math.abs(x-r)/400));den+=d;}
+  return num/den;
+}
+function expanding(r){
+  // dt = 0.01 s up to 3,600 s. w only changes until it hits w_max, so p and fairness
+  // are cached once the cap is reached; the arithmetic is the same as the plain loop.
+  const dt=0.01,N=360000,base=lam/60;let alive=1,wait=0,fav=0;
+  let capP=null,capF=null;
+  for(let i=0;i<N;i++){
+    const t=i*dt,wt=Math.min(w0+v*t,wmax);let pp,ff;
+    if(wt>=wmax){if(capP===null){capP=p(r,wmax);capF=fairness(r,wmax,200);}pp=capP;ff=capF;}
+    else{pp=p(r,wt);ff=fairness(r,wt,200);}
+    const m=alive*base*pp*dt;wait+=alive*dt;fav+=m*ff;alive-=m;
+    if(alive<1e-12)break;
+  }
+  return {wait,fair:fav/(1-alive),alive};
+}
+function curve(rr){const pts=[];for(let ww=10;ww<=600;ww+=5)pts.push([meanWait(rr,ww),fairness(rr,ww),ww]);return pts;}
+
+// ---------- formatting ----------
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+function secs(s){if(!isFinite(s))return '∞';return s>=1000?fmt(s)+' s':s.toFixed(1)+' s';}
+function human(s){if(s>=120)return (s/60).toFixed(1)+' minutes';return s.toFixed(1)+' seconds';}
+function secsLong(s){return s>=120?secs(s)+' ('+(s/60).toFixed(1)+' min)':secs(s);}
+
+// ---------- drawing ----------
+function setup(cv){const dpr=window.devicePixelRatio||1,b=cv.getBoundingClientRect();cv.width=Math.max(1,b.width*dpr);cv.height=Math.max(1,b.height*dpr);
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return {g:x,w:b.width,h:b.height};}
+function drawDensity(){
+  const {g:x,w:W,h:H}=setup($('cDen')),pad={l:12,r:12,t:28,b:40};
+  const X0=MU-4*sig,X1=MU+4*sig,px=v=>pad.l+(W-pad.l-pad.r)*(v-X0)/(X1-X0),py=d=>pad.t+(H-pad.t-pad.b)*(1-d);
+  const den=v=>Math.exp(-0.5*((v-MU)/sig)**2);
+  x.clearRect(0,0,W,H);x.font='12px '+css('--sans');
+  const step=W<460?2:1;
+  for(let k=-4;k<=4;k++){const xx=px(MU+k*sig);x.strokeStyle=css('--grid');x.lineWidth=1;x.beginPath();x.moveTo(xx,pad.t);x.lineTo(xx,H-pad.b);x.stroke();
+    if(k%step===0){x.fillStyle=css('--ink-soft');x.textAlign=k===-4?'left':k===4?'right':'center';x.textBaseline='top';
+      x.fillText(fmt(MU+k*sig),xx,H-pad.b+5);x.fillText(k===0?'μ':(k>0?'+':'−')+Math.abs(k)+'σ',xx,H-pad.b+20);}}
+  // shaded window
+  const lo=Math.max(X0,r-w),hi=Math.min(X1,r+w);
+  if(hi>lo){x.fillStyle=css('--blood');x.globalAlpha=.35;x.beginPath();x.moveTo(px(lo),py(0));
+    for(let i=0;i<=100;i++){const vv=lo+(hi-lo)*i/100;x.lineTo(px(vv),py(den(vv)));}x.lineTo(px(hi),py(0));x.closePath();x.fill();x.globalAlpha=1;
+    x.strokeStyle=css('--blood');x.lineWidth=1.5;[lo,hi].forEach(e=>{x.beginPath();x.moveTo(px(e),py(0));x.lineTo(px(e),py(den(e)));x.stroke();});}
+  // density
+  x.strokeStyle=css('--steel');x.lineWidth=2.6;x.beginPath();
+  for(let i=0;i<=300;i++){const vv=X0+(X1-X0)*i/300;i?x.lineTo(px(vv),py(den(vv))):x.moveTo(px(vv),py(den(vv)));}x.stroke();
+  x.strokeStyle=css('--ink-soft');x.lineWidth=1;x.beginPath();x.moveTo(pad.l,py(0));x.lineTo(W-pad.r,py(0));x.stroke();
+  // player marker
+  const rx=px(r);x.strokeStyle=css('--ink');x.lineWidth=2;x.setLineDash([5,4]);x.beginPath();x.moveTo(rx,pad.t-4);x.lineTo(rx,py(0));x.stroke();x.setLineDash([]);
+  x.fillStyle=css('--ink');x.beginPath();x.arc(rx,py(den(r)),5,0,Math.PI*2);x.fill();
+  // label p
+  const pp=p(r,w),lab='p = '+pp.toFixed(4),right=rx>W*0.6;
+  x.font='700 14px '+css('--sans');x.textBaseline='bottom';x.textAlign=right?'right':'left';
+  const ly=Math.min(py(den(r))-10,py(0.5));
+  x.fillStyle=css('--blood');x.fillText(lab,rx+(right?-10:10),Math.max(pad.t+14,ly));
+  x.font='600 12px '+css('--sans');x.fillStyle=css('--ink');x.textBaseline='top';x.fillText('you, r = '+fmt(r),rx+(right?-8:8),pad.t-22);
+  const z=(r-MU)/sig;
+  if(Math.abs(z)>=1.5){x.fillStyle=css('--ink-soft');x.font='12px '+css('--sans');x.textAlign=right?'right':'left';x.textBaseline='top';
+    x.fillText('density here: '+(Math.exp(-z*z/2)).toFixed(3)+' of the peak',rx+(right?-10:10),Math.max(pad.t+18,ly+4));}
+}
+let cacheKey='',cacheMe=null,cacheMed=null;
+function drawTrade(expRes){
+  const {g:x,w:W,h:H}=setup($('cTrade')),pad={l:46,r:14,t:12,b:40};
+  const px=t=>pad.l+(W-pad.l-pad.r)*Math.log10(Math.max(t,1))/4,py=f=>pad.t+(H-pad.t-pad.b)*(1-(f-0.5)/0.4);
+  x.clearRect(0,0,W,H);x.font='12px '+css('--sans');
+  const tgtW=60/Math.LN10,tgtF=0.60;
+  // target box
+  x.fillStyle=css('--moss');x.globalAlpha=.13;x.fillRect(px(1),py(tgtF),px(tgtW)-px(1),py(0.5)-py(tgtF));x.globalAlpha=1;
+  // grid
+  for(const f of [0.5,0.6,0.7,0.8,0.9]){const yy=py(f);x.strokeStyle=css('--grid');x.lineWidth=1;x.beginPath();x.moveTo(pad.l,yy);x.lineTo(W-pad.r,yy);x.stroke();
+    x.fillStyle=css('--ink-soft');x.textAlign='right';x.textBaseline='middle';x.fillText(f.toFixed(2),pad.l-6,yy);}
+  [[1,'1 s'],[10,'10 s'],[100,'100 s'],[1000,'1,000 s'],[10000,'10,000 s']].forEach(([t,l],i)=>{const xx=px(t);x.strokeStyle=css('--grid');x.beginPath();x.moveTo(xx,pad.t);x.lineTo(xx,H-pad.b);x.stroke();
+    x.fillStyle=css('--ink-soft');x.textAlign=i===0?'left':i===4?'right':'center';x.textBaseline='top';x.fillText(W<420&&i%2?'':l,xx,H-pad.b+5);});
+  x.textAlign='right';x.textBaseline='bottom';x.fillText('mean wait (log scale)',W-pad.r,H-1);
+  // target lines
+  x.strokeStyle=css('--moss');x.lineWidth=1.5;x.setLineDash([6,5]);
+  x.beginPath();x.moveTo(px(tgtW),pad.t);x.lineTo(px(tgtW),H-pad.b);x.stroke();
+  x.beginPath();x.moveTo(pad.l,py(tgtF));x.lineTo(W-pad.r,py(tgtF));x.stroke();x.setLineDash([]);
+  x.fillStyle=css('--moss');x.font='600 11px '+css('--sans');x.textAlign='right';x.textBaseline='bottom';
+  x.fillText('p90 = 60 s',px(tgtW)-4,py(0.5)-4);x.textAlign='left';x.fillText('ceiling 0.60',pad.l+4,py(tgtF)-3);
+  // curves (clipped to plot)
+  x.save();x.beginPath();x.rect(pad.l,pad.t,W-pad.l-pad.r,H-pad.t-pad.b);x.clip();
+  function line(pts,col,lw,alpha){x.strokeStyle=col;x.lineWidth=lw;x.globalAlpha=alpha;x.beginPath();
+    pts.forEach(([t,f],i)=>{const X=px(Math.min(t,1e6)),Y=py(f);i?x.lineTo(X,Y):x.moveTo(X,Y);});x.stroke();x.globalAlpha=1;}
+  line(cacheMed,css('--ink-soft'),2.4,.6);
+  line(cacheMe,css('--blood'),2.8,1);
+  // window ticks on current curve
+  x.fillStyle=css('--blood');x.font='11px '+css('--sans');x.textAlign='left';x.textBaseline='middle';
+  cacheMe.forEach(([t,f,ww])=>{if([100,200,400].includes(ww)&&t<=1e4){x.beginPath();x.arc(px(t),py(f),2.5,0,Math.PI*2);x.fill();x.fillText('w '+ww,px(t)+5,py(f)+9);}});
+  // current point
+  const t=meanWait(r,w),f=fairness(r,w);
+  if(t<=1e4){x.fillStyle=css('--blood');x.beginPath();x.arc(px(t),py(f),7.5,0,Math.PI*2);x.fill();x.strokeStyle=css('--paper');x.lineWidth=2.5;x.stroke();}
+  // median current point
+  const tm=meanWait(MU,w),fm=fairness(MU,w);x.fillStyle=css('--ink-soft');x.beginPath();x.arc(px(tm),py(fm),5,0,Math.PI*2);x.fill();
+  if(expRes&&expRes.wait<=1e4){const X=px(expRes.wait),Y=py(expRes.fair);x.fillStyle=css('--steel');x.beginPath();x.moveTo(X,Y-9);x.lineTo(X+9,Y);x.lineTo(X,Y+9);x.lineTo(X-9,Y);x.closePath();x.fill();x.strokeStyle=css('--paper');x.lineWidth=2;x.stroke();}
+  x.restore();
+  // off-chart notice
+  if(t>1e4){x.fillStyle=css('--blood');x.font='700 12px '+css('--sans');x.textAlign='right';x.textBaseline='top';x.fillText('current point: '+secs(t)+' →',W-pad.r-4,py(f)+6>H-pad.b-20?pad.t+4:py(f)+6);}
+  // labels for the two curves
+  x.font='600 12px '+css('--sans');x.textBaseline='bottom';
+  const lab=(pts,txt,col)=>{const q=pts.find(([tt,ff])=>tt<=1e4&&ff>=0.5)||pts[0];const qq=pts.filter(([tt])=>tt<=1e4);const last=qq.length?qq[qq.length-1]:q;
+    x.fillStyle=col;x.textAlign='left';const X=Math.min(px(last[0])+6,W-pad.r-80),Y=Math.max(pad.t+14,py(last[1])-4);x.fillText(txt,X,Y);};
+  lab(cacheMed,'median',css('--ink-soft'));
+}
+
+// ---------- render ----------
+function render(){
+  const key=[r,lam,sig].join('|');
+  if(key!==cacheKey){cacheMe=curve(r);cacheMed=curve(MU);cacheKey=key;}
+  $('oR').textContent=fmt(r);$('oW').textContent=w;$('oLam').textContent=lam;$('oSig').textContent=sig;
+  $('oW0').textContent=w0;$('oV').textContent=v;$('oWmax').textContent=wmax;
+  document.querySelectorAll('[data-lam]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.lam===lam));
+  document.querySelectorAll('[data-r]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.r===r));
+  document.querySelectorAll('[data-w]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.w===w));
+  const z=(r-MU)/sig,pp=p(r,w),W_=meanWait(r,w),F=fairness(r,w),pm=p(MU,w),Wm=meanWait(MU,w),Fm=fairness(MU,w);
+  let E=null,Em=null;
+  if(exp){E=expanding(r);Em=expanding(MU);}
+  $('hWait').textContent=secsLong(W_);
+  $('hFair').textContent=F.toFixed(3);
+  const ratio=W_/Wm;$('hRatio').textContent=(ratio>=10?fmt(ratio):ratio.toFixed(1))+'×';
+  const okW=2.3026*W_<=60,okF=F<=0.60;
+  $('hTarget').textContent=okW&&okF?'both met':okW?'fairness missed':okF?'wait missed':'both missed';
+  const rows=[
+    ['z = (r − μ) / σ',z.toFixed(2),'0.00'],
+    ['p(r, w), share of arrivals accepted',pp.toFixed(4),pm.toFixed(4)],
+    ['Mean wait W = 60 / (λp)',secsLong(W_),secsLong(Wm)],
+    ['90th-percentile wait, 2.3026 × W',secsLong(2.3026*W_),secsLong(2.3026*Wm)],
+    ["Fairness, favourite's expected score",F.toFixed(3),Fm.toFixed(3)],
+    ['Density ratio exp(−z²/2)',Math.exp(-z*z/2).toFixed(4),'1.0000'],
+  ];
+  if(exp){rows.push(['Expanding window: mean wait',secsLong(E.wait),secsLong(Em.wait),'exp']);rows.push(['Expanding window: fairness at match',E.fair.toFixed(3),Em.fair.toFixed(3),'exp']);}
+  $('thMe').textContent='You, r = '+fmt(r);
+  $('tbody').innerHTML=rows.map(([a,b,c,cl])=>`<tr class="${cl||''}"><td>${a}</td><td>${b}</td><td>${c}</td></tr>`).join('');
+  // insight
+  let s;
+  if(Math.abs(z)<0.5) s=`Near the middle, the curve is gentle. Halving the window to ${Math.max(10,Math.round(w/2))} roughly doubles the wait, and fairness stays close to 0.5 + 0.00072 × w. Now drag r to 2,100 without touching w.`;
+  else{
+    const need=cacheMe.find(([t])=>2.3026*t<=60);
+    s=`At r = ${fmt(r)} (z = ${z.toFixed(2)}) the density is ${Math.exp(-z*z/2).toFixed(3)} of the peak, so the same window of ${w} gives a mean wait of ${human(W_)}, ${ratio>=10?fmt(ratio):ratio.toFixed(1)} times the median player's ${Wm.toFixed(1)} s. `;
+    s+=need?`To get 90% of this player's queues under a minute you need w = ${need[2]}, and then the favourite's expected score is ${need[1].toFixed(3)}${need[1]>0.6?', above the 0.60 ceiling':''}.`:`No window up to 600 gets 90% of this player's queues under a minute at this arrival rate.`;
+    if(z>1.5&&w>=200) s+=` Most accepted opponents sit below this player, so the average gap is larger than w / 2.`;
+  }
+  if(exp) s+=` Expanding window: this player waits ${human(E.wait)} for a ${E.fair.toFixed(3)} match`+(r===MU?'.':`; the median player waits ${Em.wait.toFixed(1)} s for ${Em.fair.toFixed(3)}.`)+` It picks a different point on each player's curve; it does not beat the curve.`;
+  $('insight').textContent=s;
+  $('live').textContent=`Rating ${r}, window ${w}: mean wait ${human(W_)}, favourite wins ${(F*100).toFixed(1)}%.`+(exp?` Expanding window: ${human(E.wait)}, favourite wins ${(E.fair*100).toFixed(1)}%.`:'');
+  $('expCtl').hidden=!exp;$('lgDia').hidden=!exp;
+  drawDensity();drawTrade(E);
+}
+
+// ---------- events ----------
+let queued=false;const schedule=()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;render();});};
+const bind=(id,fn)=>$(id).addEventListener('input',e=>{fn(+e.target.value);schedule();});
+bind('r',x=>r=x);bind('w',x=>w=x);bind('lam',x=>lam=x);bind('sig',x=>sig=x);
+bind('w0',x=>w0=x);bind('v',x=>v=x);bind('wmax',x=>wmax=x);
+$('exp').addEventListener('change',e=>{exp=e.target.checked;render();});
+document.querySelectorAll('[data-lam]').forEach(b=>b.onclick=()=>{lam=+b.dataset.lam;$('lam').value=lam;render();});
+document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{r=+b.dataset.r;$('r').value=r;render();});
+document.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{w=+b.dataset.w;$('w').value=w;render();});
+const redraw=()=>render();
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+render();
+window.__w10={p,meanWait,fairness,expanding};
+})();
+</script>
+</body>
+</html>

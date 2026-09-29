@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soft reset recovery · MMO307 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.headline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}
+@media (max-width:760px){.headline{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.charts{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.charts{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 4px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dot{width:8px;height:8px;border-radius:50%}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 1rem var(--sans);width:6em;padding:6px 8px;border-radius:8px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:700 .95rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;min-height:40px}
+.seedrow{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.seedrow label{flex-direction:column;gap:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+@media (max-width:480px){table{font-size:.8rem}th,td{padding:6px 3px!important}td:first-child i{margin-right:3px;width:8px;height:8px}}
+.cap{font-family:var(--serif);font-size:1.02rem;margin:16px 0 0}
+td{white-space:nowrap}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.86rem}
+td:first-child i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:baseline}
+tr.hi td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO307 Game Balance II · Week 11 · Worked example</p>
+  <h1>The reset sets the height. K sets the fall.</h1>
+  <p class="lede">A soft reset decides how far each player starts from the truth. Recovery takes about τ × ln(e₀ / ε) games, so halving the reset saves one half-life, while doubling K halves every recovery.</p>
+</header>
+
+<section class="panel">
+  <div class="headline">
+    <div class="stat" style="--c:var(--blood)"><b id="h2100">—</b><span>2,100 player: games to settle (model / simulated)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="hShare">—</b><span>of the season spent misplaced (2,100 player)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="hTau">—</b><span>time constant τ = 1 / (K·g)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="hHalf">—</b><span>half-life τ × ln 2</span></div>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Shown vs true<small>True skill N(1,500, 200), muted. Shown rating after the reset N(1,500, α × 200). Arrows: where each player restarts, 1,500 + α(s − 1,500).</small></figcaption>
+      <canvas id="cDist" style="height:340px" role="img" aria-label="True skill and shown rating distributions with reset arrows"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ink-soft);opacity:.6"></i>true skill</span>
+        <span><i style="background:var(--steel)"></i>shown after reset</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Error vs games played<small>Lines: model e₀ × exp(−n / τ). Dots: simulated average error every 5 games. Dashed: tolerance ε. Rings: first game the simulated average drops below ε.</small></figcaption>
+      <canvas id="cErr" style="height:340px" role="img" aria-label="Average rating error against games played for three players"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>1,700</span>
+        <span><i style="background:var(--ochre)"></i>1,900</span>
+        <span><i style="background:var(--blood)"></i>2,100</span>
+        <span><i class="dot" style="background:var(--ink-soft)"></i>simulated</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="alpha">Compression α <output id="oAlpha"></output></label>
+      <input id="alpha" type="range" min="0" max="1" step="0.05" value="0.5">
+      <div class="presets" role="group" aria-label="Compression presets">
+        <button class="chip" data-alpha="0">Hard 0</button><button class="chip" data-alpha="0.5">Half 0.5</button>
+        <button class="chip" data-alpha="0.8">Light 0.8</button><button class="chip" data-alpha="0.9">0.9</button>
+      </div>
+    </div>
+    <div>
+      <label for="k">K <output id="oK"></output></label>
+      <input id="k" type="range" min="8" max="64" step="4" value="32">
+      <div class="presets" role="group" aria-label="K presets">
+        <button class="chip" data-k="32">K 32</button><button class="chip" data-k="64">K 64</button>
+      </div>
+    </div>
+    <div>
+      <label for="prov">Provisional games (K doubled) <output id="oProv"></output></label>
+      <input id="prov" type="range" min="0" max="30" step="5" value="0">
+    </div>
+    <div>
+      <label for="eps">Tolerance ε <output id="oEps"></output></label>
+      <input id="eps" type="range" min="10" max="100" step="5" value="25">
+    </div>
+    <div>
+      <label for="season">Games per season <output id="oSeason"></output></label>
+      <input id="season" type="range" min="20" max="400" step="10" value="200">
+    </div>
+    <div class="seedrow">
+      <label for="seed">Seed <input id="seed" type="number" min="1" max="99999" step="1" value="10"></label>
+      <button class="btn" id="rerun">Re-run simulation</button>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <p class="cap">Games to get within ε, per player, with <span id="capTxt"></span></p>
+  <div class="table-wrap" style="margin-top:6px">
+    <table>
+      <thead><tr><th scope="col">True rating</th><th scope="col">e₀</th><th scope="col">Settle, model</th><th scope="col">Settle, simulated</th><th scope="col">&gt; 100 off, model</th><th scope="col">Season misplaced</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 11 lecture, building on week 8's time constant: g = ln 10 / 1600, τ = 1 / (K·g), games to settle ≈ τ × ln(e₀ / ε). The simulation plays 2,000 players per curve against accurately rated opponents at their shown rating, with a seeded mulberry32 generator, and reports the first game where the average error is below ε. Misplaced share uses the simulated games. Real-game resets named in the lecture (Hearthstone, Diablo III, FIDE) are described there, not drawn here.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MU=1500,SD=200,PLAYERS=[1700,1900,2100],COLS=['--steel','--ochre','--blood'];
+const G=Math.log(10)/1600,NSIM=2000,MAXG=400;
+let alpha=0.5,K=32,prov=0,eps=25,season=200,seed=10,sim=null;
+
+// ---------- model ----------
+const tau=()=>1/(K*G);
+const e0=s=>(1-alpha)*(s-MU);
+function modelErr(s,n){const e=e0(s),t=tau();if(n<=prov)return e*Math.exp(-n/(t/2));return e*Math.exp(-prov/(t/2))*Math.exp(-(n-prov)/t);}
+function modelGames(e,th){ // games until error falls to th, piecewise with provisional games
+  if(e<=th)return 0;const t=tau(),th2=t/2;
+  const eN=e*Math.exp(-prov/th2);
+  if(eN<=th)return th2*Math.log(e/th);
+  return prov+t*Math.log(eN/th);
+}
+// ---------- simulation ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function simulate(){
+  return PLAYERS.map((s,pi)=>{
+    const rng=mulberry32(seed*7919+pi*104729),start=s-e0(s),shown=new Float64Array(NSIM).fill(start);
+    const avg=new Float64Array(MAXG+1);avg[0]=e0(s);
+    for(let n=1;n<=MAXG;n++){
+      const k=n<=prov?2*K:K;let tot=0;
+      for(let i=0;i<NSIM;i++){const win=rng()<1/(1+Math.pow(10,(shown[i]-s)/400))?1:0;shown[i]+=k*(win-0.5);tot+=s-shown[i];}
+      avg[n]=tot/NSIM;
+    }
+    return avg;
+  });
+}
+const simGames=(avg,th)=>{for(let n=0;n<=MAXG;n++)if(avg[n]<th)return n;return null;};
+
+// ---------- drawing ----------
+function setup(cv){const dpr=window.devicePixelRatio||1,b=cv.getBoundingClientRect();cv.width=Math.max(1,b.width*dpr);cv.height=Math.max(1,b.height*dpr);
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return {g:x,w:b.width,h:b.height};}
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+function drawDist(){
+  const {g:x,w:W,h:H}=setup($('cDist')),pad={l:12,r:12,t:14,b:84};
+  const X0=700,X1=2300,px=v=>pad.l+(W-pad.l-pad.r)*(v-X0)/(X1-X0);
+  const pdf=(v,sd)=>Math.exp(-0.5*((v-MU)/sd)**2)/sd;
+  const sdShown=alpha*SD,capSd=Math.max(sdShown,SD*0.3),peak=1/Math.min(SD,capSd)*1.05;
+  const py=d=>pad.t+(H-pad.t-pad.b)*(1-Math.min(d,peak)/peak);
+  x.clearRect(0,0,W,H);x.font='12px '+css('--sans');
+  const stp=W<460?400:200;
+  for(let v=X0;v<=X1;v+=stp){const xx=px(v);x.strokeStyle=css('--grid');x.lineWidth=1;x.beginPath();x.moveTo(xx,pad.t);x.lineTo(xx,H-pad.b);x.stroke();
+    x.fillStyle=css('--ink-soft');x.textAlign=v===X0?'left':v===X1?'right':'center';x.textBaseline='top';x.fillText(fmt(v),xx,H-pad.b+6);}
+  x.strokeStyle=css('--ink-soft');x.beginPath();x.moveTo(pad.l,py(0));x.lineTo(W-pad.r,py(0));x.stroke();
+  function curve(sd,col,lw,al,fill){
+    x.globalAlpha=al;x.strokeStyle=col;x.lineWidth=lw;x.beginPath();
+    for(let i=0;i<=400;i++){const v=X0+(X1-X0)*i/400,yy=py(pdf(v,sd));i?x.lineTo(px(v),yy):x.moveTo(px(v),yy);}
+    if(fill){x.stroke();x.globalAlpha=.16;x.lineTo(px(X1),py(0));x.lineTo(px(X0),py(0));x.closePath();x.fillStyle=col;x.fill();}else x.stroke();
+    x.globalAlpha=1;
+  }
+  curve(SD,css('--ink-soft'),2.4,.7,false);
+  if(sdShown<2){x.strokeStyle=css('--steel');x.lineWidth=3;x.beginPath();x.moveTo(px(MU),py(0));x.lineTo(px(MU),pad.t);x.stroke();}
+  else curve(sdShown,css('--steel'),2.8,1,true);
+  if(sdShown>=2&&1/sdShown>peak){x.fillStyle=css('--steel');x.font='600 11px '+css('--sans');x.textAlign='left';x.textBaseline='top';x.fillText('peak off scale',px(MU)+8,pad.t);}
+  // arrows in a strip under the axis: true rating -> reset position
+  PLAYERS.forEach((s,i)=>{
+    const col=css(COLS[i]),sx=px(s),to=MU+alpha*(s-MU),tx=px(to),laneY=H-10-(2-i)*17;
+    x.fillStyle=col;x.beginPath();x.arc(sx,py(pdf(s,SD)),5,0,Math.PI*2);x.fill();
+    if(sdShown>=2){x.beginPath();x.arc(tx,py(pdf(to,sdShown)),4,0,Math.PI*2);x.fill();}
+    x.strokeStyle=col;x.globalAlpha=.5;x.setLineDash([3,3]);x.lineWidth=1.2;x.beginPath();x.moveTo(sx,py(pdf(s,SD)));x.lineTo(sx,laneY);x.stroke();x.setLineDash([]);x.globalAlpha=1;
+    x.lineWidth=2;x.beginPath();x.moveTo(sx,laneY);x.lineTo(tx+(Math.abs(tx-sx)>3?7:0),laneY);x.stroke();
+    if(Math.abs(tx-sx)>3){x.beginPath();x.moveTo(tx,laneY);x.lineTo(tx+8,laneY-5);x.lineTo(tx+8,laneY+5);x.closePath();x.fill();}
+    x.font='700 11px '+css('--sans');x.textBaseline='middle';
+    x.textAlign='left';x.fillText(fmt(s),Math.min(sx+5,W-pad.r-30),laneY-8);
+    x.textAlign='right';x.fillText('→ '+fmt(to),tx-4,laneY);
+  });
+}
+function drawErr(){
+  const {g:x,w:W,h:H}=setup($('cErr')),pad={l:44,r:12,t:12,b:36};
+  const NX=120,YM=620,px=n=>pad.l+(W-pad.l-pad.r)*n/NX,py=e=>pad.t+(H-pad.t-pad.b)*(1-e/YM);
+  x.clearRect(0,0,W,H);x.font='12px '+css('--sans');
+  [0,100,200,300,400,500,600].forEach(v=>{x.strokeStyle=css('--grid');x.lineWidth=1;x.beginPath();x.moveTo(pad.l,py(v));x.lineTo(W-pad.r,py(v));x.stroke();
+    x.fillStyle=css('--ink-soft');x.textAlign='right';x.textBaseline='middle';x.fillText(v,pad.l-6,py(v));});
+  [0,20,40,60,80,100,120].forEach((n,i)=>{x.fillStyle=css('--ink-soft');x.textAlign=i===6?'right':'center';x.textBaseline='top';if(!(W<420&&i%2))x.fillText(n,px(n),H-pad.b+5);});
+  x.textAlign='right';x.textBaseline='bottom';x.fillText('games after reset',W-pad.r,H-1);
+  // tolerance
+  x.strokeStyle=css('--moss');x.lineWidth=1.6;x.setLineDash([6,5]);x.beginPath();x.moveTo(pad.l,py(eps));x.lineTo(W-pad.r,py(eps));x.stroke();x.setLineDash([]);
+  x.fillStyle=css('--moss');x.font='600 11px '+css('--sans');x.textAlign='right';x.textBaseline='bottom';x.fillText('ε = '+eps,W-pad.r-2,py(eps)-3);
+  if(prov>0){x.fillStyle=css('--ink');x.globalAlpha=.06;x.fillRect(px(0),pad.t,px(Math.min(prov,NX))-px(0),H-pad.t-pad.b);x.globalAlpha=1;
+    x.fillStyle=css('--ink-soft');x.textAlign='left';x.textBaseline='top';x.fillText('K × 2',px(0)+4,pad.t+2);}
+  x.save();x.beginPath();x.rect(pad.l,pad.t-2,W-pad.l-pad.r,H-pad.t-pad.b+4);x.clip();
+  PLAYERS.forEach((s,i)=>{
+    const col=css(COLS[i]);
+    x.strokeStyle=col;x.lineWidth=2.4;x.beginPath();
+    for(let n=0;n<=NX;n++){const yy=py(modelErr(s,n));n?x.lineTo(px(n),yy):x.moveTo(px(n),yy);}x.stroke();
+    x.fillStyle=col;
+    for(let n=0;n<=NX;n+=5){x.beginPath();x.arc(px(n),py(sim[i][n]),3.2,0,Math.PI*2);x.fill();}
+    const sg=simGames(sim[i],eps);
+    if(sg!==null&&sg<=NX){x.strokeStyle=col;x.lineWidth=2.2;x.beginPath();x.arc(px(sg),py(sim[i][sg]),7,0,Math.PI*2);x.stroke();
+      x.fillStyle=col;x.font='700 11px '+css('--sans');x.textAlign='center';x.textBaseline='bottom';x.fillText(sg,px(sg),py(eps)-10-i*13);}
+  });
+  x.restore();
+}
+
+// ---------- render ----------
+const one=v=>v.toFixed(1);
+function render(){
+  $('oAlpha').textContent=alpha.toFixed(2);$('oK').textContent=K;$('oProv').textContent=prov;$('oEps').textContent=eps;$('oSeason').textContent=season;
+  document.querySelectorAll('[data-alpha]').forEach(b=>b.setAttribute('aria-pressed',Math.abs(+b.dataset.alpha-alpha)<1e-9));
+  document.querySelectorAll('[data-k]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.k===K));
+  const t=tau();
+  $('hTau').textContent=one(t)+' games';$('hHalf').textContent=one(t*Math.LN2)+' games';
+  const rows=PLAYERS.map((s,i)=>{const e=e0(s),m=modelGames(e,eps),sg=simGames(sim[i],eps),m100=modelGames(e,100);
+    return {s,e,m,sg,m100,share:sg===null?null:Math.min(1,sg/season)};});
+  const top=rows[2];
+  const sgTxt=r=>r.sg===null?'> '+MAXG:String(r.sg);
+  const shTxt=r=>r.share===null?'100%':Math.round(r.share*100)+'%';
+  $('h2100').textContent=one(top.m)+' / '+sgTxt(top);
+  $('hShare').textContent=shTxt(top);
+  $('capTxt').textContent=`α = ${alpha.toFixed(2)}, K = ${K}, ${prov} provisional games, ε = ${eps}, ${season}-game season, seed ${seed}, ${NSIM.toLocaleString('en-US')} simulated players per row`;
+  $('tbody').innerHTML=rows.map((r,i)=>`<tr class="${i===2?'hi':''}"><td><i style="background:var(${COLS[i]})"></i>${fmt(r.s)}</td><td>${fmt(r.e)}</td><td>${one(r.m)}</td><td>${sgTxt(r)}</td><td>${one(r.m100)}</td><td>${shTxt(r)}</td></tr>`).join('');
+  // insight: compare with half the reset error and with doubled K
+  const e=top.e;let s;
+  if(e<=eps) s=`With α = ${alpha.toFixed(2)} the 2,100 player starts only ${fmt(e)} points low, already inside the ${eps}-point tolerance. No recovery is needed.`;
+  else{
+    const saveHalf=t*Math.LN2;
+    s=`The 2,100 player restarts ${fmt(e)} points low. The model says ${one(top.m)} games to get within ${eps}, the simulation ${sgTxt(top)}. `+
+      `Halving that starting error would save one half-life, ${one(saveHalf)} games, wherever you start. Doubling K to ${K*2} would cut every recovery in half, to about ${one(top.m/2)} model games.`;
+    if(alpha<0.3) s+=' At this compression the Elo curve bends, so the straight-line model is optimistic compared with the simulation.';
+  }
+  $('insight').textContent=s;
+  $('live').textContent=e<=eps?`2,100 player starts ${fmt(e)} points low, inside tolerance.`:
+    `Starts ${fmt(e)} points low, settles in about ${sgTxt(top)} games, ${shTxt(top)} of a ${season}-game season.`;
+  drawDist();drawErr();
+}
+function rerun(){sim=simulate();render();}
+let q=false;const schedule=fn=>{if(q)return;q=true;requestAnimationFrame(()=>{q=false;fn();});};
+const bind=(id,set,needSim)=>$(id).addEventListener('input',e=>{set(+e.target.value);schedule(needSim?rerun:render);});
+bind('alpha',v=>alpha=v,true);bind('k',v=>K=v,true);bind('prov',v=>prov=v,true);bind('eps',v=>eps=v,false);bind('season',v=>season=v,false);
+$('rerun').onclick=()=>{const v=Math.max(1,Math.floor(+$('seed').value||1));seed=v;$('seed').value=v;rerun();};
+$('seed').addEventListener('keydown',e=>{if(e.key==='Enter')$('rerun').click();});
+document.querySelectorAll('[data-alpha]').forEach(b=>b.onclick=()=>{alpha=+b.dataset.alpha;$('alpha').value=alpha;rerun();});
+document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{K=+b.dataset.k;$('k').value=K;rerun();});
+window.addEventListener('resize',()=>render());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render());
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render());
+rerun();
+})();
+</script>
+</body>
+</html>

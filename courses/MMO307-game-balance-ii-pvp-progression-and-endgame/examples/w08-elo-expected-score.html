@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elo expected score — MMO307 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:10px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.4vw,2.8rem);line-height:1.12;margin:0 0 12px;letter-spacing:-.01em}
+h1 .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.66em;line-height:1.1;margin:0 .15em}
+h1 .frac span:first-child{border-bottom:2px solid currentColor;padding:0 .2em}
+.lede{font-family:var(--serif);font-size:1.1rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.chart svg{display:block;width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.tab,.chip,.btn{user-select:none;-webkit-user-select:none}
+#cCurve svg{cursor:ew-resize}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.avg{margin-top:14px;padding:12px 14px;border-radius:10px;border:2px solid var(--c,var(--ink));display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+.avg b{font-size:1.6rem;font-variant-numeric:tabular-nums;color:var(--c,var(--ink))}
+.avg span{font-size:.92rem}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1.35fr 1fr;gap:16px 26px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.group-title{font-weight:700;font-size:.92rem;margin:0 0 6px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:30px;margin:0 0 6px}
+#gap{accent-color:var(--ink);height:36px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .92rem var(--sans);padding:8px 12px;min-width:44px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.check{display:flex;align-items:center;gap:8px;justify-content:flex-start;margin:14px 0 8px}
+.check input{width:20px;height:20px;accent-color:var(--ochre)}
+.btn{font:600 .9rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.small{font-size:.84rem;color:var(--ink-soft);margin:4px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO307 Game Balance II · Week 8 · Signature worked example</p>
+  <h1>E = <span class="frac"><span>1</span><span>1 + 10<sup>−gap/400</sup></span></span></h1>
+  <p class="lede" id="caption">The favourite wins a little or loses a lot. On average, exactly nothing.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Points at stake</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Choosing K</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="charts">
+    <figure>
+      <figcaption>Expected score of the favourite<small>Drag along the curve or use the gap slider. E is the win chance when there are no draws.</small></figcaption>
+      <div class="chart" id="cCurve" role="img" aria-label="Expected score curve"></div>
+    </figure>
+    <figure>
+      <figcaption>Points at stake for the favourite<small id="stakeSub">Same gap, K = 32. Shared axis from 0 to K.</small></figcaption>
+      <div class="chart" id="cBars" role="img" aria-label="Points the favourite wins or loses"></div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rE">—</b><span>favourite's expected score E</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rWin">—</b><span>if favourite wins, K(1 − E)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rLoss">—</b><span>if favourite loses, −K·E</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rRatio">—</b><span>wins needed per loss to break even</span></div>
+  </div>
+
+  <div class="avg" id="avgBox" hidden aria-live="polite">
+    <span>Average change per game: K(p − E) =</span><b id="rAvg">—</b><span id="rAvgNote"></span>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div>
+      <label for="gap"><span>Rating gap (favourite minus underdog)</span><output id="oGap">200</output></label>
+      <input id="gap" type="range" min="0" max="800" step="10" value="200">
+      <label class="check"><input type="checkbox" id="truth"><span>Compare with true skill</span></label>
+      <div id="truthWrap" hidden>
+        <label for="tgap"><span>True gap (what the players' real strengths imply)</span><output id="oTgap">200</output></label>
+        <input id="tgap" type="range" min="0" max="800" step="10" value="200" style="accent-color:var(--ochre)">
+        <p class="small">p = E(true gap) is the favourite's real win chance. The rating system only sees E(rating gap).</p>
+      </div>
+    </div>
+    <div>
+      <p class="group-title" id="kLbl">Development coefficient K</p>
+      <div class="chips" role="group" aria-labelledby="kLbl" id="kChips">
+        <button class="chip" data-k="10" aria-pressed="false">10</button>
+        <button class="chip" data-k="16" aria-pressed="false">16</button>
+        <button class="chip" data-k="20" aria-pressed="false">20</button>
+        <button class="chip" data-k="24" aria-pressed="false">24</button>
+        <button class="chip" data-k="32" aria-pressed="true">32</button>
+        <button class="chip" data-k="40" aria-pressed="false">40</button>
+      </div>
+      <p class="small">FIDE (from March 2024) uses 40 for new and junior players, 20 below 2,400 and 10 from 2,400. The two bars always add up to K.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Expected score and points at stake by rating gap">
+      <thead><tr><th>Gap</th><th>Favourite's E</th><th id="thWin">Win: favourite gains</th><th id="thLoss">Loss: favourite loses</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <figure>
+    <figcaption>20 players with true strength 1,800 who start at 1,500<small>Each game is against an accurately rated opponent at the player's current rating, so the system predicts 0.5. The truth decides the result: p = E(1,800 − R). Then R += K(S − 0.5).</small></figcaption>
+    <div class="chart" id="cSim" role="img" aria-label="Simulated rating paths"></div>
+  </figure>
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rTau">—</b><span>time constant τ = 1/(K·g), games</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rReach">—</b><span>games to close 300 → 30 points, τ·ln 10</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSig">—</b><span>predicted wobble σ = √(K/8g)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rMeas">—</b><span>measured sd, all 20 lines, games 150 to 200</span></div>
+  </div>
+  <div class="controls">
+    <div>
+      <label for="kSim"><span>K</span><output id="oKSim">32</output></label>
+      <input id="kSim" type="range" min="4" max="64" step="2" value="32">
+    </div>
+    <div>
+      <button class="btn" id="reseed">New seeds</button>
+      <p class="small" id="seedNote"></p>
+    </div>
+  </div>
+  <div class="insight" id="simInsight" aria-live="polite"></div>
+  <p class="small">g = ln 10 / 1,600 ≈ 0.00144 is the slope of the curve at an even match. Shaded band: 1,800 ± σ.</p>
+</section>
+
+<footer>Formula and K values: Elo system as described by Glickman (USCF); FIDE Rating Regulations effective 1 March 2024. The simulation is the model from MMO307 week 8 section 4, run with a seeded generator so the same seed always draws the same lines.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const E=d=>1/(1+Math.pow(10,-d/400));
+const G=Math.LN10/1600;
+let gap=200,K=32,truth=false,tgap=200,kSim=32,seed=1;
+const f1=n=>(Math.round(n*10)/10).toFixed(1);
+const f3=n=>n.toFixed(3);
+const pct=n=>(n*100).toFixed(1)+'%';
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const signed=(n,dp)=>{const r=+n.toFixed(dp);if(r===0)return (0).toFixed(dp);return (r>0?'+':'−')+Math.abs(r).toFixed(dp);};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function txt(x,y,s,o){o=o||{};return `<text x="${x}" y="${y}" style="fill:${o.fill||'var(--ink)'};font:${o.w||400} ${o.size||12}px var(--sans)" text-anchor="${o.anchor||'start'}" dominant-baseline="${o.base||'middle'}">${esc(s)}</text>`;}
+
+// ---------- tab 1 ----------
+let curveGeom=null;
+function drawCurve(){
+  const el=$('cCurve'),W=Math.max(260,el.clientWidth),Ht=W<500?260:300,pad={l:46,r:16,t:14,b:36};
+  const X=d=>pad.l+(W-pad.l-pad.r)*d/800,Y=e=>pad.t+(Ht-pad.t-pad.b)*(1-(e-0.5)/0.5);
+  curveGeom={X,pad,W};
+  let s=`<svg width="${W}" height="${Ht}" viewBox="0 0 ${W} ${Ht}">`;
+  for(let e=0.5;e<=1.0001;e+=0.1){const y=Y(e);s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${y}" y2="${y}" style="stroke:var(--grid)"/>`+txt(pad.l-6,y,e.toFixed(1),{anchor:'end',size:11,fill:'var(--ink-soft)'});}
+  const step=W<500?200:100;
+  for(let d=0;d<=800;d+=step){s+=`<line x1="${X(d)}" x2="${X(d)}" y1="${pad.t}" y2="${Ht-pad.b}" style="stroke:var(--grid)"/>`+txt(X(d),Ht-pad.b+13,String(d),{anchor:'middle',size:11,fill:'var(--ink-soft)'});}
+  s+=txt(W-pad.r,Ht-5,'rating gap',{anchor:'end',size:11,fill:'var(--ink-soft)',base:'auto'});
+  let path='';for(let i=0;i<=400;i++){const d=800*i/400;path+=(i?'L':'M')+X(d).toFixed(2)+' '+Y(E(d)).toFixed(2);}
+  s+=`<path d="${path}" style="fill:none;stroke:var(--steel);stroke-width:3"/>`;
+  const e=E(gap),x=X(gap),y=Y(e);
+  if(truth){
+    const p=E(tgap),tx=X(tgap),ty=Y(p);
+    s+=`<line x1="${pad.l}" x2="${tx}" y1="${ty}" y2="${ty}" style="stroke:var(--ochre);stroke-width:1.5;stroke-dasharray:4 4"/>`;
+    s+=`<line x1="${tx}" x2="${tx}" y1="${ty}" y2="${Ht-pad.b}" style="stroke:var(--ochre);stroke-width:1.5;stroke-dasharray:4 4"/>`;
+    // p - E bracket on the y axis
+    s+=`<line x1="${pad.l+4}" x2="${pad.l+4}" y1="${y}" y2="${ty}" style="stroke:var(--ochre);stroke-width:4"/>`;
+    s+=`<circle cx="${tx}" cy="${ty}" r="7" style="fill:var(--paper);stroke:var(--ochre);stroke-width:3"/>`;
+    const above=ty<=y,leftOk=tx>pad.l+80,useEnd=above?leftOk:tx>W-110;
+    s+=txt(useEnd?tx-11:tx+11,(above&&useEnd)?ty-14:ty+18,'p = '+f3(p),{anchor:useEnd?'end':'start',w:700,size:12.5,fill:'var(--ochre)'});
+  }
+  s+=`<line x1="${pad.l}" x2="${x}" y1="${y}" y2="${y}" style="stroke:var(--ink);opacity:.5;stroke-dasharray:4 4"/>`;
+  s+=`<line x1="${x}" x2="${x}" y1="${y}" y2="${Ht-pad.b}" style="stroke:var(--ink);opacity:.5;stroke-dasharray:4 4"/>`;
+  s+=`<circle cx="${x}" cy="${y}" r="9" style="fill:var(--steel);stroke:var(--paper);stroke-width:3"/>`;
+  const right=x<W-120;
+  s+=txt(right?x+13:x-13,y+18,`E = ${f3(e)}`,{anchor:right?'start':'end',w:700,size:13});
+  s+='</svg>';el.innerHTML=s;
+  el.setAttribute('aria-label',`Expected score curve. At a ${gap}-point gap the favourite's expected score is ${f3(e)}.`+(truth?` True gap ${tgap} gives p = ${f3(E(tgap))}.`:''));
+}
+function drawBars(){
+  const el=$('cBars'),W=Math.max(240,el.clientWidth),Ht=W<500?260:300,pad={l:40,r:10,t:26,b:40};
+  const e=E(gap),win=K*(1-e),loss=K*e;
+  const Y=v=>pad.t+(Ht-pad.t-pad.b)*(1-v/K);
+  let s=`<svg width="${W}" height="${Ht}" viewBox="0 0 ${W} ${Ht}">`;
+  const ticks=[0,K/4,K/2,3*K/4,K];
+  ticks.forEach(t=>{s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(t)}" y2="${Y(t)}" style="stroke:var(--grid)"/>`+txt(pad.l-6,Y(t),String(+t.toFixed(1)),{anchor:'end',size:11,fill:'var(--ink-soft)'});});
+  const inner=W-pad.l-pad.r,bw=Math.min(110,inner*0.32),gx=[pad.l+inner*0.27-bw/2,pad.l+inner*0.73-bw/2];
+  const bars=[[win,'var(--moss)','If favourite wins','+'+f1(win)],[loss,'var(--blood)','If favourite loses','−'+f1(loss)]];
+  bars.forEach((b,i)=>{
+    const top=Y(b[0]),x=gx[i];
+    s+=`<rect x="${x}" y="${top}" width="${bw}" height="${Math.max(0,Y(0)-top)}" rx="3" style="fill:${b[1]}"/>`;
+    s+=txt(x+bw/2,top-10,b[3],{anchor:'middle',w:700,size:16,fill:b[1]});
+    s+=txt(x+bw/2,Ht-pad.b+14,b[2],{anchor:'middle',w:600,size:12});
+    s+=txt(x+bw/2,Ht-pad.b+29,i?'−K·E':'+K(1 − E)',{anchor:'middle',size:11,fill:'var(--ink-soft)'});
+  });
+  s+='</svg>';el.innerHTML=s;
+  el.setAttribute('aria-label',`If the favourite wins they gain ${f1(win)} points; if they lose they drop ${f1(loss)}. K is ${K}.`);
+}
+function update1(){
+  const e=E(gap),win=K*(1-e),loss=K*e;
+  $('oGap').textContent=gap;$('oTgap').textContent=tgap;$('gap').value=gap;$('tgap').value=tgap;
+  document.querySelectorAll('#kChips .chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.k===K));
+  $('stakeSub').textContent=`Same gap, K = ${K}. Shared axis from 0 to K.`;
+  $('rE').textContent=f3(e);$('rWin').textContent='+'+f1(win);$('rLoss').textContent='−'+f1(loss);
+  $('rRatio').textContent=gap===0?'1.0':(loss/win).toFixed(1);
+  $('truthWrap').hidden=!truth;$('avgBox').hidden=!truth;
+  drawCurve();drawBars();
+  let msg=`At a ${gap}-point gap the favourite risks <b>${f1(loss)}</b> to win <b>${f1(win)}</b>. `;
+  msg+=`If E = ${f3(e)} is right, they win ${pct(e)} of games, so wins bring in ${f3(e)} × ${f1(win)} and losses take out ${f3(1-e)} × ${f1(loss)}. Both are ${(K*e*(1-e)).toFixed(2)} points per game. On average, exactly nothing.`;
+  if(truth){
+    const p=E(tgap),avg=K*(p-e),a=+avg.toFixed(2);
+    const c=Math.abs(avg)<0.05?'var(--ink)':(avg>0?'var(--moss)':'var(--blood)');
+    $('avgBox').style.setProperty('--c',c);
+    $('rAvg').textContent=signed(avg,2);
+    $('rAvgNote').textContent=Math.abs(avg)<0.05?'The rating gap matches the true gap. The favourite is correctly rated.':(avg>0?`The favourite is underrated. Their rating drifts up about ${Math.abs(a).toFixed(2)} a game until the gaps match.`:`The favourite is overrated. Their rating drifts down about ${Math.abs(a).toFixed(2)} a game until the gaps match.`);
+    msg=`The favourite really wins ${pct(p)} of games (true gap ${tgap}), but the system expects ${pct(e)} (rating gap ${gap}). Average change = ${K} × (${f3(p)} − ${f3(e)}) = <b>${signed(avg,2)}</b> per game. `+(Math.abs(avg)<0.05?'Zero, because the two gaps match. Nowhere else is it zero.':'It is zero only where the two gaps match. Drag either slider across the other and watch the sign flip.');
+  }
+  $('insight').innerHTML=msg;
+  $('caption').textContent=truth?(Math.abs(K*(E(tgap)-e))<0.05?'Rating gap equals true gap: the average change is zero.':'When the rating is wrong, the average change is not zero. That drift is the correction.'):'The favourite wins a little or loses a lot. On average, exactly nothing.';
+  $('thWin').textContent=`Win (K = ${K})`;$('thLoss').textContent=`Loss (K = ${K})`;
+  const near=Math.round(gap/100)*100;
+  let rows='';for(let d=0;d<=800;d+=100){const ee=E(d);rows+=`<tr class="${d===near?'here':''}"><td>${d}</td><td>${f3(ee)}</td><td>+${f1(K*(1-ee))}</td><td>−${f1(K*ee)}</td></tr>`;}
+  $('tbody').innerHTML=rows;
+}
+$('gap').addEventListener('input',e=>{gap=+e.target.value;update1();});
+$('tgap').addEventListener('input',e=>{tgap=+e.target.value;update1();});
+$('truth').addEventListener('change',e=>{truth=e.target.checked;update1();});
+document.querySelectorAll('#kChips .chip').forEach(b=>b.addEventListener('click',()=>{K=+b.dataset.k;update1();}));
+// drag on the curve
+(function(){
+  const el=$('cCurve');let down=false;
+  function setFrom(ev){if(!curveGeom)return;const r=el.getBoundingClientRect(),x=ev.clientX-r.left;
+    const d=(x-curveGeom.pad.l)/(curveGeom.W-curveGeom.pad.l-curveGeom.pad.r)*800;gap=Math.max(0,Math.min(800,Math.round(d/10)*10));update1();}
+  el.addEventListener('pointerdown',ev=>{down=true;try{el.setPointerCapture(ev.pointerId);}catch(_){}setFrom(ev);});
+  el.addEventListener('pointermove',ev=>{if(down)setFrom(ev);});
+  ['pointerup','pointercancel'].forEach(t=>el.addEventListener(t,()=>{down=false;}));
+})();
+
+// ---------- tab 2 ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function simulate(){
+  const lines=[];
+  for(let i=0;i<20;i++){
+    const rnd=mulberry32(seed*1000+i+1);let r=1500;const h=[r];
+    for(let g=0;g<200;g++){const p=E(1800-r),S=rnd()<p?1:0;r+=kSim*(S-0.5);h.push(r);}
+    lines.push(h);
+  }
+  return lines;
+}
+function drawSim(){
+  const lines=simulate(),el=$('cSim'),W=Math.max(260,el.clientWidth),Ht=W<500?300:380,pad={l:50,r:14,t:12,b:34};
+  const X=g=>pad.l+(W-pad.l-pad.r)*g/200,Y=r=>pad.t+(Ht-pad.t-pad.b)*(1-(r-1400)/550);
+  const sig=Math.sqrt(kSim/(8*G)),tau=1/(kSim*G);
+  let s=`<svg width="${W}" height="${Ht}" viewBox="0 0 ${W} ${Ht}"><defs><clipPath id="simclip"><rect x="${pad.l}" y="${pad.t}" width="${W-pad.l-pad.r}" height="${Ht-pad.t-pad.b}"/></clipPath></defs>`;
+  for(let r=1400;r<=1950;r+=50){if(r%100&&W<500)continue;const y=Y(r);s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${y}" y2="${y}" style="stroke:var(--grid)"/>`+txt(pad.l-6,y,fmt(r),{anchor:'end',size:11,fill:'var(--ink-soft)'});}
+  for(let g=0;g<=200;g+=(W<500?50:25))s+=txt(X(g),Ht-pad.b+13,String(g),{anchor:'middle',size:11,fill:'var(--ink-soft)'});
+  s+=txt(W-pad.r,Ht-4,'games',{anchor:'end',size:11,fill:'var(--ink-soft)',base:'auto'});
+  s+='<g clip-path="url(#simclip)">';
+  s+=`<rect x="${pad.l}" y="${Y(1800+sig)}" width="${W-pad.l-pad.r}" height="${Y(1800-sig)-Y(1800+sig)}" style="fill:var(--ochre);opacity:.2"/>`;
+  s+=`<rect x="${X(150)}" y="${pad.t}" width="${X(200)-X(150)}" height="${Ht-pad.t-pad.b}" style="fill:var(--ink);opacity:.05"/>`;
+  lines.forEach(h=>{let d='';h.forEach((r,g)=>{d+=(g?'L':'M')+X(g).toFixed(1)+' '+Y(r).toFixed(1);});s+=`<path d="${d}" style="fill:none;stroke:var(--steel);stroke-width:1.3;opacity:.55;stroke-linejoin:round"/>`;});
+  s+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(1800)}" y2="${Y(1800)}" style="stroke:var(--ink);stroke-width:2;stroke-dasharray:7 5"/>`;
+  // predicted mean path 1800 - 300 exp(-g/tau)
+  let m='';for(let g=0;g<=200;g++){m+=(g?'L':'M')+X(g).toFixed(1)+' '+Y(1800-300*Math.exp(-g/tau)).toFixed(1);}
+  s+=`<path d="${m}" style="fill:none;stroke:var(--blood);stroke-width:2.2"/>`;
+  s+='</g>';
+  s+=txt(pad.l+6,Y(1800)-11,'true strength 1,800',{w:700,size:12});
+  s+=txt(X(175),pad.t+10,'measured',{anchor:'middle',size:11,fill:'var(--ink-soft)'});
+  s+='</svg>';el.innerHTML=s;
+  // measured sd over games 150..200 of all lines
+  const tail=[];lines.forEach(h=>{for(let g=150;g<=200;g++)tail.push(h[g]);});
+  const mean=tail.reduce((a,b)=>a+b,0)/tail.length,sd=Math.sqrt(tail.reduce((a,b)=>a+(b-mean)**2,0)/tail.length);
+  $('rTau').textContent=f1(tau);$('rReach').textContent=String(Math.round(tau*Math.LN10));$('rSig').textContent=f1(sig);$('rMeas').textContent=f1(sd);
+  $('oKSim').textContent=kSim;$('seedNote').textContent=`Seed set ${seed}. The same seed always draws the same 20 lines.`;
+  el.setAttribute('aria-label',`20 simulated rating paths at K ${kSim}. Predicted wobble ${f1(sig)}, measured ${f1(sd)}, mean over games 150 to 200 is ${fmt(mean)}.`);
+  const reach=Math.round(tau*Math.LN10);
+  $('simInsight').innerHTML=`At K = ${kSim} the pack closes a 300-point gap to 30 in about <b>${reach} games</b> and then wobbles <b>±${f1(sig)}</b> around the truth, purely from luck. `+(reach>150?`That is slower than this 200-game window, so the measured spread still includes players who have not arrived.`:`Quadruple K and the climb gets four times faster, but the wobble only doubles.`)+` Red line: the predicted average path 1,800 − 300·e<sup>−games/τ</sup>.`;
+}
+$('kSim').addEventListener('input',e=>{kSim=+e.target.value;drawSim();});
+$('reseed').addEventListener('click',()=>{seed++;drawSim();});
+
+// ---------- tabs ----------
+const tabs=[$('t1'),$('t2')];
+function sel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});if(focus)t.focus();if(t.id==='t2')drawSim();else update1();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t,true));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2],true);}});});
+function redraw(){$('p1').hidden?drawSim():update1();}
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redraw,60);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+update1();
+})();
+</script>
+</body>
+</html>
