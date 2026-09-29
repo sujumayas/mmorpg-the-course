@@ -240,6 +240,7 @@ Expected output: two rows of the table, the reply, and one change with its predi
 - Fortnite Wiki, "Chapter 7: Season 2" and "V-Bucks" (accessed September 2026). Season ran 19 March to 5 June 2026; V-Bucks real-money price raised on 19 March 2026 (citing Epic's news post "Fortnite V-Bucks price increase"); current 800 V-Bucks bundle at $8.99 USD.
 - Epic Games, "Fortnite V-Bucks price increase" (fortnite.com news, March 2026, read via the Internet Archive copy of 10 March 2026). From 19 March 2026 the Battle Pass costs 800 V-Bucks and awards 800 V-Bucks on completion; previously it cost 1,000 and paid 1,000 plus 500 in bonus rewards; the $8.99 pack now gives 800 V-Bucks.
 - Wikipedia, "Halo Infinite" (accessed September 2026). Criticism of slow battle pass progression in 2021 and 343 Industries' adjustment.
+- Goslin, A., "Halo Infinite's battle passes will never expire", Polygon (14 June 2021, checked 29 September 2026). Passes do not expire. Plant, L., "Halo Infinite Battle Pass Progression Has Already Been Smoothed Out", IGN (17 November 2021, update of 18 November, Internet Archive copy of 19 November 2021). 343 Industries added 50 XP per matchmade game and reworked the challenge deck.
 - Fields, T. & Cotton, B. (2011). *Social Game Design: Monetization Methods and Mechanics*. Morgan Kaufmann.
 - The lognormal play-time distribution, its parameters, the near-miss window and the purchase share are teaching assumptions, not measurements from any game.
 

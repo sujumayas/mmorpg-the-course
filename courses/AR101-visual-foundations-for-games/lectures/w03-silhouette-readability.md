@@ -217,7 +217,7 @@ Expected output: the lineup photo, the one-second recognition score, a six-row I
 ## Sources
 
 - Mitchell, J., Francke, M. and Eng, D. (2007). "Illustrative Rendering in Team Fortress 2." *Proceedings of NPAR 2007*, ACM. Section 4.1 and Figure 2: the nine classes designed to be visually distinct; body proportions, weapons and silhouette lines set by footwear, hats and clothing folds; silhouettes viewed with no interior detail to validate designs during concept.
-- Valve, Team Fortress 2 Workshop page (teamfortress.com/workshop, retrieved September 2026). The classes' distinctive silhouettes help players tell them apart in battle; Valve tends to avoid items that obscure or confuse them.
+- Valve, Team Fortress 2 Workshop page (teamfortress.com/workshop, retrieved 29 September 2026). The classes' distinctive silhouettes help players tell them apart in battle; Valve tends to avoid items that obscure or confuse them.
 - Wikipedia, "Staunton chess set". Introduced 1849, design registered by Nathaniel Cooke and first released by John Jaques of London; piece identities carried by the tops (horse head, mitre, battlements, coronet, crown with cross, ball); the *Illustrated London News* (1849) remark that every piece stands out distinctly.
 - Bulbapedia, "Who's That Pokémon?" (Pokémon anime). A question segment that shows a Pokémon in silhouette for the audience to guess, used in the English dub from the first episode, dropped after season 6 and revived in the Black & White series.
 - Jaccard, P. (1912). "The distribution of the flora in the alpine zone." *New Phytologist* 11(2), 37-50. The origin of the Jaccard index (intersection over union).

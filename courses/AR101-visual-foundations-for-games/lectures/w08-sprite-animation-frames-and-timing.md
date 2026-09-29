@@ -30,7 +30,7 @@ The number of drawings per second is not the game's frame rate. A game running a
 
 ### Timing and spacing
 
-Animation teachers, Williams among them, split the craft into two questions, and so will we.
+Animation teachers commonly split the craft into two questions, and so will we.
 
 **Timing** is how long each drawing is held. It is a list of numbers, the holds.
 

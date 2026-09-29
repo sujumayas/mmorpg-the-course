@@ -8,7 +8,7 @@
 - Implement buffered contact events that make it safe to destroy bodies in response to collisions.
 - Critique a physics setup (sleep thresholds, pile sizes, static versus kinematic bodies) for its CPU cost and its wake-up spikes.
 
-**Before class:** Gregory, *Game Engine Architecture* (3rd ed., 2018), chapter 13 "Collision and Rigid Body Dynamics," the sections on integrating a physics engine into your game. Box2D v3.1 documentation, "Simulation," the sections on the world step, sleep, body events and contact events (about 20 minutes).
+**Before class:** Gregory, *Game Engine Architecture* (3rd ed., 2018), chapter 13 "Collision and Rigid Body Dynamics," section 13.5 "Integrating a Physics Engine into Your Game". Box2D v3.1 documentation, "Simulation," the sections on the world step, sleep, body events and contact events (about 20 minutes).
 
 **Prerequisites from earlier courses:** [CS101 week 9, delta time and the fixed-timestep accumulator](../../CS101-programming-for-games-i/lectures/w09-delta-time-and-frame-rate-independence.md) (why physics steps at a fixed rate, semi-implicit Euler, and render interpolation with `alpha`). [CS101 week 10, collision basics](../../CS101-programming-for-games-i/lectures/w10-collision-basics-aabb-and-circles.md) (AABB tests, tunneling, broad versus narrow phase). [CS102 week 4, big-O intuition](../../CS102-programming-for-games-ii-structures-and-patterns/lectures/w04-big-o-intuition-for-game-developers.md) (the grid broad phase). [CS102 week 10, observer and events](../../CS102-programming-for-games-ii-structures-and-patterns/lectures/w10-observer-and-events.md) (the modify-while-iterating bug, and queued events). [CS201 week 4, the frame](w04-the-frame-update-render-present.md) (where physics sits in the update stage). The vector and force material is in MA201, which runs alongside this course: [week 7, numerical integration](../../MA201-linear-algebra-and-physics-for-games/lectures/w07-numerical-integration-euler-semi-implicit-verlet.md), [week 8, forces and mass](../../MA201-linear-algebra-and-physics-for-games/lectures/w08-forces-mass-and-drag.md) and [week 10, collision response and impulses](../../MA201-linear-algebra-and-physics-for-games/lectures/w10-collision-response-and-impulses.md). None of it is re-taught here.
 
@@ -316,7 +316,7 @@ Expected output: a table of objects with body types, an island sketch with your 
 - Box2D v3.1.0, `include/box2d/types.h` (`sleepThreshold` default 0.05 m/s, `b2BodyMoveEvent` with `fellAsleep`), `src/constants.h` (`B2_TIME_TO_SLEEP` 0.5 s), `src/island.c`, and `docs/simulation.md` (sleep, waking rules, body events, contact events after the step, disabling sleep). https://github.com/erincatto/box2d/tree/v3.1.0
 - Godot Engine 4.3, `doc/classes/ProjectSettings.xml`. `physics/2d/sleep_threshold_linear` 2.0, `physics/3d/sleep_threshold_linear` 0.1, `physics/2d/time_before_sleep` and `physics/3d/time_before_sleep` 0.5 s. https://github.com/godotengine/godot/blob/4.3-stable/doc/classes/ProjectSettings.xml
 - Unity 6.6 Scripting Reference, `Rigidbody.sleepThreshold` (mass-normalized energy threshold). Unity 6.6 Manual, "Rigidbody physics" overview (sleep, wake on collision or force, moved static colliders may not wake sleeping bodies). https://docs.unity3d.com/Manual/RigidbodiesOverview.html
-- Gregory, J. (2018). *Game Engine Architecture*, 3rd ed. CRC Press. Chapter 13.
+- Gregory, J. (2018). *Game Engine Architecture*, 3rd ed. CRC Press. Chapter 13, section 13.5.
 
 ## Interactive spec: examples/w11-sleeping-islands.html
 

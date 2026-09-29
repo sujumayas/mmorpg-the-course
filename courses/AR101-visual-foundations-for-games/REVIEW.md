@@ -21,3 +21,18 @@ These were verified in this pass: Dustloop Sol Badguy 5P (5/5/9) and 5H (11/4/20
 
 - w06: Aseprite's pixel-perfect docs page returned 404, so the lecture keeps "some editors offer a pixel-perfect stroke mode" without naming a tool.
 - w12: in "Value + shape", danger versus safe has ΔV 13.0 to 19.6 in the four modes. The lecture now says this row is separated by shape, not value. If the course wants that row to pass ΔV too, the safe ring needs a darker or lighter value (for example a near-black dashed ring), and the spec and example test values would change with it.
+
+## Fact sweep (29 September 2026)
+
+Verified (sources now carry retrieval dates):
+- w12 League of Legends V1.0.0.132, 17 January 2012, Colorblind Mode for health bars and effects (League of Legends Wiki patch page, which links an archived copy of Riot's forum post), and the self health bar colorblind variant ("Health bar").
+- w12 Overwatch, October 9, 2018 patch, nine colorblind-friendly colors with enemy and friendly UI set separately (Overwatch Wiki patch page).
+- w10 WoW `graphicsSpellDensity` settings and 9.0.1 origin, patch 11.2.0 (5 August 2025) Spell Density revamp (Warcraft Wiki). One correction. The 6.0.2 variable is `spellClutter`, not a raid-only variable. `RAIDspellClutter` dates from 9.0.1. The lecture and source line now say so.
+- w10 Guild Wars 2 Options (revision of 28 August 2026). Hide Ally Visual Effects settings, Effect LOD and the early June 2023 note are as stated. The wiki calls the Samarog mechanic a "green AoE", so "players must share" was cut.
+- w03, w13 TF2 Workshop FAQ (teamfortress.com/workshop). Polygon and texture limits, silhouette rule, Americana look, color guidance, revenue split and the "guidelines, not hard and fast rules" line all match.
+- w13 D'Angelo, "Breaking the NES for Shovel Knight", Game Developer, 25 June 2014. 400×240, 4.5 px at 1080p, 16×16 tiles, 54 NES colors and #22123B match. URL added.
+
+Hedged:
+- w08 "Animation teachers, Williams among them" became "Animation teachers commonly". The book text was not reachable. Williams stays as a reading.
+
+Removed: none. Solarski needs no change. The lectures cite it only as a reading, with no chapter numbers.

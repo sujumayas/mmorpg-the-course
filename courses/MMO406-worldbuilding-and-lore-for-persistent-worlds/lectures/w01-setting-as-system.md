@@ -239,7 +239,7 @@ Expected output: a table of tensions, the numbers `P(0)`, `R`, `d` and `N` befor
 
 ## Sources
 
-- Wolf, M. J. P. (2012). *Building Imaginary Worlds: The Theory and History of Subcreation*. Routledge. Chapter list and scope from the publisher's page (chapter 3, "World Structures and Systems of Relationships"; worlds treated as transnarrative, transmedial and transauthorial).
+- Wolf, M. J. P. (2012). *Building Imaginary Worlds: The Theory and History of Subcreation*. Routledge. Chapter list and scope from the publisher's page (chapter 3, "World Structures and Systems of Relationships", https://doi.org/10.4324/9780203096994-10; worlds treated as transnarrative, transmedial and transauthorial).
 - EVE University Wiki, "Clones" (current, checked September 2026). Pod destruction wakes the pilot in a new clone at the home station; jump clones carry skills and standings but not items; implants stay with the body.
 - Guild Wars 2 Wiki, "Elder Dragon" (checked September 2026). The six Elder Dragons and the story steps in which each was defeated: Zhaitan (personal story), Mordremoth (Heart of Thorns), Kralkatorrik (War Eternal), Jormag and Primordus (Dragonstorm), Soo-Won (End of Dragons).
 - Guild Wars 2 Wiki, "Guild Wars 2: Heart of Thorns", "War Eternal", "Champions", "Guild Wars 2: End of Dragons", "Guild Wars 2: Secrets of the Obscure" and "Release". Launch 28 August 2012; Heart of Thorns 23 October 2015; War Eternal 14 May 2019; Champions chapter 4, Judgment (containing Dragonstorm), 27 April 2021; End of Dragons 28 February 2022; Secrets of the Obscure 22 August 2023.

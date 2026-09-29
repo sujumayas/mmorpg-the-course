@@ -361,7 +361,7 @@ Expected output: the traced table, the two verdicts, and your rule with its code
 - id Software, *Wolfenstein 3D* source code (GitHub `id-Software/wolf3d`, originally released 1995). `WOLFSRC/WL_DEF.H` (`MAPSIZE` 64, `MAXVIEWWIDTH` 320, `TILESHIFT` 16 and `GLOBAL1 = 1 << 16` fixed point); `WOLFSRC/WL_DRAW.C` (per-column ray stepping with `xintercept` and `yintercept`; `CalcHeight` computes distance along the view direction with `viewcos` and `viewsin`).
 - Wikipedia, "Wolfenstein 3D" (accessed September 2026). MS-DOS release on 5 May 1992; ray-casting renderer; source code released in 1995.
 - Amanatides, J. & Woo, A. (1987). "A Fast Voxel Traversal Algorithm for Ray Tracing." *Eurographics '87*, pp. 3-10.
-- Unity Technologies. Unity 6.6 Scripting API, `Physics.Raycast`: parameters, boolean result, and the note that raycasts do not detect colliders containing the origin.
+- Unity Technologies. Unity 6.6 Scripting API, `Physics.Raycast` (checked 29 September 2026): parameters, boolean result, and the note that raycasts do not detect colliders containing the origin.
 - Godot Engine. Godot 4.7 documentation, "Ray-casting": `PhysicsRayQueryParameters2D/3D.create`, `intersect_ray` result dictionary, empty dictionary on a miss.
 - Catto, E. Box2D v2.4.1, `b2_dynamic_tree.h` (tree used for volume queries and ray casts).
 - Dunn, F. & Parberry, I. *3D Math Primer for Graphics and Game Development*, 2nd ed., chapter 9 and Appendix A (gamemath.com).

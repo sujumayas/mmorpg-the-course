@@ -188,3 +188,4 @@ Every running agent stopped with the weekly limit (HTTP 429). The limit resets o
   - Stacking's 2011 release.
   - The Singularity mass-test rewards, the WoW Classic stress-test dates, EverQuest mercenaries (2008), the HZD GDC 2017 session and the Polygon report of the Yoshida GDC 2014 talk.
 - Verified earlier: the TiDi blog date (curriculum.yaml check).
+- Fact sweep, wave 6 (29 Sep 2026): AR101 6 verified, 1 hedged; AU101 5 verified, 2 hedged; CS201 3 verified, 1 hedged; MA201 4 verified, 2 hedged; PR101 nothing open; MMO403 7 verified, 4 hedged; MMO405 2 verified; MMO406 1 verified, 1 hedged. None removed. Details in each course REVIEW.md "Fact sweep" section. Fixes found on the way: AR101 w10 `spellClutter` CVar name, MA201 w14 LWC docs are UE 5.7, MMO403 w14 Titan timeline (internal stop May 2013), MMO406 w12 Harbingers post dated 22 July 2016 (Warcraft Wiki's 21 June is wrong). check_course prints OK for all eight.

@@ -325,7 +325,7 @@ Expected output: one sheet with the layered drawing, the port share as a percent
 - Wikipedia, "Quake engine" (accessed September 2026). GPL release date.
 - Godot Engine documentation (stable, 4.7), "Godot's architecture overview" (Engine details, Architecture). Scene, Server, Drivers/Platform Interface, Core and Main layers, with their source folders.
 - Godot Engine source, tag `4.7.2-stable`, GitHub `godotengine/godot`. Folders under `platform/`; sizes of `.cpp`, `.h`, `.c`, `.mm`, `.m`, `.java`, `.kt` files per top-level folder from the GitHub tree API (platform 7.03 MB, drivers 4.76 MB, runtime total 37.74 MB).
-- Gregory, J. (2018). *Game Engine Architecture* (3rd ed.). CRC Press. Sections 1.3, 1.6 (runtime architecture layers) and 6.1 (start-up and shut-down, static initialization order).
+- Gregory, J. (2018). *Game Engine Architecture* (3rd ed.). CRC Press. Sections 1.3, 1.6 (runtime architecture layers) and 6.1 (start-up and shut-down, static initialization order). Section numbers checked against the author's 3rd-edition contents page (gameenginebook.com/toc.html, Internet Archive copy of 7 November 2020).
 
 ## Interactive spec: examples/w01-port-size.html
 

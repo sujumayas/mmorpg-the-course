@@ -28,3 +28,12 @@ Reviewer pass, September 2026. Everything else found in review was fixed in plac
 ## 5. Lab solutions
 
 - Reference solutions for all 14 labs were written in the reviewer's scratchpad to confirm the tests pass; they are not stored in the repo. If instructors need them, keep them in a private instructor repo, not under `labs/`.
+
+## Fact sweep (29 September 2026)
+
+Verified 3, hedged 1, removed 0.
+
+- Verified. Tracy figures (w13) against `manual/tracy.tex` on the master branch (latest release v0.14.1, 22 August 2026). The 2.25 ns zone cost, the 300 ns to 1 µs OS timer range, 8 kHz on Windows and 10 kHz on Linux and Android, and the "sample first, instrument later" advice are all in the manual. The Sources line now carries the date and release.
+- Verified. Mantle "up to 9 times more draw calls per second" (w08) is on Wikipedia "Mantle (API)", which cites AMD's GPU14 Tech Day livestream of September 2013. The livestream itself could not be watched. The lecture already presents it as AMD's claim, and the Sources line now names the event.
+- Verified. Gregory 3rd-edition section numbers in every week match the author's contents page (gameenginebook.com/toc.html, Internet Archive copy of 7 November 2020). Vague pointers were made exact: w10 section 16.9, w11 section 13.5, w12 sections 16.3 and 16.4, w13 section 2.3. The live site now lists a 4th edition, so the course keeps "3rd ed." on every pointer.
+- Hedged (no text change). Apple M4 Pro cache sizes (w06). Apple publishes no cache figures. The lecture already states them as a `sysctl` reading on the reference machine, which is exactly what is known.

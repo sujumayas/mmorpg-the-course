@@ -8,7 +8,7 @@
 - Implement a two-pass loader that restores references, including cycles, and a file header that detects truncation and corruption.
 - Critique a save format (Minecraft, Factorio, Protocol Buffers style) for how it handles change over years of patches.
 
-**Before class:** Gregory, *Game Engine Architecture* (3rd ed., 2018), chapter 16, the sections on saving and loading and on serialization of game objects. Protocol Buffers documentation, "Language Guide (proto 3)," the section "Updating a Message Type" (about 10 minutes). Skim the Minecraft Wiki page "Data version."
+**Before class:** Gregory, *Game Engine Architecture* (3rd ed., 2018), chapter 16, sections 16.3 "World Chunk Data Formats" and 16.4 "Loading and Streaming Game Worlds". Protocol Buffers documentation, "Language Guide (proto 3)," the section "Updating a Message Type" (about 10 minutes). Skim the Minecraft Wiki page "Data version."
 
 **Prerequisites from earlier courses:** [CS102 week 13, data-driven design](../../CS102-programming-for-games-ii-structures-and-patterns/lectures/w13-data-driven-design-stats-in-json-and-csv.md) (templates plus per-instance data, and validation). [CS201 week 5, ECS design](w05-entity-component-system-design.md) (generational handles, which do not survive a save). [CS201 week 11, physics integration](w11-physics-integration-basics.md) (the physics world as derived state). Looking ahead to next semester: [CS202 week 5, serialization and bit packing](../../CS202-networking-fundamentals-for-multiplayer-games/lectures/w05-serialization-and-bit-packing.md) packs the same kind of data into network packets, [DB201 week 1, why persistence is hard](../../DB201-data-persistence-and-telemetry/lectures/w01-why-persistence-is-hard-in-games.md) returns to the atomic write for servers, and [DB201 week 9, schema migrations in a live game](../../DB201-data-persistence-and-telemetry/lectures/w09-schema-migrations-in-a-live-game.md) is the server-side version of this week's problem.
 
@@ -335,7 +335,7 @@ Expected output: the state table, the v1 JSON, three migrations, and the broken 
 - Mojang, DataFixerUpper README (GitHub). `Schema`, `DataFix`, and a builder that creates an optimized converter between schemas. https://github.com/Mojang/DataFixerUpper
 - Factorio Lua API, Auxiliary docs, "Migrations," version 2.1.20. Migration files per mod, ordering, per-save record of applied migrations by name, invalid references after a prototype is removed. https://lua-api.factorio.com/latest/auxiliary/migrations.html
 - Protocol Buffers documentation, "Language Guide (proto 3)," section "Updating A Message Type." Adding and removing fields is wire-safe; changing field numbers is not; old parsers ignore unknown fields. https://protobuf.dev/programming-guides/proto3/
-- Gregory, J. (2018). *Game Engine Architecture*, 3rd ed. CRC Press. Chapter 16.
+- Gregory, J. (2018). *Game Engine Architecture*, 3rd ed. CRC Press. Chapter 16, sections 16.3 and 16.4.
 
 ## Interactive spec: examples/w12-save-migration-chain.html
 

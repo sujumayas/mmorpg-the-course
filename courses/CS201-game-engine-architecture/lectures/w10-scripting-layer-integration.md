@@ -8,7 +8,7 @@
 - Apply a work budget to scripts using coroutines, and name what a sandbox removes and why.
 - Critique a shipped engine's scripting boundary (Unity, World of Warcraft, Factorio, Roblox) in terms of crossings, handles and capabilities.
 
-**Before class:** Gregory, *Game Engine Architecture* (3rd ed., 2018), chapter 16, the sections on scripting and on script-to-engine interfaces. Ierusalimschy, *Programming in Lua* (4th ed., 2016), chapter 27 "An Overview of the C API", about 15 pages. Skim the Lua 5.4 reference manual, section 4.1 "The Stack".
+**Before class:** Gregory, *Game Engine Architecture* (3rd ed., 2018), chapter 16, section 16.9 "Scripting". Ierusalimschy, *Programming in Lua* (4th ed., 2016), chapter 27 "An Overview of the C API", about 15 pages. Skim the Lua 5.4 reference manual, section 4.1 "The Stack".
 
 **Prerequisites from earlier courses:** [CS101 week 7, scenes, nodes and scripts](../../CS101-programming-for-games-i/lectures/w07-engine-intro-scenes-nodes-scripts.md) (you have already written scripts that an engine calls every frame). [CS102 week 9, the component pattern](../../CS102-programming-for-games-ii-structures-and-patterns/lectures/w09-pattern-component.md) (the frame as a list of systems). [CS102 week 10, observer and events](../../CS102-programming-for-games-ii-structures-and-patterns/lectures/w10-observer-and-events.md) (poll versus push). [CS102 week 13, data-driven design](../../CS102-programming-for-games-ii-structures-and-patterns/lectures/w13-data-driven-design-stats-in-json-and-csv.md) (when a table is enough and you need no script at all). [CS201 week 5, ECS design](w05-entity-component-system-design.md) (generational handles). [CS201 week 7, resources and hot reload](w07-resource-management-and-hot-reload.md) (handles, not pointers, and reloading). Looking ahead: [CS203 week 14, AI time-slicing](../../CS203-artificial-intelligence-for-games/lectures/w14-performance-ai-lod-and-time-slicing.md) (next semester) spreads AI work across frames the same way this week spreads scripts.
 
@@ -307,7 +307,7 @@ Expected output: a table of the three object kinds with call style and cost, the
 - Warcraft Wiki, "Lua" (WoW implements a subset of Lua 5.1; upgraded to 5.1.1 in patch 2.0.1). "UIHANDLER OnUpdate" (fires every drawn frame; recommends `C_Timer` or throttling). "Secure Execution and Tainting" (taint model, largely introduced in patch 2.0). Retrieved September 2026. https://warcraft.wiki.gg
 - Factorio Lua API, Auxiliary docs, "Libraries and functions," version 2.1.20. Modified Lua 5.2.1; `loadfile`, `dofile`, `coroutine`, `io`, `os` inaccessible; deterministic `pairs` and `math.random`. https://lua-api.factorio.com/latest/auxiliary/libraries.html
 - Luau, "Why Luau?" Roblox adopted Lua 5.1 around 2006 and evolved it into a sandboxed runtime, now Luau. https://luau.org/why
-- Gregory, J. (2018). *Game Engine Architecture*, 3rd ed. CRC Press. Chapter 16.
+- Gregory, J. (2018). *Game Engine Architecture*, 3rd ed. CRC Press. Chapter 16, section 16.9.
 - Ierusalimschy, R. (2016). *Programming in Lua*, 4th ed. Lua.org.
 
 ## Interactive spec: examples/w10-boundary-crossings.html

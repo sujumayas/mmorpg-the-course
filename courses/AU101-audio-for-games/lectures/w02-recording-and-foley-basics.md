@@ -248,7 +248,7 @@ Expected output: a 9-row table and a one-sentence explanation of the gap. Phone 
 
 - id Software, DOOM source code release (Linux version 1.10, 1997 release of the 1993 game), `linuxdoom-1.10/i_sound.c`: `SAMPLERATE 11025`, eight mixing channels, effects read as unsigned 8-bit data, 16-bit stereo mix buffer. https://github.com/id-Software/DOOM
 - Godot Engine documentation (Godot 4.7), `AudioStreamPlayer.pitch_scale` (multiplier of the stream's sample rate; 0.5 halves the pitch) and `ProjectSettings.audio/driver/mix_rate` (default 44,100 Hz).
-- Riot Games Technology blog, "VALORANT's 128-Tick Servers" (31 August 2020). 128 ticks per second; 7.8125 ms per frame of server work.
+- Riot Games Technology blog, "VALORANT's 128-Tick Servers" (31 August 2020, date checked on technology.riotgames.com 29 September 2026). 128 ticks per second; 7.8125 ms per frame of server work.
 - Universal Category System, universalcategorysystem.com. Public-domain category list for sound effects, version 8.2.1 (January 2024), CatID example `WOODHndl`.
 - Wikipedia, "Jack Foley (sound effects artist)". Developed live, synchronised sound-effect performance for film; the trade is named after him.
 - Wikipedia, "Hellblade: Senua's Sacrifice". Voices recorded binaurally (see week 1).

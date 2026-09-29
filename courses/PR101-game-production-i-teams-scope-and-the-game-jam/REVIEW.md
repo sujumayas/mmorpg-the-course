@@ -15,3 +15,7 @@ Reviewed September 2026 against ORCHESTRATION.md §4 and docs/BUILD_CONVENTIONS.
 ## Minor
 
 - `labs/lab13-starter/test_lab13.py`: `test_fixed_build_passes` passes on the unmodified starter, because the stubs pass everything. The suite still fails overall (1 of 9), and the test is meaningful once the stubs are replaced, so it was left as is.
+
+## Fact sweep (29 September 2026)
+
+- No items were listed as unverified, and no "(verify" tags remain. Real-game facts cite dated Wikipedia articles or the primary sources checked in review (Buehler et al. on Crossref, Kotaku on Anthem, the archived Construx cone page). Nothing was changed.

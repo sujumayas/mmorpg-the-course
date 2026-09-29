@@ -63,7 +63,7 @@ Emotion is also where silence lives. Removing music before a big moment makes th
 
 Film theory separates **diegetic** sound, which exists in the story world (a character's footsteps, a radio playing in a room), from **non-diegetic** sound, which only the audience hears (the score, a narrator). Games blur the line constantly. The Left 4 Dead cues are non-diegetic music that carries diegetic information. A health-low heartbeat is ambiguous on purpose.
 
-Karen Collins, in the introduction to *Game Sound*, draws a line that matters more for implementation. The version below is this course's paraphrase, so check it against chapter 1 as you read. Some game audio is **interactive**: it responds directly to what the player does, like a jump sound. Some is **adaptive**: it responds to the game state, like combat music that starts when enemies notice you. **Dynamic audio** is her umbrella term for both. For you as a designer the question is simple. What triggers this sound, the player's input or the game's state? The answer decides who owns it in the code and how it gets tested.
+Karen Collins, in the introduction to *Game Sound*, draws a line that matters more for implementation. The version below is this course's paraphrase. It has not been checked against the book's wording, so check it against chapter 1 as you read. Some game audio is **interactive**: it responds directly to what the player does, like a jump sound. Some is **adaptive**: it responds to the game state, like combat music that starts when enemies notice you. In this paraphrase, **dynamic audio** is her umbrella term for both. For you as a designer the question is simple. What triggers this sound, the player's input or the game's state? The answer decides who owns it in the code and how it gets tested.
 
 ## 3. Worked example: where is that footstep?
 
@@ -230,7 +230,7 @@ Expected output: the labelled list, the count of front-back swaps, and the one-s
 
 ## Sources
 
-- Collins, K. (2008). *Game Sound: An Introduction to the History, Theory, and Practice of Video Game Music and Sound Design*. MIT Press. Chapters 1-3 (chapter 1 is the introduction, chapter 2 "Push Start Button", chapter 3 "Insert Quarter to Continue"); the interactive, adaptive and dynamic audio distinction is paraphrased from the introduction.
+- Collins, K. (2008). *Game Sound: An Introduction to the History, Theory, and Practice of Video Game Music and Sound Design*. MIT Press. Chapters 1-3 (chapter 1 is the introduction, chapter 2 "Push Start Button", chapter 3 "Insert Quarter to Continue"); the interactive, adaptive and dynamic audio distinction is paraphrased from the introduction and was not checked against the book text (no copy reachable, 29 September 2026).
 - Valve, Counter-Strike 2 release notes, 29 June 2023 (limited test: distance effects on positional sources, occlusion layer for vertical positioning on Nuke), 13 September 2023 ("slight increase to stereo spread"), 6 February 2024 (fix for player-centric sounds perceived as slightly behind the player). Steam news feed for app 730.
 - Left 4 Dead Wiki, "Left 4 Dead Soundtrack" (Left 4 Dead, 2008, and Left 4 Dead 2, 2009). Special infected "bacteria" cues, piano for near spawns and strings for far spawns, Witch cue rising with proximity, cues disabled in Left 4 Dead 2 Versus by the 19 November 2010 update. Composer Mike Morasky.
 - Wikipedia, "Left 4 Dead". Each special infected has a distinctive sound, silhouette and musical cue; the AI Director controls pacing.

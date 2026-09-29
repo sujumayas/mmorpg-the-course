@@ -228,7 +228,7 @@ Expected output: a design choice, your demand guess, two `RPE` values, a break-e
 - Valve, Steamworks Documentation, "Pricing" (accessed September 2026). Three currency conversion methods for recommended regional prices, and the rule that raising a price starts a 30-day cooldown on submitting discounts.
 - Directive (EU) 2019/2161 of the European Parliament and of the Council of 27 November 2019 (the "Omnibus" directive), as adopted. Article 2 inserts Article 6a into Directive 98/6/EC (prior price is the lowest in at least 30 days); Article 4 inserts point (ea) into Article 6(1) of Directive 2011/83/EU (disclosure of prices personalised by automated decision-making); Article 7 sets transposition by 28 November 2021 and application from 28 May 2022. Read from the legislation.gov.uk copy of the adopted text.
 - Optimizely, SimCity pre-order case study (2013), as used in MA102 week 14.
-- Van Westendorp, P. (1976). "NSS Price Sensitivity Meter: A new approach to study consumer perception of prices." Proceedings of the ESOMAR Congress, Venice.
+- Van Westendorp, P. (1976). "NSS Price Sensitivity Meter: A new approach to study consumer perception of prices." Proceedings of the ESOMAR Congress, Venice. The proceedings were not seen. The four questions were checked against Lipovetsky, S., Magnan, S. & Zanetti-Polzi, A. (2011), "Pricing Models in Marketing Research", *Intelligent Information Management* 3(5), 167-174, doi:10.4236/iim.2011.35020.
 - Fields, T. & Cotton, B. (2011). *Social Game Design: Monetization Methods and Mechanics*. Morgan Kaufmann.
 - Kohavi, R., Tang, D. & Xu, Y. (2020). *Trustworthy Online Controlled Experiments*. Cambridge University Press.
 

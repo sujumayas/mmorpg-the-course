@@ -381,7 +381,7 @@ Expected output: a one-paragraph convention choice, a 2 × 3 table of angles and
 
 ## Sources
 
-- Valve Developer Community, "Field of View" (archived copy of 6 June 2026, web.archive.org). Half-Life 2 default FOV 75; widescreen expands the horizontal view; 75 corresponds to about 91° on 16:9; scaled FOV formula `2·atan(tan(fov/2)·aspect/standardRatio)` with standard ratio 4:3; `ScaleFOVByWidthRatio` in `view.cpp`.
+- Valve Developer Community, "Field of View" (Internet Archive copy of 6 June 2026, re-checked 29 September 2026). Half-Life 2 default FOV 75; widescreen expands the horizontal view; 75 corresponds to about 91° on 16:9; scaled FOV formula `2·atan(tan(fov/2)·aspect/standardRatio)` with standard ratio 4:3; `ScaleFOVByWidthRatio` in `view.cpp`.
 - Minecraft Wiki, "Options" (Java Edition, accessed September 2026). FOV default 70 ("Normal"), range 30 to 110 ("Quake Pro"), value measured as vertical vision.
 - Unity Technologies, Scripting API, `Camera.fieldOfView` and `Camera.worldToCameraMatrix` (Unity 6 documentation, accessed September 2026). Vertical field of view in degrees, horizontal depending on aspect ratio; camera space follows the OpenGL convention with forward along −z, unlike Unity's +z forward.
 - Godot Engine class reference, `Camera3D` (master branch, 4.8-dev, September 2026; the properties are unchanged across 4.x). `fov` default 75, applies to the axis not locked by `keep_aspect`; the listed horizontal equivalents 91.31°, 101.67°, 107.51° and 121.63°; `keep_aspect` default `KEEP_HEIGHT`, described as Hor+ and recommended for landscape; `near` default 0.05 with the z-fighting warning; `far` default 4000.

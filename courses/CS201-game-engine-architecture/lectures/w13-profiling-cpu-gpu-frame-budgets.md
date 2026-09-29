@@ -8,7 +8,7 @@
 - Instrument a frame with scoped timers, compute inclusive and self time, and export the scopes as a trace a timeline viewer can open.
 - Measure GPU time with timestamp queries, and report a capture as median and high-percentile frame times against a per-subsystem budget.
 
-**Before class:** Gregory, *Game Engine Architecture* (3rd ed., 2018), the profiling-tools section of chapter 2 ("Tools of the Trade"). Tracy Profiler manual (`tracy.pdf`, current release), chapter 1, the sections on nanosecond resolution and the performance-impact benchmark, and the "Call stack sampling" section. Unity 6.6 manual, "Deep Profiling" (one page).
+**Before class:** Gregory, *Game Engine Architecture* (3rd ed., 2018), section 2.3 "Profiling Tools". Tracy Profiler manual (`tracy.pdf`, current release), chapter 1, the sections on nanosecond resolution and the performance-impact benchmark, and the "Call stack sampling" section. Unity 6.6 manual, "Deep Profiling" (one page).
 
 **Prerequisites from earlier courses:** [CS201 week 4, the frame](w04-the-frame-update-render-present.md) (the budget `T`, CPU time `C`, GPU time `G`, `W = max(C, G)` and vsync rounding; this lecture uses that notation and does not re-derive it). [CS101 week 12, debugging](../../CS101-programming-for-games-i/lectures/w12-debugging-breakpoints-logging-rubber-ducking.md) (reproduce, observe, hypothesize, fix). [CS102 week 4, Big-O intuition](../../CS102-programming-for-games-ii-structures-and-patterns/lectures/w04-big-o-intuition-for-game-developers.md) (cost per call times number of calls). [MA102 week 12, descriptive statistics](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w12-descriptive-statistics-for-playtests.md) (median and spread) and [MA102 week 13, sampling and confidence](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w13-sampling-confidence-and-why-n5-lies.md) (why error shrinks with the square root of the sample size).
 
@@ -393,12 +393,12 @@ Expected output: the measured table with the new ranking, the list from step 2 w
 ## Sources
 
 - Unity Technologies, "Deep Profiling" (Unity 6.6 manual). Deep Profiling instruments all script methods; the application runs much slower and uses a lot of memory while profiling; best for small games with simple scripting. https://docs.unity3d.com/Manual/profiler-deep-profiling.html
-- Taudul, B., Tracy Profiler, README and manual (`manual/tracy.tex`, master branch, accessed September 2026). Hybrid frame and sampling profiler for games; zone overhead 2.25 ns in the manual's benchmark; OS timers with roughly 300 ns to 1 µs resolution; default sampling at 8 kHz on Windows and 10 kHz on Linux and Android; advice to start from sampling and add instrumentation where needed. https://github.com/wolfpld/tracy
+- Taudul, B., Tracy Profiler, README and manual (`manual/tracy.tex`, master branch, checked 29 September 2026; latest release v0.14.1, 22 August 2026). Hybrid frame and sampling profiler for games; zone overhead 2.25 ns in the manual's benchmark; OS timers with roughly 300 ns to 1 µs resolution; default sampling at 8 kHz on Windows and 10 kHz on Linux and Android; advice to start from sampling and add instrumentation where needed. https://github.com/wolfpld/tracy
 - Minecraft Wiki, "Debug screen" (Java Edition). Profiler pie chart toggled with F3 + 1 since Java Edition 1.20.2 (snapshot 23w33a), previously Shift + F3; drill-down with Shift and the section number; added in Beta 1.9 Prerelease 3 (2011); frame-time graph (F3 + 2) of the last 240 frames with minimum, average and maximum. https://minecraft.wiki/w/Debug_screen
 - Khronos Group, Vulkan specification, `VkPhysicalDeviceLimits` (latest). `timestampPeriod` is the number of nanoseconds for a timestamp query to increase by 1; `vkCmdWriteTimestamp`.
 - Microsoft, `ID3D12CommandQueue::GetTimestampFrequency` (Win32 API reference, d3d12.h). The tick rate for converting Direct3D 12 timestamp queries to time.
 - Perfetto documentation, "Other trace formats", section "Chrome JSON format". A JSON array of events with `pid`, `tid`, `ts` in microseconds, `ph` and `name`; `B`/`E` and `X` events shown as slices; duration events must nest. https://perfetto.dev/docs/getting-started/other-formats
-- Gregory, J. (2018). *Game Engine Architecture* (3rd ed.). CRC Press. Profiling tools, chapter 2.
+- Gregory, J. (2018). *Game Engine Architecture* (3rd ed.). CRC Press. Section 2.3, "Profiling Tools".
 
 ## Interactive spec: examples/w13-two-profilers.html
 

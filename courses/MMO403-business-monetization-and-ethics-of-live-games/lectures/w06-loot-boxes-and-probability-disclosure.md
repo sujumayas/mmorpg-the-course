@@ -24,7 +24,7 @@ Since 2017, the main requirement placed on loot boxes has been **probability dis
 
 | When | Who | Rule |
 |---|---|---|
-| Announced December 2016, in force May 2017 | China, Ministry of Culture | Online game publishers must publish the draw probability of virtual items and services. |
+| Announced December 2016, in force May 2017 (as reported; notice text not checked) | China, Ministry of Culture | Online game publishers must publish the draw probability of virtual items and services. |
 | December 2017 | Apple, App Store Review Guidelines 3.1.1 | Apps offering loot boxes or other randomized virtual items for purchase must disclose the odds of receiving each type of item before purchase. |
 | By May 2019 | Google Play, Payments policy | Apps offering randomized virtual items from a purchase must disclose the odds in advance of, and close in time to, the purchase. |
 | August 2019 | Entertainment Software Association (US industry body) | Microsoft, Nintendo and Sony announced odds-disclosure requirements for paid loot boxes on their consoles, with major publishers committing to the same on other platforms, targeted for 2020. |
@@ -241,7 +241,7 @@ Expected output: a table of costs before and after your rule, and the disclosure
 
 - Hearthstone Wiki (hearthstone.wiki.gg), "Card pack" (accessed September 2026). Legendary duplicate protection from 10 August 2017; protection extended to all rarities on 26 March 2020.
 - Hearthstone Wiki, "Arcane Dust" (accessed September 2026). Crafting 40 / 100 / 400 / 1,600 and disenchanting 5 / 20 / 100 / 400 dust for normal Common, Rare, Epic and Legendary cards; unchanged by the May 2022 golden-upgrade patch.
-- Wikipedia, "Loot box" (accessed September 2026). Overwatch's June 2017 reduction in duplicate frequency; China's December 2016 announcement and May 2017 start of disclosure; Google Play's policy by May 2019; the ESA's August 2019 announcement at the FTC workshop; Apple's December 2017 change.
+- Wikipedia, "Loot box" (accessed September 2026). Overwatch's June 2017 reduction in duplicate frequency; China's December 2016 announcement and May 2017 start of disclosure; Google Play's policy by May 2019; the ESA's August 2019 announcement at the FTC workshop; Apple's December 2017 change. The China dates rest on McAloon, Gamasutra (8 December 2016) and Xiao et al. (2021); the 2016 notice itself was not found on gov.cn in the 29 September 2026 check.
 - Apple, App Store Review Guidelines, section 3.1.1 (current text, accessed September 2026). Odds of each type of item must be disclosed before purchase.
 - Google Play Console Help, "Payments" policy (accessed September 2026). Odds must be disclosed in advance of, and in close and timely proximity to, the purchase.
 - Game World Observer, "South Korea passes loot box probability disclosure law" (28 February 2023). Amendment to the Game Industry Promotion Act, passed 27 February 2023; disclosure in games, ads and websites; penalties.

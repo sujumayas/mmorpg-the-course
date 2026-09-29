@@ -350,7 +350,7 @@ Expected output: a key diagram with bit ranges, two switch counts, and a one-par
 - Unity Technologies, Unity 6 Scripting API, `Rendering.RenderQueue`. Queue values 1000, 2450, 2500, 3000, 4000; range 0 to 5,000; queues up to 2500 sorted by opaque sort mode, above 2500 back to front. Geometry is the standard opaque queue (2000).
 - Unity Technologies, Unity 6 Manual, "Introduction to batching meshes" (DrawCallBatching). Static batching buffers up to 64,000 vertices; dynamic batching limited to meshes under 300 vertices or 900 vertex attributes.
 - Godot Engine documentation (4.x, master branch, retrieved September 2026), "GPU optimization" (validation cost of API commands, 2D batching, 3D batching and culling, reuse materials then shaders, atlases, tile-based rendering on mobile) and "3D rendering limitations", section "Transparency sorting" (back to front by node position; render priority and sorting offset).
-- Wikipedia, "Mantle (API)" (retrieved September 2026). AMD's claim of up to nine times more draw calls per second than comparable APIs by reducing CPU overhead.
+- Wikipedia, "Mantle (API)" (checked 29 September 2026), citing AMD's GPU14 Tech Day livestream (September 2013, archived 27 September 2013). AMD's claim of up to nine times more draw calls per second than comparable APIs by reducing CPU overhead.
 - Gregory, J. (2018). *Game Engine Architecture*, 3rd ed. CRC Press. Chapter 11, sections 11.1 and 11.2.
 
 ## Interactive spec: examples/w08-draw-order.html

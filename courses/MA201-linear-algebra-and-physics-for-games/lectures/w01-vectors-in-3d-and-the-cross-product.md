@@ -127,7 +127,7 @@ The slope angle of a surface is the angle between its normal and straight up. A 
 
 Engines store this threshold in one of two forms. Some store the angle and compute the cosine. Some store the cosine directly. Unreal's source keeps both, `WalkableFloorAngle` in degrees and `WalkableFloorZ` as the cosine. In a Z-up engine, `n̂ · û` is just the normal's z-component, which is why Unreal calls the threshold a "Z".
 
-Now the 44.765° is no mystery. In the Unreal Engine 5.3 source, the character movement component's constructor sets `WalkableFloorZ` to 0.71, and the angle is derived from it as `acos(0.71)`:
+Now the 44.765° is no mystery. In the Unreal Engine 5.3 source (read from a public mirror, see Sources), the character movement component's constructor sets `WalkableFloorZ` to 0.71, and the angle is derived from it as `acos(0.71)`:
 
 ```
 acos(0.71) = 44.765°
@@ -135,7 +135,7 @@ acos(0.71) = 44.765°
 
 Someone picked a round cosine, not a round angle. The cosine of 45° is `1/√2 = 0.70711`, which is just below 0.71. So a perfect 45° ramp fails the default test by 0.0029.
 
-Unreal Engine 3 made the opposite rounding. Its base `Pawn` class sets `WalkableFloorZ=0.7`, with a source comment calling it roughly a 45 degree angle. `acos(0.7) = 45.573°`, so the 45° ramp passes. Godot stores an angle, 45° by default, and allows a tolerance of 0.01 radians (0.573°) when it classifies a collision, giving an effective limit of 45.573°. Godot and UE3 land on almost the same number from opposite directions.
+Unreal Engine 3 made the opposite rounding. Its base `Pawn` class, in a third-party copy of the UDK-era source, sets `WalkableFloorZ=0.7`, with a source comment calling it roughly a 45 degree angle. `acos(0.7) = 45.573°`, so the 45° ramp passes. Godot stores an angle, 45° by default, and allows a tolerance of 0.01 radians (0.573°) when it classifies a collision, giving an effective limit of 45.573°. Godot and UE3 land on almost the same number from opposite directions.
 
 ### Numbers you can check
 

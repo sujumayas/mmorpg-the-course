@@ -243,7 +243,7 @@ Stretch-then-rotate gives a sprite that is long in the direction it now faces. R
 
 Matrix multiplication is **associative**, `(A B) C = A (B C)`, so you may combine a long chain in any grouping. It is **not commutative**. `A B` and `B A` are usually different. The exceptions are special: two rotations about the same point commute, and two scales along the same axes commute. A rotation and a non-uniform scale almost never do.
 
-This is the reason engines fix an order for the parts of a transform. Unreal's `FTransform` documents that positions are transformed in the order scale, then rotate, then translate. Next week you will stack these per-node matrices up a whole scene tree, and the order question becomes the central one.
+This is the reason engines fix an order for the parts of a transform. Epic's API reference for `FTransform` states that positions are transformed in the order scale, then rotate, then translate. Next week you will stack these per-node matrices up a whole scene tree, and the order question becomes the central one.
 
 ## 5. The determinant: area, mirrors and undo
 
@@ -353,7 +353,7 @@ Expected output: three matrices with inverses, three picked tiles, and a two-sen
 - Tiled Map Editor, release 1.12.2, `src/libtiled/isometricrenderer.cpp` (`tileToScreenCoords` and `screenToTileCoords`). https://github.com/mapeditor/tiled, accessed September 2026.
 - Wikipedia, "Isometric video game graphics" (accessed September 2026). Game "isometric" art usually uses a 2:1 pixel pattern at about 26.565°, a form of dimetric projection, because 30° lines do not form a clean pixel pattern. The article carries original-research tags, so this lecture checks the 64×32 figure against DevilutionX's source instead of relying on it.
 - Godot Engine documentation, class references `Transform2D` and `Basis` (4.7, accessed September 2026). `x` and `y` (and `z` for `Basis`) are the matrix columns; in 2D `y` points down on the identity transform; rotating one axis on its own produces skew or shear.
-- Unreal Engine 5.3.2 source, `Core/Public/Math/TransformNonVectorized.h`. Read from a public third-party mirror of the source on GitHub, since Epic's repository requires an account; accessed September 2026. Positions are transformed in the order scale, rotate, translate; `A * B` applies `A` first.
+- Unreal Engine 5.3.2 source, `Core/Public/Math/TransformNonVectorized.h`. Read from a public third-party mirror of the source on GitHub, since Epic's repository requires an account; accessed September 2026. Positions are transformed in the order scale, rotate, translate; `A * B` applies `A` first. The same two rules appear in Epic's API reference, "FTransform" (Unreal Engine 4.27 documentation, Internet Archive copy of 19 July 2024).
 - Khronos, glTF 2.0 Specification. The sign of the node's global transform determinant decides whether front faces are counterclockwise or clockwise.
 - Dunn, F. & Parberry, I. (2011). *3D Math Primer for Graphics and Game Development*, 2nd ed. CRC Press.
 - The 96×48 tile set, the zoom factor and the collapse matrix are invented for teaching.
