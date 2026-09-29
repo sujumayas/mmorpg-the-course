@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Resource locality — MMO406 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1.1fr 1fr;gap:14px}
+@media (max-width:820px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--sans)}
+#ring:focus{outline:none}
+#ring:focus-visible .sel circle.body{stroke:var(--focus);stroke-width:4}
+.region{cursor:pointer}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend svg{display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.bars{margin:6px 0 12px}
+.bar{margin:10px 0}
+.bar .lab{display:flex;justify-content:space-between;font-size:.9rem;font-weight:600}
+.bar .lab b{font-size:1.35rem;font-variant-numeric:tabular-nums}
+.track{height:22px;background:var(--paper);border-radius:6px;overflow:hidden;border:1px solid var(--grid)}
+.fill{height:100%;border-radius:5px 0 0 5px;transition:width .25s}
+.regname{font-family:var(--serif);font-size:1.15rem;margin:0}
+.regtypes{font-size:.86rem;color:var(--ink-soft);margin:0}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+select{font:600 .95rem var(--sans);padding:8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);width:100%;margin-top:4px}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.92rem;margin-top:10px;justify-content:flex-start}
+.check input{width:20px;height:20px;accent-color:var(--ochre)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-family:var(--serif);font-size:.96rem;margin:10px 0 0;color:var(--ink-soft)}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.custom{margin-top:16px;background:var(--paper-2);border-radius:10px;padding:12px}
+.custom h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:0 0 8px}
+.grid-wrap{overflow-x:auto;margin-top:10px}
+.tg{border-collapse:collapse;font-size:.84rem}
+.tg th{padding:4px 6px;font-weight:600;text-align:center}
+.tg th:first-child{text-align:left}
+.tg td{padding:2px;text-align:center}
+.tog{width:34px;height:34px;border-radius:6px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;font:700 .9rem var(--sans)}
+.tog[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table.nums{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+.nums th,.nums td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+.nums th:first-child,.nums td:first-child{text-align:left}
+.nums tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:560px){.nums{font-size:.8rem}.nums th,.nums td{padding:5px 4px}}
+.missing{font-size:.9rem;margin:10px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO406 Worldbuilding and Lore for Persistent Worlds · Week 2 · Worked example</p>
+  <h1>Holding 60% of the resources is not making 60% of the recipes</h1>
+  <p class="lede">Local share = C(r, k) / C(M, k). The types a region holds stay fixed. Add ingredients to recipes and the share you can make at home collapses, so goods have to travel.</p>
+</header>
+
+<section class="panel" aria-label="Resource locality model">
+  <div class="charts">
+    <figure>
+      <figcaption>Regions and the resource types they hold<small>Click a region, or focus the ring and use the arrow keys. Lines are trade routes the recipes demand.</small></figcaption>
+      <svg id="ring" viewBox="0 0 400 380" tabindex="0" role="radiogroup" aria-label="Regions on a ring. Arrow keys change the selected region."></svg>
+      <div class="legend" id="legend"></div>
+    </figure>
+    <figure>
+      <figcaption>Selected region<small>Types held against recipes it can make with no imports</small></figcaption>
+      <p class="regname" id="regName"></p>
+      <p class="regtypes" id="regTypes"></p>
+      <div class="bars" aria-live="polite">
+        <div class="bar"><div class="lab"><span>Types held, r / M</span><b id="bHeld"></b></div><div class="track"><div class="fill" id="fHeld" style="background:var(--steel)"></div></div></div>
+        <div class="bar"><div class="lab"><span>Recipes makeable here, k = <span id="kLab"></span></span><b id="bLocal"></b></div><div class="track"><div class="fill" id="fLocal" style="background:var(--ochre)"></div></div></div>
+      </div>
+      <svg id="kChart" viewBox="0 0 360 170" role="img" aria-label="Local share against recipe size k from 1 to 4"></svg>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="preset">World</label>
+      <select id="preset">
+        <option value="albion">Albion Online biomes (2023 wiki)</option>
+        <option value="all">Everything everywhere</option>
+        <option value="rare">One rare type</option>
+        <option value="custom">Custom</option>
+      </select>
+      <p class="note" id="note"></p>
+    </div>
+    <div>
+      <label for="k">Ingredient types per recipe k <output id="oK"></output></label>
+      <input id="k" type="range" min="1" max="4" step="1" value="3">
+      <label class="check" for="anywhere"><input type="checkbox" id="anywhere"> Show makeable anywhere</label>
+    </div>
+  </div>
+
+  <div class="custom" id="customBox" hidden>
+    <h2>Custom world</h2>
+    <div class="controls" style="margin-top:0">
+      <div><label for="M">Resource types M <output id="oM"></output></label><input id="M" type="range" min="3" max="8" step="1" value="5"></div>
+      <div><label for="nR">Regions <output id="oNR"></output></label><input id="nR" type="range" min="2" max="8" step="1" value="5"></div>
+    </div>
+    <div class="grid-wrap"><table class="tg" id="tgrid" aria-label="Which resource types each region holds"></table></div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="nums" aria-label="Locality numbers">
+      <thead><tr><th>Region</th><th>M</th><th>r</th><th>k</th><th>C(r, k)</th><th>C(M, k)</th><th>Local share</th><th>Travel pressure</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <p class="missing" id="anyLine"></p>
+  <p class="missing" id="missing"></p>
+</section>
+
+<footer>Albion Online biome resources as documented on the Albion Online wiki (2023): forest wood, hide, stone; highland stone, ore, wood; mountain ore, stone, fiber; steppe hide, fiber, ore; swamp fiber, wood, hide. Biome names appear as text only. The other worlds are invented. Model from the MMO406 week 2 lecture, section 2.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const SHAPES=['circle','square','triangle','diamond','hexagon','star','pentagon','cross'];
+const PRESETS={
+  albion:{types:['wood','hide','stone','ore','fiber'],regions:[
+    ['Forest',['wood','hide','stone']],['Highland',['stone','ore','wood']],['Mountain',['ore','stone','fiber']],['Steppe',['hide','fiber','ore']],['Swamp',['fiber','wood','hide']]],
+    note:'Five biomes, three of five resource types each, every type in three biomes. Each biome holds exactly one of the ten possible triples.'},
+  all:{types:['wood','hide','stone','ore','fiber'],regions:[
+    ['Northmarch',['wood','hide','stone','ore','fiber']],['Saltreach',['wood','hide','stone','ore','fiber']],['Emberdale',['wood','hide','stone','ore','fiber']],['Greywater',['wood','hide','stone','ore','fiber']]],
+    note:'An invented world where every region holds all five types. Everything is local, and nobody needs to travel.'},
+  rare:{types:['tin','copper','timber','clay','salt'],regions:[
+    ['Tinmoor',['tin','copper','salt']],['Redcliff',['copper','timber','clay']],['Lowfen',['copper','timber','salt']],['Kilnhollow',['copper','clay','salt']],['Ashwood',['timber','clay','salt']]],
+    note:'An invented world where tin exists in Tinmoor only. The other four regions each hold three of the remaining four types.'}
+};
+const GENERIC=['amber','basalt','cotton','dye','ember','flax','glass','horn'];
+let world=null,k=3,sel=0,showAny=false,mode='albion';
+
+function C(n,r){if(r<0||r>n)return 0;let x=1;for(let i=1;i<=r;i++)x=x*(n-r+i)/i;return Math.round(x);}
+function combos(arr,r){const out=[];(function rec(s,cur){if(cur.length===r){out.push(cur.slice());return;}for(let i=s;i<arr.length;i++){cur.push(arr[i]);rec(i+1,cur);cur.pop();}})(0,[]);return out;}
+function localShare(M,r,kk){const d=C(M,kk);return d===0?null:C(r,kk)/d;}
+function pct(x){return x===null?'n/a':(Math.round(x*1000)/10).toString().replace(/\.0$/,'')+'%';}
+function makeableAnywhere(w,kk){
+  const all=combos(w.types,kk);const sets=w.regions.map(r=>new Set(r[1]));
+  const ok=[],bad=[];all.forEach(cb=>(sets.some(s=>cb.every(t=>s.has(t)))?ok:bad).push(cb));
+  return {ok,bad,total:all.length};
+}
+function tradeLines(w,kk){
+  const lines=[];const sets=w.regions.map(r=>new Set(r[1]));
+  for(let i=0;i<sets.length;i++)for(let j=i+1;j<sets.length;j++){
+    const u=[...new Set([...sets[i],...sets[j]])];
+    if(u.length<kk)continue;
+    const need=combos(u,kk).some(cb=>!sets.some(s=>cb.every(t=>s.has(t))));
+    if(need)lines.push([i,j]);
+  }
+  return lines;
+}
+window.__loc={C,localShare,makeableAnywhere,tradeLines,get world(){return world;}};
+
+function shapePath(name,x,y,s){
+  const pts=(n,rot,rr)=>{let p=[];for(let i=0;i<n;i++){const a=rot+i*2*Math.PI/n;p.push((x+rr*Math.cos(a)).toFixed(1)+','+(y+rr*Math.sin(a)).toFixed(1));}return p.join(' ');};
+  switch(name){
+    case 'circle':return `<circle cx="${x}" cy="${y}" r="${s*.9}"/>`;
+    case 'square':return `<rect x="${x-s*.8}" y="${y-s*.8}" width="${s*1.6}" height="${s*1.6}"/>`;
+    case 'triangle':return `<polygon points="${pts(3,-Math.PI/2,s*1.05)}"/>`;
+    case 'diamond':return `<polygon points="${pts(4,-Math.PI/2,s*1.05)}"/>`;
+    case 'hexagon':return `<polygon points="${pts(6,0,s)}"/>`;
+    case 'pentagon':return `<polygon points="${pts(5,-Math.PI/2,s)}"/>`;
+    case 'star':{let p=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?s*.45:s*1.05;p.push((x+rr*Math.cos(a)).toFixed(1)+','+(y+rr*Math.sin(a)).toFixed(1));}return `<polygon points="${p.join(' ')}"/>`;}
+    case 'cross':{const a=s*.35,b=s*.95;return `<polygon points="${[[-a,-b],[a,-b],[a,-a],[b,-a],[b,a],[a,a],[a,b],[-a,b],[-a,a],[-b,a],[-b,-a],[-a,-a]].map(q=>(x+q[0])+','+(y+q[1])).join(' ')}"/>`;}
+  }
+}
+function shapeOf(t){return SHAPES[world.types.indexOf(t)];}
+
+function drawRing(){
+  const n=world.regions.length,cx=200,cy=185,R=n<=3?110:128,rr=n>6?34:40;
+  const pos=world.regions.map((_,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+R*Math.cos(a),cy+R*Math.sin(a)];});
+  let h='';
+  if(showAny){tradeLines(world,k).forEach(([i,j])=>{h+=`<line x1="${pos[i][0]}" y1="${pos[i][1]}" x2="${pos[j][0]}" y2="${pos[j][1]}" stroke="var(--ochre)" stroke-width="2.5" stroke-opacity=".8"/>`;});}
+  world.regions.forEach((reg,i)=>{
+    const [x,y]=pos[i],on=i===sel;
+    h+=`<g class="region${on?' sel':''}" data-i="${i}" role="radio" aria-checked="${on}" aria-label="${reg[0]}: ${reg[1].join(', ')||'nothing'}">`;
+    h+=`<circle class="body" cx="${x}" cy="${y}" r="${rr}" fill="var(--paper)" stroke="${on?'var(--steel)':'var(--ink-soft)'}" stroke-width="${on?4:1.5}"/>`;
+    const ts=reg[1],per=ts.length>4?4:ts.length,rows=Math.ceil(ts.length/per)||1,sz=7,gap=18;
+    ts.forEach((t,j)=>{const row=Math.floor(j/per),col=j%per,inRow=Math.min(per,ts.length-row*per);
+      const sx=x+(col-(inRow-1)/2)*gap,sy=y+(row-(rows-1)/2)*gap+4;
+      h+=`<g fill="${on?'var(--steel)':'var(--ink)'}">${shapePath(shapeOf(t),sx,sy,sz)}</g>`;});
+    const ly=y<cy-5?y-rr-8:y+rr+17;
+    h+=`<text x="${x}" y="${ly}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--ink)">${reg[0]}</text></g>`;
+  });
+  $('ring').innerHTML=h;
+  $('ring').querySelectorAll('.region').forEach(g=>g.addEventListener('click',()=>{sel=+g.dataset.i;render();}));
+}
+function drawLegend(){
+  $('legend').innerHTML=world.types.map((t,i)=>`<span><svg viewBox="-8 -8 16 16" aria-hidden="true"><g fill="var(--ink)">${shapePath(SHAPES[i],0,0,7)}</g></svg>${t}</span>`).join('');
+}
+function drawK(M,r){
+  const W=360,H=170,l=42,rt=14,t=12,b=30,X=kk=>l+(W-l-rt)*(kk-1)/3,Y=v=>t+(H-t-b)*(1-v);
+  let h='';
+  for(let i=0;i<=4;i++){const v=i/4;h+=`<line x1="${l}" x2="${W-rt}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${l-6}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="var(--ink-soft)">${i*25}%</text>`;}
+  for(let kk=1;kk<=4;kk++)h+=`<text x="${X(kk)}" y="${H-b+18}" text-anchor="middle" font-size="12" fill="var(--ink-soft)">k = ${kk}</text>`;
+  const pts=[1,2,3,4].map(kk=>[kk,localShare(M,r,kk)]).filter(p=>p[1]!==null);
+  h+=`<line x1="${l}" x2="${W-rt}" y1="${Y(r/M)}" y2="${Y(r/M)}" stroke="var(--steel)" stroke-dasharray="6 4" stroke-width="2"/><text x="${W-rt}" y="${Y(r/M)-5}" text-anchor="end" font-size="12" fill="var(--steel)" font-weight="700">types held ${pct(r/M)}</text>`;
+  h+=`<polyline fill="none" stroke="var(--ochre)" stroke-width="2.5" points="${pts.map(p=>X(p[0])+','+Y(p[1])).join(' ')}"/>`;
+  pts.forEach(p=>{const cur=p[0]===k;h+=`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="${cur?7:4}" fill="var(--ochre)" stroke="var(--paper)" stroke-width="2"/>`;
+    h+=`<text x="${X(p[0])+(p[0]===4?-8:8)}" y="${Y(p[1])-9}" text-anchor="${p[0]===4?'end':'start'}" font-size="12" font-weight="${cur?700:400}" fill="var(--ink)">${pct(p[1])}</text>`;});
+  $('kChart').innerHTML=h;
+}
+function render(){
+  const M=world.types.length;if(sel>=world.regions.length)sel=0;
+  const reg=world.regions[sel],r=reg[1].length,ls=localShare(M,r,k);
+  $('oK').textContent=k;$('kLab').textContent=k;
+  $('regName').textContent=reg[0];$('regTypes').textContent=`Holds ${r} of ${M}: ${reg[1].join(', ')||'nothing'}`;
+  $('bHeld').textContent=pct(r/M);$('fHeld').style.width=(r/M*100)+'%';
+  $('bLocal').textContent=pct(ls);$('fLocal').style.width=((ls||0)*100)+'%';
+  drawRing();drawLegend();drawK(M,r);
+  const any=makeableAnywhere(world,k),lines=tradeLines(world,k);
+  $('tbody').innerHTML=world.regions.map((g,i)=>{const rr=g[1].length,s=localShare(M,rr,k);
+    return `<tr class="${i===sel?'here':''}"><td>${g[0]}</td><td>${M}</td><td>${rr}</td><td>${k}</td><td>${C(rr,k)}</td><td>${C(M,k)}</td><td>${pct(s)}</td><td>${s===null?'n/a':pct(1-s)}</td></tr>`;}).join('');
+  $('anyLine').innerHTML=any.total?`<b>Makeable anywhere: ${any.ok.length} of ${any.total}</b> recipes with k = ${k} can be gathered inside a single region. Trade routes the recipes demand: <b>${lines.length}</b> of ${C(world.regions.length,2)} region pairs${showAny?'':' (switch on "Show makeable anywhere" to draw them)'}.`:`No recipe can need ${k} different types when only ${M} exist.`;
+  $('missing').textContent=any.bad.length?`Not makeable in any single region: ${any.bad.map(c=>'{'+c.join(', ')+'}').join(', ')}.`:(any.total?'Every recipe of this size can be made inside at least one region.':'');
+  let s;
+  if(ls===null) s=`With M = ${M} types there are no ${k}-type recipes.`;
+  else if(ls===1&&r===M) s=`${reg[0]} holds every type, so every recipe is local and travel pressure is 0%.`;
+  else if(Math.abs(ls-r/M)<1e-9) s=`${reg[0]} holds ${pct(r/M)} of the resource types and can make the same <b>${pct(ls)}</b> of ${k}-ingredient recipes at home. Raise k and watch the two bars split.`;
+  else s=`${reg[0]} holds ${pct(r/M)} of the resource types but can make only <b>${pct(ls)}</b> of ${k}-ingredient recipes at home: C(${r}, ${k}) = ${C(r,k)} out of C(${M}, ${k}) = ${C(M,k)}. The other ${pct(1-ls)} need imports.`;
+  $('insight').innerHTML=s;
+  if(mode==='custom')buildGrid();
+}
+function buildGrid(){
+  let h='<thead><tr><th scope="col">Region</th>'+world.types.map((t,i)=>`<th scope="col"><svg viewBox="-8 -8 16 16" width="12" height="12" aria-hidden="true" style="display:inline;width:12px"><g fill="var(--ink)">${shapePath(SHAPES[i],0,0,7)}</g></svg><br>${t}</th>`).join('')+'</tr></thead><tbody>';
+  world.regions.forEach((g,i)=>{h+=`<tr><th scope="row">${g[0]}</th>`+world.types.map(t=>{const on=g[1].includes(t);return `<td><button class="tog" data-r="${i}" data-t="${t}" aria-pressed="${on}" aria-label="${g[0]} holds ${t}">${on?'✓':''}</button></td>`;}).join('')+'</tr>';});
+  $('tgrid').innerHTML=h+'</tbody>';
+  $('tgrid').querySelectorAll('.tog').forEach(b=>b.addEventListener('click',()=>{
+    const g=world.regions[+b.dataset.r],t=b.dataset.t,i=g[1].indexOf(t);
+    if(i>=0)g[1].splice(i,1);else{g[1].push(t);g[1].sort((a,c)=>world.types.indexOf(a)-world.types.indexOf(c));}
+    const key=b.dataset.r+'|'+t;render();const nb=$('tgrid').querySelector(`.tog[data-r="${b.dataset.r}"][data-t="${t}"]`);if(nb)nb.focus();
+  }));
+}
+function clone(w){return {types:w.types.slice(),regions:w.regions.map(r=>[r[0],r[1].slice()])};}
+function loadPreset(p){
+  mode=p;$('customBox').hidden=p!=='custom';
+  if(p==='custom'){ // start from the current world
+    $('M').value=world.types.length;$('nR').value=world.regions.length;$('oM').textContent=world.types.length;$('oNR').textContent=world.regions.length;
+    $('note').textContent='Toggle the grid to set which types each region holds. The world starts as a copy of the one you had.';
+  } else {world=clone(PRESETS[p]);sel=0;$('note').textContent=PRESETS[p].note;}
+  render();
+}
+function resizeCustom(){
+  const M=+$('M').value,n=+$('nR').value;$('oM').textContent=M;$('oNR').textContent=n;
+  const pool=world.types.concat(GENERIC.filter(t=>!world.types.includes(t)));
+  const types=pool.slice(0,M);
+  const regions=[];for(let i=0;i<n;i++){const old=world.regions[i];regions.push(old?[old[0],old[1].filter(t=>types.includes(t))]:['Region '+(i+1),types.slice(0,Math.min(3,M))]);}
+  world={types,regions};render();
+}
+$('preset').addEventListener('change',e=>loadPreset(e.target.value));
+$('k').addEventListener('input',e=>{k=+e.target.value;render();});
+$('anywhere').addEventListener('change',e=>{showAny=e.target.checked;render();});
+$('M').addEventListener('input',resizeCustom);$('nR').addEventListener('input',resizeCustom);
+$('ring').addEventListener('keydown',e=>{const n=world.regions.length;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){sel=(sel+1)%n;render();e.preventDefault();}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){sel=(sel-1+n)%n;render();e.preventDefault();}});
+window.__setWorld=(types,regions)=>{mode='custom';world={types,regions};sel=0;render();};
+loadPreset('albion');
+})();
+</script>
+</body>
+</html>
