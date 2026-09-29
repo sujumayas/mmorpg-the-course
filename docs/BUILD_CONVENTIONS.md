@@ -56,3 +56,4 @@ Studio courses are team projects. Per ORCHESTRATION.md they are mostly briefs, m
 - `assessments/` holds one brief per milestone with a rubric totalling 100, a peer-assessment brief, and `exam-bank.md` as a viva and reflection bank of at least 40 numbered questions with model answers or marking guidance.
 - Link to the courses that teach each skill (CS202 networking, PR101 production, GD201 levels) instead of re-teaching them.
 - `tools/check_course.py` applies these rules to the studio course codes.
+- Never put anyone's email address or other personal data in API requests, User-Agent strings or query parameters (for example Crossref or OpenAlex `mailto=`). Use the anonymous endpoints.

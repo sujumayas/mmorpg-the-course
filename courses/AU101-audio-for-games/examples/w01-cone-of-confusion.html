@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cone of confusion · AU101 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1.25fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;touch-action:none}
+#cHead{height:300px;cursor:grab;border-radius:8px}
+#cItd{height:300px}
+#cEars{height:110px}
+.caption{font-family:var(--serif);font-size:1.12rem;font-weight:600;margin:14px 0 0}
+.readout{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+fieldset{border:0;padding:0;margin:10px 0 0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.radio{display:flex;flex-wrap:wrap;gap:6px}
+.radio label{font-weight:600;font-size:.88rem;border:1.5px solid var(--steel);border-radius:8px;padding:6px 10px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.radio input{accent-color:var(--steel);margin:0}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-size:.88rem;color:var(--ink-soft);margin:8px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);min-height:3em}
+.audio{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px;padding:8px 12px;border-radius:10px;background:var(--paper-2);font-size:.9rem}
+.audio label{font-weight:600;font-size:.9rem;align-items:center}
+.audio input[type=range]{width:140px}
+.audio .state{color:var(--ink-soft)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 1 · Worked example</p>
+  <h1>The cone of confusion</h1>
+  <p class="lede">A sound 30&deg; to your front right and its mirror 150&deg; behind you reach your ears with the same timing difference. Timing alone can&rsquo;t tell front from back. Turn your head and the two split apart.</p>
+</header>
+
+<div class="audio" role="group" aria-label="Sound output">
+  <button id="mute" aria-pressed="false">Mute</button>
+  <label for="vol">Volume <output id="oVol">70%</output></label>
+  <input id="vol" type="range" min="0" max="100" step="1" value="70">
+  <span class="state" id="audioState">Sound is off until you press a play button.</span>
+</div>
+
+<section class="panel">
+  <div class="charts">
+    <figure>
+      <figcaption>Top-down head<small>Drag the source dot, or focus it and use the arrow keys. The dashed dot is its mirror.</small></figcaption>
+      <canvas id="cHead" tabindex="0" role="slider" aria-label="Source azimuth" aria-valuemin="0" aria-valuemax="359" aria-valuenow="30" aria-valuetext="30 degrees"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Interaural time difference vs azimuth<small>Positive means the right ear hears it first. Solid dot is the source, hollow dot the mirror.</small></figcaption>
+      <canvas id="cItd" role="img" aria-label="ITD curve over azimuth with source and mirror markers"></canvas>
+    </figure>
+  </div>
+  <p class="caption" id="caption">Same delay, opposite sides of your head.</p>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rAz">—</b><span>azimuth</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rMir">—</b><span>mirror azimuth</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rLat">—</b><span>lateral angle</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rItd">—</b><span>ITD</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSmp">—</b><span>ITD, samples at 48 kHz</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rIld">—</b><span>ILD, right minus left</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="az">Source azimuth <output id="oAz">30&deg;</output></label>
+      <input id="az" type="range" min="0" max="359" step="1" value="30">
+      <label for="rad" style="margin-top:8px">Head radius <output id="oRad">0.0875 m</output></label>
+      <input id="rad" type="range" min="0.07" max="0.1" step="0.0025" value="0.0875">
+      <fieldset>
+        <legend>Cue model</legend>
+        <div class="radio">
+          <label><input type="radio" name="cue" value="itd" checked> timing only</label>
+          <label><input type="radio" name="cue" value="ild"> timing + level difference</label>
+        </div>
+      </fieldset>
+    </div>
+    <div>
+      <div class="btns">
+        <button id="bPlay" class="primary">Play click</button>
+        <button id="bMirror">Play mirror</button>
+        <button id="bTurn">Head turn +20&deg;</button>
+      </div>
+      <p class="note">Headphones recommended. Each ear gets its own channel, so speakers blur the cue.</p>
+      <figure style="margin-top:10px">
+        <figcaption>What each ear gets<small id="earsCap">The last click played, zoomed to 1.5 ms. Shown before you play anything too.</small></figcaption>
+        <canvas id="cEars" role="img" aria-label="Left and right ear click waveforms showing the delay"></canvas>
+      </figure>
+    </div>
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+</section>
+
+<footer>Model: spherical head, ITD = (R / c)(&theta; + sin &theta;) with lateral angle &theta; = asin(sin a), R = 0.0875 m, c = 343 m/s (Woodworth's formula). The level difference is a simple 6 dB &times; sin a teaching model, not a measured head response. No pinna filtering is modelled, which is why front and back stay identical here.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const D2R=Math.PI/180,C=343;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+let R=0.0875,A=30,turn=0,cue='itd',turnInfo=null,lastPlayed=null;
+
+const norm=d=>((d%360)+360)%360;
+const mirror=a=>norm(180-a);
+const lateral=a=>Math.asin(Math.sin(a*D2R));
+const itd=a=>{const l=lateral(a);return R/C*(l+Math.sin(l));};
+const ild=a=>6*Math.sin(a*D2R);
+const ms=s=>(s*1000).toFixed(3)+' ms';
+const deg=d=>Math.round(d)+'°';
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+
+function drawHead(){
+  const {g,w,h}=setupCanvas($('cHead'));
+  g.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,S=Math.min(w,h)/2-18,rr=S*0.85,rh=S*0.30;
+  g.font='12px '+css('--sans');
+  // ring
+  g.strokeStyle=css('--grid');g.lineWidth=1.5;g.beginPath();g.arc(cx,cy,rr,0,7);g.stroke();
+  // front/back axis label
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='bottom';
+  const P=(ang,r)=>[cx+r*Math.sin(ang*D2R),cy-r*Math.cos(ang*D2R)];
+  // cone: the two directions share a line parallel to the ear axis
+  const src=P(A,rr),mir=P(mirror(A),rr);
+  g.strokeStyle=css('--ochre');g.setLineDash([5,5]);g.lineWidth=1.5;g.beginPath();g.moveTo(src[0],src[1]);g.lineTo(mir[0],mir[1]);g.stroke();g.setLineDash([]);
+  // head
+  g.save();g.translate(cx,cy);g.rotate(turn*D2R);
+  g.fillStyle=css('--paper');g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.arc(0,0,rh,0,7);g.fill();g.stroke();
+  g.beginPath();g.moveTo(-8,-rh+2);g.lineTo(0,-rh-12);g.lineTo(8,-rh+2);g.stroke();
+  g.fillStyle=css('--ink');g.fillRect(rh-3,-9,8,18);g.fillRect(-rh-5,-9,8,18);
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='middle';
+  g.fillText('L',-rh+14,0);g.fillText('R',rh-14,0);
+  g.restore();
+  // ticks for front / right / back / left in head frame
+  g.fillStyle=css('--ink-soft');
+  [[0,'0° front'],[90,'90°'],[180,'180° back'],[270,'270°']].forEach(([a,t])=>{
+    const p=P(a+turn,rr+11);g.textAlign=Math.abs(Math.sin((a+turn)*D2R))<.3?'center':(Math.sin((a+turn)*D2R)>0?'left':'right');
+    g.textBaseline='middle';const q=P(a+turn,a%180===0?rr+10:rr+6);g.fillText(t,q[0],q[1]);
+  });
+  // mirror dot
+  g.setLineDash([3,3]);g.strokeStyle=css('--ink-soft');g.lineWidth=2;g.beginPath();g.arc(mir[0],mir[1],8,0,7);g.stroke();g.setLineDash([]);
+  // source dot
+  g.fillStyle=css('--steel');g.beginPath();g.arc(src[0],src[1],10,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  // labels
+  const lab=(p,t,col)=>{g.fillStyle=col;g.font='600 12px '+css('--sans');g.textAlign=p[0]<cx?'right':'left';g.textBaseline='middle';g.fillText(t,p[0]+(p[0]<cx?-14:14),p[1]+(p[1]<cy?-12:12));};
+  const rel=norm(A-turn),relM=norm(mirror(A)-turn);
+  lab(src,'source '+deg(rel),css('--steel'));
+  if(mirror(A)!==A)lab(mir,'mirror '+deg(relM),css('--ink-soft'));
+}
+
+function drawItd(){
+  const {g,w,h}=setupCanvas($('cItd'));
+  g.clearRect(0,0,w,h);
+  const pad={l:62,r:20,t:12,b:34},yM=(R/C*(Math.PI/2+1)>0.0007)?0.8:0.7;
+  const X=a=>pad.l+(w-pad.l-pad.r)*a/360,Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v*1000+yM)/(2*yM));
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=-2;i<=2;i++){const v=yM*i/2/1000,y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText((yM*i/2).toFixed(2),pad.l-6,y);}
+  for(let a=0;a<=360;a+=90){g.textAlign='center';g.textBaseline='top';g.fillStyle=css('--ink-soft');g.fillText(a+'°',X(a),h-pad.b+6);
+    g.strokeStyle=css('--grid');g.beginPath();g.moveTo(X(a),pad.t);g.lineTo(X(a),h-pad.b);g.stroke();}
+  g.save();g.translate(2,pad.t+(h-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='top';g.fillText('ITD (ms)',0,0);g.restore();
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=360;i++){const x=X(i),y=Y(itd(i));i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();
+  const a=norm(A-turn),m=norm(mirror(A)-turn);
+  // previous positions during/after a head turn
+  if(turn>0){[norm(A),mirror(A)].forEach(p=>{g.strokeStyle=css('--ink-soft');g.globalAlpha=.5;g.lineWidth=1.5;g.beginPath();g.arc(X(p),Y(itd(p)),4,0,7);g.stroke();g.globalAlpha=1;});}
+  const same=Math.abs(itd(a)-itd(m))<1e-9;
+  if(same){g.strokeStyle=css('--ochre');g.setLineDash([6,5]);g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(itd(a)));g.lineTo(w-pad.r,Y(itd(a)));g.stroke();g.setLineDash([]);}
+  g.fillStyle=css('--steel');g.beginPath();g.arc(X(a),Y(itd(a)),7,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.strokeStyle=css('--ink');g.lineWidth=2.5;g.fillStyle=css('--paper');g.beginPath();g.arc(X(m),Y(itd(m)),6,0,7);g.fill();g.stroke();
+}
+
+// seeded 5 ms noise click, linear decay
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function clickSamples(sr){const n=Math.round(sr*0.005),r=mulberry32(7),out=new Float32Array(n);for(let i=0;i<n;i++)out[i]=(r()*2-1)*(1-i/n);return out;}
+const CLICK=clickSamples(48000);
+
+function drawEars(az){
+  const {g,w,h}=setupCanvas($('cEars'));g.clearRect(0,0,w,h);
+  const t=itd(az),L=cue==='ild'?Math.pow(10,-ild(az)/40):1,Rg=cue==='ild'?Math.pow(10,ild(az)/40):1;
+  const dl=t>0?t:0,dr=t<0?-t:0,span=0.0015,pad=30,row=(h-8)/2;
+  g.font='12px '+css('--sans');g.textBaseline='middle';g.textAlign='left';
+  [['L',dl,L,css('--steel'),0],['R',dr,Rg,css('--blood'),1]].forEach(([nm,d,gain,col,k])=>{
+    const y0=4+row*k+row/2;g.fillStyle=css('--ink-soft');g.fillText(nm,4,y0);
+    g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad,y0);g.lineTo(w-4,y0);g.stroke();
+    g.strokeStyle=col;g.lineWidth=1.2;g.beginPath();
+    for(let i=0;i<CLICK.length;i++){const x=pad+(w-pad-4)*(d+i/48000)/span*0.999;if(x>w-4)break;const y=y0-CLICK[i]*gain*row*0.42;i?g.lineTo(x,y):g.moveTo(x,y);}
+    g.stroke();
+  });
+  $('earsCap').textContent=`Source at ${deg(az)}: ${t>=0?'left':'right'} ear delayed ${(Math.abs(t)*1e6).toFixed(0)} µs`+(cue==='ild'?`, level ${ild(az)>=0?'right':'left'} +${Math.abs(ild(az)).toFixed(1)} dB.`:'. Levels equal.');
+}
+
+function readouts(){
+  const a=norm(A-turn),m=norm(mirror(A)-turn),t=itd(a);
+  $('rAz').textContent=deg(a);$('rMir').textContent=deg(m);
+  $('rLat').textContent=(lateral(a)/D2R).toFixed(1)+'°';
+  $('rItd').textContent=ms(t);$('rSmp').textContent=(t*48000).toFixed(1);
+  $('rIld').textContent=(ild(a)>=0?'+':'')+ild(a).toFixed(1)+' dB';
+  $('oAz').textContent=deg(A);$('oRad').textContent=R.toFixed(4)+' m';
+  const cH=$('cHead');cH.setAttribute('aria-valuenow',A);cH.setAttribute('aria-valuetext',`${A} degrees, mirror ${mirror(A)} degrees`);
+  const same=Math.abs(itd(a)-itd(m))<1e-9;
+  $('caption').textContent=a===m?'Straight to the side: the source is its own mirror.':(same?'Same delay, opposite sides of your head.':'After the turn, the two delays differ.');
+  if(turnInfo)$('insight').textContent=turnInfo;
+  else $('insight').textContent=a===m?`At ${deg(a)} the source sits on the ear axis, so it has no mirror. This is the largest delay the head can make: ${ms(t)}.`
+    :`Source ${deg(a)} and mirror ${deg(m)} both give ${ms(t)} (${(t*48000).toFixed(1)} samples at 48 kHz). ${cue==='ild'?'The level difference is the same too, so adding it does not help. ':''}Press "Head turn +20°" to break the tie.`;
+}
+function drawAll(){drawHead();drawItd();drawEars(lastPlayed===null?norm(A-turn):lastPlayed);readouts();}
+
+function setA(v){A=norm(Math.round(v));turn=0;turnInfo=null;lastPlayed=null;$('az').value=A;drawAll();}
+
+// audio
+let ctx=null,master=null,muted=false,vol=0.7,buf=null;
+function ensureAudio(){
+  if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('audioState').textContent='This browser has no Web Audio. The pictures still show every cue.';return false;}
+    ctx=new AC();master=ctx.createGain();master.connect(ctx.destination);
+    buf=ctx.createBuffer(1,Math.round(ctx.sampleRate*0.005),ctx.sampleRate);buf.copyToChannel(clickSamples(ctx.sampleRate),0);}
+  if(ctx.state==='suspended')ctx.resume();
+  master.gain.value=muted?0:vol*0.8;$('audioState').textContent=muted?'Muted. The ear view still shows each click.':'Sound on.';
+  return true;
+}
+function playAt(az,when){
+  lastPlayed=az;drawEars(az);
+  if(!ensureAudio())return;
+  const t=itd(az),src=ctx.createBufferSource();src.buffer=buf;
+  const merger=ctx.createChannelMerger(2);
+  [[0,t>0?t:0,-1],[1,t<0?-t:0,1]].forEach(([ch,d,sgn])=>{
+    const dl=ctx.createDelay(0.01);dl.delayTime.value=d;const gn=ctx.createGain();
+    gn.gain.value=cue==='ild'?Math.pow(10,sgn*ild(az)/40):1;
+    src.connect(dl);dl.connect(gn);gn.connect(merger,0,ch);
+  });
+  merger.connect(master);src.start(ctx.currentTime+0.03+(when||0));
+}
+$('bPlay').addEventListener('click',()=>playAt(norm(A-turn)));
+$('bMirror').addEventListener('click',()=>playAt(norm(mirror(A)-turn)));
+$('bTurn').addEventListener('click',()=>{
+  turn=0;const a0=A,m0=mirror(A),a1=norm(A-20),m1=norm(m0-20);
+  turnInfo=`Front source ITD went from ${ms(itd(a0))} to ${ms(itd(a1))} (${deg(a0)} → ${deg(a1)}); mirror went from ${ms(itd(m0))} to ${ms(itd(m1))} (${deg(m0)} → ${deg(m1)}). They move in opposite directions, so the brain knows which one it was.`;
+  playAt(a0,0);playAt(a1,0.6);
+  if(reduce.matches){turn=20;drawAll();return;}
+  const t0=performance.now(),dur=700;
+  (function step(now){const k=Math.min(1,(now-t0)/dur);turn=20*(1-Math.pow(1-k,3));drawHead();drawItd();readouts();if(k<1)requestAnimationFrame(step);else drawAll();})(t0);
+});
+$('mute').addEventListener('click',()=>{muted=!muted;$('mute').setAttribute('aria-pressed',muted);$('mute').textContent=muted?'Unmute':'Mute';if(ctx)ensureAudio();else $('audioState').textContent=muted?'Muted.':'Sound is off until you press a play button.';});
+$('vol').addEventListener('input',e=>{vol=e.target.value/100;$('oVol').textContent=e.target.value+'%';if(ctx&&!muted)master.gain.value=vol*0.8;});
+
+$('az').addEventListener('input',e=>setA(+e.target.value));
+$('rad').addEventListener('input',e=>{R=+e.target.value;drawAll();});
+document.querySelectorAll('input[name=cue]').forEach(r=>r.addEventListener('change',e=>{cue=e.target.value;drawAll();}));
+const cH=$('cHead');
+cH.addEventListener('keydown',e=>{
+  const s=e.shiftKey?15:5;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp'){setA(A+s);e.preventDefault();}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){setA(A-s);e.preventDefault();}
+});
+let drag=false;
+function fromPointer(e){const r=cH.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2;setA(Math.atan2(dx,-dy)/D2R);}
+cH.addEventListener('pointerdown',e=>{drag=true;cH.setPointerCapture(e.pointerId);fromPointer(e);});
+cH.addEventListener('pointermove',e=>{if(drag)fromPointer(e);});
+cH.addEventListener('pointerup',()=>{drag=false;});
+window.addEventListener('resize',drawAll);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+
+drawAll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Machine-gun layering · AU101 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1160px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.lede b{font-variant-numeric:tabular-nums}
+.layout{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.layout{grid-template-columns:3fr 2fr;align-items:start}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figure+figure{margin-top:14px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+/* burst strip */
+.strip{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;list-style:none;margin:0;padding:0}
+@media (max-width:560px){.strip{grid-template-columns:repeat(5,1fr)}}
+.tile{position:relative;background:var(--paper);border-radius:8px;border:2px solid var(--grid);padding:6px 4px 4px;text-align:center;min-width:0;transition:opacity .08s,transform .08s}
+.tile.wait{opacity:.28}
+.tile.hit{transform:translateY(-3px)}
+.tile .bars{display:flex;justify-content:center;align-items:flex-end;gap:3px;height:38px}
+.tile .bars i{display:block;width:9px;border-radius:2px 2px 0 0}
+.tile .ll{display:flex;justify-content:center;gap:3px;font-size:.62rem;color:var(--ink-soft);line-height:1.2}
+.tile .ll span{width:9px}
+.tile .pt{display:block;font-weight:700;font-size:.82rem;font-variant-numeric:tabular-nums;line-height:1.3}
+.tile .tag{display:block;font-size:.68rem;font-weight:700;height:1.1em;line-height:1.1;color:var(--blood)}
+.tile.repeat{border-color:var(--blood);border-style:solid}
+.tile.near{border-color:var(--blood);border-style:dotted}
+.tile .n{position:absolute;top:2px;left:5px;font-size:.62rem;color:var(--ink-soft)}
+.summary{margin:10px 0 0;font-size:.95rem}
+.mobile-only{margin-top:8px}
+@media (min-width:900px){.mobile-only{display:none}}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;color:var(--ink-soft);margin-top:8px}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.key .ol{width:14px;height:10px;border:2px solid var(--blood);background:transparent}
+.key .ol.d{border-style:dotted}
+/* stats */
+.stats{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:640px){.stats{grid-template-columns:3fr 2fr}}
+canvas{display:block;width:100%;height:250px}
+.leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--ink-soft);margin-top:4px}
+.leg i{display:inline-block;width:12px;height:10px;margin-right:5px;vertical-align:-1px;border-radius:2px}
+dl{margin:0;display:grid;grid-template-columns:1fr;gap:6px}
+dl div{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px}
+dt{font-size:.78rem;color:var(--ink-soft)}
+dd{margin:0;font-weight:700;font-size:1.15rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.pnote{font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+/* controls */
+fieldset{border:0;padding:0;margin:0 0 12px;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+.modes{display:grid;gap:5px}
+.modes label{display:flex;gap:8px;align-items:flex-start;border:1.5px solid var(--steel);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.9rem}
+.modes label:has(input:checked){background:var(--steel);color:var(--paper)}
+.modes label:has(input:checked) small{color:var(--paper)}
+.modes input{accent-color:var(--ink);margin:4px 0 0}
+.modes small{display:block;color:var(--ink-soft);font-size:.76rem}
+.modes label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.ctl{margin-bottom:10px}
+.ctl.off{opacity:.45}
+label.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.toggle{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--steel)}
+.hint{font-size:.78rem;color:var(--ink-soft);margin:0}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+button{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--paper)}
+kbd{font:600 .75rem var(--sans);border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:6px;opacity:.8}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.audio{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border-radius:10px;background:var(--paper-2);font-size:.88rem}
+.audio label{font-weight:600;display:flex;gap:6px;align-items:center}
+.audio input[type=range]{width:120px}
+.meter{flex:1 1 100%;display:flex;align-items:center;gap:8px}
+.meter .bar{flex:1;height:10px;background:var(--paper);border-radius:5px;overflow:hidden;border:1px solid var(--grid)}
+.meter .bar span{display:block;height:100%;width:0;background:var(--moss)}
+.meter output{font-variant-numeric:tabular-nums;font-size:.8rem;color:var(--ink-soft);min-width:9ch;text-align:right}
+.state{color:var(--ink-soft);font-size:.82rem;flex:1 1 100%}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:78ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 4 · Worked example (signature)</p>
+  <h1>Twelve files, two ways to spend them</h1>
+  <p class="lede">Twelve whole gunshots repeat <b>0.75</b> times in a 10-shot burst. The same twelve files split into three layers of four repeat <b>0.14</b> times. A no-repeat rule takes either to zero. Fire a burst, then run the long-run simulation.</p>
+</header>
+
+<div class="layout">
+  <section class="panel" aria-label="Burst and statistics">
+    <figure>
+      <figcaption>Burst<small id="burstCap">Preview burst, generated silently. Press Fire to hear one.</small></figcaption>
+      <ol class="strip" id="strip" aria-label="Shots in the most recent burst"></ol>
+      <div class="key" aria-hidden="true">
+        <span><i style="background:var(--steel)"></i>variant 1</span><span><i style="background:var(--ochre)"></i>2</span><span><i style="background:var(--moss)"></i>3</span><span><i style="background:var(--ink-soft)"></i>4</span>
+        <span>bars: T transient, B body, L tail</span>
+        <span><i class="ol"></i>repeat of previous</span><span><i class="ol d"></i>same within grouping</span>
+      </div>
+      <p class="summary" id="summary" aria-live="polite"></p>
+      <button id="bFire2" class="primary mobile-only">Fire burst</button>
+    </figure>
+    <figure>
+      <figcaption>Long run<small>Expected repeats per 10-shot burst, predicted 9 &times; R against the average of 1,000 simulated bursts, for every mode at the current settings.</small></figcaption>
+      <div class="stats">
+        <div>
+          <canvas id="cChart" role="img" aria-label="Predicted and measured repeats per burst for five modes"></canvas>
+          <div class="leg"><span><i style="background:var(--steel)"></i>predicted 9R</span><span><i style="background:var(--ochre)"></i>measured, 1,000 bursts</span><span>Bars above 1 are cut; the label is the true value.</span></div>
+        </div>
+        <div>
+          <dl aria-live="polite">
+            <div style="--c:var(--ink)"><dt>Mode</dt><dd id="rMode">—</dd></div>
+            <div style="--c:var(--steel)"><dt>Outcomes n</dt><dd id="rN">—</dd></div>
+            <div style="--c:var(--blood)"><dt>Repeat chance R</dt><dd id="rR">—</dd></div>
+            <div style="--c:var(--steel)"><dt>Expected repeats per burst, 9R</dt><dd id="r9R">—</dd></div>
+            <div style="--c:var(--blood)"><dt>P(at least one repeat) = 1 &minus; (1 &minus; R)^9</dt><dd id="rP">—</dd></div>
+            <div style="--c:var(--ochre)"><dt>Measured, 1,000 bursts</dt><dd id="rMeas">—</dd></div>
+            <div style="--c:var(--moss)"><dt>Files in memory</dt><dd id="rFiles">—</dd></div>
+          </dl>
+          <p class="pnote" id="pnote"></p>
+        </div>
+      </div>
+    </figure>
+    <div class="insight" id="insight" aria-live="polite"></div>
+  </section>
+
+  <section class="panel" aria-label="Controls">
+    <fieldset>
+      <legend>Mode</legend>
+      <div class="modes">
+        <label><input type="radio" name="mode" value="same" checked><span>Same sample &times; 10<small>One file, no pitch, no volume change</small></span></label>
+        <label><input type="radio" name="mode" value="doom"><span>Doom pitch<small>One file, k uniform in &minus;15..16</small></span></label>
+        <label><input type="radio" name="mode" value="heretic"><span>Heretic pitch<small>One file, k = a &minus; b, a and b in 0..7</small></span></label>
+        <label><input type="radio" name="mode" value="whole"><span>12 whole variants<small>12 fixed transient + body + tail shots</small></span></label>
+        <label><input type="radio" name="mode" value="layers"><span>3 layers &times; 4<small>Each layer picked on its own</small></span></label>
+      </div>
+    </fieldset>
+    <div class="ctl" id="ctlNR">
+      <label class="toggle"><input type="checkbox" id="noRep"> No repeat</label>
+      <p class="hint">Each file pool rerolls if it would pick the same index twice in a row. Applies to the two variant modes.</p>
+    </div>
+    <div class="ctl" id="ctlP">
+      <label class="lbl" for="pr">Pitch range <output id="oPr">&plusmn;1.00 st</output></label>
+      <input id="pr" type="range" min="0" max="3" step="0.25" value="1">
+      <p class="hint">Continuous, uniform. Variant modes only.</p>
+    </div>
+    <div class="ctl">
+      <label class="lbl" for="gw">Sounds the same within <output id="oGw">0 (exact)</output></label>
+      <input id="gw" type="range" min="0" max="1" step="0.05" value="0">
+      <p class="hint">Pitches share a group when floor(s / width) matches.</p>
+    </div>
+    <div class="ctl">
+      <label class="lbl" for="rate">Rate <output id="oRate">8.75 /s</output></label>
+      <input id="rate" type="range" min="2" max="15" step="0.25" value="8.75">
+      <p class="hint" id="rateHint">8.75 shots per second is 4/35 s apart, Doom's chaingun.</p>
+    </div>
+    <div class="btns">
+      <button id="bFire" class="primary" aria-keyshortcuts="F">Fire burst<kbd>F</kbd></button>
+      <button id="bSim" aria-keyshortcuts="S">Simulate 1,000 bursts<kbd>S</kbd></button>
+    </div>
+    <div class="audio" role="group" aria-label="Sound output">
+      <button id="mute" aria-pressed="false">Mute</button>
+      <label for="vol">Volume <output id="oVol">70%</output></label>
+      <input id="vol" type="range" min="0" max="100" step="1" value="70">
+      <div class="meter" aria-hidden="true"><span style="font-size:.8rem">Output</span><div class="bar"><span id="meterBar"></span></div><output id="meterDb">silent</output></div>
+      <span class="state" id="audioState">No sound until you press Fire. All shots are synthesised in the page.</span>
+    </div>
+  </section>
+</div>
+
+<footer>Pitch rules: Doom (1993) scales the sample rate by a random step; this page maps its rule to semitones as s = 12 &times; log2(1 / (2 &minus; (128 + k)/128)). Heretic's rule subtracts two random numbers, so the middle values are more likely. Repeat chance R = &Sigma; p&sup2; over outcomes, independent parts multiply, and a no-repeat pool contributes 0 to immediate repeats. Gunshots are noise and sine sweeps rendered in the browser; no recordings are used.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const MODES=['same','doom','heretic','whole','layers'];
+const NAMES={same:'Same sample × 10',doom:'Doom pitch',heretic:'Heretic pitch',whole:'12 whole variants',layers:'3 layers × 4'};
+const SHORT={same:'Same',doom:'Doom',heretic:'Heretic',whole:'12 whole',layers:'3 × 4'};
+const FILES={same:1,doom:1,heretic:1,whole:12,layers:12};
+let mode='same',noRep=false,PR=1,W=0,rate=8.75;
+const doomS=k=>12*Math.log2(1/(2-(128+k)/128));
+const WHOLE=[...Array(12)].map((_,j)=>({t:j%4,b:Math.floor(j/3)%4,l:(j+1)%4}));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const ri=(r,n)=>Math.floor(r()*n);
+
+// discrete pitch distributions for the one-file modes
+function pitchDist(m){
+  const d=new Map();
+  if(m==='doom')for(let k=-15;k<=16;k++)d.set(k,(d.get(k)||0)+1/32);
+  if(m==='heretic')for(let a=0;a<8;a++)for(let b=0;b<8;b++){const k=a-b;d.set(k,(d.get(k)||0)+1/64);}
+  return d;
+}
+const bin=s=>Math.floor(s/W+1e-9);
+function groupsOf(m){const g=new Map();pitchDist(m).forEach((p,k)=>{const key=W>0?bin(doomS(k)):k;g.set(key,(g.get(key)||0)+p);});return g;}
+
+// prediction
+function predict(m){
+  let Rf=1,Rp=1,n,files=FILES[m],note='';
+  const nr=noRep&&(m==='whole'||m==='layers');
+  if(m==='same'){n='1';}
+  else if(m==='doom'||m==='heretic'){const g=groupsOf(m);Rp=[...g.values()].reduce((a,p)=>a+p*p,0);n=String(g.size);
+    note=W>0?`${g.size} pitch groups of width ${W.toFixed(2)} st from the ${m==='doom'?32:15} distinct pitches.`:'Each pitch step counts as its own outcome.';}
+  else{
+    const fileN=m==='whole'?12:64;Rf=nr?0:1/fileN;
+    if(PR===0){n=String(fileN);note='No pitch variation.';}
+    else if(W===0){n=`${fileN} files × continuous pitch`;note='Pitch: continuous, exact repeats ≈ 0. R counts the file part only, because tiny pitch differences sound the same.';}
+    else{const G=Math.ceil(2*PR/W);Rp=1/G;n=`${fileN*G} (${fileN} × ${G} pitch groups)`;note=`Pitch groups: ceil(2 × ${PR} / ${W.toFixed(2)}) = ${G}, treated as uniform.`;}
+    if(nr)note+=' No repeat is on, so the file part is never the same twice in a row.';
+  }
+  const R=Rf*Rp;return {R,n,files,note,e:9*R,P:1-Math.pow(1-R,9)};
+}
+
+// shot generation
+function makeBurst(m,r){
+  const shots=[];let prev=null;
+  for(let i=0;i<10;i++){
+    let s={t:0,b:0,l:0,s:0,k:0};
+    if(m==='doom'){const k=ri(r,32)-15;s.k=k;s.s=doomS(k);}
+    else if(m==='heretic'){const k=ri(r,8)-ri(r,8);s.k=k;s.s=doomS(k);}
+    else if(m==='whole'){let j=ri(r,12);if(noRep&&prev)while(j===prev.j)j=ri(r,12);s=Object.assign(s,WHOLE[j],{j});s.s=(r()*2-1)*PR;}
+    else if(m==='layers'){const pick=key=>{let v=ri(r,4);if(noRep&&prev)while(v===prev[key])v=ri(r,4);return v;};s.t=pick('t');s.b=pick('b');s.l=pick('l');s.s=(r()*2-1)*PR;}
+    shots.push(s);prev=s;
+  }
+  return shots;
+}
+// 'exact' | 'near' | null, relative to previous shot
+function compare(a,b,m){
+  if(!a)return null;
+  if(a.t!==b.t||a.b!==b.b||a.l!==b.l)return null;
+  if(m==='same')return 'exact';
+  if(m==='doom'||m==='heretic'){if(a.k===b.k)return 'exact';return W>0&&bin(a.s)===bin(b.s)?'near':null;}
+  if(PR===0||a.s===b.s)return 'exact';
+  if(W===0)return 'exact';   // continuous pitch ignored: the file part is what repeats
+  return bin(a.s)===bin(b.s)?'near':null;
+}
+const counted=c=>c==='exact'||(c==='near'&&W>0);
+
+// simulation
+let simRng=mulberry32(20240),measured=null;
+function simulate(){
+  measured={};
+  MODES.forEach(m=>{let tot=0;for(let b=0;b<1000;b++){const sh=makeBurst(m,simRng);for(let i=1;i<10;i++)if(counted(compare(sh[i-1],sh[i],m)))tot++;}measured[m]=tot/1000;});
+  render();
+}
+
+// strip
+let burst=[],revealT=null;
+const PAL=['--steel','--ochre','--moss','--ink-soft'];
+const fmtS=s=>(s>0.049?'+':s<-0.049?'−':'')+Math.abs(s).toFixed(1);
+function drawStrip(){
+  const ol=$('strip');ol.innerHTML='';let ex=0,nr=0;
+  burst.forEach((s,i)=>{
+    const c=compare(burst[i-1],s,mode);if(c==='exact')ex++;if(c==='near')nr++;
+    const li=document.createElement('li');li.className='tile'+(c==='exact'?' repeat':c==='near'?' near':'');
+    const bars=['t','b','l'].map(k=>`<i style="height:${40+20*s[k]}%;background:var(${PAL[s[k]]})"></i>`).join('');
+    li.innerHTML=`<span class="n">${i+1}</span><div class="bars">${bars}</div><div class="ll"><span>T</span><span>B</span><span>L</span></div><span class="pt">${fmtS(s.s)}</span><span class="tag">${c==='exact'?'repeat':c==='near'?'≈ same':''}</span>`;
+    li.setAttribute('aria-label',`Shot ${i+1}: transient ${s.t+1}, body ${s.b+1}, tail ${s.l+1}, pitch ${fmtS(s.s)} semitones${c==='exact'?', repeat of previous':c==='near'?', same group as previous':''}`);
+    ol.appendChild(li);
+  });
+  const within=W>0?`, ${nr} more within ${W.toFixed(2)} semitone`:'';
+  const cont=(mode==='whole'||mode==='layers')&&PR>0&&W===0?' (continuous pitch ignored, file part compared)':'';
+  $('summary').textContent=`10 shots, ${ex} ${W>0?'exact ':''}repeat${ex===1?'':'s'}${cont}${within}.`;
+}
+function animateStrip(interval){
+  const tiles=[...$('strip').children];if(reduce.matches)return;
+  tiles.forEach(t=>t.classList.add('wait'));const t0=performance.now();
+  cancelAnimationFrame(revealT);
+  (function step(now){const el=(now-t0)/1000-0.05;let done=true;
+    tiles.forEach((t,k)=>{const on=el>=k*interval;t.classList.toggle('wait',!on);t.classList.toggle('hit',on&&el<k*interval+0.06);if(!on||el<k*interval+0.06)done=false;});
+    if(!done)revealT=requestAnimationFrame(step);})(t0);
+}
+
+// chart
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function drawChart(){
+  const {g,w,h}=setupCanvas($('cChart'));g.clearRect(0,0,w,h);
+  const pad={l:34,r:6,t:34,b:30},yM=1,Y=v=>pad.t+(h-pad.t-pad.b)*(1-Math.min(v,yM)/yM),gw=(w-pad.l-pad.r)/5,small=w<420;
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let v=0;v<=1.001;v+=0.25){g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(v.toFixed(2).replace(/0$/,''),pad.l-5,Y(v));}
+  MODES.forEach((m,i)=>{
+    const x0=pad.l+gw*i,bw=gw*0.34,cx=x0+gw/2,pr=predict(m).e,me=measured?measured[m]:null;
+    if(m===mode){g.fillStyle=css('--paper');g.fillRect(x0+2,pad.t-30,gw-4,h-pad.t-pad.b+30);}
+    const tp=Y(pr)-3,tm=me===null?null:Y(me)-3,lift=(tm!==null&&Math.abs(tm-tp)<13)?Math.min(tm,tp-12):tm;
+    [[pr,css('--steel'),cx-bw-1,tp],[me,css('--ochre'),cx+1,lift]].forEach(([v,col,x,ly])=>{
+      g.font=(small?'600 10px ':'600 11px ')+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+      if(v===null){g.strokeStyle=col;g.setLineDash([3,3]);g.strokeRect(x,Y(0)-4,bw,4);g.setLineDash([]);g.fillStyle=css('--ink-soft');g.fillText('—',x+bw/2,Y(0)-6);return;}
+      const top=Y(v);g.fillStyle=col;g.fillRect(x,top,bw,Y(0)-top);
+      if(v>yM){g.fillStyle=css('--paper-2');const zy=Y(yM*0.82);g.beginPath();g.moveTo(x-1,zy);g.lineTo(x+bw/2,zy-5);g.lineTo(x+bw+1,zy);g.lineTo(x+bw+1,zy+5);g.lineTo(x+bw/2,zy);g.lineTo(x-1,zy+5);g.closePath();g.fill();}
+      g.fillStyle=css('--ink');g.fillText(v.toFixed(2),x+bw/2,ly);
+    });
+    g.fillStyle=m===mode?css('--ink'):css('--ink-soft');g.font=(m===mode?'700 ':'')+(small?'11px ':'12px ')+css('--sans');g.textAlign='center';g.textBaseline='top';g.fillText(SHORT[m],cx,h-pad.b+7);
+  });
+}
+
+function render(){
+  const p=predict(mode),pc=v=>(v*100).toFixed(1)+'%';
+  $('rMode').textContent=NAMES[mode];$('rN').textContent=p.n;$('rR').textContent=pc(p.R);$('r9R').textContent=p.e.toFixed(2);
+  $('rP').textContent=pc(p.P);$('rFiles').textContent=p.files;$('rMeas').textContent=measured?measured[mode].toFixed(2)+' per burst':'—';
+  $('pnote').textContent=p.note;
+  const variant=mode==='whole'||mode==='layers';
+  $('ctlP').classList.toggle('off',!variant);$('pr').disabled=!variant;
+  $('ctlNR').classList.toggle('off',!variant);$('noRep').disabled=!variant;
+  const pw=predict('whole').e,pl=predict('layers').e;
+  const msg={
+    same:'Ten identical tiles and nine red outlines. The ear hears one sample stuttering, the "machine-gun effect". Every other mode below does better with the same single file or the same twelve files.',
+    doom:`32 pitch steps make exact repeats rare (R = ${pc(p.R)}). Slide "sounds the same within" to 0.5 and the 32 steps collapse into ${predict('doom').n} groups your ear can tell apart.`,
+    heretic:`Subtracting two random numbers piles up the middle: k = 0 comes up 8 times in 64. Fewer outcomes and uneven odds give R = ${pc(p.R)}, higher than Doom's.`,
+    whole:`Twelve files as whole shots: ${pw.toFixed(2)} repeats per burst. Switch to "3 layers × 4" to spend the same twelve files as layers.`,
+    layers:`The same twelve files as layers give 4 × 4 × 4 = 64 combinations and ${pl.toFixed(2)} repeats per burst, against ${pw.toFixed(2)} as whole shots.`
+  }[mode];
+  $('insight').textContent=msg+(noRep&&variant?' With no repeat on, immediate repeats are gone entirely.':'');
+  $('oPr').textContent='±'+PR.toFixed(2)+' st';$('oGw').textContent=W===0?'0 (exact)':W.toFixed(2)+' st';
+  $('oRate').textContent=rate+' /s';$('rateHint').textContent=`${(1000/rate).toFixed(1)} ms between shots`+(rate===8.75?', 4/35 s, Doom’s chaingun.':'.');
+  drawStrip();drawChart();
+}
+
+// audio
+let ctx=null,bus=null,master=null,analyser=null,bufs=null,renderP=null,muted=false,vol=0.7;
+function noise(n,seed){const r=mulberry32(seed),d=new Float32Array(n);for(let i=0;i<n;i++)d[i]=r()*2-1;return d;}
+async function renderLayer(kind,v){
+  const sr=44100,dur=kind==='t'?0.02:kind==='b'?0.25:0.6,n=Math.ceil(sr*dur);
+  const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext,off=new OAC(1,n,sr);
+  const mk=data=>{const b=off.createBuffer(1,n,sr);b.copyToChannel(data,0);const s=off.createBufferSource();s.buffer=b;return s;};
+  if(kind==='t'){const d=noise(n,11+v);for(let i=0;i<n;i++)d[i]*=Math.exp(-i/sr/0.004);const s=mk(d),f=off.createBiquadFilter();f.type='highpass';f.frequency.value=2000+400*v;s.connect(f);f.connect(off.destination);s.start();}
+  else if(kind==='b'){const f0=140+20*v,d=new Float32Array(n);let ph=0;
+    for(let i=0;i<n;i++){const t=i/sr,f=f0*Math.pow(50/f0,Math.min(t,0.12)/0.12);ph+=f/sr;d[i]=Math.sin(2*Math.PI*ph)*Math.exp(-t/0.04);}
+    const s=mk(d);s.connect(off.destination);s.start();
+    const nz=noise(n,21+v);for(let i=0;i<n;i++)nz[i]*=0.251*Math.exp(-i/sr/0.04);const s2=mk(nz),lp=off.createBiquadFilter();lp.type='lowpass';lp.frequency.value=800;s2.connect(lp);lp.connect(off.destination);s2.start();}
+  else{const d=noise(n,31+v);for(let i=0;i<n;i++)d[i]*=Math.exp(-i/sr/0.15);const s=mk(d),bp=off.createBiquadFilter();bp.type='bandpass';bp.frequency.value=500+100*v;bp.Q.value=0.7;s.connect(bp);bp.connect(off.destination);s.start();}
+  const out=await off.startRendering(),d=out.getChannelData(0);let pk=0;for(let i=0;i<d.length;i++)pk=Math.max(pk,Math.abs(d[i]));
+  const gain=(kind==='t'?0.55:kind==='b'?0.9:0.9*0.316)/(pk||1);for(let i=0;i<d.length;i++)d[i]*=gain;
+  return out;
+}
+function ensureAudio(){
+  if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('audioState').textContent='No Web Audio in this browser. The tiles and chart still show every shot.';return false;}
+    ctx=new AC();bus=ctx.createGain();const comp=ctx.createDynamicsCompressor();comp.threshold.value=-6;
+    analyser=ctx.createAnalyser();analyser.fftSize=1024;master=ctx.createGain();
+    bus.connect(comp);comp.connect(analyser);analyser.connect(master);master.connect(ctx.destination);
+    renderP=Promise.all(['t','b','l'].map(k=>Promise.all([0,1,2,3].map(v=>renderLayer(k,v))))).then(([t,b,l])=>{bufs={t,b,l};});}
+  if(ctx.state==='suspended')ctx.resume();
+  master.gain.value=muted?0:vol;$('audioState').textContent=muted?'Muted. The meter and tiles still show each shot.':'Sound on. Shots are scheduled on the audio clock.';
+  return true;
+}
+let meterRaf=null,meterUntil=0;
+function meter(){
+  const a=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(a);let pk=0;for(const v of a)pk=Math.max(pk,Math.abs(v));
+  const db=pk>1e-4?20*Math.log10(pk):-Infinity;$('meterBar').style.width=Math.max(0,Math.min(100,(db+48)/48*100))+'%';$('meterDb').textContent=isFinite(db)?db.toFixed(1)+' dBFS':'silent';
+  if(performance.now()<meterUntil)meterRaf=requestAnimationFrame(meter);else{$('meterBar').style.width='0';$('meterDb').textContent='silent';}
+}
+let fireRng=mulberry32(777);
+async function fire(){
+  burst=makeBurst(mode,fireRng);const interval=1/rate;
+  $('burstCap').textContent=`Last burst: ${NAMES[mode]}, ${rate} shots per second.`;
+  drawStrip();animateStrip(interval);
+  if(!ensureAudio())return;
+  await renderP;
+  const t0=ctx.currentTime+0.05;
+  burst.forEach((s,k)=>{const at=t0+k*interval,pr=Math.pow(2,s.s/12),gn=ctx.createGain();gn.gain.value=Math.pow(10,0/20);gn.connect(bus);
+    [['t',s.t],['b',s.b],['l',s.l]].forEach(([kind,v])=>{const src=ctx.createBufferSource();src.buffer=bufs[kind][v];src.playbackRate.value=pr;src.connect(gn);src.start(at);});});
+  meterUntil=performance.now()+(0.05+10*interval+0.8)*1000;cancelAnimationFrame(meterRaf);meter();
+}
+
+// events
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',e=>{mode=e.target.value;burst=makeBurst(mode,mulberry32(5));$('burstCap').textContent='Preview burst for this mode, generated silently. Press Fire to hear one.';render();}));
+$('noRep').addEventListener('change',e=>{noRep=e.target.checked;simulate();});
+$('pr').addEventListener('input',e=>{PR=+e.target.value;measured=null;render();});
+$('pr').addEventListener('change',simulate);
+$('gw').addEventListener('input',e=>{W=+e.target.value;measured=null;render();});
+$('gw').addEventListener('change',simulate);
+$('rate').addEventListener('input',e=>{rate=+e.target.value;render();});
+$('bFire').addEventListener('click',fire);
+$('bFire2').addEventListener('click',fire);
+$('bSim').addEventListener('click',simulate);
+document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;const k=e.key.toLowerCase();if(k==='f'){e.preventDefault();fire();}else if(k==='s'){e.preventDefault();simulate();}});
+$('mute').addEventListener('click',()=>{muted=!muted;$('mute').setAttribute('aria-pressed',muted);$('mute').textContent=muted?'Unmute':'Mute';if(ctx)ensureAudio();else $('audioState').textContent=muted?'Muted.':'No sound until you press Fire. All shots are synthesised in the page.';});
+$('vol').addEventListener('input',e=>{vol=e.target.value/100;$('oVol').textContent=e.target.value+'%';if(ctx&&!muted)master.gain.value=vol;});
+window.addEventListener('resize',drawChart);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawChart);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawChart);
+burst=makeBurst(mode,mulberry32(5));
+simulate();
+})();
+</script>
+</body>
+</html>

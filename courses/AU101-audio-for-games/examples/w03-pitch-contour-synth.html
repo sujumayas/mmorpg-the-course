@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pitch contour synth · AU101 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:250px}
+.caption{font-family:var(--serif);font-size:1.12rem;font-weight:600;margin:14px 0 0}
+.readout{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:12px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 9px;min-width:0}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.row .lab{font-weight:600;font-size:.92rem;margin-right:4px}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 22px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+fieldset{border:0;padding:0;margin:0;min-width:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+legend{font-weight:600;font-size:.92rem;padding:0;float:left;margin-right:6px}
+.seg label{position:relative;font:600 .85rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);cursor:pointer}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg label:has(input:checked){background:var(--steel);color:var(--paper)}
+.seg label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+button{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--paper)}
+button.chip{border-radius:8px;border-color:var(--steel);padding:7px 12px}
+button.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.blind{margin-top:14px;padding:12px 14px;border-radius:10px;border:1.5px dashed var(--ink-soft)}
+.blind h2{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+.blind p{margin:6px 0 0;font-size:.92rem}
+.score{font-variant-numeric:tabular-nums;font-weight:700}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.audio{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px;padding:8px 12px;border-radius:10px;background:var(--paper-2);font-size:.9rem}
+.audio label{font-weight:600;display:flex;gap:6px;align-items:center}
+.audio input[type=range]{width:140px}
+.audio .state{color:var(--ink-soft)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 3 · Worked example</p>
+  <h1>The contour carries the meaning</h1>
+  <p class="lede">A falling square wave sounds like getting hurt. Flip the slide upward and it sounds like a reward. The waveform barely changes. The pitch view shows the whole difference.</p>
+</header>
+
+<div class="audio" role="group" aria-label="Sound output">
+  <button id="mute" aria-pressed="false">Mute</button>
+  <label for="vol">Volume <output id="oVol">70%</output></label>
+  <input id="vol" type="range" min="0" max="100" step="1" value="70">
+  <span class="state" id="audioState">Sound is off until you press Play. Master level is capped at 0.5.</span>
+</div>
+
+<section class="panel">
+  <div class="charts">
+    <figure>
+      <figcaption>What you hear<small>Rendered waveform, min and max per pixel column. The outline is the envelope.</small></figcaption>
+      <canvas id="cWave" role="img" aria-label="Waveform and envelope"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Pitch contour<small>Semitones relative to f0. Dashed line is the flipped contour.</small></figcaption>
+      <canvas id="cPitch" role="img" aria-label="Pitch contour in semitones over time"></canvas>
+    </figure>
+  </div>
+  <p class="caption" id="caption">Same wave, same envelope. Only the direction changed.</p>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rF0">—</b><span>start frequency</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rF1">—</b><span>end frequency</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSt">—</b><span>total change</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rLen">—</b><span>length</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rSmp">—</b><span>samples at 48 kHz</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rHarm">—</b><span id="rHarmL">harmonics below 24 kHz</span></div>
+  </div>
+
+  <div class="row" role="group" aria-label="Presets">
+    <span class="lab">Preset</span>
+    <button class="chip" data-p="coin" aria-pressed="false">coin</button>
+    <button class="chip" data-p="jump" aria-pressed="false">jump</button>
+    <button class="chip" data-p="laser" aria-pressed="false">laser</button>
+    <button class="chip" data-p="hurt" aria-pressed="true">hurt</button>
+    <span style="flex:1"></span>
+    <button id="bFlip">Flip contour</button>
+    <button id="bPlay" class="primary">Play</button>
+  </div>
+  <div class="row">
+    <fieldset class="seg" id="waves">
+      <legend>Wave</legend>
+      <label><input type="radio" name="wave" value="sine">sine</label>
+      <label><input type="radio" name="wave" value="square" checked>square</label>
+      <label><input type="radio" name="wave" value="sawtooth">sawtooth</label>
+      <label><input type="radio" name="wave" value="triangle">triangle</label>
+      <label><input type="radio" name="wave" value="noise">noise</label>
+    </fieldset>
+  </div>
+
+  <div class="controls">
+    <div><label class="lbl" for="f0">Start f0 <output id="oF0"></output></label><input id="f0" type="range" min="0" max="1000" step="1"></div>
+    <div><label class="lbl" for="s">Slide s (oct/s) <output id="oS"></output></label><input id="s" type="range" min="-8" max="8" step="0.1"></div>
+    <div><label class="lbl" for="n">Jump n (semitones) <output id="oN"></output></label><input id="n" type="range" min="-12" max="12" step="1"></div>
+    <div><label class="lbl" for="tj">Jump time <output id="oTj"></output></label><input id="tj" type="range" min="0" max="300" step="1"></div>
+    <div><label class="lbl" for="A">Attack A <output id="oA"></output></label><input id="A" type="range" min="0" max="200" step="1"></div>
+    <div><label class="lbl" for="D">Decay D <output id="oD"></output></label><input id="D" type="range" min="20" max="1000" step="1"></div>
+  </div>
+
+  <div class="blind">
+    <h2>Blind test</h2>
+    <div class="row" style="margin-top:0">
+      <button id="bBlind">Play two sounds</button>
+      <span>Which is the pickup?</span>
+      <button id="gA" disabled>First</button>
+      <button id="gB" disabled>Second</button>
+      <span class="score" id="score" aria-live="polite">Score 0 / 0</span>
+    </div>
+    <p id="blindMsg">Plays the current wave, f0 and envelope twice, once rising and once falling, in random order. Guess, then the contours are revealed on the pitch view.</p>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+</section>
+
+<footer>Model: f(t) = f0 &times; 2^(s&thinsp;t), times 2^(n/12) after the jump time. Level ramps linearly up over A and down over D. Preset values match the lecture table (coin, jump, laser, hurt). The drawing uses naive waveforms; playback uses band-limited Web Audio oscillators, as sfxr-style tools do.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const PRESETS={coin:['square',1000,0,5,0.06,0.005,0.25],jump:['square',300,2,0,0,0.010,0.20],laser:['sawtooth',1200,-4,0,0,0.002,0.25],hurt:['square',400,-3,0,0,0.002,0.20]};
+let P={};
+function load(name){const [wave,f0,s,n,tj,A,D]=PRESETS[name];P={wave,f0,s,n,tj,A,D};sync();}
+const fAt=(t,p=P)=>p.f0*Math.pow(2,p.s*t)*((t>=p.tj&&p.n!==0)?Math.pow(2,p.n/12):1);
+const len=(p=P)=>p.A+p.D;
+const st=(t,p=P)=>12*p.s*t+((t>=p.tj&&p.n!==0)?p.n:0);
+const flipped=p=>Object.assign({},p,{s:-p.s,n:-p.n});
+function fMax(p=P){const L=len(p);let m=Math.max(fAt(0,p),fAt(L,p));if(p.n!==0&&p.tj<=L){m=Math.max(m,fAt(p.tj,p),p.f0*Math.pow(2,p.s*p.tj));}return m;}
+const level=(t,p=P)=>t<p.A?t/p.A:(t<p.A+p.D?1-(t-p.A)/p.D:0);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function wave(ph,w,r){switch(w){case 'square':return ph<0.5?1:-1;case 'sawtooth':return 2*ph-1;case 'triangle':return 1-4*Math.abs(ph-0.5);case 'sine':return Math.sin(2*Math.PI*ph);default:return r()*2-1;}}
+function render(p=P,fs=48000){const n=Math.round(len(p)*fs),out=new Float32Array(n),r=mulberry32(99);let ph=0;
+  for(let i=0;i<n;i++){const t=i/fs;ph+=fAt(t,p)/fs;ph-=Math.floor(ph);out[i]=0.5*level(t,p)*wave(ph,p.wave,r);}return out;}
+const f0ToSlider=f=>Math.round(1000*Math.log(f/50)/Math.log(80));
+const sliderToF0=v=>50*Math.pow(80,v/1000);
+const hz=f=>f.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+' Hz';
+const sgn=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1);
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:44,r:14,t:14,b:34};
+function timeAxis(g,w,h,L){
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.textBaseline='top';
+  const ms=L*1000,step=ms>600?200:ms>300?100:50,X=t=>pad.l+(w-pad.l-pad.r)*t/L;
+  for(let m=0;m<=ms+1e-6;m+=step){g.textAlign='center';g.fillText(m,X(m/1000),h-pad.b+6);}
+  g.textAlign='left';g.fillText('ms',2,h-pad.b+6);return X;
+}
+let reveal=null;
+function drawWave(){
+  const {g,w,h}=setupCanvas($('cWave'));g.clearRect(0,0,w,h);const L=len(),X=timeAxis(g,w,h,L),Y=v=>pad.t+(h-pad.t-pad.b)*(1-v)/2;
+  g.strokeStyle=css('--grid');g.lineWidth=1;[-1,-0.5,0,0.5,1].forEach(v=>{g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,Y(v));});
+  const data=render(),cols=Math.floor(w-pad.l-pad.r),per=data.length/cols;
+  g.fillStyle=css('--ink-soft');
+  for(let c=0;c<cols;c++){let lo=1,hi=-1;const a=Math.floor(c*per),b=Math.max(a+1,Math.floor((c+1)*per));for(let i=a;i<b&&i<data.length;i++){const v=data[i];if(v<lo)lo=v;if(v>hi)hi=v;}if(hi<lo)continue;g.fillRect(pad.l+c,Y(hi),1,Math.max(1,Y(lo)-Y(hi)));}
+  g.strokeStyle=css('--steel');g.lineWidth=2;[1,-1].forEach(sg=>{g.beginPath();for(let i=0;i<=200;i++){const t=L*i/200,x=X(t),y=Y(sg*0.5*level(t));i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();});
+}
+function contourColor(v){return Math.abs(v)<0.05?css('--ink'):(v>0?css('--ochre'):css('--blood'));}
+function plotContour(g,X,Y,p,col,width,dash){
+  const L=len(p),c=v=>Math.max(-24,Math.min(24,v)),jump=p.n!==0&&p.tj<L;
+  g.strokeStyle=col;g.lineWidth=width;g.setLineDash(dash||[]);g.beginPath();
+  if(jump&&p.tj>0){g.moveTo(X(0),Y(0));g.lineTo(X(p.tj),Y(c(12*p.s*p.tj)));g.lineTo(X(p.tj),Y(c(12*p.s*p.tj+p.n)));}
+  else g.moveTo(X(0),Y(c(jump?p.n:0)));
+  g.lineTo(X(L),Y(c(12*p.s*L+(jump?p.n:0))));
+  g.stroke();g.setLineDash([]);
+}
+function drawPitch(){
+  const {g,w,h}=setupCanvas($('cPitch'));g.clearRect(0,0,w,h);const L=len(),X=timeAxis(g,w,h,L),Y=v=>pad.t+(h-pad.t-pad.b)*(24-v)/48;
+  g.lineWidth=1;[-24,-12,0,12,24].forEach(v=>{g.strokeStyle=v===0?css('--ink-soft'):css('--grid');g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText((v>0?'+':'')+v,pad.l-6,Y(v));});
+  g.save();g.translate(2,pad.t+(h-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='top';g.fillText('semitones',0,0);g.restore();
+  const end=st(L),fp=flipped(P),endF=st(L,fp);
+  if(reveal){
+    reveal.forEach((p,i)=>{const e=st(len(p),p);plotContour(g,X,Y,p,contourColor(e),3);lbl(g,X(L),Y(e),(i?'Second ':'First ')+sgn(e)+' st',contourColor(e));});
+    return;
+  }
+  if(Math.abs(end)>0.05)plotContour(g,X,Y,fp,css('--ink-soft'),1.8,[6,5]);
+  plotContour(g,X,Y,P,contourColor(end),3);
+  lbl(g,X(L),Y(end),sgn(end)+' st',contourColor(end));
+  if(Math.abs(end)>0.05)lbl(g,X(L),Y(endF),'flipped '+sgn(endF),css('--ink-soft'));
+}
+function lbl(g,x,y,t,col){g.font='700 12px '+css('--sans');g.fillStyle=col;g.textAlign='right';g.textBaseline=y<40?'top':'bottom';g.fillText(t,x-4,y+(y<40?6:-6));}
+function readouts(){
+  const L=len(),f1=fAt(L),tot=12*Math.log2(f1/P.f0);
+  $('rF0').textContent=hz(P.f0);$('rF1').textContent=hz(f1);$('rSt').textContent=sgn(tot)+' st';
+  $('rLen').textContent=Math.round(L*1000)+' ms';$('rSmp').textContent=Math.round(L*48000).toLocaleString('en-US');
+  const harm=(P.wave==='square'||P.wave==='sawtooth');
+  $('rHarm').textContent=harm?Math.floor(24000/fMax()).toLocaleString('en-US'):'—';
+  $('rHarmL').textContent=harm?`harmonics below 24 kHz at ${Math.round(fMax())} Hz`:'harmonics (square and saw only)';
+  $('oF0').textContent=hz(P.f0);$('oS').textContent=(P.s>0?'+':'')+P.s.toFixed(1);$('oN').textContent=(P.n>0?'+':'')+P.n;
+  $('oTj').textContent=Math.round(P.tj*1000)+' ms';$('oA').textContent=Math.round(P.A*1000)+' ms';$('oD').textContent=Math.round(P.D*1000)+' ms';
+  const dir=Math.abs(tot)<0.05?'flat':(tot>0?'rising':'falling');
+  $('insight').textContent=dir==='flat'?'A flat contour carries no direction. It reads as a neutral beep or a UI tick.'
+    :`This contour is ${dir} ${Math.abs(tot).toFixed(1)} semitones, so it reads as ${tot>0?'a reward, a pickup or a power-up':'damage, failure or a loss'}. Press "Flip contour": the waveform view hardly moves, but the pitch view tips to ${sgn(-tot)} st and the meaning reverses.`;
+}
+function sync(){
+  $('f0').value=f0ToSlider(P.f0);$('s').value=P.s;$('n').value=P.n;$('tj').value=Math.round(P.tj*1000);$('A').value=Math.round(P.A*1000);$('D').value=Math.round(P.D*1000);
+  document.querySelector(`input[name=wave][value=${P.wave}]`).checked=true;draw();
+}
+function draw(){drawWave();drawPitch();readouts();}
+function clearPreset(){document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));reveal=null;}
+
+// audio
+let ctx=null,master=null,muted=false,vol=0.7;
+function ensureAudio(){
+  if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('audioState').textContent='No Web Audio here. The two views show every sound.';return false;}ctx=new AC();master=ctx.createGain();master.connect(ctx.destination);}
+  if(ctx.state==='suspended')ctx.resume();
+  master.gain.value=muted?0:0.5*vol;$('audioState').textContent=muted?'Muted. The views show each sound.':'Sound on. Master level capped at 0.5.';return true;
+}
+function playSound(p,delay){
+  if(!ensureAudio())return;
+  const t0=ctx.currentTime+0.04+(delay||0),L=len(p),g=ctx.createGain();
+  g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(1,t0+Math.max(0.001,p.A));g.gain.linearRampToValueAtTime(0,t0+L);g.connect(master);
+  const tj=Math.min(p.tj,L),hasJump=p.n!==0&&p.tj<L;
+  let src,param,scale=1;
+  if(p.wave==='noise'){const n=Math.ceil(ctx.sampleRate*(L+0.05)),b=ctx.createBuffer(1,n,ctx.sampleRate),d=b.getChannelData(0),r=mulberry32(99);for(let i=0;i<n;i++)d[i]=r()*2-1;
+    src=ctx.createBufferSource();src.buffer=b;param=src.playbackRate;scale=1/p.f0;}
+  else{src=ctx.createOscillator();src.type=p.wave;param=src.frequency;}
+  param.setValueAtTime(fAt(0,p)*scale,t0);
+  if(hasJump){if(tj>0)param.exponentialRampToValueAtTime(p.f0*Math.pow(2,p.s*tj)*scale,t0+tj);param.setValueAtTime(fAt(tj,p)*scale,t0+tj);}
+  param.exponentialRampToValueAtTime(fAt(L,p)*scale,t0+L);
+  src.connect(g);src.start(t0);src.stop(t0+L+0.02);
+}
+$('bPlay').addEventListener('click',()=>{reveal=null;drawPitch();playSound(P);});
+$('bFlip').addEventListener('click',()=>{P.s=+(-P.s).toFixed(1)||0;P.n=-P.n||0;clearPreset();sync();
+  $('caption').textContent='Flipped. Same wave, same envelope, opposite direction.';});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{clearPreset();b.setAttribute('aria-pressed','true');load(b.dataset.p);$('caption').textContent=b.dataset.p==='hurt'?'Same wave, same envelope. Only the direction changed.':`Preset "${b.dataset.p}" from the lecture table.`;}));
+document.querySelectorAll('input[name=wave]').forEach(r=>r.addEventListener('change',e=>{P.wave=e.target.value;clearPreset();draw();}));
+const bind=(id,fn)=>$(id).addEventListener('input',e=>{fn(+e.target.value);clearPreset();draw();});
+bind('f0',v=>P.f0=+sliderToF0(v).toFixed(1));bind('s',v=>P.s=v);bind('n',v=>P.n=v);bind('tj',v=>P.tj=v/1000);bind('A',v=>P.A=v/1000);bind('D',v=>P.D=v/1000);
+// blind test
+let right=0,total=0,answer=null,pair=null;
+$('bBlind').addEventListener('click',()=>{
+  const e=st(len());if(Math.abs(e)<0.05){$('blindMsg').textContent='The current contour is flat, so there is nothing to flip. Pick a preset or move the slide first.';return;}
+  const up=e>0?Object.assign({},P):flipped(P),down=flipped(up),first=Math.random()<0.5?up:down;pair=[first,first===up?down:up];answer=first===up?0:1;
+  reveal=null;drawPitch();playSound(pair[0]);playSound(pair[1],len()+0.45);
+  $('gA').disabled=false;$('gB').disabled=false;$('blindMsg').textContent='Played first, then second. Which one is the pickup?';
+});
+function guess(i){if(answer===null)return;total++;const ok=i===answer;if(ok)right++;
+  $('score').textContent=`Score ${right} / ${total}`;$('blindMsg').textContent=(ok?'Right. ':'Not this time. ')+`The ${answer?'second':'first'} sound rose ${Math.abs(st(len())).toFixed(1)} semitones. Both contours are now on the pitch view.`;
+  reveal=pair;answer=null;$('gA').disabled=true;$('gB').disabled=true;drawPitch();}
+$('gA').addEventListener('click',()=>guess(0));$('gB').addEventListener('click',()=>guess(1));
+$('mute').addEventListener('click',()=>{muted=!muted;$('mute').setAttribute('aria-pressed',muted);$('mute').textContent=muted?'Unmute':'Mute';if(ctx)ensureAudio();else $('audioState').textContent=muted?'Muted.':'Sound is off until you press Play. Master level is capped at 0.5.';});
+$('vol').addEventListener('input',e=>{vol=e.target.value/100;$('oVol').textContent=e.target.value+'%';if(ctx&&!muted)master.gain.value=0.5*vol;});
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load('hurt');
+})();
+</script>
+</body>
+</html>

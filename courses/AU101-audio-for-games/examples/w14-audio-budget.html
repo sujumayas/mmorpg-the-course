@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Audio budget · AU101 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;--plum:#7a4f86;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--plum:#c39ad0}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--plum:#c39ad0}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:0 0 4px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px}
+.top{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:flex-end;margin-bottom:14px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .9rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.budgets{display:flex;flex-wrap:wrap;gap:12px}
+.budgets label{display:flex;flex-direction:column;font-weight:600;font-size:.85rem}
+.budgets input{font:inherit;width:7.5em;padding:5px 7px;border:1.5px solid var(--ink-soft);border-radius:8px;background:var(--paper);color:var(--ink)}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1024px){.views{grid-template-columns:1fr 1fr}}
+.view{background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+.readline{font-variant-numeric:tabular-nums;font-size:1rem;margin:0 0 10px;min-height:3em}
+.readline b{font-size:1.25rem}
+.over{color:var(--blood);font-weight:700}
+.ok{color:var(--moss);font-weight:700}
+.bar{position:relative;height:46px;margin-top:26px;background:var(--paper);border:1.5px solid var(--ink-soft);border-radius:6px;overflow:visible}
+.bar .fillwrap{position:absolute;inset:0;display:flex;overflow:hidden;border-radius:5px}
+.seg{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font:700 .72rem var(--sans);overflow:hidden;white-space:nowrap;border-right:1px solid var(--paper)}
+.budgetline{position:absolute;top:-8px;bottom:-8px;width:0;border-left:2.5px dashed var(--ink)}
+.budgetline span{position:absolute;top:-20px;left:4px;font:700 .75rem var(--sans);white-space:nowrap}
+.budgetline.flip span{left:auto;right:4px}
+.axis{position:relative;height:18px;margin-top:4px;font-size:.72rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;transform:translateX(-50%)}
+.axis span:first-child{transform:none}
+.axis span:last-child{transform:translateX(-100%)}
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:2px 10px;font-size:.8rem;margin-top:10px;font-variant-numeric:tabular-nums}
+@media (max-width:480px){.legend{grid-template-columns:repeat(2,1fr)}}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+.caveat{font-size:.8rem;color:var(--ink-soft);margin:8px 0 0;font-style:italic}
+/* table */
+.table-wrap{margin-top:4px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:6px 5px;text-align:right;border-bottom:1px solid var(--grid);vertical-align:middle}
+th:first-child,td:first-child{text-align:left}
+td select,td input[type=number]{font:inherit;font-size:.86rem;padding:4px 5px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+td input[type=number]{width:4.2em}
+td .mono{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;font-weight:600;margin-left:6px}
+td .mono input{accent-color:var(--steel);width:16px;height:16px;margin:0}
+td .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+tfoot td{font-weight:700}
+@media (max-width:860px){
+  table,tbody,tfoot,td{display:block;width:100%}
+  thead{display:none}
+  tr{border:1.5px solid var(--grid);border-radius:10px;padding:6px 10px;margin-bottom:10px;background:var(--paper);display:grid;grid-template-columns:1fr 1fr;column-gap:16px}
+  tr td:first-child,tr td[data-label="Load"]{grid-column:1/-1}
+  tfoot tr{grid-template-columns:1fr}
+  td{display:flex;justify-content:space-between;align-items:center;gap:10px;border:0;padding:3px 0;text-align:right}
+  td::before{content:attr(data-label);font-weight:600;font-size:.82rem;color:var(--ink-soft);text-align:left}
+  td:first-child{font-weight:700;font-size:1rem;justify-content:flex-start;gap:0}
+  td:first-child::before{content:none}
+  tfoot tr{background:var(--paper-2)}
+  tfoot td:first-child::before{content:none}
+  tfoot td[colspan]{display:none}
+}
+/* listening */
+.listen{display:grid;grid-template-columns:1fr 1.4fr;gap:16px}
+@media (max-width:760px){.listen{grid-template-columns:1fr}}
+fieldset{border:0;padding:0;margin:0 0 10px;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.radio{display:flex;flex-wrap:wrap;gap:6px}
+.radio label{font-weight:600;font-size:.86rem;border:1.5px solid var(--steel);border-radius:8px;padding:6px 10px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.radio input{accent-color:var(--steel);margin:0}
+label{font-weight:600;font-size:.92rem}
+.volrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:6px}
+.volrow input[type=range]{width:140px;accent-color:var(--steel)}
+canvas{display:block;width:100%;height:220px}
+button{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-size:.88rem;color:var(--ink-soft);margin:8px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.specread{font-variant-numeric:tabular-nums;font-size:.9rem;margin:6px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 14 · Worked example</p>
+  <h1>Memory and CPU pull in opposite directions</h1>
+  <p class="lede">Preset B decodes every Vorbis file at load: 188.73 MB of resident memory against a 32 MB budget, with CPU at 2.10%. Press C to keep them compressed. Memory drops to 18.87 MB and CPU jumps to 10.50%, over its 8% line. No one setting fits both budgets. Press D for a per-group plan that does.</p>
+</header>
+
+<section class="panel" aria-labelledby="hPlan">
+  <h2 id="hPlan" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Budget plan</h2>
+  <div class="top">
+    <div>
+      <div style="font-weight:600;font-size:.92rem;margin-bottom:4px" id="presetLab">Presets</div>
+      <div class="presets" role="group" aria-labelledby="presetLab">
+        <button class="chip" data-p="A" aria-pressed="false" title="All PCM, decompress on load">A · all PCM</button>
+        <button class="chip" data-p="B" aria-pressed="true" title="All Vorbis, decompress on load">B · Vorbis, decompress</button>
+        <button class="chip" data-p="C" aria-pressed="false" title="All Vorbis, compressed in memory">C · Vorbis, compressed</button>
+        <button class="chip" data-p="D" aria-pressed="false" title="Per-group plan">D · per-group plan</button>
+        <button class="chip" data-p="H" aria-pressed="false" title="Budgets 8 MB and 4.5%">Handheld budgets</button>
+      </div>
+    </div>
+    <div class="budgets">
+      <label for="bMem">Memory budget (MB)<input id="bMem" type="number" min="1" max="1000" step="0.5" value="32"></label>
+      <label for="bCpu">CPU budget (%)<input id="bCpu" type="number" min="0.5" max="100" step="0.1" value="8"></label>
+    </div>
+  </div>
+
+  <div class="views">
+    <section class="view" aria-labelledby="hMem">
+      <h2 id="hMem">Memory</h2>
+      <p class="readline" id="memRead" aria-live="polite"></p>
+      <div class="bar" id="memBar" role="img"><div class="fillwrap"></div><div class="budgetline"><span></span></div></div>
+      <div class="axis" id="memAxis" aria-hidden="true"></div>
+      <div class="legend" id="memLeg"></div>
+    </section>
+    <section class="view" aria-labelledby="hCpu">
+      <h2 id="hCpu">CPU at peak</h2>
+      <p class="readline" id="cpuRead" aria-live="polite"></p>
+      <div class="bar" id="cpuBar" role="img"><div class="fillwrap"></div><div class="budgetline"><span></span></div></div>
+      <div class="axis" id="cpuAxis" aria-hidden="true"></div>
+      <div class="legend" id="cpuLeg"></div>
+      <p class="caveat">CPU costs per voice are invented for this example; measure your platform. Mixing 0.10%, plus decode: PCM 0, ADPCM 0.05, Vorbis 0.40.</p>
+    </section>
+  </div>
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table aria-label="Sound groups and their settings">
+      <thead><tr><th>Group</th><th>Count</th><th>Length</th><th>Channels</th><th>Sample rate</th><th>Codec</th><th>Load</th><th>Peak voices</th><th>PCM MB</th><th>Resident MB</th><th>CPU %</th></tr></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot><tr><td>Total</td><td data-label="" colspan="7"></td><td data-label="PCM MB" id="tP"></td><td data-label="Resident MB" id="tR"></td><td data-label="CPU %" id="tC"></td></tr></tfoot>
+    </table>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="hListen">
+  <h2 id="hListen">Listening panel: what a lower rate or bit depth costs</h2>
+  <div class="listen">
+    <div>
+      <fieldset>
+        <legend>Sample rate</legend>
+        <div class="radio">
+          <label><input type="radio" name="lr" value="48000" checked> 48,000 Hz</label>
+          <label><input type="radio" name="lr" value="32000"> 32,000 Hz</label>
+          <label><input type="radio" name="lr" value="22050"> 22,050 Hz</label>
+          <label><input type="radio" name="lr" value="11025"> 11,025 Hz</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Bit depth</legend>
+        <div class="radio">
+          <label><input type="radio" name="lb" value="16" checked> 16-bit</label>
+          <label><input type="radio" name="lb" value="8"> 8-bit</label>
+        </div>
+      </fieldset>
+      <button id="bPlay" class="primary">Play</button>
+      <div class="volrow" role="group" aria-label="Sound output">
+        <button id="mute" aria-pressed="false">Mute</button>
+        <label for="vol">Volume <output id="oVol">70%</output></label>
+        <input id="vol" type="range" min="0" max="100" step="1" value="70">
+      </div>
+      <p class="note" id="audioState">Sound starts when you press Play. The spectrum shows the same change without sound.</p>
+    </div>
+    <div>
+      <canvas id="cSpec" role="img" aria-label="Spectrum of the test sound at the chosen rate and bit depth, with the 48 kHz original as reference"></canvas>
+      <p class="specread" id="specRead" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<footer>Formulas from the week 14 lecture. PCM size P = count × sample rate × 2 bytes × channels × length (16-bit). Compression ratio r: PCM 1, ADPCM 3.5, Vorbis 10. Package = P / r. Resident: decompress on load P; compressed in memory P / r; stream 200,000 bytes per voice. Voices of a decompressed group play as PCM. Stream reads = voices × rate × 2 × channels / r. 1 MB = 1,000,000 bytes, 1 KB = 1,000 bytes. The test sound is noise plus a 6,000 to 200 Hz sweep built in code; lower rates average the 48 kHz samples in each output window before decimating. No audio files.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const RATIO={PCM:1,ADPCM:3.5,Vorbis:10},DEC={PCM:0,ADPCM:0.05,Vorbis:0.40};
+const LOADS={dec:'Decompress on load',cmp:'Compressed in memory',str:'Stream'};
+const RATES=[48000,32000,24000,22050,11025];
+const COLS=['--steel','--blood','--ochre','--moss','--plum','--ink-soft'];
+const BASE=[
+  {id:'footsteps',count:24,t:0.35,ch:1,v:6},
+  {id:'weapons',count:10,t:1.5,ch:2,v:6},
+  {id:'ui',count:30,t:0.25,ch:1,v:2},
+  {id:'ambience',count:3,t:45,ch:2,v:3},
+  {id:'music',count:4,t:150,ch:2,v:2},
+  {id:'vo',count:180,t:2.5,ch:1,v:2},
+];
+let G=BASE.map(b=>Object.assign({},b,{fs:48000,codec:'Vorbis',load:'dec',mono:false}));
+let budMem=32,budCpu=8;
+const PRESETS={
+  A:()=>G.forEach(g=>{g.codec='PCM';g.load='dec';}),
+  B:()=>G.forEach(g=>{g.codec='Vorbis';g.load='dec';}),
+  C:()=>G.forEach(g=>{g.codec='Vorbis';g.load='cmp';}),
+  D:()=>{const p={footsteps:['PCM','dec'],weapons:['ADPCM','cmp'],ui:['PCM','dec'],ambience:['Vorbis','cmp'],music:['Vorbis','str'],vo:['Vorbis','str']};G.forEach(g=>{[g.codec,g.load]=p[g.id];});},
+};
+const ch=g=>g.mono?1:g.ch;
+function calc(g){
+  const P=g.count*g.fs*2*ch(g)*g.t,r=RATIO[g.codec];
+  const res=g.load==='dec'?P:g.load==='cmp'?P/r:g.v*200000;
+  const played=g.load==='dec'?'PCM':g.codec;
+  const cpu=g.v*(0.10+DEC[played]);
+  const rd=g.load==='str'?g.v*g.fs*2*ch(g)/r:0;
+  return {P,pkg:P/r,res,cpu,rd};
+}
+const mb=b=>(b/1e6).toFixed(2);
+function totals(){const c=G.map(calc);const s=k=>c.reduce((a,x)=>a+x[k],0);return {c,P:s('P'),pkg:s('pkg'),res:s('res'),cpu:s('cpu'),rd:s('rd'),voices:G.reduce((a,g)=>a+g.v,0)};}
+
+function bar(el,axisEl,legEl,vals,total,max,budget,unit,fmt){
+  const wrap=el.querySelector('.fillwrap');
+  const px=el.clientWidth||300;
+  wrap.innerHTML=vals.map((v,i)=>{const w=100*v/max;return `<div class="seg" style="width:${w}%;background:var(${COLS[i]})" title="${G[i].id} ${fmt(v)} ${unit}">${w*px/100>G[i].id.length*7+10?G[i].id:''}</div>`;}).join('');
+  const bl=el.querySelector('.budgetline'),bx=100*budget/max;bl.style.left=bx+'%';bl.classList.toggle('flip',bx>70);
+  bl.querySelector('span').textContent='budget '+(unit==='MB'?budget+' MB':budget+'%');
+  el.setAttribute('aria-label',`Stacked bar: ${fmt(total)} ${unit} used against a budget of ${budget}${unit==='MB'?' MB':'%'}.`);
+  const ticks=[0,0.25,0.5,0.75,1].map(f=>f*max);
+  axisEl.innerHTML=ticks.map(t=>`<span style="left:${100*t/max}%">${unit==='MB'?Math.round(t):t.toFixed(1)}${unit==='MB'?'':'%'}</span>`).join('');
+  legEl.innerHTML=vals.map((v,i)=>`<span><i style="background:var(${COLS[i]})"></i>${G[i].id} ${fmt(v)}</span>`).join('');
+}
+function render(){
+  const T=totals();
+  const memMax=Math.max(200,T.res/1e6*1.1),cpuMax=Math.max(12,T.cpu*1.1);
+  bar($('memBar'),$('memAxis'),$('memLeg'),T.c.map(x=>x.res/1e6),T.res/1e6,memMax,budMem,'MB',v=>v.toFixed(2));
+  bar($('cpuBar'),$('cpuAxis'),$('cpuLeg'),T.c.map(x=>x.cpu),T.cpu,cpuMax,budCpu,'%',v=>v.toFixed(2));
+  const memOver=T.res/1e6-budMem,cpuOver=T.cpu-budCpu;
+  $('memRead').innerHTML=`Resident memory <b>${mb(T.res)} MB</b> of ${budMem} MB · package ${mb(T.pkg)} MB<br>`+(memOver>1e-9?`<span class="over">OVER by ${memOver.toFixed(2)} MB</span>`:`<span class="ok">Under budget by ${(-memOver).toFixed(2)} MB</span>`);
+  $('cpuRead').innerHTML=`CPU <b>${T.cpu.toFixed(2)}%</b> of ${budCpu}% · ${T.voices} real voices · stream reads ${(T.rd/1000).toFixed(1)} KB/s<br>`+(cpuOver>1e-9?`<span class="over">OVER by ${cpuOver.toFixed(2)} points</span>`:`<span class="ok">Under budget by ${(-cpuOver).toFixed(2)} points</span>`);
+  T.c.forEach((x,i)=>{const r=$('row-'+i);r.querySelector('.pP').textContent=mb(x.P);r.querySelector('.pR').textContent=mb(x.res);r.querySelector('.pC').textContent=x.cpu.toFixed(2);});
+  $('tP').textContent=mb(T.P);$('tR').textContent=mb(T.res);$('tC').textContent=T.cpu.toFixed(2);
+  let s;
+  const mo=memOver>1e-9,co=cpuOver>1e-9;
+  if(mo&&!co)s=`Memory is over and CPU has room. Decompressed audio costs its full PCM size in RAM. Keeping big groups compressed or streaming them trades RAM for decode CPU.`;
+  else if(co&&!mo)s=`CPU is over and memory has room. Every Vorbis voice decodes at play time (0.50% each here). Decompress the short, busy groups (footsteps, ui) and keep Vorbis for long, rare ones.`;
+  else if(mo&&co)s=`Both are over. Start with the biggest segment in each bar: it is rarely the same group.`;
+  else s=`Both fit. Short, frequent sounds stay as PCM in RAM (cheap CPU, small anyway); long sounds stay compressed or stream (small RAM, few voices to decode). Try the Handheld budgets next.`;
+  $('insight').textContent=s;
+}
+function buildTable(){
+  $('tbody').innerHTML=G.map((g,i)=>`<tr id="row-${i}">
+    <td><span class="sw" style="background:var(${COLS[i]})"></span>${g.id}</td>
+    <td data-label="Count">${g.count}</td>
+    <td data-label="Length">${g.t} s</td>
+    <td data-label="Channels"><span class="chn">${ch(g)}</span>${g.ch>1?`<label class="mono"><input type="checkbox" data-k="mono" data-i="${i}" aria-label="${g.id} mono"${g.mono?' checked':''}>mono</label>`:''}</td>
+    <td data-label="Sample rate"><select data-k="fs" data-i="${i}" aria-label="${g.id} sample rate">${RATES.map(r=>`<option value="${r}"${r===g.fs?' selected':''}>${r.toLocaleString('en-US')}</option>`).join('')}</select></td>
+    <td data-label="Codec"><select data-k="codec" data-i="${i}" aria-label="${g.id} codec">${Object.keys(RATIO).map(c=>`<option${c===g.codec?' selected':''}>${c}</option>`).join('')}</select></td>
+    <td data-label="Load"><select data-k="load" data-i="${i}" aria-label="${g.id} load type">${Object.entries(LOADS).map(([k,v])=>`<option value="${k}"${k===g.load?' selected':''}>${v}</option>`).join('')}</select></td>
+    <td data-label="Peak voices"><input type="number" min="0" max="40" step="1" value="${g.v}" data-k="v" data-i="${i}" aria-label="${g.id} peak voices"></td>
+    <td data-label="PCM MB" class="pP"></td><td data-label="Resident MB" class="pR"></td><td data-label="CPU %" class="pC"></td></tr>`).join('');
+  $('tbody').querySelectorAll('[data-k]').forEach(el=>el.addEventListener(el.type==='number'?'input':'change',()=>{
+    const g=G[+el.dataset.i],k=el.dataset.k;
+    if(k==='mono'){g.mono=el.checked;el.closest('td').querySelector('.chn').textContent=ch(g);}
+    else if(k==='v'){const v=parseInt(el.value,10);if(!isFinite(v))return;g.v=Math.max(0,Math.min(40,v));}
+    else if(k==='fs')g.fs=+el.value;else g[k]=el.value;
+    setPressed(null);render();
+  }));
+}
+function syncTable(){G.forEach((g,i)=>{const r=$('row-'+i);r.querySelector('[data-k=codec]').value=g.codec;r.querySelector('[data-k=load]').value=g.load;r.querySelector('[data-k=fs]').value=g.fs;r.querySelector('[data-k=v]').value=g.v;const m=r.querySelector('[data-k=mono]');if(m)m.checked=g.mono;r.querySelector('.chn').textContent=ch(g);});}
+function setPressed(p){document.querySelectorAll('.chip').forEach(b=>{if(b.dataset.p!=='H')b.setAttribute('aria-pressed',b.dataset.p===p);});}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const p=b.dataset.p;
+  if(p==='H'){budMem=8;budCpu=4.5;$('bMem').value=8;$('bCpu').value=4.5;b.setAttribute('aria-pressed','true');}
+  else{G=BASE.map(x=>Object.assign({},x,{fs:48000,codec:'Vorbis',load:'dec',mono:false}));PRESETS[p]();syncTable();setPressed(p);}
+  render();
+}));
+$('bMem').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>0){budMem=v;document.querySelector('[data-p=H]').setAttribute('aria-pressed','false');render();}});
+$('bCpu').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>0){budCpu=v;document.querySelector('[data-p=H]').setAttribute('aria-pressed','false');render();}});
+
+// ---------- listening panel ----------
+const SR0=48000,LEN=Math.round(1.2*SR0);
+const src=new Float32Array(LEN);
+(function(){let seed=7;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff*2-1;};
+  let ph=0;
+  for(let i=0;i<LEN;i++){const t=i/SR0;let x=rnd()*Math.exp(-t/0.15)*0.5;
+    if(t<1.0){const f=6000*Math.pow(200/6000,t/1.0);ph+=2*Math.PI*f/SR0;x+=0.3*Math.sin(ph);}
+    const fin=Math.min(1,t/0.005),fout=Math.min(1,(1.2-t)/0.05);src[i]=x*fin*Math.max(0,fout);}
+})();
+function degrade(rate,bits){
+  const n=Math.floor(LEN*rate/SR0),out=new Float32Array(n),step=SR0/rate;
+  for(let j=0;j<n;j++){const a=Math.floor(j*step),b=Math.max(a+1,Math.floor((j+1)*step));let s=0;for(let k=a;k<b&&k<LEN;k++)s+=src[k];let x=s/(b-a);
+    if(bits===8){x=Math.max(-1,Math.min(1,x));x=Math.round((x+1)*127.5)/127.5-1;}out[j]=x;}
+  return out;
+}
+function fft(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j){[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]];}}
+  for(let len=2;len<=n;len<<=1){const a=-2*Math.PI/len,wr=Math.cos(a),wi=Math.sin(a);for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let k=0;k<len/2;k++){const ur=re[i+k],ui=im[i+k],vr=re[i+k+len/2]*cr-im[i+k+len/2]*ci,vi=re[i+k+len/2]*ci+im[i+k+len/2]*cr;re[i+k]=ur+vr;im[i+k]=ui+vi;re[i+k+len/2]=ur-vr;im[i+k+len/2]=ui-vi;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t;}}}}
+function spectrum(x,rate){ // average power spectrum, frames of ~43 ms
+  const N=rate>=32000?2048:1024,hop=N/2,bins=new Float64Array(N/2);let frames=0;
+  for(let s=0;s+N<=x.length;s+=hop){const re=new Float64Array(N),im=new Float64Array(N);for(let i=0;i<N;i++)re[i]=x[s+i]*(0.5-0.5*Math.cos(2*Math.PI*i/(N-1)));fft(re,im);for(let k=0;k<N/2;k++)bins[k]+=re[k]*re[k]+im[k]*im[k];frames++;}
+  return {db:Array.from(bins,b=>10*Math.log10(b/frames/(N*N/16)+1e-12)),df:rate/N};
+}
+let lr=48000,lb=16;
+const refSpec=spectrum(src,SR0);
+let cur=null;
+function listenState(){cur={rate:lr,bits:lb,data:degrade(lr,lb)};cur.spec=spectrum(cur.data,lr);}
+function setupC(c){const d=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*d);c.height=Math.max(1,r.height*d);const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);return {g,w:r.width,h:r.height};}
+function drawSpec(live){
+  const {g,w,h}=setupC($('cSpec'));g.clearRect(0,0,w,h);
+  const pad={l:40,r:8,t:10,b:22},lo=-110,hi=0,x=f=>pad.l+(w-pad.l-pad.r)*f/24000,y=d=>pad.t+(h-pad.t-pad.b)*(hi-Math.max(lo,Math.min(hi,d)))/(hi-lo);
+  g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');
+  for(let d=0;d>=lo;d-=20){g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y(d));g.lineTo(w-pad.r,y(d));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(d,pad.l-5,y(d));}
+  for(let f=0;f<=24000;f+=4000){g.textAlign=f===24000?'right':'center';g.textBaseline='top';g.fillText(f?(f/1000)+(f===24000?' kHz':'k'):'0',x(f),h-pad.b+4);}
+  const line=(sp,col,lw,alpha)=>{g.strokeStyle=col;g.lineWidth=lw;g.globalAlpha=alpha;g.beginPath();sp.db.forEach((d,k)=>{const f=k*sp.df;k?g.lineTo(x(f),y(d)):g.moveTo(x(f),y(d));});g.stroke();g.globalAlpha=1;};
+  line(refSpec,css('--ink-soft'),1.2,.6);
+  line(cur.spec,css('--blood'),1.8,1);
+  if(lr<48000){const ny=x(lr/2);g.fillStyle=css('--blood');g.globalAlpha=.1;g.fillRect(ny,pad.t,w-pad.r-ny,h-pad.t-pad.b);g.globalAlpha=1;
+    g.strokeStyle=css('--blood');g.setLineDash([5,4]);g.beginPath();g.moveTo(ny,pad.t);g.lineTo(ny,h-pad.b);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--blood');g.font='600 11px '+css('--sans');g.textAlign=ny>w*0.7?'right':'left';g.textBaseline='top';g.fillText('nothing above '+(lr/2).toLocaleString('en-US')+' Hz',ny+(ny>w*0.7?-4:4),pad.t+2);}
+  if(live){g.strokeStyle=css('--focus');g.lineWidth=1.5;g.beginPath();const bin=ctx.sampleRate/2/live.length;live.forEach((d,k)=>{const f=k*bin;if(f>24000)return;k?g.lineTo(x(f),y(d)):g.moveTo(x(f),y(d));});g.stroke();}
+  $('specRead').innerHTML=`<b>${lr.toLocaleString('en-US')} Hz, ${lb}-bit.</b> Highest frequency it can hold: ${(lr/2).toLocaleString('en-US')} Hz. Theoretical noise floor: about −${(6.02*lb).toFixed(0)} dB. Size vs 48 kHz 16-bit: ${Math.round(100*lr*lb/(48000*16))}%. Grey line: the 48 kHz original. Red: this version.${live?' Blue: live analyser.':''}`;
+}
+document.querySelectorAll('input[name=lr]').forEach(r=>r.addEventListener('change',()=>{lr=+r.value;listenState();drawSpec();}));
+document.querySelectorAll('input[name=lb]').forEach(r=>r.addEventListener('change',()=>{lb=+r.value;listenState();drawSpec();}));
+let ctx=null,master=null,an=null,muted=false,vol=0.7,playingUntil=0;
+function ensureAudio(){
+  if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('audioState').textContent='No Web Audio here. The spectrum still shows the change.';return false;}
+    ctx=new AC();master=ctx.createGain();an=ctx.createAnalyser();an.fftSize=2048;master.connect(an);an.connect(ctx.destination);}
+  if(ctx.state==='suspended')ctx.resume();master.gain.value=muted?0:vol*0.5;
+  $('audioState').textContent=muted?'Muted. The spectrum still shows the change.':'Sound on, gain 0.5.';return true;
+}
+$('bPlay').addEventListener('click',()=>{
+  if(!ensureAudio())return;
+  const b=ctx.createBuffer(1,cur.data.length,cur.rate);b.getChannelData(0).set(cur.data);
+  const s=ctx.createBufferSource();s.buffer=b;s.connect(master);s.start();playingUntil=performance.now()+1300;
+  const buf=new Float32Array(an.frequencyBinCount);
+  if(reduce){setTimeout(()=>{an.getFloatFrequencyData(buf);drawSpec(Array.from(buf));},400);return;}
+  (function tick(){an.getFloatFrequencyData(buf);drawSpec(Array.from(buf));if(performance.now()<playingUntil)requestAnimationFrame(tick);else drawSpec();})();
+});
+$('mute').addEventListener('click',()=>{muted=!muted;$('mute').setAttribute('aria-pressed',muted);$('mute').textContent=muted?'Unmute':'Mute';if(ctx)ensureAudio();else $('audioState').textContent=muted?'Muted.':'Sound starts when you press Play.';});
+$('vol').addEventListener('input',e=>{vol=e.target.value/100;$('oVol').textContent=e.target.value+'%';if(ctx&&!muted)master.gain.value=vol*0.5;});
+window.addEventListener('resize',()=>{drawSpec();render();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>drawSpec());
+
+buildTable();PRESETS.B();syncTable();render();listenState();drawSpec();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>drawSpec());
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Music Sync Points — AU101 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.audiobar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:14px;padding:10px 12px;border-radius:10px;background:var(--paper-2)}
+.btn{font:700 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn[aria-pressed="true"]{background:var(--blood);border-color:var(--blood);color:var(--paper)}
+.btn.big{font-size:1.05rem;padding:12px 20px;background:var(--blood);border-color:var(--blood);color:var(--paper)}
+.vol{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem}
+.vol input{width:110px}
+.scope{width:160px;height:40px;display:block;border-radius:6px;background:var(--paper)}
+.astatus{font-size:.85rem;color:var(--ink-soft);flex:1 1 220px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:12px}
+.state{font-size:.95rem}
+.state b{font-weight:700}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem;color:var(--paper)}
+.pill.explore{background:var(--steel)}.pill.combat{background:var(--blood)}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas.plot{display:block;width:100%;height:240px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+@media (min-width:900px){.controls{grid-template-columns:1fr 1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:8px 12px 10px;margin:0 0 10px;min-width:0}
+legend{font-weight:700;font-size:.9rem;padding:0 4px}
+.opt{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:3px 0;cursor:pointer}
+.opt input{width:18px;height:18px;accent-color:var(--steel);margin:0;flex:none}
+.opt kbd,.hint kbd{font:600 .75rem var(--sans);border:1px solid var(--ink-soft);border-radius:4px;padding:0 5px;color:var(--ink-soft)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:.92rem}
+.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 .95rem var(--sans);width:6em;padding:5px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:520px){th,td{padding:5px 4px;font-size:.84rem}}
+.whatif{margin-top:16px;padding:12px;border-radius:10px;border:1.5px solid var(--grid)}
+.whatif h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:0 0 6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 9 · Worked example</p>
+  <h1>A quantized switch waits. A stinger doesn't.</h1>
+  <p class="lede">One press shows you one wait, which tells you nothing. Press "simulate 1,000 presses" and the histogram shows the rule. With a 4-bar phrase at 120 BPM the switch waits anywhere from 0 to 8 s, 4 s on average, and more than 1 s in 87.5% of presses. A stinger on the next beat answers within half a second while the real switch still waits.</p>
+</header>
+
+<section class="panel" aria-label="Music transition sync points">
+  <div class="audiobar" role="group" aria-label="Sound controls">
+    <button class="btn primary" id="play" type="button">Play music</button>
+    <label class="vol" for="vol">Volume <input id="vol" type="range" min="0" max="100" step="1" value="50"> <output id="oVol">50%</output></label>
+    <button class="btn" id="mute" type="button" aria-pressed="false">Mute</button>
+    <canvas class="scope" id="scope" role="img" aria-label="Live waveform of the music"></canvas>
+    <span class="astatus" id="aStatus">Sound is off. The clock, timeline and histogram run anyway.</span>
+  </div>
+
+  <div class="actions">
+    <button class="btn big" id="spot" type="button" aria-keyshortcuts="Space">Enemy spotted (Space)</button>
+    <span class="state" id="state" aria-live="polite"></span>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Timeline<small id="tlCap">8 bars. Playhead at the left quarter. Diamonds are the sync points for the chosen unit. Arrows run from each press to the moment it is served.</small></figcaption>
+      <canvas class="plot" id="cTl" role="img" aria-label="Scrolling timeline of bars, sync points, presses and stingers"></canvas>
+      <div class="legend"><span><i style="background:var(--steel);opacity:.35"></i>explore loop</span><span><i style="background:var(--blood);opacity:.35"></i>combat loop</span><span>◆ sync point</span><span style="color:var(--ochre)">⚑ stinger</span><span>✕ cancelled request</span></div>
+    </figure>
+    <figure>
+      <figcaption>Histogram of waits<small id="hCap">20 equal bins from 0 to U. Solid line: mean. Dashed: U/2 and the flat density n/20.</small></figcaption>
+      <canvas class="plot" id="cHist" role="img" aria-label="Histogram of transition waits"></canvas>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite" id="readout">
+    <div class="stat" style="--c:var(--ink)"><b id="rU">—</b><span>sync unit U</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rLast">—</b><span>last wait</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rMean">—</b><span>mean wait</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rWorst">—</b><span>worst wait</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rOver">—</b><span>waits over 1 s</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rN">0</b><span>presses counted</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSting">—</b><span>last stinger delay</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rClock">—</b><span>music time</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <fieldset>
+        <legend>Sync unit</legend>
+        <label class="opt"><input type="radio" name="unit" value="0"> Immediate <kbd>1</kbd></label>
+        <label class="opt"><input type="radio" name="unit" value="1"> Beat <kbd>2</kbd></label>
+        <label class="opt"><input type="radio" name="unit" value="4" checked> Bar <kbd>3</kbd></label>
+        <label class="opt"><input type="radio" name="unit" value="16"> 4-bar phrase <kbd>4</kbd></label>
+      </fieldset>
+    </div>
+    <div>
+      <div class="row"><label for="bpm">Tempo</label><output id="oBpm">120 BPM</output></div>
+      <input id="bpm" type="range" min="60" max="180" step="1" value="120">
+      <p class="hint">Changing tempo or unit restarts the music at bar 1 and clears the histogram.</p>
+      <label class="opt" style="margin-top:6px"><input type="checkbox" id="sting"> Stinger on spotted <kbd>S</kbd></label>
+    </div>
+    <div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <button class="btn" id="sim" type="button">Simulate 1,000 presses</button>
+        <button class="btn" id="clear" type="button">Clear histogram</button>
+      </div>
+      <p class="hint">The simulation draws 1,000 request times uniformly over 64 s of music with a seeded generator (seed 9), so every run gives the same numbers. No audio plays.</p>
+    </div>
+  </div>
+
+  <div class="whatif">
+    <h2>What if you pressed at a given music time?</h2>
+    <div class="row" style="justify-content:flex-start;gap:10px"><label for="wt">Press at</label><input type="number" id="wt" min="0" step="0.01" value="3.30"> <span>s, at <span id="wBpm">120</span> BPM</span></div>
+    <div class="table-wrap">
+      <table aria-label="Served time by sync unit">
+        <thead><tr><th>Unit</th><th>U</th><th>Served at</th><th>Wait</th></tr></thead>
+        <tbody id="wbody"></tbody>
+      </table>
+    </div>
+    <p class="hint" id="wSting"></p>
+  </div>
+</section>
+
+<footer>Model: U = k × 60 / BPM with k = 0 (immediate), 1 (beat), 4 (bar) or 16 (4-bar phrase); next_sync(t) = ceil(t / U − 10⁻⁹) × U, measured from music start; a stinger uses k = 1. A lookahead scheduler (25 ms timer, 100 ms ahead) switches loops at the sync point with a 10 ms fade on the old loop. Both loops and the stinger (A5, C6, A6) are synthesized in the browser. No recorded or game music is used.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const UNITS={0:'Immediate',1:'Beat',4:'Bar',16:'4-bar phrase'};
+const S={bpm:120,k:4,sting:false};
+const U=(k,bpm)=>k*60/(bpm||S.bpm);
+function nextSync(t,k,bpm){const u=U(k,bpm);return u===0?t:Math.ceil(t/u-1e-9)*u;}
+const f2=v=>v.toFixed(2);
+
+// ---------- clock ----------
+let perfBase=performance.now(),tBase=0,AC=null,acOrigin=0,audioOn=false;
+function now(){return audioOn?AC.currentTime-acOrigin:tBase+(performance.now()-perfBase)/1000;}
+
+// ---------- state ----------
+let cur='explore',req='explore',pending=null,segs=[{from:0,st:'explore'}],presses=[],stings=[];
+let waits=[],lastWait=null,lastSting=null;
+function resetMusic(){
+  const wasOn=audioOn;if(wasOn)stopAudio(true);
+  perfBase=performance.now();tBase=0;cur='explore';req='explore';pending=null;segs=[{from:0,st:'explore'}];presses=[];stings=[];
+  loop={name:'explore',origin:0,idx:0};
+  if(wasOn)startAudio();
+}
+function press(){
+  const t=now();
+  req=req==='explore'?'combat':'explore';
+  if(pending&&req===cur){ // reversed before its sync point
+    pending.p.cancelled=true;pending.p.cancelT=t;const w=pending.p.wait;const i=waits.lastIndexOf(w);if(i>=0)waits.splice(i,1);
+    audioCancel(pending);pending=null;lastWait=null;refresh();return;
+  }
+  const sT=nextSync(t,S.k),p={t,sT,to:req,wait:sT-t,cancelled:false};
+  presses.push(p);waits.push(p.wait);lastWait=p.wait;
+  if(S.sting&&req==='combat'){const st=nextSync(t,1);stings.push({t:st});lastSting=st-t;audioSting(st);}
+  if(S.k===0){commit(p);}else pending={p};
+  refresh();
+}
+function commit(p){cur=p.to;segs.push({from:p.sT,st:p.to});if(S.k===0)audioImmediate(p);else if(!audioOn||!audioSwitch)loop={name:p.to,origin:p.sT,idx:audioOn?Math.max(0,Math.ceil((now()-p.sT)/E8()-1e-9)):0};}
+
+// ---------- audio ----------
+let master=null,vol=null,scopeAn=null,bus={},timer=0,loop={name:'explore',origin:0,idx:0},noiseBuf=null,audioSwitch=null;
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+const E8=()=>30/S.bpm; // eighth note in seconds
+function volVal(){return $('mute').getAttribute('aria-pressed')==='true'?0:(+$('vol').value/100);}
+function osc(type,f,t,dur,peak,out,att,list){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+(att||0.005));g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(out);o.start(t);o.stop(t+dur+0.02);if(list)list.push({n:o,t});return o;}
+function playLoopNote(name,n,t,list){
+  const bar=Math.floor(n/8),e8=n%8,out=bus[name],beatLen=60/S.bpm,barLen=4*beatLen;
+  const isA=bar%2===0;
+  if(name==='explore'){
+    if(e8===0){(isA?[57,60,64]:[53,57,60]).forEach(m=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=mtof(m);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.1,t+0.08);g.gain.setValueAtTime(0.1,t+barLen-0.08);g.gain.linearRampToValueAtTime(0,t+barLen);o.connect(g);g.connect(out);o.start(t);o.stop(t+barLen+0.01);list.push({n:o,t});});
+      osc('triangle',mtof(isA?69:65),t,0.9,0.22,out,0.01,list);}
+  } else {
+    if(e8%2===0){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(110,t);o.frequency.exponentialRampToValueAtTime(50,t+0.08);g.gain.setValueAtTime(0.8,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.22);o.connect(g);g.connect(out);o.start(t);o.stop(t+0.24);list.push({n:o,t});}
+    if(e8===2||e8===6){const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;f.type='bandpass';f.frequency.value=1800;f.Q.value=0.9;g.gain.setValueAtTime(0.7,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.14);s.connect(f);f.connect(g);g.connect(out);s.start(t);s.stop(t+0.15);list.push({n:s,t});}
+    {const o=AC.createOscillator(),f=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.value=mtof(isA?45:41);f.type='lowpass';f.frequency.value=800;g.gain.setValueAtTime(0.2,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.2);o.connect(f);f.connect(g);g.connect(out);o.start(t);o.stop(t+0.22);list.push({n:o,t});}
+    if(e8===0)(isA?[69,72,76]:[65,69,72]).forEach(m=>osc('square',mtof(m),t,0.14,0.05,out,0.003,list));
+  }
+}
+let scheduled=[];
+function sched(){
+  if(!audioOn)return;const tn=now(),ahead=tn+0.1;
+  scheduled=scheduled.filter(v=>v.t>tn-4);
+  while(true){
+    const te=loop.origin+loop.idx*E8();
+    if(pending&&!audioSwitch&&pending.p.sT<ahead&&te>=pending.p.sT-1e-6){
+      const ts=pending.p.sT,a=ts+acOrigin,from=loop.name,to=pending.p.to;
+      audioSwitch={ts,from,to,snap:{name:loop.name,origin:loop.origin,idx:loop.idx},nodes:[]};
+      bus[from].gain.setValueAtTime(1,Math.max(AC.currentTime,a-0.01));bus[from].gain.linearRampToValueAtTime(0,a);
+      bus[to].gain.cancelScheduledValues(a);bus[to].gain.setValueAtTime(1,a);
+      loop={name:to,origin:ts,idx:0};continue;
+    }
+    if(te>=ahead)break;
+    const list=audioSwitch&&loop.origin===audioSwitch.ts?audioSwitch.nodes:scheduled;
+    if(te>=tn-0.02)playLoopNote(loop.name,loop.idx,te+acOrigin,list);
+    loop.idx++;
+  }
+}
+function audioCancel(){
+  if(!audioSwitch||!AC)return;
+  const a=AC.currentTime;audioSwitch.nodes.forEach(v=>{try{v.n.stop();}catch(e){}});
+  bus[audioSwitch.from].gain.cancelScheduledValues(a);bus[audioSwitch.from].gain.setValueAtTime(1,a);
+  bus[audioSwitch.to].gain.cancelScheduledValues(a);bus[audioSwitch.to].gain.setValueAtTime(0,a);
+  loop=audioSwitch.snap;audioSwitch=null;
+}
+function audioImmediate(p){
+  if(!audioOn){loop={name:p.to,origin:p.sT,idx:0};return;}
+  const from=loop.name,a=AC.currentTime;
+  bus[from].gain.cancelScheduledValues(a);bus[from].gain.setValueAtTime(bus[from].gain.value,a);bus[from].gain.linearRampToValueAtTime(0,a+0.01);
+  scheduled.forEach(v=>{if(v.t>a){try{v.n.stop();}catch(e){}}});
+  bus[p.to].gain.cancelScheduledValues(a);bus[p.to].gain.setValueAtTime(1,a+0.01);
+  loop={name:p.to,origin:p.sT+0.01,idx:0};
+}
+function audioSting(st){
+  if(!audioOn)return;const a=Math.max(AC.currentTime,st+acOrigin);
+  [81,84,93].forEach((m,i)=>osc('triangle',mtof(m),a+i*0.11,0.09,0.25,bus.sting,0.005,null));
+}
+function startAudio(){
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)throw new Error('none');
+    if(!AC){AC=new C();master=AC.createGain();master.gain.value=0.6;vol=AC.createGain();vol.gain.value=0;scopeAn=AC.createAnalyser();scopeAn.fftSize=1024;
+      master.connect(scopeAn);master.connect(vol);vol.connect(AC.destination);
+      ['explore','combat','sting'].forEach(n=>{bus[n]=AC.createGain();bus[n].gain.value=0;bus[n].connect(master);});
+      const n=Math.round(AC.sampleRate*0.2);noiseBuf=AC.createBuffer(1,n,AC.sampleRate);const d=noiseBuf.getChannelData(0);let s=5;for(let i=0;i<n;i++){s=(s*1664525+1013904223)>>>0;d[i]=s/2147483648-1;}}
+    AC.resume().then(()=>{
+      const t=tBase+(performance.now()-perfBase)/1000;acOrigin=AC.currentTime-t;audioOn=true;audioSwitch=null;
+      const a=AC.currentTime;['explore','combat'].forEach(n=>{bus[n].gain.cancelScheduledValues(a);bus[n].gain.setValueAtTime(n===loop.name?1:0,a);});bus.sting.gain.setValueAtTime(1,a);
+      loop.idx=Math.max(0,Math.ceil((t-loop.origin)/E8()-1e-9));
+      vol.gain.setTargetAtTime(volVal(),a,0.02);clearInterval(timer);timer=setInterval(sched,25);sched();
+      $('play').textContent='Stop music';$('aStatus').textContent='Playing. Press Space and listen for how long the switch takes.';
+    }).catch(blocked);
+    setTimeout(()=>{if(AC&&AC.state!=='running')blocked();},1500);
+  }catch(e){blocked();}
+}
+function blocked(){if(audioOn)return;$('aStatus').textContent='Sound is blocked or unavailable here. The timeline and histogram still work.';}
+function stopAudio(silent){
+  if(!audioOn)return;const t=now();audioOn=false;tBase=t;perfBase=performance.now();clearInterval(timer);
+  const a=AC.currentTime;vol.gain.setTargetAtTime(0,a,0.02);scheduled.concat(audioSwitch?audioSwitch.nodes:[]).forEach(v=>{try{v.n.stop(a+0.1);}catch(e){}});scheduled=[];
+  if(audioSwitch){loop=audioSwitch.snap;audioSwitch=null;}
+  if(!silent){$('play').textContent='Play music';$('aStatus').textContent='Sound is off. The clock, timeline and histogram run anyway.';}
+}
+
+// ---------- drawing ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return{g,w:r.width,h:r.height};}
+function stateAt(tt){let s=segs[0].st;for(const sg of segs){if(sg.from<=tt+1e-9)s=sg.st;}return s;}
+function drawTl(t){
+  const o=setup($('cTl')),g=o.g,pad={l:6,r:6,t:30,b:26},W=o.w-pad.l-pad.r;
+  const beat=60/S.bpm,bar=4*beat,span=8*bar;
+  let t0=reduced?Math.floor(t/span)*span:t-0.25*span;
+  const xs=tt=>pad.l+W*(tt-t0)/span,y0=pad.t,y1=o.h-pad.b;
+  // bar backgrounds
+  for(let b=Math.floor(t0/bar);b*bar<t0+span;b++){
+    const a=b*bar;if(a+bar<0)continue;const st=a<=t?stateAt(Math.max(a,0)):(pending&&pending.p.sT<=a?pending.p.to:cur);
+    const future=a>t;g.fillStyle=css(st==='combat'?'--blood':'--steel');g.globalAlpha=future?0.1:0.22;
+    const xa=Math.max(xs(Math.max(a,0)),pad.l),xb=Math.min(xs(a+bar),o.w-pad.r);if(xb>xa)g.fillRect(xa,y0,xb-xa,y1-y0);g.globalAlpha=1;
+  }
+  // switch points mid-bar (beat or immediate units) shade exactly
+  segs.forEach(sg=>{if(sg.from>t0&&sg.from<t0+span&&Math.abs(sg.from/bar-Math.round(sg.from/bar))>1e-6){g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(xs(sg.from),y0);g.lineTo(xs(sg.from),y1);g.stroke();}});
+  // beat and bar lines
+  for(let k=Math.ceil(t0/beat);k*beat<=t0+span;k++){if(k<0)continue;const x=xs(k*beat),isBar=k%4===0;g.strokeStyle=css(isBar?'--ink':'--ink-soft');g.globalAlpha=isBar?0.7:0.3;g.lineWidth=isBar?2:1;g.beginPath();g.moveTo(x,y0);g.lineTo(x,y1);g.stroke();g.globalAlpha=1;
+    if(isBar){g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('bar '+(k/4%4+1),x+3,y1+4);}}
+  // sync diamonds
+  const u=U(S.k);
+  if(u>0){g.fillStyle=css('--ink');for(let k=Math.ceil(t0/u);k*u<=t0+span;k++){if(k<0)continue;const x=xs(k*u),y=y0-8;g.beginPath();g.moveTo(x,y-5);g.lineTo(x+5,y);g.lineTo(x,y+5);g.lineTo(x-5,y);g.closePath();g.fill();}}
+  // presses
+  g.font='600 11px '+css('--sans');
+  presses.forEach((p,i)=>{
+    const end=p.cancelled?p.cancelT:p.sT;if(end<t0-1||p.t>t0+span)return;
+    const lane=y0+18+(i%4)*((y1-y0-30)/4),xa=xs(p.t),xb=xs(p.sT);
+    g.strokeStyle=css(p.cancelled?'--ink-soft':(p.to==='combat'?'--blood':'--steel'));g.fillStyle=g.strokeStyle;g.lineWidth=2.2;
+    if(p.cancelled)g.setLineDash([4,4]);
+    g.beginPath();g.moveTo(xa,lane);g.lineTo(xb,lane);g.stroke();g.setLineDash([]);
+    g.beginPath();g.arc(xa,lane,3.5,0,Math.PI*2);g.fill();
+    if(xb-xa>4){g.beginPath();g.moveTo(xb,lane);g.lineTo(xb-7,lane-4.5);g.lineTo(xb-7,lane+4.5);g.closePath();g.fill();}
+    g.textAlign='center';g.textBaseline='bottom';g.fillStyle=css('--ink');
+    g.fillText((p.cancelled?'cancelled ':'')+f2(p.wait)+' s',Math.max(pad.l+30,(xa+xb)/2),lane-4);
+    if(p.cancelled){const cx=(xa+xb)/2;g.strokeStyle=css('--blood');g.lineWidth=2.5;g.beginPath();g.moveTo(cx-6,lane-6);g.lineTo(cx+6,lane+6);g.moveTo(cx+6,lane-6);g.lineTo(cx-6,lane+6);g.stroke();}
+  });
+  // stingers
+  stings.forEach(s=>{if(s.t<t0||s.t>t0+span)return;const x=xs(s.t);g.strokeStyle=css('--ochre');g.fillStyle=css('--ochre');g.lineWidth=2;g.beginPath();g.moveTo(x,y1);g.lineTo(x,y1-26);g.stroke();g.beginPath();g.moveTo(x,y1-26);g.lineTo(x+12,y1-21);g.lineTo(x,y1-16);g.closePath();g.fill();});
+  // playhead
+  const px=xs(t);g.strokeStyle=css('--moss');g.lineWidth=3;g.beginPath();g.moveTo(px,4);g.lineTo(px,y1);g.stroke();
+  g.fillStyle=css('--moss');g.font='700 11px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('now',px+4,2);
+}
+function drawHist(){
+  const o=setup($('cHist')),g=o.g,pad={l:40,r:24,t:12,b:34},W=o.w-pad.l-pad.r,H=o.h-pad.t-pad.b;
+  const u=U(S.k),n=waits.length;
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');
+  if(u===0){g.textAlign='center';g.textBaseline='middle';g.fillText(n?`Immediate: all ${n} waits are 0.00 s.`:'Immediate: every wait is 0.',o.w/2,o.h/2);return;}
+  const bins=new Array(20).fill(0);waits.forEach(w=>{let b=Math.floor(w/u*20);if(b>=20)b=19;if(b<0)b=0;bins[b]++;});
+  const mx=Math.max(4,...bins,n/20)*1.15;
+  const xs=v=>pad.l+W*v/u,ys=v=>pad.t+H*(1-v/mx);
+  const step=[1,2,5,10,20,25,50,100,200,500].find(s=>mx/s<=5)||1000;
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let v=0;v<=mx;v+=step){g.beginPath();g.moveTo(pad.l,ys(v));g.lineTo(o.w-pad.r,ys(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,ys(v));}
+  [0,.25,.5,.75,1].forEach(f=>{g.textAlign='center';g.textBaseline='top';g.fillText(f2(u*f),xs(u*f),o.h-pad.b+5);});
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('wait (s)',o.w-pad.r,o.h-1);
+  g.fillStyle=css('--steel');bins.forEach((c,i)=>{if(!c)return;const xa=xs(u*i/20)+1,xb=xs(u*(i+1)/20)-1;g.fillRect(xa,ys(c),xb-xa,ys(0)-ys(c));});
+  g.save();g.setLineDash([6,4]);g.lineWidth=1.5;g.strokeStyle=css('--ink');g.beginPath();g.moveTo(xs(u/2),pad.t);g.lineTo(xs(u/2),ys(0));g.stroke();
+  if(n){g.strokeStyle=css('--moss');g.beginPath();g.moveTo(pad.l,ys(n/20));g.lineTo(o.w-pad.r,ys(n/20));g.stroke();g.fillStyle=css('--moss');g.font='700 11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';{const lb='flat: n/20 = '+(n/20).toFixed(n%20?1:0);g.strokeStyle=css('--paper-2');g.lineWidth=4;g.setLineDash([]);g.strokeText(lb,pad.l+4,ys(n/20)-3);g.fillText(lb,pad.l+4,ys(n/20)-3);}}g.restore();
+  if(n){const m=waits.reduce((a,b)=>a+b,0)/n;g.strokeStyle=css('--ochre');g.lineWidth=3;g.beginPath();g.moveTo(xs(m),pad.t);g.lineTo(xs(m),ys(0));g.stroke();
+    g.fillStyle=css('--ochre');g.font='700 11px '+css('--sans');g.textAlign=m>u*0.6?'right':'left';g.textBaseline='top';g.fillText('mean '+f2(m)+' s',xs(m)+(m>u*0.6?-5:5),pad.t);}
+  else{g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='middle';g.fillText('Press Space or simulate 1,000 presses',pad.l+W/2,pad.t+H/2);}
+}
+function drawScope(){const o=setup($('scope')),g=o.g;g.strokeStyle=css('--steel');g.lineWidth=1.5;g.beginPath();
+  if(scopeAn&&audioOn){const d=new Float32Array(scopeAn.fftSize);scopeAn.getFloatTimeDomainData(d);for(let i=0;i<d.length;i++){const x=o.w*i/(d.length-1),y=o.h/2-d[i]*o.h*1.4;i?g.lineTo(x,y):g.moveTo(x,y);}}
+  else{g.moveTo(0,o.h/2);g.lineTo(o.w,o.h/2);}g.stroke();}
+
+// ---------- readouts ----------
+function refresh(){
+  const u=U(S.k),n=waits.length;
+  $('rU').textContent=f2(u)+' s';
+  $('rLast').textContent=lastWait===null?'—':f2(lastWait)+' s';
+  if(n){const m=waits.reduce((a,b)=>a+b,0)/n,wmax=Math.max(...waits),over=waits.filter(w=>w>1).length/n*100;
+    $('rMean').textContent=f2(m)+' s';$('rWorst').textContent=f2(wmax)+' s';$('rOver').textContent=over.toFixed(1)+'%';}
+  else{$('rMean').textContent='—';$('rWorst').textContent='—';$('rOver').textContent='—';}
+  $('rN').textContent=n.toLocaleString('en-US');
+  $('rSting').textContent=lastSting===null?(S.sting?'—':'off'):f2(lastSting)+' s';
+  const ex=u===0?'0':f2(u/2),over1=u>1?((1-1/u)*100).toFixed(1)+'%':'0%';
+  let s=`With the ${UNITS[S.k].toLowerCase()} unit at ${S.bpm} BPM, U = ${f2(u)} s. A request arriving at a random moment waits between 0 and ${f2(u)} s, <b>${ex} s on average</b>, and more than 1 s in <b>${over1}</b> of presses. `;
+  if(n>=200){const m=waits.reduce((a,b)=>a+b,0)/n;s+=`Your ${n.toLocaleString('en-US')} presses average ${f2(m)} s. `;}
+  s+=S.sting?`The stinger always lands on the next beat, within ${f2(60/S.bpm)} s, so the player hears an answer at once.`:`Turn on the stinger to answer the press on the next beat while the switch still waits.`;
+  if(S.k===0)s=`Immediate switches wait 0 s, but they cut the loop mid-phrase. Listen for the jolt. That is the price of zero wait.`;
+  $('insight').innerHTML=s;
+  whatIf();drawHist();
+}
+function stateText(){
+  const t=now();let s=`Playing <span class="pill ${cur}">${cur}</span>`;
+  if(pending)s+=` · switching to <span class="pill ${pending.p.to}">${pending.p.to}</span> in ${f2(Math.max(0,pending.p.sT-t))} s`;
+  return s;
+}
+function whatIf(){
+  const t=Math.max(0,parseFloat($('wt').value)||0);$('wBpm').textContent=S.bpm;
+  $('wbody').innerHTML=[0,1,4,16].map(k=>{const sT=nextSync(t,k);return `<tr class="${k===S.k?'here':''}"><td>${UNITS[k]}</td><td>${f2(U(k))} s</td><td>${f2(sT)} s</td><td>${f2(sT-t)} s</td></tr>`;}).join('');
+  const st=nextSync(t,1);$('wSting').textContent=`A stinger for a press at ${f2(t)} s plays at ${f2(st)} s, ${f2(st-t)} s later.`;
+}
+
+// ---------- loop ----------
+let lastState='';
+function frame(){
+  const t=now();
+  if(pending&&t>=pending.p.sT){commit(pending.p);pending=null;if(audioSwitch)audioSwitch=null;}
+  drawTl(t);drawScope();
+  const st=stateText();if(st!==lastState){$('state').innerHTML=st;lastState=st;}
+  $('rClock').textContent=f2(t)+' s';
+  requestAnimationFrame(frame);
+}
+
+// ---------- controls ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+$('spot').addEventListener('click',press);
+$('sim').addEventListener('click',()=>{const r=mulberry32(9);for(let i=0;i<1000;i++){const t=r()*64;waits.push(nextSync(t,S.k)-t);}refresh();});
+$('clear').addEventListener('click',()=>{waits=[];lastWait=null;lastSting=null;refresh();});
+function setUnit(k){S.k=k;document.querySelectorAll('input[name=unit]').forEach(r=>r.checked=+r.value===k);waits=[];lastWait=null;lastSting=null;resetMusic();refresh();}
+document.querySelectorAll('input[name=unit]').forEach(r=>r.addEventListener('change',()=>setUnit(+r.value)));
+$('bpm').addEventListener('input',e=>{S.bpm=+e.target.value;$('oBpm').textContent=S.bpm+' BPM';waits=[];lastWait=null;lastSting=null;resetMusic();refresh();});
+$('sting').addEventListener('change',e=>{S.sting=e.target.checked;refresh();});
+$('wt').addEventListener('input',whatIf);
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;const tag=e.target.tagName,type=e.target.type;
+  const typing=tag==='INPUT'&&(type==='number'||type==='text');
+  if(e.key===' '&&!typing&&type!=='range'){e.preventDefault();press();return;}
+  if(typing)return;
+  if(['1','2','3','4'].includes(e.key)){e.preventDefault();setUnit([0,1,4,16][+e.key-1]);}
+  else if(e.key==='s'||e.key==='S'){e.preventDefault();$('sting').checked=!$('sting').checked;S.sting=$('sting').checked;refresh();}
+});
+$('play').addEventListener('click',()=>audioOn?stopAudio():startAudio());
+$('vol').addEventListener('input',e=>{$('oVol').textContent=e.target.value+'%';if(audioOn)vol.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);});
+$('mute').addEventListener('click',()=>{const m=$('mute').getAttribute('aria-pressed')!=='true';$('mute').setAttribute('aria-pressed',m);$('mute').textContent=m?'Muted':'Mute';if(audioOn)vol.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);});
+if(reduced)$('tlCap').textContent+=' Reduced motion: the timeline turns a page every 8 bars instead of scrolling.';
+if(!(window.AudioContext||window.webkitAudioContext)){$('play').disabled=true;$('aStatus').textContent='This browser has no Web Audio. The timeline and histogram still work.';}
+window.addEventListener('resize',drawHist);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawHist);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawHist);
+refresh();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

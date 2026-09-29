@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Subtitle reading race · AU101 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-size:1rem;font-weight:600;margin:0}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1024px){.views{grid-template-columns:1.15fr 1fr}}
+.view{background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+.view p.sub{font-size:.82rem;color:var(--ink-soft);margin:0 0 8px}
+/* timeline */
+.tl{position:relative;margin:4px 0 0 58px}
+.rowlab{position:absolute;left:-58px;width:54px;font-size:.78rem;color:var(--ink-soft);font-weight:600;line-height:1.1}
+.track{position:relative;height:30px;border-bottom:1px solid var(--grid)}
+.track.subs{height:66px}
+.clip{position:absolute;top:6px;height:18px;background:var(--ink-soft);opacity:.55;border-radius:3px;color:var(--paper);font:700 .7rem var(--sans);line-height:18px;padding-left:3px;overflow:hidden}
+.ev{position:absolute;top:6px;height:26px;padding:0;border:0;border-radius:4px;background:transparent;cursor:pointer;display:block}
+.ev .core{position:absolute;left:0;top:0;bottom:0;background:var(--steel);border-radius:4px 0 0 4px}
+.ev .hold{position:absolute;top:0;bottom:0;background:var(--steel);opacity:.4}
+.ev .clash{position:absolute;top:0;bottom:0;min-width:6px;background:repeating-linear-gradient(135deg,var(--blood) 0 2px,transparent 2px 4px);border:1.5px solid var(--blood);border-radius:0 4px 4px 0}
+.ev .num{position:absolute;left:3px;top:4px;font:700 .72rem var(--sans);color:var(--paper)}
+.ev[aria-pressed="true"]{outline:2.5px solid var(--ink);outline-offset:2px}
+.ev:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.clabel{position:absolute;top:34px;font:700 .68rem var(--sans);color:var(--blood);white-space:nowrap}
+.axis{position:relative;height:20px}
+.axis span{position:absolute;transform:translateX(-50%);font-size:.7rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+@media (max-width:600px){.axis span.odd{display:none}}
+.ticks{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:calc(100%/18) 100%}
+.playhead{position:absolute;top:-4px;bottom:0;width:2px;background:var(--ochre);pointer-events:none}
+.playhead::after{content:"";position:absolute;top:-2px;left:-4px;border:5px solid transparent;border-top-color:var(--ochre)}
+.transport{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+.transport .time{font-variant-numeric:tabular-nums;font-weight:700;min-width:5.5ch}
+/* reader */
+.scene{position:relative;height:230px;border-radius:8px;background:linear-gradient(170deg,#2b3a52 0%,#1a2333 55%,#121926 100%);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:12px}
+.scene::before{content:"";position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(0deg,#0d121b,transparent)}
+.subbox{position:relative;display:flex;flex-direction:column;gap:6px;align-items:center;width:100%}
+.subrow{background:rgba(0,0,0,.78);color:#f4f4f0;font:500 1rem/1.35 var(--sans);padding:6px 10px;border-radius:4px;max-width:100%;text-align:center}
+.subrow b{color:#ffd98a;margin-right:.35em}
+.subrow .rd{background:rgba(255,217,138,.28);text-decoration:underline;text-decoration-color:#ffd98a;text-decoration-thickness:2px;text-underline-offset:3px}
+.subrow.old{opacity:.8}
+.sceneinfo{position:absolute;top:8px;left:10px;right:10px;color:#cfd6e2;font-size:.8rem;font-variant-numeric:tabular-nums}
+.missed{margin-top:10px}
+.missed h3{font-size:.9rem;margin:0 0 4px}
+.missed ol{margin:0;padding-left:0;list-style:none;font-family:var(--serif);font-size:.95rem}
+.missed li{border-left:3px solid var(--blood);padding:2px 0 2px 8px;margin-bottom:4px}
+.missed .none{color:var(--ink-soft);font-family:var(--sans);font-size:.88rem}
+/* controls */
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.radio{display:flex;flex-direction:column;gap:6px}
+.radio.row{flex-direction:row;flex-wrap:wrap}
+.radio label{font-weight:600;font-size:.88rem;border:1.5px solid var(--steel);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:flex-start}
+.radio input,.check input{accent-color:var(--steel);margin:0;width:18px;height:18px}
+.check{justify-content:flex-start;align-items:center;margin-top:10px}
+button{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+caption{text-align:left;font-weight:600;font-size:.92rem;padding-bottom:4px}
+th,td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:nth-child(2),td:nth-child(2){text-align:left}
+tr.sel td{font-weight:700;background:var(--paper-2)}
+td.bad{color:var(--blood);font-weight:700}
+td button{padding:2px 9px;font-size:.85rem}
+@media (max-width:600px){table{font-size:.78rem}th,td{padding:4px 4px}td button{padding:1px 6px;font-size:.78rem}
+th:first-child,td:first-child{position:sticky;left:0;background:var(--paper);z-index:1}tr.sel td:first-child{background:var(--paper-2)}}
+.swipe{display:none;font-size:.8rem;color:var(--ink-soft);margin:4px 0 0}
+@media (max-width:760px){.swipe{display:block}}
+.audio{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px;padding:8px 12px;border-radius:10px;background:var(--paper-2);font-size:.9rem}
+.audio label{font-weight:600;font-size:.9rem;align-items:center}
+.audio input[type=range]{width:140px}
+.audio .state{color:var(--ink-soft)}
+.note{font-size:.88rem;color:var(--ink-soft);margin:8px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 13 · Worked example</p>
+  <h1>The subtitle left before you finished reading</h1>
+  <p class="lede">Each subtitle below lasts exactly as long as its voice clip. At 17 characters per second, line 4 disappears with the reader at character 39 of 56, so the warning about the roof never gets read. Switch the policy to Hold and the same line stays 0.99 s longer. Watch line 3's bar turn red.</p>
+</header>
+
+<div class="audio" role="group" aria-label="Sound output">
+  <label class="check" for="snd" style="margin:0"><input type="checkbox" id="snd" checked> Sound</label>
+  <label for="vol">Volume <output id="oVol">70%</output></label>
+  <input id="vol" type="range" min="0" max="100" step="1" value="70">
+  <span class="state" id="audioState">Sound is optional. It starts when you press Play; everything it does is also drawn.</span>
+</div>
+
+<section class="panel">
+  <div class="views">
+    <section class="view" aria-labelledby="hTl">
+      <h2 id="hTl">Timeline</h2>
+      <p class="sub">Grey: voice clips. Blue: subtitles, lighter where held past the clip. Red hatch: the part that runs into the next line. Select a subtitle bar to inspect that line at the moment it disappears.</p>
+      <div class="tl" id="tl">
+        <div class="ticks"></div>
+        <div class="rowlab" style="top:6px">Voice</div>
+        <div class="track" id="voiceTrack"></div>
+        <div class="rowlab" style="top:38px">Subtitle</div>
+        <div class="track subs" id="subTrack"></div>
+        <div class="axis" id="axis" aria-hidden="true"></div>
+        <div class="playhead" id="playhead" aria-hidden="true"></div>
+      </div>
+      <div class="transport">
+        <button id="bPlay" class="primary" aria-pressed="false">Play</button>
+        <button id="bRestart">Restart</button>
+        <fieldset><legend class="sr">Playback speed</legend>
+          <div class="radio row">
+            <label><input type="radio" name="speed" value="0.5"> 0.5x</label>
+            <label><input type="radio" name="speed" value="1" checked> 1x</label>
+          </div>
+        </fieldset>
+        <span class="time" id="tNow" aria-live="off">8.40 s</span>
+      </div>
+      <label for="scrub" style="margin-top:8px">Playhead <output id="oScrub">8.4 s</output></label>
+      <input id="scrub" type="range" min="0" max="18" step="0.1" value="8.4">
+      <p class="note">Space plays or pauses when no control has focus.</p>
+    </section>
+
+    <section class="view" aria-labelledby="hRd">
+      <h2 id="hRd">Reader</h2>
+      <p class="sub">The underlined tint is how far a reader at R characters per second has got since the subtitle appeared.</p>
+      <div class="scene" role="img" aria-labelledby="sceneDesc">
+        <div class="sceneinfo" id="sceneInfo"></div>
+        <div class="subbox" id="subbox"></div>
+      </div>
+      <p class="sr" id="sceneDesc">Game scene with the current subtitle.</p>
+      <div class="missed">
+        <h3 id="hMissed">Missed</h3>
+        <ol id="missed" aria-live="polite" aria-labelledby="hMissed"></ol>
+      </div>
+    </section>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="rate">Reading limit R <output id="oR">17 CPS</output></label>
+      <input id="rate" type="range" min="8" max="25" step="1" value="17" aria-describedby="rNote">
+      <p class="note" id="rNote">Characters per second a reader can manage. 17 is a common subtitle limit.</p>
+      <label for="dmin" style="margin-top:8px">Minimum display d_min <output id="oD">1.0 s</output></label>
+      <input id="dmin" type="range" min="0.5" max="2" step="0.1" value="1">
+    </div>
+    <fieldset>
+      <legend>Policy</legend>
+      <div class="radio">
+        <label><input type="radio" name="policy" value="voice" checked> Voice-locked (shown for L)</label>
+        <label><input type="radio" name="policy" value="hold"> Hold (cut when the next line starts)</label>
+        <label><input type="radio" name="policy" value="stack"> Hold + stack (two rows)</label>
+      </div>
+    </fieldset>
+    <div>
+      <label class="check" for="cond" style="margin-top:0"><input type="checkbox" id="cond"> Condense line 3</label>
+      <p class="note">Replaces it with "The bridge is out. We cross at the mill." (40 characters).</p>
+    </div>
+  </div>
+
+  <p class="swipe">Scroll the table sideways for Verdict and Unread.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Line table, scrollable">
+    <table id="tbl">
+      <caption>Every line, current settings (times in s)</caption>
+      <thead><tr><th scope="col">#</th><th scope="col">Speaker</th><th scope="col">n</th><th scope="col">L (s)</th><th scope="col">n/L</th><th scope="col">Need d</th><th scope="col">Hold h</th><th scope="col">Gap g</th><th scope="col">Verdict</th><th scope="col">Unread</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Formulas from the week 13 lecture. n counts every character including spaces and punctuation. need = max(d_min, n/R). hold = max(0, need − L). Gap g = next start − (start + L); the scene ends at 17.8 s. A line clashes when hold &gt; g. Unread (voice-locked) = max(0, 1 − R·L/n); under Hold the display time is min(need, L + g); under Hold + stack it is need. The missed list starts at the beginning of the word the reader was in, since half a word is not read; the Unread column counts characters. The voice is procedural: one filtered sawtooth blip per vowel group. No recorded audio.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const END=17.8,SPAN=18;
+const DATA=[
+  {sp:'Mara',text:'Keep your head down.',start:0.0,L:1.2},
+  {sp:'Mara',text:'Grenade!',start:2.7,L:0.5},
+  {sp:'Tomas',text:'The bridge is out. We cross at the mill instead.',start:3.5,L:2.2},
+  {sp:'Mara',text:'Cover me while I get this door open, and watch the roof!',start:6.1,L:2.3},
+  {sp:'Tomas',text:'Go.',start:10.4,L:0.3},
+  {sp:'Radio',text:'All units, the convoy leaves at dawn. Anyone not on it stays behind.',start:13.7,L:3.6},
+];
+const COND='The bridge is out. We cross at the mill.';
+let R=17,dmin=1.0,policy='voice',cond=false,t=8.4,sel=3,playing=false,speed=1;
+
+function lines(){
+  return DATA.map((d,i)=>{
+    const text=(i===2&&cond)?COND:d.text,n=text.length;
+    const next=i<DATA.length-1?DATA[i+1].start:END;
+    const g=+(next-(d.start+d.L)).toFixed(6);
+    const need=Math.max(dmin,n/R),hold=Math.max(0,need-d.L),clash=hold>g+1e-9;
+    let disp=policy==='voice'?d.L:policy==='hold'?Math.min(need,d.L+g):need;
+    const unread=Math.max(0,1-R*disp/n);
+    return {i,sp:d.sp,text,n,start:d.start,L:d.L,g,need,hold,clash,cl:hold-g,disp,end:d.start+disp,unread};
+  });
+}
+const f2=x=>x.toFixed(2);
+function readChars(l,tt){return Math.min(l.n,Math.floor(R*(tt-l.start)+1e-6));}
+function wordStart(text,k){while(k>0&&k<text.length&&text[k-1]!==' ')k--;return k;}
+function wrap(text,max){const w=text.split(' ');const out=[];let cur='';w.forEach(x=>{if(cur&&(cur+' '+x).length>max){out.push(cur);cur=x;}else cur=cur?cur+' '+x:x;});if(cur)out.push(cur);return out;}
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+// ---------- timeline ----------
+const pct=s=>(100*s/SPAN)+'%';
+function buildAxis(){let h='';for(let s=0;s<=SPAN;s++)h+=`<span class="${s%2?'odd':''}" style="left:${pct(s)}">${s}</span>`;$('axis').innerHTML=h;}
+function drawTimeline(Ls){
+  $('voiceTrack').innerHTML=Ls.map(l=>`<div class="clip" style="left:${pct(l.start)};width:${pct(l.L)}" title="${l.sp} voice ${l.start}–${f2(l.start+l.L)} s">${l.sp[0]}</div>`).join('');
+  let ck=0;
+  $('subTrack').innerHTML=Ls.map(l=>{
+    const want=policy==='voice'?l.L:Math.max(l.L,l.need);
+    const nextStart=l.start+l.L+l.g;
+    const coreEnd=Math.min(l.L,want),holdEnd=Math.min(want,l.L+l.g),showClash=policy!=='voice'&&l.clash;
+    const W=want;const rel=x=>(100*x/W)+'%';
+    let inner=`<span class="core" style="width:${rel(coreEnd)}"></span>`;
+    if(holdEnd>coreEnd)inner+=`<span class="hold" style="left:${rel(coreEnd)};width:${rel(holdEnd-coreEnd)}"></span>`;
+    if(showClash)inner+=`<span class="clash" style="left:${rel(l.L+l.g)};width:${rel(W-(l.L+l.g))}"></span>`;
+    inner+=`<span class="num">${l.i+1}</span>`;
+    const lab=`Line ${l.i+1}, ${l.sp}, subtitle ${f2(l.start)} to ${f2(l.start+W)} s${showClash?', clash '+f2(l.cl)+' s':''}`;
+    let s=`<button class="ev" style="left:${pct(l.start)};width:${pct(W)}" aria-pressed="${l.i===sel}" aria-label="${lab}" data-i="${l.i}">${inner}</button>`;
+    if(showClash){s+=`<span class="clabel" style="left:${pct(nextStart)};top:${34+(ck%2)*14}px;transform:translateX(${nextStart>SPAN*0.8?'-100%':'-30%'})" aria-hidden="true">clash ${f2(l.cl)} s</span>`;ck++;}
+    return s;
+  }).join('');
+  $('subTrack').querySelectorAll('.ev').forEach(b=>b.addEventListener('click',()=>{select(+b.dataset.i);}));
+  const shown=reduce&&playing?Math.floor(t/0.5)*0.5:t;
+  $('playhead').style.left=pct(Math.min(SPAN,shown));
+}
+// ---------- reader ----------
+function drawReader(Ls){
+  const on=Ls.filter(l=>t>=l.start-1e-6&&t<=l.end+1e-6);
+  const rows=policy==='stack'?on.slice(-2):on.slice(-1);
+  $('subbox').innerHTML=rows.map((l,k)=>{
+    const rc=readChars(l,t);const parts=wrap(l.text,42);let pos=0;
+    const html=parts.map(p=>{const a=pos,b=pos+p.length;pos=b+1;const cut=Math.max(0,Math.min(p.length,rc-a));return `<span class="rd">${esc(p.slice(0,cut))}</span>${esc(p.slice(cut))}`;}).join('<br>');
+    return `<div class="subrow${rows.length>1&&k===0?' old':''}"><b>${l.sp}:</b>${html}</div>`;
+  }).join('');
+  const cur=rows[rows.length-1];
+  $('sceneInfo').textContent=cur?`#${cur.i+1} · read ${readChars(cur,t)} of ${cur.n} characters · ${Math.abs(t-cur.end)<1e-6?'disappears now':'on screen until '+f2(cur.end)+' s'}`:`t = ${f2(t)} s · no subtitle`;
+  $('sceneDesc').textContent=cur?`Subtitle ${cur.i+1}, ${cur.sp}: ${cur.text} The reader has read ${readChars(cur,t)} of ${cur.n} characters.`:'Game scene, no subtitle on screen.';
+  // missed list: every line whose display has ended by t, with its unread part
+  const gone=Ls.filter(l=>l.end<=t+1e-6).sort((a,b)=>a.end-b.end);
+  const items=gone.map(l=>{const rc=Math.min(l.n,Math.floor(R*l.disp+1e-6));if(rc>=l.n)return null;const k=wordStart(l.text,rc);return `#${l.i+1} ${l.sp}: "${l.text.slice(k)}"`;}).filter(Boolean);
+  const key=items.join('|');
+  if($('missed').dataset.key!==key){$('missed').dataset.key=key;$('missed').innerHTML=items.length?items.map(x=>`<li>${esc(x)}</li>`).join(''):'<li class="none">Nothing missed so far.</li>';}
+}
+function drawTable(Ls){
+  $('tbody').innerHTML=Ls.map(l=>`<tr class="${l.i===sel?'sel':''}"><td><button data-i="${l.i}" aria-label="Inspect line ${l.i+1}" aria-pressed="${l.i===sel}">${l.i+1}</button></td><td>${l.sp}</td><td>${l.n}</td><td>${l.L.toFixed(1)}</td><td>${(l.n/l.L).toFixed(1)}</td><td>${f2(l.need)}</td><td>${f2(l.hold)}</td><td>${f2(l.g)}</td><td class="${l.clash?'bad':''}">${l.clash?'clash '+f2(l.cl):'fits'}</td><td class="${l.unread>0?'bad':''}">${Math.round(l.unread*100)}%</td></tr>`).join('');
+  $('tbody').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>select(+b.dataset.i)));
+}
+function insight(Ls){
+  const l=Ls[sel],rc=Math.min(l.n,Math.floor(R*l.disp+1e-6));
+  const pol={voice:'voice-locked',hold:'Hold',stack:'Hold + stack'}[policy];
+  let s=`Line ${l.i+1} under ${pol}: on screen ${f2(l.disp)} s, needs ${f2(l.need)} s at ${R} CPS. The reader gets through ${rc} of ${l.n} characters (${Math.round(l.unread*100)}% unread).`;
+  const clashes=Ls.filter(x=>x.clash);
+  if(policy!=='voice'&&clashes.length)s+=` Holding clashes on ${clashes.map(x=>'line '+(x.i+1)+' ('+f2(x.cl)+' s)').join(' and ')}: the gap to the next line is shorter than the hold.${policy==='hold'?' Hold cuts those lines short; stacking keeps them as a second row.':''}`;
+  else if(policy==='voice')s+=` Voice-locked never clashes, but it leaves ${Ls.filter(x=>x.unread>0).length} of 6 lines partly unread.`;
+  $('insight').textContent=s;
+}
+function render(){const Ls=lines();drawTimeline(Ls);drawReader(Ls);drawTable(Ls);insight(Ls);
+  $('tNow').textContent=f2(t)+' s';$('scrub').value=t.toFixed(1);$('oScrub').textContent=t.toFixed(1)+' s';}
+function select(i){sel=i;const l=lines()[i];if(!playing)t=l.end;render();}
+
+// ---------- playback ----------
+let lastTs=null,lastDraw=0;
+function frame(ts){
+  if(!playing){lastTs=null;return;}
+  if(lastTs===null)lastTs=ts;const dt=Math.min(0.1,(ts-lastTs)/1000)*speed;lastTs=ts;
+  const prev=t;t=Math.min(SPAN,t+dt);voiceSched(prev,t);
+  if(t>=SPAN){setPlaying(false);}
+  render();
+  if(playing)requestAnimationFrame(frame);
+}
+function setPlaying(p){playing=p;$('bPlay').textContent=p?'Pause':'Play';$('bPlay').setAttribute('aria-pressed',p);if(p){if(t>=SPAN-0.01)t=0;ensureAudio();requestAnimationFrame(frame);}}
+$('bPlay').addEventListener('click',()=>setPlaying(!playing));
+$('bRestart').addEventListener('click',()=>{t=0;render();if(!playing)setPlaying(true);});
+document.addEventListener('keydown',e=>{if(e.key===' '&&e.target===document.body){e.preventDefault();setPlaying(!playing);}});
+document.querySelectorAll('input[name=speed]').forEach(r=>r.addEventListener('change',()=>{speed=+r.value;}));
+$('scrub').addEventListener('input',e=>{t=+e.target.value;render();});
+
+// ---------- procedural voice ----------
+let ctx=null,master=null,sndOn=true,vol=0.7;
+const PITCH={Mara:220,Tomas:140,Radio:180};
+function ensureAudio(){
+  if(!sndOn)return false;
+  if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('audioState').textContent='No Web Audio in this browser. The timeline and reader show everything.';return false;}
+    ctx=new AC();master=ctx.createGain();master.connect(ctx.destination);}
+  if(ctx.state==='suspended')ctx.resume();master.gain.value=vol;$('audioState').textContent='Sound on: one blip per syllable, spread across each clip.';return true;
+}
+function voiceSched(t0,t1){
+  if(!ctx||!sndOn)return;
+  DATA.forEach((d,i)=>{if(d.start>=t0&&d.start<t1)speak(i===2&&cond?COND:d.text,d.sp,d.L/speed);});
+}
+function speak(text,sp,L){
+  const syl=Math.max(1,(text.match(/[aeiouy]+/gi)||[]).length),now=ctx.currentTime+0.02;
+  let out=master;
+  if(sp==='Radio'){const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=400;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3000;hp.connect(lp).connect(master);out=hp;}
+  for(let k=0;k<syl;k++){
+    const when=now+L*k/syl,o=ctx.createOscillator(),bp=ctx.createBiquadFilter(),g=ctx.createGain();
+    o.type='sawtooth';o.frequency.value=PITCH[sp]*(1+(Math.random()*0.06-0.03));
+    bp.type='bandpass';bp.frequency.value=[500,700,900,1200][Math.floor(Math.random()*4)];bp.Q.value=4;
+    g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(0.15,when+0.01);g.gain.setValueAtTime(0.15,when+0.05);g.gain.linearRampToValueAtTime(0,when+0.1);
+    o.connect(bp).connect(g).connect(out);o.start(when);o.stop(when+0.11);
+  }
+}
+$('snd').addEventListener('change',e=>{sndOn=e.target.checked;if(master)master.gain.value=sndOn?vol:0;$('audioState').textContent=sndOn?(ctx?'Sound on.':'Sound starts when you press Play.'):'Sound off. The timeline and reader show everything.';});
+$('vol').addEventListener('input',e=>{vol=e.target.value/100;$('oVol').textContent=e.target.value+'%';if(ctx&&sndOn)master.gain.value=vol;});
+
+// ---------- settings ----------
+function settingChanged(){if(!playing){const l=lines()[sel];t=l.end;}render();}
+$('rate').addEventListener('input',e=>{R=+e.target.value;$('oR').textContent=R+' CPS';settingChanged();});
+$('dmin').addEventListener('input',e=>{dmin=+e.target.value;$('oD').textContent=dmin.toFixed(1)+' s';settingChanged();});
+document.querySelectorAll('input[name=policy]').forEach(r=>r.addEventListener('change',()=>{policy=r.value;settingChanged();}));
+$('cond').addEventListener('change',e=>{cond=e.target.checked;settingChanged();});
+window.addEventListener('resize',render);
+window.subs={lines,setT:x=>{t=x;render();}};
+
+buildAxis();render();
+})();
+</script>
+</body>
+</html>

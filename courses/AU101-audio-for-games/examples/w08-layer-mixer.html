@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vertical Layer Mixer — AU101 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.audiobar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:14px;padding:10px 12px;border-radius:10px;background:var(--paper-2)}
+.btn{font:700 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn[aria-pressed="true"]{background:var(--blood);border-color:var(--blood);color:var(--paper)}
+.btn.fight{border-color:var(--blood);color:var(--blood)}
+.btn.fight[aria-pressed="true"]{color:var(--paper)}
+.vol{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem}
+.vol input{width:110px}
+.scope{width:160px;height:40px;display:block;border-radius:6px;background:var(--paper)}
+.astatus{font-size:.85rem;color:var(--ink-soft);flex:1 1 220px}
+.intensity{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;margin:0 0 14px}
+.intensity label{font-weight:700;font-size:1rem}
+.intensity .vals{font-variant-numeric:tabular-nums;font-size:.95rem;text-align:right}
+.intensity .vals b{font-size:1.15rem}
+.intensity input{grid-column:1/-1;accent-color:var(--blood);height:32px}
+.intensity .ticks{grid-column:1/-1;position:relative;height:18px;font-size:.75rem;color:var(--ink-soft);margin-top:-6px}
+.intensity .ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas.plot{display:block;width:100%;height:250px}
+canvas.tl{display:block;width:100%;height:250px}
+.mixer{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.strip{background:var(--paper);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;border-top:4px solid var(--c);min-width:0}
+.strip.dim{opacity:.45}
+.strip h3{margin:0;font-size:.9rem;font-weight:700}
+.strip .g{font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.strip .db{font-size:.78rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.track{position:relative;width:46px;height:130px;border-radius:6px;background:var(--paper-2);overflow:hidden;display:flex;gap:4px;justify-content:center;align-items:flex-end;padding:0 4px}
+.fader{width:24px;background:var(--c);border-radius:4px 4px 0 0;height:0}
+.meter{width:8px;background:var(--ink-soft);border-radius:3px 3px 0 0;height:0;opacity:.8}
+.strip .thr,.strip .off{font-size:.74rem;color:var(--ink-soft);text-align:center;line-height:1.25}
+.strip .off.bad{color:var(--blood);font-weight:700}
+.solo{font:700 .78rem var(--sans);padding:4px 10px;border-radius:999px;border:1.5px solid var(--c);background:transparent;color:var(--ink);cursor:pointer;min-height:30px}
+.solo[aria-pressed="true"]{background:var(--c);color:var(--paper)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:16px;height:4px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+@media (min-width:900px){.controls{grid-template-columns:1fr 1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:8px 12px 10px;margin:0 0 10px;min-width:0}
+legend{font-weight:700;font-size:.9rem;padding:0 4px}
+.opt{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:3px 0;cursor:pointer}
+.opt input{width:18px;height:18px;accent-color:var(--steel);margin:0;flex:none}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:.92rem}
+.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding:0 0 6px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td:last-child,th:last-child{text-align:left;white-space:normal}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:520px){th,td{padding:5px 4px;font-size:.82rem}td:last-child{min-width:15em}th:first-child{white-space:normal}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 8 · Signature worked example</p>
+  <h1>Combat intensity mixes the stems</h1>
+  <p class="lede">Four stems play from one clock the whole time. The intensity slider only moves their gains, so the drums can come in on any frame and still land on the beat. Turn on "restart stem on entry" and the stems come in on their own clocks. The strips below show them drift off the beat.</p>
+</header>
+
+<section class="panel" aria-label="Adaptive music mixer">
+  <div class="audiobar" role="group" aria-label="Sound controls">
+    <button class="btn primary" id="play" type="button">Play music</button>
+    <label class="vol" for="vol">Volume <input id="vol" type="range" min="0" max="100" step="1" value="50"> <output id="oVol">50%</output></label>
+    <button class="btn" id="mute" type="button" aria-pressed="false">Mute</button>
+    <button class="btn fight" id="fight" type="button" aria-pressed="false">Fight</button>
+    <canvas class="scope" id="scope" role="img" aria-label="Live waveform of the music after the −6 dB trim"></canvas>
+    <span class="astatus" id="aStatus">Sound is off. The clock, gains and plots run anyway.</span>
+  </div>
+
+  <div class="intensity">
+    <label for="x">Combat intensity (target)</label>
+    <div class="vals">target <b id="oT">0.00</b> · smoothed <b id="oX">0.00</b></div>
+    <input id="x" type="range" min="0" max="1" step="0.01" value="0" aria-describedby="xHint">
+    <div class="ticks" aria-hidden="true" id="ticks"></div>
+    <p class="hint" id="xHint" style="grid-column:1/-1;margin:0">Arrows ±0.01, Page Up/Down ±0.1. Stem thresholds are marked under the slider.</p>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Mixer<small>Applied gain per stem (tall bar) and live level (thin bar). Every stem is always playing.</small></figcaption>
+      <div class="mixer" id="mixer"></div>
+    </figure>
+    <figure>
+      <figcaption>Ramp view<small>Each stem's gain g(x) against intensity. Solid line: smoothed x. Dashed: target.</small></figcaption>
+      <canvas class="plot" id="cRamp" role="img" aria-label="Gain ramps for pad, drums, bass and lead against intensity"></canvas>
+      <div class="legend" id="legend"></div>
+    </figure>
+  </div>
+
+  <figure style="margin-top:14px">
+    <figcaption>Timeline, last 20 s<small id="tlCap">Top lane: target (dashed) and smoothed intensity. Below: each stem's applied gain. Grey lines are the shared bars (every 2 s). Coloured ticks mark each stem's own bar 1.</small></figcaption>
+    <canvas class="tl" id="cTl" role="img" aria-label="Scrolling timeline of intensity and stem gains"></canvas>
+  </figure>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--ochre)"><b id="rLevel">—</b><span>level vs one stem</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rBar">—</b><span>shared clock: bar · beat</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rTrim">−6.0 dB</b><span>fixed master trim (×0.5)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rSync">—</b><span id="rSyncL">stems on the shared grid</span></div>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <div class="row"><label for="up">Up rate</label><output id="oUp">0.50 /s</output></div>
+      <input id="up" type="range" min="0.05" max="2" step="0.05" value="0.5">
+      <div class="row"><label for="down">Down rate</label><output id="oDown">0.10 /s</output></div>
+      <input id="down" type="range" min="0.02" max="2" step="0.02" value="0.1">
+      <label class="opt"><input type="checkbox" id="nosmooth"> No smoothing (rates = infinity)</label>
+      <p class="hint">Fast up, slow down: the music reacts to danger at once and relaxes slowly.</p>
+    </div>
+    <div>
+      <div class="row"><label for="w">Fade width w</label><output id="oW">0.20</output></div>
+      <input id="w" type="range" min="0.05" max="0.4" step="0.01" value="0.2">
+      <fieldset>
+        <legend>Fade shape</legend>
+        <label class="opt"><input type="radio" name="shape" value="linear" checked> Linear: gain = g</label>
+        <label class="opt"><input type="radio" name="shape" value="power"> Equal power: gain = sin(g · π/2)</label>
+      </fieldset>
+    </div>
+    <div>
+      <label class="opt"><input type="checkbox" id="comp"> Compensate loudness (× 1/√Σgain²)</label>
+      <label class="opt"><input type="checkbox" id="restart"> Restart stem on entry (the wrong way)</label>
+      <p class="hint">With restart on, a stem that rises from 0 starts again from its own bar 1 at that moment, off the shared clock.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Fight sequence: smoothed x at key moments (press Fight)</caption>
+      <thead><tr><th>Time into fight</th><th>Target</th><th>Smoothed x</th><th>What happens</th></tr></thead>
+      <tbody id="fbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>All four stems are synthesized in the browser at 120 BPM in 4/4, a 4-bar loop of A minor, F major, G major, E major. A lookahead scheduler (25 ms timer, 100 ms ahead) places every note on one shared clock, and gains move with setTargetAtTime (15 ms) every frame. The model: g(x) = clamp((x − a) / w, 0, 1), thresholds a = 0.2 (drums), 0.45 (bass), 0.7 (lead), pad always on. No recorded or game music is used.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const minus=s=>String(s).replace(/^-/,'−');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const BEAT=0.5,EIGHTH=0.25,BAR=2,LOOP=8;
+const STEMS=[
+  {id:'pad',name:'Pad',a:null,col:'--moss'},
+  {id:'drums',name:'Drums',a:0.2,col:'--blood'},
+  {id:'bass',name:'Bass',a:0.45,col:'--steel'},
+  {id:'lead',name:'Lead',a:0.7,col:'--ochre'},
+];
+const S={T:0,x:0,up:0.5,down:0.1,noSmooth:false,w:0.2,shape:'linear',comp:false,restart:false,solo:null,
+  off:[0,0,0,0],prevG:[1,0,0,0],applied:[1,0,0,0]};
+
+// ---------- model ----------
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+function gRaw(i,x){const a=STEMS[i].a;return a===null?1:clamp((x-a)/S.w,0,1);}
+function gains(x){
+  let g=STEMS.map((_,i)=>{const r=gRaw(i,x);return S.shape==='power'?Math.sin(r*Math.PI/2):r;});
+  const p=g.reduce((s,v)=>s+v*v,0);
+  if(S.comp&&p>0){const k=1/Math.sqrt(p);g=g.map(v=>v*k);}
+  return g;
+}
+const levelDb=g=>10*Math.log10(g.reduce((s,v)=>s+v*v,0));
+function stepX(x,T,dt){if(S.noSmooth)return T;if(T>x)return Math.min(T,x+S.up*dt);return Math.max(T,x-S.down*dt);}
+
+// ---------- clock ----------
+// Transport time runs from page load. Once audio starts, AudioContext time drives it.
+let perfBase=performance.now(),tBase=0,AC=null,acOrigin=0,audioOn=false;
+function now(){return audioOn?AC.currentTime-acOrigin:tBase+(performance.now()-perfBase)/1000;}
+
+// ---------- fight ----------
+const FKEYS=[{t:0,what:'Fight starts. x snaps to 0.1: pad plus half-faded drums.'},{t:4,what:'Target jumps to 0.55.'},{t:4.9,what:'x arrives at 0.55 after 0.45 / 0.5 = 0.9 s. Bass fading in.'},{t:7,what:'Target jumps to 1.0.'},{t:7.9,what:'x arrives at 1.0 after 0.9 s. All four stems.'},{t:13,what:'Enemy dies. Target drops to 0.'},{t:19,what:'Down rate 0.1/s: six seconds later x is only down to 0.4.'},{t:23,what:'x reaches 0 after 10 s. Pad alone.'}];
+let fight=null;
+function fightTarget(e){return e<4?0.1:e<7?0.55:e<13?1.0:0;}
+function renderFight(){
+  $('fbody').innerHTML=FKEYS.map((k,i)=>{const v=fight&&fight.rec[i];return `<tr><td>${k.t.toFixed(1)} s</td><td>${v?v.T.toFixed(2):'—'}</td><td>${v?v.x.toFixed(2):'—'}</td><td>${k.what}</td></tr>`;}).join('');
+}
+function startFight(){
+  const t=now();fight={t0:t,rec:[]};S.x=0.1;S.T=0.1;fight.rec[0]={T:0.1,x:0.1};
+  $('fight').setAttribute('aria-pressed','true');$('fight').textContent='Fighting…';renderFight();
+}
+function endFightControl(){ // after 13 s the slider is live again
+  if(!fight)return;fight.handed=true;$('fight').setAttribute('aria-pressed','false');$('fight').textContent='Fight';
+}
+
+// advance model from t0 to t1, splitting at fight breakpoints and key times so the ramps are exact
+function advance(t0,t1){
+  if(t1<=t0)return;
+  const cuts=[t0,t1];
+  if(fight&&!fight.done){[4,4.9,7,7.9,13,19,23].forEach(k=>{const tk=fight.t0+k;if(tk>t0&&tk<t1)cuts.push(tk);});}
+  cuts.sort((a,b)=>a-b);
+  for(let j=0;j<cuts.length-1;j++){
+    const a=cuts[j],b=cuts[j+1];
+    if(fight&&!fight.handed){S.T=fightTarget((a+b)/2-fight.t0);}
+    S.x=stepX(S.x,S.T,b-a);
+    if(fight&&!fight.done){const e=b-fight.t0;FKEYS.forEach((k,i)=>{if(i>0&&!fight.rec[i]&&Math.abs(e-k.t)<1e-9){fight.rec[i]={T:fightTarget(k.t+1e-9),x:S.x};}});
+      if(e>=13&&!fight.handed){S.T=0;$('x').value=0;endFightControl();}
+      if(e>=23-1e-9){fight.done=true;}
+      renderFightLazy();}
+  }
+}
+let fDirty=false;function renderFightLazy(){fDirty=true;}
+
+// ---------- audio ----------
+let master=null,vol=null,scopeAn=null,stemG=[],stemAn=[],timer=0,nextIdx=[0,0,0,0],live=[[],[],[],[]],noiseBuf=null;
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+const CHORDS=[[57,60,64],[53,57,60],[55,59,62],[52,56,59]]; // Am F G E (A3 C4 E4 ...)
+const ROOTS=[45,41,43,40]; // A2 F2 G2 E2
+const LEAD=[69,72,74,76,74,72,71,69]; // A4 C5 D5 E5 D5 C5 B4 A4
+function keep(i,node,t){live[i].push({node,t});}
+function padChord(bar,t,end){
+  CHORDS[bar].forEach(m=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=mtof(m);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.12,t+0.05);g.gain.setValueAtTime(0.12,end-0.05);g.gain.linearRampToValueAtTime(0,end);
+    o.connect(g);g.connect(stemG[0]);o.start(t);o.stop(end+0.01);keep(0,o,t);});
+}
+function playNote(i,n,t){
+  const bar=Math.floor(n/8)%4,e8=n%8,beat=Math.floor(n/2);
+  const out=stemG[i];
+  if(i===0&&e8===0)padChord(bar,t,t+BAR);
+  if(i===1){
+    if(n%2===0){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(110,t);o.frequency.exponentialRampToValueAtTime(50,t+0.08);
+      g.gain.setValueAtTime(0.9,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.25);o.connect(g);g.connect(out);o.start(t);o.stop(t+0.26);keep(i,o,t);}
+    const s=AC.createBufferSource(),h=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;h.type='highpass';h.frequency.value=7000;
+    g.gain.setValueAtTime(0.25,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.03);s.connect(h);h.connect(g);g.connect(out);s.start(t);s.stop(t+0.04);keep(i,s,t);
+  }
+  if(i===2){const m=ROOTS[bar]+(e8%4===3?12:0);const o=AC.createOscillator(),f=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.value=mtof(m);
+    f.type='lowpass';f.frequency.value=900;g.gain.setValueAtTime(0.22,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.15);o.connect(f);f.connect(g);g.connect(out);o.start(t);o.stop(t+0.16);keep(i,o,t);}
+  if(i===3&&n%2===0){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=mtof(LEAD[beat%8]);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.3,t+0.025);g.gain.exponentialRampToValueAtTime(0.001,t+0.325);o.connect(g);g.connect(out);o.start(t);o.stop(t+0.33);keep(i,o,t);}
+}
+function sched(){
+  if(!audioOn)return;const tn=now(),ahead=tn+0.1;
+  for(let i=0;i<4;i++){
+    live[i]=live[i].filter(v=>v.t>tn-3);
+    while(true){const te=S.off[i]+nextIdx[i]*EIGHTH;if(te>=ahead)break;if(te>=tn-0.01)playNote(i,nextIdx[i],te+acOrigin);nextIdx[i]++;}
+  }
+}
+function volVal(){return $('mute').getAttribute('aria-pressed')==='true'?0:(+$('vol').value/100);}
+function startAudio(){
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)throw new Error('no audio');
+    if(!AC){
+      AC=new C();master=AC.createGain();master.gain.value=0.5;vol=AC.createGain();vol.gain.value=0;scopeAn=AC.createAnalyser();scopeAn.fftSize=1024;
+      master.connect(scopeAn);master.connect(vol);vol.connect(AC.destination);
+      for(let i=0;i<4;i++){const g=AC.createGain();g.gain.value=0;const an=AC.createAnalyser();an.fftSize=512;g.connect(master);g.connect(an);stemG.push(g);stemAn.push(an);}
+      const n=Math.round(AC.sampleRate*0.05);noiseBuf=AC.createBuffer(1,n,AC.sampleRate);const d=noiseBuf.getChannelData(0);let s=3;for(let k=0;k<n;k++){s=(s*1664525+1013904223)>>>0;d[k]=s/2147483648-1;}
+    }
+    AC.resume().then(()=>{
+      const t=tBase+(performance.now()-perfBase)/1000;acOrigin=AC.currentTime-t;audioOn=true;
+      for(let i=0;i<4;i++)nextIdx[i]=Math.ceil((t-S.off[i])/EIGHTH-1e-9);
+      vol.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);
+      const barStart=Math.floor((t-S.off[0])/BAR)*BAR+S.off[0],rest=barStart+BAR-t;
+      if(rest>0.2&&t-barStart>0.01)padChord(Math.floor((barStart-S.off[0])/BAR)%4,t+0.02+acOrigin,barStart+BAR+acOrigin);
+      clearInterval(timer);timer=setInterval(sched,25);sched();
+      $('play').textContent='Stop music';$('aStatus').textContent='Playing on the shared clock. Headphones help with the bass.';
+    }).catch(()=>blocked());
+    setTimeout(()=>{if(AC&&AC.state!=='running')blocked();},1500);
+  }catch(e){blocked();}
+}
+function blocked(){if(audioOn)return;$('aStatus').textContent='Sound is blocked or unavailable here. The clock, gains and plots still run from the model.';}
+function stopAudio(){
+  if(!audioOn)return;const t=now();audioOn=false;tBase=t;perfBase=performance.now();clearInterval(timer);
+  vol.gain.setTargetAtTime(0,AC.currentTime,0.02);live.forEach(l=>l.forEach(v=>{try{v.node.stop(AC.currentTime+0.1);}catch(e){}}));live=[[],[],[],[]];
+  $('play').textContent='Play music';$('aStatus').textContent='Sound is off. The clock, gains and plots run anyway.';
+}
+function restartStem(i,t){
+  S.off[i]=t;
+  if(audioOn){live[i].forEach(v=>{if(v.t>t){try{v.node.stop();}catch(e){}}});live[i]=live[i].filter(v=>v.t<=t);nextIdx[i]=0;}
+}
+
+// ---------- views ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return{g,w:r.width,h:r.height};}
+function drawRamp(){
+  const o=setup($('cRamp')),g=o.g,pad={l:40,r:12,t:12,b:30},W=o.w-pad.l-pad.r,H=o.h-pad.t-pad.b;
+  const xs=v=>pad.l+W*v,ys=v=>pad.t+H*(1-v);
+  g.font='12px '+css('--sans');g.lineWidth=1;g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');
+  [0,.25,.5,.75,1].forEach(v=>{g.beginPath();g.moveTo(pad.l,ys(v));g.lineTo(o.w-pad.r,ys(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v.toFixed(2),pad.l-6,ys(v));
+    g.beginPath();g.moveTo(xs(v),pad.t);g.lineTo(xs(v),o.h-pad.b);g.stroke();g.textAlign='center';g.textBaseline='top';g.fillText(v.toFixed(2),xs(v),o.h-pad.b+5);});
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('intensity x',o.w-pad.r,o.h-1);
+  STEMS.forEach((s,i)=>{g.strokeStyle=css(s.col);g.lineWidth=2.6;g.beginPath();for(let k=0;k<=400;k++){const x=k/400,v=gRaw(i,x)-i*0.006;k?g.lineTo(xs(x),ys(v)):g.moveTo(xs(x),ys(v));}g.stroke();
+    if(S.shape==='power'){g.save();g.setLineDash([3,4]);g.lineWidth=1.5;g.beginPath();for(let k=0;k<=400;k++){const x=k/400,v=Math.sin(gRaw(i,x)*Math.PI/2);k?g.lineTo(xs(x),ys(v)):g.moveTo(xs(x),ys(v));}g.stroke();g.restore();}});
+  g.save();g.strokeStyle=css('--ink');g.globalAlpha=.6;g.setLineDash([5,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(xs(S.T),pad.t);g.lineTo(xs(S.T),o.h-pad.b);g.stroke();g.restore();
+  g.strokeStyle=css('--ink');g.lineWidth=2.2;g.beginPath();g.moveTo(xs(S.x),pad.t);g.lineTo(xs(S.x),o.h-pad.b);g.stroke();
+  STEMS.forEach((s,i)=>{const v=gRaw(i,S.x);g.beginPath();g.arc(xs(S.x),ys(v),5,0,Math.PI*2);g.fillStyle=css(s.col);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+}
+// history
+const hist=[];let lastPush=-1;
+function pushHist(t){if(t-lastPush<0.05)return;lastPush=t;hist.push({t,T:S.T,x:S.x,g:S.applied.slice(),off:S.off.slice()});while(hist.length&&hist[0].t<t-21)hist.shift();}
+function drawTl(t){
+  const o=setup($('cTl')),g=o.g,pad={l:66,r:8,t:8,b:20},W=o.w-pad.l-pad.r;
+  const top=46,lane=(o.h-pad.t-pad.b-top-8)/4;
+  const xs=tt=>pad.l+W*(1-(t-tt)/20);
+  g.font='11px '+css('--sans');
+  // bar lines
+  g.strokeStyle=css('--grid');g.lineWidth=1.5;g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  for(let b=Math.ceil((t-20)/BAR)*BAR;b<=t+1e-9;b+=BAR){if(b<0)continue;const x=xs(b);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,o.h-pad.b);g.stroke();g.fillText('bar '+(Math.round(b/BAR)%4+1),x,o.h-pad.b+3);}
+  // labels
+  g.textAlign='right';g.textBaseline='middle';g.fillStyle=css('--ink');g.font='600 11px '+css('--sans');
+  g.fillText('intensity',pad.l-6,pad.t+top/2);
+  STEMS.forEach((s,i)=>{g.fillStyle=css(s.col);g.fillText(s.name,pad.l-6,pad.t+top+8+lane*(i+.5));});
+  if(!hist.length)return;
+  g.save();g.beginPath();g.rect(pad.l,0,W+pad.r,o.h);g.clip();
+  // intensity lane
+  const iy=v=>pad.t+top-4-(top-8)*v;
+  g.save();g.setLineDash([5,4]);g.strokeStyle=css('--ink-soft');g.lineWidth=1.5;g.beginPath();hist.forEach((h,k)=>{k?g.lineTo(xs(h.t),iy(h.T)):g.moveTo(xs(h.t),iy(h.T));});g.stroke();g.restore();
+  g.strokeStyle=css('--ink');g.lineWidth=2.2;g.beginPath();hist.forEach((h,k)=>{k?g.lineTo(xs(h.t),iy(h.x)):g.moveTo(xs(h.t),iy(h.x));});g.stroke();
+  // stem lanes
+  STEMS.forEach((s,i)=>{
+    const y0=pad.t+top+8+lane*(i+1)-3,hh=lane-6;
+    g.fillStyle=css(s.col);g.globalAlpha=.75;g.beginPath();g.moveTo(xs(hist[0].t),y0);
+    hist.forEach(h=>g.lineTo(xs(h.t),y0-hh*Math.min(1,h.g[i])));g.lineTo(xs(hist[hist.length-1].t),y0);g.closePath();g.fill();g.globalAlpha=1;
+    // own bar-1 ticks from this stem's clock
+    const off=S.off[i];g.strokeStyle=css(s.col);g.lineWidth=2.5;
+    for(let b=off+Math.ceil((t-20-off)/LOOP)*LOOP;b<=t;b+=LOOP){if(b<Math.max(0,t-20))continue;const x=xs(b);g.beginPath();g.moveTo(x,y0-hh-2);g.lineTo(x,y0+2);g.stroke();}
+    for(let b=off+Math.ceil((t-20-off)/BAR)*BAR;b<=t;b+=BAR){if(b<Math.max(0,t-20))continue;const x=xs(b);g.beginPath();g.moveTo(x,y0-4);g.lineTo(x,y0+2);g.stroke();}
+  });
+  g.restore();
+}
+function drawScope(){const o=setup($('scope')),g=o.g;g.strokeStyle=css('--steel');g.lineWidth=1.5;g.beginPath();
+  if(scopeAn&&audioOn){const d=new Float32Array(scopeAn.fftSize);scopeAn.getFloatTimeDomainData(d);for(let i=0;i<d.length;i++){const x=o.w*i/(d.length-1),y=o.h/2-d[i]*o.h*1.6;i?g.lineTo(x,y):g.moveTo(x,y);}}
+  else{g.moveTo(0,o.h/2);g.lineTo(o.w,o.h/2);}g.stroke();}
+
+// mixer
+$('mixer').innerHTML=STEMS.map((s,i)=>`<div class="strip" id="st${i}" style="--c:var(${s.col})"><h3>${s.name}</h3><div class="g" id="sg${i}">0.00</div><div class="db" id="sd${i}">—</div>
+  <div class="track" aria-hidden="true"><div class="fader" id="sf${i}"></div><div class="meter" id="sm${i}"></div></div>
+  <div class="thr">${s.a===null?'always on (bed)':'enters at '+s.a.toFixed(2)}</div><div class="off" id="so${i}">on the grid</div>
+  <button class="solo" type="button" aria-pressed="false" data-i="${i}" aria-label="Solo ${s.name}">Solo</button></div>`).join('');
+$('legend').innerHTML=STEMS.map(s=>`<span><i style="background:var(${s.col})"></i>${s.name}${s.a===null?'':' from '+s.a.toFixed(2)}</span>`).join('')+'<span style="color:var(--ink-soft)">dotted: equal-power shape</span>';
+function drawTicks(){$('ticks').innerHTML=STEMS.filter(s=>s.a!==null).map(s=>`<span style="left:${s.a*100}%;color:var(${s.col})">▲ ${s.name.toLowerCase()} ${s.a}</span>`).join('');}
+drawTicks();
+function offText(i){
+  if(S.off[i]===0)return['on the grid',false];
+  let ph=((S.off[i]%BEAT)+BEAT)%BEAT;const ms=Math.round(ph*1000);const bph=((S.off[i]%BAR)+BAR)%BAR;
+  if(ms===0||ms===500)return[bph===0?'restarted, on the bar':'restarted, bar shifted',bph!==0];
+  return['off the beat by '+ms+' ms',true];
+}
+let lastLive=0,lastTl=-10;const meterHold=[0,0,0,0];
+function render(t){
+  const g=S.applied,lv=levelDb(g);
+  if(fight&&!fight.handed&&+$('x').value!==S.T)$('x').value=S.T;
+  $('oT').textContent=S.T.toFixed(2);$('oX').textContent=S.x.toFixed(2);
+  $('x').setAttribute('aria-valuetext',`target ${S.T.toFixed(2)}, smoothed ${S.x.toFixed(2)}`);
+  let offGrid=0;
+  STEMS.forEach((s,i)=>{
+    $('sg'+i).textContent=g[i].toFixed(2);$('sd'+i).textContent=g[i]>0?minus((20*Math.log10(g[i])).toFixed(1))+' dB':'−inf dB';
+    $('sf'+i).style.height=Math.min(100,g[i]*100)+'%';
+    let m=0;if(audioOn&&stemAn[i]){const d=new Float32Array(stemAn[i].fftSize);stemAn[i].getFloatTimeDomainData(d);let r=0;for(const v of d)r+=v*v;r=Math.sqrt(r/d.length);m=r>0?clamp((20*Math.log10(r)+48)/48,0,1):0;}
+    m=Math.max(m,(meterHold[i]||0)*0.92);meterHold[i]=m;
+    $('sm'+i).style.height=(m*100)+'%';
+    const [txt,bad]=offText(i);$('so'+i).textContent=txt;$('so'+i).classList.toggle('bad',bad);if(bad)offGrid++;
+    $('st'+i).classList.toggle('dim',S.solo!==null&&S.solo!==i);
+  });
+  $('rLevel').textContent=(lv>=0.005?'+':lv<=-0.005?'−':'')+Math.abs(lv).toFixed(2)+' dB';
+  const bar=Math.floor(t/BAR)%4+1,beat=Math.floor(t/BEAT)%4+1;$('rBar').textContent=bar+' · '+beat;
+  $('rSync').textContent=(4-offGrid)+' of 4';$('rSyncL').textContent=offGrid?'stems on the shared grid (restart broke '+offGrid+')':'stems on the shared grid';
+  const sum=`Intensity ${S.x.toFixed(2)}: pad ${g[0].toFixed(2)}, drums ${g[1].toFixed(2)}, bass ${g[2].toFixed(2)}, lead ${g[3].toFixed(2)}, level ${$('rLevel').textContent}.`;
+  const nowMs=performance.now();if(nowMs-lastLive>500){$('live').textContent=sum;lastLive=nowMs;insight(lv,offGrid);}
+  if(fDirty){renderFight();fDirty=false;}
+}
+function insight(lv,offGrid){
+  let s;
+  if(offGrid)s=`<b>${offGrid} stem${offGrid>1?'s are':' is'} off the shared clock.</b> Restarting a stem on entry started it from its own bar 1 in the middle of someone else's bar, so its notes no longer line up with the drums and chords. Turn restart off and every stem snaps back to the one clock. This is why vertical layers keep playing at gain 0.`;
+  else if(S.comp)s=`Compensation divides every gain by √Σgain², so the mix stays at ${minus(lv.toFixed(2))} dB whatever the intensity. The music gets denser as stems enter, not louder. Each stem at x = 1 sits at 0.50.`;
+  else s=`At x = ${S.x.toFixed(2)} the mix is ${(lv>=0?'+':'−')+Math.abs(lv).toFixed(2)} dB above the pad alone. Four stems at full gain add ${(10*Math.log10(4)).toFixed(2)} dB, which is why the master sits at a fixed −6 dB trim. Every stem is scheduled on the same clock whether you hear it or not, so any gain change lands in time.`;
+  $('insight').innerHTML=s;
+}
+
+// ---------- main loop ----------
+let lastT=now(),raf=0;
+function frame(){
+  const t=now();advance(lastT,t);lastT=t;
+  const g=gains(S.x);
+  if(S.restart){for(let i=1;i<4;i++){if(S.prevG[i]<=0&&gRaw(i,S.x)>0)restartStem(i,t);}}
+  S.prevG=STEMS.map((_,i)=>gRaw(i,S.x));
+  S.applied=g;
+  if(audioOn){const at=AC.currentTime;for(let i=0;i<4;i++){const m=S.solo===null||S.solo===i?1:0;stemG[i].gain.setTargetAtTime(g[i]*m,at,0.015);}}
+  pushHist(t);
+  render(t);drawRamp();
+  if(!reduced||t-lastTl>=1){drawTl(t);lastTl=t;}
+  drawScope();
+  raf=requestAnimationFrame(frame);
+}
+
+// ---------- controls ----------
+$('x').addEventListener('input',e=>{if(fight&&!fight.handed){fight.handed=true;endFightControl();}S.T=+e.target.value;});
+$('x').addEventListener('keydown',e=>{if(e.key==='PageUp'||e.key==='PageDown'){e.preventDefault();const v=clamp(Math.round((S.T+(e.key==='PageUp'?0.1:-0.1))*100)/100,0,1);$('x').value=v;$('x').dispatchEvent(new Event('input'));}});
+$('up').addEventListener('input',e=>{S.up=+e.target.value;$('oUp').textContent=S.up.toFixed(2)+' /s';});
+$('down').addEventListener('input',e=>{S.down=+e.target.value;$('oDown').textContent=S.down.toFixed(2)+' /s';});
+$('nosmooth').addEventListener('change',e=>{S.noSmooth=e.target.checked;['up','down'].forEach(id=>$(id).disabled=S.noSmooth);});
+$('w').addEventListener('input',e=>{S.w=+e.target.value;$('oW').textContent=S.w.toFixed(2);});
+document.querySelectorAll('input[name=shape]').forEach(r=>r.addEventListener('change',()=>{S.shape=r.value;}));
+$('comp').addEventListener('change',e=>{S.comp=e.target.checked;});
+$('restart').addEventListener('change',e=>{S.restart=e.target.checked;if(!S.restart){const t=now();for(let i=0;i<4;i++){if(S.off[i]!==0){S.off[i]=0;if(audioOn){live[i].forEach(v=>{if(v.t>t){try{v.node.stop();}catch(x){}}});live[i]=live[i].filter(v=>v.t<=t);nextIdx[i]=Math.ceil(t/EIGHTH-1e-9);}}}}});
+$('mixer').addEventListener('click',e=>{const b=e.target.closest('.solo');if(!b)return;const i=+b.dataset.i;S.solo=S.solo===i?null:i;document.querySelectorAll('.solo').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.i===S.solo)));});
+$('fight').addEventListener('click',()=>{if(fight&&!fight.handed){fight.handed=true;endFightControl();S.T=+$('x').value;return;}startFight();$('x').value=0.1;});
+$('play').addEventListener('click',()=>audioOn?stopAudio():startAudio());
+$('vol').addEventListener('input',e=>{$('oVol').textContent=e.target.value+'%';if(audioOn)vol.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);});
+$('mute').addEventListener('click',()=>{const m=$('mute').getAttribute('aria-pressed')!=='true';$('mute').setAttribute('aria-pressed',m);$('mute').textContent=m?'Muted':'Mute';if(audioOn)vol.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);});
+if(reduced)$('tlCap').textContent+=' Reduced motion: the timeline redraws once per second instead of scrolling.';
+if(!(window.AudioContext||window.webkitAudioContext)){$('play').disabled=true;$('aStatus').textContent='This browser has no Web Audio. The clock, gains and plots still run from the model.';}
+renderFight();
+raf=requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

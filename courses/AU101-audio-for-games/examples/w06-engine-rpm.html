@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Engine RPM Crossfades — AU101 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.audiobar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:14px;padding:10px 12px;border-radius:10px;background:var(--paper-2)}
+.btn{font:700 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn[aria-pressed="true"]{background:var(--blood);border-color:var(--blood);color:var(--paper)}
+.vol{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem}
+.vol input{width:110px}
+.scope{width:160px;height:40px;display:block;border-radius:6px;background:var(--paper)}
+.astatus{font-size:.85rem;color:var(--ink-soft);flex:1 1 220px}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas.plot{display:block;width:100%;height:300px}
+canvas.half{display:block;width:100%;height:142px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:16px;height:4px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.summary{font-family:var(--serif);margin:8px 0 0;font-size:.98rem}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+@media (min-width:900px){.controls{grid-template-columns:1.2fr 1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:8px 12px 10px;margin:0 0 10px;min-width:0}
+legend{font-weight:700;font-size:.9rem;padding:0 4px}
+.opt{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:3px 0;cursor:pointer}
+.opt input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:.92rem}
+.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 .95rem var(--sans);width:7.5em;padding:5px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.loops{display:flex;flex-wrap:wrap;gap:4px 14px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+@media (max-width:520px){th,td{padding:6px 5px!important;font-size:.85rem}}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 6 · Worked example</p>
+  <h1>Crossfading engine loops by RPM</h1>
+  <p class="lede">At 1,500 RPM a linear crossfade sets two loops to 0.5 each. The gains add to 1, so the curve editor looks balanced, but the mix is 3 dB quieter. Switch to equal power and the dip disappears. The second plot shows the other cost: with only three loops, each one gets stretched by up to 7 semitones.</p>
+</header>
+
+<section class="panel" aria-label="Engine crossfade model">
+  <div class="audiobar" role="group" aria-label="Sound controls">
+    <button class="btn primary" id="play" type="button">Start engine</button>
+    <label class="vol" for="vol">Volume <input id="vol" type="range" min="0" max="100" step="1" value="50"> <output id="oVol">50%</output></label>
+    <button class="btn" id="mute" type="button" aria-pressed="false">Mute</button>
+    <canvas class="scope" id="scope" role="img" aria-label="Live waveform of the engine mix before the volume control"></canvas>
+    <span class="astatus" id="aStatus">Sound is off. Every plot and number below works without it.</span>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption id="capL">Curve editor<small id="capLs">Gain of each loop against RPM. The gains of the two active loops always add to 1 in linear mode.</small></figcaption>
+      <canvas class="plot" id="cCurve" role="img" aria-label="Gain curves for each engine loop against RPM"></canvas>
+      <div class="legend" id="legend"></div>
+      <label class="opt" style="margin-top:6px" id="logWrap"><input type="checkbox" id="logx"> Log scale for RPM axis</label>
+    </figure>
+    <figure>
+      <figcaption>What you hear<small>Top: total level, 10 × log10(Σ gain²). Bottom: pitch shift of every loop at gain 0.1 or more.</small></figcaption>
+      <canvas class="half" id="cLevel" role="img" aria-label="Total level in decibels against RPM"></canvas>
+      <canvas class="half" id="cPitch" role="img" aria-label="Pitch shift in semitones against RPM"></canvas>
+      <p class="summary" id="summary" aria-live="polite"></p>
+    </figure>
+  </div>
+
+  <div class="readout" id="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rPos">—</b><span id="rPosL">heard RPM</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rLevel">—</b><span id="rLevelL">total level</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rWorst">—</b><span id="rWorstL">worst stretch</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rSeek">—</b><span id="rSeekL">seek</span></div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Loops that are playing">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <fieldset>
+        <legend>Source</legend>
+        <label class="opt"><input type="radio" name="src" value="multi" checked> Multi-loop event</label>
+        <label class="opt"><input type="radio" name="src" value="stk"> SuperTuxKart rule (one loop)</label>
+      </fieldset>
+      <div class="row"><label for="pos" id="posLabel">RPM</label><input type="number" id="posNum" aria-label="Exact RPM value" min="1000" max="4000" step="10" value="1500"></div>
+      <input id="pos" type="range" min="1000" max="4000" step="10" value="1500" aria-describedby="posHint">
+      <p class="hint" id="posHint">Arrows move 10 RPM, Page Up/Down 250. Type an exact value in the box.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn" id="sweep" type="button" aria-keyshortcuts="w">Sweep (W)</button>
+      </div>
+    </div>
+    <div id="multiCtl">
+      <fieldset>
+        <legend>Crossfade</legend>
+        <label class="opt"><input type="radio" name="fade" value="linear" checked> Linear</label>
+        <label class="opt"><input type="radio" name="fade" value="power"> Equal power</label>
+      </fieldset>
+      <fieldset>
+        <legend>Crossfade spacing</legend>
+        <label class="opt"><input type="radio" name="space" value="lin" checked> Linear in RPM</label>
+        <label class="opt"><input type="radio" name="space" value="log"> Log (pitch) spaced</label>
+      </fieldset>
+    </div>
+    <div>
+      <fieldset id="loopSet">
+        <legend>Loops (recorded RPM)</legend>
+        <div class="loops" id="loops"></div>
+        <p class="hint" id="loopHint">At least two loops stay on.</p>
+      </fieldset>
+      <div class="row"><label for="seek">Seek speed</label><output id="oSeek">Instant</output></div>
+      <input id="seek" type="range" min="0" max="40" step="1" value="0" aria-describedby="seekHint">
+      <p class="hint" id="seekHint">Range per second, where range = 3,000 RPM. Hollow marker = target, filled = what you hear.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Engine tones are synthesized in the browser: the firing frequency of a four-cylinder four-stroke (RPM / 60 × 2), harmonics 1 to 12 at 1/k, a 3 Hz wobble and band-passed noise. SuperTuxKart rule from the SuperTuxKart source, release 1.5 (src/karts/kart.cpp, Kart::updateEngineSFX): pitch = 0.6 + 0.35 × (0.9 f + 3 × (f mod 0.333334)), clamped to 0.5 to 2.0. No game audio or art is used.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const sgn=(v,d)=>(v>=0?'+':'−')+Math.abs(v).toFixed(d);
+const dbTxt=(v,d)=>v===-Infinity?'−inf':(v<0?'−':'')+Math.abs(v).toFixed(d);
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const ALL=[1000,1414,2000,3000,4000];
+const COL=['--steel','--blood','--ochre','--moss','--ink-soft'];
+const RANGE=3000;
+const S={mode:'multi',fade:'linear',space:'lin',loops:new Set([1000,2000,4000]),target:1500,cur:1500,f:0,fCur:0,seek:0,logx:false};
+
+// ---------- model ----------
+function stkPitch(f){const p=0.6+0.35*(0.9*f+3*(f%0.333334));return Math.min(2,Math.max(0.5,p));}
+function stkGears(f){return 3*(f%0.333334);}
+function gainsAt(rpm){
+  const L=[...S.loops].sort((a,b)=>a-b),g={};ALL.forEach(r=>g[r]=0);
+  if(rpm<=L[0]){g[L[0]]=1;return g;}
+  if(rpm>=L[L.length-1]){g[L[L.length-1]]=1;return g;}
+  let i=0;while(!(rpm>=L[i]&&rpm<L[i+1]))i++;
+  const a=L[i],b=L[i+1];
+  const t=S.space==='log'?Math.log(rpm/a)/Math.log(b/a):(rpm-a)/(b-a);
+  if(S.fade==='power'){g[a]=Math.cos(t*Math.PI/2);g[b]=Math.sin(t*Math.PI/2);}
+  else{g[a]=1-t;g[b]=t;}
+  return g;
+}
+function levelDb(g){let s=0;for(const r in g)s+=g[r]*g[r];return 10*Math.log10(s);}
+const semis=(rpm,r)=>12*Math.log2(rpm/r);
+
+// ---------- canvas helpers ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return{g,w:r.width,h:r.height};}
+function frame(o,pad,xs,ys,xTicks,yTicks,xFmt,yFmt,xLabel){
+  const {g,w,h}=o;g.font='12px '+css('--sans');g.lineWidth=1;
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');
+  yTicks.forEach(v=>{const y=ys(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(v),pad.l-6,y);});
+  xTicks.forEach(v=>{const x=xs(v);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.textAlign='center';g.textBaseline='top';g.fillText(xFmt(v),x,h-pad.b+5);});
+  if(xLabel){g.textAlign='right';g.textBaseline='bottom';g.fillText(xLabel,w-pad.r,pad.t+12);}
+}
+function scales(o,pad,x0,x1,y0,y1,logx){
+  const W=o.w-pad.l-pad.r,H=o.h-pad.t-pad.b;
+  const xs=logx?v=>pad.l+W*Math.log(v/x0)/Math.log(x1/x0):v=>pad.l+W*(v-x0)/(x1-x0);
+  const ys=v=>pad.t+H*(1-(v-y0)/(y1-y0));
+  return{xs,ys};
+}
+function dot(g,x,y,col,hollow){g.beginPath();g.arc(x,y,5.5,0,Math.PI*2);if(hollow){g.strokeStyle=col;g.lineWidth=2;g.fillStyle=css('--paper');g.fill();g.stroke();}else{g.fillStyle=col;g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}}
+function vline(g,x,t,b,dash){g.save();g.strokeStyle=css('--ink');g.globalAlpha=.55;g.lineWidth=1.5;g.setLineDash(dash||[]);g.beginPath();g.moveTo(x,t);g.lineTo(x,b);g.stroke();g.restore();}
+
+// ---------- drawing ----------
+function drawCurve(){
+  const o=setup($('cCurve')),g=o.g,pad={l:44,r:12,t:10,b:28};
+  if(S.mode==='stk'){
+    const {xs,ys}=scales(o,pad,0,1,0.5,1.4,false);
+    frame(o,pad,xs,ys,[0,.25,.5,.75,1],[0.5,0.7,0.9,1.1,1.3],v=>v.toFixed(2),v=>v.toFixed(1),'speed fraction f');
+    g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+    let prev=null;
+    for(let i=0;i<=1000;i++){const f=i/1000,p=stkPitch(f),x=xs(f),y=ys(p);if(prev!==null&&p<prev-0.1){g.stroke();g.beginPath();g.moveTo(x,y);}else if(i===0)g.moveTo(x,y);else g.lineTo(x,y);prev=p;}
+    g.stroke();
+    vline(g,xs(S.fCur),pad.t,o.h-pad.b);
+    if(Math.abs(S.f-S.fCur)>1e-6)dot(g,xs(S.f),ys(stkPitch(S.f)),css('--steel'),true);
+    dot(g,xs(S.fCur),ys(stkPitch(S.fCur)),css('--steel'));
+    return;
+  }
+  const {xs,ys}=scales(o,pad,800,4200,0,1,S.logx);
+  frame(o,pad,xs,ys,S.logx?[1000,1414,2000,3000,4000]:[1000,2000,3000,4000],[0,.25,.5,.75,1],v=>fmt(v),v=>v.toFixed(2),'RPM');
+  const L=[...S.loops].sort((a,b)=>a-b);
+  L.forEach(r=>{
+    g.strokeStyle=css(COL[ALL.indexOf(r)]);g.lineWidth=2.5;g.beginPath();
+    for(let i=0;i<=400;i++){const rpm=S.logx?800*Math.pow(4200/800,i/400):800+3400*i/400;const v=gainsAt(rpm)[r];i?g.lineTo(xs(rpm),ys(v)):g.moveTo(xs(rpm),ys(v));}
+    g.stroke();
+  });
+  vline(g,xs(S.cur),pad.t,o.h-pad.b);
+  if(Math.abs(S.target-S.cur)>0.5){vline(g,xs(S.target),pad.t,o.h-pad.b,[4,4]);const gt=gainsAt(S.target);L.forEach(r=>{if(gt[r]>0)dot(g,xs(S.target),ys(gt[r]),css(COL[ALL.indexOf(r)]),true);});}
+  const gc=gainsAt(S.cur);L.forEach(r=>{if(gc[r]>0)dot(g,xs(S.cur),ys(gc[r]),css(COL[ALL.indexOf(r)]));});
+}
+function drawHear(){
+  // level
+  let o=setup($('cLevel')),g=o.g,pad={l:44,r:12,t:10,b:22};
+  const stk=S.mode==='stk';
+  const x0=stk?0:800,x1=stk?1:4200,logx=!stk&&S.logx;
+  let sc=scales(o,pad,x0,x1,-6,3,logx);
+  const xt=stk?[0,.25,.5,.75,1]:(logx?[1000,1414,2000,3000,4000]:[1000,2000,3000,4000]);
+  frame(o,pad,sc.xs,sc.ys,xt,[-6,-3,0,3],v=>stk?v.toFixed(2):fmt(v),v=>(v>0?'+':v<0?'−':'')+Math.abs(v)+' dB','');
+  g.save();g.strokeStyle=css('--ink');g.setLineDash([5,4]);g.lineWidth=1.2;g.beginPath();g.moveTo(pad.l,sc.ys(0));g.lineTo(o.w-pad.r,sc.ys(0));g.stroke();g.restore();
+  g.strokeStyle=css('--ochre');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=400;i++){const x=stk?i/400:(logx?800*Math.pow(4200/800,i/400):800+3400*i/400);const v=stk?0:Math.max(-6,levelDb(gainsAt(x)));i?g.lineTo(sc.xs(x),sc.ys(v)):g.moveTo(sc.xs(x),sc.ys(v));}
+  g.stroke();
+  const here=stk?S.fCur:S.cur;vline(g,sc.xs(here),pad.t,o.h-pad.b);
+  dot(g,sc.xs(here),sc.ys(stk?0:Math.max(-6,levelDb(gainsAt(S.cur)))),css('--ochre'));
+  // pitch
+  o=setup($('cPitch'));g=o.g;pad={l:44,r:12,t:10,b:24};
+  sc=scales(o,pad,x0,x1,-12,12,logx);
+  frame(o,pad,sc.xs,sc.ys,xt,[-12,-5,0,5,12],v=>stk?v.toFixed(2):fmt(v),v=>(v>0?'+':v<0?'−':'')+Math.abs(v)+' st',stk?'f':'RPM');
+  g.save();g.strokeStyle=css('--blood');g.setLineDash([5,4]);g.lineWidth=1.2;[5,-5].forEach(v=>{g.beginPath();g.moveTo(pad.l,sc.ys(v));g.lineTo(o.w-pad.r,sc.ys(v));g.stroke();});
+  g.fillStyle=css('--blood');g.font='11px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText('stretch limit ±5 st',o.w-pad.r-2,sc.ys(-5)+2);g.restore();
+  if(stk){
+    g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();let prev=null;
+    for(let i=0;i<=1000;i++){const f=i/1000,v=12*Math.log2(stkPitch(f));if(prev!==null&&v<prev-1){g.stroke();g.beginPath();g.moveTo(sc.xs(f),sc.ys(v));}else if(i===0)g.moveTo(sc.xs(f),sc.ys(v));else g.lineTo(sc.xs(f),sc.ys(v));prev=v;}
+    g.stroke();vline(g,sc.xs(S.fCur),pad.t,o.h-pad.b);dot(g,sc.xs(S.fCur),sc.ys(12*Math.log2(stkPitch(S.fCur))),css('--steel'));
+    return;
+  }
+  const L=[...S.loops].sort((a,b)=>a-b);
+  L.forEach(r=>{
+    g.strokeStyle=css(COL[ALL.indexOf(r)]);g.lineWidth=2.5;g.beginPath();let on=false;
+    for(let i=0;i<=400;i++){const rpm=logx?800*Math.pow(4200/800,i/400):800+3400*i/400;const gg=gainsAt(rpm)[r];const v=Math.max(-12,Math.min(12,semis(rpm,r)));
+      if(gg>=0.1){on?g.lineTo(sc.xs(rpm),sc.ys(v)):g.moveTo(sc.xs(rpm),sc.ys(v));on=true;}else on=false;}
+    g.stroke();
+  });
+  vline(g,sc.xs(S.cur),pad.t,o.h-pad.b);
+  const gc=gainsAt(S.cur);L.forEach(r=>{if(gc[r]>=0.1)dot(g,sc.xs(S.cur),sc.ys(Math.max(-12,Math.min(12,semis(S.cur,r)))),css(COL[ALL.indexOf(r)]));});
+}
+function legend(){
+  if(S.mode==='stk'){$('legend').innerHTML='<span><i style="background:var(--steel)"></i>one loop recorded at 1,000 RPM, pitch multiplier</span>';return;}
+  $('legend').innerHTML=[...S.loops].sort((a,b)=>a-b).map(r=>`<span><i style="background:var(${COL[ALL.indexOf(r)]})"></i>${fmt(r)} RPM loop</span>`).join('');
+}
+
+// ---------- readouts ----------
+let lastLive=0;
+function readouts(force){
+  const now=performance.now();
+  if(S.mode==='stk'){
+    const f=S.fCur,p=stkPitch(f),st=12*Math.log2(p);
+    $('rPos').textContent=f.toFixed(4);$('rPosL').textContent='speed fraction f (heard)';
+    $('rLevel').textContent=p.toFixed(3);$('rLevelL').textContent='pitch multiplier ('+p.toFixed(4)+' to 4 places)';
+    $('rWorst').textContent=sgn(st,1)+' st';$('rWorstL').textContent='relative to pitch 1.0';
+    $('thead').innerHTML='<tr><th>f</th><th>gears</th><th>Pitch multiplier</th><th>Semitones vs 1.0</th><th>Gain</th></tr>';
+    $('tbody').innerHTML=`<tr><td>${f.toFixed(4)}</td><td>${stkGears(f).toFixed(4)}</td><td>${p.toFixed(3)}</td><td>${sgn(st,1)}</td><td>1.000</td></tr>`;
+    const s=`f = ${f.toFixed(4)}: one loop at pitch ${p.toFixed(3)}, ${sgn(st,1)} st from its recording, total 0.0 dB.`;
+    if(force||now-lastLive>500){$('summary').textContent=s;lastLive=now;}
+    $('insight').innerHTML=`One loop, no crossfade, so the level never dips. The pitch climbs in three ramps and snaps down twice (at f ≈ 0.333 and 0.667), a drop of about 7 then 6.2 semitones. That snap is a fake gear change. The loop is stretched from ${sgn(-8.8,1)} to ${sgn(4.1,1)} semitones, far past the ±5 limit, which is fine for a cartoon kart.`;
+  } else {
+    const g=gainsAt(S.cur),lv=levelDb(g),L=[...S.loops].sort((a,b)=>a-b);
+    const act=L.filter(r=>g[r]>0);
+    const aud=L.filter(r=>g[r]>=0.1);
+    let worst=0;aud.forEach(r=>{const s=semis(S.cur,r);if(Math.abs(s)>Math.abs(worst))worst=s;});
+    $('rPos').textContent=fmt(S.cur);$('rPosL').textContent='heard RPM';
+    $('rLevel').textContent=dbTxt(lv,2)+' dB';$('rLevelL').textContent='total level';
+    $('rWorst').textContent=sgn(worst,1)+' st';$('rWorstL').textContent='worst stretch (gain ≥ 0.1)';
+    $('thead').innerHTML='<tr><th>Loop (recorded RPM)</th><th>Gain</th><th>Gain dB</th><th>Pitch shift</th></tr>';
+    $('tbody').innerHTML=act.map(r=>`<tr><td><i style="background:var(${COL[ALL.indexOf(r)]})"></i>${fmt(r)}</td><td>${g[r].toFixed(3)}</td><td>${dbTxt(20*Math.log10(g[r]),1)}</td><td>${sgn(semis(S.cur,r),1)} st</td></tr>`).join('')+`<tr><td><b>Total</b></td><td></td><td><b>${dbTxt(lv,2)}</b></td><td>worst ${sgn(worst,1)}</td></tr>`;
+    const desc=act.length===1?`one loop at ${g[act[0]].toFixed(3)}`:(Math.abs(g[act[0]]-g[act[1]])<5e-4?`two loops at ${g[act[0]].toFixed(3)}`:`loops at ${act.map(r=>g[r].toFixed(3)).join(' and ')}`);
+    const s=`${fmt(S.cur)} RPM: ${desc}, total ${dbTxt(Math.abs(lv)<0.05?0:lv,1)} dB, worst stretch ${sgn(worst,1)} st`;
+    if(force||now-lastLive>500){$('summary').textContent=s;lastLive=now;}
+    let ins;
+    if(S.fade==='linear'&&act.length===2) ins=`The gains add to ${(g[act[0]]+g[act[1]]).toFixed(3)}, which looks right on the curve editor. Loudness follows the sum of squares, ${(g[act[0]]**2+g[act[1]]**2).toFixed(3)}, so this point sits <b>${dbTxt(lv,2)} dB</b> below a single loop. Switch to equal power to fill the hole.`;
+    else if(S.fade==='power'&&act.length===2) ins=`cos² + sin² = 1 at every point, so the level stays at ${dbTxt(Math.abs(lv)<0.005?0:lv,2)} dB through the whole fade. The hole is gone. The pitch plot does not change: fewer loops still means more stretch.`;
+    else ins=`You are sitting exactly on one loop, so it plays at its recorded pitch and full gain. Move between two loops to see the crossfade.`;
+    if(Math.abs(worst)>5) ins+=` The worst stretch here is ${sgn(worst,1)} semitones, past the ±5 limit where a recording starts to sound smeared or chipmunked. Add the 1,414 or 3,000 loop to shrink it.`;
+    $('insight').innerHTML=ins;
+  }
+  // seek readout
+  if(S.seek===0){$('rSeek').textContent='Instant';$('rSeekL').textContent='seek speed';}
+  else{
+    const rate=S.seek*RANGE;
+    const dist=S.mode==='stk'?Math.abs(S.f-S.fCur)*RANGE:Math.abs(S.target-S.cur);
+    $('rSeek').textContent=(S.lastTravel!=null?S.lastTravel:0).toFixed(2)+' s';
+    $('rSeekL').textContent=dist>0.5?`travel time, ${(dist/rate).toFixed(2)} s left`:`travel time of last move (${fmt(rate)} RPM/s)`;
+  }
+}
+
+// ---------- audio ----------
+let AC=null,bus=null,master=null,comp=null,analyser=null,srcs={},gains={},running=false;
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function biquad(type,f0,Q,sr){const w=2*Math.PI*f0/sr,cs=Math.cos(w),al=Math.sin(w)/(2*Q);let b0,b1,b2;
+  if(type==='lp'){b0=(1-cs)/2;b1=1-cs;b2=(1-cs)/2;}else{b0=al;b1=0;b2=-al;}
+  const a0=1+al,a1=-2*cs,a2=1-al;return{b0:b0/a0,b1:b1/a0,b2:b2/a0,a1:a1/a0,a2:a2/a0};}
+function filt(x,c){let x1=0,x2=0,y1=0,y2=0;const y=new Float32Array(x.length);for(let n=0;n<x.length;n++){const v=c.b0*x[n]+c.b1*x1+c.b2*x2-c.a1*y1-c.a2*y2;x2=x1;x1=x[n];y2=y1;y1=v;y[n]=v;}return y;}
+function makeLoop(r){
+  const sr=AC.sampleRate,F=r/60*2,cycles=Math.round(2*F),dur=cycles/F,N=Math.round(dur*sr);
+  const rnd=mulberry(r);const ph=[];for(let k=1;k<=12;k++)ph.push(rnd()*Math.PI*2);
+  const wob=Math.max(1,Math.round(3*dur))/dur;
+  const tone=new Float32Array(N),noise=new Float32Array(N);
+  for(let n=0;n<N;n++){const t=n/sr;let s=0;for(let k=1;k<=12;k++)s+=Math.sin(2*Math.PI*k*F*t+ph[k-1])/k;tone[n]=s*(1+0.1*Math.sin(2*Math.PI*wob*t));noise[n]=rnd()*2-1;}
+  const nb=filt(noise,biquad('bp',8*F,1,sr));
+  let rt=0,rn=0;for(let n=0;n<N;n++){rt+=tone[n]*tone[n];rn+=nb[n]*nb[n];}
+  const kn=Math.sqrt(rt/rn)*Math.pow(10,-18/20);
+  const mix=new Float32Array(N);for(let n=0;n<N;n++)mix[n]=tone[n]+nb[n]*kn;
+  const out=filt(filt(mix,biquad('lp',2500,0.707,sr)),biquad('lp',2500,0.707,sr)).slice(0);
+  let rms=0;for(let n=0;n<N;n++)rms+=out[n]*out[n];rms=Math.sqrt(rms/N);
+  const buf=AC.createBuffer(1,N,sr),d=buf.getChannelData(0),k=0.16/rms;
+  for(let n=0;n<N;n++)d[n]=out[n]*k;return buf;
+}
+function volVal(){return $('mute').getAttribute('aria-pressed')==='true'?0:(+$('vol').value/100);}
+function startAudio(){
+  try{
+    if(!AC){
+      const C=window.AudioContext||window.webkitAudioContext;if(!C)throw new Error('no Web Audio');
+      AC=new C();master=AC.createGain();comp=AC.createDynamicsCompressor();comp.threshold.value=-3;
+      analyser=AC.createAnalyser();analyser.fftSize=1024;
+      bus=AC.createGain();bus.connect(master);bus.connect(analyser);master.connect(comp);comp.connect(AC.destination);
+      ALL.forEach(r=>{const b=makeLoop(r),s=AC.createBufferSource();s.buffer=b;s.loop=true;const gn=AC.createGain();gn.gain.value=0;s.connect(gn);gn.connect(bus);s.start();srcs[r]=s;gains[r]=gn;});
+    }
+    AC.resume();master.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);running=true;
+    $('play').textContent='Stop engine';$('aStatus').textContent='Engine running. Use headphones to hear the dip at the midpoint of a linear fade.';
+    pushAudio();
+  }catch(e){$('aStatus').textContent='Sound is unavailable in this browser. The plots and numbers still work.';}
+}
+function stopAudio(){if(AC){master.gain.setTargetAtTime(0,AC.currentTime,0.02);setTimeout(()=>{if(!running&&AC)AC.suspend();},200);}running=false;$('play').textContent='Start engine';$('aStatus').textContent='Sound is off. Every plot and number below works without it.';}
+function pushAudio(){
+  if(!AC||!running)return;const t=AC.currentTime;
+  if(S.mode==='stk'){const p=stkPitch(S.fCur);ALL.forEach(r=>{gains[r].gain.setTargetAtTime(r===1000?1:0,t,0.02);srcs[r].playbackRate.setTargetAtTime(r===1000?p:1,t,0.02);});return;}
+  const g=gainsAt(S.cur);ALL.forEach(r=>{gains[r].gain.setTargetAtTime(g[r],t,0.02);srcs[r].playbackRate.setTargetAtTime(S.cur/r,t,0.02);});
+}
+function drawScope(){
+  const o=setup($('scope')),g=o.g;g.strokeStyle=css('--steel');g.lineWidth=1.5;g.beginPath();
+  if(analyser&&running){const d=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(d);for(let i=0;i<d.length;i++){const x=o.w*i/(d.length-1),y=o.h/2-d[i]*o.h*0.9;i?g.lineTo(x,y):g.moveTo(x,y);}}
+  else{g.moveTo(0,o.h/2);g.lineTo(o.w,o.h/2);}
+  g.stroke();
+}
+
+// ---------- state changes ----------
+function drawAll(){legend();drawCurve();drawHear();}
+function update(force){readouts(force);drawAll();pushAudio();}
+function setPos(v,fromUser){
+  if(S.mode==='stk'){S.f=Math.min(1,Math.max(0,v));if(S.seek===0)S.fCur=S.f;else S.lastTravel=Math.abs(S.f-S.fCur)/S.seek;}
+  else{S.target=Math.min(4000,Math.max(1000,v));if(S.seek===0)S.cur=S.target;else S.lastTravel=Math.abs(S.target-S.cur)/(S.seek*RANGE);}
+  if(fromUser!=='num')$('posNum').value=S.mode==='stk'?+S.f.toFixed(4):S.target;
+  if(fromUser!=='range')$('pos').value=S.mode==='stk'?S.f:S.target;
+  update(true);kick();
+}
+let raf=0,lastT=0;
+function kick(){if(!raf){lastT=performance.now();raf=requestAnimationFrame(tick);}}
+function tick(now){
+  raf=0;const dt=Math.min(0.1,(now-lastT)/1000);lastT=now;let moving=false;
+  if(sweep)stepSweep(now);
+  if(S.seek>0){
+    const rate=S.seek*RANGE;
+    if(S.mode==='stk'){const d=S.f-S.fCur,st=rate/RANGE*dt;if(Math.abs(d)>1e-9){S.fCur=Math.abs(d)<=st?S.f:S.fCur+Math.sign(d)*st;moving=true;}}
+    else{const d=S.target-S.cur,st=rate*dt;if(Math.abs(d)>1e-9){S.cur=Math.abs(d)<=st?S.target:S.cur+Math.sign(d)*st;moving=true;}}
+    if(moving)update(false);
+  }
+  if(running)drawScope();
+  if(moving||sweep||running)raf=requestAnimationFrame(tick);
+}
+// sweep
+let sweep=null;
+function startSweep(){if(sweep){sweep=null;$('sweep').textContent='Sweep (W)';update(true);return;}sweep={t0:performance.now(),step:-1};$('sweep').textContent='Stop sweep (W)';kick();}
+function stepSweep(now){
+  const T=(now-sweep.t0)/1000,lo=S.mode==='stk'?0:1000,hi=S.mode==='stk'?1:4000;
+  if(T>=12){sweep=null;$('sweep').textContent='Sweep (W)';setPos(lo);return;}
+  let u=T<6?T/6:2-T/6;
+  if(reduced){const k=Math.min(9,Math.floor(T/1.2));if(k===sweep.step)return;sweep.step=k;u=[0,.25,.5,.75,1,1,.75,.5,.25,0][k];}
+  let v=lo+(hi-lo)*u;if(S.mode!=='stk')v=Math.round(v/10)*10;
+  const keep=S.seek;S.seek=0;setPos(v);S.seek=keep;
+}
+
+// ---------- wire up ----------
+$('loops').innerHTML=ALL.map((r,i)=>`<label class="opt"><input type="checkbox" value="${r}" ${S.loops.has(r)?'checked':''}> <i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(${COL[i]})"></i>${fmt(r)}</label>`).join('');
+$('loops').addEventListener('change',e=>{
+  const r=+e.target.value;
+  if(e.target.checked)S.loops.add(r);else if(S.loops.size>2)S.loops.delete(r);else{e.target.checked=true;$('loopHint').textContent='You need at least two loops to crossfade.';return;}
+  $('loopHint').textContent='At least two loops stay on.';update(true);
+});
+$('pos').addEventListener('input',e=>{sweep=null;$('sweep').textContent='Sweep (W)';setPos(+e.target.value,'range');});
+$('pos').addEventListener('keydown',e=>{
+  if(e.key==='PageUp'||e.key==='PageDown'){e.preventDefault();const d=S.mode==='stk'?0.1:250;setPos((S.mode==='stk'?S.f:S.target)+(e.key==='PageUp'?d:-d));}
+});
+$('posNum').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(isFinite(v))setPos(v,'num');});
+document.querySelectorAll('input[name=fade]').forEach(x=>x.addEventListener('change',()=>{S.fade=x.value;update(true);}));
+document.querySelectorAll('input[name=space]').forEach(x=>x.addEventListener('change',()=>{S.space=x.value;update(true);}));
+document.querySelectorAll('input[name=src]').forEach(x=>x.addEventListener('change',()=>{
+  S.mode=x.value;const stk=S.mode==='stk';const p=$('pos'),n=$('posNum');
+  sweep=null;$('sweep').textContent='Sweep (W)';
+  if(stk){p.min=0;p.max=1;p.step=0.001;n.min=0;n.max=1;n.step=0.0001;$('posLabel').textContent='Speed fraction f';$('posHint').textContent='Arrows move 0.001, Page Up/Down 0.1. Type an exact value such as 0.3333 in the box.';p.value=S.f;n.value=S.f;}
+  else{p.min=1000;p.max=4000;p.step=10;n.min=1000;n.max=4000;n.step=10;$('posLabel').textContent='RPM';$('posHint').textContent='Arrows move 10 RPM, Page Up/Down 250. Type an exact value in the box.';p.value=S.target;n.value=S.target;}
+  $('multiCtl').hidden=stk;$('loopSet').hidden=stk;$('logWrap').hidden=stk;
+  $('capL').firstChild.textContent=stk?'Pitch curve':'Curve editor';
+  $('capLs').textContent=stk?'Pitch multiplier of the single 1,000 RPM loop against speed fraction f.':'Gain of each loop against RPM. The gains of the two active loops always add to 1 in linear mode.';
+  update(true);
+}));
+$('logx').addEventListener('change',e=>{S.logx=e.target.checked;drawAll();});
+$('seek').addEventListener('input',e=>{const v=+e.target.value;S.seek=v*0.05;$('oSeek').textContent=v===0?'Instant':(v*0.05).toFixed(2)+' range/s';$('seek').setAttribute('aria-valuetext',$('oSeek').textContent);if(v===0){S.cur=S.target;S.fCur=S.f;}S.lastTravel=null;update(true);});
+$('sweep').addEventListener('click',startSweep);
+document.addEventListener('keydown',e=>{if((e.key==='w'||e.key==='W')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.target.type!=='number'){e.preventDefault();startSweep();}});
+$('play').addEventListener('click',()=>{running?stopAudio():startAudio();kick();});
+$('vol').addEventListener('input',e=>{$('oVol').textContent=e.target.value+'%';if(AC&&running)master.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);});
+$('mute').addEventListener('click',()=>{const m=$('mute').getAttribute('aria-pressed')!=='true';$('mute').setAttribute('aria-pressed',m);$('mute').textContent=m?'Muted':'Mute';if(AC&&running)master.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);});
+window.addEventListener('resize',()=>{drawAll();drawScope();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawAll();drawScope();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawAll();});
+update(true);drawScope();
+})();
+</script>
+</body>
+</html>

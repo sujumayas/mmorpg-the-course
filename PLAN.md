@@ -91,14 +91,14 @@ flowchart LR
 | CS101 | finished | 14/14 | 15 (3) | 14 | 4 |
 | MA101 | finished | 14/14 | 14 (4) | 14 | 5 |
 | GS101 | finished | 14/14 | 14 (2) | 13 | 4 |
-| AR101 | stub | 14/14 | 14 (2) | 14 | 0 |
+| AR101 | finished | 14/14 | 14 (2) | 14 | 4 |
 | GD102 | finished | 14/14 | 14 (3) | 14 | 4 |
 | CS102 | finished | 14/14 | 15 (2) | 14 | 4 |
 | MA102 | finished | 14/14 | 15 (4) | 14 | 5 |
-| AU101 | stub | 14/14 | 14 (2) | 14 | 4 |
-| PR101 | stub | 3/14 | 0 (1) | 1 | 0 |
-| CS201 | stub | 14/14 | 0 (2) | 14 | 0 |
-| MA201 | stub | 13/14 | 0 (2) | 13 | 0 |
+| AU101 | finished | 14/14 | 14 (2) | 14 | 4 |
+| PR101 | stub | 14/14 | 14 (1) | 14 | 0 |
+| CS201 | stub | 14/14 | 14 (2) | 14 | 3 |
+| MA201 | stub | 14/14 | 14 (2) | 14 | 4 |
 | GD201 | finished | 14/14 | 14 (2) | 14 | 4 |
 | GD202 | finished | 14/14 | 14 (1) | 14 | 3 |
 | UX201 | finished | 14/14 | 14 (2) | 14 | 4 |
@@ -119,11 +119,11 @@ flowchart LR
 | PR301 | stub | 0/14 | 0 (0) | 0 | 0 |
 | MMO401 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO402 | finished | 14/14 | 14 (1) | 13 | 4 |
-| MMO403 | stub | 0/14 | 0 (2) | 0 | 0 |
+| MMO403 | stub | 14/14 | 0 (2) | 14 | 0 |
 | MMO404 | finished | 14/14 | 14 (1) | 14 | 3 |
 | PR401 | stub | 0/14 | 0 (0) | 0 | 0 |
-| MMO405 | stub | 0/14 | 0 (1) | 0 | 0 |
-| MMO406 | stub | 0/14 | 0 (0) | 0 | 0 |
+| MMO405 | stub | 14/14 | 0 (1) | 14 | 0 |
+| MMO406 | stub | 12/14 | 0 (0) | 12 | 0 |
 | MMO407 | finished | 14/14 | 14 (1) | 14 | 3 |
 | PR402 | stub | 0/14 | 0 (0) | 0 | 0 |
 
@@ -1168,7 +1168,7 @@ The social science of MMOs: groups, guilds, trust, status, toxicity and how syst
 - Taylor — Play Between Worlds (2006)
 - Ducheneaut, Yee, Nickell & Moore (2006) — 'Alone Together?'
 - Steinkuehler & Williams (2006) — Where Everybody Knows Your (Screen) Name
-- Kou (2020) — Toxic behaviors in team-based competitive gaming (verify)
+- Kou (2020) — Toxic behaviors in team-based competitive gaming: the case of League of Legends. CHI PLAY 2020, doi:10.1145/3410404.3414243
 
 **Assessment:** Reading responses (20%), field observation (30%), final design + proposal (50%)
 

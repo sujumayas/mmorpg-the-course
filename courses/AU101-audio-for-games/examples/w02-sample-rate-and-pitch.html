@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sample rate and pitch · AU101 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:250px}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 9px;min-width:0}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+@media (max-width:480px){.mini .stat b{font-size:1rem}.mini .stat span{font-size:.74rem;line-height:1.25;display:block}.mini{gap:6px}}
+.caption{font-family:var(--serif);font-size:1.12rem;font-weight:600;margin:14px 0 0}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin:0 0 4px}
+label.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{position:relative;font:600 .85rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);cursor:pointer;font-variant-numeric:tabular-nums}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg label:has(input:checked){background:var(--steel);color:var(--paper)}
+.seg label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.ticks{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ink-soft);position:relative;height:1.2em}
+.ticks span{position:absolute;transform:translateX(-50%)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-size:.88rem;color:var(--ink-soft);margin:8px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.audio{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px;padding:8px 12px;border-radius:10px;background:var(--paper-2);font-size:.9rem}
+.audio label{font-weight:600;display:flex;gap:6px;align-items:center}
+.audio input[type=range]{width:140px}
+.audio .state{color:var(--ink-soft)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 2 · Worked example</p>
+  <h1>Pitch down, and the top falls in</h1>
+  <p class="lede">A 48 kHz recording holds nothing above 24 kHz. Play it one octave down and that edge lands at 12 kHz, well inside what you hear. The sample rate you record at decides how bright a pitched sound can stay.</p>
+</header>
+
+<div class="audio" role="group" aria-label="Sound output">
+  <button id="mute" aria-pressed="false">Mute</button>
+  <label for="vol">Volume <output id="oVol">70%</output></label>
+  <input id="vol" type="range" min="0" max="100" step="1" value="70">
+  <span class="state" id="audioState">Sound is off until you press a play button.</span>
+</div>
+
+<section class="panel">
+  <div class="charts">
+    <figure>
+      <figcaption>Recording<small>Spectrum as captured, 0 to 100 kHz. Shaded band is what humans hear.</small></figcaption>
+      <canvas id="cRec" role="img" aria-label="Spectrum of the recording from 0 to 100 kilohertz"></canvas>
+      <div class="mini">
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rNyq">—</b><span>Nyquist (fs / 2)</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rTop">—</b><span>f_top</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rLim">—</b><span>limited by</span></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>After pitch<small>Same sound in a 48 kHz game mix, 0 to 24 kHz, every frequency times p.</small></figcaption>
+      <canvas id="cOut" role="img" aria-label="Spectrum after pitch change from 0 to 24 kilohertz"></canvas>
+      <div class="mini">
+        <div class="stat" style="--c:var(--ochre)"><b id="rAfter">—</b><span>f_top after pitch</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rEmpty">—</b><span>empty audible band</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rP">—</b><span>pitch p</span></div>
+      </div>
+    </figure>
+  </div>
+  <p class="caption" id="caption"></p>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--moss)"><b id="rDR">—</b><span>dynamic range (6.02 &times; N)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rBytes">—</b><span>bytes per minute, mono</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rMB">—</b><span>MB per minute, mono</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rFmt">—</b><span>format</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <fieldset>
+        <legend>Sample rate (Hz)</legend>
+        <div class="seg" id="segFs">
+          <label><input type="radio" name="fs" value="11025">11,025</label>
+          <label><input type="radio" name="fs" value="22050">22,050</label>
+          <label><input type="radio" name="fs" value="44100">44,100</label>
+          <label><input type="radio" name="fs" value="48000" checked>48,000</label>
+          <label><input type="radio" name="fs" value="96000">96,000</label>
+          <label><input type="radio" name="fs" value="192000">192,000</label>
+        </div>
+      </fieldset>
+      <fieldset style="margin-top:12px">
+        <legend>Bit depth</legend>
+        <div class="seg">
+          <label><input type="radio" name="bits" value="8">8-bit</label>
+          <label><input type="radio" name="bits" value="16">16-bit</label>
+          <label><input type="radio" name="bits" value="24" checked>24-bit</label>
+        </div>
+      </fieldset>
+      <fieldset style="margin-top:12px">
+        <legend>Source content (f_source)</legend>
+        <div class="seg">
+          <label><input type="radio" name="src" value="60000" checked>keys (60 kHz)</label>
+          <label><input type="radio" name="src" value="30000">door creak (30 kHz)</label>
+          <label><input type="radio" name="src" value="8000">kick drum (8 kHz)</label>
+        </div>
+      </fieldset>
+    </div>
+    <div>
+      <label class="lbl" for="mic">Microphone limit f_mic <output id="oMic">40 kHz</output></label>
+      <input id="mic" type="range" min="16" max="100" step="1" value="40">
+      <label class="lbl" for="p" style="margin-top:12px">Pitch p <output id="oP">0.50</output></label>
+      <input id="p" type="range" min="0.25" max="1" step="0.01" value="0.5" list="pticks">
+      <datalist id="pticks"><option value="0.25"></option><option value="0.5"></option><option value="1"></option></datalist>
+      <div class="ticks" aria-hidden="true"><span style="left:0%;transform:none">0.25</span><span style="left:33.33%">0.5</span><span style="right:0;transform:none">1.0</span></div>
+      <div class="btns" style="margin-top:12px">
+        <button id="bOrig">Play original</button>
+        <button id="bPitch" class="primary">Play pitched</button>
+      </div>
+      <p class="note" id="playNote">The jingle is 40 synthesised sine partials from a fixed seed, filtered at f_top and quantised to N bits with no dither.</p>
+    </div>
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+</section>
+
+<footer>Model: f_top = min(fs / 2, f_mic, f_source); after pitch p the top is p &times; f_top. Storage is fs &times; (N / 8) bytes per second per channel. Dynamic range 6.02 &times; N dB is the ideal figure for N-bit quantisation. The spectrum shape L(f) = &minus;6 &minus; 18 &times; f / 60 kHz dB is a drawing aid, not a measured key recording.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>n.toLocaleString('en-US',{maximumFractionDigits:1});
+const k1=hz=>(hz/1000).toFixed(1)+' kHz';
+let fs=48000,N=24,fsrc=60000,fmic=40000,p=0.5;
+const val=name=>+document.querySelector(`input[name=${name}]:checked`).value;
+const L=f=>f<=fsrc?-6-18*f/60000:-90;
+function model(){
+  const nyq=fs/2,top=Math.min(nyq,fmic,fsrc),after=p*top,empty=Math.max(0,20-after/1000);
+  const lim=top===nyq?'sample rate':(top===fmic?'microphone':'source');
+  return {nyq,top,after,empty,lim,dr:6.02*N,bpm:fs*(N/8)*60};
+}
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:44,r:14,t:14,b:34};
+function frame(g,w,h,xMax,xStep){
+  g.clearRect(0,0,w,h);
+  const X=f=>pad.l+(w-pad.l-pad.r)*f/xMax,Y=db=>pad.t+(h-pad.t-pad.b)*(-db/90);
+  // audible shade
+  g.fillStyle=css('--paper');g.fillRect(X(0),pad.t,X(Math.min(20000,xMax))-X(0),h-pad.t-pad.b);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let db=0;db>=-90;db-=30){const y=Y(db);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(db+'',pad.l-6,y);}
+  if(w<420)xStep*=2;
+  for(let f=0;f<=xMax;f+=xStep){g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.fillText(f/1000,X(f),h-pad.b+6);}
+  g.textAlign='left';g.fillText('kHz',2,h-pad.b+6);
+  g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='top';g.fillText('audible',X(0)+6,pad.t+4);
+  g.save();g.translate(2,pad.t+(h-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.fillText('dB',0,0);g.restore();
+  return {X,Y};
+}
+function spectrum(g,X,Y,h,xMax,fn,col){
+  g.beginPath();g.moveTo(X(0),Y(-90));
+  const n=400;for(let i=0;i<=n;i++){const f=xMax*i/n;g.lineTo(X(f),Y(Math.max(-90,fn(f))));}
+  g.lineTo(X(xMax),Y(-90));g.closePath();
+  g.fillStyle=col;g.globalAlpha=.18;g.fill();g.globalAlpha=1;g.strokeStyle=col;g.lineWidth=2.2;g.stroke();
+}
+function vline(g,x,Y,col,text,align){
+  g.strokeStyle=col;g.lineWidth=1.5;g.setLineDash([5,4]);g.beginPath();g.moveTo(x,Y(0));g.lineTo(x,Y(-90));g.stroke();g.setLineDash([]);
+  g.fillStyle=col;g.font='600 12px '+css('--sans');g.textAlign=align;g.textBaseline='top';g.fillText(text,x+(align==='left'?5:-5),Y(-8));
+}
+function floorLine(g,X,Y,xMax){
+  const dr=6.02*N;
+  if(dr<90){const y=Y(-dr);g.strokeStyle=css('--moss');g.setLineDash([2,3]);g.lineWidth=1.5;g.beginPath();g.moveTo(X(0),y);g.lineTo(X(xMax),y);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--moss');g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText(`${N}-bit noise floor −${dr.toFixed(1)} dB`,X(xMax)-2,y-2);}
+}
+function draw(){
+  const m=model();
+  let c=setupCanvas($('cRec')),g=c.g;let {X,Y}=frame(g,c.w,c.h,100000,20000);
+  spectrum(g,X,Y,c.h,100000,f=>f<=m.top?L(f):-90,css('--steel'));
+  floorLine(g,X,Y,100000);
+  vline(g,X(m.top),Y,css('--steel'),'f_top '+k1(m.top),m.top>70000?'right':'left');
+  c=setupCanvas($('cOut'));g=c.g;({X,Y}=frame(g,c.w,c.h,24000,4000));
+  const a=Math.min(m.after,24000);
+  if(m.empty>0){
+    const x0=X(m.after),x1=X(20000),y0=Y(0),y1=Y(-90);
+    g.save();g.beginPath();g.rect(x0,y0,x1-x0,y1-y0);g.clip();
+    g.fillStyle=css('--blood');g.globalAlpha=.1;g.fillRect(x0,y0,x1-x0,y1-y0);g.globalAlpha=.35;g.strokeStyle=css('--blood');g.lineWidth=1.5;
+    for(let x=x0-(y1-y0);x<x1;x+=9){g.beginPath();g.moveTo(x,y1);g.lineTo(x+(y1-y0),y0);g.stroke();}
+    g.restore();
+    g.fillStyle=css('--blood');g.font='700 13px '+css('--sans');g.textAlign='center';g.textBaseline='middle';
+    const lab='empty: '+m.empty.toFixed(1)+' kHz';const lx=(x0+x1)/2;
+    g.fillStyle=css('--paper-2');const tw=g.measureText(lab).width+10;g.fillRect(lx-tw/2,Y(-45)-10,tw,20);g.fillStyle=css('--blood');g.fillText(lab,lx,Y(-45));
+  }
+  spectrum(g,X,Y,c.h,24000,f=>f<=a?L(f/p):-90,css('--ochre'));
+  floorLine(g,X,Y,24000);
+  if(m.after<=24000)vline(g,X(m.after),Y,css('--ochre'),k1(m.after),m.after>17000?'right':'left');
+  // readouts
+  $('rNyq').textContent=fmt(m.nyq)+' Hz';$('rTop').textContent=k1(m.top);$('rLim').textContent=m.lim;
+  $('rAfter').textContent=k1(m.after);$('rEmpty').textContent=m.empty.toFixed(1)+' kHz';$('rP').textContent=p.toFixed(2)+'×';
+  $('rDR').textContent=m.dr.toFixed(1)+' dB';$('rBytes').textContent=m.bpm.toLocaleString('en-US');$('rMB').textContent=(m.bpm/1e6).toFixed(2)+' MB';
+  $('rFmt').textContent=`${fmt(fs/1000)} kHz, ${N}-bit`;
+  $('oMic').textContent=(fmic/1000)+' kHz';$('oP').textContent=p.toFixed(2);
+  const oct=Math.log2(1/p);
+  $('caption').textContent=(fs===48000&&p===0.5&&m.lim==='sample rate')?'One octave down, the top of a 48 kHz recording falls to 12 kHz.'
+    :`At pitch ${p.toFixed(2)} (${oct.toFixed(2)} octaves down), the top falls from ${k1(m.top)} to ${k1(m.after)}.`;
+  let s;
+  if(m.empty>0) s=`The top ${m.empty.toFixed(1)} kHz of hearing is now empty, and nothing can fill it: the ${m.lim} cut this recording at ${k1(m.top)}. `+
+    (m.lim==='sample rate'?`Recording at ${fmt(Math.min(192000,Math.ceil(2*20000/p/1000)*1000))} Hz or more would let this pitch reach 20 kHz, if the microphone reaches ${k1(20000/p)}.`
+     :m.lim==='microphone'?`A higher sample rate will not help. Only a microphone that reaches ${k1(20000/p)} would.`:`The source itself has nothing higher, so the recording chain is not the problem.`);
+  else s=`The pitched sound still reaches ${k1(Math.min(m.after,20000))} or more, so the audible band stays full.`+(m.after>24000?` The part above 24 kHz is thrown away by the 48 kHz mix.`:'');
+  $('insight').textContent=s;
+}
+
+// audio
+let ctx=null,master=null,muted=false,vol=0.7,renderRate=null;const cache={};
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function ensureAudio(){
+  if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('audioState').textContent='No Web Audio in this browser. The spectra still show the effect.';return false;}
+    ctx=new AC();master=ctx.createGain();master.connect(ctx.destination);}
+  if(ctx.state==='suspended')ctx.resume();
+  master.gain.value=muted?0:vol*0.9;$('audioState').textContent=muted?'Muted. The spectra show what you would hear.':'Sound on.';
+  return true;
+}
+function makeOffline(len){
+  const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  for(const r of [192000,96000,48000,44100]){try{const o=new OAC(1,Math.ceil(len*r),r);renderRate=r;return o;}catch(e){}}
+  return null;
+}
+async function render(){
+  const m=model(),key=[fsrc,m.top,N].join('/');if(cache[key])return cache[key];
+  const len=1.4,off=makeOffline(len);if(!off)return null;
+  const sr=off.sampleRate,n=Math.ceil(len*sr),data=new Float32Array(n),rnd=mulberry32(1234);
+  const hi=Math.min(fsrc,sr/2*0.98);
+  for(let k=0;k<40;k++){
+    const f=2000+rnd()*(fsrc-2000),t0=rnd()*0.3,tau=0.08+rnd()*0.17,ph=rnd()*6.283;
+    if(f>hi)continue;
+    const amp=Math.pow(10,L(f)/20)*0.12,i0=Math.floor(t0*sr),w=2*Math.PI*f/sr,iEnd=Math.min(n,i0+Math.ceil(tau*sr*7));
+    for(let i=i0;i<iEnd;i++){const t=(i-i0)/sr;data[i]+=amp*Math.exp(-t/tau)*Math.sin(w*(i-i0)+ph)*Math.min(1,t/0.001);}
+  }
+  const b=off.createBuffer(1,n,sr);b.copyToChannel(data,0);
+  const src=off.createBufferSource();src.buffer=b;let node=src;
+  const cut=Math.min(m.top,sr/2*0.95);
+  for(let i=0;i<4;i++){const bq=off.createBiquadFilter();bq.type='lowpass';bq.frequency.value=cut;bq.Q.value=0.707;node.connect(bq);node=bq;}
+  node.connect(off.destination);src.start();
+  const out=await off.startRendering(),d=out.getChannelData(0),q=Math.pow(2,N-1);
+  for(let i=0;i<d.length;i++)d[i]=Math.max(-1,Math.min(1,Math.round(d[i]*q)/q));
+  cache[key]=out;return out;
+}
+async function play(rate){
+  const m=model(),msg=rate===1?`Playing the original: top ${k1(Math.min(m.top,24000))} in the mix.`:`Playing at ${rate.toFixed(2)}×: top ${k1(m.after)}, ${m.empty.toFixed(1)} kHz of the audible band empty, ${(1.4/rate).toFixed(1)} s long.`;
+  $('playNote').textContent=msg;
+  if(!ensureAudio())return;
+  const b=await render();if(!b)return;
+  const s=ctx.createBufferSource();s.buffer=b;s.playbackRate.value=rate;s.connect(master);s.start(ctx.currentTime+0.03);
+  if(renderRate&&renderRate<192000)$('playNote').textContent=msg+` Rendered at ${fmt(renderRate)} Hz, the highest rate this browser allows.`;
+}
+$('bOrig').addEventListener('click',()=>play(1));
+$('bPitch').addEventListener('click',()=>play(p));
+$('mute').addEventListener('click',()=>{muted=!muted;$('mute').setAttribute('aria-pressed',muted);$('mute').textContent=muted?'Unmute':'Mute';if(ctx)ensureAudio();else $('audioState').textContent=muted?'Muted.':'Sound is off until you press a play button.';});
+$('vol').addEventListener('input',e=>{vol=e.target.value/100;$('oVol').textContent=e.target.value+'%';if(ctx&&!muted)master.gain.value=vol*0.9;});
+document.querySelectorAll('input[type=radio]').forEach(r=>r.addEventListener('change',()=>{fs=val('fs');N=val('bits');fsrc=val('src');draw();}));
+$('mic').addEventListener('input',e=>{fmic=e.target.value*1000;draw();});
+$('p').addEventListener('input',e=>{p=+e.target.value;draw();});
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+draw();
+})();
+</script>
+</body>
+</html>

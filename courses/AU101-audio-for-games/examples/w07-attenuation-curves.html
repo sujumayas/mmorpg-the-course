@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Attenuation Curves — AU101 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.audiobar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-bottom:14px;padding:10px 12px;border-radius:10px;background:var(--paper-2)}
+.btn{font:700 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn[aria-pressed="true"]{background:var(--blood);border-color:var(--blood);color:var(--paper)}
+.btn.sm{font-size:.85rem;padding:6px 11px;min-height:34px}
+.vol{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem}
+.vol input{width:110px}
+.scope{width:160px;height:40px;display:block;border-radius:6px;background:var(--paper)}
+.astatus{font-size:.85rem;color:var(--ink-soft);flex:1 1 220px}
+.layout{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1000px){.layout{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}}
+.stack{display:grid;gap:14px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#cMap{display:block;width:100%;aspect-ratio:1/1;max-width:520px;margin:0 auto;touch-action:none;cursor:grab;border-radius:6px}
+canvas.plot{display:block;width:100%;height:230px}
+.maptools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;font-size:.88rem}
+.maptools input[type=number]{width:4.6em}
+input[type=number]{font:600 .92rem var(--sans);padding:4px 6px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:16px;height:4px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.bars{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+.bar{height:8px;border-radius:4px;background:var(--grid);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c,var(--steel))}
+.controls{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+@media (min-width:900px){.controls{grid-template-columns:1fr 1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:8px 12px 10px;margin:0 0 10px;min-width:0}
+legend{font-weight:700;font-size:.9rem;padding:0 4px}
+.opt{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:3px 0;cursor:pointer}
+.opt input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+.curvegrid{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;font-size:.9rem}
+.curvegrid .h{font-size:.78rem;color:var(--ink-soft);font-weight:700}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:.92rem}
+.row output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding:0 0 6px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:520px){th,td{padding:5px 4px;font-size:.82rem}}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AU101 Audio for Games · Week 7 · Worked example</p>
+  <h1>One curve, two plots</h1>
+  <p class="lede">At 16 m the linear curve still has gain 0.516 and the inverse curve only 0.0625. On the gain plot, linear looks gentle and inverse looks brutal. On the decibel plot it flips. Inverse drops a steady 6 dB per doubling of distance, while linear stays flat and then falls off a cliff near its max distance. Your ear hears decibels.</p>
+</header>
+
+<section class="panel" aria-label="Distance attenuation model">
+  <div class="audiobar" role="group" aria-label="Sound controls">
+    <button class="btn primary" id="play" type="button">Play footsteps</button>
+    <label class="vol" for="vol">Volume <input id="vol" type="range" min="0" max="100" step="1" value="50"> <output id="oVol">50%</output></label>
+    <button class="btn" id="mute" type="button" aria-pressed="false">Mute</button>
+    <label class="opt" style="font-weight:600"><input type="checkbox" id="tone"> Tone (330 Hz)</label>
+    <canvas class="scope" id="scope" role="img" aria-label="Live waveform after distance gain and pan"></canvas>
+    <span class="astatus" id="aStatus">Sound is off. The map, plots and numbers work without it.</span>
+  </div>
+
+  <div class="layout">
+    <figure>
+      <figcaption>Top-down map<small>64 × 64 m, grid every 8 m. Drag the emitter, or focus the map and use the arrow keys (Shift = 4 m). Dashed circles: r and R.</small></figcaption>
+      <canvas id="cMap" tabindex="0" role="application" aria-roledescription="map" aria-label="Map. Arrow keys move the emitter 1 metre, Shift plus arrow 4 metres." aria-describedby="mapStatus"></canvas>
+      <div class="maptools">
+        <button class="btn sm" id="turnL" type="button">Turn left 15°</button>
+        <button class="btn sm" id="turnR" type="button">Turn right 15°</button>
+        <label for="ex">x</label><input type="number" id="ex" min="0" max="64" step="1" value="32">
+        <label for="ey">y</label><input type="number" id="ey" min="0" max="64" step="1" value="40">
+      </div>
+      <p class="hint" id="mapStatus" aria-live="polite"></p>
+    </figure>
+    <div class="stack">
+      <figure>
+        <figcaption>Gain plot<small>Linear gain against linear distance. What a curve editor usually shows.</small></figcaption>
+        <canvas class="plot" id="cGain" role="img" aria-label="Gain against distance for each selected curve"></canvas>
+      </figure>
+      <figure>
+        <figcaption>Level plot<small>Decibels against distance on a log2 axis. Each tick is one doubling. What your ear hears.</small></figcaption>
+        <canvas class="plot" id="cLevel" role="img" aria-label="Level in decibels against distance on a logarithmic axis"></canvas>
+        <div class="legend" id="legend"></div>
+      </figure>
+    </div>
+  </div>
+
+  <div class="readout" aria-live="polite" id="readout">
+    <div class="stat" style="--c:var(--ink)"><b id="rD">—</b><span>distance</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rP">—</b><span>pan p</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rLR">—</b><span>left / right gain</span>
+      <div class="bars" aria-hidden="true"><div class="bar"><i id="bL" style="--c:var(--steel)"></i></div><div class="bar"><i id="bR" style="--c:var(--steel)"></i></div></div></div>
+    <div class="stat" style="--c:var(--ochre)" id="heardStat"><b id="rHeard">—</b><span id="rHeardL">heard gain</span>
+      <div class="bars" aria-hidden="true"><div class="bar"><i id="bH" style="--c:var(--ochre)"></i></div></div></div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Each drawn curve at the emitter's distance</caption>
+      <thead><tr><th>Curve</th><th>Gain</th><th>Level</th><th>−20 dB at</th><th>−40 dB at</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <fieldset>
+        <legend>Curves</legend>
+        <div class="curvegrid" id="curves">
+          <span class="h">Draw</span><span class="h">Drives audio</span>
+        </div>
+      </fieldset>
+      <p class="hint" id="audioNote"></p>
+    </div>
+    <div>
+      <div class="row"><label for="r">Min distance r</label><output id="oR">1.0 m</output></div>
+      <input id="r" type="range" min="0.5" max="10" step="0.5" value="1">
+      <div class="row"><label for="R">Max distance R</label><output id="oRR">32 m</output></div>
+      <input id="R" type="range" min="4" max="64" step="1" value="32">
+      <label class="opt"><input type="checkbox" id="R0"> Godot curve: R = 0 (no taper)</label>
+      <div class="row"><label for="f">Rolloff f</label><output id="oF">1.0</output></div>
+      <input id="f" type="range" min="0.5" max="4" step="0.1" value="1">
+    </div>
+    <div>
+      <span style="font-weight:700;font-size:.92rem">Presets</span>
+      <div class="presets" role="group" aria-label="Presets">
+        <button class="chip" type="button" data-p="phys" aria-pressed="false">Physical</button>
+        <button class="chip" type="button" data-p="h16" aria-pressed="false">Hard edge at 16</button>
+        <button class="chip" type="button" data-p="h32" aria-pressed="false">Hard edge at 32</button>
+        <button class="chip" type="button" data-p="godot" aria-pressed="false">Godot default</button>
+      </div>
+      <p class="hint" id="presetNote">Presets set the curve that drives the audio and the sliders it needs.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Doubling table: every drawn curve at 1, 2, 4 ... 64 m</caption>
+      <thead id="dhead"></thead>
+      <tbody id="dbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Curve formulas follow the lecture: inverse r / (r + f(d − r)), linear with a hard stop at R, the tapered minimum of both, and a Godot-style inverse capped at +3 dB with an optional linear taper to R. Pan is a plain equal-power stereo pan computed from the listener's right-hand vector, so what you hear is exactly the model on screen. The "hard edge at 32" preset mirrors the reach of a volume-2 sound in the Minecraft hook; the curve shape inside Minecraft's radius is not modeled. Footsteps are band-passed noise synthesized in the browser. No game audio or art is used.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const CUR=[
+  {id:'inverse',name:'Inverse',col:'--steel',draw:true},
+  {id:'linear',name:'Linear',col:'--blood',draw:true},
+  {id:'tapered',name:'Tapered',col:'--ochre',draw:false},
+  {id:'godot',name:'Godot-style',col:'--moss',draw:false},
+];
+const S={r:1,R:32,f:1,R0:false,drive:'inverse',P:{x:32,y:32},E:{x:32,y:40},face:0};
+
+// ---------- model ----------
+function inverse(d,f){f=f===undefined?S.f:f;return S.r/(S.r+f*(Math.max(d,S.r)-S.r));}
+function linear(d,f){f=f===undefined?S.f:f;return Math.max(0,1-f*(Math.min(Math.max(d,S.r),S.R)-S.r)/(S.R-S.r));}
+function tapered(d){const l=linear(d,1);return Math.min(inverse(d,1),l*l);}
+function godot(d){const R=S.R0?0:S.R;return Math.min(Math.pow(10,3/20),S.r/Math.max(d,1e-6))*(R>0?Math.max(0,1-d/R):1);}
+const G={inverse:d=>inverse(d),linear:d=>linear(d),tapered,godot};
+const L=g=>g<=0?-Infinity:20*Math.log10(g);
+function crossing(fn,thr){
+  if(L(fn(10000))>thr)return null;
+  let lo=0,hi=10000;
+  if(L(fn(lo))<=thr)return 0;
+  while(hi-lo>0.001){const m=(lo+hi)/2;if(L(fn(m))>thr)lo=m;else hi=m;}
+  return (lo+hi)/2;
+}
+function geom(){
+  const dx=S.E.x-S.P.x,dy=S.E.y-S.P.y,d=Math.hypot(dx,dy);
+  const th=S.face*Math.PI/180,right={x:Math.cos(th),y:-Math.sin(th)};
+  let p=d<1e-9?0:(dx*right.x+dy*right.y)/d;p=Math.max(-1,Math.min(1,p));
+  const a=(p+1)/2*Math.PI/2;
+  return{d,p,left:Math.cos(a),right:Math.sin(a)};
+}
+// formatting
+const minus=s=>s.replace(/^-/,'−');
+function fmtG(g){if(g===0)return '0';const s3=g.toFixed(3),s4=g.toFixed(4);const exact4=Math.abs(g*1e4-Math.round(g*1e4))<1e-7;return(exact4&&s4[s4.length-1]!=='0'&&g<1)?s4:s3;}
+function fmtL(g){const v=L(g);return v===-Infinity?'−inf':minus((Math.abs(v)<0.05?0:v).toFixed(1))+' dB';}
+function fmtX(x){return x===null?'never':x.toFixed(1)+' m';}
+
+// ---------- drawing ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return{g,w:r.width,h:r.height};}
+function drawMap(){
+  const o=setup($('cMap')),g=o.g,W=o.w,k=W/64;
+  const X=x=>x*k,Y=y=>W-y*k;
+  g.fillStyle=css('--paper');g.fillRect(0,0,W,W);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');
+  for(let v=0;v<=64;v+=8){g.beginPath();g.moveTo(X(v),0);g.lineTo(X(v),W);g.stroke();g.beginPath();g.moveTo(0,Y(v));g.lineTo(W,Y(v));g.stroke();}
+  g.textAlign='left';g.textBaseline='top';g.fillText('8 m',X(0)+3,Y(8)+2);
+  // circles
+  g.save();g.setLineDash([6,5]);g.lineWidth=1.5;g.strokeStyle=css('--ink-soft');
+  g.beginPath();g.arc(X(S.P.x),Y(S.P.y),S.r*k,0,Math.PI*2);g.stroke();
+  const Rv=(S.drive==='godot'&&S.R0)?0:S.R;
+  if(Rv>0){g.strokeStyle=css('--blood');g.beginPath();g.arc(X(S.P.x),Y(S.P.y),Rv*k,0,Math.PI*2);g.stroke();
+    g.fillStyle=css('--blood');g.textAlign='center';g.textBaseline='bottom';const ly=Y(S.P.y)-Rv*k+14;if(ly>10)g.fillText('R = '+Rv+' m',X(S.P.x),Math.max(12,ly));}
+  g.restore();
+  // line
+  const gm=geom();
+  g.strokeStyle=css('--ink');g.globalAlpha=.45;g.lineWidth=1.5;g.beginPath();g.moveTo(X(S.P.x),Y(S.P.y));g.lineTo(X(S.E.x),Y(S.E.y));g.stroke();g.globalAlpha=1;
+  // listener
+  const th=S.face*Math.PI/180,fx=Math.sin(th),fy=Math.cos(th);
+  const cx=X(S.P.x),cy=Y(S.P.y),rad=Math.max(7,k*1.2);
+  g.fillStyle=css('--ink');g.beginPath();g.arc(cx,cy,rad,0,Math.PI*2);g.fill();
+  g.strokeStyle=css('--ink');g.lineWidth=3;g.beginPath();g.moveTo(cx,cy);const ax=cx+fx*rad*2.6,ay=cy-fy*rad*2.6;g.lineTo(ax,ay);g.stroke();
+  g.beginPath();g.moveTo(ax,ay);g.lineTo(ax-fx*8+fy*6,ay+fy*8+fx*6);g.lineTo(ax-fx*8-fy*6,ay+fy*8-fx*6);g.closePath();g.fillStyle=css('--ink');g.fill();
+  g.fillStyle=css('--paper');g.font='700 10px '+css('--sans');g.textAlign='center';g.textBaseline='middle';
+  g.fillText('L',cx-Math.cos(th)*rad*0.5,cy-Math.sin(th)*rad*0.5);g.fillText('R',cx+Math.cos(th)*rad*0.5,cy+Math.sin(th)*rad*0.5);
+  // emitter
+  const col=css(CUR.find(c=>c.id===S.drive).col);
+  const ex=X(S.E.x),ey=Y(S.E.y);
+  g.fillStyle=col;g.beginPath();g.arc(ex,ey,Math.max(8,k*1.1),0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2.5;g.stroke();
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign=S.E.x>52?'right':'left';g.textBaseline='bottom';
+  g.fillText(gm.d.toFixed(1)+' m',ex+(S.E.x>52?-12:12),ey-6);
+}
+function plotFrame(o,pad,xs,ys,xt,yt,xf,yf,xl){const g=o.g;g.font='12px '+css('--sans');g.lineWidth=1;g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');
+  yt.forEach(v=>{const y=ys(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(o.w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(yf(v),pad.l-6,y);});
+  xt.forEach(v=>{const x=xs(v);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,o.h-pad.b);g.stroke();g.textAlign='center';g.textBaseline='top';g.fillText(xf(v),x,o.h-pad.b+5);});
+  g.textAlign='right';g.textBaseline='bottom';g.fillText(xl,o.w-pad.r,o.h-2);}
+function drawPlots(){
+  const d=geom().d,on=CUR.filter(c=>c.draw);
+  // gain
+  let o=setup($('cGain')),g=o.g,pad={l:44,r:12,t:10,b:36};
+  const ymax=on.some(c=>c.id==='godot')?1.5:1;
+  let W=o.w-pad.l-pad.r,H=o.h-pad.t-pad.b;
+  let xs=v=>pad.l+W*v/64,ys=v=>pad.t+H*(1-v/ymax);
+  plotFrame(o,pad,xs,ys,[0,8,16,24,32,40,48,56,64],ymax>1?[0,.5,1,1.5]:[0,.25,.5,.75,1],v=>v,v=>v.toFixed(2),'distance (m)');
+  on.forEach(c=>{g.strokeStyle=css(c.col);g.lineWidth=c.id===S.drive?3:2;g.beginPath();for(let i=0;i<=640;i++){const x=64*i/640,y=Math.min(ymax,G[c.id](x));i?g.lineTo(xs(x),ys(y)):g.moveTo(xs(x),ys(y));}g.stroke();});
+  mark(g,xs(Math.min(64,d)),pad.t,o.h-pad.b);
+  if(d<=64)on.forEach(c=>dot(g,xs(d),ys(Math.min(ymax,G[c.id](d))),css(c.col)));
+  // level
+  o=setup($('cLevel'));g=o.g;pad={l:48,r:12,t:10,b:36};W=o.w-pad.l-pad.r;H=o.h-pad.t-pad.b;
+  xs=v=>pad.l+W*(Math.log2(v)+1)/7;ys=v=>pad.t+H*(1-(v+60)/63);
+  plotFrame(o,pad,xs,ys,[0.5,1,2,4,8,16,32,64],[-60,-40,-20,0],v=>v,v=>(v<0?'−':'')+Math.abs(v)+' dB','distance (m, log2)');
+  g.save();g.setLineDash([6,4]);g.strokeStyle=css('--ink-soft');g.lineWidth=1.2;[-20,-40].forEach(v=>{g.beginPath();g.moveTo(pad.l,ys(v));g.lineTo(o.w-pad.r,ys(v));g.stroke();});
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText('about inaudible in a mix',pad.l+4,ys(-40)-2);g.fillText('−20 dB',pad.l+4,ys(-20)-2);g.restore();
+  g.save();g.beginPath();g.rect(pad.l,pad.t-2,W,H+4);g.clip();
+  on.forEach(c=>{g.strokeStyle=css(c.col);g.lineWidth=c.id===S.drive?3:2;g.beginPath();let started=false;
+    for(let i=0;i<=700;i++){const x=Math.pow(2,-1+7*i/700);let v=L(G[c.id](x));if(v===-Infinity){if(started){g.lineTo(xs(x),ys(-64));}break;}v=Math.max(-64,v);if(!started){g.moveTo(xs(x),ys(v));started=true;}else g.lineTo(xs(x),ys(v));}
+    g.stroke();});
+  g.restore();
+  const dd=Math.max(0.5,Math.min(64,d));mark(g,xs(dd),pad.t,o.h-pad.b);
+  on.forEach(c=>{const v=L(G[c.id](d));dot(g,xs(dd),ys(Math.max(-60,Math.min(3,v))),css(c.col),v<-60);});
+  $('legend').innerHTML=on.map(c=>`<span><i style="background:var(${c.col})"></i>${c.name}${c.id===S.drive?' (audio)':''}</span>`).join('');
+}
+function mark(g,x,t,b){g.save();g.strokeStyle=css('--ink');g.globalAlpha=.5;g.setLineDash([4,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(x,t);g.lineTo(x,b);g.stroke();g.restore();}
+function dot(g,x,y,col,hollow){g.beginPath();g.arc(x,y,5.5,0,Math.PI*2);if(hollow){g.fillStyle=css('--paper');g.fill();g.strokeStyle=col;g.lineWidth=2;g.stroke();}else{g.fillStyle=col;g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}}
+
+// ---------- readouts ----------
+function readouts(){
+  const gm=geom(),d=gm.d;
+  $('rD').textContent=d.toFixed(1)+' m';
+  $('rP').textContent=minus(gm.p.toFixed(2));
+  $('rLR').textContent=gm.left.toFixed(3)+' / '+gm.right.toFixed(3);
+  $('bL').style.width=(gm.left*100)+'%';$('bR').style.width=(gm.right*100)+'%';
+  const gd=G[S.drive](d);
+  $('rHeard').textContent=fmtG(gd);$('rHeardL').textContent='heard gain, '+fmtL(gd)+' ('+CUR.find(c=>c.id===S.drive).name.toLowerCase()+')';
+  $('bH').style.width=Math.min(100,gd*100)+'%';
+  $('heardStat').style.setProperty('--c','var('+CUR.find(c=>c.id===S.drive).col+')');
+  const on=CUR.filter(c=>c.draw);
+  $('tbody').innerHTML=on.map(c=>{const g=G[c.id](d);return `<tr><td><i style="background:var(${c.col})"></i>${c.name}</td><td>${fmtG(g)}</td><td>${fmtL(g)}</td><td>${fmtX(crossing(G[c.id],-20))}</td><td>${fmtX(crossing(G[c.id],-40))}</td></tr>`;}).join('')||'<tr><td colspan="5">Tick a curve to draw it.</td></tr>';
+  $('mapStatus').textContent=`Emitter at (${S.E.x}, ${S.E.y}), ${d.toFixed(1)} m away, pan ${minus(gm.p.toFixed(2))}. Listener faces ${S.face}° from +y.`;
+  // doubling table
+  const ds=[1,2,4,8,16,32,64];
+  $('dhead').innerHTML='<tr><th>Distance</th>'+on.map(c=>`<th>${c.name} gain</th><th>dB</th>`).join('')+'</tr>';
+  $('dbody').innerHTML=ds.map(x=>`<tr class="${Math.abs(x-d)<0.05?'here':''}"><td>${x} m</td>`+on.map(c=>{const g=G[c.id](x);return `<td>${fmtG(g)}</td><td>${fmtL(g).replace(' dB','')}</td>`;}).join('')+'</tr>').join('');
+  // insight
+  let s;
+  const inv=inverse(d),lin=linear(d);
+  if(S.r===1&&S.f===1&&CUR[0].draw&&CUR[1].draw){
+    const c20=crossing(G.linear,-20),c40=crossing(G.linear,-40),i20=crossing(G.inverse,-20),i40=crossing(G.inverse,-40);
+    s=`Here, ${d.toFixed(1)} m out, inverse gives ${fmtG(inv)} (${fmtL(inv)}) and linear gives ${fmtG(lin)} (${fmtL(lin)}). `;
+    s+=`Linear takes you from −20 dB to −40 dB in <b>${c20!==null&&c40!==null?(c40-c20).toFixed(1):'—'} m</b> (${fmtX(c20)} to ${fmtX(c40)}), a cliff. Inverse takes <b>${i20!==null&&i40!==null?(i40-i20).toFixed(1):'—'} m</b> (${fmtX(i20)} to ${fmtX(i40)}), a slope of 6 dB per doubling. Walk the emitter out along the facing arrow and listen for where each one disappears.`;
+  } else {
+    s=`The level plot is the honest one. A straight line there means the sound fades evenly to your ear. A curve that bends straight down is a wall the player will notice.`;
+    if(S.drive==='godot')s+=` The Godot-style curve starts at +3 dB inside r and never reaches silence without a taper, so a sound can be heard from very far away.`;
+  }
+  $('insight').innerHTML=s;
+}
+
+// ---------- audio ----------
+let AC=null,bus=null,dist=null,pan=null,master=null,analyser=null,noiseBuf=null,osc=null,oscG=null,running=false,timer=0,nextT=0;
+function volVal(){return $('mute').getAttribute('aria-pressed')==='true'?0:(+$('vol').value/100);}
+function startAudio(){
+  try{
+    if(!AC){
+      const C=window.AudioContext||window.webkitAudioContext;if(!C)throw new Error('no audio');
+      AC=new C();if(!AC.createStereoPanner)throw new Error('no panner');
+      bus=AC.createBiquadFilter();bus.type='bandpass';bus.frequency.value=900;bus.Q.value=1.2;
+      dist=AC.createGain();pan=AC.createStereoPanner();master=AC.createGain();analyser=AC.createAnalyser();analyser.fftSize=1024;
+      bus.connect(dist);dist.connect(pan);pan.connect(analyser);pan.connect(master);master.connect(AC.destination);
+      const n=Math.round(AC.sampleRate*0.06);noiseBuf=AC.createBuffer(1,n,AC.sampleRate);const dch=noiseBuf.getChannelData(0);
+      let seed=7;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+      for(let i=0;i<n;i++)dch[i]=(rnd()*2-1)*Math.exp(-i/(AC.sampleRate*0.012))*1.6;
+      osc=AC.createOscillator();osc.type='triangle';osc.frequency.value=330;oscG=AC.createGain();oscG.gain.value=0;osc.connect(oscG);oscG.connect(dist);osc.start();
+    }
+    AC.resume();running=true;master.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);
+    oscG.gain.setTargetAtTime($('tone').checked?0.12:0,AC.currentTime,0.02);
+    nextT=AC.currentTime+0.05;clearInterval(timer);timer=setInterval(sched,25);sched();
+    pushAudio();$('play').textContent='Stop footsteps';$('aStatus').textContent='Playing. Headphones make the pan easy to hear.';loop();
+  }catch(e){$('aStatus').textContent='Sound is unavailable in this browser. The map, plots and numbers still work.';}
+}
+function sched(){if(!running)return;while(nextT<AC.currentTime+0.1){const s=AC.createBufferSource();s.buffer=noiseBuf;s.connect(bus);s.start(nextT);nextT+=0.45;}}
+function stopAudio(){running=false;clearInterval(timer);if(AC){master.gain.setTargetAtTime(0,AC.currentTime,0.02);oscG.gain.setTargetAtTime(0,AC.currentTime,0.02);}$('play').textContent='Play footsteps';$('aStatus').textContent='Sound is off. The map, plots and numbers work without it.';}
+function pushAudio(){if(!AC||!running)return;const gm=geom(),t=AC.currentTime;dist.gain.setTargetAtTime(G[S.drive](gm.d),t,0.02);pan.pan.setTargetAtTime(gm.p,t,0.02);}
+let raf=0;
+function loop(){cancelAnimationFrame(raf);const step=()=>{drawScope();if(running)raf=requestAnimationFrame(step);else drawScope();};raf=requestAnimationFrame(step);}
+function drawScope(){const o=setup($('scope')),g=o.g;g.strokeStyle=css('--steel');g.lineWidth=1.5;g.beginPath();
+  if(analyser&&running){const d=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(d);for(let i=0;i<d.length;i++){const x=o.w*i/(d.length-1),y=o.h/2-d[i]*o.h*0.9;i?g.lineTo(x,y):g.moveTo(x,y);}}
+  else{g.moveTo(0,o.h/2);g.lineTo(o.w,o.h/2);}g.stroke();}
+
+// ---------- controls ----------
+function update(){readouts();drawMap();drawPlots();pushAudio();}
+function setE(x,y){S.E.x=Math.max(0,Math.min(64,Math.round(x)));S.E.y=Math.max(0,Math.min(64,Math.round(y)));$('ex').value=S.E.x;$('ey').value=S.E.y;update();}
+function clearPreset(){document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));}
+$('curves').insertAdjacentHTML('beforeend',CUR.map(c=>`<label class="opt"><input type="checkbox" data-c="${c.id}" ${c.draw?'checked':''}><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:var(${c.col})"></i>${c.name}</label><label class="opt" style="justify-content:center"><input type="radio" name="drive" value="${c.id}" ${c.id===S.drive?'checked':''} aria-label="${c.name} drives the audio"></label>`).join(''));
+function syncCurves(){document.querySelectorAll('[data-c]').forEach(x=>{x.checked=CUR.find(c=>c.id===x.dataset.c).draw;});document.querySelectorAll('input[name=drive]').forEach(x=>x.checked=x.value===S.drive);}
+document.querySelectorAll('[data-c]').forEach(x=>x.addEventListener('change',()=>{CUR.find(c=>c.id===x.dataset.c).draw=x.checked;update();}));
+document.querySelectorAll('input[name=drive]').forEach(x=>x.addEventListener('change',()=>{S.drive=x.value;const c=CUR.find(c=>c.id===x.value);c.draw=true;syncCurves();clearPreset();update();}));
+function syncSliders(){$('r').value=S.r;$('R').value=S.R;$('f').value=S.f;$('R0').checked=S.R0;$('oR').textContent=S.r.toFixed(1)+' m';$('oRR').textContent=S.R+' m';$('oF').textContent=S.f.toFixed(1);}
+$('r').addEventListener('input',e=>{S.r=+e.target.value;if(S.R<=S.r){S.R=Math.ceil(S.r+1);}syncSliders();clearPreset();update();});
+$('R').addEventListener('input',e=>{S.R=Math.max(+e.target.value,S.r+0.5);syncSliders();clearPreset();update();});
+$('f').addEventListener('input',e=>{S.f=+e.target.value;syncSliders();clearPreset();update();});
+$('R0').addEventListener('change',e=>{S.R0=e.target.checked;clearPreset();update();});
+const PRE={
+  phys:{drive:'inverse',r:1,f:1,note:'Physical: inverse curve, r = 1 m, rolloff 1. Every doubling of distance costs 6 dB, like sound in open air.'},
+  h16:{drive:'linear',r:1,R:16,f:1,note:'Hard edge at 16: linear, r = 1 m, R = 16 m. Quiet by 12 m, gone at 16 m.'},
+  h32:{drive:'linear',r:1,R:32,f:1,note:'Hard edge at 32: linear, r = 1 m, R = 32 m, the reach of a volume-2 sound in the Minecraft hook. Only the hard cut at 32 m is modeled.'},
+  godot:{drive:'godot',r:10,R0:true,note:'Godot default: inverse from a 10 m unit size, capped at +3 dB, R = 0 so there is no taper. It is still −40 dB at 1,000 m.'}
+};
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const p=PRE[b.dataset.p];clearPreset();b.setAttribute('aria-pressed','true');
+  S.drive=p.drive;S.r=p.r;S.f=p.f===undefined?S.f:p.f;if(p.R)S.R=p.R;S.R0=!!p.R0;
+  CUR.find(c=>c.id===p.drive).draw=true;syncCurves();syncSliders();$('presetNote').textContent=p.note;update();
+}));
+$('ex').addEventListener('change',e=>setE(+e.target.value,S.E.y));
+$('ey').addEventListener('change',e=>setE(S.E.x,+e.target.value));
+$('turnL').addEventListener('click',()=>{S.face=(S.face-15+360)%360;update();});
+$('turnR').addEventListener('click',()=>{S.face=(S.face+15)%360;update();});
+const map=$('cMap');
+map.addEventListener('keydown',e=>{const s=e.shiftKey?4:1;let dx=0,dy=0;
+  if(e.key==='ArrowLeft')dx=-s;else if(e.key==='ArrowRight')dx=s;else if(e.key==='ArrowUp')dy=s;else if(e.key==='ArrowDown')dy=-s;else return;
+  e.preventDefault();setE(S.E.x+dx,S.E.y+dy);});
+let drag=false;
+function toMap(ev){const r=map.getBoundingClientRect();return{x:(ev.clientX-r.left)/r.width*64,y:64-(ev.clientY-r.top)/r.height*64};}
+map.addEventListener('pointerdown',ev=>{drag=true;map.setPointerCapture(ev.pointerId);const m=toMap(ev);setE(m.x,m.y);});
+map.addEventListener('pointermove',ev=>{if(!drag)return;const m=toMap(ev);setE(m.x,m.y);});
+['pointerup','pointercancel'].forEach(t=>map.addEventListener(t,()=>{drag=false;}));
+$('play').addEventListener('click',()=>running?stopAudio():startAudio());
+$('vol').addEventListener('input',e=>{$('oVol').textContent=e.target.value+'%';if(AC&&running)master.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);});
+$('mute').addEventListener('click',()=>{const m=$('mute').getAttribute('aria-pressed')!=='true';$('mute').setAttribute('aria-pressed',m);$('mute').textContent=m?'Muted':'Mute';if(AC&&running)master.gain.setTargetAtTime(volVal(),AC.currentTime,0.02);});
+$('tone').addEventListener('change',e=>{if(AC&&running)oscG.gain.setTargetAtTime(e.target.checked?0.12:0,AC.currentTime,0.02);});
+if(!(window.AudioContext||window.webkitAudioContext)){$('aStatus').textContent='This browser has no Web Audio. The map, plots and numbers still work.';$('play').disabled=true;}
+window.addEventListener('resize',()=>{drawMap();drawPlots();drawScope();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawMap();drawPlots();drawScope();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawMap();drawPlots();});
+update();drawScope();
+})();
+</script>
+</body>
+</html>
