@@ -226,7 +226,7 @@ Expected output: the six numbers, the plots, the sentence and the question. Pair
 
 ## Sources
 
-- Thompson, C. (2007). "Halo 3: How Microsoft Labs Invented a New Science of Play." *Wired* 15.09, August 2007 (reprinted by ABC News). Randy Pagulayan's team logging weapon use, causes and locations of death, and building death heat maps during *Halo 3* development.
+- Thompson, C. (2007). "Halo 3: How Microsoft Labs Invented a New Science of Play." *Wired* 15.09, published online 21 August 2007 (wired.com/2007/08/ff-halo-2/, re-read September 2026). Randy Pagulayan's team logged player locations, weapon fire and deaths, produced maps of where testers died and charts of how they died, and a death "heat map" of the Valhalla multiplayer level led Bungie to change its terrain.
 - Warcraft Logs, rankings help page, and the third-party guide "What your WoW parse score means" (wowcoach.gg, accessed September 2026). Parse as a percentile against the same spec, boss and difficulty; colour bands at 25, 50, 75, 95, 99 and 100. Warcraft Logs is a community tool, not part of the game.
 - HowLongToBeat, per-game statistics pages (accessed September 2026). Average, median, rushed and leisure completion times from user submissions.
 - SteamSpy API documentation (steamspy.com/api.php, accessed September 2026). Fields `average_forever` and `median_forever`, in minutes, since March 2009. SteamSpy figures are estimates.

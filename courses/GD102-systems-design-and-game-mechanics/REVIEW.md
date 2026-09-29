@@ -43,3 +43,7 @@ These were checked live, and fixes were applied where needed:
 - Dwarf Fortress cat fix, which is dated 12 December 2015, not 8 December (fixed).
 - Cookie Clicker base values.
 - Stardew watering energy and XP table.
+
+## Fact sweep (2026-09-29)
+
+No open items. Every fact was resolved in the second pass. No "(verify" markers. Verified 0, hedged 0, removed 0.

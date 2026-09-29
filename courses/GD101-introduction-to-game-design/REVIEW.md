@@ -11,5 +11,10 @@ Reviewer pass, September 2026. Small fixes were made in place. The items below n
 | lectures/w08 | Supercell counts depend on Wikipedia's live games table (7 released, at least 13 discontinued as of September 2026; Squad Busters marked as shutting down in 2026). The lecture now avoids an exact discontinued count. | Re-read the table before each teaching year. |
 | syllabus.md | Still carries the generated-stub marker. Schedule links now resolve to all 14 lectures and examples. | Orchestrator hand-finishes the syllabus and removes the marker. |
 | lectures/w04, w07, w08 (prerequisites) | Logarithms are used before or alongside MA101 week 5 (a co-requisite, same semester). Weeks 4 and 7 now tell students to treat `ln a / ln b` as a calculator recipe; week 8 relies on week 7's note. | Accept, or move the log-based questions to a later week. |
-</content>
-</invoke>
+
+## Fact sweep (2026-09-29)
+
+- Verified: Celeste Assist Mode game speed down to 50% in multiples of 10% (celeste.ink "Assist Mode", w05 source updated). Condor acquisition in 1996 (Wikipedia "Diablo (video game)" says it followed CUC's February 1996 purchase of Davidson/Blizzard; "Blizzard Entertainment" also says 1996). The w14 text now gives the year and the source line cites both.
+- Hedged: *Rules of Play* chapter numbers (w01, w03, w09 and the w01 example footer). No table of contents was reachable (Open Library has none, Crossref has no chapter records). These now cite chapters by title only. The "Rules on Three Levels" title (w02) is now "the chapter on operational, constitutive and implicit rules", with the title marked unchecked. Fullerton's eight elements (w02). Ch. 3's title "Working with Formal Elements" is confirmed by DOI 10.1201/b22309-13. The chapter text was not reachable, so the lecture now says "this course uses eight" and the source notes the list was checked against Schreiber only.
+- Removed: flOw Flash "20 levels" (w05). Neither jenovachen.com nor Wikipedia gives a count. The lesson does not need it.
+- Counts: verified 2, hedged 2, removed 1.

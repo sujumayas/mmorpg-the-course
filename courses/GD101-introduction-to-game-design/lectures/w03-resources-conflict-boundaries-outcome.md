@@ -8,7 +8,7 @@
 - Explain how changing the starting lives moves the band of players for whom the outcome is uncertain.
 - Critique a boundary between a game and the real world, such as a real-money exchange, by naming what crosses it.
 
-**Before class:** Fullerton, *Game Design Workshop* (4th ed., 2018), chapter 3, the sections on resources, conflict, boundaries and outcome. Salen & Zimmerman, *Rules of Play* (2003), chapter 9, "The Magic Circle". Ian Schreiber, *Game Design Concepts* (2009), "Level 3: Formal Elements of Games", sections on resources and game state.
+**Before class:** Fullerton, *Game Design Workshop* (4th ed., 2018), chapter 3, the sections on resources, conflict, boundaries and outcome. Salen & Zimmerman, *Rules of Play* (2003), the chapter "The Magic Circle". Ian Schreiber, *Game Design Concepts* (2009), "Level 3: Formal Elements of Games", sections on resources and game state.
 
 **Prerequisites from earlier courses:** None. From this course, [week 1](w01-what-is-a-game.md) (Juul's variable outcome, the magic circle) and [week 2](w02-players-objectives-procedures-rules.md) (players, objectives, procedures, rules). You need fractions and multiplication only. MA102 later treats the probability here formally in [week 7, the geometric distribution](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w07-geometric-distribution-kills-until-the-drop.md).
 
@@ -235,7 +235,7 @@ The type of outcome shapes behaviour. Zero-sum outcomes push players against eac
 
 - Fullerton, T. (2018). *Game Design Workshop*, 4th ed. CRC Press, chapter 3. Resources, conflict (obstacles, opponents, dilemmas), boundaries and outcome.
 - Schreiber, I. (2009). *Game Design Concepts*, "Level 3: Formal Elements of Games". Resource examples including time and information; game state.
-- Salen, K. & Zimmerman, E. (2003). *Rules of Play*. MIT Press, chapter 9, "The Magic Circle".
+- Salen, K. & Zimmerman, E. (2003). *Rules of Play*. MIT Press, the chapter "The Magic Circle" (cited by title; chapter number not checked).
 - Wikipedia, "Magic circle (games)" (accessed September 2026). Huizinga (1938); the term coined by Zimmerman and Lantz in 1999; Castronova's porous membrane.
 - Castronova, E. (2005). *Synthetic Worlds: The Business and Culture of Online Games*. University of Chicago Press.
 - Wikipedia, "Super Mario Bros." (accessed September 2026). Extra lives from 100 coins and 1-Up Mushrooms; holding A on the game-over screen restarts at the first level of the current world (NES, 1985).

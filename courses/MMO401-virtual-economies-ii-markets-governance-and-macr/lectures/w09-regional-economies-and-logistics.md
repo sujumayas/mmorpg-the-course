@@ -212,7 +212,7 @@ Expected output: a target `τ`, a route design with its calculation, the effect 
 - Warcraft Wiki, "Auction House" (retail). Patch 9.2.7 (16 August 2022): commodities shared across all realms in a region, other items realm-specific.
 - Guild Wars 2 Wiki, "Trading Post" (current). One market for all NA and EU worlds.
 - Wikipedia, "Albion Online" (checked September 2026). Released 17 July 2017; fully player-driven economy with all equipment made by players; full loot on death in red and black zones.
-- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press. Chapters 9-12.
+- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press. Chapters 9-12: 9 "Institutions and Nonmarket Allocation", 10 "Money", 11 "Macroeconomic Design", 12 "Macroeconomic Management" (titles and order from the MIT Press chapter DOIs 10.7551/mitpress/9525.003.0010 to .0013 on Crossref, checked September 2026).
 - Two-market trade with transport costs and agglomeration follow standard trade and economic geography texts, for example Krugman, P. (1991), "Increasing Returns and Economic Geography", *Journal of Political Economy* 99(3).
 
 ## Interactive spec: examples/w09-two-region-trade.html

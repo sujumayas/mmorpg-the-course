@@ -241,7 +241,7 @@ Expected output: the numbers, plus five lines. Hint for step 1: the residual is 
 - CCP Games, *Monthly Economic Report, October 2024*, eveonline.com (retrieved September 2026). Money supply and money velocity charts shown without a published definition or formula.
 - EVE University Wiki, "Trade hubs" (accessed September 2026), citing the EVE Monthly Economic Report for February 2025. Market offer value at Jita (about 687 trillion ISK), Amarr (about 54 trillion), Dodixie (about 17 trillion), Hek (about 10 trillion) and Rens (about 8 trillion).
 - Old School RuneScape Wiki, "Grand Exchange tax" (accessed September 2026). Tax of 1% from December 9, 2021, 2% from May 29, 2025, capped at 5 million coins per item; most revenue removed from the game, a small part used to buy selected items from players and delete them; Jagex's May 29, 2025 announcement of about 5.7 trillion coins' worth of items removed by the item sink since launch; exemptions for low-level supplies and bonds.
-- Wikipedia, "Eve Online" (accessed September 2026). CCP hired economist Eyjólfur Guðmundsson in 2007; he left in 2014.
+- Wikipedia, "Eve Online" (accessed September 2026). CCP hired economist Eyjólfur Guðmundsson in 2007 (his first CCP econ dev blog is dated 3 September 2007); he left in 2014 (Wikipedia only).
 - Fisher, I. (1911). *The Purchasing Power of Money*. Macmillan. Chapter II, "Purchasing Power of Money as Related to the Equation of Exchange" (Library of Economics and Liberty edition, retrieved September 2026). The equation of exchange `MV = PT`, written here in its modern `MV = PQ` form.
 - Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press.
 

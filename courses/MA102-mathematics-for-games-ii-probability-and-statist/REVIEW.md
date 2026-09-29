@@ -30,3 +30,11 @@ Re-read on 28 September 2026 with WebFetch:
 - Recomputed every numeric answer in `assessments/exam-bank.md` with `.venv/bin/python`. All match the current lectures (week 8 +16.7 points at target 8, week 10 C = 0.0557 and 0.0847, 69.70 and 62.30 pulls, median 76, week 11 0.3655 and 0.587). One fix: question 33(c) said the normal estimate was off by 0.15 points. It is off by 0.1 (11.5% against 11.60%).
 - No assessment used 29.23, the old week 11 tables or the Warcraft III wrong-C claim.
 - Loot design brief reference numbers (9.5%, 1.8%, about 740, 0.46%, 30%) recompute.
+
+## Fact sweep (2026-09-29)
+
+- Verified: Halo 3 playtest logging (w12). The Wired article by Clive Thompson is live at wired.com/2007/08/ff-halo-2/ (21 August 2007). It confirms location, weapon-fire and death logging, death maps and the Valhalla heat map. The source line is now precise.
+- Hedged: Catan dots and red 6/8 (w08). The full 6th-edition rulebook text (catan.com PDF) does not mention them. The lecture now says the detail comes from rules guides.
+- Still hedged, unchanged: SimCity 43.4% (w14). TechCrunch (2013 URL), the Optimizely blog and customer URLs all return 404, and archive.org returned 429. The lecture already attributes the figure to the case study. Genshin rates stay cited to the in-game Details page.
+- The only "(verify" text is in syllabus.md line 38 (Dota 2 C constants), which this pass may not edit. Week 6 already verifies the C values on Liquipedia.
+- Counts: verified 1, hedged 1, removed 0.

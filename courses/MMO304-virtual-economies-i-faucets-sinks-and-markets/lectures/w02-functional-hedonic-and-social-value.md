@@ -8,7 +8,7 @@
 - Predict the shape of an item's value over a content cycle from the mix of its three parts.
 - Critique a store or reward plan by naming which kind of value it sells and who loses when it does.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (MIT Press, 2014), the chapters on consumer behaviour and virtual goods. Lehdonvirta, V. (2009), "Virtual item sales as a revenue model: identifying attributes that drive purchase decisions", *Electronic Commerce Research* 9(1-2), pp. 97-113.
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (MIT Press, 2014), chapters 2 and 3, "Theories of Human Behavior" and "Goods: Material, Digital, Virtual". Lehdonvirta, V. (2009), "Virtual item sales as a revenue model: identifying attributes that drive purchase decisions", *Electronic Commerce Research* 9(1-2), pp. 97-113.
 
 **Prerequisites from earlier courses:** [MA101 week 5, logarithms](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w05-logarithms-how-many-levels-until.md) (reading `log2` as "how many halvings"). [MA101 week 4, exponentials](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md) (repeated multiplication by a fixed factor). [GD203 week 14, horizontal vs vertical progression](../../GD203-combat-and-progression-design/lectures/w14-horizontal-vs-vertical-progression.md) (tier shelf life). [Week 1 of this course](w01-why-virtual-economies-exist-artificial-scarcity.md) (artificial scarcity and fixed supply).
 

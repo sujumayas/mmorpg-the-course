@@ -8,7 +8,7 @@
 - Compute money supply per active player and show how the choice of denominator changes the conclusion.
 - Specify an economy dashboard for a live game, with each panel's metric, cadence and alert rule.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), the chapter on measuring and managing an economy. Browse one recent EVE Online Monthly Economic Report on eveonline.com and list the charts it contains.
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), chapter 12, "Macroeconomic Management". Browse one recent EVE Online Monthly Economic Report on eveonline.com and list the charts it contains.
 
 **Prerequisites from earlier courses:** [MA102 week 12, descriptive statistics](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w12-descriptive-statistics-for-playtests.md) (mean vs median, percentiles). [MA102 week 13, sampling and confidence](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w13-sampling-confidence-and-why-n5-lies.md) (why a thin market's weekly price is noisy). DB201 [week 10](../../DB201-data-persistence-and-telemetry/lectures/w10-telemetry-design-events-and-properties.md) and [week 11](../../DB201-data-persistence-and-telemetry/lectures/w11-pipelines-collect-store-query.md) (how events get logged and stored). From this course, [week 3 on faucets, sinks and transformations](w03-faucets-sinks-and-transformations.md), [week 4 on money supply per capita and inflation](w04-money-supply-per-capita-and-inflation.md), and [week 11 on real-money trade](w11-real-money-trade-and-gold-farming.md) (bots show up in telemetry first).
 

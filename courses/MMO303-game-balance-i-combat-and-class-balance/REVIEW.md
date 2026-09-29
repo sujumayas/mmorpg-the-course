@@ -68,3 +68,7 @@ Every starter below is standard-library Python. Its tests fail on the stub and p
 - Exam question 50 notes the near mutual wipe at parity in the step simulation. Questions 51 and 53 were checked and are unchanged.
 - The w13 separation change and the w02 Q5 addition do not affect any assessment answer. Q5's arithmetic was checked (A = 18.75, HP = 1,900, EHP ≈ 2,256).
 - `assessments/final-roster.yaml` was created from the brief's table and rules and is linked from the brief.
+
+## Fact sweep (2026-09-29)
+
+No open items. Section 3 was resolved on 28 September 2026. No "(verify" markers. Verified 0, hedged 0, removed 0.

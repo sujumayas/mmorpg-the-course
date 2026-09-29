@@ -8,7 +8,7 @@
 - Compute the round-trip cost of a trade under a fee schedule and use it to predict the smallest price gap traders will close.
 - Critique a market design for a specific game, naming what it gains and what it gives up.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), the chapter on market design and the chapter on money. Skim Stigler (1961), "The Economics of Information", sections I and II (the first eight pages are enough).
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), chapter 7, "Methods of Exchange", and chapter 10, "Money". Skim Stigler (1961), "The Economics of Information", sections I and II (the first eight pages are enough).
 
 **Prerequisites from earlier courses:** [MA102 week 4, expected value](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md) (the expected price you pay is an expected value). [MA102 week 11, Monte Carlo simulation](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w11-monte-carlo-simulation.md) (the lab checks this week's formula by simulation). [MMO303 week 10, payoff matrices and Nash equilibria](../../MMO303-game-balance-i-combat-and-class-balance/lectures/w10-game-theory-payoff-matrices-and-nash-equilibria.md) (undercutting is a game between sellers). [GD102 week 7 on internal economies](../../GD102-systems-design-and-game-mechanics/lectures/w07-internal-economies-sources-drains-converters.md). From this course, [week 9 on commodity money](w09-commodity-money-when-an-item-becomes-currency.md) (the Stone of Jordan and the barter search count) and [week 6 on supply, demand and equilibrium](w06-supply-demand-and-equilibrium-in-auction-houses.md).
 

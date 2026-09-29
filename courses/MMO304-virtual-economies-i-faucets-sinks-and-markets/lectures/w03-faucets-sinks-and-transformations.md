@@ -8,7 +8,7 @@
 - Derive the steady-state money per player from faucet, sink, tax and churn rates, and explain why sinks that scale with play cannot stop drift on their own.
 - Design a sink package that holds money per player near a target, and critique its effect on players.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (MIT Press, 2014), the chapter on money and the money supply. Skim one CCP *Monthly Economic Report* for EVE Online (any month from 2024 on) and find its chart of faucets and sinks.
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (MIT Press, 2014), chapter 10, "Money". Skim one CCP *Monthly Economic Report* for EVE Online (any month from 2024 on) and find its chart of faucets and sinks.
 
 **Prerequisites from earlier courses:** GD102 [week 2, stocks and flows](../../GD102-systems-design-and-game-mechanics/lectures/w02-stocks-and-flows.md) and [week 7, sources, drains and converters](../../GD102-systems-design-and-game-mechanics/lectures/w07-internal-economies-sources-drains-converters.md), including Machinations notation. [MA101 week 4, exponentials](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md) (repeated multiplication by `1 − k`). [MA101 week 2, linear functions and rates](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md). [Week 1 of this course](w01-why-virtual-economies-exist-artificial-scarcity.md) (the farming wage).
 
@@ -246,6 +246,7 @@ Expected output: the ledger table, two `m*` values (or "none"), and one proposed
 ## Sources
 
 - Wikipedia, "Eve Online" (article as of 2026). CCP hired economist Eyjólfur Guðmundsson in 2007 to oversee the game's economy.
+- CCP Dr.EyjoG (Eyjólfur Guðmundsson), "Econ Dev Blog - Market Overview For Mineral Markets", eveonline.com, 3 September 2007 (re-read September 2026). His first economics dev blog as CCP's economist, which confirms the 2007 date.
 - CCP Games, *Monthly Economic Report*, January 2024 (eveonline.com news). Includes the standard charts of ISK sinks and faucets and their history.
 - EVE University Wiki, "Trading". Sales tax 7.5% base from 12 March 2025, reduced by 11% per Accounting level; broker's fee 3% base at NPC stations, reduced by Broker Relations and standings.
 - Warcraft Wiki, "Auction House" (5% cut of the winning bid, deposits as a share of vendor price) and "Repair" (10% loss of maximum durability on death, more with a spirit healer). Checked September 2026: the page states the 5% cut for the faction auction houses and flags only missing information on the old neutral auction houses (15% cut) and the patch 8.3 revamp.

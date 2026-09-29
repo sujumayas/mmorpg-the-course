@@ -8,7 +8,7 @@
 - Prove that two differently presented games are the same game by building a one-to-one map between their states.
 - Predict how changing one formal element (for example the player structure) changes what players do.
 
-**Before class:** Fullerton, *Game Design Workshop* (4th ed., 2018), chapter 3, the sections on players, objectives, procedures and rules. Salen & Zimmerman, *Rules of Play* (2003), the chapter "Rules on Three Levels". Ian Schreiber, *Game Design Concepts* (online course, 2009), "Level 3: Formal Elements of Games".
+**Before class:** Fullerton, *Game Design Workshop* (4th ed., 2018), chapter 3, the sections on players, objectives, procedures and rules. Salen & Zimmerman, *Rules of Play* (2003), the chapter on operational, constitutive and implicit rules. Ian Schreiber, *Game Design Concepts* (online course, 2009), "Level 3: Formal Elements of Games".
 
 **Prerequisites from earlier courses:** None. From this course, [week 1](w01-what-is-a-game.md) (the feature checklist and Suits's constitutive rules).
 
@@ -18,7 +18,7 @@
 
 ## 1. The parts list
 
-Tracy Fullerton's *Game Design Workshop* breaks every game into eight **formal elements**. "Formal" here means the parts that make up the structure of a game, the ones you could write down in a rulebook, as opposed to the art or the story. The eight are players, objectives, procedures, rules, resources, conflict, boundaries and outcome. This week covers the first four. Week 3 covers the rest.
+Tracy Fullerton's *Game Design Workshop* breaks every game into **formal elements**. "Formal" here means the parts that make up the structure of a game, the ones you could write down in a rulebook, as opposed to the art or the story. This course uses eight: players, objectives, procedures, rules, resources, conflict, boundaries and outcome. Schreiber's online course, built on Fullerton, gives the same eight. This week covers the first four. Week 3 covers the rest.
 
 Why a parts list? Because it turns a vague feeling ("this game is too chaotic") into a question about one part ("is it the player structure, with six people all attacking each other?"). It also lets you compare games that look nothing alike.
 
@@ -252,8 +252,8 @@ The four elements in this lecture are not independent. Change one and the others
 
 ## Sources
 
-- Fullerton, T. (2018). *Game Design Workshop*, 4th ed. CRC Press, chapter 3. The eight formal elements.
-- Salen, K. & Zimmerman, E. (2003). *Rules of Play*. MIT Press, "Rules on Three Levels". Operational, constitutive and implicit rules. Paraphrased.
+- Fullerton, T. (2018). *Game Design Workshop*, 4th ed. CRC Press, chapter 3, "Working with Formal Elements" (title from the chapter DOI 10.1201/b22309-13). The eight-element list was checked against Schreiber (2009), not against the chapter text.
+- Salen, K. & Zimmerman, E. (2003). *Rules of Play*. MIT Press, the chapter on operational, constitutive and implicit rules (often cited as "Rules on Three Levels"; title not checked against the book). Paraphrased.
 - Schreiber, I. (2009). *Game Design Concepts*, "Level 3: Formal Elements of Games" (gamedesignconcepts.wordpress.com). Player structures, objective types, setup/progression/resolution, the tic-tac-toe and Three-to-Fifteen example, spawn camping as an implicit-rule dispute, Gauntlet vs DOOM, and the Puerto Rico theme example. Paraphrased.
 - Wikipedia, "Number Scrabble" (accessed September 2026). Rules; isomorphism with tic-tac-toe via the magic square; Michon (1967) "JAM"; Simon, *The Sciences of the Artificial* (1969).
 - Pokémon type triangle and Fire Emblem weapon triangle: as verified and cited in MMO303 week 9 (Pokémon Database "Pokémon type chart"; Fire Emblem Wiki "Weapon triangle", accessed September 2026).

@@ -8,7 +8,7 @@
 - Compute the gold a repair system removes per hour of play.
 - Choose a destruction rate that holds an item's ownership near a target share of players.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), the chapter on sinks and item lifecycles. Look at the "Mining, Production and Destruction History" chart in any recent CCP *Monthly Economic Report* for EVE Online.
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), chapter 11, "Macroeconomic Design". Look at the "Mining, Production and Destruction History" chart in any recent CCP *Monthly Economic Report* for EVE Online.
 
 **Prerequisites from earlier courses:** [MA102 week 7, the geometric distribution](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w07-geometric-distribution-kills-until-the-drop.md) (the mean wait `1/p`). [MA101 week 4, exponentials](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w04-exponentials-and-the-xp-curve.md) (repeated multiplication by `1 − d`). [GD102 week 2, stocks and flows](../../GD102-systems-design-and-game-mechanics/lectures/w02-stocks-and-flows.md). From this course, [week 3, faucets, sinks and transformations](w03-faucets-sinks-and-transformations.md) (flow sinks versus stock sinks), [week 2, value](w02-functional-hedonic-and-social-value.md) (obsolescence wipes functional value) and [week 7, crafting chains](w07-crafting-chains-and-gathering-professions.md).
 

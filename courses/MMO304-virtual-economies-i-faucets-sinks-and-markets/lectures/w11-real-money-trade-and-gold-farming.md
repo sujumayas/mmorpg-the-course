@@ -8,7 +8,7 @@
 - Classify a studio's real-money trade policy (ban, tolerate, sanction currency, sanction items) and predict its effect on bots, theft and the reward loop.
 - Critique a proposed real-money feature using the two models from this lecture.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), the chapter on real-money trade. Reread [week 10](w10-market-design-auction-houses-vendors-barter.md), section 2, on how a central exchange changes prices.
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), chapter 8, "Externalities and Secondary Market Trade". Reread [week 10](w10-market-design-auction-houses-vendors-barter.md), section 2, on how a central exchange changes prices.
 
 **Prerequisites from earlier courses:** [MA102 week 4, expected value](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md). [MA102 week 7, the geometric distribution](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w07-geometric-distribution-kills-until-the-drop.md) (the expected wait for an upgrade is a geometric mean, `1 / p`). [GD203 week 14, horizontal vs vertical progression](../../GD203-combat-and-progression-design/lectures/w14-horizontal-vs-vertical-progression.md) (why gear upgrades carry the reward loop in loot games). From this course, [week 3 on faucets and sinks](w03-faucets-sinks-and-transformations.md) (bots are a faucet) and [week 10 on market design](w10-market-design-auction-houses-vendors-barter.md).
 

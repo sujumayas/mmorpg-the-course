@@ -274,7 +274,7 @@ Expected output: a rate, a volume, a proposed `E` with its number, and one parag
 - Old School RuneScape Wiki, "Scams". Rule 2 of the Code of Conduct prohibits scamming; trade window guidance.
 - Guild Wars 2 Wiki, "Trading Post" (current). 5% non-refundable listing fee, 10% exchange fee on sale, shared by all NA and EU worlds.
 - Warcraft Wiki, "Auction House" (current retail). 5% cut of the winning bid, deposit by vendor price and duration, kept if the item does not sell.
-- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press. Chapters 9-12.
+- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press. Chapters 9-12: 9 "Institutions and Nonmarket Allocation", 10 "Money", 11 "Macroeconomic Design", 12 "Macroeconomic Management" (titles and order from the MIT Press chapter DOIs 10.7551/mitpress/9525.003.0010 to .0013 on Crossref, checked September 2026).
 - Tax incidence and deadweight loss in linear markets follow any intermediate microeconomics text, for example Varian, H. *Intermediate Microeconomics*, the chapter on taxes in equilibrium.
 
 ## Interactive spec: examples/w07-tax-order-book.html

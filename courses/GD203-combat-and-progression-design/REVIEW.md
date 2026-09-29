@@ -25,3 +25,7 @@ All six groups were checked on 28 September 2026. Sources are cited with era in 
 ## Added files
 
 - `labs/lab10-reference.md` is the instructor's lab 10 reference sheet that lab 11 promises. It covers the player curve, stat blocks, the breakpoint pass and room costs before tuning, and lab 11 links it.
+
+## Fact sweep (2026-09-29)
+
+No open items. All facts were closed on 28 September 2026 (see the table above). No "(verify" markers. Verified 0, hedged 0, removed 0.

@@ -35,7 +35,7 @@ Loot, crits, drop rates, matchmaking and A/B tests all run on probability. This 
 ## Signature worked examples
 
 - 1% drop rate: after 100 kills only ~63% of players have it — and 1 in 20 still lacks it after ~300 kills
-- Dota 2 pseudo-random distribution: same average crit rate, far lower streakiness (verify C constants)
+- Dota 2 pseudo-random distribution: same average crit rate, far lower streakiness
 - Gacha pity: soft/hard pity changes the expected pulls (Genshin hard pity at 90; verify soft-pity rates)
 - 2d6 vs 1d12: same range, completely different feel
 

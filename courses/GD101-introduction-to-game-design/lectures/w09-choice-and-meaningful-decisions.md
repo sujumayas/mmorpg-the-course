@@ -8,7 +8,7 @@
 - Audit the decisions in a paper prototype with the discernable, integrated and uncertain tests, and name the weakest one.
 - Propose a rule change that turns a dead decision into a trade-off, and predict its cost.
 
-**Before class:** Salen & Zimmerman, *Rules of Play* (2003), chapter 3, "Meaningful Play" (short, and the source of two of this lecture's tests), then skim chapters 7 to 9 from the course reading list. Watch or read a summary of Sid Meier's GDC 2012 talk "Interesting Decisions" (GDC Vault, listed in Sources).
+**Before class:** Salen & Zimmerman, *Rules of Play* (2003), the chapter "Meaningful Play" (short, and the source of two of this lecture's tests), then skim "Defining Games" and "The Magic Circle" from the course reading list. Watch or read a summary of Sid Meier's GDC 2012 talk "Interesting Decisions" (GDC Vault, listed in Sources).
 
 **Prerequisites from earlier courses:** GD101 [week 2](w02-players-objectives-procedures-rules.md) (formal elements: procedures, rules and outcomes) and [week 4](w04-mda-mechanics-dynamics-aesthetics.md) (MDA). [GD101 week 7](w07-playtesting-observe-dont-explain.md), because section 3 turns this week's audit into playtest questions. No math beyond counting and comparing is needed.
 
@@ -245,7 +245,7 @@ Pairs. Materials: paper, pencil, a printout of the magic square from section 2, 
 ## Sources
 
 - Meier, S. (2012). "Interesting Decisions." Game Developers Conference 2012, Firaxis Games. GDC Vault session page describes gameplay as a series of interesting decisions. https://www.gdcvault.com/play/1015756/Interesting
-- Salen, K. & Zimmerman, E. (2003). *Rules of Play: Game Design Fundamentals*. MIT Press. Chapter 3, "Meaningful Play": the discernable and integrated conditions (paraphrased).
+- Salen, K. & Zimmerman, E. (2003). *Rules of Play: Game Design Fundamentals*. MIT Press. The chapter "Meaningful Play" (cited by title; chapter number not checked): the discernable and integrated conditions (paraphrased).
 - Wikipedia, "Solved game" (accessed September 2026). Tic-tac-toe is a draw with perfect play; Connect Four solved October 1988 by James D. Allen and independently by Victor Allis, first-player win; checkers weakly solved April 29, 2007 by Jonathan Schaeffer's team, draw; Nim solved by C. L. Bouton (1901 to 1902). https://en.wikipedia.org/wiki/Solved_game
 - Schaeffer, J. et al. (2007). "Checkers Is Solved." *Science*, 317(5844), 1518-1522.
 - Bouton, C. L. (1901). "Nim, a game with a complete mathematical theory." *Annals of Mathematics*, 3(1/4), 35-39.

@@ -8,7 +8,7 @@
 - Compare four levers of artificial scarcity (chance, effort, rate limits and fixed supply) and predict what each does to prices and to players.
 - Critique a drop-rate proposal by converting it into hours and into gold before it ships.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (MIT Press, 2014), chapters 1 and 2 (what a virtual economy is, and the basics of scarcity and choice). Castronova (2001), "Virtual Worlds: A First-Hand Account of Market and Society on the Cyberian Frontier", CESifo Working Paper 618, the introduction and the section on the Norrath economy (about 12 pages).
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (MIT Press, 2014), chapters 1 and 2, "Introduction" and "Theories of Human Behavior". Castronova (2001), "Virtual Worlds: A First-Hand Account of Market and Society on the Cyberian Frontier", CESifo Working Paper 618, the introduction and the section on the Norrath economy (about 12 pages).
 
 **Prerequisites from earlier courses:** [MA102 week 7, the geometric distribution](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w07-geometric-distribution-kills-until-the-drop.md) (mean wait `1/p`, median and dry tail). [MA102 week 4, expected value](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md). GD102 [week 2, stocks and flows](../../GD102-systems-design-and-game-mechanics/lectures/w02-stocks-and-flows.md) and [week 7, internal economies](../../GD102-systems-design-and-game-mechanics/lectures/w07-internal-economies-sources-drains-converters.md). [GD101 week 9, meaningful decisions](../../GD101-introduction-to-game-design/lectures/w09-choice-and-meaningful-decisions.md).
 
@@ -199,7 +199,7 @@ Expected output: a table with lever, rule numbers and implied price for each ite
 ## Sources
 
 - Castronova, E. (2001). "Virtual Worlds: A First-Hand Account of Market and Society on the Cyberian Frontier." CESifo Working Paper No. 618. Norrath (EverQuest) in March 1999: hourly wage about 3.42 US dollars, currency at 0.0107 dollars, GNP per capita between Russia and Bulgaria. Abstract checked on RePEc/IDEAS.
-- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press.
+- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press. Chapter titles and order checked against the MIT Press chapter DOIs on Crossref (10.7551/mitpress/9525.003.0002 to .0015, September 2026): 1 Introduction, 2 Theories of Human Behavior, 3 Goods, 4 Supply and Demand, 5 Regulating Markets, 6 Market Power and Pricing, 7 Methods of Exchange, 8 Externalities and Secondary Market Trade, 9 Institutions and Nonmarket Allocation, 10 Money, 11 Macroeconomic Design, 12 Macroeconomic Management, 13 Policymaking, 14 Why the Real World Needs Virtual Economy Design.
 - Warcraft Wiki, "WoW Token". Introduced in patch 6.1.2 on 7 April 2015 in the Americas at 20 US dollars, initial gold price 30,000, redeemable for 30 days of game time.
 - RuneScape Wiki, "Christmas cracker". Released 25 December 2001 in the first RuneScape Christmas event, available that day only, never re-released, contained partyhats; notes the 2003 duplication glitch and partyhat prices in the billions of coins.
 - Schreiber, I. (2010). *Game Balance Concepts*, Level 4, "Probability and Randomness", for the geometric-distribution results reused from MA102 week 7.

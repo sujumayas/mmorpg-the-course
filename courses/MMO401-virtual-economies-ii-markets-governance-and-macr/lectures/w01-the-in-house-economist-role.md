@@ -18,7 +18,7 @@
 
 ## 1. A job that did not exist before 2007
 
-In 2007 CCP Games, the studio behind EVE Online, hired an academic economist to look after the game's economy. Eyjólfur Guðmundsson had been dean of business and science at the University of Akureyri in Iceland. Wikipedia's history of EVE describes CCP as the first game developer to make that kind of hire. He stayed until 2014, when he went back to Akureyri as the university's rector. In June 2012 Valve hired the economist Yanis Varoufakis to study the economies of its games and the Steam platform. By 2024, CCP's economic reports carried the byline "EVE Online Economic Council," a team rather than one person.
+In 2007 CCP Games, the studio behind EVE Online, hired an academic economist to look after the game's economy. Eyjólfur Guðmundsson had been dean of business and science at the University of Akureyri in Iceland. Wikipedia's history of EVE describes CCP as the first game developer to make that kind of hire. His first economics dev blog for players is dated 3 September 2007. Wikipedia, citing a May 2014 Morgunblaðið report, says he left in 2014 to become the university's rector. We could not open that report. In June 2012 Valve hired the economist Yanis Varoufakis to study the economies of its games and the Steam platform. By 2024, CCP's economic reports carried the byline "EVE Online Economic Council," a team rather than one person.
 
 Why would a game studio pay for an economist? Three reasons, all of which you met in MMO304.
 
@@ -229,14 +229,15 @@ Expected output: three index values, one custom basket with its index, and the m
 
 ## Sources
 
-- Wikipedia, "Eve Online" (accessed 2026). CCP hired Eyjólfur Guðmundsson in 2007 as the first economist employed by a game developer; he left in 2014 to become rector of the University of Akureyri. The 2007 t20 blueprint incident, CCP's internal affairs response, and the first Council of Stellar Management election in 2008.
+- CCP Dr.EyjoG (Eyjólfur Guðmundsson), "Econ Dev Blog - Market Overview For Mineral Markets", eveonline.com, 3 September 2007 (re-read September 2026). CCP's first economics dev blog.
+- Wikipedia, "Eve Online" (accessed 2026). CCP hired Eyjólfur Guðmundsson in 2007 as the first economist employed by a game developer; he left in 2014 to become rector of the University of Akureyri (Wikipedia cites Morgunblaðið, 19 May 2014, which blocked automated reads in September 2026). The 2007 t20 blueprint incident, CCP's internal affairs response, and the first Council of Stellar Management election in 2008.
 - Wikipedia, "Yanis Varoufakis" and "Valve Corporation" (accessed 2026). Varoufakis joined Valve in June 2012 to study the economies of its games and Steam.
 - Castronova, E. (2001). "Virtual Worlds: A First-Hand Account of Market and Society on the Cyberian Frontier." CESifo Working Paper No. 618. Norrath GNP per capita between Russia and Bulgaria (as summarized on Wikipedia, "Edward Castronova").
 - CCP Games, "Monthly Economic Report, October 2024," EVE Online Economic Council, eveonline.com, published 8 November 2024. Mineral Price Index record of 287, Ship Index down about 4.5% over 12 months, the five indices, and the faucet and sink charts.
 - CCP Games, raw data for the October 2024 report (`EVEOnline_MER_Oct2024.zip`, files `money_supply.csv`, `sinks_and_faucets_history.csv`, `index_baskets.csv`, `economy_indices_details.csv`). Money supply values, October 2024 faucet and sink totals and shares, and the index basket structure were computed by the author from these files.
 - Warcraft Wiki, "WoW Token." Introduced with patch 6.1.2 (2015), redeems for 30 days of game time, price set by supply and demand, 30,000 gold at launch in the Americas.
 - US Bureau of Labor Statistics, "Chained CPI questions and answers." CPI-U fixed-weight formula with annual weight updates; C-CPI-U from July 2002 data using a superlative formula; the pork and beef substitution example.
-- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press.
+- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press. Chapters 9-12: 9 "Institutions and Nonmarket Allocation", 10 "Money", 11 "Macroeconomic Design", 12 "Macroeconomic Management" (titles and order from the MIT Press chapter DOIs 10.7551/mitpress/9525.003.0010 to .0013 on Crossref, checked September 2026).
 
 ## Interactive spec: examples/w01-price-index-basket.html
 

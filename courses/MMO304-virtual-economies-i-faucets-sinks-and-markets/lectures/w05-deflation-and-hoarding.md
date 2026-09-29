@@ -8,7 +8,7 @@
 - Compare flat, proportional and luxury sinks by their effect on prices and on each group of players, not only by the gold they remove.
 - Design a hoard-targeted sink and predict what happens to prices when a hoard is released instead of destroyed.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), the chapters on virtual currency. Find the money velocity chart in CCP's Monthly Economic Report for January 2024 and note whether velocity moves with the money supply chart.
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), chapter 10, "Money". Find the money velocity chart in CCP's Monthly Economic Report for January 2024 and note whether velocity moves with the money supply chart.
 
 **Prerequisites from earlier courses:** [MMO304 week 4, money supply per capita and inflation](w04-money-supply-per-capita-and-inflation.md) (the quantity equation `M × V = P × Q` and real value). [MMO304 week 3, faucets, sinks and transformations](w03-faucets-sinks-and-transformations.md) (flow sinks and stock sinks). [GD102 week 3, positive feedback loops](../../GD102-systems-design-and-game-mechanics/lectures/w03-positive-feedback-loops-snowballing.md). [MA102 week 12, descriptive statistics](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w12-descriptive-statistics-for-playtests.md) (skew, mean and median). [MA102 week 4, expected value](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md) (weighted averages).
 

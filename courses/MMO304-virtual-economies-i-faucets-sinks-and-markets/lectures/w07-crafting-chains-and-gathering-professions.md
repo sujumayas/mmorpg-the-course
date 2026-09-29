@@ -8,7 +8,7 @@
 - Predict the market price of a crafted item when many players craft it for experience rather than profit.
 - Design a gathering profession whose hourly income lands where you want it relative to other activities.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), the chapters on production and on markets. Skim the Old School RuneScape Wiki guide "Pay-to-play Smithing training" and note every method with a negative profit.
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), chapter 4, "Supply and Demand", and chapter 7, "Methods of Exchange". Skim the Old School RuneScape Wiki guide "Pay-to-play Smithing training" and note every method with a negative profit.
 
 **Prerequisites from earlier courses:** GD102 [week 6, converters in Machinations](../../GD102-systems-design-and-game-mechanics/lectures/w06-machinations-diagrams-ii-converters-traders-gates.md) and [week 7, internal economies with sources, drains and converters](../../GD102-systems-design-and-game-mechanics/lectures/w07-internal-economies-sources-drains-converters.md). [MA102 week 4, expected value](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w04-expected-value-comparing-weapons.md) (averages over random outcomes). [GD203 week 9, item budgets](../../GD203-combat-and-progression-design/lectures/w09-item-budgets-and-stat-weights.md) (pricing an item in one currency). From this course, [week 3, faucets, sinks and transformations](w03-faucets-sinks-and-transformations.md) and [week 6, supply and demand in auction houses](w06-supply-demand-and-equilibrium-in-auction-houses.md).
 

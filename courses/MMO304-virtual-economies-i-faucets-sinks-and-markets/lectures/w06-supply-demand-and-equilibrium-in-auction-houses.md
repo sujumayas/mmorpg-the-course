@@ -8,7 +8,7 @@
 - Predict the new equilibrium after a patch shifts demand or supply, using elasticity to say which side moves the price more.
 - Identify NPC buy and sell prices as floors and ceilings, and compute the gold they add or remove each day.
 
-**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), the chapter on supply, demand and markets. Read the Old School RuneScape Wiki page "Grand Exchange," sections on offers and the tax.
+**Before class:** Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (2014), chapter 4, "Supply and Demand". Read the Old School RuneScape Wiki page "Grand Exchange," sections on offers and the tax.
 
 **Prerequisites from earlier courses:** [MMO304 week 2, functional, hedonic and social value](w02-functional-hedonic-and-social-value.md) (willingness to pay). [MMO304 week 4, money supply per capita and inflation](w04-money-supply-per-capita-and-inflation.md) (percentage sinks and faucets). [MMO304 week 5, deflation and hoarding](w05-deflation-and-hoarding.md) (items piling up toward an NPC floor). [MA101 week 2, linear functions and rates](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w02-linear-functions-and-rates.md) (slopes and where two lines cross). [GD102 week 7, converters and traders in an internal economy](../../GD102-systems-design-and-game-mechanics/lectures/w07-internal-economies-sources-drains-converters.md).
 

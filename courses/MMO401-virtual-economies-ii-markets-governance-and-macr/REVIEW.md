@@ -10,3 +10,11 @@ These are the open items the reviewer did not fix directly. The small fixes are 
 | lectures/w04 (Mod Ash figure) | w04 says "about 5.73 trillion coins", while w13, w14 and the wiki say about 5.7 trillion. Both round the same Jagex figure. | Harmless. Pick one rounding across the course when next edited. |
 | examples/*.html | The automated check passes all 14 at 390 px and 1,280 px in light and dark mode. Readouts were compared with the lecture by reading the JS for w08, w10 and w13 only. | Spot-check the default readouts of the other 11 interactives against each spec's test values in a browser. |
 | syllabus.md | Still the generated stub with `_todo_` cells. Not edited by the reviewer. | The orchestrator fills it. |
+
+## Fact sweep (2026-09-29)
+
+- Verified: EverQuest II 2005 dupe (w12). Terdiman's CNET article (11 August 2005) is live on cnet.com. It confirms that money rose "by a fifth in about 24 hours", that SOE tracked and removed the duped platinum, and that it shut the auctions. The US$70,000 figure appears there only as an allegation from other sites, so the text now says so. The chapter titles for Lehdonvirta & Castronova ch. 9-12 were confirmed via Crossref chapter DOIs and are now named in the w01, w07, w08 and w09 sources.
+- Hedged: the PLEX month (w11) is now "2008, Wikipedia gives November". Guðmundsson's 2014 departure (w01, w13) is now attributed to Wikipedia citing Morgunblaðið, which blocked automated reads. His 2007 start is cited to CCP's 3 September 2007 dev blog.
+- Unchanged: the CCP report definitions are already stated as unpublished. The Mod Ash rounding item no longer applies, because no 5.73 trillion figure remains.
+- The only "(verify" text is in syllabus.md line 35 (PLEX mechanics), which this pass may not edit.
+- Counts: verified 2, hedged 2, removed 0.

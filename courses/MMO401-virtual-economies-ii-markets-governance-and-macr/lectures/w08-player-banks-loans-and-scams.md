@@ -235,7 +235,7 @@ Expected output: a four-line feature spec, a rate, a `D*` estimate, and one scam
 - EVE University Wiki, "Contracts" (current). Courier contracts: reward, collateral held in escrow, failure paying collateral to the issuer, advice to set collateral above cargo value, and the high-collateral gank scam.
 - Wikipedia, "Ginko Financial" (checked September 2026). Second Life bank; rates reaching 0.145% a day (69.7% a year); failure in 2007 after in-world gambling was restricted; about 200 million Linden dollars converted to bonds; Linden Lab's January 2008 rule limiting interest-paying accounts to organizations with real-world banking licences.
 - Old School RuneScape Wiki, "Scams" (current). Rule 2 of the Code of Conduct prohibits scamming (mute or ban if reported); doubling-money scheme with small initial doublings of 20,000 to 50,000 coins; trust trading; advice to never split a single trade into two.
-- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press. Chapters 9-12.
+- Lehdonvirta, V. & Castronova, E. (2014). *Virtual Economies: Design and Analysis*. MIT Press. Chapters 9-12: 9 "Institutions and Nonmarket Allocation", 10 "Money", 11 "Macroeconomic Design", 12 "Macroeconomic Management" (titles and order from the MIT Press chapter DOIs 10.7551/mitpress/9525.003.0010 to .0013 on Crossref, checked September 2026).
 
 ## Interactive spec: examples/w08-honest-banker.html
 

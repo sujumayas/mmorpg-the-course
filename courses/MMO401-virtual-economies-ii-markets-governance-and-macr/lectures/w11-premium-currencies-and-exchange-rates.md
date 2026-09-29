@@ -34,7 +34,7 @@ MMO304 week 11 asked what a token does to the black market. It sets a ceiling on
 
 In EVE Online you can pay your subscription with ISK you earned in space. You never touch a credit card. Someone else did. They bought PLEX from CCP with real money and sold it to you on the market. You paid ISK. They got ISK to spend on ships. CCP got paid in dollars either way.
 
-CCP introduced PLEX in November 2008. Under the current rules, 500 PLEX buys 30 days of Omega (subscriber) time, 5,500 PLEX buys a year, and 450 PLEX adds 30 days of training on a second character. PLEX also buys items in the New Eden Store. And it trades between players for ISK at whatever price the market sets.
+CCP introduced PLEX in 2008. Wikipedia gives November 2008, and we could not confirm the month from a CCP source. Under the current rules, 500 PLEX buys 30 days of Omega (subscriber) time, 5,500 PLEX buys a year, and 450 PLEX adds 30 days of training on a second character. PLEX also buys items in the New Eden Store. And it trades between players for ISK at whatever price the market sets.
 
 So the PLEX price in ISK is an exchange rate between ISK and dollars. It moves every day. What moves it?
 
@@ -201,7 +201,7 @@ Expected output: an annotated triangle, the three numbers from step 2 (answer: 2
 ## Sources
 
 - EVE University Wiki, "Accounts", section on PLEX (current). 500 PLEX for 30 days of Omega, 5,500 PLEX for a year, 450 PLEX for 30 days of Multiple Character Training, use in the New Eden Store, trade to players for ISK at a floating price, and a 3% base broker fee when listing.
-- Wikipedia, "Eve Online" (retrieved September 2026). PLEX introduced in November 2008 as an in-game item that extends a subscription by 30 days, bought for real money and sold on the market for ISK; selling ISK for money is prohibited.
+- Wikipedia, "Eve Online" (retrieved September 2026). PLEX introduced in November 2008 (month not confirmed from a CCP source) as an in-game item that extends a subscription by 30 days, bought for real money and sold on the market for ISK; selling ISK for money is prohibited.
 - Warcraft Wiki, "WoW Token" (current). Introduced in patch 6.1.2, Americas on 7 April 2015 at 30,000 gold; US$20; 30 days of game time; Battle.net balance option added February 2017 (US$15); gold price set dynamically from supply and demand; seller receives the gold quoted at listing; Blizzard's stated aim of a secure, legitimate way to get gold.
 - Guild Wars 2 Wiki, "Currency Exchange" (current). Two-way gold and gem exchange with a rate set by the supply of each held by the exchange, and a transaction fee on trades.
 - RuneScape Wiki, "Bond" (current). Introduced 25 September 2013; redeemable for membership and other benefits; tradeable on the Grand Exchange when newly bought; re-tradeability costs 10% of Grand Exchange value in coins.

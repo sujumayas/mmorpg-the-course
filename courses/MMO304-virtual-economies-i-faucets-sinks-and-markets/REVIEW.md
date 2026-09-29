@@ -11,3 +11,10 @@ Reviewed September 2026. The review fixed the small issues directly. Only the it
 | lectures/w13 (Sources), w11 | PLEX "introduced November 2008" and "Eyjólfur Guðmundsson 2007-2014" are cited to Wikipedia only. | Replace with a CCP dev blog or an EVE University page if one is available. |
 
 No change is needed in MMO401. It already uses 7.5% × (1 − 0.11 × 5) = 3.375% for EVE sales tax at Accounting V, which MMO304 now matches (checked on the EVE University wiki: 7.5% base since 22.02, 11% per level, 3.37% at max).
+
+## Fact sweep (2026-09-29)
+
+- Verified: Diablo II death penalty (w09). The Arreat Summit "Characters" page is reachable again. Level in percent, capped at 20%, taken from carried and stashed gold. Also verified: the vendor cap from the Arreat Summit "Vendors" page. It is 35,000 in Hell only, from 5,000 in Normal Act I, so the w09 sentence "in any act, on any difficulty" was corrected. Guðmundsson's 2007 start is confirmed by CCP's first econ dev blog (3 September 2007), now cited in w03 and w13. The Lehdonvirta & Castronova (2014) chapter titles come from Crossref chapter DOIs. The w01-w14 "Before class" lines now name real chapters, and the w01 source lists all 14.
+- Hedged: PLEX launch (w13) now gives the year only and says the month is Wikipedia-only. The "first game developer to hire an economist" claim and the 2014 departure were dropped from w13's text.
+- Still hedged, unchanged: Lehdonvirta (2009) functional/hedonic/social grouping. Springer, SSRN and the author's site blocked reads, and OpenAlex/Semantic Scholar have no abstract. Also unchanged: the Diablo clone trigger. The Arreat Summit "Bosses" page lists the clone as a world event but gives no trigger, and the lecture already calls the trigger a community claim.
+- Counts: verified 4, hedged 2, removed 0.

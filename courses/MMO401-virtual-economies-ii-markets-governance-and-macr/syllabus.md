@@ -32,7 +32,7 @@ Advanced economy design and management: monetary policy, market microstructure, 
 
 ## Signature worked examples
 
-- EVE PLEX market: how a subscription token links real and virtual money (verify mechanics)
+- EVE PLEX market: how a subscription token links real and virtual money
 - Transaction-tax tuning: order-book simulation shows volume vs sink trade-off
 
 ## Labs

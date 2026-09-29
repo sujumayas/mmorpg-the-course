@@ -8,7 +8,7 @@
 - Compare the market designs of Diablo III, EVE Online and RuneScape and explain which design fits which core loop.
 - Critique a proposed market change (a new auction house, a tax, a price band) by predicting its effect on the loop it touches.
 
-**Before class:** CCP, *Monthly Economic Report, January 2024* (skim every chart; read the ISK faucets and sinks section and the money supply section closely). Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (MIT Press, 2014), the chapters on markets and on economic design goals. Castronova (2001), *Virtual Worlds: A First-Hand Account of Market and Society on the Cyberian Frontier*, the introduction and the sections describing how players trade.
+**Before class:** CCP, *Monthly Economic Report, January 2024* (skim every chart; read the ISK faucets and sinks section and the money supply section closely). Lehdonvirta & Castronova, *Virtual Economies: Design and Analysis* (MIT Press, 2014), chapter 7, "Methods of Exchange", and chapter 11, "Macroeconomic Design". Castronova (2001), *Virtual Worlds: A First-Hand Account of Market and Society on the Cyberian Frontier*, the introduction and the sections describing how players trade.
 
 **Prerequisites from earlier courses:** [MA102 week 7, geometric distribution](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w07-geometric-distribution-kills-until-the-drop.md) (the mean wait `1/p`). [MA102 week 11, Monte Carlo simulation](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w11-monte-carlo-simulation.md) (for the lab). GD102 [week 2 on stocks and flows](../../GD102-systems-design-and-game-mechanics/lectures/w02-stocks-and-flows.md) and [week 7 on sources and drains](../../GD102-systems-design-and-game-mechanics/lectures/w07-internal-economies-sources-drains-converters.md). From this course, [week 3 on faucets and sinks](w03-faucets-sinks-and-transformations.md), [week 6 on auction house equilibrium](w06-supply-demand-and-equilibrium-in-auction-houses.md), [week 9 on commodity money](w09-commodity-money-when-an-item-becomes-currency.md) and [week 11 on real-money trade](w11-real-money-trade-and-gold-farming.md), whose self-found upgrade model this week extends.
 
@@ -130,7 +130,7 @@ A global open market is not a mistake. It is a set of trade-offs.
 
 ## 3. EVE Online: the economy as a published dataset
 
-EVE is the case study for question 4, intervention, because CCP shows its work. In 2007 CCP became the first game developer to hire an economist, Eyjólfur Guðmundsson, to oversee the in-game economy. He held the role until 2014. CCP now publishes a Monthly Economic Report. The January 2024 edition, your reading, has charts for production, mining and destruction, regional trade and imports, NPC bounties, ISK faucets and sinks, money supply and velocity, and price indices for consumer goods, minerals and producer goods. CCP also offers the raw data for download.
+EVE is the case study for question 4, intervention, because CCP shows its work. By 2007 CCP had hired an economist, Eyjólfur Guðmundsson, to oversee the in-game economy. His first economics dev blog for players appeared on 3 September 2007. CCP now publishes a Monthly Economic Report. The January 2024 edition, your reading, has charts for production, mining and destruction, regional trade and imports, NPC bounties, ISK faucets and sinks, money supply and velocity, and price indices for consumer goods, minerals and producer goods. CCP also offers the raw data for download.
 
 ### Reading the flows
 
@@ -146,7 +146,7 @@ The tax history matters. CCP has moved the sales tax several times, and the 2025
 
 EVE's market is not global. Each region has its own regional market, and goods must be hauled physically between them. Hauling costs time and carries risk, since cargo ships can be destroyed. In the week 6 model, travel cost acts like a transaction cost, and it lets prices differ between regions by up to the cost of moving goods between them. That gap is a profession. Players make a living hauling from cheap regions to expensive ones.
 
-EVE also shows the other side of real-money pressure. In November 2008 CCP introduced PLEX, an item that adds 30 days of game time. Players buy it with real money and sell it on the market for ISK. The developer created a legal, taxed channel between cash and currency, which gave a public ISK-to-dollar price and competed with gold sellers. Week 11 covers the trade-offs.
+EVE also shows the other side of real-money pressure. In 2008 CCP introduced PLEX, an item that adds 30 days of game time. (Wikipedia dates it to November 2008. We could not confirm the month from a CCP source.) Players buy it with real money and sell it on the market for ISK. The developer created a legal, taxed channel between cash and currency, which gave a public ISK-to-dollar price and competed with gold sellers. Week 11 covers the trade-offs.
 
 ## 4. RuneScape's Grand Exchange: a market with a leash
 
@@ -233,7 +233,8 @@ Expected output: one filled-in row of the section 5 table, plus the intervention
 - Wikipedia, "Diablo III: Reaper of Souls" (accessed September 2026). Release March 25, 2014 (PC and Mac); patch 2.0.1 on February 25, 2014; Loot 2.0 changes, including fewer higher-quality drops, drops suited to the finding character, and account-bound items with a limited trading window.
 - Warcraft Wiki, "Auction House" (accessed September 2026). 5% cut of the winning bid on the faction auction house; region-wide commodity listings from patch 9.2.7 (August 2022).
 - Warcraft Wiki, "Soulbound" and "Bind on pickup" (accessed September 2026). Bind on pickup and bind on equip rules; most boss loot is bind on pickup; instance drops can be traded within the group for up to two hours.
-- Wikipedia, "Eve Online" (accessed September 2026). Single-shard server Tranquility; CCP's hiring of economist Eyjólfur Guðmundsson in 2007 and his departure in 2014; PLEX introduced November 2008.
+- Wikipedia, "Eve Online" (accessed September 2026). Single-shard server Tranquility; PLEX introduced November 2008 (not confirmed from a CCP source; the lecture gives the year only).
+- CCP Dr.EyjoG (Eyjólfur Guðmundsson), "Econ Dev Blog - Market Overview For Mineral Markets", eveonline.com, 3 September 2007 (re-read September 2026). CCP's first economics dev blog, written by its in-house economist.
 - CCP Games, *Monthly Economic Report, January 2024*, eveonline.com. Report sections, including ISK faucets and sinks and money supply; raw data download.
 - EVE University Wiki, "Market" and "Sales tax" (accessed September 2026). Regional markets; sales tax base 7.5% since release 22.02 (March 12, 2025), raised from 4%; broker fee base 3% at NPC stations and its skill and standing reductions.
 - RuneScape Wiki, "Grand Exchange" and "Prices" (accessed September 2026). Release on November 26, 2007; guide price from recent trades; "before free trade was reintroduced, offers were limited to 5% above or below the market price"; price restrictions removed on 1 February 2011.

@@ -8,7 +8,7 @@
 - Design a game out of a non-game activity by adding the specific features it is missing.
 - Critique a claim such as "sandbox games aren't real games" by naming the exact feature it depends on.
 
-**Before class:** Fullerton, *Game Design Workshop* (4th ed., 2018), chapters 1 and 2. Salen & Zimmerman, *Rules of Play* (2003), chapter 7, "Defining Games". Jesper Juul, "The Game, the Player, the World: Looking for a Heart of Gameness" (2003), sections 1 to 3 (about 10 pages, free on the author's site).
+**Before class:** Fullerton, *Game Design Workshop* (4th ed., 2018), chapters 1 and 2. Salen & Zimmerman, *Rules of Play* (2003), the chapter "Defining Games". Jesper Juul, "The Game, the Player, the World: Looking for a Heart of Gameness" (2003), sections 1 to 3 (about 10 pages, free on the author's site).
 
 **Prerequisites from earlier courses:** None. This is a first-semester course. You only need to have played games.
 
@@ -37,7 +37,7 @@ Bernard Suits was a philosopher. In *The Grasshopper: Games, Life and Utopia* (1
 
 ### Salen & Zimmerman: a system of artificial conflict with a quantifiable outcome
 
-Katie Salen and Eric Zimmerman, both designers and teachers, compared eight earlier definitions in *Rules of Play* (2003, chapter 7) and wrote their own. Paraphrased, a game is a system in which players engage in an artificial conflict, defined by rules, that produces a quantifiable outcome. The parts:
+Katie Salen and Eric Zimmerman, both designers and teachers, compared eight earlier definitions in *Rules of Play* (2003, the chapter "Defining Games") and wrote their own. Paraphrased, a game is a system in which players engage in an artificial conflict, defined by rules, that produces a quantifiable outcome. The parts:
 
 - **System.** A set of parts that affect each other. Change one, and others move.
 - **Players.** People who actively take part.
@@ -247,7 +247,7 @@ Notice that each step changed how people behave. After step 2 they care about th
 ## Sources
 
 - Suits, B. (1978). *The Grasshopper: Games, Life and Utopia*. University of Toronto Press. Definition and the four elements (prelusory goal, lusory means, constitutive rules, lusory attitude), as summarized in Wikipedia, "Bernard Suits" (accessed September 2026). Paraphrased.
-- Salen, K. & Zimmerman, E. (2003). *Rules of Play: Game Design Fundamentals*. MIT Press, chapter 7, "Defining Games". Definition wording checked against Wikipedia, "Game" (accessed September 2026); the lecture quotes only the phrase "quantifiable outcome".
+- Salen, K. & Zimmerman, E. (2003). *Rules of Play: Game Design Fundamentals*. MIT Press, the chapter "Defining Games" (cited by title; we could not check chapter numbers against a table of contents in September 2026). Definition wording checked against Wikipedia, "Game" (accessed September 2026); the lecture quotes only the phrase "quantifiable outcome".
 - Juul, J. (2003). "The Game, the Player, the World: Looking for a Heart of Gameness." *Level Up: Digital Games Research Conference Proceedings*, Utrecht University. Six features, the seven definitions compared, and the borderline and non-game examples (SimCity, The Sims, pure chance, gambling, pen-and-paper RPGs, traffic, war, ring-a-ring o' roses). Online at jesperjuul.net.
 - Wittgenstein, L. (1953). *Philosophical Investigations*. Family resemblance and "game", as summarized in Wikipedia, "Game" (accessed September 2026).
 - Huizinga, J. (1938). *Homo Ludens*. Origin of the magic circle idea; Wikipedia, "Magic circle (games)" (accessed September 2026).
