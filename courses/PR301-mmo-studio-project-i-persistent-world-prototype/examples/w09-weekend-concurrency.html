@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Weekend concurrency · PR301 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.1rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.top{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:1100px){.top{grid-template-columns:minmax(0,1fr) 300px}}
+.bottom{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;margin-top:16px}
+@media (max-width:860px){.bottom{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cWk{height:300px} #cNeed{height:240px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend svg{vertical-align:middle;margin-right:5px}
+h2{font-family:var(--serif);font-weight:600;font-size:1.08rem;margin:0 0 8px}
+.nums{background:var(--paper-2);border-radius:10px;padding:12px}
+.nums dl{display:grid;grid-template-columns:1fr auto;gap:0;margin:0;font-size:.9rem}
+.nums dt,.nums dd{padding:4px 0;border-bottom:1px solid var(--grid);margin:0}
+.nums dd{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;padding-left:10px}
+.nums dd.big{font-size:1.15rem}
+.nums .sub{font-weight:400;color:var(--ink-soft);font-size:.8rem;display:block}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+.controls .wide{grid-column:1/-1}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+input[type=number],select{font:600 .95rem var(--sans);color:var(--ink);background:var(--paper);border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);padding:5px 8px;max-width:100%}
+input[type=number]{width:6.5em}
+input.exact{width:5.2em;padding:2px 6px;font-size:.9rem}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip:active{background:var(--steel);color:var(--paper)}
+select{width:100%;margin-top:4px}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--steel)}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600;font-size:.9rem}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+details{grid-column:1/-1;border-top:1px solid var(--grid);padding-top:8px}
+summary{cursor:pointer;font-weight:600;font-size:.9rem}
+.weights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin-top:8px}
+.weights label{font-weight:400}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR301 MMO Studio Project I · Week 9 · Worked example</p>
+  <h1>Headcount is not concurrency</h1>
+  <p class="lede" id="caption" aria-live="polite"></p>
+</header>
+
+<section class="panel" aria-label="Weekend concurrency model">
+  <div class="top">
+    <figure>
+      <figcaption>Online over the weekend<small>Saltmarsh alpha, Friday 18:00 to Sunday 18:00. Humans online at each clock hour.</small></figcaption>
+      <canvas id="cWk" role="img" aria-label="Players online over the 48-hour weekend, with the event spike and the target line"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="6" aria-hidden="true"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--steel)" stroke-width="3"/></svg>Regular crowd R(T)</span>
+        <span><svg width="22" height="10" aria-hidden="true"><line x1="0" y1="9" x2="11" y2="1" stroke="var(--ochre)" stroke-width="3"/><line x1="11" y1="1" x2="22" y2="9" stroke="var(--ochre)" stroke-width="3"/></svg>Event spike C(E)</span>
+        <span><svg width="22" height="6" aria-hidden="true"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--blood)" stroke-width="2" stroke-dasharray="6 4"/></svg>Target</span>
+        <span><svg width="14" height="10" aria-hidden="true"><rect width="14" height="10" fill="var(--ink-soft)" opacity=".18"/></svg>Night, 00:00 to 07:00</span>
+        <span id="botLeg" hidden><svg width="14" height="10" aria-hidden="true"><rect width="14" height="10" fill="var(--moss)" opacity=".45"/></svg>Bots</span>
+      </div>
+    </figure>
+    <div class="nums">
+      <h2 id="numH">The numbers</h2>
+      <dl aria-labelledby="numH" aria-live="polite" id="nums"></dl>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="controls">
+      <div class="wide presets"><button class="chip" id="plan" type="button">Guide plan (defaults)</button><button class="chip" id="wk10" type="button">Week 10 measured rates</button></div>
+      <div class="wide"><label for="I">Sign-ups I <output id="oI"></output></label><input id="I" type="range" min="10" max="300" step="1" value="60"></div>
+      <div><label for="s">Show rate s <output id="os"></output></label><input id="s" type="range" min="0.2" max="0.9" step="0.01" value="0.55"></div>
+      <div><label for="k">Sessions per player k <input id="kN" class="exact" type="number" min="1" max="6" step="any" value="2.5" aria-label="Sessions per player k, exact value"></label><input id="k" type="range" min="1" max="6" step="0.5" value="2.5" aria-label="Sessions per player k slider"></div>
+      <div><label for="W">Mean session length W (h) <input id="WN" class="exact" type="number" min="0.5" max="4" step="any" value="1.5" aria-label="Mean session length W (h), exact value"></label><input id="W" type="range" min="0.5" max="4" step="0.25" value="1.5" aria-label="Mean session length W (h) slider"></div>
+      <div><label for="e">Event attendance e <input id="eN" class="exact" type="number" min="0" max="1" step="any" value="0.6" aria-label="Event attendance e, exact value"></label><input id="e" type="range" min="0" max="1" step="0.05" value="0.6" aria-label="Event attendance e slider"></div>
+      <div><label for="E" style="display:block">Event time E</label><select id="E"></select></div>
+      <div><label for="target">Target online <input id="target" type="number" min="5" max="200" step="1" value="20"></label></div>
+      <div class="wide row"><input id="bots" type="checkbox"><label for="bots">Top up with bots at the event to</label><input id="botT" type="number" min="1" max="1000" step="1" value="100" aria-label="Bot target, total online at the event"></div>
+      <details>
+        <summary>Advanced: hour weights</summary>
+        <div class="weights">
+          <label for="wN">Night 00:00 to 07:00 <input id="wN" type="number" min="0" max="10" step="0.1" value="0.1"></label>
+          <label for="wM">Morning 07:00 to 12:00 <input id="wM" type="number" min="0" max="10" step="0.1" value="0.5"></label>
+          <label for="wA">Afternoon 12:00 to 18:00 <input id="wA" type="number" min="0" max="10" step="0.1" value="1.0"></label>
+          <label for="wE">Evening 18:00 to 24:00 <input id="wE" type="number" min="0" max="10" step="0.1" value="2.0"></label>
+        </div>
+      </details>
+    </div>
+    <figure>
+      <figcaption>Sign-ups needed for the target<small id="needSub">Against show rate, other settings as chosen</small></figcaption>
+      <canvas id="cNeed" role="img" aria-label="Sign-ups needed to reach the target, against show rate"></canvas>
+    </figure>
+  </div>
+</section>
+
+<footer>Model from PR301 week 9, section 4. Sessions start uniformly within each hour, weighted by time of day, and last an exponentially distributed time with mean W hours. R(T) counts humans online at clock hour T. At the event hour, a share e of all players who ever log in are online, plus the regular crowd among the rest: C(E) = (1 − e) × R(E) + e × P. With no event, sign-ups are sized at the last event hour chosen with e = 0. The hand model in the guide (Little's law) gives slightly different sign-up counts because it assumes the evening crowd has reached its steady level. Saltmarsh is an invented team.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DAY=['Fri','Sat','Sun'];
+const clock=T=>{const a=18+T;return DAY[Math.min(2,Math.floor(a/24))]+' '+String(a%24).padStart(2,'0')+':00';};
+const f2=n=>n.toFixed(2);
+// event hour select
+const sel=$('E');
+sel.add(new Option('No event','none'));
+for(let u=1;u<=47;u++)sel.add(new Option(clock(u),String(u)));
+sel.value='26';
+let lastE=26;
+const S={};
+function num(id,lo,hi,d){let v=parseFloat($(id).value);if(!isFinite(v))v=d;return Math.min(hi,Math.max(lo,v));}
+function read(){
+  S.I=+$('I').value;S.s=+$('s').value;S.k=num('kN',1,6,2.5);S.W=num('WN',0.5,4,1.5);S.e=num('eN',0,1,0.6);
+  S.noEvent=sel.value==='none';if(!S.noEvent)lastE=+sel.value;S.E=lastE;
+  S.target=num('target',5,200,20);S.bots=$('bots').checked;S.botT=num('botT',1,1000,100);
+  S.w=[num('wN',0,10,.1),num('wM',0,10,.5),num('wA',0,10,1),num('wE',0,10,2)];
+}
+function w(u){const h=(18+u)%24;return h<7?S.w[0]:h<12?S.w[1]:h<18?S.w[2]:S.w[3];}
+function sumW(){let t=0;for(let u=0;u<48;u++)t+=w(u);return t;}
+// R(T) for a given number of sign-ups
+function Rcurve(I,s){
+  const P=I*s,Ss=P*S.k,Sw=sumW(),W=S.W,out=[];
+  for(let T=0;T<=48;T++){let r=0;for(let u=0;u<T;u++)r+=Ss*w(u)/Sw*W*(Math.exp(-(T-u-1)/W)-Math.exp(-(T-u)/W));out.push(Sw>0?r:0);}
+  return out;
+}
+function compute(){
+  const P=S.I*S.s,Ss=P*S.k,Sw=sumW(),R=Rcurve(S.I,S.s);
+  const e=S.noEvent?0:S.e;
+  const C=R.slice();if(!S.noEvent)C[S.E]=(1-e)*R[S.E]+e*P;
+  let pk=0;for(let T=0;T<=48;T++)if(C[T]>C[pk]+1e-12)pk=T;
+  let rpk=0;for(let T=0;T<=48;T++)if(R[T]>R[rpk]+1e-12)rpk=T;
+  const R1E=R[S.E]/S.I;
+  const perSign=s=>s*e+(1-e)*R1E*(s/S.s); // R1 scales with s
+  const need=t=>Math.ceil(t/perSign(S.s)-1e-9);
+  const needPeakNoEvent=Math.ceil(S.target/(R[rpk]/S.I)-1e-9);
+  const L=Ss*S.w[3]/Sw*S.W;
+  return {P,Ss,Sw,R,C,pk,rpk,R1E,perSign,need,needPeakNoEvent,L,e,share:S.w[3]/Sw,CE:C[S.E],RE:R[S.E]};
+}
+
+function setup(c){const d=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*d);c.height=Math.max(1,r.height*d);const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);return {g,w:r.width,h:r.height};}
+function nice(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v-1e-9);}
+
+function drawWeek(m){
+  const c=setup($('cWk')),g=c.g,pad={l:40,r:12,t:14,b:44},pw=c.w-pad.l-pad.r,ph=c.h-pad.t-pad.b;
+  let top=Math.max(...m.C);if(S.bots&&!S.noEvent)top=Math.max(top,S.botT);
+  const yM=nice(Math.max(60,1.1*top,S.target*1.1));
+  const X=T=>pad.l+pw*T/48,Y=v=>pad.t+ph*(1-v/yM);
+  g.clearRect(0,0,c.w,c.h);
+  // night shading
+  g.fillStyle=css('--ink-soft');g.globalAlpha=.16;
+  [[6,13],[30,37]].forEach(([a,b])=>g.fillRect(X(a),pad.t,X(b)-X(a),ph));g.globalAlpha=1;
+  g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');
+  for(let i=0;i<=4;i++){const v=yM*i/4,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(c.w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(v),pad.l-6,y);}
+  const step=pw<520?12:6;
+  for(let T=0;T<=48;T+=step){const x=X(T),lab=clock(T).split(' ');g.textAlign=T===0?'left':T===48?'right':'center';g.textBaseline='top';g.fillText(lab[0],x,c.h-pad.b+5);g.fillText(lab[1],x,c.h-pad.b+19);
+    g.globalAlpha=.5;g.beginPath();g.moveTo(x,c.h-pad.b);g.lineTo(x,c.h-pad.b+3);g.stroke();g.globalAlpha=1;}
+  g.save();g.translate(11,pad.t+ph/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillText('online',0,0);g.restore();
+  // target
+  const ty=Y(S.target);g.strokeStyle=css('--blood');g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,ty);g.lineTo(c.w-pad.r,ty);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--blood');g.font='600 12px '+css('--sans');const tr=S.noEvent||S.E<30;g.textAlign=tr?'right':'left';g.textBaseline='bottom';g.fillText('target '+fmt(S.target),tr?c.w-pad.r-4:pad.l+4,ty-3);
+  // bots band
+  if(S.bots&&!S.noEvent){const hu=m.CE,tot=Math.max(hu,S.botT),x=X(S.E),bw=Math.max(8,pw/48*.9);
+    g.fillStyle=css('--moss');g.globalAlpha=.45;g.fillRect(x-bw/2,Y(tot),bw,Y(hu)-Y(tot));g.globalAlpha=1;
+    g.fillStyle=css('--moss');g.textAlign=x>c.w-80?'right':'left';g.textBaseline='middle';g.fillText('bots',x>c.w-80?x-bw/2-4:x+bw/2+4,Y((hu+tot)/2));}
+  // regular curve
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();m.R.forEach((v,T)=>T?g.lineTo(X(T),Y(v)):g.moveTo(X(T),Y(v)));g.stroke();
+  // spike
+  if(!S.noEvent){const E=S.E;g.strokeStyle=css('--ochre');g.lineWidth=3;g.beginPath();g.moveTo(X(E-1),Y(m.R[E-1]));g.lineTo(X(E),Y(m.CE));g.lineTo(X(E+1),Y(m.R[E+1]));g.stroke();
+    g.fillStyle=css('--ochre');g.beginPath();g.arc(X(E),Y(m.CE),5.5,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');const right=X(E)>c.w-150;g.textAlign=right?'right':'left';g.textBaseline='bottom';
+    g.fillText('event '+m.CE.toFixed(1),right?X(E)-8:X(E)+8,Y(m.CE)-2);}
+}
+function fmt(n){return Math.round(n).toLocaleString('en-US');}
+function drawNeed(m){
+  const c=setup($('cNeed')),g=c.g,pad={l:44,r:14,t:14,b:36},pw=c.w-pad.l-pad.r,ph=c.h-pad.t-pad.b,yM=400;
+  const X=s=>pad.l+pw*(s-.2)/.7,Y=v=>pad.t+ph*(1-Math.min(v,yM)/yM);
+  g.clearRect(0,0,c.w,c.h);g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');
+  for(let i=0;i<=4;i++){const v=yM*i/4,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(c.w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,y);}
+  for(let s=.2;s<=.901;s+=.1){g.textAlign='center';g.textBaseline='top';g.fillText(s.toFixed(1),X(s),c.h-pad.b+5);}
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('show rate s',c.w-pad.r,c.h-2);
+  const need=s=>Math.ceil(S.target/m.perSign(s)-1e-9);
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=140;i++){const s=.2+.7*i/140,v=need(s);i?g.lineTo(X(s),Y(v)):g.moveTo(X(s),Y(v));}
+  g.stroke();
+  // clip arrow: last s where curve is above 400
+  let sClip=null;for(let i=0;i<=140;i++){const s=.2+.7*i/140;if(need(s)>yM)sClip=s;}
+  if(sClip!==null){const x=X(Math.max(.2,sClip)),y=pad.t;g.fillStyle=css('--steel');g.beginPath();g.moveTo(x,y-6);g.lineTo(x-6,y+4);g.lineTo(x+6,y+4);g.closePath();g.fill();
+    g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='top';g.fillText('above 400',Math.min(x+9,c.w-80),y);}
+  const v=need(S.s);g.fillStyle=css('--ochre');g.beginPath();g.arc(X(S.s),Y(v),6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');const right=X(S.s)>c.w-110;g.textAlign=right?'right':'left';g.textBaseline='bottom';
+  g.fillText(fmt(v)+' at s = '+S.s.toFixed(2),right?X(S.s)-9:X(S.s)+9,Math.max(pad.t+14,Y(v)-4));
+}
+
+function panel(m){
+  const rows=[
+    ['Players who log in, P',f2(m.P)],['Sessions, S',f2(m.Ss)],['Total hour weight, Σw',f2(m.Sw)],
+    ['Evening share_hour',(m.share*100).toFixed(2)+'%'],["Little's law L, steady evening",f2(m.L)],
+    ['R(E), regular crowd at '+clock(S.E),f2(m.RE)]];
+  if(!S.noEvent)rows.push(['C(E), online at the event',f2(m.CE),'big']);
+  rows.push(['Regular peak, no spike',f2(m.R[m.rpk])+'<span class="sub">'+clock(m.rpk)+'</span>']);
+  if(!S.noEvent)rows.push(['Peak of C',f2(m.C[m.pk])+'<span class="sub">'+clock(m.pk)+'</span>']);
+  rows.push([S.noEvent?'Sign-ups for '+fmt(S.target)+' at '+clock(S.E)+', no event':'Sign-ups needed for '+fmt(S.target),fmt(m.need(S.target))+(S.noEvent?'<span class="sub">'+fmt(m.needPeakNoEvent)+' at the regular peak, '+clock(m.rpk)+'</span>':''),'big']);
+  if(S.bots&&!S.noEvent)rows.push(['Bots needed at the event',fmt(Math.max(0,Math.ceil(S.botT-m.CE-1e-9)))]);
+  $('nums').innerHTML=rows.map(r=>`<dt>${r[0]}</dt><dd class="${r[2]||''}">${r[1]}</dd>`).join('');
+  $('botLeg').hidden=!(S.bots&&!S.noEvent);
+  const n50=Math.ceil(50/m.perSign(S.s)-1e-9);
+  $('caption').textContent=S.noEvent
+    ?`${fmt(m.P)} players, ${fmt(m.L)} online on a normal evening. With no event the peak is ${m.C[m.pk].toFixed(1)}. Fifty would take ${fmt(n50)} sign-ups.`
+    :`${fmt(m.P)} players, ${fmt(m.L)} online on a normal evening. The ${['Friday','Saturday','Sunday'][Math.floor((18+S.E)/24)]} event brings ${fmt(m.CE)}. Fifty would take ${fmt(n50)} sign-ups.`;
+  $('needSub').textContent=S.noEvent?`No event: sized at ${clock(S.E)} with e = 0`:`Event at ${clock(S.E)}, e = ${S.e.toFixed(2)}, target ${fmt(S.target)}`;
+}
+function outputs(){$('oI').textContent=S.I;$('os').textContent=S.s.toFixed(2);}
+let M;
+function draw(){drawWeek(M);drawNeed(M);}
+function update(){read();outputs();M=compute();panel(M);draw();}
+['k','W','e'].forEach(id=>{$(id).addEventListener('input',()=>{$(id+'N').value=$(id).value;});$(id+'N').addEventListener('input',()=>{$(id).value=$(id+'N').value;});});
+function preset(v){for(const k in v){$(k).value=v[k];if($(k+'N'))$(k+'N').value=v[k];}update();}
+$('plan').addEventListener('click',()=>preset({I:60,s:0.55,k:2.5,W:1.5,e:0.6}));
+$('wk10').addEventListener('click',()=>preset({I:40,s:0.65,k:2.69,W:2.1,e:0.654}));
+document.querySelectorAll('input,select').forEach(el=>el.addEventListener(el.type==='checkbox'||el.tagName==='SELECT'?'change':'input',update));
+window.addEventListener('resize',()=>M&&draw());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>M&&draw());
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>M&&draw());
+update();
+window.__update=update;window.__preset=preset;window.__M=()=>M;
+})();
+</script>
+</body>
+</html>

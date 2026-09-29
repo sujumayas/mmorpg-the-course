@@ -194,3 +194,17 @@ Every running agent stopped with the weekly limit (HTTP 429). The limit resets o
 - Fact sweep, wave 5 (29 Sep 2026): GD201 Totten chapters verified on Crossref (w02, w13 readings fixed); GD202 BG3 "34 players" hedged (404, no Larian source); CS203 Iwatani quote stays via Birch; MMO306 Story Mode, Duty Support, Issue 14 verified; MMO307 Dampening hotfix note verified; MMO308 Andersen, Roblox (hook corrected to ~50 h), Mob Vote (Mojang, Sept 2024), OSRS coin pouch verified, Destiny 2 sizes and Koster report hedged; MMO407 Politowski 116/112 and Combat Upgrade 27 Apr 2005 verified, FWST-8 page date hedged. Details in each REVIEW.md. curriculum.yaml still carries "verify" tags at lines 1040 and 1371 for the orchestrator.
 - Fact sweep, wave 4 courses (29 September 2026). CS202: 7 verified (Quake III source, Riot figures, Apex 60 players via EA, TiDi blog, clumsy 0.3, Gilbert/Elliott) and 2 hedged (Tribes paper undated, Tribes 2 design). DB201: 6 verified (Fortnite postmortem, WoW 12.0.0, GameAnalytics, Roblox 10-K, Riot and Blizzard policies), with the GameAnalytics `v` field corrected, and Kleppmann 256 TB hedged. MMO309: 4 verified (Botcraft, Kwon author order, EQ2 2005 and SWG from primary sources), 2 hedged (Steam 15-day hold, Bungie award) and 1 removed (SWG uninvolved-trader bans). MMO302: SWG source cited directly. MMO404: Star Citizen 500-player target verified. CS101 and CS102 had nothing open. Details are in each course REVIEW.md.
   - Still unverified: Steam's 15-day figure (GameSpot bot-walled), Bungie's confirmed award amount, the Kleppmann paraphrases (book paywalled).
+- PR201 review items 1 to 3 closed (29 Sep 2026): week 9 burn-up baseline traced from week 2 (311 − 94 = 217) through a new week 5 term check and the week 6 and 8 cuts; weeks 8 and 12 converted to estimate-hours against f × U (labs 08 and 12, checkers, w12 example updated); M2 persistence reduced to a save format and an atomic file save, with database and full tracking-plan criteria moved to M3. No new real-game facts. check_course PR201 leaves only the syllabus findings.
+
+## PR301 complete (29 Sep 2026)
+
+- The review worked through the notes in docs/handoff/notes-PR301.md. These now agree across the course:
+  - The team is Saltmarsh, 7 people, with f = 0.46 then 0.54 and estimates in hours.
+  - The tick rule is mean ≤60 ms and p99 ≤80 ms at 100 bots in the market-square layout.
+  - Sprint 2 velocity is 44.8 h (38.2 committed plus 6.6 pulled in).
+  - Alpha turnout is 40/26/17 with s = 0.65, and the plan is 145.
+  - The w11 bug reserve is w10's top four.
+- Sprint calendar: each sprint runs two weeks, from one planning session to the next. Reviews open weeks 5, 7 and 9. Weeks 4, 6 and 8 are mid-sprint sessions that rehearse the review. The week titles still come from curriculum.yaml.
+- The lab 06 checker now prints NOT READY unless the planned mobs fit the tick rule or the chosen option is modelled.
+- All 14 checkers fail on the starter and pass on a solution. The reviewer verified 14 real-game facts against wiki source, NWDB and archive.org.
+- Still unverified: the Warcraft Wiki "Respawn" page has no patch date. The guide says so.

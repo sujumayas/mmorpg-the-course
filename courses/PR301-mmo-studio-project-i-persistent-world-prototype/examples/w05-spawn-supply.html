@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spawn supply vs crowd · PR301 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend svg{vertical-align:middle;margin-right:5px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.work{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;margin-top:16px}
+@media (max-width:860px){.work{grid-template-columns:1fr}}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+.controls .wide{grid-column:1/-1}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.presets span{font-weight:600;font-size:.9rem;width:100%}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+h2{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin:0 0 8px}
+.table-wrap{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.82rem;color:var(--ink-soft);font-weight:600}
+td.fx{color:var(--blood)} td.dy{color:var(--steel)}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.over{color:var(--blood);font-weight:700}
+.crowd{margin-top:18px}
+.crowd table{min-width:620px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+code{font-size:.92em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR301 MMO Studio Project I · Week 5 · Worked example</p>
+  <h1>Will the camp feed the crowd?</h1>
+  <p class="lede">Saltmarsh's Reedbank camp has 12 wolves on a 90-second timer. It looked perfect with three testers. Push the crowd up: a fixed timer leaves players standing idle once demand passes supply, while a dynamic timer holds utilization at 0.8 until it hits its floor.</p>
+</header>
+
+<section class="panel" aria-label="Spawn supply model">
+  <div class="charts">
+    <figure>
+      <figcaption>Players waiting<small>Share of each player's time spent waiting for a spawn, by crowd size</small></figcaption>
+      <canvas id="cIdle" role="img" aria-label="Idle share versus players for fixed and dynamic respawn timers"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="6" aria-hidden="true"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--blood)" stroke-width="3" stroke-dasharray="6 4"/></svg>Fixed timer (dashed)</span>
+        <span><svg width="22" height="6" aria-hidden="true"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--steel)" stroke-width="3"/></svg>Dynamic timer (solid)</span>
+        <span><svg width="14" height="10" aria-hidden="true"><rect width="14" height="10" fill="var(--blood)" opacity=".16"/></svg>Fixed ρ &gt; 0.8</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Income per player<small>Copper per player-hour from this camp</small></figcaption>
+      <canvas id="cInc" role="img" aria-label="Income per player-hour versus players for fixed and dynamic respawn timers"></canvas>
+      <div class="legend">
+        <span><svg width="22" height="6" aria-hidden="true"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--blood)" stroke-width="3" stroke-dasharray="6 4"/></svg>Fixed</span>
+        <span><svg width="22" height="6" aria-hidden="true"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--steel)" stroke-width="3"/></svg>Dynamic</span>
+        <span><svg width="22" height="6" aria-hidden="true"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--ochre)" stroke-width="2" stroke-dasharray="2 3"/></svg>Never waiting: k × 60 × drop</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="work">
+    <div>
+      <div class="presets" role="group" aria-label="Designs from the lecture">
+        <span>Designs from the lecture</span>
+        <button class="chip" data-p='{"M":12,"T":90}' aria-pressed="true">Reedbank, T = 90</button>
+        <button class="chip" data-p='{"M":12,"T":30}' aria-pressed="false">Fix 1: T = 30</button>
+        <button class="chip" data-p='{"M":18,"T":90}' aria-pressed="false">Fix 3: 18 spawns</button>
+      </div>
+      <div class="controls">
+        <div class="wide"><label for="P">Players at camp P <output id="oP"></output></label><input id="P" type="range" min="1" max="30" step="1" value="10"></div>
+        <div><label for="M">Spawn points M <output id="oM"></output></label><input id="M" type="range" min="4" max="30" step="1" value="12"></div>
+        <div><label for="T">Fixed respawn T (s) <output id="oT"></output></label><input id="T" type="range" min="10" max="180" step="5" value="90"></div>
+        <div><label for="TTK">Time to kill TTK (s) <output id="oTTK"></output></label><input id="TTK" type="range" min="5" max="60" step="1" value="20"></div>
+        <div><label for="t">Travel and loot t (s) <output id="ot"></output></label><input id="t" type="range" min="0" max="30" step="1" value="10"></div>
+        <div><label for="drop">Drop value (copper) <output id="odrop"></output></label><input id="drop" type="range" min="1" max="20" step="1" value="5"></div>
+        <div><label for="target">Target utilization <output id="otarget"></output></label><input id="target" type="range" min="0.5" max="1" step="0.05" value="0.8"></div>
+        <div><label for="Tmin">Dynamic T_min (s) <output id="oTmin"></output></label><input id="Tmin" type="range" min="5" max="60" step="1" value="20"></div>
+        <div><label for="Tmax">Dynamic T_max (s) <output id="oTmax"></output></label><input id="Tmax" type="range" min="30" max="180" step="1" value="90"></div>
+      </div>
+    </div>
+    <div>
+      <h2 id="rdH">At P = 10</h2>
+      <div class="table-wrap">
+        <table aria-labelledby="rdH" aria-live="polite">
+          <thead><tr><th>Quantity</th><th>Fixed</th><th>Dynamic</th></tr></thead>
+          <tbody id="rd"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="crowd">
+    <h2 id="crH">Crowd table, same settings</h2>
+    <div class="table-wrap">
+      <table aria-labelledby="crH">
+        <thead><tr><th>Players</th><th>Demand λ</th><th>Fixed μ</th><th>Fixed ρ</th><th>Fixed idle</th><th>Dynamic T</th><th>Dynamic μ</th><th>Dynamic ρ</th><th>Dynamic idle</th></tr></thead>
+        <tbody id="crowd"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Model from PR301 week 5, section 2. Rates are per minute. Kills per player per minute = min(k, μ / P). The simple idle formula is zero below ρ = 1; real players start waiting earlier, which is why the target is 0.8. Check any design with <code>check_camps.py</code> from lab 05. Saltmarsh is an invented team.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2=n=>n.toFixed(2);
+const pc=n=>(n*100).toFixed(1)+'%';
+const S={};
+const ids=['P','M','T','TTK','t','drop','target','Tmin','Tmax'];
+function read(){ids.forEach(i=>S[i]=+$(i).value);}
+
+function model(P,dyn){
+  const k=60/(S.TTK+S.t),lam=P*k;
+  const T=dyn?Math.min(Math.max(S.M*60*S.target/lam,S.Tmin),S.Tmax):S.T;
+  const mu=S.M*60/T,rho=lam/mu,idle=Math.max(0,1-mu/lam);
+  const kpm=Math.min(k,mu/P),inc=kpm*60*S.drop;
+  return {k,lam,T,mu,rho,idle,kpm,inc,floor:dyn&&T===S.Tmin&&S.M*60*S.target/lam<S.Tmin,ceil:dyn&&T===S.Tmax&&S.M*60*S.target/lam>S.Tmax};
+}
+
+function setup(c){const d=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*d);c.height=Math.max(1,r.height*d);const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);return {g,w:r.width,h:r.height};}
+const pad={l:50,r:12,t:12,b:44};
+const X=(c,p)=>pad.l+(c.w-pad.l-pad.r)*(p-1)/29;
+const Y=(c,v,yM)=>pad.t+(c.h-pad.t-pad.b)*(1-v/yM);
+function axes(c,yM,yf,xl){
+  const g=c.g;g.clearRect(0,0,c.w,c.h);g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=Y(c,yM*i/4,yM);g.beginPath();g.moveTo(pad.l,y);g.lineTo(c.w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(yf(yM*i/4),pad.l-6,y);}
+  [1,5,10,15,20,25,30].forEach(p=>{g.textAlign='center';g.textBaseline='top';g.fillText(p,X(c,p),c.h-pad.b+6);});
+  g.textAlign='center';g.textBaseline='bottom';g.fillText(xl,pad.l+(c.w-pad.l-pad.r)/2,c.h-2);
+}
+function line(c,yM,fn,color,dash,w){const g=c.g;g.strokeStyle=color;g.lineWidth=w||2.5;g.setLineDash(dash||[]);g.beginPath();
+  for(let i=0;i<=290;i++){const p=1+i/10,v=Math.min(fn(p),yM);i?g.lineTo(X(c,p),Y(c,v,yM)):g.moveTo(X(c,p),Y(c,v,yM));}g.stroke();g.setLineDash([]);}
+function dot(c,p,v,yM,color){const g=c.g;g.fillStyle=color;g.beginPath();g.arc(X(c,p),Y(c,v,yM),5.5,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+function cursor(c){const g=c.g,x=X(c,S.P);g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,c.h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+
+function draw(){
+  const red=css('--blood'),blue=css('--steel'),och=css('--ochre');
+  // idle
+  let c=setup($('cIdle'));
+  axes(c,1,v=>Math.round(v*100)+'%','players P');
+  const k=60/(S.TTK+S.t),mu=S.M*60/S.T;
+  const bandP=0.8*mu/k;
+  if(bandP<30){const g=c.g,x0=X(c,Math.max(1,bandP));g.fillStyle=red;g.globalAlpha=.13;g.fillRect(x0,pad.t,c.w-pad.r-x0,c.h-pad.t-pad.b);g.globalAlpha=1;
+    g.fillStyle=red;g.font='600 12px '+css('--sans');g.textAlign=x0>c.w-120?'right':'left';g.textBaseline='top';g.fillText('fixed ρ > 0.8',x0>c.w-120?c.w-pad.r-4:x0+5,pad.t+4);}
+  line(c,1,p=>model(p,false).idle,red,[7,5]);
+  line(c,1,p=>model(p,true).idle,blue,[],2.5);
+  cursor(c);dot(c,S.P,model(S.P,false).idle,1,red);dot(c,S.P,model(S.P,true).idle,1,blue);
+  // income
+  c=setup($('cInc'));
+  const top=k*60*S.drop,yM=niceMax(top*1.12);
+  axes(c,yM,v=>Math.round(v).toLocaleString('en-US'),'players P');
+  line(c,yM,()=>top,och,[2,4],2);
+  line(c,yM,p=>model(p,false).inc,red,[7,5]);
+  line(c,yM,p=>model(p,true).inc,blue,[],2.5);
+  cursor(c);dot(c,S.P,model(S.P,false).inc,yM,red);dot(c,S.P,model(S.P,true).inc,yM,blue);
+}
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v);}
+
+function readout(){
+  const a=model(S.P,false),b=model(S.P,true);
+  $('rdH').textContent='At P = '+S.P+' players';
+  const rows=[
+    ['k, kills/min one player wants',f2(a.k),f2(b.k)],
+    ['λ, demand (kills/min)',f2(a.lam),f2(b.lam)],
+    ['T, respawn (s)',f2(a.T),f2(b.T)+(b.floor?' floor':b.ceil?' ceiling':'')],
+    ['μ, supply (kills/min)',f2(a.mu),f2(b.mu)],
+    ['ρ, utilization',rh(a.rho),rh(b.rho)],
+    ['Idle share',pc(a.idle),pc(b.idle)],
+    ['Kills per player per min',f2(a.kpm),f2(b.kpm)],
+    ['Income per player-hour',f2(a.inc),f2(b.inc)]];
+  $('rd').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td class="fx">${r[1]}</td><td class="dy">${r[2]}</td></tr>`).join('');
+  const list=[3,6,10,15,20,25,30];if(!list.includes(S.P)){list.push(S.P);list.sort((x,y)=>x-y);}
+  $('crowd').innerHTML=list.map(p=>{const x=model(p,false),y=model(p,true);
+    return `<tr class="${p===S.P?'here':''}"><td>${p}</td><td>${f2(x.lam)}</td><td>${f2(x.mu)}</td><td>${rh(x.rho)}</td><td>${pc(x.idle)}</td><td>${y.T.toFixed(1)}${y.floor?' (floor)':y.ceil?' (ceiling)':''}</td><td>${f2(y.mu)}</td><td>${rh(y.rho)}</td><td>${pc(y.idle)}</td></tr>`;}).join('');
+  // insight
+  const k=a.k,full=k*60*S.drop;
+  const pFixed=Math.floor(S.target*a.mu/k+1e-9);
+  const pFloor=S.M*60*S.target/(k*S.Tmin); // dynamic reaches floor above this crowd
+  let s=`At <b>${S.P}</b> players the fixed ${S.T}-second timer supplies ${f2(a.mu)} kills a minute against a demand of ${f2(a.lam)}: ρ = ${f2(a.rho)}, players wait <b>${pc(a.idle)}</b> of the time and earn ${Math.round(a.inc)} copper an hour instead of ${Math.round(full)}. `;
+  s+=`The dynamic timer sets T = ${b.T.toFixed(1)} s, giving ρ = ${f2(b.rho)} and <b>${pc(b.idle)}</b> idle. `;
+  s+=pFixed>=1?`The fixed timer stays at or under ρ = ${S.target.toFixed(2)} only up to ${pFixed} player${pFixed===1?'':'s'}. `:`The fixed timer is over ρ = ${S.target.toFixed(2)} even for one player. `;
+  s+=pFloor<30?`The dynamic timer hits its ${S.Tmin}-second floor above ${pFloor.toFixed(1)} players; past that only more spawn points help.`:`With ${S.M} spawn points the dynamic timer never reaches its floor in this range.`;
+  $('insight').innerHTML=s;
+}
+function rh(r){const s=f2(r);return r>S.target+1e-9?`<span class="over">${s}</span>`:s;}
+
+function outputs(){
+  $('oP').textContent=S.P;$('oM').textContent=S.M;$('oT').textContent=S.T;$('oTTK').textContent=S.TTK;$('ot').textContent=S.t;
+  $('odrop').textContent=S.drop;$('otarget').textContent=S.target.toFixed(2);$('oTmin').textContent=S.Tmin;$('oTmax').textContent=S.Tmax;
+}
+function update(){read();outputs();readout();draw();}
+ids.forEach(i=>$(i).addEventListener('input',()=>{
+  if(i==='Tmin'&&+$('Tmin').value>+$('Tmax').value)$('Tmax').value=$('Tmin').value;
+  if(i==='Tmax'&&+$('Tmax').value<+$('Tmin').value)$('Tmin').value=$('Tmax').value;
+  if(i==='M'||i==='T')document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(JSON.parse(c.dataset.p).M===+$('M').value&&JSON.parse(c.dataset.p).T===+$('T').value)));
+  update();
+}));
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const p=JSON.parse(b.dataset.p);$('M').value=p.M;$('T').value=p.T;
+  document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c===b)));update();
+}));
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+window.__model=model;window.__update=update;
+})();
+</script>
+</body>
+</html>
