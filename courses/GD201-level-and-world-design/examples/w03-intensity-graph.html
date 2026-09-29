@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Intensity graph, GD201 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.layout{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+.views{display:grid;gap:12px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.counter{font:700 .95rem var(--mono);color:var(--ochre);white-space:nowrap}
+.barwrap{position:relative;height:200px}
+.yax{position:absolute;left:0;top:0;bottom:22px;width:34px;font-size:12px;color:var(--ink-soft)}
+.yax span{position:absolute;right:6px;transform:translateY(-50%)}
+.yax i{position:absolute;left:34px;height:1px;background:var(--grid);width:var(--gw)}
+.bars{position:absolute;left:40px;right:10px;top:0;bottom:22px;display:flex;align-items:stretch;gap:2px}
+.bar{flex:1 1 0;min-width:0;position:relative;border:0;padding:0;background:transparent;cursor:default;touch-action:none;border-radius:3px}
+.bar.edit{cursor:ns-resize}
+.bar.edit:hover{background:color-mix(in srgb,var(--steel) 10%,transparent)}
+.bar .fill{position:absolute;left:0;right:0;bottom:0;background:var(--blood);border-radius:3px 3px 0 0}
+.bar .v{position:absolute;left:-4px;right:-4px;text-align:center;font:700 11px var(--mono);color:var(--ink)}
+@media (max-width:480px){.bar .v{font-size:9px}}
+.xax{position:absolute;left:40px;right:10px;bottom:0;height:20px;font-size:12px;color:var(--ink-soft)}
+.xax span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+@media (max-width:480px){.xax span.odd{display:none}}
+canvas{display:block;width:100%;height:260px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.sw{display:inline-block;width:22px;height:12px;vertical-align:middle;margin-right:6px;border:1px solid var(--ink-soft)}
+.sw.peak{background:repeating-linear-gradient(45deg,var(--blood) 0 1.5px,transparent 1.5px 6px)}
+.sw.calm{background:radial-gradient(circle,var(--steel) 1.3px,transparent 1.5px) 0 0/5px 5px}
+.sw.relax{background:var(--moss);opacity:.5}
+.sw.eq{height:0;border:0;border-top:2px dashed var(--ochre)}
+.side{min-width:0}
+.group-label{font-weight:600;font-size:.92rem;margin:0 0 6px}
+.designs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.chip{font:600 .88rem var(--sans);padding:8px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.plain{border-color:var(--ink-soft)}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+.ctl{margin-top:12px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+label small{font-weight:400;color:var(--ink-soft)}
+label output{font-family:var(--mono);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--ochre)}
+.check{display:flex;gap:8px;align-items:center;font-weight:400;justify-content:flex-start}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:6px 12px 10px;margin:12px 0 0}
+fieldset:disabled{opacity:.5}
+legend{font-weight:600;font-size:.88rem;padding:0 4px}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 4px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.25rem;font-family:var(--mono);font-weight:600;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:900px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto}
+.note{font-family:var(--serif);font-size:.95rem;margin:0 0 6px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:.86rem;min-width:100%}
+th,td{padding:4px 9px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-family:var(--sans);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.pk{color:var(--blood);font-weight:700}
+td.cm{color:var(--steel)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD201 Level and World Design · Week 3 · Worked example</p>
+  <h1>Same threat, different fight</h1>
+  <p class="lede">All three designs spend exactly 180 threat over three minutes. Spread evenly, it feels like nothing: intensity creeps to 20 and sits there. Bunched into waves, it gives two peaks and a full minute of calm. Switch designs and watch the total stay put while the curve changes.</p>
+</header>
+
+<section class="panel" aria-label="Intensity model">
+  <div class="layout">
+    <div class="views">
+      <figure>
+        <figcaption><span>Threat per step<small id="barHint">Each bar is 10 s of enemies</small></span><span class="counter" id="counter">Total threat: 180</span></figcaption>
+        <div class="barwrap" id="barwrap">
+          <div class="yax" id="yax"></div>
+          <div class="bars" id="bars" role="group" aria-label="Threat per 10-second step"></div>
+          <div class="xax" id="xax"></div>
+        </div>
+      </figure>
+      <figure>
+        <figcaption><span>Intensity<small>I[k] = d × I[k−1] + E[k], at the end of each step</small></span></figcaption>
+        <canvas id="cI" role="img" aria-label="Intensity curve over 180 seconds with peak and calm bands"></canvas>
+        <div class="legend">
+          <span><i class="sw peak"></i>Peak band (I ≥ peak)</span>
+          <span><i class="sw calm"></i>Calm band (I &lt; calm)</span>
+          <span id="lgRelax"><i class="sw relax"></i>Director relax step</span>
+          <span id="lgEq"><i class="sw eq"></i>Equilibrium</span>
+        </div>
+      </figure>
+    </div>
+
+    <div class="side">
+      <p class="group-label" id="dl">Design</p>
+      <div class="designs" role="group" aria-labelledby="dl">
+        <button class="chip" data-d="A" aria-pressed="false">A drip</button>
+        <button class="chip" data-d="B" aria-pressed="true">B authored wave</button>
+        <button class="chip" data-d="C" aria-pressed="false">C Director</button>
+        <button class="chip" data-d="U" aria-pressed="false">Custom</button>
+      </div>
+
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--ochre)"><b id="rTot">—</b><span>total threat</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rMax">—</b><span>maximum I</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rPeak">—</b><span>peak time</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rCalm">—</b><span>calm time</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rPeaks">—</b><span>peaks</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rEq">—</b><span>equilibrium, mean threat</span></div>
+      </div>
+
+      <div class="ctl"><label for="d">Decay d <output id="oD"></output></label><input id="d" type="range" min="0.1" max="0.9" step="0.05" value="0.5">
+        <small style="color:var(--ink-soft);font-size:.82rem">Half-life <span id="hl" style="font-family:var(--mono)"></span></small></div>
+      <div class="ctl"><label for="pk">Peak threshold <output id="oPk"></output></label><input id="pk" type="range" min="20" max="60" step="1" value="35"></div>
+      <div class="ctl"><label for="cm">Calm threshold <output id="oCm"></output></label><input id="cm" type="range" min="0" max="20" step="1" value="10"></div>
+      <fieldset id="dirSet"><legend>Director (design C)</legend>
+        <label for="full">Full population <output id="oFull"></output></label><input id="full" type="range" min="5" max="40" step="1" value="20">
+        <label for="relax">Relax steps <output id="oRelax"></output></label><input id="relax" type="range" min="0" max="6" step="1" value="3">
+      </fieldset>
+      <div class="ctl"><label class="check" for="eq"><input type="checkbox" id="eq" checked> Show equilibrium line</label></div>
+      <div class="btns">
+        <button class="chip plain" id="norm">Normalise total</button>
+        <button class="chip plain" id="reset">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="insight" id="insight"></p>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <p class="note">All designs at the current d and thresholds</p>
+      <table><thead><tr><th>Design</th><th>Total</th><th>Max</th><th>Peak</th><th>Calm</th><th>Peaks</th></tr></thead><tbody id="tDes"></tbody></table>
+    </div>
+    <div class="table-wrap">
+      <p class="note">Step by step for the selected design</p>
+      <table><thead><tr><th>Step (end, s)</th><th>E</th><th>I</th></tr></thead><tbody id="tSteps"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<footer>Model from the week 3 lecture. Intensity decays by d each 10-second step and adds that step's threat. The Director rule sends a full population when not resting and rests for a set number of steps after intensity reaches the peak threshold. Bars and lines only, no game art. Keyboard: focus a bar and press Up or Down to change it by 5, Left or Right to move between bars.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f1=n=>n.toFixed(1),f2=n=>n.toFixed(2);
+const K=18,YB=60,YI=80;
+const B0=[0,5,10,15,20,30,40,0,0,0,0,5,10,15,30,0,0,0];
+const D={design:'B',d:0.5,pk:35,cm:10,full:20,relax:3,eq:true};
+let st={...D},Bars=B0.slice(),Custom=B0.slice(),focusIdx=0;
+
+function director(p=st){let rest=0,I=0;const E=[],Is=[],relax=[];for(let k=0;k<K;k++){const e=rest>0?0:p.full;relax.push(rest>0);rest=Math.max(0,rest-1);I=p.d*I+e;if(e>0&&I>=p.pk)rest=p.relax;E.push(e);Is.push(I);}return {E,I:Is,relax};}
+function run(E,d){let I=0;return E.map(e=>I=d*I+e);}
+function series(des){
+  if(des==='A'){const E=Array(K).fill(10);return {E,I:run(E,st.d),relax:[]};}
+  if(des==='B')return {E:Bars.slice(),I:run(Bars,st.d),relax:[]};
+  if(des==='C')return director();
+  return {E:Custom.slice(),I:run(Custom,st.d),relax:[]};
+}
+function stats(s){const tot=s.E.reduce((a,b)=>a+b,0);let pt=0,ct=0,peaks=0,prev=false,mx=0;
+  s.I.forEach(v=>{const on=v>=st.pk-1e-9;if(on)pt+=10;if(v<st.cm-1e-9)ct+=10;if(on&&!prev)peaks++;prev=on;mx=Math.max(mx,v);});
+  return {tot,mx,pt,ct,peaks,eq:(tot/K)/(1-st.d)};}
+const editable=()=>st.design==='B'||st.design==='U';
+function curE(){return st.design==='B'?Bars:Custom;}
+
+// ---------- bars ----------
+function buildBars(){
+  const box=$('bars');box.innerHTML='';
+  for(let k=0;k<K;k++){const b=document.createElement('button');b.className='bar';b.dataset.k=k;b.tabIndex=k===focusIdx?0:-1;
+    b.innerHTML='<span class="fill"></span><span class="v"></span>';box.appendChild(b);
+    b.addEventListener('keydown',e=>{
+      if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();focusIdx=Math.max(0,Math.min(K-1,k+(e.key==='ArrowRight'?1:-1)));roving();box.children[focusIdx].focus();return;}
+      if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();if(!editable())return;const a=curE();a[k]=Math.max(0,Math.min(YB,a[k]+(e.key==='ArrowUp'?5:-5)));update();}
+      if(e.key==='Home'){e.preventDefault();focusIdx=0;roving();box.children[0].focus();}
+      if(e.key==='End'){e.preventDefault();focusIdx=K-1;roving();box.children[K-1].focus();}
+    });
+    b.addEventListener('focus',()=>{focusIdx=k;roving();});
+    let drag=false;
+    const setFrom=ev=>{const r=box.getBoundingClientRect();const v=Math.round((r.bottom-ev.clientY)/r.height*YB/5)*5;curE()[k]=Math.max(0,Math.min(YB,v));update();};
+    b.addEventListener('pointerdown',ev=>{if(!editable())return;drag=true;b.setPointerCapture(ev.pointerId);setFrom(ev);ev.preventDefault();b.focus();});
+    b.addEventListener('pointermove',ev=>{if(drag)setFrom(ev);});
+    b.addEventListener('pointerup',()=>drag=false);b.addEventListener('pointercancel',()=>drag=false);
+  }
+  const y=$('yax');y.innerHTML='';for(let v=0;v<=YB;v+=15){const s=document.createElement('span');s.style.top=(100-v/YB*100)+'%';s.textContent=v;y.appendChild(s);}
+  const x=$('xax');x.innerHTML='';for(let t=0;t<=180;t+=30){const s=document.createElement('span');s.style.left=(t/180*100)+'%';s.textContent=t+(t===180?' s':'');if(t%60)s.className='odd';if(t===0)s.style.transform='none';if(t===180)s.style.transform='translateX(-100%)';x.appendChild(s);}
+}
+function roving(){[...$('bars').children].forEach((b,i)=>b.tabIndex=i===focusIdx?0:-1);}
+function drawBars(s){
+  const ed=editable();
+  [...$('bars').children].forEach((b,k)=>{const v=s.E[k];b.classList.toggle('edit',ed);
+    b.querySelector('.fill').style.height=(v/YB*100)+'%';
+    const lab=b.querySelector('.v');lab.textContent=v;lab.style.bottom=`calc(${v/YB*100}% + 2px)`;
+    b.setAttribute('aria-label',`Step ${k+1}, ${10*k} to ${10*k+10} seconds, threat ${v}${ed?'. Up or Down arrow changes by 5':''}`);
+    b.setAttribute('aria-disabled',ed?'false':'true');});
+  $('barHint').textContent=ed?'Drag a bar or use Up and Down keys (steps of 5)':st.design==='C'?'Set by the Director rule':'Fixed design. Pick B or Custom to edit';
+}
+
+// ---------- intensity canvas ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function pattern(g,kind,color){const c=document.createElement('canvas');c.width=c.height=8;const x=c.getContext('2d');x.strokeStyle=color;x.fillStyle=color;
+  if(kind==='hatch'){x.lineWidth=1.5;x.beginPath();x.moveTo(-2,10);x.lineTo(10,-2);x.moveTo(-2,2);x.lineTo(2,-2);x.moveTo(6,10);x.lineTo(10,6);x.stroke();}else{x.beginPath();x.arc(4,4,1.3,0,7);x.fill();}
+  return g.createPattern(c,'repeat');}
+function drawI(s,S){
+  const {g,w,h}=setup($('cI'));const pad={l:40,r:10,t:10,b:44};const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const X=t=>pad.l+pw*t/180,Y=v=>pad.t+ph*(1-Math.min(v,YI)/YI);
+  g.clearRect(0,0,w,h);
+  // bands
+  g.globalAlpha=.5;g.fillStyle=pattern(g,'hatch',css('--blood'));g.fillRect(pad.l,Y(YI),pw,Y(st.pk)-Y(YI));
+  g.fillStyle=pattern(g,'dots',css('--steel'));g.fillRect(pad.l,Y(st.cm),pw,Y(0)-Y(st.cm));g.globalAlpha=1;
+  g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let v=0;v<=YI;v+=20){g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,Y(v));}
+  const tstep=pw<400?60:30;for(let t=0;t<=180;t+=tstep){g.textAlign=t===0?'left':t===180?'right':'center';g.textBaseline='top';g.fillText(t+(t===180?' s':''),X(t),h-pad.b+14);}
+  g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';
+  g.fillStyle=css('--blood');g.fillText('peak ≥ '+st.pk,pad.l+4,Y(st.pk)-2);
+  g.fillStyle=css('--steel');if(st.cm>0)g.fillText('calm < '+st.cm,pad.l+4,Y(st.cm)-2);
+  // relax shading under axis
+  if(s.relax.length){g.fillStyle=css('--moss');g.globalAlpha=.5;s.relax.forEach((r,k)=>{if(r)g.fillRect(X(10*k)+1,h-pad.b+2,X(10)-X(0)-2,9);});g.globalAlpha=1;}
+  // equilibrium
+  if(st.eq){const e=S.eq;g.strokeStyle=css('--ochre');g.lineWidth=2;g.setLineDash([6,5]);g.beginPath();g.moveTo(pad.l,Y(e));g.lineTo(w-pad.r,Y(e));g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ochre');g.textAlign='right';g.textBaseline='bottom';g.font='600 12px '+css('--sans');g.fillText('equilibrium '+f1(e),w-pad.r-2,Y(e)-2);}
+  // curve
+  g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();g.moveTo(X(0),Y(0));s.I.forEach((v,k)=>g.lineTo(X(10*(k+1)),Y(v)));g.stroke();
+  s.I.forEach((v,k)=>{const on=v>=st.pk-1e-9,cm=v<st.cm-1e-9;g.fillStyle=on?css('--blood'):cm?css('--steel'):css('--ink');g.beginPath();g.arc(X(10*(k+1)),Y(v),on?5:3.5,0,7);g.fill();});
+}
+
+function describe(name,S){
+  if(S.pt===0&&S.ct===0)return `Design ${name} never peaks and never rests`;
+  const p=S.pt?`spends ${S.pt} s at peak`:'never peaks';const c=S.ct?`${S.ct} s calm`:'no calm';
+  return `Design ${name} ${p} and ${S.pt?'':'has '}${c}`;
+}
+function update(){
+  const s=series(st.design),S=stats(s);
+  $('oD').textContent=f2(st.d);$('hl').textContent=f1(10*Math.log(0.5)/Math.log(st.d))+' s';
+  $('oPk').textContent=st.pk;$('oCm').textContent=st.cm;$('oFull').textContent=st.full;$('oRelax').textContent=st.relax;
+  $('dirSet').disabled=st.design!=='C';$('norm').disabled=st.design!=='U';
+  $('lgRelax').hidden=st.design!=='C';$('lgEq').hidden=!st.eq;
+  $('counter').textContent='Total threat: '+S.tot;
+  $('rTot').textContent=S.tot;$('rMax').textContent=f1(S.mx);$('rPeak').textContent=S.pt+' s';$('rCalm').textContent=S.ct+' s';$('rPeaks').textContent=S.peaks;$('rEq').textContent=f1(S.eq);
+  const names={A:'A',B:'B',C:'C',U:'Custom'};
+  const all=['A','B','C'].concat(st.design==='U'?['U']:[]).map(k=>({k,S:stats(series(k))}));
+  const same=all.every(x=>x.S.tot===all[0].S.tot);
+  let txt=(same?`Same ${S.tot} threat. `:`Total threat ${S.tot}. `);
+  const A=all[0].S;
+  txt+= st.design==='A'?`${describe('A',A)}; intensity settles at the equilibrium, ${f1(A.eq)}.`:`${describe('A',A)}; ${describe(names[st.design],S).replace(/^Design /,'design ')}.`;
+  $('insight').textContent=txt;
+  $('tDes').innerHTML=all.map(({k,S:x})=>`<tr class="${k===st.design?'here':''}"><td>${names[k]}</td><td>${x.tot}</td><td>${f1(x.mx)}</td><td>${x.pt} s</td><td>${x.ct} s</td><td>${x.peaks}</td></tr>`).join('');
+  $('tSteps').innerHTML=s.I.map((v,k)=>`<tr><td>${k+1} (${10*(k+1)})</td><td>${s.E[k]}</td><td class="${v>=st.pk-1e-9?'pk':v<st.cm-1e-9?'cm':''}">${f2(v)}</td></tr>`).join('');
+  drawBars(s);drawI(s,S);
+  const gw=$('bars').getBoundingClientRect().width;$('yax').style.setProperty('--gw',gw+'px');
+}
+// events
+document.querySelectorAll('[data-d]').forEach(b=>b.addEventListener('click',()=>{
+  const d=b.dataset.d;if(d==='U')Custom=series(st.design).E.slice();st.design=d;
+  document.querySelectorAll('[data-d]').forEach(x=>x.setAttribute('aria-pressed',x===b));update();}));
+[['d','d'],['pk','pk'],['cm','cm'],['full','full'],['relax','relax']].forEach(([id,k])=>$(id).addEventListener('input',e=>{st[k]=+e.target.value;update();}));
+$('eq').addEventListener('change',e=>{st.eq=e.target.checked;update();});
+$('norm').addEventListener('click',()=>{const tot=Custom.reduce((a,b)=>a+b,0);if(!tot)return;
+  let n=Custom.map(v=>Math.round(v*180/tot/5)*5);const rem=180-n.reduce((a,b)=>a+b,0);let big=0;n.forEach((v,i)=>{if(v>n[big])big=i;});n[big]=Math.max(0,n[big]+rem);Custom=n;update();});
+$('reset').addEventListener('click',()=>{st={...D};Bars=B0.slice();Custom=B0.slice();
+  $('d').value=st.d;$('pk').value=st.pk;$('cm').value=st.cm;$('full').value=st.full;$('relax').value=st.relax;$('eq').checked=true;
+  document.querySelectorAll('[data-d]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.d==='B'));update();});
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+buildBars();update();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+})();
+</script>
+</body>
+</html>

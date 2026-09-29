@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>POI travel gaps — GD201 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--steel)}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cMap{aspect-ratio:1/1;height:auto}
+#cTime{height:360px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.legend i.dash{border-top-style:dashed}
+.legend i.box{height:10px;border:0;opacity:.45}
+.readout{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+.group-title{font-weight:600;font-size:.92rem;display:block;margin-bottom:6px}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+label.row:first-child{margin-top:0}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;border:0;padding:0;margin:0}
+.seg legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.seg span{display:inline-block;font:600 .85rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--steel);color:var(--ink);font-variant-numeric:tabular-nums}
+.seg input:checked+span{background:var(--steel);color:var(--paper)}
+.seg input:focus-visible+span,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;margin-top:8px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.92rem;margin-top:12px;font-weight:600}
+.check input{width:18px;height:18px;margin-top:3px;accent-color:var(--blood)}
+.check small{display:block;font-weight:400;color:var(--ink-soft)}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:560px;width:100%}
+p.cap{font-family:var(--serif);font-size:1rem;margin:18px 0 0}
+p.cap small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+th,td{white-space:nowrap;padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+table.wrap1 td:first-child{white-space:normal}
+td.long{color:var(--blood);font-weight:700}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600}
+#legTable{min-width:0;max-width:420px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD201 Level and World Design · Week 9 · Worked example</p>
+  <h1>Twice the speed needs <em>a quarter</em> of the POIs</h1>
+  <p class="lede">The left view is a 2 km zone seen from above. The right view is what the player feels, seconds between points of interest. Switch to the fast mount and only the right view changes. Press "Match target" and only the left one does.</p>
+</header>
+
+<section class="panel" aria-label="POI gap model">
+  <div class="charts">
+    <figure>
+      <figcaption>The zone, 2 km × 2 km<small>Tour from the POI nearest the centre to the nearest unvisited POI, 30 legs at most</small></figcaption>
+      <canvas id="cMap" role="img" aria-label="Top-down map of points of interest and the player's tour"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--steel)"></i>leg</span>
+        <span><i class="dash" style="border-color:var(--blood)"></i>leg over 2 × target</span>
+        <span><i class="dash" style="border-color:var(--moss)"></i>legible distance r</span>
+        <span id="lgDead" hidden><i class="box" style="background:var(--blood)"></i>dead zone</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>The timeline, one bar per leg<small>Bar length = leg distance ÷ travel speed, in seconds</small></figcaption>
+      <canvas id="cTime" role="img" aria-label="Bar chart of travel gap in seconds for each leg of the tour"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--ochre)"></i>target gap</span>
+        <span><i class="dash" style="border-color:var(--blood)"></i>2 × target</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rMean">—</b><span>mean gap</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rLong">—</b><span>longest gap</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rCount">—</b><span id="rCountSub">POIs on map</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rRho">—</b><span>density, per km²</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rA">—</b><span>spacing a = 1000/√ρ</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rVis">—</b><span id="rVisSub">visible within r (expected)</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <fieldset class="seg" id="modes">
+        <legend>Travel mode</legend>
+        <label><input type="radio" name="mode" value="foot" checked><span>On foot 6.40</span></label>
+        <label><input type="radio" name="mode" value="m60"><span>Mount +60% 10.24</span></label>
+        <label><input type="radio" name="mode" value="m100"><span>Mount +100% 12.80</span></label>
+        <label><input type="radio" name="mode" value="custom"><span>Custom</span></label>
+      </fieldset>
+      <div id="customWrap" hidden>
+        <label class="row" for="vIn">Speed, m/s <output id="oV">8.0</output></label>
+        <input id="vIn" type="range" min="2" max="20" step="0.1" value="8">
+      </div>
+      <label class="row" for="gapIn">Target gap <output id="oGap">30 s</output></label>
+      <input id="gapIn" type="range" min="10" max="90" step="5" value="30">
+    </div>
+    <div>
+      <label class="row" for="rhoIn">Density ρ, POIs per km² <output id="oRho">27.1</output></label>
+      <input id="rhoIn" type="range" min="2" max="40" step="0.1" value="27.1">
+      <button class="btn primary" id="match" type="button">Match target</button>
+      <p style="margin:6px 0 0;font-size:.82rem;color:var(--ink-soft)">Sets ρ = 1 / (v × target / 1000)²</p>
+      <label class="row" for="rIn">Legible distance r <output id="oR">300 m</output></label>
+      <input id="rIn" type="range" min="100" max="800" step="25" value="300">
+    </div>
+    <div>
+      <fieldset class="seg" id="layouts">
+        <legend>Layout</legend>
+        <label><input type="radio" name="layout" value="grid" checked><span>Grid</span></label>
+        <label><input type="radio" name="layout" value="jitter"><span>Jittered</span></label>
+        <label><input type="radio" name="layout" value="random"><span>Random</span></label>
+      </fieldset>
+      <button class="btn" id="shuffle" type="button">Reshuffle <span id="seedTxt">(seed 9)</span></button>
+      <button class="btn" id="play" type="button">Play the walk</button>
+      <label class="check"><input type="checkbox" id="deadIn"><span>Show dead zones<small id="deadTxt">Ground farther than r_dead = a/√2 from every POI</small></span></label>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <p class="cap">Same target, every travel mode<small>Spacing a = v × target. Density needed = 1 / (a in km)². The last column rides the zone you have on screen now.</small></p>
+  <div class="table-wrap">
+    <table aria-label="Same target, every travel mode">
+      <thead><tr><th>Travel mode</th><th>v (m/s)</th><th>Spacing</th><th>Density needed</th><th>POIs in 4 km²</th><th>Gap on this zone</th></tr></thead>
+      <tbody id="modeBody"></tbody>
+    </table>
+  </div>
+
+  <p class="cap">Dead zones and visibility<small>Random-layout formula exp(−ρ π r_dead²), and the share of 50 m raster cells beyond r_dead in the layout on screen</small></p>
+  <div class="table-wrap">
+    <table class="wrap1" style="min-width:0" aria-label="Dead zones and visibility">
+      <thead><tr><th>Measure</th><th>Value</th></tr></thead>
+      <tbody id="deadBody"></tbody>
+    </table>
+  </div>
+
+  <details>
+    <summary>Timeline as a table (every leg)</summary>
+    <div class="table-wrap">
+      <table id="legTable"><thead><tr><th>Leg</th><th>Distance</th><th>Seconds</th></tr></thead><tbody id="legBody"></tbody></table>
+    </div>
+  </details>
+</section>
+
+<footer>Speeds: Warcraft Wiki, "Speed" (standard run 7 yards per second = 6.40 m/s; ground mounts +60% and +100%). The 30 s target gap is an invented design target, as in the lecture. POIs are generic markers; no game map is reproduced.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const ZONE=2000, MAX_LEGS=30;
+const WALK=7*0.9144;
+const MODES={foot:{name:'On foot',v:WALK},m60:{name:'Mount +60%',v:WALK*1.6},m100:{name:'Mount +100%',v:WALK*2}};
+const S={mode:'foot',vCustom:8,rho:27.1,layout:'grid',gap:30,r:300,dead:false,seed:9};
+let pois=[],tour=[],legs=[],walker=null;
+
+const f1=n=>n.toFixed(1), f2=n=>n.toFixed(2);
+const sig3=n=>n>=100?Math.round(n).toLocaleString('en-US'):n.toPrecision(3);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+function speed(){return S.mode==='custom'?S.vCustom:MODES[S.mode].v;}
+function spacing(){return 1000/Math.sqrt(S.rho);}
+function rhoFor(v,t){const a=v*t/1000;return 1/(a*a);}
+
+function rng(seed){let s=seed>>>0;return function(){s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+
+function makePois(){
+  const a=spacing(),R=rng(S.seed),out=[];
+  if(S.layout==='random'){
+    const n=Math.round(4*S.rho);
+    for(let i=0;i<n;i++)out.push({x:R()*ZONE,y:R()*ZONE});
+  }else{
+    const n=Math.max(1,Math.round(ZONE/a)),m=(ZONE-(n-1)*a)/2,inner=0.7*a; // s = 0.15a, keep central 1 - 2s/a
+    for(let j=0;j<n;j++)for(let i=0;i<n;i++){
+      let x=m+i*a,y=m+j*a;
+      if(S.layout==='jitter'){x+=(R()-.5)*inner;y+=(R()-.5)*inner;}
+      out.push({x,y});
+    }
+  }
+  return out;
+}
+function makeTour(){
+  const n=pois.length;if(!n)return [];
+  let start=0,best=Infinity;
+  pois.forEach((p,i)=>{const d=Math.hypot(p.x-ZONE/2,p.y-ZONE/2);if(d<best-1e-9){best=d;start=i;}});
+  const seen=new Uint8Array(n),order=[start];seen[start]=1;
+  let hx=1,hy=0,cur=start; // initial heading east
+  const tol=1e-6*spacing();
+  while(order.length<Math.min(n,MAX_LEGS+1)){
+    let bd=Infinity,cands=[];
+    for(let i=0;i<n;i++){if(seen[i])continue;const d=Math.hypot(pois[i].x-pois[cur].x,pois[i].y-pois[cur].y);
+      if(d<bd-tol){bd=d;cands=[i];}else if(Math.abs(d-bd)<=tol)cands.push(i);}
+    // ties (grid): prefer a left turn, then straight, then right. Traces a spiral.
+    let pick=cands[0],rank=-Infinity;
+    for(const i of cands){const dx=pois[i].x-pois[cur].x,dy=pois[i].y-pois[cur].y;
+      let ang=Math.atan2(hx*dy-hy*dx,hx*dx+hy*dy); if(ang<-Math.PI+1e-6)ang=Math.PI;
+      const r=ang>Math.PI-1e-6?-10:ang; if(r>rank+1e-9){rank=r;pick=i;}}
+    const dx=pois[pick].x-pois[cur].x,dy=pois[pick].y-pois[cur].y,L=Math.hypot(dx,dy)||1;
+    hx=dx/L;hy=dy/L;seen[pick]=1;order.push(pick);cur=pick;
+  }
+  return order;
+}
+function rebuild(){pois=makePois();tour=makeTour();}
+
+function setupCanvas(c,h){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  const H=h||r.height;
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,H*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:H};
+}
+function nearestDist(x,y){let b=Infinity;for(const p of pois){const d=(p.x-x)**2+(p.y-y)**2;if(d<b)b=d;}return Math.sqrt(b);}
+function deadCells(){
+  const rd=spacing()/Math.SQRT2,cells=[];let n=0;
+  for(let j=0;j<40;j++)for(let i=0;i<40;i++){const x=25+i*50,y=25+j*50;if(nearestDist(x,y)>rd){cells.push([i,j]);n++;}}
+  return {cells,frac:n/1600};
+}
+
+function drawMap(walkPos){
+  const c=setupCanvas($('cMap')),g=c.g,pad=8,W=c.w-2*pad,k=W/ZONE;
+  const X=x=>pad+x*k,Y=y=>pad+(ZONE-y)*k;
+  g.clearRect(0,0,c.w,c.h);
+  g.fillStyle=css('--paper');g.fillRect(pad,pad,W,W);
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let m=500;m<ZONE;m+=500){g.beginPath();g.moveTo(X(m),Y(0));g.lineTo(X(m),Y(ZONE));g.stroke();g.beginPath();g.moveTo(X(0),Y(m));g.lineTo(X(ZONE),Y(m));g.stroke();}
+  if(S.dead){
+    g.fillStyle=css('--blood');g.globalAlpha=.22;
+    for(const [i,j] of deadCells().cells)g.fillRect(X(i*50),Y((j+1)*50),50*k+.5,50*k+.5);
+    g.globalAlpha=1;
+  }
+  const v=speed(),lim=2*S.gap;
+  if(tour.length){ // legible circle around the start
+    const s=pois[tour[0]];g.strokeStyle=css('--moss');g.lineWidth=1.5;g.setLineDash([5,4]);
+    g.beginPath();g.arc(X(s.x),Y(s.y),S.r*k,0,Math.PI*2);g.stroke();g.setLineDash([]);
+  }
+  g.save();g.beginPath();g.rect(pad,pad,W,W);g.clip();
+  for(let i=1;i<tour.length;i++){
+    const p=pois[tour[i-1]],q=pois[tour[i]],long=Math.hypot(q.x-p.x,q.y-p.y)/v>lim;
+    g.strokeStyle=long?css('--blood'):css('--steel');g.lineWidth=long?2.5:2.2;g.setLineDash(long?[7,5]:[]);
+    g.beginPath();g.moveTo(X(p.x),Y(p.y));g.lineTo(X(q.x),Y(q.y));g.stroke();
+  }
+  g.setLineDash([]);
+  const inTour=new Set(tour);
+  pois.forEach((p,i)=>{const s=inTour.has(i)?4:3.2;g.fillStyle=inTour.has(i)?css('--ink'):css('--ink-soft');
+    g.beginPath();g.moveTo(X(p.x),Y(p.y)-s);g.lineTo(X(p.x)+s,Y(p.y));g.lineTo(X(p.x),Y(p.y)+s);g.lineTo(X(p.x)-s,Y(p.y));g.closePath();g.fill();});
+  if(tour.length){const s=pois[tour[0]];g.strokeStyle=css('--ochre');g.lineWidth=2.5;g.beginPath();g.arc(X(s.x),Y(s.y),8,0,Math.PI*2);g.stroke();}
+  if(walkPos){g.fillStyle=css('--ochre');g.beginPath();g.arc(X(walkPos.x),Y(walkPos.y),7,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+  g.restore();
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(pad,pad,W,W);
+  // scale bar
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--paper');g.globalAlpha=.85;g.fillRect(X(40),Y(170),500*k+X(80)-X(40)+4,Y(40)-Y(170));g.globalAlpha=1;
+  g.fillStyle=css('--ink');g.fillRect(X(60),Y(80),500*k,3);
+  g.textBaseline='bottom';g.textAlign='left';g.fillText('500 m',X(60),Y(95)-2);
+}
+
+function drawTime(active){
+  const c=setupCanvas($('cTime'),timeHeight()),g=c.g,w=c.w,h=c.h;
+  const pad={l:34,r:12,t:8,b:30},x0=pad.l,x1=w-pad.r,XM=120,X=s=>x0+(x1-x0)*Math.min(s,XM)/XM;
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let s=0;s<=XM;s+=30){g.beginPath();g.moveTo(X(s),pad.t);g.lineTo(X(s),h-pad.b);g.stroke();g.textAlign=s===XM?'right':'center';g.textBaseline='top';g.fillText(s+' s',s===XM?x1:X(s),h-pad.b+6);}
+  const n=Math.max(legs.length,1),rowH=(h-pad.t-pad.b)/n,bh=Math.max(2,Math.min(14,rowH*.68)),lim=2*S.gap;
+  const hatch=hatchPattern(g);
+  legs.forEach((L,i)=>{
+    const y=pad.t+i*rowH+(rowH-bh)/2,len=X(L.t)-x0,long=L.t>lim;
+    g.globalAlpha=(active!=null&&active!==i)?.4:1;
+    if(long){g.fillStyle=hatch;g.fillRect(x0,y,len,bh);g.strokeStyle=css('--blood');g.lineWidth=1.5;g.setLineDash([4,3]);g.strokeRect(x0+.75,y+.75,len-1.5,bh-1.5);g.setLineDash([]);}
+    else{g.fillStyle=css('--steel');g.fillRect(x0,y,len,bh);}
+    if(L.t>XM){g.fillStyle=css('--blood');g.beginPath();g.moveTo(x1+1,y-2);g.lineTo(x1+9,y+bh/2);g.lineTo(x1+1,y+bh+2);g.fill();}
+    g.globalAlpha=1;
+    if(rowH>=11&&(i===0||(i+1)%5===0)){g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(i+1,x0-6,y+bh/2);}
+  });
+  if(!legs.length){g.fillStyle=css('--ink-soft');g.textAlign='center';g.fillText('Only one POI: no legs',(x0+x1)/2,h/2);}
+  g.strokeStyle=css('--blood');g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(X(lim),pad.t);g.lineTo(X(lim),h-pad.b);g.stroke();
+  g.setLineDash([]);g.strokeStyle=css('--ochre');g.lineWidth=2.5;g.beginPath();g.moveTo(X(S.gap),pad.t);g.lineTo(X(S.gap),h-pad.b);g.stroke();
+  g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='top';g.fillText('leg',2,pad.t);
+}
+function hatchPattern(g){
+  const p=document.createElement('canvas');p.width=p.height=8;const q=p.getContext('2d');
+  q.fillStyle=css('--blood');q.globalAlpha=.25;q.fillRect(0,0,8,8);q.globalAlpha=1;q.strokeStyle=css('--blood');q.lineWidth=2;
+  q.beginPath();q.moveTo(-2,10);q.lineTo(10,-2);q.moveTo(-2,2);q.lineTo(2,-2);q.moveTo(6,10);q.lineTo(10,6);q.stroke();
+  return g.createPattern(p,'repeat');
+}
+function timeHeight(){const m=$('cMap').getBoundingClientRect().height;return Math.max(300,Math.round(m));}
+
+function compute(){
+  const v=speed();legs=[];
+  for(let i=1;i<tour.length;i++){const p=pois[tour[i-1]],q=pois[tour[i]],d=Math.hypot(q.x-p.x,q.y-p.y);legs.push({d,t:d/v});}
+}
+function readouts(){
+  const v=speed(),a=spacing(),rho=S.rho,lim=2*S.gap;
+  const mean=legs.length?legs.reduce((s,L)=>s+L.t,0)/legs.length:0,long=legs.reduce((m,L)=>Math.max(m,L.t),0);
+  $('rMean').textContent=legs.length?f1(mean)+' s':'—';
+  $('rLong').textContent=legs.length?f1(long)+' s':'—';
+  $('rCount').textContent=fmt(pois.length);
+  $('rCountSub').textContent=S.layout==='random'?'POIs on map = round(4ρ)':'POIs on map (round(4ρ) = '+Math.round(4*rho)+')';
+  $('rRho').textContent=sig3(rho);
+  $('rA').textContent=fmt(a)+' m';
+  const nv=rho*Math.PI*(S.r/1000)**2;
+  $('rVis').textContent=f2(nv);$('rVisSub').textContent='visible within '+S.r+' m (expected)';
+  $('oRho').textContent=sig3(rho);$('oGap').textContent=S.gap+' s';$('oR').textContent=S.r+' m';$('oV').textContent=f1(S.vCustom);
+  $('seedTxt').textContent='(seed '+S.seed+')';
+  $('lgDead').hidden=!S.dead;
+  // mode table
+  const rows=Object.entries(MODES).map(([k,m])=>[k,m.name,m.v]);
+  if(S.mode==='custom')rows.push(['custom','Custom',S.vCustom]);
+  $('modeBody').innerHTML=rows.map(([k,name,vv])=>{
+    const need=rhoFor(vv,S.gap);
+    return `<tr class="${k===S.mode?'here':''}"><td>${name}</td><td>${f2(vv)}</td><td>${fmt(vv*S.gap)} m</td><td>${sig3(need)} per km²</td><td>${fmt(4*need)}</td><td>${f1(a/vv)} s</td></tr>`;}).join('');
+  // dead zone table
+  const rd=a/Math.SQRT2,randFrac=Math.exp(-rho*Math.PI*(rd/1000)**2),dc=deadCells().frac;
+  $('deadTxt').textContent=`Ground farther than r_dead = a/√2 = ${fmt(rd)} m from every POI`;
+  $('deadBody').innerHTML=[
+    ['r_dead, grid worst case a/√2',fmt(rd)+' m'],
+    ['Random layout: expected share beyond r_dead',f2(randFrac)+' ('+Math.round(randFrac*100)+'%)'],
+    ['This layout, raster cells beyond r_dead',(dc*100).toFixed(1)+'%'],
+    ['Visible within r = ρ π r²',f2(nv)]
+  ].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+  $('legBody').innerHTML=legs.map((L,i)=>`<tr><td>${i+1}</td><td>${fmt(L.d)} m</td><td class="${L.t>lim?'long':''}">${f1(L.t)} s${L.t>lim?' (long)':''}</td></tr>`).join('')||'<tr><td colspan="3">No legs</td></tr>';
+  // insight
+  const gapNow=a/v,need=rhoFor(v,S.gap),footNeed=rhoFor(WALK,S.gap),longN=legs.filter(L=>L.t>lim).length;
+  let s=`At ${f2(v)} m/s, a spacing of ${fmt(a)} m gives a ${f1(gapNow)} s gap. `;
+  if(Math.abs(gapNow-S.gap)/S.gap<0.02){
+    if(S.mode==='foot')s+=`That matches your ${S.gap} s target. Now pick <b>Mount +100%</b>: the map will not change, and every bar on the right halves.`;
+    else{const ratio=v/WALK;s+=`That matches your ${S.gap} s target with ${sig3(rho)} POIs per km². A walker needs ${sig3(footNeed)} for the same rhythm, so this zone carries <b>${Math.round(rho/footNeed*100)}%</b> of the content: speed ×${ratio.toFixed(2).replace(/\.?0+$/,'')} squares to ×${(ratio*ratio).toFixed(2).replace(/\.?0+$/,'')}. The map looks empty. The timeline looks the same.`;}
+  }else{
+    s+=`Your target is ${S.gap} s, which needs ${sig3(need)} POIs per km², <b>${(need/rho).toFixed(2)}×</b> the density on screen. Press <b>Match target</b>.`;
+  }
+  if(longN)s+=` ${longN} of ${legs.length} legs run longer than ${lim} s: the greedy tour ran out of close neighbours.`;
+  $('insight').innerHTML=s;
+}
+function drawAll(){drawMap();drawTime();}
+function update(rebuildPois){stopWalk();if(rebuildPois)rebuild();compute();readouts();drawAll();}
+
+// walker animation: 1 s on screen = 30 s of game time
+function stopWalk(){if(walker){cancelAnimationFrame(walker.raf);walker=null;$('play').textContent='Play the walk';}}
+function play(){
+  if(walker){stopWalk();drawAll();return;}
+  if(!legs.length)return;
+  const total=legs.reduce((s,L)=>s+L.t,0),t0=performance.now();
+  $('play').textContent='Stop';
+  walker={raf:0};
+  const step=now=>{
+    let t=(now-t0)/1000*30;
+    if(t>=total){stopWalk();drawAll();return;}
+    let i=0;while(i<legs.length-1&&t>legs[i].t){t-=legs[i].t;i++;}
+    const p=pois[tour[i]],q=pois[tour[i+1]],u=Math.min(1,t/legs[i].t);
+    drawMap({x:p.x+(q.x-p.x)*u,y:p.y+(q.y-p.y)*u});drawTime(i);
+    walker.raf=requestAnimationFrame(step);
+  };
+  walker.raf=requestAnimationFrame(step);
+}
+function syncPlay(){$('play').hidden=reduce.matches;if(reduce.matches)stopWalk();}
+
+// events
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',()=>{S.mode=r.value;$('customWrap').hidden=S.mode!=='custom';update(false);}));
+document.querySelectorAll('input[name=layout]').forEach(r=>r.addEventListener('change',()=>{S.layout=r.value;update(true);}));
+$('vIn').addEventListener('input',e=>{S.vCustom=+e.target.value;update(false);});
+$('gapIn').addEventListener('input',e=>{S.gap=+e.target.value;update(false);});
+$('rhoIn').addEventListener('input',e=>{S.rho=+e.target.value;update(true);});
+$('rIn').addEventListener('input',e=>{S.r=+e.target.value;update(false);});
+$('deadIn').addEventListener('change',e=>{S.dead=e.target.checked;update(false);});
+$('match').addEventListener('click',()=>{S.rho=rhoFor(speed(),S.gap);$('rhoIn').value=S.rho;update(true);});
+$('shuffle').addEventListener('click',()=>{S.seed=(S.seed*48271+11)%2147483647;update(true);});
+$('play').addEventListener('click',play);
+reduce.addEventListener('change',syncPlay);
+window.addEventListener('resize',()=>{if(!walker)drawAll();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(!walker)drawAll();});
+syncPlay();
+update(true);
+})();
+</script>
+</body>
+</html>

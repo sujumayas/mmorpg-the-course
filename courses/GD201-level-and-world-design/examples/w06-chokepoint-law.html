@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chokepoint law — GD201 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.views{grid-template-columns:1fr}}
+.col{display:grid;gap:14px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cMap{height:330px}@media (max-width:820px){#cMap{height:260px}}#cAlive{height:200px}#cLoss{height:120px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.sym{font-size:1rem;margin-right:4px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+button{font:600 .9rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:820px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-family:var(--mono);font-size:1.2rem;font-weight:700;line-height:1.25}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.valid{font-family:var(--mono);font-size:.88rem;margin:8px 0 0}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:1fr}}
+.ctl>label,.ctl .lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-family:var(--mono);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+fieldset{border:0;padding:0;margin:0 0 10px}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg label{display:inline-flex;align-items:center;gap:5px;font-size:.88rem;padding:5px 9px;border:1.5px solid var(--steel);border-radius:8px;cursor:pointer}
+.seg input{accent-color:var(--steel);margin:0}
+.seg label:has(input:checked){background:var(--steel);color:var(--paper)}
+.seg label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.txt{font:inherit;font-family:var(--mono);width:100%;padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.small{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.err{color:var(--blood)}
+.dis{opacity:.45}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.chip{font-size:.85rem;padding:7px 11px;border-color:var(--steel)}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD201 Level and World Design · Week 6 · Worked example</p>
+  <h1>A gate makes attackers pay for the square of the defenders</h1>
+  <p class="lede">Same 30 against the same 10. The wall costs the attackers 25 fighters instead of 2. Try adding attackers.</p>
+</header>
+
+<section class="panel" aria-label="Chokepoint model">
+  <div class="views">
+    <figure>
+      <figcaption id="mapCap">The gate<small>Top-down. Only the attackers standing in the gap can shoot. Everyone behind them waits.</small></figcaption>
+      <canvas id="cMap" role="img" aria-label="Top-down view of attackers, wall gap and defenders"></canvas>
+      <div class="legend">
+        <span><span class="sym" style="color:var(--blood)">&#9679;</span>Attackers</span>
+        <span><span class="sym" style="color:var(--blood)">&#9711;</span>Engaged in the gap</span>
+        <span><span class="sym" style="color:var(--steel)">&#9670;</span>Defenders</span>
+      </div>
+      <div class="row">
+        <button class="primary" id="play">Play</button>
+        <span class="small" id="clock" aria-live="off"></span>
+      </div>
+    </figure>
+    <div class="col">
+      <figure>
+        <figcaption>Fighters alive<small id="aliveSub">Tick simulation, dt = 0.001 s. Dashed line is the closed form D₀ − a·w·t.</small></figcaption>
+        <canvas id="cAlive" role="img" aria-label="Attackers and defenders alive over time"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--blood)"></i>Attackers</span>
+          <span><i style="background:var(--steel)"></i>Defenders</span>
+          <span id="lgClosed"><i style="background:repeating-linear-gradient(90deg,var(--ink-soft) 0 5px,transparent 5px 8px)"></i>Closed form</span>
+        </div>
+      </figure>
+      <figure>
+        <figcaption>Attacker losses<small>Open field (square law) against the gate (closed form, simulation in brackets). The tick marks the whole attacking force.</small></figcaption>
+        <canvas id="cLoss" role="img" aria-label="Attacker losses in open field and at the gate"></canvas>
+      </figure>
+    </div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rLoss">—</b><span>gate losses, closed form</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rOpen">—</b><span>open-field losses (square law)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rT">—</b><span>fight length T = D₀ / (a_eff w)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rEff">—</b><span>a_eff / b_eff (kills per second)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rSimA">—</b><span>simulated attackers left</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rSimD">—</b><span>simulated defenders left</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSimT">—</b><span>simulated fight length</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rOpenS">—</b><span>open-field attacker survivors</span></div>
+  </div>
+  <p class="valid" id="valid"></p>
+  <div class="stat" id="laneBox" style="--c:var(--ochre);margin-top:10px" hidden>
+    <b id="rLane">—</b><span id="rLaneL"></span>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="A0">Attackers A₀ <output id="oA0"></output></label>
+      <input id="A0" type="range" min="1" max="100" step="1" value="30">
+      <label for="D0">Defenders D₀ <output id="oD0"></output></label>
+      <input id="D0" type="range" min="1" max="40" step="1" value="10">
+      <label for="ta">Attacker time-to-kill <output id="oTa"></output></label>
+      <input id="ta" type="range" min="2" max="30" step="1" value="10">
+      <label for="tb">Defender time-to-kill <output id="oTb"></output></label>
+      <input id="tb" type="range" min="2" max="30" step="1" value="10">
+    </div>
+    <div class="ctl">
+      <fieldset><legend>Mode</legend>
+        <div class="seg">
+          <label><input type="radio" name="mode" value="open"> Open field</label>
+          <label><input type="radio" name="mode" value="choke" checked> Chokepoint</label>
+        </div>
+      </fieldset>
+      <div id="chokeOnly">
+        <label for="w" class="lbl">Gate width w <output id="oW"></output></label>
+        <input id="w" type="range" min="1" max="12" step="1" value="2">
+        <label for="k" class="lbl">Splash targets per defender hit k <output id="oK"></output></label>
+        <input id="k" type="range" min="1" max="4" step="0.5" value="1">
+      </div>
+      <fieldset><legend>Defender cover</legend>
+        <div class="seg">
+          <label><input type="radio" name="cover" value="1" checked> None</label>
+          <label><input type="radio" name="cover" value="half"> Half</label>
+          <label><input type="radio" name="cover" value="full"> Full</label>
+          <label><input type="radio" name="cover" value="custom"> Custom</label>
+        </div>
+      </fieldset>
+      <div id="customWrap" hidden>
+        <label for="c" class="lbl">Cover multiplier c <output id="oC"></output></label>
+        <input id="c" type="range" min="0.2" max="1" step="0.05" value="0.6">
+      </div>
+    </div>
+    <div class="ctl" id="laneCtl">
+      <label for="lanes">Lanes <output id="oL"></output></label>
+      <input id="lanes" type="range" min="1" max="4" step="1" value="1">
+      <label for="split" class="lbl" style="margin-top:6px">Defender split</label>
+      <input id="split" class="txt" type="text" inputmode="numeric" value="10" aria-describedby="splitMsg">
+      <p class="small" id="splitMsg">Comma-separated, must add up to D₀.</p>
+      <label for="rot" class="lbl" style="margin-top:6px">Rotation time (s)</label>
+      <input id="rot" class="txt" type="number" min="0" max="600" step="1" value="20">
+    </div>
+  </div>
+
+  <div class="presets" role="group" aria-label="Presets">
+    <button class="chip" data-p='{"A0":30,"D0":10,"w":2}' aria-pressed="true">Lecture (30 v 10, w = 2)</button>
+    <button class="chip" data-p='{"A0":30,"D0":10,"w":10}' aria-pressed="false">Wide gate (w = 10)</button>
+    <button class="chip" data-p='{"A0":30,"D0":10,"w":1}' aria-pressed="false">One-wide gate (w = 1)</button>
+    <button class="chip" data-p='{"A0":30,"D0":20,"w":2}' aria-pressed="false">Double defenders</button>
+    <button class="chip" data-p='{"A0":30,"D0":10,"w":4,"cover":"full"}' aria-pressed="false">Full cover (w = 4)</button>
+    <button class="chip" data-p='{"A0":30,"D0":10,"w":2,"lanes":3,"split":"4,3,3"}' aria-pressed="false">Three lanes 4/3/3</button>
+  </div>
+</section>
+
+<footer>Model from the week 6 lecture: Lanchester's square law for the open field, and a gate where only min(A, w) attackers can fire. Cover multipliers follow the lecture's XCOM example (rookie aim 65, half cover 45%, full cover 25% to hit). Shapes are generic markers, not game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f1=x=>x.toFixed(1),f2=x=>x.toFixed(2);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const S={A0:30,D0:10,ta:10,tb:10,mode:'choke',w:2,k:1,cover:'1',c:0.6,lanes:1,split:'10',rot:20};
+const coverC=()=>S.cover==='half'?45/65:S.cover==='full'?25/65:S.cover==='custom'?S.c:1;
+
+function evenSplit(D,L){const base=Math.floor(D/L),rem=D-base*L;return Array.from({length:L},(_,i)=>base+(i<rem?1:0)).join(',');}
+function parseSplit(){
+  if(S.lanes===1)return {parts:[S.D0],ok:true};
+  const parts=S.split.split(',').map(s=>s.trim()).filter(s=>s!=='').map(Number);
+  const ok=parts.length===S.lanes&&parts.every(x=>Number.isInteger(x)&&x>=1)&&parts.reduce((a,b)=>a+b,0)===S.D0;
+  return ok?{parts,ok}:{parts:evenSplit(S.D0,S.lanes).split(',').map(Number),ok:false};
+}
+
+function simulate(A,D,a,b,w){
+  const dt=0.001,trace=[[0,A,D]];let t=0,i=0;
+  while(A>0&&D>0&&t<20000){
+    const firing=w===null?A:Math.min(A,w);
+    const nA=A-b*D*dt,nD=D-a*firing*dt;A=nA;D=nD;t+=dt;i++;
+    if(A<1e-4&&D<1e-4)break;
+    if(i%50===0)trace.push([t,Math.max(A,0),Math.max(D,0)]);
+  }
+  A=Math.max(A,0);D=Math.max(D,0);trace.push([t,A,D]);
+  return {A,D,t,trace};
+}
+
+let M=null;
+function compute(){
+  const a=1/S.ta,b=1/S.tb,c=coverC(),choke=S.mode==='choke';
+  const aEff=a*c,bEff=b*(choke?S.k:1),bOpen=b;
+  const sp=parseSplit();
+  const Dl=choke?Math.min(...sp.parts):S.D0;
+  const laneMode=choke&&S.lanes>1;
+  const Dfight=laneMode?Dl:S.D0;
+  const w=S.w;
+  const loss=bEff*Dfight*Dfight/(2*aEff*w),T=Dfight/(aEff*w);
+  const openDisc=S.A0*S.A0-(bOpen/aEff)*S.D0*S.D0;
+  const openSurv=openDisc>0?Math.sqrt(openDisc):0,openLoss=openDisc>0?S.A0-openSurv:null;
+  const sim=simulate(S.A0,Dfight,aEff,choke?bEff:bOpen,choke?w:null);
+  M={a,b,c,aEff,bEff,choke,loss,T,openSurv,openLoss,openDisc,sim,Dfight,laneMode,sp,w};
+}
+
+function setupCanvas(cv){
+  const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function diamond(g,x,y,r){g.beginPath();g.moveTo(x,y-r);g.lineTo(x+r,y);g.lineTo(x,y+r);g.lineTo(x-r,y);g.closePath();g.fill();}
+function shield(g,x,y,s,full){g.beginPath();g.moveTo(x-s,y-s);g.lineTo(x+s,y-s);g.lineTo(x+s,y);g.quadraticCurveTo(x+s,y+s*.9,x,y+s*1.3);g.quadraticCurveTo(x-s,y+s*.9,x-s,y);g.closePath();full?g.fill():g.stroke();}
+function burst(g,x,y,r){g.beginPath();for(let i=0;i<16;i++){const ang=i*Math.PI/8,rr=i%2?r*.45:r;g.lineTo(x+rr*Math.cos(ang),y+rr*Math.sin(ang));}g.closePath();g.fill();}
+
+let playT=null; // null = final state
+function stateAt(t){
+  const tr=M.sim.trace;if(t===null||t>=M.sim.t)return [M.sim.A,M.sim.D];
+  let lo=0,hi=tr.length-1;while(hi-lo>1){const m=(lo+hi)>>1;tr[m][0]<=t?lo=m:hi=m;}
+  return [tr[lo][1],tr[lo][2]];
+}
+const whole=x=>Math.max(0,Math.floor(x+0.01));
+
+function drawMap(){
+  const cv=setupCanvas($('cMap')),g=cv.g,W=cv.w,H=cv.h;g.clearRect(0,0,W,H);
+  const [Ac,Dc]=stateAt(playT);const nA=whole(Ac),nD=whole(Dc);
+  const red=css('--blood'),blue=css('--steel');
+  g.font='12px '+css('--sans');g.textBaseline='top';g.fillStyle=css('--ink-soft');g.textAlign='left';
+  g.fillText(`attackers ${nA} of ${S.A0}`,8,6);g.textAlign='right';g.fillText(`defenders ${nD} of ${M.Dfight}`,W-8,6);
+  if(M.laneMode){g.textAlign='center';g.fillText(`weakest lane: ${M.Dfight} defenders`,W/2,H-16);}
+  const top=26,bot=H-(M.laneMode?22:8);
+  if(M.choke){
+    const wall=W*0.52,s=Math.min(18,(bot-top)/(Math.max(12,M.w)+2)),r=s*0.36;
+    const gapH=M.w*s,gy0=(top+bot)/2-gapH/2;
+    // wall
+    g.fillStyle=css('--ink');g.fillRect(wall-6,top,12,gy0-top);g.fillRect(wall-6,gy0+gapH,12,bot-gy0-gapH);
+    // gap slots
+    g.strokeStyle=css('--ink-soft');g.lineWidth=1;
+    for(let i=0;i<M.w;i++)g.strokeRect(wall-s/2+.5,gy0+i*s+.5,s-1,s-1);
+    const eng=Math.min(nA,M.w);
+    for(let i=0;i<eng;i++){const x=wall,y=gy0+i*s+s/2;g.strokeStyle=red;g.lineWidth=2.5;g.beginPath();g.arc(x,y,r+2.5,0,Math.PI*2);g.stroke();g.fillStyle=red;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();}
+    // queue
+    const q=nA-eng,rows=Math.max(1,Math.floor((bot-top)/s)),perCol=Math.min(rows,10);
+    const qs=Math.min(s,(wall-s-14)/Math.ceil(Math.max(1,q)/perCol));
+    g.fillStyle=red;
+    for(let i=0;i<q;i++){const col=Math.floor(i/perCol),row=i%perCol;const x=wall-s-qs*0.7-col*qs,y=(top+bot)/2+(row-(perCol-1)/2)*s;g.beginPath();g.arc(x,y,Math.min(r,qs*0.4),0,Math.PI*2);g.fill();}
+    // defenders arc
+    g.fillStyle=blue;const R=Math.min(W-wall-24,(bot-top)/2-6),cx=wall+8,cy=(top+bot)/2;
+    const pts=[];const rings=Math.ceil(nD/14);
+    for(let i=0;i<nD;i++){const ring=Math.floor(i/14),inRing=Math.min(14,nD-ring*14),j=i%14;const ang=(-0.42+0.84*(inRing===1?0.5:j/(inRing-1)))*Math.PI;const rr=R*(0.62+0.3*ring/Math.max(1,rings));pts.push([cx+rr*Math.cos(ang),cy+rr*Math.sin(ang)]);}
+    pts.forEach(([x,y])=>diamond(g,x,y,r*1.25));
+    if(M.c<1&&pts.length){g.fillStyle=css('--moss');g.strokeStyle=css('--moss');g.lineWidth=2;pts.forEach(([x,y])=>shield(g,x-r*1.9,y-r*.5,r*.6,M.c<=25/65+1e-9));}
+    if(S.k>1){g.fillStyle=css('--ochre');burst(g,wall,gy0-12,9);g.fillStyle=css('--ink');g.textAlign='center';g.textBaseline='bottom';g.font='600 11px '+css('--sans');g.fillText('splash ×'+S.k,wall,gy0-22);}
+  } else {
+    // open field: two lines
+    const perCol=Math.max(1,Math.floor((bot-top)/14)),s=Math.min(14,(bot-top)/perCol),r=s*0.36;
+    g.fillStyle=red;for(let i=0;i<nA;i++){const col=Math.floor(i/perCol),row=i%perCol;g.beginPath();g.arc(W*0.32-col*s,top+s/2+row*s,r,0,Math.PI*2);g.fill();}
+    g.fillStyle=blue;const dp=[];for(let i=0;i<nD;i++){const col=Math.floor(i/perCol),row=i%perCol;dp.push([W*0.68+col*s,top+s/2+row*s]);}
+    dp.forEach(([x,y])=>diamond(g,x,y,r*1.25));
+    if(M.c<1){g.fillStyle=css('--moss');g.strokeStyle=css('--moss');g.lineWidth=2;dp.forEach(([x,y])=>shield(g,x-r*2,y-r*.4,r*.55,M.c<=25/65+1e-9));}
+    g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='middle';g.fillText('open field: everyone fires',W/2,(top+bot)/2);
+  }
+  $('clock').textContent=`t = ${f1(playT===null?M.sim.t:Math.min(playT,M.sim.t))} s`;
+}
+
+const pad={l:40,r:12,t:10,b:28};
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v-1e-9);}
+function drawAlive(){
+  const cv=setupCanvas($('cAlive')),g=cv.g,W=cv.w,H=cv.h;g.clearRect(0,0,W,H);
+  const tMax=niceMax(Math.max(M.sim.t,0.5)),yStep=Math.max(1,Math.ceil(Math.max(S.A0,M.Dfight)/4)),yMax=4*yStep;
+  const X=t=>pad.l+(W-pad.l-pad.r)*t/tMax,Y=v=>pad.t+(H-pad.t-pad.b)*(1-v/yMax);
+  g.font='11px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Y(yMax*i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(W-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(yMax*i/4),pad.l-5,y);}
+  for(let i=0;i<=4;i++){g.textAlign='center';g.textBaseline='top';g.fillText(+(tMax*i/4).toFixed(1),X(tMax*i/4),H-pad.b+5);}
+  g.textAlign='right';g.fillText('seconds',W-pad.r,H-13);
+  const tEnd=playT===null?M.sim.t:Math.min(playT,M.sim.t);
+  [[1,css('--blood')],[2,css('--steel')]].forEach(([idx,col])=>{g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();let first=true;for(const p of M.sim.trace){if(p[0]>tEnd)break;first?g.moveTo(X(p[0]),Y(p[idx])):g.lineTo(X(p[0]),Y(p[idx]));first=false;}const [A,D]=stateAt(playT);g.lineTo(X(tEnd),Y(idx===1?A:D));g.stroke();});
+  if(M.choke){g.strokeStyle=css('--ink');g.lineWidth=1.5;g.globalAlpha=.8;g.setLineDash([5,4]);g.beginPath();g.moveTo(X(0),Y(M.Dfight));const te=Math.min(M.T,tMax);g.lineTo(X(te),Y(Math.max(0,M.Dfight-M.aEff*M.w*te)));g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+}
+function drawLoss(){
+  const cv=setupCanvas($('cLoss')),g=cv.g,W=cv.w,H=cv.h;g.clearRect(0,0,W,H);
+  const openV=M.openLoss===null?S.A0:M.openLoss,gateV=M.loss;
+  const xMax=niceMax(Math.max(S.A0,gateV,1)*1.05);
+  const L=86,R=W-70,X=v=>L+(R-L)*Math.min(v,xMax)/xMax;
+  g.font='600 12px '+css('--sans');g.textBaseline='middle';
+  const bars=[['open field',openV,M.openLoss===null?'all ('+S.A0+')':f2(M.openLoss)],[M.laneMode?'gate (lane)':'gate',gateV,f2(gateV)+' ('+f2(S.A0-M.sim.A)+')']];
+  const ax=X(S.A0);g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(ax,6);g.lineTo(ax,90);g.stroke();
+  bars.forEach(([lab,v,txt],i)=>{const y=14+i*38;g.fillStyle=css('--ink');g.textAlign='right';g.fillText(lab,L-8,y+10);g.fillStyle=css('--blood');g.globalAlpha=i?1:.55;g.fillRect(L,y,Math.max(2,X(v)-L),20);g.globalAlpha=1;g.textAlign='left';g.font='12px '+css('--mono');const tx=Math.min(X(v)+6,R+4),tw=g.measureText(txt).width;g.fillStyle=css('--paper-2');g.fillRect(tx-3,y+1,tw+6,18);g.fillStyle=css('--ink');g.fillText(txt,tx,y+10);g.font='600 12px '+css('--sans');});
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='center';g.textBaseline='top';g.fillText('A₀ = '+S.A0,ax,94);
+  g.fillText('0',L,94);
+}
+
+function readouts(){
+  $('oA0').textContent=S.A0;$('oD0').textContent=S.D0;$('oTa').textContent=S.ta+' s';$('oTb').textContent=S.tb+' s';$('oW').textContent=S.w;$('oK').textContent=S.k;$('oC').textContent=S.c.toFixed(2);$('oL').textContent=S.lanes;
+  $('rLoss').textContent=M.choke?f2(M.loss):'—';
+  $('rOpen').textContent=M.openLoss===null?'all':f2(M.openLoss);
+  $('rT').textContent=M.choke?f1(M.T)+' s':'—';
+  $('rEff').textContent=`${M.aEff.toFixed(4).replace(/0+$/,'').replace(/\.$/,'')} / ${M.bEff.toFixed(4).replace(/0+$/,'').replace(/\.$/,'')}`;
+  $('rSimA').textContent=M.sim.A>0?f2(M.sim.A):'0 (wiped)';
+  $('rSimD').textContent=M.sim.D>0?f2(M.sim.D):'0';
+  $('rSimT').textContent=f1(M.sim.t)+' s';
+  $('rOpenS').textContent=M.openDisc>0?f2(M.openSurv):'0 (attackers lose)';
+  const v=$('valid');
+  if(M.choke){const ok=S.A0>=M.loss+M.w-1e-9;v.textContent=ok?`Formula valid (A₀ = ${S.A0} ≥ losses + w = ${f2(M.loss+M.w)}). Closed form predicts ${f2(S.A0-M.loss)} attackers left.`:`Formula past its limit (A₀ = ${S.A0} < losses + w = ${f2(M.loss+M.w)}), see simulation.`;v.className='valid'+(ok?'':' err');}
+  else v.textContent='Open field: square law. Splash and gate width do not apply.';
+  // lanes
+  const lb=$('laneBox');lb.hidden=!M.laneMode;
+  if(M.laneMode){const ok=S.rot<M.T;$('rLane').textContent=`${f1(M.T)} s vs ${S.rot} s rotation: ${ok?'help arrives in time':'lane falls first'}`;$('rLaneL').textContent=`weakest lane (${M.Dfight} defenders) falls in T = D_lane / (a_eff w); breaking it costs ${f2(M.loss)} attackers`;}
+  const sp=$('splitMsg');sp.textContent=S.lanes===1?'One lane holds all defenders.':M.sp.ok?`Lanes hold ${M.sp.parts.join(', ')} defenders.`:`Split must be ${S.lanes} whole numbers adding up to ${S.D0}. Using ${M.sp.parts.join(',')}.`;sp.className='small'+(S.lanes>1&&!M.sp.ok?' err':'');
+  $('split').disabled=S.lanes===1||!M.choke;$('rot').disabled=S.lanes===1||!M.choke;
+  $('chokeOnly').classList.toggle('dis',!M.choke);$('laneCtl').classList.toggle('dis',!M.choke);
+  ['w','k','lanes'].forEach(id=>$(id).disabled=!M.choke);
+  $('lgClosed').style.opacity=M.choke?1:.35;
+  // insight
+  let s;
+  if(!M.choke) s=`In the open all ${S.A0} attackers fire at once. The square law gives them ${M.openDisc>0?f2(M.openSurv)+' survivors, a loss of '+f2(M.openLoss):'a defeat'}. Switch to chokepoint to see what a wall does to the same fight.`;
+  else {
+    s=`At a ${S.w}-wide gate the attackers lose <b>${f2(M.loss)}</b> fighters against ${M.Dfight} defenders, compared with <b>${M.openLoss===null?'all of them':f2(M.openLoss)}</b> in the open. `;
+    s+=`Losses grow with D² and fall with 1/w. They don't depend on A₀: more attackers only lengthen the queue`;
+    s+=M.loss>S.A0?`, and here the gate costs more than the whole force of ${S.A0}.`:'.';
+  }
+  $('insight').innerHTML=s;
+}
+
+let raf=null;
+function drawAll(){drawMap();drawAlive();drawLoss();}
+function refresh(){if(raf){cancelAnimationFrame(raf);raf=null;}playT=null;compute();readouts();drawAll();}
+function play(){
+  if(raf)cancelAnimationFrame(raf);
+  if(reduce.matches){playT=null;drawAll();return;}
+  const t0=performance.now();
+  const step=now=>{const f=Math.min(1,(now-t0)/3000);playT=f*M.sim.t;drawAll();if(f<1)raf=requestAnimationFrame(step);else{playT=null;raf=null;drawAll();}};
+  raf=requestAnimationFrame(step);
+}
+$('play').addEventListener('click',play);
+
+function clearPreset(){document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));}
+const num=(id,key)=>$(id).addEventListener('input',e=>{S[key]=+e.target.value;if(key==='D0'||key==='lanes'){S.split=evenSplit(S.D0,S.lanes);$('split').value=S.split;}clearPreset();refresh();});
+[['A0','A0'],['D0','D0'],['ta','ta'],['tb','tb'],['w','w'],['k','k'],['c','c'],['lanes','lanes']].forEach(([i,k])=>num(i,k));
+$('split').addEventListener('input',e=>{S.split=e.target.value;clearPreset();refresh();});
+$('rot').addEventListener('input',e=>{S.rot=Math.max(0,+e.target.value||0);refresh();});
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',e=>{S.mode=e.target.value;clearPreset();refresh();}));
+document.querySelectorAll('input[name=cover]').forEach(r=>r.addEventListener('change',e=>{S.cover=e.target.value;$('customWrap').hidden=S.cover!=='custom';clearPreset();refresh();}));
+function syncInputs(){
+  ['A0','D0','ta','tb','w','k','c','lanes'].forEach(id=>$(id).value=S[id]);$('split').value=S.split;$('rot').value=S.rot;
+  document.querySelector(`input[name=mode][value=${S.mode}]`).checked=true;document.querySelector(`input[name=cover][value="${S.cover}"]`).checked=true;$('customWrap').hidden=S.cover!=='custom';
+}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const p=JSON.parse(b.dataset.p);
+  Object.assign(S,{A0:30,D0:10,ta:10,tb:10,mode:'choke',w:2,k:1,cover:'1',lanes:1,rot:20},p);
+  if(!p.split)S.split=evenSplit(S.D0,S.lanes);
+  syncInputs();clearPreset();b.setAttribute('aria-pressed','true');refresh();
+}));
+window.addEventListener('resize',drawAll);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+syncInputs();refresh();
+})();
+</script>
+</body>
+</html>

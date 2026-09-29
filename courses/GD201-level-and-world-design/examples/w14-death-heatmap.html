@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Death heatmaps — GD201 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--heat-lo:#f5e6d3;--heat-hi:#7c2410;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--heat-lo:#3b2c2a;--heat-hi:#ffcf8a}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--heat-lo:#3b2c2a;--heat-hi:#ffcf8a}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1160px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:68ch;margin-bottom:12px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+@media (max-width:520px){main{padding:20px 12px 40px}.panel{padding:12px}}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.gridwrap{border-radius:6px;cursor:crosshair}
+.gridwrap svg{display:block;width:100%;height:auto}
+.scale{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.8rem;margin-top:8px;flex-wrap:wrap}
+.scale .ramp{flex:1 1 100px;height:12px;border-radius:3px;min-width:80px;background:linear-gradient(90deg,var(--heat-lo),var(--heat-hi));border:1px solid var(--ink-soft)}
+.scale .nd{display:inline-block;width:18px;height:12px;border:1px solid var(--ink-soft);border-radius:2px;background:repeating-linear-gradient(45deg,var(--paper) 0 3px,var(--ink-soft) 3px 4.5px);vertical-align:-2px;margin-right:4px}
+.cellinfo{font-family:var(--mono);font-size:.84rem;margin:10px 0 0;min-height:2.6em;padding:8px 10px;border-radius:8px;background:var(--paper-2)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:820px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-family:var(--mono);font-size:1.3rem;font-weight:700;line-height:1.2}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 24px;margin-top:16px}
+@media (max-width:980px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:620px){.controls{grid-template-columns:1fr}}
+.ctl label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctl output{font-family:var(--mono);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.group{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+button{font:600 .88rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+button.plain{border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,.gridwrap:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.9rem;margin:6px 0;justify-content:flex-start!important}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:.86rem;width:100%;min-width:560px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-family:var(--sans)}
+th:first-child,td:first-child{text-align:left}
+td.name,th.lft{font-family:var(--sans);text-align:left}
+tr.top td{font-weight:700;background:var(--paper-2)}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:6px}
+.bars{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.bars{grid-template-columns:1fr}}
+.brow{display:grid;grid-template-columns:7.5em 1fr 4.2em;gap:8px;align-items:center;font-size:.9rem;margin:6px 0}
+.brow .track{position:relative;height:18px;background:var(--paper);border-radius:3px;overflow:visible}
+.brow .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.brow .val{font-family:var(--mono);text-align:right;font-weight:700}
+.rbar{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed var(--ink)}
+.hint{font-size:.85rem;color:var(--ink-soft);margin:6px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD201 Level and World Design · Week 14 · Worked example</p>
+  <h1>Where players die is not where the level is dangerous</h1>
+  <p class="lede" id="lede">The death-count map lights up where traffic is heavy. The shrunk death rate, (d + k r̄) / (v + k), points at the sniper yard instead.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Playtest heatmaps</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Quarry zone table</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="views">
+    <figure>
+      <figcaption>Deaths per cell<small>What most death heatmaps show. It follows traffic.</small></figcaption>
+      <div class="gridwrap" id="mL" tabindex="0" role="application" aria-roledescription="heatmap grid" aria-label="Death count map. Arrow keys move between cells." aria-describedby="cellinfo"></div>
+      <div class="scale"><span>0</span><span class="ramp" aria-hidden="true"></span><span id="lgL">max</span><span><i class="nd"></i>no data</span></div>
+    </figure>
+    <figure>
+      <figcaption id="capR">Death rate per visit, shrunk<small id="capRs"></small></figcaption>
+      <div class="gridwrap" id="mR" tabindex="0" role="application" aria-roledescription="heatmap grid" aria-label="Death rate map. Arrow keys move between cells." aria-describedby="cellinfo"></div>
+      <div class="scale"><span>0</span><span class="ramp" aria-hidden="true"></span><span id="lgR">max</span><span><i class="nd"></i>no data</span></div>
+    </figure>
+  </div>
+  <p class="cellinfo" id="cellinfo" aria-live="polite">Hover or focus a map, then use the arrow keys to read a cell.</p>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="sRuns">—</b><span>runs</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="sVis">—</b><span>cell visits</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="sDeaths">—</b><span>deaths</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="sRbar">—</b><span>r̄ = deaths / visits</span></div>
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div class="ctl">
+      <span class="lbl">Testers (4 runs each)</span>
+      <div class="group" role="group" aria-label="Testers" id="testers"></div>
+      <span class="lbl">Cell size</span>
+      <div class="group" role="group" aria-label="Cell size" id="cells"></div>
+      <div class="group"><button class="plain" id="newTest">New playtest</button><button class="plain" id="reset1">Reset</button></div>
+      <p class="hint" id="seedInfo"></p>
+    </div>
+    <div class="ctl k-host" id="kHost1"></div>
+    <div class="ctl">
+      <label for="minV">Hide cells with fewer than N visits <output id="oMinV">0</output></label>
+      <input id="minV" type="range" min="0" max="30" step="1" value="0">
+      <label class="check"><input type="checkbox" id="truth"> Show true danger (chance of death per second)</label>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Top 3 cells on each map</caption>
+      <thead><tr><th>Map</th><th>#</th><th>Cell (m)</th><th class="lft">Region</th><th>Visits v</th><th>Deaths d</th><th>Value</th></tr></thead>
+      <tbody id="top3"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <p class="insight" id="zInsight" style="margin-top:0"></p>
+  <div class="bars">
+    <figure><figcaption>Deaths per zone<small>Counts do not change with k.</small></figcaption><div id="zCount"></div></figure>
+    <figure><figcaption id="zRateCap">Death rate per visit</figcaption><div id="zRate"></div><p class="hint">Dashed line: r̄ = 0.100, the level-wide rate. Shrinking pulls every zone toward it, and pulls hardest where visits are few.</p></figure>
+  </div>
+  <div class="controls"><div class="ctl k-host" id="kHost2"></div></div>
+  <div class="table-wrap">
+    <table>
+      <caption>Quarry, 30 testers, 1,000 visits, 100 deaths</caption>
+      <thead><tr><th>Zone</th><th>Visits v</th><th>Deaths d</th><th>Raw d/v</th><th>Std. error</th><th id="zColH">Shrunk</th><th>Rank</th></tr></thead>
+      <tbody id="zBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<div id="kCtl" class="ctl">
+  <label for="k">Shrinkage k (pseudo-visits) <output id="oK">20</output></label>
+  <input id="k" type="range" min="0" max="100" step="1" value="20">
+  <span class="lbl" style="margin-top:6px">Rate map shows</span>
+  <div class="group" role="group" aria-label="Rate mode">
+    <button class="chip" data-mode="raw" aria-pressed="false">Raw rate d / v</button>
+    <button class="chip" data-mode="shrunk" aria-pressed="true">Shrunk rate</button>
+  </div>
+</div>
+
+<footer>Level, routes and danger values from GD201 Lab 14's generator (make_telemetry.py), reproduced in JavaScript with a seeded mulberry32 generator, so the data differs from the lab's CSV. Quarry zone numbers are the lecture's teaching model, not data from any game. All drawings are plain rectangles.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const REG=[
+  {n:'spawn room',r:[0,6,6,14],p:0.002},{n:'corridor',r:[6,8,26,12],p:0.012},{n:'sniper yard',r:[14,12,26,20],p:0.070},
+  {n:'vent',r:[10,0,30,4],p:0.050},{n:'bridge',r:[26,8,34,12],p:0.030},{n:'exit hall',r:[34,6,40,14],p:0.004}];
+const ROUTES=[
+  {w:0.70,pts:[[3,10],[26,10],[34,10],[39,10]]},
+  {w:0.25,pts:[[3,10],[14,10],[18,16],[24,16],[26,10],[34,10],[39,10]]},
+  {w:0.05,pts:[[3,10],[8,10],[10,2],[30,2],[34,10],[39,10]]}];
+const DEF={seed:13,testers:30,k:20,cs:4,mode:'shrunk',minV:0,truth:false};
+let S=Object.assign({},DEF),DATA=null,G=null,cursor=null;
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function danger(x,y){for(const g of REG){const[a,b,c,d]=g.r;if(x>=a&&x<c&&y>=b&&y<d)return g.p;}return 0.01;}
+function regionAt(x,y){for(const g of REG){const[a,b,c,d]=g.r;if(x>=a&&x<c&&y>=b&&y<d)return g.n;}return 'open ground';}
+function samples(pts){ // same stepping as make_telemetry.py
+  const out=[];let [x,y]=pts[0];out.push([x,y]);
+  for(let i=1;i<pts.length;i++){const [tx,ty]=pts[i];
+    while(true){const dx=tx-x,dy=ty-y,dist=Math.hypot(dx,dy);if(dist<=2){x=tx;y=ty;break;}x+=2*dx/dist;y+=2*dy/dist;out.push([x,y]);}
+    out.push([x,y]);}
+  return out;
+}
+const PATHS=ROUTES.map(r=>samples(r.pts));
+function simulate(seed,testers){
+  const rng=mulberry32(seed),runs=[];
+  for(let p=0;p<testers;p++)for(let r=0;r<4;r++){
+    let u=rng(),ri=0,acc=0;for(;ri<ROUTES.length-1;ri++){acc+=ROUTES[ri].w;if(u<acc)break;}
+    const pos=[];let death=null;
+    for(const [bx,by] of PATHS[ri]){
+      let x=bx+(rng()*1.6-0.8),y=by+(rng()*1.6-0.8);x=Math.min(Math.max(x,0),39.9);y=Math.min(Math.max(y,0),19.9);
+      pos.push([x,y]);if(rng()<danger(x,y)){death=[x,y];break;}
+    }
+    runs.push({pos,death});
+  }
+  return runs;
+}
+function aggregate(){
+  const cs=S.cs,C=Math.ceil(40/cs),R=Math.ceil(20/cs),v=new Int32Array(C*R),d=new Int32Array(C*R);
+  let V=0,D=0;
+  for(const run of DATA){let prev=-1;
+    for(const [x,y] of run.pos){const c=Math.floor(y/cs)*C+Math.floor(x/cs);if(c!==prev){v[c]++;V++;prev=c;}}
+    if(run.death){const [x,y]=run.death;d[Math.floor(y/cs)*C+Math.floor(x/cs)]++;D++;}}
+  const rbar=V?D/V:0;
+  G={cs,C,R,v,d,V,D,rbar};
+}
+function heat(i,mode){const v=G.v[i],d=G.d[i];if(!v||v<S.minV)return null;
+  if(mode==='count')return d;if(mode==='raw')return d/v;return (d+S.k*G.rbar)/(v+S.k);}
+function cellRegion(i){const cx=i%G.C,cy=Math.floor(i/G.C),x0=cx*G.cs,y0=cy*G.cs,x1=Math.min(40,x0+G.cs),y1=Math.min(20,y0+G.cs);
+  let best='open ground',ba=0;REG.forEach(g=>{const[a,b,c,d]=g.r,ov=Math.max(0,Math.min(c,x1)-Math.max(a,x0))*Math.max(0,Math.min(d,y1)-Math.max(b,y0));if(ov>ba){ba=ov;best=g.n;}});return best;}
+function cellLabel(i){const cx=i%G.C,cy=Math.floor(i/G.C);return `${cx*G.cs}-${Math.min(40,(cx+1)*G.cs)}, ${cy*G.cs}-${Math.min(20,(cy+1)*G.cs)}`;}
+const f3=x=>x.toFixed(3);
+
+// colours
+function hex(c){c=c.trim();if(c[0]==='#'){if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return [1,3,5].map(k=>parseInt(c.substr(k,2),16));}return [0,0,0];}
+function ramp(t){const cs=getComputedStyle(document.documentElement);const a=hex(cs.getPropertyValue('--heat-lo')),b=hex(cs.getPropertyValue('--heat-hi'));t=Math.max(0,Math.min(1,t));return 'rgb('+a.map((v,k)=>Math.round(v+(b[k]-v)*t)).join(',')+')';}
+
+function drawMap(el,mode){
+  let mx=0;for(let i=0;i<G.C*G.R;i++){const h=heat(i,mode);if(h!==null&&h>mx)mx=h;}
+  let o=`<svg viewBox="-.2 -.2 40.4 20.4" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="nd-${el.id}" width=".7" height=".7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width=".7" height=".7" fill="var(--paper)"/><line x1="0" y1="0" x2="0" y2=".7" stroke="var(--ink-soft)" stroke-width=".18"/></pattern></defs>`;
+  o+=`<rect x="0" y="0" width="40" height="20" fill="var(--paper)" stroke="var(--ink)" stroke-width=".15"/>`;
+  for(let i=0;i<G.C*G.R;i++){const cx=i%G.C,cy=Math.floor(i/G.C),x=cx*G.cs,y=cy*G.cs,w=Math.min(G.cs,40-x),h=Math.min(G.cs,20-y);
+    const v=heat(i,mode);
+    o+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${v===null?`url(#nd-${el.id})`:ramp(mx?v/mx:0)}" stroke="var(--paper-2)" stroke-width=".08"/>`;}
+  REG.forEach(g=>{const[a,b,c,d]=g.r;
+    o+=`<rect x="${a}" y="${b}" width="${c-a}" height="${d-b}" fill="none" stroke="var(--ink)" stroke-width="${S.truth?.32:.12}" ${S.truth?'':'stroke-dasharray=".5 .35"'} stroke-opacity="${S.truth?.95:.7}"/>`;
+    const fs=Math.min(1.4,(c-a-.5)/(g.n.length*.56)),cx=(a+c)/2,cy=(b+d)/2,T=(yy,txt,sz)=>`<text x="${cx}" y="${yy}" text-anchor="middle" dominant-baseline="middle" font-size="${sz}" font-weight="700" font-family="Figtree,system-ui,sans-serif" fill="var(--ink)" stroke="var(--paper)" stroke-width="${sz*.28}" paint-order="stroke">${txt}</text>`;
+    o+=S.truth?T(cy-fs*.55,g.n,fs)+T(cy+fs*.6,g.p.toFixed(3)+' /s',fs):T(cy,g.n,fs);});
+  if(cursor!==null){const cx=cursor%G.C,cy=Math.floor(cursor/G.C);o+=`<rect x="${cx*G.cs}" y="${cy*G.cs}" width="${Math.min(G.cs,40-cx*G.cs)}" height="${Math.min(G.cs,20-cy*G.cs)}" fill="none" stroke="var(--focus)" stroke-width=".35"/>`;}
+  el.innerHTML=o+'</svg>';
+  return mx;
+}
+function top3(mode){const a=[];for(let i=0;i<G.C*G.R;i++){const h=heat(i,mode);if(h!==null)a.push([i,h]);}
+  a.sort((p,q)=>q[1]-p[1]||G.v[q[0]]-G.v[p[0]]);return a.slice(0,3);}
+function render(){
+  aggregate();
+  const rm=S.mode;
+  const mxL=drawMap($('mL'),'count'),mxR=drawMap($('mR'),rm);
+  $('lgL').textContent='max '+mxL;$('lgR').textContent='max '+f3(mxR);
+  $('capR').firstChild.textContent=rm==='raw'?'Death rate per visit, raw d / v':'Death rate per visit, shrunk';
+  $('capRs').textContent=rm==='raw'?'Deaths divided by visits. Cells with few visits swing to 0 or 100%.':`(d + k r̄) / (v + k) with k = ${S.k}. Few visits pull a cell toward r̄.`;
+  $('sRuns').textContent=DATA.length.toLocaleString('en-US');$('sVis').textContent=G.V.toLocaleString('en-US');$('sDeaths').textContent=G.D;$('sRbar').textContent=f3(G.rbar);
+  const tc=top3('count'),tr=top3(rm);
+  const row=(lab,t)=>t.map(([i,h],n)=>`<tr class="${n===0?'top':''}"><td>${n===0?lab:''}</td><td>${n+1}</td><td>${cellLabel(i)}</td><td class="name">${cellRegion(i)}</td><td>${G.v[i]}</td><td>${G.d[i]}</td><td>${lab==='Deaths'?h:f3(h)}</td></tr>`).join('');
+  $('top3').innerHTML=row('Deaths',tc)+row(rm==='raw'?'Raw rate':'Shrunk rate',tr);
+  let ones=0,vis=0;for(let i=0;i<G.C*G.R;i++)if(G.v[i]&&G.v[i]>=S.minV){vis++;if(G.d[i]/G.v[i]>=0.2&&G.v[i]<10)ones++;}
+  let s='';
+  if(tc.length&&tr.length){
+    const [ci,ch]=tc[0],[ri,rh]=tr[0];
+    s=`Most deaths: ${cellRegion(ci)} (${ch}). Most dangerous per visit: ${cellRegion(ri)}, ${f3(rh)} from ${G.v[ri]} visit${G.v[ri]===1?'':'s'}.`;
+    if(rm==='raw'&&ones)s+=` ${ones} of ${vis} cells show a raw rate of 0.200 or more from fewer than 10 visits. One death more or less swings those cells by 10 points or more, so treat them as noise until the shrunk map agrees.`;
+    else if(rm==='shrunk'&&cellRegion(ri)!==cellRegion(ci))s+=` The count map and the rate map disagree, because the ${cellRegion(ci)} gets the most traffic.`;
+  }
+  $('insight').textContent=s;
+  $('seedInfo').textContent=`Playtest seed ${S.seed}. The same seed and tester count always give the same data.`;
+  $('oK').textContent=S.mode==='raw'?S.k+' (off in raw mode)':S.k;$('k').disabled=S.mode==='raw';$('oMinV').textContent=S.minV;
+  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===rm?'true':'false'));
+  document.querySelectorAll('#testers .chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.t===S.testers?'true':'false'));
+  document.querySelectorAll('#cells .chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.c===S.cs?'true':'false'));
+  cellInfo();renderZones();
+}
+function cellInfo(){
+  if(cursor===null){$('cellinfo').textContent='Hover or focus a map, then use the arrow keys to read a cell.';return;}
+  const v=G.v[cursor],d=G.d[cursor],head=`Cell ${cellLabel(cursor)} m, ${cellRegion(cursor)}`;
+  if(!v){$('cellinfo').textContent=head+' · no visits, no data';return;}
+  const r=d/v,se=Math.sqrt(r*(1-r)/v),h=(d+S.k*G.rbar)/(v+S.k);
+  $('cellinfo').textContent=`${head} · v = ${v} · d = ${d} · raw ${f3(r)} · std. error ${f3(se)} · heat ${f3(h)}`+(v<S.minV?' · hidden (few visits)':'');
+}
+
+// zones (lecture's Quarry)
+const Z=[['Corridor',400,28],['Bridge',250,30],['Sniper yard',100,25],['Vent',10,4],['Spawn room',236,11],['Lift',4,2]];
+const ZR=100/1000;
+function fz(x){const n=x*1e4,r=Math.round(n);return (Math.abs(n-r)<1e-6&&r%10!==0)?x.toFixed(4):x.toFixed(3);}
+function renderZones(){
+  const k=S.mode==='raw'?0:S.k;
+  const rate=Z.map(([n,v,d])=>(d+k*ZR)/(v+k));
+  const order=rate.map((r,i)=>i).sort((a,b)=>rate[b]-rate[a]);
+  const rank=[];order.forEach((i,n)=>rank[i]=n+1);
+  $('zCount').innerHTML=Z.map(([n,v,d])=>`<div class="brow"><span>${n}</span><span class="track"><span class="fill" style="width:${d/30*100}%;background:var(--blood)"></span></span><span class="val">${d}</span></div>`).join('');
+  $('zRate').innerHTML=Z.map(([n],i)=>`<div class="brow"><span>${n}</span><span class="track"><span class="fill" style="width:${rate[i]/0.5*100}%;background:var(--ochre)"></span><span class="rbar" style="left:${ZR/0.5*100}%"></span></span><span class="val">${fz(rate[i])}</span></div>`).join('');
+  $('zRateCap').textContent=S.mode==='raw'?'Raw death rate d / v':`Shrunk rate (d + k r̄) / (v + k), k = ${S.k}`;
+  $('zColH').textContent=S.mode==='raw'?'Raw (k = 0)':`Shrunk, k = ${S.k}`;
+  $('zBody').innerHTML=Z.map(([n,v,d],i)=>{const r=d/v;return `<tr class="${rank[i]<=3?'top':''}"><td>${n}</td><td>${v}</td><td>${d}</td><td>${f3(r)}</td><td>${f3(Math.sqrt(r*(1-r)/v))}</td><td>${fz(rate[i])}</td><td>${rank[i]}</td></tr>`;}).join('');
+  const top=order.slice(0,3).map(i=>Z[i][0]);
+  $('zInsight').innerHTML=`<b>Top 3 by ${S.mode==='raw'?'raw rate':'shrunk rate, k = '+S.k}:</b> ${top.join(', ')}. By count the order is Bridge, Corridor, Sniper yard. r̄ = ${ZR.toFixed(3)}.`+
+   (k===0?' With no shrinkage the lift, 2 deaths from 4 visits, tops the list.':k>=20?' The sniper yard, with 100 visits behind it, now leads.':'');
+}
+
+// build controls
+$('testers').innerHTML=[5,10,30,100,300].map(t=>`<button class="chip" data-t="${t}">${t}</button>`).join('');
+$('cells').innerHTML=[2,4,8].map(c=>`<button class="chip" data-c="${c}">${c} m</button>`).join('');
+document.querySelectorAll('#testers .chip').forEach(b=>b.addEventListener('click',()=>{S.testers=+b.dataset.t;DATA=simulate(S.seed,S.testers);render();}));
+document.querySelectorAll('#cells .chip').forEach(b=>b.addEventListener('click',()=>{S.cs=+b.dataset.c;cursor=null;render();}));
+$('k').addEventListener('input',e=>{S.k=+e.target.value;render();});
+$('minV').addEventListener('input',e=>{S.minV=+e.target.value;render();});
+$('truth').addEventListener('change',e=>{S.truth=e.target.checked;render();});
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{S.mode=b.dataset.mode;render();}));
+$('newTest').addEventListener('click',()=>{S.seed=(S.seed*1103515245+12345)%2147483647||7;DATA=simulate(S.seed,S.testers);render();});
+function reset(){S=Object.assign({},DEF);cursor=null;$('k').value=S.k;$('minV').value=0;$('truth').checked=false;DATA=simulate(S.seed,S.testers);render();}
+$('reset1').addEventListener('click',reset);
+['mL','mR'].forEach(id=>{const el=$(id);
+  const at=ev=>{const r=el.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width*40.4-.2,y=(ev.clientY-r.top)/r.height*20.4-.2;if(x<0||y<0||x>=40||y>=20)return null;return Math.floor(y/G.cs)*G.C+Math.floor(x/G.cs);};
+  el.addEventListener('pointermove',ev=>{const c=at(ev);if(c!==null&&c!==cursor){cursor=c;render();}});
+  el.addEventListener('focus',()=>{if(cursor===null){cursor=Math.floor(G.R/2)*G.C;render();}});
+  el.addEventListener('keydown',ev=>{const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[ev.key];if(!d)return;ev.preventDefault();
+    if(cursor===null)cursor=0;let cx=cursor%G.C+d[0],cy=Math.floor(cursor/G.C)+d[1];cx=Math.max(0,Math.min(G.C-1,cx));cy=Math.max(0,Math.min(G.R-1,cy));cursor=cy*G.C+cx;render();});
+});
+// shared k control moves between tabs
+const tabs=[$('t1'),$('t2')];
+function sel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});
+  (t.id==='t1'?$('kHost1'):$('kHost2')).appendChild($('kCtl'));if(focus)t.focus();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t,true));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft')sel(tabs[(i+1)%2],true);});});
+sel(tabs[0],false);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+reset();
+window.__w14={S:()=>S,G:()=>G,set:(o)=>{Object.assign(S,o);$('k').value=S.k;DATA=simulate(S.seed,S.testers);render();},top:m=>top3(m).map(([i,h])=>[cellRegion(i),h,G.v[i],G.d[i]])};
+})();
+</script>
+</body>
+</html>

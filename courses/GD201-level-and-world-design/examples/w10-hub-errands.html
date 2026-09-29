@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hub errand cost — GD201 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}.world{min-height:0;padding:10px 0}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0;display:flex;flex-direction:column}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.world{flex:1;display:flex;align-items:center;justify-content:center;min-height:220px}
+#svg{display:block;width:100%;height:auto;max-height:380px;overflow:visible}
+#svg .edge{stroke:var(--ink-soft);stroke-width:2.5;fill:none}
+#svg .edge.path{stroke:var(--steel);stroke-width:5}
+#svg .edge.new{stroke:var(--moss);stroke-width:3.5}
+#svg .edge.new.path{stroke:var(--steel)}
+#svg .node{cursor:pointer;outline:none}
+#svg .node circle{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+#svg .node.hub circle{fill:var(--ink)}
+#svg .node.hub text.id{fill:var(--paper)}
+#svg .node.path circle{stroke:var(--steel);stroke-width:3.5}
+#svg .node.sel circle{stroke:var(--ochre);stroke-width:4}
+#svg .node:focus-visible circle{stroke:var(--focus);stroke-width:4}
+#svg text{font-family:var(--sans);fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+#svg text.id{font-weight:700;font-size:12px}
+#svg text.d{font-size:11px;fill:var(--ink-soft);font-weight:600;font-variant-numeric:tabular-nums}
+#svg text.d.far{fill:var(--blood)}
+@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+#svg .edge.anim{stroke-dasharray:var(--len);animation:draw .9s ease-out both}
+canvas{display:block;width:100%;height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0;min-height:1.3em}
+.readout{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:980px){.readout{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+label.row:first-child{margin-top:0}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;border:0;padding:0;margin:0}
+.seg legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.seg span{display:inline-block;font:600 .88rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);color:var(--ink)}
+.seg input:checked+span{background:var(--steel);color:var(--paper)}
+.seg input:focus-visible+span,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+p.cap{font-family:var(--serif);font-size:1rem;margin:18px 0 0}
+p.cap small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:600px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD201 Level and World Design · Week 10 · Worked example</p>
+  <h1>A hub keeps every errand short</h1>
+  <p class="lede">An errand is a round trip from the hub to one destination and back. Drag "Destinations" up: the chain's cost climbs with the size of the world, the hub's line never moves. Then press "Add loop-back" and watch one link turn the chain into a ring.</p>
+</header>
+
+<section class="panel" aria-label="Errand cost model">
+  <div class="charts">
+    <figure>
+      <figcaption>The world as a graph<small>Numbers under each place are d(h, i), links to the hub on the shortest path. Hover or focus a place to see that path.</small></figcaption>
+      <div class="world"><svg id="svg" role="group" aria-label="World graph"></svg></div>
+      <p class="hint" id="hint" aria-live="polite"></p>
+    </figure>
+    <figure>
+      <figcaption>Mean errand cost E against destinations n<small>E = (2 / n) × Σ d(h, i) × L. Left axis metres, right axis seconds at speed v.</small></figcaption>
+      <canvas id="cE" role="img" aria-label="Line chart of errand cost against number of destinations for chain, ring and hub"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--blood)"></i>chain</span>
+        <span><i style="border-color:var(--ochre);border-top-style:dashed"></i>ring</span>
+        <span><i style="border-color:var(--moss);border-top-style:dotted;border-top-width:4px"></i>hub and spoke</span>
+        <span id="lgCustom" hidden><i style="border:0;width:10px;height:10px;background:var(--steel);transform:rotate(45deg);margin-right:8px"></i>your custom graph</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="rN">—</b><span>destinations n</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rSum">—</b><span>Σ d(h, i), links</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rMean">—</b><span>mean links to hub</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rE">—</b><span>E per errand</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rT">—</b><span>E / v per errand</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rAll">—</b><span>n × E, one errand each</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rPair">—</b><span>pairwise mean distance</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <fieldset class="seg" id="layouts">
+        <legend>Layout</legend>
+        <label><input type="radio" name="layout" value="chain" checked><span>Chain</span></label>
+        <label><input type="radio" name="layout" value="ring"><span>Ring</span></label>
+        <label><input type="radio" name="layout" value="hub"><span>Hub and spoke</span></label>
+        <label><input type="radio" name="layout" value="custom"><span>Custom</span></label>
+      </fieldset>
+      <div class="btns">
+        <button class="btn primary" id="loop" type="button">Add loop-back</button>
+        <button class="btn" id="reset" type="button">Reset links</button>
+      </div>
+      <p class="hint">Custom: click (or Tab to and press Enter on) one place, then a second, to add or remove the link between them.</p>
+    </div>
+    <div>
+      <label class="row" for="nIn">Destinations n <output id="oN">8</output></label>
+      <input id="nIn" type="range" min="2" max="20" step="1" value="8">
+      <label class="row" for="lIn">Link length L <output id="oL">100 m</output></label>
+      <input id="lIn" type="range" min="20" max="200" step="10" value="100">
+      <label class="row" for="vIn">Walking speed v <output id="oV">6 m/s</output></label>
+      <input id="vIn" type="range" min="2" max="12" step="1" value="6">
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <p class="cap">All layouts at the current n<small>Distances from breadth-first search on each graph. Pairwise mean = L × mean of d(i, j) over distinct destination pairs.</small></p>
+  <div class="table-wrap">
+    <table aria-label="All layouts at the current n">
+      <thead><tr><th>Layout</th><th>Σ d(h, i)</th><th>Mean links</th><th>E</th><th>E / v</th><th>n × E</th><th>Pairwise mean</th></tr></thead>
+      <tbody id="cmpBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 10 lecture. All links have the same length L; places are drawn as generic circles, not any game's map.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS='http://www.w3.org/2000/svg';
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const trim1=n=>(Math.round(n*10)/10).toLocaleString('en-US',{maximumFractionDigits:1});
+const S={layout:'chain',n:8,L:100,v:6,custom:null,sel:null,hover:null,animEdge:null};
+
+const key=(a,b)=>a<b?a+'-'+b:b+'-'+a;
+function edgesFor(layout,n){
+  const E=new Set();
+  if(layout==='hub'){for(let i=1;i<=n;i++)E.add(key(0,i));return E;}
+  for(let i=1;i<=n;i++)E.add(key(i-1,i));
+  if(layout==='ring')E.add(key(n,0));
+  return E;
+}
+function adj(E,n){const A=Array.from({length:n+1},()=>[]);E.forEach(k=>{const [a,b]=k.split('-').map(Number);A[a].push(b);A[b].push(a);});return A;}
+function bfs(A,s){const d=new Array(A.length).fill(Infinity),par=new Array(A.length).fill(-1);d[s]=0;const q=[s];
+  for(let h=0;h<q.length;h++){const u=q[h];for(const w of A[u].slice().sort((x,y)=>x-y))if(d[w]===Infinity){d[w]=d[u]+1;par[w]=u;q.push(w);}}return {d,par};}
+function stats(E,n,L){
+  const A=adj(E,n),{d,par}=bfs(A,0);let sum=0;
+  for(let i=1;i<=n;i++)sum+=d[i];
+  let ps=0,pc=0;for(let i=1;i<=n;i++){const di=bfs(A,i).d;for(let j=i+1;j<=n;j++){ps+=di[j];pc++;}}
+  const E_=2/n*sum*L;
+  return {d,par,sum,mean:sum/n,E:E_,pair:pc?L*ps/pc:0,ok:isFinite(sum)&&isFinite(ps)};
+}
+function currentEdges(){return S.layout==='custom'?S.custom:edgesFor(S.layout,S.n);}
+
+// ---- world drawing ----
+function positions(){
+  const n=S.n,P=[];let W=360,H=160;
+  if(S.layout==='ring'){W=360;H=330;const cx=180,cy=165,R=122;
+    for(let k=0;k<=n;k++){const a=-Math.PI/2+k*2*Math.PI/(n+1);P.push({x:cx+R*Math.cos(a),y:cy+R*Math.sin(a),out:a});}}
+  else if(S.layout==='hub'){W=360;H=330;const cx=180,cy=165,R=120;P.push({x:cx,y:cy,out:null});
+    for(let k=1;k<=n;k++){const a=-Math.PI/2+(k-1)*2*Math.PI/n;P.push({x:cx+R*Math.cos(a),y:cy+R*Math.sin(a),out:a});}}
+  else if(n<=10){W=Math.max(360,(n+1)*40+40);H=150;const step=(W-60)/n;for(let k=0;k<=n;k++)P.push({x:30+k*step,y:62,out:'below'});}
+  else{const per=7,rows=Math.ceil((n+1)/per);W=360;H=rows*86+36;
+    for(let k=0;k<=n;k++){const r=Math.floor(k/per);let c=k%per;if(r%2)c=per-1-c;P.push({x:30+c*50,y:42+r*86,out:'below'});}}
+  return {P,W,H};
+}
+function edgeGeom(P,a,b,W){
+  const p=P[a],q=P[b];
+  const straight=S.layout==='ring'||S.layout==='hub'||Math.abs(a-b)===1;
+  if(straight)return {d:`M${p.x},${p.y} L${q.x},${q.y}`,len:Math.hypot(q.x-p.x,q.y-p.y)};
+  // curve below the chain so it doesn't run through other places
+  const mx=(p.x+q.x)/2,my=(p.y+q.y)/2,dist=Math.hypot(q.x-p.x,q.y-p.y),bend=Math.min(70,18+dist*.22);
+  const cx=mx,cy=Math.max(p.y,q.y)+bend;
+  return {d:`M${p.x},${p.y} Q${cx},${cy} ${q.x},${q.y}`,len:dist+bend*1.2};
+}
+let svgNodes=[],lastSt=null;
+function drawWorld(st){
+  const svg=$('svg'),{P,W,H}=positions(),E=currentEdges();
+  const extra=S.layout==='custom'?[...E].some(k=>{const [a,b]=k.split('-').map(Number);return Math.abs(a-b)!==1;}):false;
+  const Hh=H+(extra&&S.n<=10?60:(extra?40:0));
+  svg.setAttribute('viewBox',`0 0 ${W} ${Hh}`);
+  svg.innerHTML='';
+  const focusIdx=S.hover;let pathSet=new Set(),pathNodes=new Set();
+  if(focusIdx!=null&&isFinite(st.d[focusIdx])){let u=focusIdx;pathNodes.add(u);while(st.par[u]!==-1){pathSet.add(key(u,st.par[u]));u=st.par[u];pathNodes.add(u);}}
+  const gE=document.createElementNS(NS,'g');svg.appendChild(gE);
+  E.forEach(k=>{const [a,b]=k.split('-').map(Number),g=edgeGeom(P,a,b,W),pa=document.createElementNS(NS,'path');
+    pa.setAttribute('d',g.d);let cls='edge';
+    if(S.layout==='custom'&&!edgesFor('chain',S.n).has(k))cls+=' new';
+    if(pathSet.has(k))cls+=' path';
+    if(S.animEdge===k&&!reduce.matches){cls+=' anim';pa.style.setProperty('--len',Math.ceil(g.len));}
+    pa.setAttribute('class',cls);pa.dataset.k=k;gE.appendChild(pa);});
+  S.animEdge=null;
+  const maxD=Math.max(...st.d.slice(1).filter(isFinite));
+  svgNodes=[];
+  for(let i=0;i<=S.n;i++){
+    const p=P[i],g=document.createElementNS(NS,'g'),hub=i===0,r=hub?19:13;
+    g.setAttribute('class','node'+(hub?' hub':'')+(pathNodes.has(i)?' path':'')+(S.sel===i?' sel':''));
+    g.setAttribute('tabindex','0');g.setAttribute('role','button');g.dataset.i=i;
+    const dTxt=hub?'':(isFinite(st.d[i])?st.d[i]+(st.d[i]===1?' link':' links'):'unreachable');
+    g.setAttribute('aria-label',hub?'Hub':`Destination ${i}, ${dTxt} from the hub`);
+    const c=document.createElementNS(NS,'circle');c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',r);g.appendChild(c);
+    const t=document.createElementNS(NS,'text');t.setAttribute('class','id');t.setAttribute('x',p.x);t.setAttribute('y',p.y);t.textContent=hub?'Hub':i;if(hub)t.style.fontSize='10.5px';g.appendChild(t);
+    if(!hub){const dt=document.createElementNS(NS,'text');dt.setAttribute('class','d'+(st.d[i]===maxD&&maxD>1?' far':''));
+      let lx=p.x,ly=p.y+25;if(typeof p.out==='number'){lx=p.x+Math.cos(p.out)*27;ly=p.y+Math.sin(p.out)*27;}
+      dt.setAttribute('x',lx);dt.setAttribute('y',ly);dt.textContent=isFinite(st.d[i])?'d '+st.d[i]:'—';g.appendChild(dt);}
+    svg.appendChild(g);svgNodes.push(g);
+  }
+}
+
+// ---- chart ----
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v)||v;}
+let series=null;
+function computeSeries(){
+  series={};for(const lay of ['chain','ring','hub']){series[lay]=[];for(let n=2;n<=20;n++)series[lay].push({n,E:stats(edgesFor(lay,n),n,S.L).E});}
+}
+function drawChart(st){
+  const c=setupCanvas($('cE')),g=c.g,w=c.w,h=c.h,pad={l:54,r:48,t:14,b:36};
+  const yMax=niceMax(Math.max(...series.chain.map(p=>p.E))*1.02),X=n=>pad.l+(w-pad.l-pad.r)*(n-2)/18,Y=e=>pad.t+(h-pad.t-pad.b)*(1-e/yMax);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const e=yMax*i/4,y=Y(e);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textBaseline='middle';g.textAlign='right';g.fillText(fmt(e)+' m',pad.l-6,y);
+    g.textAlign='left';g.fillText(fmt(e/S.v)+' s',w-pad.r+6,y);}
+  for(const n of [2,5,8,11,14,17,20]){g.textAlign='center';g.textBaseline='top';g.fillStyle=css('--ink-soft');g.fillText(n,X(n),h-pad.b+6);}
+  g.textAlign='right';g.fillText('destinations n',w-pad.r,h-14);
+  // current n marker
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(S.n),pad.t);g.lineTo(X(S.n),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  const lines=[['chain',css('--blood'),[],2.5],['ring',css('--ochre'),[8,5],2.5],['hub',css('--moss'),[2,5],3.5]];
+  for(const [lay,col,dash,lw] of lines){g.strokeStyle=col;g.lineWidth=lw;g.setLineDash(dash);g.lineCap='round';g.beginPath();
+    series[lay].forEach((p,i)=>{i?g.lineTo(X(p.n),Y(p.E)):g.moveTo(X(p.n),Y(p.E));});g.stroke();g.setLineDash([]);
+    const cur=series[lay][S.n-2];const on=S.layout===lay;
+    g.fillStyle=col;g.beginPath();g.arc(X(S.n),Y(cur.E),on?7:4.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();}
+  if(S.layout==='custom'&&st.ok){const x=X(S.n),y=Y(Math.min(st.E,yMax)),s=8;g.fillStyle=css('--steel');g.beginPath();g.moveTo(x,y-s);g.lineTo(x+s,y);g.lineTo(x,y+s);g.lineTo(x-s,y);g.closePath();g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();}
+}
+
+// ---- readouts ----
+function readouts(st){
+  const n=S.n,L=S.L,v=S.v;
+  $('oN').textContent=n;$('oL').textContent=L+' m';$('oV').textContent=v+' m/s';
+  $('rN').textContent=n;
+  $('rSum').textContent=st.ok?st.sum:'—';
+  $('rMean').textContent=st.ok?st.mean.toFixed(2).replace(/\.?0+$/,''):'—';
+  $('rE').textContent=st.ok?fmt(st.E)+' m':'—';
+  $('rT').textContent=st.ok?(st.E/v).toFixed(1)+' s':'—';
+  $('rAll').textContent=st.ok?fmt(n*st.E)+' m':'—';
+  $('rPair').textContent=st.ok?trim1(st.pair)+' m':'—';
+  $('lgCustom').hidden=S.layout!=='custom';
+  $('loop').disabled=S.layout!=='chain';
+  $('reset').disabled=S.layout!=='custom';
+  const rows=[['chain','Chain'],['ring','Ring'],['hub','Hub and spoke']];if(S.layout==='custom')rows.push(['custom','Custom']);
+  $('cmpBody').innerHTML=rows.map(([k,name])=>{const s=k==='custom'?st:stats(edgesFor(k,n),n,L);
+    if(!s.ok)return `<tr class="here"><td>${name}</td><td colspan="6">graph is disconnected</td></tr>`;
+    return `<tr class="${k===S.layout?'here':''}"><td>${name}</td><td>${s.sum}</td><td>${s.mean.toFixed(2).replace(/\.?0+$/,'')}</td><td>${fmt(s.E)} m</td><td>${(s.E/v).toFixed(1)} s</td><td>${fmt(n*s.E)} m</td><td>${trim1(s.pair)} m</td></tr>`;}).join('');
+  const ch=stats(edgesFor('chain',n),n,L),ri=stats(edgesFor('ring',n),n,L),hb=stats(edgesFor('hub',n),n,L);
+  let s;
+  if(S.layout==='chain')s=`In a chain of ${n}, the average errand walks ${fmt(ch.E)} m, ${(ch.E/v).toFixed(1)} s. Each extra destination adds about L = ${L} m to every errand, while the hub stays at 2L = ${fmt(hb.E)} m for any n. Press <b>Add loop-back</b>: one link cuts this to ${fmt(ri.E)} m.`;
+  else if(S.layout==='ring')s=`The ring lets you go whichever way is shorter, so E = ${fmt(ri.E)} m against the chain's ${fmt(ch.E)} m. It still grows with n, at about half the chain's rate.`;
+  else if(S.layout==='hub')s=`Every destination is one link from the hub, so E = 2L = ${fmt(hb.E)} m whatever n is. Drag n to 20 and this number does not move.`;
+  else if(!st.ok)s=`Some places cannot reach the hub. Add a link to reconnect them.`;
+  else{const cut=1-st.E/ch.E;s=`Your graph: E = ${fmt(st.E)} m, ${(st.E/v).toFixed(1)} s per errand. That is ${cut>=0?Math.round(cut*100)+'% less':Math.round(-cut*100)+'% more'} than the chain (${fmt(ch.E)} m)`+(Math.abs(st.E-ri.E)<1e-6?`, exactly the ring's value.`:`. Ring: ${fmt(ri.E)} m. Hub: ${fmt(hb.E)} m.`);}
+  $('insight').innerHTML=s;
+}
+
+function update(opts){
+  if(!opts||opts.series)computeSeries();
+  const st=stats(currentEdges(),S.n,S.L);lastSt=st;
+  drawWorld(st);drawChart(st);readouts(st);
+  if(S.focusAfter!=null){const el=svgNodes[S.focusAfter];S.focusAfter=null;if(el)el.focus({preventScroll:true});}
+}
+function setLayout(l){S.layout=l;const r=document.querySelector(`input[name=layout][value=${l}]`);if(r)r.checked=true;}
+function toCustom(){if(S.layout!=='custom'){S.custom=new Set(currentEdges());setLayout('custom');}}
+
+// ---- events ----
+document.querySelectorAll('input[name=layout]').forEach(r=>r.addEventListener('change',()=>{
+  if(r.value==='custom'){S.custom=S.custom&&S.customN===S.n?S.custom:edgesFor('chain',S.n);S.customN=S.n;}
+  S.layout=r.value;S.sel=null;$('hint').textContent='';update({series:false});}));
+$('nIn').addEventListener('input',e=>{
+  const old=S.n;S.n=+e.target.value;
+  if(S.custom){const keep=new Set();S.custom.forEach(k=>{const [a,b]=k.split('-').map(Number);if(a<=S.n&&b<=S.n)keep.add(k);});
+    for(let i=old+1;i<=S.n;i++)keep.add(key(i-1,i));S.custom=keep;S.customN=S.n;}
+  S.sel=null;update({series:false});});
+$('lIn').addEventListener('input',e=>{S.L=+e.target.value;update();});
+$('vIn').addEventListener('input',e=>{S.v=+e.target.value;update({series:false});});
+$('loop').addEventListener('click',()=>{S.custom=edgesFor('chain',S.n);S.customN=S.n;const k=key(S.n,0);S.custom.add(k);S.animEdge=k;setLayout('custom');S.sel=null;
+  $('hint').textContent=`Added a link from ${S.n} back to the hub.`;update({series:false});});
+$('reset').addEventListener('click',()=>{S.custom=edgesFor('chain',S.n);S.customN=S.n;S.sel=null;$('hint').textContent='Links reset to the chain.';update({series:false});});
+function pick(i){
+  if(S.layout==='ring'||S.layout==='hub'){$('hint').textContent='Switch to Chain or Custom to edit links.';return;}
+  if(S.sel==null){S.sel=i;$('hint').textContent=`${i?'Place '+i:'Hub'} selected. Pick a second place to add or remove a link.`;}
+  else if(S.sel===i){S.sel=null;$('hint').textContent='Selection cleared.';}
+  else{toCustom();S.customN=S.n;const k=key(S.sel,i);const had=S.custom.has(k);
+    if(had)S.custom.delete(k);else{S.custom.add(k);S.animEdge=k;}
+    $('hint').textContent=`${had?'Removed':'Added'} the link between ${S.sel?'place '+S.sel:'the hub'} and ${i?'place '+i:'the hub'}.`;S.sel=null;}
+  S.focusAfter=i;update({series:false});
+}
+const svg=$('svg');
+svg.addEventListener('click',e=>{const g=e.target.closest('.node');if(g)pick(+g.dataset.i);});
+svg.addEventListener('keydown',e=>{const g=e.target.closest('.node');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();pick(+g.dataset.i);}});
+function hov(i){
+  if(S.hover===i)return;S.hover=i;const st=lastSt;const ps=new Set(),pn=new Set();
+  if(i!=null&&st&&isFinite(st.d[i])){let u=i;pn.add(u);while(st.par[u]!==-1){ps.add(key(u,st.par[u]));u=st.par[u];pn.add(u);}}
+  svg.querySelectorAll('.edge').forEach(e=>e.classList.toggle('path',ps.has(e.dataset.k)));
+  svgNodes.forEach((g,j)=>g.classList.toggle('path',pn.has(j)));
+}
+svg.addEventListener('mouseover',e=>{const g=e.target.closest('.node');if(g)hov(+g.dataset.i);});
+svg.addEventListener('mouseleave',()=>{if(!svg.contains(document.activeElement))hov(null);});
+svg.addEventListener('focusin',e=>{const g=e.target.closest('.node');if(g)hov(+g.dataset.i);});
+svg.addEventListener('focusout',e=>{if(!svg.contains(e.relatedTarget))hov(null);});
+window.addEventListener('resize',()=>update({series:false}));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>update({series:false}));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>update({series:false}));
+update();
+})();
+</script>
+</body>
+</html>

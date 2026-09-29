@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Retry cost, GD201 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px}
+svg.strip{display:block;width:100%;height:auto;overflow:visible;touch-action:none}
+.flag{cursor:grab}
+.flag:focus{outline:none}
+.flag .ring{opacity:0}
+.flag:focus-visible .ring{opacity:1}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-family:var(--mono);font-weight:600;line-height:1.2}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label,.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+label output{font-family:var(--mono);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+input[type=number]{font:600 1rem var(--mono);width:6.5em;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--moss)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.plain{border-color:var(--ink-soft)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:.88rem;min-width:100%}
+caption{font-family:var(--serif);text-align:left;font-size:.95rem;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-family:var(--sans);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.note{font-family:var(--serif);font-size:.95rem;margin:0 0 6px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.86rem;margin:8px 0 0}
+.legend i{display:inline-block;width:22px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid}
+.legend i.box{height:12px;border:2px dashed var(--ink);width:16px}
+.seg-controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+@media (max-width:760px){.seg-controls{grid-template-columns:1fr}}
+.card{border:1.5px solid var(--grid);border-radius:10px;padding:10px 12px}
+.card h3{font:600 1rem var(--serif);margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card .row{display:flex;align-items:center;gap:8px;font-size:.9rem;margin-top:6px}
+.card.off{opacity:.55}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD201 Level and World Design · Week 1 · Worked example</p>
+  <h1>Where you put the checkpoint taxes the learners</h1>
+  <p class="lede">The flag is 300 m before the gap. A player who clears it one try in five spends 248 s per clear, 208 s of it spent respawning and walking back. A player who clears it nine times in ten loses under 6 s. Drag the flag toward the gap and watch the red area shrink on the left of the chart.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">One challenge</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Segment</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="views">
+    <figure>
+      <figcaption>Level strip<small>Drag the flag, or focus it and use arrow keys (Shift for 50 m)</small></figcaption>
+      <svg class="strip" id="strip" viewBox="0 0 660 215" aria-label="Side view of the level from 0 to 320 metres with a gap at 310 metres">
+        <g id="stripStatic"></g>
+        <g id="bracket"></g>
+        <g class="flag" id="flag" tabindex="0" role="slider" aria-label="Checkpoint distance before the gap" aria-valuemin="0" aria-valuemax="310" aria-valuenow="300">
+          <rect class="ring" x="-16" y="16" width="44" height="92" rx="6" fill="none" stroke="var(--focus)" stroke-width="3"></rect>
+          <rect x="-18" y="10" width="48" height="100" fill="transparent"></rect>
+          <line x1="0" y1="24" x2="0" y2="110" stroke="var(--ink)" stroke-width="3"></line>
+          <path d="M0 24 L26 34 L0 44 Z" fill="var(--moss)"></path>
+        </g>
+      </svg>
+    </figure>
+    <figure>
+      <figcaption>Expected time to clear<small>Solid: this layout. Dashed: instant retry, r = 0. Red area: time added by layout.</small></figcaption>
+      <canvas id="cE" role="img" aria-label="Expected time to clear versus success chance, for this layout and for instant retry"></canvas>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rR">—</b><span>r = s + d / v (s)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rE">—</b><span>E[T] this layout (s)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rE0">—</b><span>E[T] at r = 0 (s)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rRatio">—</b><span>penalty ratio</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rAtt">—</b><span>attempts per hour</span></div>
+  </div>
+  <p class="insight" id="insight"></p>
+
+  <div class="controls">
+    <div>
+      <label for="p">Success chance p <output id="oP">0.20</output></label>
+      <input id="p" type="range" min="0.05" max="1" step="0.05" value="0.2">
+    </div>
+    <div>
+      <label for="t">Attempt time t <output id="oT">8 s</output></label>
+      <input id="t" type="range" min="2" max="30" step="1" value="8">
+    </div>
+    <div>
+      <label for="s">Respawn delay s <output id="oS">2 s</output></label>
+      <input id="s" type="range" min="0" max="10" step="1" value="2">
+    </div>
+    <div>
+      <label for="v">Run speed v <output id="oV">6 m/s</output></label>
+      <input id="v" type="range" min="2" max="12" step="1" value="6">
+    </div>
+    <div>
+      <label for="d">Checkpoint distance d (m) <input id="d" type="number" min="0" max="310" step="10" value="300"></label>
+    </div>
+  </div>
+  <div class="presets" role="group" aria-label="Presets">
+    <button class="chip" data-d="0" data-s="1">Celeste-like (d = 0, s = 1)</button>
+    <button class="chip" data-d="300">Far checkpoint (d = 300)</button>
+    <button class="chip" data-d="60">Near checkpoint (d = 60)</button>
+    <button class="chip plain" id="reset1">Reset</button>
+  </div>
+
+  <div class="table-wrap">
+    <p class="note">E[T] in seconds, with the penalty ratio E[T] / E₀ in brackets. Uses the current t, s and v.</p>
+    <table>
+      <thead><tr><th>Layout</th><th>r (s)</th><th>p = 0.2</th><th>p = 0.5</th><th>p = 0.9</th></tr></thead>
+      <tbody id="tbody1"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <div class="views">
+    <figure>
+      <figcaption>Three challenges<small>Flags mark checkpoints. A death sends you back to the last flag before it.</small></figcaption>
+      <svg class="strip" id="strip2" viewBox="0 0 660 200" aria-label="Side view with challenges at 100, 200 and 300 metres"></svg>
+    </figure>
+    <figure>
+      <figcaption>Expected time per segment<small>A segment runs from one checkpoint to the next.</small></figcaption>
+      <canvas id="cSeg" role="img" aria-label="Bar chart of expected time per segment and total"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--blood)"></i>Segment</span>
+        <span><i style="border-color:var(--ochre)"></i>Total, this layout</span>
+        <span><i class="box"></i>Total with a checkpoint before every challenge</span>
+      </div>
+    </figure>
+  </div>
+  <div class="readout" aria-live="polite" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="--c:var(--ochre)"><b id="sTot">—</b><span>total E (s)</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="sAll">—</b><span>flag before each (s)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="sDiff">—</b><span>layout cost (s)</span></div>
+  </div>
+  <div class="seg-controls" id="segCards"></div>
+  <div class="controls" style="grid-template-columns:1fr">
+    <div style="max-width:420px">
+      <label for="s2">Respawn delay s <output id="oS2">2 s</output></label>
+      <input id="s2" type="range" min="0" max="10" step="1" value="2">
+    </div>
+  </div>
+  <div class="presets" role="group" aria-label="Segment presets">
+    <button class="chip" id="swap">Swap order</button>
+    <button class="chip" data-allp="0.5">All p = 0.5</button>
+    <button class="chip" data-allp="0.9">All p = 0.9</button>
+    <button class="chip plain" id="reset2">Reset</button>
+  </div>
+  <div class="table-wrap">
+    <p class="note">Segments for the current layout</p>
+    <table>
+      <thead><tr><th>Segment</th><th>Challenges</th><th>run = Σ c × reach</th><th>P (clear all)</th><th>E[segment] (s)</th></tr></thead>
+      <tbody id="tbody2"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 1 lecture: E[T] = (t + r(1 − p)) / p with r = s + d / v. Segment: reach₁ = 1, reachᵢ₊₁ = reachᵢ × pᵢ, run = Σ cᵢ × reachᵢ, E = (run + s(1 − P)) / P. "Celeste-like" names a design pattern (instant respawn at the screen start). Shapes only, no game art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS='http://www.w3.org/2000/svg';
+// round half up with a small nudge so exact ties like 1.125 and 1.025 are not lost to binary floats
+const f1=n=>(Math.round(n*10+1e-9)/10).toFixed(1), f2=n=>(Math.round(n*100+1e-9)/100).toFixed(2);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const D={p:0.2,t:8,s:2,v:6,d:300};
+let st={...D};
+
+// ---------- model ----------
+const rOf=(s,d,v)=>s+d/v;
+const ET=(t,r,p)=>(t+r*(1-p))/p;
+function segE(cs,ps,s){let reach=1,run=0;for(let i=0;i<cs.length;i++){run+=cs[i]*reach;reach*=ps[i];}return {run,P:reach,E:(run+s*(1-reach))/reach};}
+
+// ---------- svg helpers ----------
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+const X=m=>20+m*1.9; // 0..330 m -> 20..647
+const GY=110;
+
+function drawStrip1(){
+  const g=$('stripStatic');g.innerHTML='';
+  el('rect',{x:X(0),y:GY,width:X(310)-X(0),height:22,fill:'var(--ink-soft)'},g);
+  el('rect',{x:X(320),y:GY,width:X(330)-X(320),height:22,fill:'var(--ink-soft)'},g);
+  el('rect',{x:X(310),y:GY+6,width:X(320)-X(310),height:40,fill:'var(--blood)',opacity:.25},g);
+  el('text',{x:X(315),y:GY-10,'text-anchor':'middle','font-size':24,fill:'var(--blood)','font-weight':700},g,'gap');
+  for(const m of [0,100,200,300]){
+    el('line',{x1:X(m),x2:X(m),y1:GY+22,y2:GY+28,stroke:'var(--ink-soft)'},g);
+    el('text',{x:X(m),y:GY+48,'text-anchor':m===0?'start':'middle','font-size':21,fill:'var(--ink-soft)'},g,m+' m');
+  }
+}
+function drawBracket(){
+  const g=$('bracket');g.innerHTML='';
+  const pos=310-st.d,x1=X(pos),x2=X(310),y=GY+66;
+  if(st.d>0){
+    el('path',{d:`M${x1} ${y-8} V${y} H${x2} V${y-8}`,fill:'none',stroke:'var(--blood)','stroke-width':2.5},g);
+  }
+  const txt=`d = ${st.d} m · walk back ${f1(st.d/st.v)} s`;
+  const mid=Math.min(Math.max((x1+x2)/2,210),450);
+  el('text',{x:st.d>0?mid:Math.min(x2,500),y:y+30,'text-anchor':st.d>0?'middle':'end','font-size':27,'font-weight':700,fill:'var(--ink)'},g,txt);
+  $('flag').setAttribute('transform',`translate(${X(pos)},0)`);
+  $('flag').setAttribute('aria-valuenow',st.d);
+  $('flag').setAttribute('aria-valuetext',`checkpoint ${st.d} metres before the gap, ${f1(st.d/st.v)} seconds walk back`);
+}
+function setD(d){st.d=Math.max(0,Math.min(310,Math.round(d/10)*10));$('d').value=st.d;update();}
+// drag
+(function(){
+  const svg=$('strip'),flag=$('flag');let drag=false;
+  function toM(ev){const r=svg.getBoundingClientRect();const vx=(ev.clientX-r.left)/r.width*660;return (vx-20)/1.9;}
+  flag.addEventListener('pointerdown',e=>{drag=true;flag.setPointerCapture(e.pointerId);flag.focus();e.preventDefault();});
+  flag.addEventListener('pointermove',e=>{if(drag)setD(310-toM(e));});
+  flag.addEventListener('pointerup',()=>drag=false);
+  flag.addEventListener('pointercancel',()=>drag=false);
+  flag.addEventListener('keydown',e=>{
+    const step=e.shiftKey?50:10;let d=st.d;
+    if(e.key==='ArrowRight'||e.key==='ArrowUp')d-=step;
+    else if(e.key==='ArrowLeft'||e.key==='ArrowDown')d+=step;
+    else if(e.key==='Home')d=310;else if(e.key==='End')d=0;else return;
+    e.preventDefault();setD(d);
+  });
+})();
+
+// ---------- canvas helpers ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function niceCeil(v){const mag=Math.pow(10,Math.floor(Math.log10(v)));for(const m of [1,1.2,1.6,2,2.4,4,6,8,10]){if(m*mag>=v*1.02)return m*mag;}return 10*mag;}
+
+function drawChart(){
+  const {g,w,h}=setup($('cE'));const pad={l:48,r:14,t:16,b:34};
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const r=rOf(st.s,st.d,st.v),t=st.t;
+  const top=ET(t,r,0.05);let yMax=top>600?600:niceCeil(top);
+  const px=p=>pad.l+pw*(p-0.05)/0.95, py=y=>pad.t+ph*(1-Math.min(y,yMax*1.2)/yMax);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+ph*(1-i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(yMax*i/4),pad.l-6,y);}
+  for(const p of [0.05,0.25,0.5,0.75,1]){g.textAlign='center';g.textBaseline='top';g.fillText(p.toFixed(2),px(p),h-pad.b+6);}
+  g.textAlign='right';g.fillText('p, chance to clear per try',w-pad.r,h-14);
+  g.save();g.beginPath();g.rect(pad.l,pad.t,pw,ph);g.clip();
+  const N=190,ps=[];for(let i=0;i<=N;i++)ps.push(0.05+0.95*i/N);
+  // shade
+  g.beginPath();ps.forEach((p,i)=>{const y=py(ET(t,r,p));i?g.lineTo(px(p),y):g.moveTo(px(p),y);});
+  for(let i=N;i>=0;i--)g.lineTo(px(ps[i]),py(t/ps[i]));g.closePath();
+  g.fillStyle=css('--blood');g.globalAlpha=.16;g.fill();g.globalAlpha=1;
+  // baseline dashed
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.setLineDash([7,5]);g.beginPath();
+  ps.forEach((p,i)=>{const y=py(t/p);i?g.lineTo(px(p),y):g.moveTo(px(p),y);});g.stroke();g.setLineDash([]);
+  // current
+  g.strokeStyle=css('--blood');g.lineWidth=3;g.beginPath();
+  ps.forEach((p,i)=>{const y=py(ET(t,r,p));i?g.lineTo(px(p),y):g.moveTo(px(p),y);});g.stroke();
+  g.restore();
+  // shaded label
+  g.font='600 12px '+css('--sans');const tw=g.measureText('time added by layout').width;
+  for(let q=0.1;q<0.9&&r>0;q+=0.01){const xl=px(q),y=py(t/q)-14,qr=0.05+0.95*(xl+tw+6-pad.l)/pw;if(qr>1)break;
+    if(py(ET(t,r,qr))<y-12&&y>pad.t+30&&Math.abs(px(st.p)-xl)>4&&!(px(st.p)>xl-4&&px(st.p)<xl+tw+4)){g.fillStyle=css('--blood');g.textAlign='left';g.textBaseline='middle';g.fillText('time added by layout',xl,y);break;}}
+  g.fillStyle=css('--steel');g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('instant retry',px(1)-4,py(t)-4);
+  // off-scale arrow
+  if(top>yMax){g.fillStyle=css('--blood');g.beginPath();const ax=pad.l+10;g.moveTo(ax,pad.t);g.lineTo(ax-6,pad.t+10);g.lineTo(ax+6,pad.t+10);g.fill();
+    g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText(`off scale: ${fmt(top)} s at p = 0.05`,w-pad.r-4,pad.t+2);}
+  // marker
+  const p=st.p,e=ET(t,r,p),e0=t/p,x=px(p);
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  const dot=(y,col)=>{g.fillStyle=col;g.beginPath();g.arc(x,Math.max(pad.t,y),6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();};
+  dot(py(e0),css('--steel'));dot(py(e),css('--blood'));
+  g.font='700 12px '+css('--mono');const right=x<pad.l+pw*0.6;g.textAlign=right?'left':'right';g.textBaseline='middle';
+  const lx=right?x+10:x-10;let yE=Math.max(pad.t+8,py(e)),y0=py(e0);if(Math.abs(y0-yE)<16)yE=y0-16;
+  g.fillStyle=css('--blood');g.fillText(f1(e)+' s',lx,Math.max(pad.t+8,yE));
+  g.fillStyle=css('--steel');g.textBaseline='top';g.fillText(f1(e0)+' s',lx,y0+7);
+}
+
+function update1(){
+  const r=rOf(st.s,st.d,st.v),{p,t}=st,e=ET(t,r,p),e0=t/p;
+  $('oP').textContent=f2(p);$('oT').textContent=t+' s';$('oS').textContent=st.s+' s';$('oV').textContent=st.v+' m/s';
+  $('rR').textContent=f1(r);$('rE').textContent=f1(e);$('rE0').textContent=f1(e0);$('rRatio').textContent=f2(e/e0);
+  $('rAtt').textContent=f1(3600/(t+r*(1-p)));
+  const pa=Math.abs(p-0.9)<1e-9?0.2:p, pb=Math.abs(p-0.9)<1e-9?0.9:0.9;
+  const add=q=>r*(1-q)/q;
+  $('insight').innerHTML=`At p = ${f2(Math.min(pa,pb))} this layout adds <b>${f1(add(Math.min(pa,pb)))} s</b> per clear. At p = ${f2(Math.max(pa,pb))} it adds <b>${f1(add(Math.max(pa,pb)))} s</b>. Same flag, same walk; the player who fails most pays it most often.`;
+  const rows=[['Instant retry',0],['d = 0 m',rOf(st.s,0,st.v)],['d = 60 m',rOf(st.s,60,st.v)],['d = 300 m',rOf(st.s,300,st.v)],[`This layout (d = ${st.d} m)`,r,true]];
+  $('tbody1').innerHTML=rows.map(([n,rr,here])=>`<tr class="${here?'here':''}"><td>${n}</td><td>${f1(rr)}</td>${[0.2,0.5,0.9].map(q=>`<td>${f1(ET(t,rr,q))} (${f2(ET(t,rr,q)/(t/q))})</td>`).join('')}</tr>`).join('');
+  drawBracket();drawChart();
+}
+
+// ---------- segment tab ----------
+const SD={p:[0.5,0.5,0.5],c:[10,10,10],cp:[true,false,false],use3:true};
+let sg=JSON.parse(JSON.stringify(SD));
+function active(){return sg.use3?[0,1,2]:[0,1];}
+function segments(){const idx=active(),segs=[];let cur=null;for(const i of idx){if(sg.cp[i]||!cur){cur=[];segs.push(cur);}cur.push(i);}return segs;}
+function buildCards(){
+  const box=$('segCards');box.innerHTML='';
+  for(let i=0;i<3;i++){
+    const d=document.createElement('div');d.className='card';d.id='card'+i;
+    d.innerHTML=`<h3>Challenge ${i+1} <span style="font:400 .8rem var(--sans);color:var(--ink-soft)">at ${(i+1)*100} m</span></h3>
+    <label for="sp${i}">Chance p <output id="osp${i}"></output></label><input id="sp${i}" type="range" min="0.05" max="1" step="0.05">
+    <label for="sc${i}">Time c <output id="osc${i}"></output></label><input id="sc${i}" type="range" min="0" max="30" step="1">
+    <div class="row"><input type="checkbox" id="cp${i}" ${i===0?'disabled':''}><label for="cp${i}" style="font-weight:400">Checkpoint before it${i===0?' (always on)':''}</label></div>
+    ${i===2?'<div class="row"><input type="checkbox" id="use3"><label for="use3" style="font-weight:400">Include this challenge</label></div>':''}`;
+    box.appendChild(d);
+    $('sp'+i).addEventListener('input',e=>{sg.p[i]=+e.target.value;update2();});
+    $('sc'+i).addEventListener('input',e=>{sg.c[i]=+e.target.value;update2();});
+    $('cp'+i).addEventListener('change',e=>{sg.cp[i]=i===0?true:e.target.checked;update2();});
+  }
+  $('use3').addEventListener('change',e=>{sg.use3=e.target.checked;update2();});
+}
+function syncCards(){for(let i=0;i<3;i++){$('sp'+i).value=sg.p[i];$('osp'+i).textContent=f2(sg.p[i]);$('sc'+i).value=sg.c[i];$('osc'+i).textContent=sg.c[i]+' s';$('cp'+i).checked=sg.cp[i];}
+  $('use3').checked=sg.use3;$('card2').classList.toggle('off',!sg.use3);['sp2','sc2','cp2'].forEach(id=>$(id).disabled=!sg.use3);$('cp0').disabled=true;}
+function drawStrip2(){
+  const s=$('strip2');s.innerHTML='';const idx=active();
+  const gaps=idx.map(i=>(i+1)*100);
+  let x=0;const segs=[];for(const m of gaps.concat([330])){segs.push([x,Math.min(m,330)]);x=m+10;}
+  for(const [a,b] of segs)if(b>a)el('rect',{x:X(a),y:GY,width:X(b)-X(a),height:22,fill:'var(--ink-soft)'},s);
+  if(!sg.use3)el('rect',{x:X(300),y:GY,width:X(310)-X(300),height:22,fill:'var(--ink-soft)'},s);
+  for(const i of idx){const m=(i+1)*100;
+    el('rect',{x:X(m),y:GY+6,width:X(m+10)-X(m),height:40,fill:'var(--blood)',opacity:.25},s);
+    el('text',{x:X(m+5),y:GY-58,'text-anchor':'middle','font-size':26,'font-weight':700,fill:'var(--blood)'},s,'C'+(i+1));
+    el('text',{x:X(m+5),y:GY-30,'text-anchor':'middle','font-size':23,fill:'var(--ink)'},s,`p ${f2(sg.p[i])}`);
+    el('text',{x:X(m+5),y:GY-6,'text-anchor':'middle','font-size':23,fill:'var(--ink-soft)'},s,`c ${sg.c[i]} s`);
+  }
+  for(let i=0;i<3;i++){if(i===2&&!sg.use3)continue;const m=(i+1)*100-30,on=sg.cp[i];
+    const g=el('g',{transform:`translate(${X(m)},0)`,opacity:on?1:.3},s);
+    el('line',{x1:0,y1:GY-100,x2:0,y2:GY,stroke:'var(--ink)','stroke-width':3,'stroke-dasharray':on?'':'4 4'},g);
+    el('path',{d:`M0 ${GY-100} L24 ${GY-90} L0 ${GY-80} Z`,fill:on?'var(--moss)':'none',stroke:'var(--moss)','stroke-width':2},g);
+  }
+  // segment brackets
+  segments().forEach((seg,k)=>{const a=seg[0]*100+70,b=(seg[seg.length-1]+1)*100+10,y=GY+44;
+    el('path',{d:`M${X(a)} ${y-8} V${y} H${X(b)} V${y-8}`,fill:'none',stroke:'var(--ochre)','stroke-width':2.5},s);
+    el('text',{x:(X(a)+X(b))/2,y:y+30,'text-anchor':'middle','font-size':24,'font-weight':700,fill:'var(--ink)'},s,`seg ${k+1}`);});
+}
+function drawBars(bars,allTot){
+  const {g,w,h}=setup($('cSeg'));const pad={l:48,r:12,t:22,b:34},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const mx=Math.max(...bars.map(b=>b.v),allTot);const yMax=niceCeil(mx);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+ph*(1-i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(yMax*i/4),pad.l-6,y);}
+  const n=bars.length,slot=pw/n,bw=Math.min(70,slot*0.6);
+  bars.forEach((b,i)=>{const cx=pad.l+slot*(i+.5),bh=ph*b.v/yMax;
+    g.fillStyle=css(b.total?'--ochre':'--blood');g.fillRect(cx-bw/2,pad.t+ph-bh,bw,bh);
+    if(b.total){const oh=ph*allTot/yMax;g.strokeStyle=css('--ink');g.lineWidth=2;g.setLineDash([6,4]);g.strokeRect(cx-bw/2-5,pad.t+ph-oh,bw+10,oh);g.setLineDash([]);
+      g.fillStyle=css('--ink');g.font='700 12px '+css('--mono');g.textAlign='left';g.textBaseline='middle';
+      g.fillText(f1(allTot),cx+bw/2+9,Math.max(pad.t+ph-oh,pad.t+ph-bh+14));}
+    g.fillStyle=css('--ink');g.font='700 12px '+css('--mono');g.textAlign='center';g.textBaseline='bottom';g.fillText(f1(b.v),cx,pad.t+ph-bh-3);
+    g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textBaseline='top';g.fillText(b.label,cx,h-pad.b+6);
+  });
+}
+function update2(){
+  syncCards();$('s2').value=st.s;$('oS2').textContent=st.s+' s';
+  const segs=segments(),s=st.s;const rows=[],bars=[];let tot=0;
+  segs.forEach((seg,k)=>{const r=segE(seg.map(i=>sg.c[i]),seg.map(i=>sg.p[i]),s);tot+=r.E;
+    bars.push({v:r.E,label:'seg '+(k+1)});rows.push(`<tr><td>${k+1}</td><td>${seg.map(i=>'C'+(i+1)).join(' + ')}</td><td>${f2(r.run)}</td><td>${r.P.toFixed(3)}</td><td>${f1(r.E)}</td></tr>`);});
+  let all=0;for(const i of active())all+=segE([sg.c[i]],[sg.p[i]],s).E;
+  bars.push({v:tot,label:'total',total:true});
+  rows.push(`<tr class="here"><td>Total</td><td></td><td></td><td></td><td>${f1(tot)}</td></tr>`);
+  $('tbody2').innerHTML=rows.join('');
+  $('sTot').textContent=f1(tot);$('sAll').textContent=f1(all);$('sDiff').textContent='+'+f1(tot-all);
+  drawStrip2();drawBars(bars,all);
+}
+$('s2').addEventListener('input',e=>{st.s=+e.target.value;$('s').value=st.s;update2();});
+$('swap').addEventListener('click',()=>{const idx=active();const p=idx.map(i=>sg.p[i]).reverse(),c=idx.map(i=>sg.c[i]).reverse();idx.forEach((i,k)=>{sg.p[i]=p[k];sg.c[i]=c[k];});update2();});
+document.querySelectorAll('[data-allp]').forEach(b=>b.addEventListener('click',()=>{sg.p=sg.p.map(()=>+b.dataset.allp);update2();}));
+$('reset2').addEventListener('click',()=>{sg=JSON.parse(JSON.stringify(SD));st.s=D.s;$('s').value=st.s;update2();});
+
+// ---------- tab 1 events ----------
+['p','t','s','v'].forEach(k=>$(k).addEventListener('input',e=>{st[k]=+e.target.value;update1();}));
+$('d').addEventListener('change',e=>setD(+e.target.value||0));
+$('d').addEventListener('input',e=>{const v=+e.target.value;if(v>=0&&v<=310&&v%10===0){st.d=v;update1();}});
+document.querySelectorAll('#p1 [data-d]').forEach(b=>b.addEventListener('click',()=>{st.d=+b.dataset.d;st.s=b.dataset.s!=null?+b.dataset.s:D.s;$('s').value=st.s;$('d').value=st.d;update1();}));
+$('reset1').addEventListener('click',()=>{st={...D};for(const k of ['p','t','s','v','d'])$(k).value=st[k];update1();});
+function update(){update1();}
+
+// tabs
+const tabs=[$('t1'),$('t2')];
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();redraw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2]);}});});
+function redraw(){if($('p1').hidden)update2();else update1();}
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+drawStrip1();buildCards();update1();update2();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+})();
+</script>
+</body>
+</html>

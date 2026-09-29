@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crowd capacity — GD201 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cMap{aspect-ratio:1/1;height:auto}
+#cChart{height:360px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 8px;align-items:center}
+.tab{font:600 .78rem var(--sans);padding:4px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tabs span{font-size:.78rem;color:var(--ink-soft)}
+.note{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0;min-height:1.2em}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.legend i.box{height:10px;border:0;opacity:.35}
+.legend i.dot{width:9px;height:9px;border:0;border-radius:50%}
+.readout{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:980px){.readout{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat b small{font-size:.72rem;font-weight:600;color:var(--ink-soft);display:block;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+label.row:first-child{margin-top:0}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.prow{display:flex;gap:8px;align-items:center}
+.prow input[type=range]{flex:1;min-width:0}
+input[type=number]{font:600 .95rem var(--sans);width:5.5em;padding:5px 6px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.nums{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.nums label{font-weight:600;font-size:.92rem;display:flex;flex-direction:column;gap:4px}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.92rem;margin-top:14px;font-weight:600}
+.check input{width:18px;height:18px;margin-top:3px;accent-color:var(--steel)}
+.check small{display:block;font-weight:400;color:var(--ink-soft)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+p.cap{font-family:var(--serif);font-size:1rem;margin:18px 0 0}
+p.cap small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;min-width:420px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.hi{color:var(--blood)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD201 Level and World Design · Week 11 · Worked example</p>
+  <h1>Crowding happens at the camps</h1>
+  <p class="lede">A hundred players in one square kilometre sounds empty, and the open ground is. The eight camps are not: each player there sees about 32 times as many neighbours. Drag the population up and the camp line leaves the comfortable band long before the open ground feels busy. Make the map bigger and capacity does not move.</p>
+</header>
+
+<section class="panel" aria-label="Crowd capacity model">
+  <div class="presets" role="group" aria-label="Presets">
+    <button class="chip" type="button" data-preset="teach" aria-pressed="true">Teaching zone</button>
+    <button class="chip" type="button" data-preset="launch" aria-pressed="false">Launch day</button>
+    <button class="chip" type="button" data-preset="year" aria-pressed="false">One year later</button>
+    <button class="chip" type="button" data-preset="credit" aria-pressed="false">Shared credit</button>
+  </div>
+  <div class="charts">
+    <figure>
+      <figcaption>The zone from above<small id="mapSub">Open ground 1,000 m on a side. Rings are camps; the number on each is players standing there.</small></figcaption>
+      <div class="tabs" id="copyTabs" role="tablist" aria-label="Server copies" hidden></div>
+      <canvas id="cMap" role="img" aria-label="Top-down map of camps and players"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--blood)"></i>player at a camp</span>
+        <span><i class="dot" style="background:var(--steel)"></i>player in the open</span>
+        <span><i class="dot" style="background:var(--ochre)"></i>you, with view radius r</span>
+      </div>
+      <p class="note" id="mapNote"></p>
+    </figure>
+    <figure>
+      <figcaption>Neighbours against population<small>Both axes logarithmic. Shaded band: n_min to n_max neighbours at a camp.</small></figcaption>
+      <canvas id="cChart" role="img" aria-label="Log-log chart of camp and open-ground neighbours against population"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--blood)"></i>N_camp</span>
+        <span><i style="border-color:var(--steel);border-top-style:dashed"></i>N_open</span>
+        <span><i class="box" style="background:var(--moss)"></i>comfortable band</span>
+        <span><i style="border-color:var(--ink-soft);border-top-style:dotted"></i>P_min, P_max</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rCamp">—</b><span>N_camp, others at your camp</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rOpen">—</b><span>N_open, others within r</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rRatio">—</b><span>camp ÷ open</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rPmin">—</b><span>P_min</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rPmax">—</b><span>P_max</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rCopies">—</b><span>copies</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rPer">—</b><span>players per copy</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label class="row" for="pIn">Population P <output id="oP">100</output></label>
+      <div class="prow">
+        <input id="pIn" type="range" min="0" max="1000" step="1" aria-label="Population, logarithmic slider">
+        <input id="pNum" type="number" min="20" max="3000" step="1" value="100" aria-label="Population, exact number">
+      </div>
+      <label class="check"><input type="checkbox" id="splitIn"><span>Split into copies<small>copies = ceiling(P / P_max)</small></span></label>
+    </div>
+    <div>
+      <label class="row" for="hIn">Camps H <output id="oH">8</output></label>
+      <input id="hIn" type="range" min="1" max="30" step="1" value="8">
+      <label class="row" for="fIn">Share at camps f <output id="oF">0.60</output></label>
+      <input id="fIn" type="range" min="0.1" max="0.9" step="0.05" value="0.6">
+      <label class="row" for="rIn">View radius r <output id="oR">40 m</output></label>
+      <input id="rIn" type="range" min="10" max="100" step="5" value="40">
+    </div>
+    <div>
+      <label class="row" for="aIn">Open ground A <output id="oA">1.00 km²</output></label>
+      <input id="aIn" type="range" min="0.25" max="4" step="0.25" value="1">
+      <div class="nums">
+        <label for="nMin">n_min<input id="nMin" type="number" min="0" max="100" step="1" value="2"></label>
+        <label for="nMax">n_max<input id="nMax" type="number" min="1" max="200" step="1" value="10"></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <p class="cap">The lecture's table at the current settings<small>N_camp = f × P / H − 1 and N_open = (1 − f) × P × π r² / A, per copy when splitting is on. Red: above n_max.</small></p>
+  <div class="table-wrap">
+    <table aria-label="Neighbours at several populations">
+      <thead><tr><th>Population P</th><th>Copies</th><th>Per copy</th><th>N_camp</th><th>N_open</th><th>Ratio</th></tr></thead>
+      <tbody id="tBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model and numbers from the week 11 lecture (after World of Warcraft's layering in Classic, 2019, and sharding from patch 6.0.2). Camps and players are drawn as generic rings and dots.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const r2=n=>(Math.round((n+1e-9)*100)/100).toFixed(2);
+const PLO=20,PHI=3000;
+const DEF={P:100,H:8,f:0.6,r:40,A:1,nMin:2,nMax:10,split:false};
+const S=Object.assign({},DEF,{copy:0});
+let dots=[],animRaf=0;
+
+// model
+const Pmin=()=>S.H*(S.nMin+1)/S.f;
+const Pmax=()=>Math.max(1,Math.floor(S.H*(S.nMax+1)/S.f+1e-9));
+const copiesFor=P=>S.split?Math.max(1,Math.ceil(P/Pmax()-1e-9)):1;
+const perCopy=P=>P/copiesFor(P);
+const nCamp=P=>S.f*perCopy(P)/S.H-1;
+const nOpen=P=>(1-S.f)*perCopy(P)*Math.PI*S.r*S.r/(S.A*1e6);
+const campTxt=v=>v<=0?'0':r2(v);
+
+// log slider mapping
+const toP=s=>Math.round(PLO*Math.pow(PHI/PLO,s/1000));
+const toS=P=>Math.round(1000*Math.log(P/PLO)/Math.log(PHI/PLO));
+
+function rng(seed){let s=seed>>>0;return function(){s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+
+// map geometry in unit square
+function camps(){
+  const H=S.H,cols=Math.ceil(Math.sqrt(H)),rows=Math.ceil(H/cols),out=[];
+  for(let k=0;k<H;k++){const rI=Math.floor(k/cols),inRow=rI<rows-1?cols:H-cols*(rows-1),c=k%cols;
+    out.push({x:(c+.5)/inRow,y:(rI+.5)/rows});}
+  const cell=Math.min(1/cols,1/rows);
+  return {list:out,rad:Math.min(.075,cell*.3)};
+}
+function youPos(C){
+  let best=null,bd=-1;
+  for(let i=1;i<12;i++)for(let j=1;j<12;j++){const x=i/12,y=j/12;let d=Infinity;for(const c of C.list)d=Math.min(d,Math.hypot(c.x-x,c.y-y));
+    if(d>bd+1e-9){bd=d;best={x,y};}}
+  return best;
+}
+function scatter(){
+  const C=camps(),R=rng(1000+S.copy*7919),pc=perCopy(S.P),total=Math.round(pc),campN=Math.min(total,Math.round(S.f*S.P/copiesFor(S.P)));
+  const scale=pc>400?5:1,cd=Math.round(campN/scale),od=Math.max(0,Math.round((total-campN)/scale)),out=[];
+  for(let i=0;i<cd;i++){const c=C.list[i%C.list.length],a=R()*Math.PI*2,rr=Math.sqrt(R())*C.rad*.8;out.push({x:c.x+Math.cos(a)*rr,y:c.y+Math.sin(a)*rr,camp:true});}
+  for(let i=0;i<od;i++){let x,y,ok=false,tries=0;
+    while(!ok&&tries<50){x=.01+R()*.98;y=.01+R()*.98;ok=C.list.every(c=>Math.hypot(c.x-x,c.y-y)>C.rad*1.25);tries++;}
+    out.push({x,y,camp:false});}
+  return {C,pts:out,scale,campN,total};
+}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+
+let lastScatter=null;
+function drawMap(sc,t){
+  const c=setupCanvas($('cMap')),g=c.g,pad=6,W=c.w-2*pad,X=x=>pad+x*W,Y=y=>pad+y*W;
+  g.clearRect(0,0,c.w,c.h);g.fillStyle=css('--paper');g.fillRect(pad,pad,W,W);
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(pad,pad,W,W);
+  const C=sc.C,H=S.H,perCamp=S.f*perCopy(S.P)/H;
+  for(const cp of C.list){g.fillStyle=css('--blood');g.globalAlpha=.1;g.beginPath();g.arc(X(cp.x),Y(cp.y),C.rad*W,0,Math.PI*2);g.fill();g.globalAlpha=1;
+    g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.arc(X(cp.x),Y(cp.y),C.rad*W,0,Math.PI*2);g.stroke();}
+  // dots, interpolated from previous positions
+  const prev=lastScatter?lastScatter.pts:[],size=W<360?2.1:2.6;
+  sc.pts.forEach((p,i)=>{let x=p.x,y=p.y;const q=prev[i];if(t<1&&q){x=q.x+(p.x-q.x)*t;y=q.y+(p.y-q.y)*t;}
+    g.fillStyle=p.camp?css('--blood'):css('--steel');g.globalAlpha=(t<1&&!q)?t:1;g.beginPath();g.arc(X(x),Y(y),size,0,Math.PI*2);g.fill();});
+  g.globalAlpha=1;
+  // badges
+  g.font='700 11px '+css('--sans');g.textAlign='center';g.textBaseline='middle';
+  const lbl=perCamp>=10?fmt(perCamp):perCamp.toFixed(1);
+  for(const cp of C.list){const bx=X(cp.x),by=Y(cp.y)-C.rad*W-9,tw=g.measureText(lbl).width+10;
+    g.fillStyle=css('--ink');g.beginPath();g.roundRect?g.roundRect(bx-tw/2,by-8,tw,16,8):g.rect(bx-tw/2,by-8,tw,16);g.fill();
+    g.fillStyle=css('--paper');g.fillText(lbl,bx,by+.5);}
+  // you
+  const yp=youPos(C),side=Math.sqrt(S.A)*1000,rp=S.r/side*W;
+  g.strokeStyle=css('--ochre');g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();g.arc(X(yp.x),Y(yp.y),Math.max(rp,3),0,Math.PI*2);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ochre');g.beginPath();g.arc(X(yp.x),Y(yp.y),5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=1.5;g.stroke();
+  g.fillStyle=css('--ink');g.font='600 11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText('you',X(yp.x)+Math.max(rp,6)+3,Y(yp.y)-2);
+}
+function renderMap(){
+  cancelAnimationFrame(animRaf);
+  const sc=scatter();
+  if(reduce.matches||!lastScatter){drawMap(sc,1);lastScatter=sc;return;}
+  const t0=performance.now(),D=260;
+  const step=now=>{const t=Math.min(1,(now-t0)/D);drawMap(sc,1-(1-t)*(1-t));if(t<1)animRaf=requestAnimationFrame(step);else lastScatter=sc;};
+  animRaf=requestAnimationFrame(step);
+}
+
+function drawChart(){
+  const wide=matchMedia('(min-width: 761px)').matches;$('cChart').style.height=(wide?Math.max(320,Math.round($('cMap').getBoundingClientRect().height)):320)+'px';
+  const c=setupCanvas($('cChart')),g=c.g,w=c.w,h=c.h,pad={l:44,r:12,t:24,b:38};
+  const lx=Math.log10(PLO),hx=Math.log10(PHI),ly=-2,hy=Math.log10(300);
+  const X=P=>pad.l+(w-pad.l-pad.r)*(Math.log10(P)-lx)/(hx-lx);
+  const Y=n=>pad.t+(h-pad.t-pad.b)*(1-(Math.log10(Math.min(300,Math.max(.01,n)))-ly)/(hy-ly));
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  // band
+  g.fillStyle=css('--moss');g.globalAlpha=.2;const b1=Y(Math.max(S.nMin,.01)),b2=Y(S.nMax);g.fillRect(pad.l,b2,w-pad.l-pad.r,b1-b2);g.globalAlpha=1;
+  for(const n of [.01,.1,1,10,100]){const y=Y(n);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(n>=1?n:String(n),pad.l-6,y);}
+  const xt=w<420?[20,100,500,3000]:[20,50,100,200,500,1000,3000];
+  for(const P of xt){const x=X(P);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign=P===PHI?'right':'center';g.textBaseline='top';g.fillText(fmt(P),P===PHI?w-pad.r:x,h-pad.b+6);}
+  g.textAlign='right';g.fillText('population P',w-pad.r,h-14);
+  g.textAlign='left';g.textBaseline='top';g.fillText('neighbours',2,2);
+  // P_min / P_max markers
+  g.setLineDash([2,4]);g.strokeStyle=css('--ink-soft');g.lineWidth=1.5;
+  for(const [P,t] of [[Pmin(),'P_min'],[Pmax(),'P_max']]){if(P<PLO||P>PHI)continue;const x=X(P);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='top';g.fillText(t+' '+fmt(Math.floor(P+1e-9)),x+4,t==='P_min'?pad.t+2:pad.t+16);}
+  g.setLineDash([]);
+  // lines
+  const N=500;
+  for(const [fn,col,dash] of [[nCamp,css('--blood'),[]],[nOpen,css('--steel'),[7,5]]]){
+    g.strokeStyle=col;g.lineWidth=2.5;g.setLineDash(dash);g.beginPath();
+    for(let i=0;i<=N;i++){const P=PLO*Math.pow(PHI/PLO,i/N);const x=X(P),y=Y(fn(P));i?g.lineTo(x,y):g.moveTo(x,y);}
+    g.stroke();g.setLineDash([]);
+    g.fillStyle=col;g.beginPath();g.arc(X(S.P),Y(fn(S.P)),6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();
+  }
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(X(S.P),pad.t);g.lineTo(X(S.P),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+}
+
+function tabs(){
+  const k=copiesFor(S.P),el=$('copyTabs');
+  if(k<=1){el.hidden=true;el.innerHTML='';S.copy=0;return;}
+  el.hidden=false;if(S.copy>=k)S.copy=0;
+  const show=Math.min(k,8);let h='';
+  for(let i=0;i<show;i++)h+=`<button class="tab" role="tab" type="button" data-c="${i}" aria-selected="${i===S.copy}" tabindex="${i===S.copy?0:-1}">Copy ${i+1}</button>`;
+  if(k>show)h+=`<span>… to Copy ${k}</span>`;
+  el.innerHTML=h;
+}
+
+function readouts(){
+  const P=S.P,k=copiesFor(P),pc=perCopy(P),nc=nCamp(P),no=nOpen(P);
+  $('oP').textContent=fmt(P);$('oH').textContent=S.H;$('oF').textContent=S.f.toFixed(2);$('oR').textContent=S.r+' m';$('oA').textContent=S.A.toFixed(2)+' km²';
+  $('rCamp').innerHTML=nc<=0?'0<small>camp usually empty</small>':r2(nc);
+  $('rOpen').textContent=r2(no);
+  $('rRatio').textContent=nc<=0?'—':(nc/no>=10?Math.round(nc/no):(nc/no).toFixed(1))+'×';
+  $('rPmin').textContent=(Math.round(Pmin()*10)/10).toLocaleString('en-US');
+  $('rPmax').textContent=fmt(Pmax());
+  $('rCopies').textContent=k;
+  $('rPer').textContent=(Math.round(pc*10)/10).toLocaleString('en-US',{minimumFractionDigits:k>1?1:0,maximumFractionDigits:1});
+  $('mapSub').textContent=`Open ground ${fmt(Math.sqrt(S.A)*1000)} m on a side. Rings are camps; the number on each is players standing there.`;
+  const sc=pc>400;
+  $('mapNote').textContent=(k>1?`Showing copy ${S.copy+1} of ${k}; every copy holds about ${(Math.round(pc*10)/10)} players. `:'')+(sc?'Over 400 players per copy: one dot = 5 players.':'One dot = 1 player.');
+  const Ps=[25,50,100,200,400,1000,3000];if(!Ps.includes(P))Ps.push(P);Ps.sort((a,b)=>a-b);
+  $('tBody').innerHTML=Ps.map(p=>{const c=nCamp(p),o=nOpen(p),kk=copiesFor(p);
+    return `<tr class="${p===P?'here':''}"><td>${fmt(p)}</td><td>${kk}</td><td>${(Math.round(perCopy(p)*10)/10).toLocaleString('en-US')}</td><td class="${c>S.nMax?'hi':''}">${c<=0?'0 (usually empty)':r2(c)}</td><td>${r2(o)}</td><td>${c<=0?'—':(c/o>=10?Math.round(c/o):(c/o).toFixed(1))+'×'}</td></tr>`;}).join('');
+  let s;const ratio=nc>0?Math.round(nc/no):0;
+  if(nc>S.nMax)s=`At a camp you share the spot with <b>${r2(nc)}</b> others, above your n_max of ${S.nMax}. In the open you see ${r2(no)}. Capacity comes from the camps: P_max = H × (n_max + 1) / f = ${fmt(Pmax())}, and the area A is not in that formula. `+(S.split?'':'Turn on <b>Split into copies</b>.');
+  else if(nc<S.nMin)s=`Only ${nc<=0?'0':r2(nc)} others at a camp, below your n_min of ${S.nMin}: the zone feels deserted. You need P_min = ${(Math.round(Pmin()*10)/10)} players per copy.`+(k>1?' Splitting made this worse; merge copies instead.':'');
+  else s=`Camps sit inside the band with ${r2(nc)} others, while the open ground shows ${r2(no)}, about ${ratio} times fewer. `+(k>1?`${k} copies of ${(Math.round(pc*10)/10)} players each keep every camp under n_max.`:`This copy is comfortable from ${(Math.round(Pmin()*10)/10)} to ${fmt(Pmax())} players.`);
+  $('insight').innerHTML=s;
+}
+
+function update(opts){
+  opts=opts||{};
+  S.P=Math.max(PLO,Math.min(PHI,Math.round(S.P)));
+  if(!opts.fromSlider)$('pIn').value=toS(S.P);
+  if(!opts.fromNum)$('pNum').value=S.P;
+  tabs();readouts();drawChart();
+  if(opts.redraw)drawMap(lastScatter||scatter(),1);else renderMap();
+}
+function clearPreset(){document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));}
+function syncInputs(){$('hIn').value=S.H;$('fIn').value=S.f;$('rIn').value=S.r;$('aIn').value=S.A;$('nMin').value=S.nMin;$('nMax').value=S.nMax;$('splitIn').checked=S.split;}
+
+$('pIn').addEventListener('input',e=>{S.P=toP(+e.target.value);clearPreset();update({fromSlider:true});});
+$('pNum').addEventListener('input',e=>{const v=+e.target.value;if(!isFinite(v)||v<PLO||v>PHI)return;S.P=v;clearPreset();update({fromNum:true});});
+$('pNum').addEventListener('change',()=>update());
+[['hIn','H'],['fIn','f'],['rIn','r'],['aIn','A']].forEach(([id,k])=>$(id).addEventListener('input',e=>{S[k]=+e.target.value;clearPreset();update();}));
+$('nMin').addEventListener('input',e=>{const v=+e.target.value;if(e.target.value===''||v<0)return;S.nMin=v;clearPreset();update();});
+$('nMax').addEventListener('input',e=>{const v=+e.target.value;if(e.target.value===''||v<1)return;S.nMax=v;clearPreset();update();});
+$('splitIn').addEventListener('change',e=>{S.split=e.target.checked;clearPreset();update();});
+$('copyTabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;S.copy=+b.dataset.c;update();const nb=$('copyTabs').querySelector(`[data-c="${S.copy}"]`);if(nb)nb.focus();});
+$('copyTabs').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;const n=$('copyTabs').querySelectorAll('.tab').length;S.copy=(S.copy+(e.key==='ArrowRight'?1:n-1))%n;update();$('copyTabs').querySelector(`[data-c="${S.copy}"]`).focus();});
+const PRE={teach:{},launch:{P:3000,split:true},year:{P:60,split:true},credit:{nMax:40}};
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.preset;if(k==='teach'||k==='launch'||k==='year')Object.assign(S,DEF);Object.assign(S,PRE[k]);S.copy=0;
+  syncInputs();clearPreset();b.setAttribute('aria-pressed','true');update();}));
+window.addEventListener('resize',()=>{drawChart();if(lastScatter)drawMap(lastScatter,1);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>update({redraw:true}));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>update({redraw:true}));
+update();
+})();
+</script>
+</body>
+</html>

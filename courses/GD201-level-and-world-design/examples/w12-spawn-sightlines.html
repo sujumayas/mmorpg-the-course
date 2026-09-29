@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spawn camping as geometry — GD201 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;--wall:#1f2a44;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--wall:#4b5b7a}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--wall:#4b5b7a}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1160px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:68ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+@media (max-width:520px){main{padding:20px 12px 40px}.panel{padding:12px}}
+.bar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:12px}
+.group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.group>.lbl{font-weight:600;font-size:.9rem;margin-right:2px}
+button{font:600 .9rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:38px}
+button:disabled{opacity:.4;cursor:not-allowed}
+.chip{border-color:var(--steel)}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.tool[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible,.gridwrap:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+select{font:600 .9rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);min-height:38px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.gridwrap{border-radius:6px;cursor:crosshair;touch-action:manipulation}
+.gridwrap svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0;align-items:center}
+.legend svg{width:18px;height:18px;vertical-align:-4px;margin-right:5px}
+.scale{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.82rem;margin-top:8px;flex-wrap:wrap}
+.scale .ramp{flex:1 1 120px;height:12px;border-radius:3px;min-width:100px;background:linear-gradient(90deg,#140e36,#4a1c6e,#9c2e5f,#e0632e,#fce07a)}
+.cellinfo{font-family:var(--mono);font-size:.86rem;margin:10px 0 0;min-height:2.6em;padding:8px 10px;border-radius:8px;background:var(--paper-2)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:820px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-family:var(--mono);font-size:1.3rem;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.stat b.small{font-size:.95rem;line-height:1.35;padding-top:3px}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1.2fr 1fr;gap:14px 24px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:1fr}}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl label.check{justify-content:flex-start}
+.ctl output{font-family:var(--mono);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.9rem;margin-top:8px}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.hint{font-size:.88rem;color:var(--ink-soft);margin:8px 0 0}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:.86rem;min-width:600px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);vertical-align:top;white-space:nowrap}
+th{font-family:var(--sans)}
+th:first-child,td:first-child,th:nth-child(4),td:nth-child(4),th:last-child,td:last-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:6px}
+.msg{color:var(--blood);font-weight:600;font-size:.88rem;min-height:1.3em;margin:6px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.fade{animation:fade .35s ease-out}
+@keyframes fade{from{opacity:.35}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD201 Level and World Design · Week 12 · Worked example</p>
+  <h1>Hidden is not the same as safe</h1>
+  <p class="lede" id="lede">Spawn C sits in a closet that only 2 cells can see. Its one door is covered by 21 camp positions. Click B to compare.</p>
+</header>
+
+<section class="panel" aria-label="Spawn sightline model">
+  <div class="bar">
+    <div class="group" role="group" aria-label="Spawn presets">
+      <span class="lbl">Spawn</span>
+      <span id="presetBtns" class="group"></span>
+    </div>
+    <div class="group">
+      <label class="lbl" for="mapSel">Map</label>
+      <select id="mapSel">
+        <option value="teach">Teaching map (17 × 13)</option>
+        <option value="arena">Open arena (11 × 11)</option>
+      </select>
+    </div>
+    <button id="gapBtn" aria-pressed="false">Wall up B's north gap</button>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>Sightlines from the spawn<small>Tinted cells see the spawn within range R. Outlined cells with a crosshair see every exit: the camp positions K.</small></figcaption>
+      <div class="gridwrap" id="gL" tabindex="0" role="application" aria-roledescription="map grid" aria-label="Sightline map. Arrow keys move the cursor, Enter applies the current tool." aria-describedby="cellinfo"></div>
+      <div class="legend" aria-hidden="true">
+        <span><svg viewBox="0 0 1 1"><rect width="1" height="1" fill="var(--paper)"/><rect width="1" height="1" fill="var(--blood)" opacity=".3"/></svg>sees the spawn</span>
+        <span><svg viewBox="0 0 1 1" id="lgCamp"></svg>camp position</span>
+        <span><svg viewBox="0 0 1 1" id="lgSpawn"></svg>spawn</span>
+        <span><svg viewBox="0 0 1 1" id="lgExit"></svg>exit</span>
+        <span><svg viewBox="0 0 1 1"><rect x=".08" y=".08" width=".84" height=".84" fill="none" stroke="var(--steel)" stroke-width=".1" stroke-dasharray=".16 .1"/></svg>spawn area</span>
+        <span><svg viewBox="0 0 1 1"><rect width="1" height="1" fill="var(--wall)"/></svg>wall</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Exposure heatmap E(cell)<small>How many open cells within R see each cell. Dark means few, bright means many.</small></figcaption>
+      <div class="gridwrap" id="gR" tabindex="0" role="application" aria-roledescription="map grid" aria-label="Exposure heatmap. Arrow keys move the cursor, Enter applies the current tool." aria-describedby="cellinfo"></div>
+      <div class="scale"><span>min <b id="sMin">0</b></span><span class="ramp" aria-hidden="true"></span><span>max <b id="sMax">0</b></span></div>
+      <p class="hint" id="maxAt" style="margin-top:4px"></p>
+    </figure>
+  </div>
+  <p class="cellinfo" id="cellinfo" aria-live="polite">Hover or focus a map, then move with the arrow keys to read a cell.</p>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--moss)"><b id="rSpawn">—</b><span id="rSpawnLbl">spawn</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rE">—</b><span>E at the spawn</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rExits" class="small">—</b><span>exits, E at each</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rK">—</b><span>camp positions K</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div class="ctl">
+      <div class="group" role="group" aria-label="Click tool">
+        <span class="lbl">Click tool</span>
+        <button class="tool" data-tool="inspect" aria-pressed="true">Inspect</button>
+        <button class="tool" data-tool="spawn" aria-pressed="false">Pick a cell</button>
+        <button class="tool" data-tool="exit" aria-pressed="false">Mark exits</button>
+        <button class="tool" data-tool="area" aria-pressed="false">Spawn area</button>
+        <button class="tool" data-tool="wall" aria-pressed="false">Edit walls</button>
+      </div>
+      <p class="hint" id="toolHint"></p>
+      <p class="msg" id="msg" role="status"></p>
+    </div>
+    <div class="ctl">
+      <label for="R">Threat range R (cells) <output id="oR">8</output></label>
+      <input id="R" type="range" min="2" max="16" step="1" value="8">
+      <label class="check"><input type="checkbox" id="nums"> Numbers on heatmap cells</label>
+      <div class="group" style="margin-top:10px"><button id="reset">Reset</button></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tblCap">Preset spawns on the current map at R = 8</caption>
+      <thead><tr><th>Spawn</th><th>Cell</th><th>E at spawn</th><th>Exits (E at each)</th><th>K</th><th>Camp cells</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 12 lecture. Line of sight walks the segment between cell centres in quarter-cell steps. E(p) counts open cells c ≠ p with dx² + dy² ≤ R² and line of sight. K counts open cells outside the spawn area that see every exit. Wave and door rules cited in the lecture come from the Team Fortress 2 Wiki ("Respawn") and Warcraft Wiki ("Spirit Guide"). All shapes here are generic.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const MAPS={
+  teach:{rows:[
+"#################",
+"#...............#",
+"#...............#",
+"#...............#",
+"#...............#",
+"#...##.....##...#",
+"#...#.......#...#",
+"#...#.......#...#",
+"##.##..###..#####",
+"#...#.......#...#",
+"#...........#.###",
+"#...#...........#",
+"#################"],
+  presets:{
+    A:{name:'A, plaza',spawn:[8,3],exits:[[8,3]],area:[]},
+    B:{name:'B, side room',spawn:[1,9],exits:[[4,10],[2,8]],area:[[1,9],[2,9],[3,9],[1,10],[2,10],[3,10],[1,11],[2,11],[3,11]]},
+    C:{name:'C, closet',spawn:[15,9],exits:[[12,11]],area:[[13,9],[14,9],[15,9],[13,10],[13,11],[14,11],[15,11]]}
+  }},
+  arena:{rows:(()=>{const r=[];for(let y=0;y<11;y++){let s='';for(let x=0;x<11;x++)s+=(x==0||y==0||x==10||y==10)?'#':'.';r.push(s);}return r;})(),
+  presets:{Centre:{name:'Centre',spawn:[5,5],exits:[[5,5]],area:[]}}}
+};
+const TOOLHINT={
+  inspect:'Clicking a cell only reads it. Pick another tool to change the map.',
+  spawn:'Click or press Enter on an open cell to move the spawn there. Its exit becomes the spawn cell itself and the spawn area is cleared.',
+  exit:'Click open cells to add or remove them as exits. K counts cells that see every exit.',
+  area:'Click cells to add or remove them from the spawn area. Cells in the area never count toward K.',
+  wall:'Click cells to toggle wall and floor. The outer border and the spawn cell cannot be changed.'
+};
+
+let S; // state
+function key(x,y){return x+','+y;}
+function fresh(mapId){
+  const m=MAPS[mapId];
+  const W=m.rows[0].length,H=m.rows.length,wall=new Uint8Array(W*H);
+  m.rows.forEach((row,y)=>{for(let x=0;x<W;x++)wall[y*W+x]=row[x]==='#'?1:0;});
+  return {mapId,W,H,wall,R:+$('R').value,tool:'inspect',cursor:null,preset:null,base:null,spawn:null,exits:[],area:new Set()};
+}
+function applyPreset(name){
+  const p=MAPS[S.mapId].presets[name];
+  S.preset=name;S.base=name;S.spawn=p.spawn.slice();S.exits=p.exits.map(e=>key(e[0],e[1]));S.area=new Set(p.area.map(a=>key(a[0],a[1])));
+}
+
+// ---- geometry, exactly as in the lecture ----
+let OPEN=[],IDX=null,LOS=null;
+function isWall(x,y){return x<0||y<0||x>=S.W||y>=S.H||S.wall[y*S.W+x]===1;}
+function los(x0,y0,x1,y1){
+  const dx=x1-x0,dy=y1-y0,n=Math.max(1,4*Math.max(Math.abs(dx),Math.abs(dy)));
+  for(let i=0;i<=n;i++){const t=i/n;if(isWall(Math.floor(x0+dx*t+0.5),Math.floor(y0+dy*t+0.5)))return false;}
+  return true;
+}
+function rebuildLOS(){
+  OPEN=[];IDX=new Int32Array(S.W*S.H).fill(-1);
+  for(let y=0;y<S.H;y++)for(let x=0;x<S.W;x++)if(!S.wall[y*S.W+x]){IDX[y*S.W+x]=OPEN.length;OPEN.push([x,y]);}
+  const N=OPEN.length;LOS=new Uint8Array(N*N);
+  for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){const a=OPEN[i],b=OPEN[j];if((a[0]-b[0])**2+(a[1]-b[1])**2>256)continue;const v=los(a[0],a[1],b[0],b[1])?1:0;LOS[i*N+j]=v;LOS[j*N+i]=v;}
+}
+function idxOf(x,y){return isWall(x,y)?-1:IDX[y*S.W+x];}
+function sees(i,j){ // open-cell indices
+  if(i===j||i<0||j<0)return false;const a=OPEN[i],b=OPEN[j];
+  return (a[0]-b[0])**2+(a[1]-b[1])**2<=S.R*S.R && LOS[i*OPEN.length+j]===1;
+}
+function E(i){if(i<0)return null;let n=0;for(let j=0;j<OPEN.length;j++)if(sees(j,i))n++;return n;}
+function analyse(spawn,exitKeys,areaSet){
+  const si=idxOf(spawn[0],spawn[1]);
+  const ex=exitKeys.map(k=>k.split(',').map(Number)).filter(e=>!isWall(e[0],e[1]));
+  const exI=ex.map(e=>idxOf(e[0],e[1]));
+  let camps=null;
+  if(ex.length){camps=[];for(let c=0;c<OPEN.length;c++){const p=OPEN[c];if(areaSet.has(key(p[0],p[1])))continue;if(exI.every(e=>sees(c,e)))camps.push(c);}}
+  return {si,E:E(si),exits:ex.map((e,n)=>({x:e[0],y:e[1],E:E(exI[n])})),camps};
+}
+
+// ---- rendering ----
+const HEAT=[[20,14,54],[74,28,110],[156,46,95],[224,99,46],[252,224,122]];
+function heat(t){t=Math.max(0,Math.min(1,t));const s=t*(HEAT.length-1),i=Math.min(HEAT.length-2,Math.floor(s)),f=s-i;const a=HEAT[i],b=HEAT[i+1];return 'rgb('+a.map((v,k)=>Math.round(v+(b[k]-v)*f)).join(',')+')';}
+function crosshair(cx,cy,col){return `<circle cx="${cx}" cy="${cy}" r=".24" fill="none" stroke="${col}" stroke-width=".08"/>`+
+  [[0,-1],[0,1],[-1,0],[1,0]].map(([u,v])=>`<line x1="${cx+u*.1}" y1="${cy+v*.1}" x2="${cx+u*.38}" y2="${cy+v*.38}" stroke="${col}" stroke-width=".08" stroke-linecap="round"/>`).join('');}
+function door(x,y,col){return `<rect x="${x+.1}" y="${y+.1}" width=".8" height=".8" fill="none" stroke="${col}" stroke-width=".12"/><rect x="${x+.34}" y="${y+.26}" width=".32" height=".56" fill="${col}"/>`;}
+function spawnMark(cx,cy){return `<circle cx="${cx}" cy="${cy}" r=".3" fill="var(--moss)" stroke="var(--paper)" stroke-width=".08"/>`;}
+$('lgCamp').innerHTML=`<rect x=".06" y=".06" width=".88" height=".88" fill="none" stroke="var(--blood)" stroke-width=".12"/>`+crosshair(.5,.5,'var(--blood)');
+$('lgSpawn').innerHTML=spawnMark(.5,.5);
+$('lgExit').innerHTML=door(0,0,'var(--steel)');
+
+let cur=null,Ecache=null;
+function render(fade){
+  cur=analyse(S.spawn,S.exits,S.area);
+  Ecache=new Int32Array(OPEN.length);let mn=Infinity,mx=-Infinity;
+  for(let i=0;i<OPEN.length;i++){Ecache[i]=E(i);mn=Math.min(mn,Ecache[i]);mx=Math.max(mx,Ecache[i]);}
+  const W=S.W,H=S.H,campSet=new Set(cur.camps||[]),exitSet=new Set(cur.exits.map(e=>key(e.x,e.y)));
+  const presetLetters=S.mapId==='teach'?Object.entries(MAPS.teach.presets).map(([n,p])=>[n,p.spawn]):[];
+  let L=`<svg viewBox="-.05 -.05 ${W+.1} ${H+.1}" xmlns="${NS}"><defs><pattern id="hatch" width=".35" height=".35" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width=".35" height=".35" fill="var(--paper)"/><line x1="0" y1="0" x2="0" y2=".35" stroke="var(--ink-soft)" stroke-width=".1"/></pattern></defs>`;
+  let Rr=`<svg viewBox="-.05 -.05 ${W+.1} ${H+.1}" xmlns="${NS}">`;
+  let camps='',tint='',areas='',heatCells='',nums='';
+  const showNums=$('nums').checked;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const i=idxOf(x,y);
+    if(i<0){L+=`<rect x="${x}" y="${y}" width="1" height="1" fill="var(--wall)"/>`;Rr+=`<rect x="${x}" y="${y}" width="1" height="1" fill="url(#hatchR)"/>`;continue;}
+    L+=`<rect x="${x+.03}" y="${y+.03}" width=".94" height=".94" fill="var(--paper)"/>`;
+    if(sees(i,cur.si))tint+=`<rect x="${x+.03}" y="${y+.03}" width=".94" height=".94" fill="var(--blood)" opacity=".3"/>`;
+    if(S.area.has(key(x,y)))areas+=`<rect x="${x+.1}" y="${y+.1}" width=".8" height=".8" fill="var(--steel)" fill-opacity=".12" stroke="var(--steel)" stroke-width=".07" stroke-dasharray=".16 .1"/>`;
+    if(campSet.has(i))camps+=`<rect x="${x+.07}" y="${y+.07}" width=".86" height=".86" fill="none" stroke="var(--blood)" stroke-width=".12"/>`+crosshair(x+.5,y+.5,'var(--blood)');
+    const t=mx>mn?(Ecache[i]-mn)/(mx-mn):0;
+    heatCells+=`<rect x="${x+.03}" y="${y+.03}" width=".94" height=".94" fill="${heat(t)}"/>`;
+    if(showNums)nums+=`<text x="${x+.5}" y="${y+.54}" font-size=".4" text-anchor="middle" dominant-baseline="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-weight="700" fill="${t>.62?'#1f2a44':'#f4f1ea'}">${Ecache[i]}</text>`;
+  }
+  const sx=S.spawn[0]+.5,sy=S.spawn[1]+.5;
+  L+=tint+areas+`<circle cx="${sx}" cy="${sy}" r="${S.R}" fill="none" stroke="var(--ink-soft)" stroke-width=".06" stroke-dasharray=".25 .2"/>`;
+  presetLetters.forEach(([n,p])=>{if(!(p[0]===S.spawn[0]&&p[1]===S.spawn[1]))L+=`<text x="${p[0]+.5}" y="${p[1]+.56}" font-size=".55" text-anchor="middle" dominant-baseline="middle" font-family="Figtree,system-ui,sans-serif" font-weight="700" fill="var(--ink-soft)">${n}</text>`;});
+  L+=camps;
+  cur.exits.forEach(e=>{L+=door(e.x,e.y,'var(--steel)');});
+  L+=spawnMark(sx,sy);
+  Rr=Rr.replace('>','><defs><pattern id="hatchR" width=".35" height=".35" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width=".35" height=".35" fill="var(--paper)"/><line x1="0" y1="0" x2="0" y2=".35" stroke="var(--ink-soft)" stroke-width=".1"/></pattern></defs>');
+  Rr+=heatCells+nums;
+  cur.exits.forEach(e=>{Rr+=`<rect x="${e.x+.08}" y="${e.y+.08}" width=".84" height=".84" fill="none" stroke="#7fd0ff" stroke-width=".1"/><rect x="${e.x+.08}" y="${e.y+.08}" width=".84" height=".84" fill="none" stroke="#10243a" stroke-width=".04"/>`;});
+  Rr+=`<circle cx="${sx}" cy="${sy}" r=".3" fill="none" stroke="#fff" stroke-width=".12"/><circle cx="${sx}" cy="${sy}" r=".3" fill="none" stroke="var(--moss)" stroke-width=".06"/>`;
+  if(S.cursor){const [cx,cy]=S.cursor;const f=`<rect x="${cx+.02}" y="${cy+.02}" width=".96" height=".96" fill="none" stroke="var(--focus)" stroke-width=".1"/>`;L+=f;Rr+=f;}
+  L+='</svg>';Rr+='</svg>';
+  $('gL').innerHTML=L;$('gR').innerHTML=Rr;
+  if(fade){$('gR').classList.remove('fade');void $('gR').offsetWidth;$('gR').classList.add('fade');}
+  $('sMin').textContent=mn;$('sMax').textContent=mx;
+  const maxCells=[];for(let i=0;i<OPEN.length;i++)if(Ecache[i]===mx)maxCells.push(`(${OPEN[i][0]}, ${OPEN[i][1]})`);
+  $('maxAt').textContent=`Hottest: E = ${mx} at `+(maxCells.length<=4?maxCells.join(' and '):maxCells.length+' cells')+'.';
+  readouts();cellInfo();
+}
+function fmtCamps(c){if(c===null)return '—';if(!c.length)return 'none';if(c.length<=4)return c.map(i=>`(${OPEN[i][0]}, ${OPEN[i][1]})`).join(', ');return c.length+' cells';}
+function exitsText(ex){return ex.length?ex.map(e=>`(${e.x}, ${e.y}) ${e.E}`).join(' · '):'none';}
+function spawnName(){
+  if(!S.base)return 'Custom';
+  const nm=MAPS[S.mapId].presets[S.base].name;return S.preset?nm:nm+' (edited)';
+}
+function readouts(){
+  $('oR').textContent=S.R;
+  $('rSpawn').textContent=`(${S.spawn[0]}, ${S.spawn[1]})`;
+  $('rSpawnLbl').textContent='spawn '+spawnName();
+  $('rE').textContent=cur.E;
+  $('rExits').textContent=exitsText(cur.exits);
+  $('rK').textContent=cur.camps===null?'no exits':cur.camps.length;
+  // insight
+  const K=cur.camps?cur.camps.length:null,e=cur.E;
+  let s=`<b>${spawnName()}</b>: ${e} cell${e===1?'':'s'} see the spawn. `;
+  if(K===null)s+='Mark at least one exit to count camp positions.';
+  else{
+    s+=`${K} camp position${K===1?'':'s'} cover${K===1?'s':''} every exit`+(K&&K<=4?`, at ${fmtCamps(cur.camps)}`:'')+'. ';
+    if(e<=20&&K>=10)s+=`Hidden, not safe. A camper on any of those ${K} cells catches every player who leaves, one after another.`;
+    else if(K<=3&&cur.exits.length>=2)s+=`The exits face different parts of the map, so almost no single cell watches all of them. Camping here needs a team, not one player.`;
+    else if(e>=60)s+=`The spawn is in the open. Anyone who walks within ${S.R} cells can shoot a player who just appeared.`;
+    else if(K<=3)s+=`Few cells cover the way out, so a camper has little room to hide.`;
+    else s+=`Compare this with B (K = 2 on the default map) and C (K = 21).`;
+  }
+  $('insight').innerHTML=s;
+  // lede tracks the default story only when a preset is active
+  // table
+  $('tblCap').textContent=`Preset spawns on the current map at R = ${S.R}`;
+  const rows=Object.entries(MAPS[S.mapId].presets).map(([n,p])=>{
+    const a=analyse(p.spawn,p.exits.map(e=>key(e[0],e[1])),new Set(p.area.map(q=>key(q[0],q[1]))));
+    return `<tr class="${S.preset===n?'here':''}"><td>${p.name}</td><td>(${p.spawn[0]}, ${p.spawn[1]})</td><td>${a.E===null?'wall':a.E}</td><td>${exitsText(a.exits)}</td><td>${a.camps===null?'—':a.camps.length}</td><td>${fmtCamps(a.camps)}</td></tr>`;
+  });
+  if(!S.preset)rows.push(`<tr class="here"><td>${spawnName()}</td><td>(${S.spawn[0]}, ${S.spawn[1]})</td><td>${cur.E}</td><td>${exitsText(cur.exits)}</td><td>${cur.camps===null?'—':cur.camps.length}</td><td>${fmtCamps(cur.camps)}</td></tr>`);
+  $('tbody').innerHTML=rows.join('');
+  // buttons
+  document.querySelectorAll('#presetBtns .chip').forEach(b=>b.setAttribute('aria-pressed',S.preset===b.dataset.p?'true':'false'));
+  const gapWalled=S.mapId==='teach'&&isWall(2,8);
+  $('gapBtn').disabled=S.mapId!=='teach';
+  $('gapBtn').setAttribute('aria-pressed',gapWalled?'true':'false');
+  $('gapBtn').textContent=gapWalled?"Reopen B's north gap":"Wall up B's north gap";
+}
+function cellInfo(){
+  if(!S.cursor){$('cellinfo').textContent='Hover or focus a map, then move with the arrow keys to read a cell.';return;}
+  const [x,y]=S.cursor,i=idxOf(x,y);
+  if(i<0){$('cellinfo').textContent=`Cell (${x}, ${y}): wall.`;return;}
+  const parts=[`Cell (${x}, ${y})`,`E = ${Ecache[i]}`];
+  if(x===S.spawn[0]&&y===S.spawn[1])parts.push('the spawn');
+  else parts.push(sees(i,cur.si)?'sees the spawn':'cannot see the spawn');
+  if(cur.exits.some(e=>e.x===x&&e.y===y))parts.push('exit');
+  if(S.area.has(key(x,y)))parts.push('in the spawn area');
+  if(cur.camps&&cur.camps.includes(i))parts.push('camp position (sees every exit)');
+  $('cellinfo').textContent=parts.join(' · ');
+}
+function flash(t){$('msg').textContent=t;}
+
+// ---- interaction ----
+function applyTool(x,y){
+  flash('');
+  const k=key(x,y),border=x===0||y===0||x===S.W-1||y===S.H-1;
+  if(S.tool==='inspect')return;
+  if(S.tool==='wall'){
+    if(border){flash('The outer border stays a wall.');return;}
+    if(x===S.spawn[0]&&y===S.spawn[1]){flash('Move the spawn before walling its cell.');return;}
+    S.wall[y*S.W+x]^=1;rebuildLOS();render(true);return;
+  }
+  if(isWall(x,y)){flash('That cell is a wall. Pick an open cell.');return;}
+  if(S.tool==='spawn'){S.spawn=[x,y];S.exits=[k];S.area=new Set();S.preset=null;S.base=null;}
+  else if(S.tool==='exit'){const i=S.exits.indexOf(k);if(i>=0)S.exits.splice(i,1);else S.exits.push(k);S.preset=null;}
+  else if(S.tool==='area'){S.area.has(k)?S.area.delete(k):S.area.add(k);S.preset=null;}
+  render(true);
+}
+function cellFromEvent(el,ev){
+  const r=el.getBoundingClientRect(),x=Math.floor((ev.clientX-r.left)/r.width*(S.W+.1)-.05),y=Math.floor((ev.clientY-r.top)/r.height*(S.H+.1)-.05);
+  return (x>=0&&y>=0&&x<S.W&&y<S.H)?[x,y]:null;
+}
+['gL','gR'].forEach(id=>{
+  const el=$(id);
+  el.addEventListener('pointermove',ev=>{const c=cellFromEvent(el,ev);if(c&&(!S.cursor||c[0]!==S.cursor[0]||c[1]!==S.cursor[1])){S.cursor=c;render(false);}});
+  el.addEventListener('click',ev=>{const c=cellFromEvent(el,ev);if(c){S.cursor=c;applyTool(c[0],c[1]);if(S.tool==='inspect')render(false);}});
+  el.addEventListener('focus',()=>{if(!S.cursor){S.cursor=S.spawn.slice();render(false);}});
+  el.addEventListener('keydown',ev=>{
+    const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[ev.key];
+    if(!S.cursor)S.cursor=S.spawn.slice();
+    if(d){ev.preventDefault();S.cursor=[Math.max(0,Math.min(S.W-1,S.cursor[0]+d[0])),Math.max(0,Math.min(S.H-1,S.cursor[1]+d[1]))];render(false);}
+    else if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();applyTool(S.cursor[0],S.cursor[1]);}
+    else if(ev.key==='Home'){ev.preventDefault();S.cursor=S.spawn.slice();render(false);}
+  });
+});
+document.querySelectorAll('.tool').forEach(b=>b.addEventListener('click',()=>{
+  S.tool=b.dataset.tool;document.querySelectorAll('.tool').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+  $('toolHint').textContent=TOOLHINT[S.tool];flash('');
+}));
+function buildPresetButtons(){
+  $('presetBtns').innerHTML=Object.keys(MAPS[S.mapId].presets).map(n=>`<button class="chip" data-p="${n}" aria-pressed="false">${n}</button>`).join('');
+  document.querySelectorAll('#presetBtns .chip').forEach(b=>b.addEventListener('click',()=>{applyPreset(b.dataset.p);flash('');render(true);}));
+}
+$('gapBtn').addEventListener('click',()=>{if(S.mapId!=='teach')return;S.wall[8*S.W+2]^=1;rebuildLOS();flash('');render(true);});
+$('R').addEventListener('input',e=>{S.R=+e.target.value;render(false);});
+$('nums').addEventListener('change',()=>render(false));
+$('mapSel').addEventListener('change',e=>{const tool=S.tool;S=fresh(e.target.value);S.tool=tool;buildPresetButtons();applyPreset(S.mapId==='teach'?'C':'Centre');rebuildLOS();render(true);});
+function reset(){
+  $('R').value=8;$('mapSel').value='teach';S=fresh('teach');buildPresetButtons();applyPreset('C');rebuildLOS();
+  document.querySelectorAll('.tool').forEach(x=>x.setAttribute('aria-pressed',x.dataset.tool==='inspect'?'true':'false'));
+  $('toolHint').textContent=TOOLHINT.inspect;flash('');render(false);
+}
+$('reset').addEventListener('click',reset);
+$('nums').checked=window.innerWidth>=600;
+reset();
+// test hook for automated checks
+window.__w12={state:()=>S,analyse:(sp,ex,ar)=>{const a=analyse(sp,ex.map(e=>key(e[0],e[1])),new Set(ar.map(q=>key(q[0],q[1]))));return {E:a.E,exits:a.exits.map(e=>e.E),K:a.camps&&a.camps.length,camps:a.camps&&a.camps.map(i=>OPEN[i])};},E:(x,y)=>E(idxOf(x,y))};
+})();
+</script>
+</body>
+</html>
