@@ -5,3 +5,4 @@ w01-03: Gregory chapter attributions from ToC only. ASan hangs on this Mac: lab 
 w04-06: Mike Acton employer omitted; lab06 SoA slowdown at 100k probably cache-set conflicts (stated); benchmarks from one M4 Pro (state machine). Signatures w04 (16.6 ms pie) and w06 (AoS vs SoA). w13 depends on w04 notation T,C,G,W,Q.
 w03 lecture button names 'Next file'/'Allocate' vs spec 'Next step'/'Allocate request': align lecture.
 w10 spec test B=40 not on snap list (example adds Exact B field): fix spec.
+w05 'The visual': archetype counter climbs by 224 per toggle; spec rule makes repeat toggles 112 bytes (entity is last row): fix lecture.
