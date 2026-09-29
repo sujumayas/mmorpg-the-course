@@ -97,3 +97,22 @@
 - MMO407 complete: 14 lectures, 14 examples, 14 labs, assessments (85-question bank, launch plan 50%, case analyses 50%). Signature: w02 login queue at hour 3 (builds on MMO302 w09). Reviewer fixes: WoW Classic launch given by region (Europe midnight CEST 27 Aug 2019, Americas 3 p.m. PDT 26 Aug); w07 late-lock result rewritten from the model (back to 53.5% by week 52, ~8,180 turned away vs 3,650 early); w14 presentation moved to the week 15 panel; w06 New World economy-restore timing per PC Gamer 17 Nov 2021; w05 Combat Upgrade dated spring 2005; w13 fifteen launches; w08 6VDT-H source added. Steam review counts carry "read 28 September 2026".
   - Still unverified (course REVIEW.md): Politowski et al. counts (116 technical, 112 design problems); FWST-8 battle report exact publish date; Combat Upgrade exact date. Queued for the final fact sweep.
 - Wave 5 complete: GD201, GD202, CS203, MMO306, MMO307, MMO308, MMO407.
+
+## Handoff (usage limit reached, session 2)
+
+Committed complete: waves 1 to 5 (all courses), plus the studio-course template and the Kou (2020) citation fix.
+
+In progress at cut-off (agents may have finished or been cut off; check files on disk):
+- CS201: all lectures and examples w01-10 built; w11-14 builder and assessments were running; then review.
+- MA201: all lectures; examples w01-12 built; w13-14 builder and assessments were running; then review.
+- AR101 and AU101: fully built; reviews were running. After review: finish_syllabus, check, BUILD_LOG entry, commit.
+- PR101: all lectures; example builders running; assessments and review not started.
+- MMO403: weeks 1-6 and 10-14 written; 7-9 author was running; then builders, assessments, review. Verify-tagged PLEX (w11) done by author; loot-box regulation is in w07.
+- MMO405: weeks 1-3 written; 4-6, 7-9, 13-14 authors running; 10-12 author running.
+- MMO406: weeks 1-3, 4-6, 7-9, 10-12 authors running; 13-14 not started.
+- Wave 7 studio courses (PR201, PR301, PR401, PR402): not started. Template is in docs/BUILD_CONVENTIONS.md; checker mode in tools/check_course.py.
+- Final passes: link sweep (earlier courses still link later courses' syllabi) and fact sweep (retry every REVIEW.md "still unverified" item; hedge or remove).
+
+The launch queue and per-course reviewer notes are in docs/handoff/ (queue.txt, notes-<CODE>.md). Remaining curriculum.yaml "(verify)" tags: EVE PLEX (MMO403, verified by w11 author, clear after review), loot-box regulation (MMO403 w07), and any others listed by `grep -n "(verify" curriculum.yaml`.
+
+Owner decisions still open: delete orphaned courses/MMO303-*/examples/w10-counter-triangle.html; confirm GD203 lab 10 has no late window; em dash kept in the lecture title-line convention; studio-course template choice (session guides, 1,500-4,000 words) for wave 7.

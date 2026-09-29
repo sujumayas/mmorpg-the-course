@@ -1,0 +1,10 @@
+w13-14: Solarski chapter ranges unverified ('listed on course page'); Minecraft 1.5 release date (cites 13w02a snapshot, 2013). Interactive names code-formatted not links: builders link. CS201 w7-8 and AR101 w2, w3, w6 syllabus links: upgrade.
+w07-09: Solarski by topic only; Williams 'ones and twos' and Block 'contrast and affinity' from general knowledge: verify or hedge. Uses week 1 CIE L* scale throughout. w03, w06 syllabus links.
+w01-03: Solarski chapter/pages topic only. w03 signature silhouette test. L* scale and value gap 20 standard across course.
+w10-12: FFXIV battle-effect settings omitted. w12 signature colour-blind raid telegraph. DEDUP CHECK: w12 vs MMO306 w14 (cue coverage) and UX201 w11 (accessibility): link, different angle. MMO306 syllabus link -> MMO306 w05 lecture now exists.
+w04-06: Solarski chapters; Game Boy 1989 era only; Aseprite pixel-perfect docs ('some editors').
+w05 'At 0 degrees the two balls are identical' false under spec (saturation differs); fix wording or model. w05 spec second extra ramp unreachable (delta max 240; example adds direct end-hue option). w06 'clean lines are only a few' lists 5 angles but model also gives all ratios 6:1-32:1 on p=1: qualify. w07 'using 9 of 47' should be 8.
+w11 spec 'ground 92 in Weighted gives one inversion': model gives two (Rare 272.9 > Epic 130.2, Junk 30 > Common 8): fix spec/lecture. w09 spec 58.12/23.12 are half-even rounding of 58.125/23.125 (note).
+w01 spec Game Boy floor/coin gap dV 5.7 should be 5.8 (71.53-65.77=5.76). w03 example adds pixel editor per in-class activity (final roster adds 83 pixels).
+w12 lecture says Grayscale acts on left panel; spec applies to both. With Value+shape fill contrast 2.57-3.19 (<3:1), so 'every row turns to pass' holds for dV only: fix claim. w13 2D mode: checker square is 2 art px not 8 texels. w14 lecture says grass tiles, spec stone; 'unaligned never bleeds earlier than model with 24/28/32 sprites' contradicts spec: align lecture/spec with page notes.
+From assessments: w12 section 1 table '20 men 83%' should be 82% (1-(11/12)^20=0.8245). w04 '15 to 30 points darker' should be 14 to 30 (smallest gap 14.4).
