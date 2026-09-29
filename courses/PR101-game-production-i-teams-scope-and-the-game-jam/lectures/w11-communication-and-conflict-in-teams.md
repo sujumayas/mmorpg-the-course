@@ -48,7 +48,7 @@ Write your team's version of this table into your working agreement. The respons
 
 In 1979, Bibb Latané, Kipling Williams and Stephen Harkins asked people to clap and shout as loudly as they could, alone and in groups. People made less noise per person in groups, and the loss was larger than poor coordination alone could explain. People put in less effort when their contribution disappears into a group total. The authors called this **social loafing**.
 
-Every team game you have played has the same shape. In an MMO raid, the boss dies for all 40 people at once, whether you pulled your weight or stood in the fire. Raiding guilds, first in EverQuest in 1999 and later in World of Warcraft, built systems like DKP ("dragon kill points"), covered in MMO305 week 5, to tie each person's loot to their own attendance. Player-run guilds invented rules to solve a problem your team has too. The question is why the problem arises so reliably, and how big a fix it needs.
+Every team game you have played has the same shape. In an MMO raid, the boss dies for all 40 people at once, whether you pulled your weight or stood in the fire. Raiding guilds, first in EverQuest in 1999 and later in World of Warcraft, built systems like DKP ("dragon kill points"), which MMO305 week 5 (year 3) covers, to tie each person's loot to their own attendance. Player-run guilds invented rules to solve a problem your team has too. The question is why the problem arises so reliably, and how big a fix it needs.
 
 ### The model
 
@@ -102,7 +102,9 @@ Now add individual credit `k = 0.6` (a peer review that tracks each person's log
 | One free rides: each contributor | 15 | 21 |
 | Nobody contributes | 10 each | 10 each |
 
-Read the `k = 0` column as the free rider would. If the other three contribute, doing nothing earns 25 instead of 20. Free riding pays, even though everyone together prefers the all-contribute row. In the language of MMO303 week 10, not contributing is each player's best response whatever the others do, so "nobody contributes" is the equilibrium of the one-shot game.
+Read the `k = 0` column as the free rider would. If the other three contribute, doing nothing earns 25 instead of 20. Free riding pays, even though everyone together prefers the all-contribute row.
+
+Two terms from game theory name what just happened. Your **best response** is the choice that pays you most, given what the others do. An **equilibrium** (in full, a Nash equilibrium) is a set of choices where everyone is already playing a best response, so nobody gains by changing on their own. Test "nobody contributes" with one step. Start at `X = 0` and let one person switch to 10 project hours. Now `X = 10`, and the switcher gets `(2/4) × 10 = 5` instead of the 10 they had, a loss of 5. Nobody gains by moving alone, so "nobody contributes" is an equilibrium. "All contribute" is not, because each person gains 5 by dropping out (25 against 20). In fact switching to 10 hours costs you 5 units whatever the others do, so not contributing is always your best response and "nobody contributes" is the only equilibrium of the one-shot game. Looking ahead, MMO303 week 10 (year 3) builds payoff matrices and finds equilibria in games where the best response does depend on the others.
 
 Now read the `k = 0.6` column. Free riding earns 25, contributing earns 26. It no longer pays. Check with the formula: `m / n + k − 1 = 0.5 + 0.6 − 1 = 0.1` per hour, times 10 hours, is the 1-unit difference. The threshold is `k* = 1 − 2/4 = 0.5`.
 
