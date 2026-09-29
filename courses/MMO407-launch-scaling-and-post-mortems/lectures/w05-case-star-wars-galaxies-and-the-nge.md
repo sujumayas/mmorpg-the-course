@@ -24,7 +24,7 @@ Then, in one year, the game changed twice.
 
 | Date | Event |
 |---|---|
-| Spring 2005 | The Combat Upgrade changes combat. Media criticize it, and subscription cancellations rise |
+| 27 April 2005 | The Combat Upgrade changes combat. Media criticize it, and subscription cancellations rise |
 | 5 May 2005 | Expansion *Rage of the Wookiees* released |
 | 19 August 2005 | Expansion *Trials of Obi-Wan* announced |
 | 1 November 2005 | *Trials of Obi-Wan* released |
@@ -193,7 +193,7 @@ Four products, one question. Before the change, write down `L` by segment, the c
 
 ### Losses compound
 
-Galaxies changed combat in spring 2005 and changed everything else in November. Each change drives away a share of the players who were left after the one before:
+Galaxies changed combat in April 2005 and changed everything else in November. Each change drives away a share of the players who were left after the one before:
 
 ```
 remaining = S₀ × (1 − D₁) × (1 − D₂)
@@ -282,7 +282,8 @@ Expected output for a table with crafters (0.20, 0.50), guild leaders and organi
 
 ## Sources
 
-- Wikipedia, "Star Wars Galaxies" (read September 2026). North American launch 26 June 2003; 34 professions at launch (6 basic, 24 advanced); Combat Upgrade in spring 2005, after publish 14.1 of April 2005 (press criticism archived from May 2005), with rising cancellations; *Rage of the Wookiees* released 5 May 2005; *Trials of Obi-Wan* announced 19 August 2005 and released 1 November 2005; NGE implemented about a week after, announced two days after the expansion's release; nine professions after the NGE; refunds after one to two weeks of protest; Smedley's defense as reversing deterioration in the subscriber base; one million boxed copies reported in August 2005; the unconfirmed report of 10,363 subscribers on a Friday night in early 2006 and Smedley's denial; Smedley's July 2012 Reddit comments on "stupid decisions"; closure on 15 December 2011 announced 24 June 2011; SWGEmu founded 2004 to recreate the game through publish 14.1 (April 2005, pre-Combat Upgrade); Project SWG founded 2011.
+- Wikipedia, "Star Wars Galaxies" (read September 2026). North American launch 26 June 2003; 34 professions at launch (6 basic, 24 advanced); press criticism of the Combat Upgrade archived from May 2005, with rising cancellations; *Rage of the Wookiees* released 5 May 2005; *Trials of Obi-Wan* announced 19 August 2005 and released 1 November 2005; NGE implemented about a week after, announced two days after the expansion's release; nine professions after the NGE; refunds after one to two weeks of protest; Smedley's defense as reversing deterioration in the subscriber base; one million boxed copies reported in August 2005; the unconfirmed report of 10,363 subscribers on a Friday night in early 2006 and Smedley's denial; Smedley's July 2012 Reddit comments on "stupid decisions"; closure on 15 December 2011 announced 24 June 2011; SWGEmu founded 2004 to recreate the game through publish 14.1 (April 2005, pre-Combat Upgrade); Project SWG founded 2011.
+- Sony Online Entertainment, "Things to know about the Character Respec Process" (notice headed "Combat Upgrade April 27th, 2005"), reproduced on the SWG Fandom wiki with the Combat Upgrade update notes of 29 April to 19 May 2005 (read September 2026). https://swg.fandom.com/wiki/Things_to_know_about_the_Character_Respec_Process
 - Schiesel, S. "For Online Star Wars Game, It's Revenge of the Fans." *The New York Times*, 10 December 2005. Contemporary account of the NGE backlash.
 - Wikipedia, "Old School RuneScape" (read September 2026). February 2013 poll citing a declining player base and the reception of updates; 449,351 votes, meeting the launch threshold; launch on 22 February 2013 from an August 2007 backup, for members at no extra fee.
 - Wikipedia, "RuneScape" (read September 2026). Evolution of Combat in 2012 introducing ability-based combat; Legacy Mode with the older interface and combat added in 2014.

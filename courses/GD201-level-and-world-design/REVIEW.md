@@ -13,3 +13,9 @@ Items the reviewer could not close. Everything else found in review was fixed in
 
 - `syllabus.md` still carries the generated-stub marker. All 14 schedule rows already link to existing lectures and examples, so `tools/build_plan.py` only needs to clear the marker.
 - MA201 has no lectures yet. w07 and w13 still link to `MA201/syllabus.md`. Upgrade when MA201 kinematics is written.
+
+## Fact sweep (29 September 2026)
+
+- Verified: Totten 2nd-edition chapter numbers and titles against Crossref chapter records (doi:10.1201/9781351116305-1 to -14). Chapters 4, 5, 6, 7, 9 and 10 match the lectures. Two readings named chapters that do not exist in the 2nd edition and were fixed. w02 now reads chapter 3 "Level Design Workflows" (was "tools and techniques", a 1st-edition title). w13 now uses the index for "scale" and "proportion" (was "the chapter on scale and proportion").
+- Hedged: section titles inside Totten's chapters (w04, w05, w06) are marked unchecked in the source lines. Neon White "50+ changes" source line now names Blake Hester, Game Informer #350, and says the magazine was not checked.
+- Removed: none.

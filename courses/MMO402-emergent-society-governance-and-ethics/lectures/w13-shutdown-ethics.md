@@ -48,10 +48,10 @@ The model in section 2 is a harm model. It prices one kind of loss. Keep in mind
 Three live-service games closed within two years of each other, and their operators made three different choices.
 
 - **Concord** (Sony, released 23 August 2024). Sony announced on 3 September 2024 that it would take the game offline, and the servers went down on 6 September. Every copy sold was refunded. The game had run for 14 days.
-- **Anthem** (EA and BioWare, released 22 February 2019). On 3 July 2025, EA stopped selling the game's premium currency and announced that servers would close on 12 January 2026. Because the game's content lived on the servers, closure made it unplayable. Wikipedia's account of the closure records no refunds.
+- **Anthem** (EA and BioWare, released 22 February 2019). On 3 July 2025, EA stopped selling the game's premium currency and announced that servers would close on 12 January 2026. With its content on the servers, closure made it unplayable. EA offered no refunds (Forbes, 4 July 2025).
 - **The Crew** (Ubisoft, 2014). The game was removed from stores on 14 December 2023, and servers closed on 31 March 2024. In early April 2024, Ubisoft began removing the game from players' libraries. Players later found code for an unused offline mode.
 
-Concord refunded everything and got little criticism for how it ended. Anthem gave more than six months of notice and, on the record, no refunds. The Crew became the case that started a European Citizens' Initiative. Which operator treated its players best? You cannot answer by feel. You need to count what each player lost and what each remedy cost.
+Concord refunded everything and got little criticism for how it ended. Anthem gave more than six months of notice and no refunds. The Crew became the case that started a European Citizens' Initiative. Which operator treated its players best? You cannot answer by feel. You need to count what each player lost and what each remedy cost.
 
 ### The model
 
@@ -231,7 +231,8 @@ Expected output: `N*` with your working, the announcement, and one recorded disa
 ## Sources
 
 - Wikipedia, "Concord (video game)" (accessed September 2026). Release 23 August 2024; announcement 3 September 2024 that the game would go offline with all copies refunded; servers offline 6 September 2024; Firewalk Studios closed 29 October 2024.
-- Wikipedia, "Anthem (video game)" (accessed September 2026). Release 22 February 2019; premium-currency sales stopped and shutdown announced 3 July 2025; servers closed 12 January 2026; content on the servers, so unplayable after closure. The article records no refunds.
+- Wikipedia, "Anthem (video game)" (accessed September 2026). Release 22 February 2019; premium-currency sales stopped and shutdown announced 3 July 2025; servers closed 12 January 2026; content on the servers, so unplayable after closure.
+- Tassi, P. (4 July 2025). *Forbes* headline: no refunds for Anthem.
 - Wikipedia, "The Crew (video game)" (accessed September 2026). Delisted 14 December 2023; servers closed 31 March 2024, citing server infrastructure and licensing constraints; removal from player libraries in early April 2024; unused offline-mode code; California class action filed 4 November 2024; fan server emulator released September 2025.
 - Wikipedia, "Knockout City" (accessed September 2026). End of service announced early 2023; official servers closed 6 June 2023; PC version for privately hosted servers released.
 - California Legislative Information, Assembly Bill 2426 (2023-2024 session), chaptered 24 September 2024. Disclosure required before "buy" or "purchase" can be used for digital goods; games included in the definition.

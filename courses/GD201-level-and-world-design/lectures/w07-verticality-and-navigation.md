@@ -281,7 +281,7 @@ Expected output: a side section with times on every edge, three numbers (out tim
 - Minecraft Wiki, "Ladder" (Java Edition). Climbing speed about 2.35 blocks per second, descending speed about 3 blocks per second.
 - Zelda Wiki, "Sheikah Tower" and "Stamina Wheel" (*Breath of the Wild*, 2017). Fifteen towers; climbable walls with platforms between sections for resting; activating a tower gives the detailed map of the surrounding area; climbing drains stamina.
 - Wikipedia, "The Legend of Zelda: Breath of the Wild" (accessed September 2026). Activating towers reveals map territory.
-- Totten, C. (2019). *An Architectural Approach to Level Design* (2nd ed.). A K Peters/CRC Press. Chapters 4 and 6.
+- Totten, C. (2019). *An Architectural Approach to Level Design* (2nd ed.). A K Peters/CRC Press. Chapters 4 and 6 (doi:10.1201/9781351116305-4 and -6; titles checked on Crossref, September 2026).
 - Dijkstra, E. W. (1959). "A note on two problems in connexion with graphs." *Numerische Mathematik* 1, 269-271. The shortest-path method used in section 2.
 
 ## Interactive spec: examples/w07-drop-and-climb.html

@@ -286,11 +286,11 @@ Expected output: one index card with the five numbers (`r`, `b`, `K`, client kbi
 
 - Valve Developer Community, "Source Multiplayer Networking" (archived copy, December 2023). Tick rates 66 (*Counter-Strike: Source*, *Day of Defeat: Source*, *Team Fortress 2*), 64 default (*CS:GO*), 60 (*Counter-Strike*, GoldSrc) and 30 (*Left 4 Dead*, *Left 4 Dead 2*). `cl_updaterate` default 20, command packets usually 30 per second, no more snapshots than ticks. Client `rate` in bytes per second, `sv_minrate` and `sv_maxrate`, 10,000 suggested for DSL and above, modem players limited to 5 to 7 KB/s.
 - Respawn Entertainment, "What Makes Apex Tick: A Developer Deep Dive into Servers and Netcode" (Apex Legends news, ea.com, 28 April 2021). 20 Hz server, about 60 kB/s at the start of a match, about 180 kB/s at 60 Hz, the "two frames" argument about triple bandwidth and CPU.
-- Apex Legends Wiki, "Battle Royale" (accessed September 2026). 60 players per match, 20 squads of three in Trios.
+- Electronic Arts, "About Apex Legends" (ea.com, accessed September 2026). "Play in classic 60-person Battle Royale matches."
 - Randall, B. "VALORANT's 128-Tick Servers" (Riot Games, 31 August 2020). 7.8125 ms per tick, 2.34 ms target per game, three games per core, 108 games and 1,080 players on a 36-core host, a starting cost of 50 ms, the animation savings.
 - Fiedler, G. "Snapshot Compression" (Gaffer on Games, 4 January 2015). 901 cubes, 60 Hz, 40.125 bytes per cube, 17.37 Mbit/s uncompressed, 256 kbit/s target.
 - Fiedler, G. "State Synchronization" (Gaffer on Games, 5 January 2015). The priority accumulator and the 256 kbit/s budget.
-- EVE University Wiki, "Server tick" and "Time dilation" (accessed September 2026). One tick per second, time dilation down to 10% speed, server load `O(n²)` in players on grid. CCP Games dev blog "Introducing Time Dilation (TiDi)" (22 April 2011), as cited by the wiki.
+- EVE University Wiki, "Server tick" and "Time dilation" (accessed September 2026). One tick per second, time dilation down to 10% speed, server load `O(n²)` in players on grid. CCP Veritas, "Introducing Time Dilation (TiDi)" (EVE Online dev blog, 22 April 2011), read directly: load in large fights is mostly tied to the game clock, so slowing time lowers it. The 10% floor comes from the wiki, not the blog.
 
 ## Interactive spec: examples/w13-bandwidth-budget.html
 

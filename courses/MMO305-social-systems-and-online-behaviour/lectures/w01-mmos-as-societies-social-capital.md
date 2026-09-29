@@ -54,7 +54,7 @@ Bonding capital lives in internal ties. Bridging capital lives in external ties,
 
 ### What the research found in MMOs
 
-Steinkuehler and Williams combined a year-long survey and interview study of Asheron's Call players with two years of participant observation in Lineage. Their conclusion, which frames this course, is that MMOs work as **third places**, the sociologist Ray Oldenburg's term (1989) for informal public spaces outside home and work such as cafés, pubs and barbershops. Third places are open without appointment, put everyone on equal footing, have regulars, and are built around conversation.
+Steinkuehler and Williams combined a survey and field experiment with 750 new Asheron's Call players, plus a year of play and interviews in that game, with two years of participant observation in Lineage. Their conclusion, which frames this course, is that MMOs work as **third places**, the sociologist Ray Oldenburg's term (1989) for informal public spaces outside home and work such as cafés, pubs and barbershops. Third places are open without appointment, put everyone on equal footing, have regulars, and are built around conversation.
 
 Their main claim about social capital is specific. MMOs are good at producing bridging capital. Players meet people of different ages, jobs and backgrounds as rough equals, and they hear views they would not meet at home. MMOs are much weaker at producing bonding capital. Deep, supportive friendships did form, mostly through long guild membership, and some moved offline, but they were the exception.
 
@@ -219,7 +219,7 @@ Expected output: your rules, a drawing with E-I and reach written on it, your br
 
 ## Sources
 
-- Steinkuehler, C. A. & Williams, D. (2006). "Where Everybody Knows Your (Screen) Name: Online Games as 'Third Places'." *Journal of Computer-Mediated Communication* 11(4), 885-909. https://doi.org/10.1111/j.1083-6101.2006.00300.x. Games studied (Lineage I and II, Asheron's Call I and II), methods (a media-effects study of Asheron's Call players combined with two years of participant observation in Lineage; the abstract confirms the two strands, sample sizes are in the full paper) and the conclusion that MMOs produce mostly bridging and rarely bonding capital.
+- Steinkuehler, C. A. & Williams, D. (2006). "Where Everybody Knows Your (Screen) Name: Online Games as 'Third Places'." *Journal of Computer-Mediated Communication* 11(4), 885-909. https://doi.org/10.1111/j.1083-6101.2006.00300.x. Games studied (Lineage I and II, Asheron's Call I and II), methods (full text, section on methods: an Asheron's Call survey and experiment with 750 participants, then 30 interviews over one year of play; a two-year, 24-month ethnography of Lineage I then II with 16 key informants) and the conclusion that MMOs produce mostly bridging and rarely bonding capital.
 - Putnam, R. D. (2000). *Bowling Alone: The Collapse and Revival of American Community*. Simon & Schuster. Definition of social capital and the bonding and bridging distinction, which Putnam credits to Ross Gittell and Avis Vidal (as summarized in Wikipedia, "Social capital").
 - Granovetter, M. S. (1973). "The Strength of Weak Ties." *American Journal of Sociology* 78(6), 1360-1380. Tie strength, closure among strong ties, bridges as weak ties, and the job-search finding.
 - Oldenburg, R. (1989). *The Great Good Place*. Paragon House. The third-place concept and its characteristics (as summarized in Wikipedia, "Third place").

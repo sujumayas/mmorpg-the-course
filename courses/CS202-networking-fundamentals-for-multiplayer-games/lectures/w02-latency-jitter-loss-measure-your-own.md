@@ -290,7 +290,7 @@ Expected output: one card per group with the five statistics, the chosen target,
 - Wikipedia, "Optical fiber" (accessed September 2026). Refractive index around 1.44 to 1.45 and the rule of thumb of about 200,000 km/s in fiber.
 - Schulzrinne, H., Casner, S., Frederick, R. & Jacobson, V. (2003). RFC 3550, *RTP: A Transport Protocol for Real-Time Applications*. Interarrival jitter estimator `J = J + (|D| − J) / 16`.
 - Bettner, P. & Terrano, M. (2001). "1500 Archers on a 28.8: Network Programming in Age of Empires and Beyond." Gamasutra, 22 March 2001 (now Game Developer). Commands scheduled two communications turns ahead. 250 ms of command latency not noticed, 250 to 500 ms very playable, beyond 500 ms noticeable.
-- Gilbert, E. N. (1960). "Capacity of a burst-noise channel." *Bell System Technical Journal* 39(5). Elliott, E. O. (1963). "Estimates of error rates for codes on burst-noise channels." *Bell System Technical Journal* 42(5). The two-state burst-loss model.
+- Gilbert, E. N. (1960). "Capacity of a burst-noise channel." *Bell System Technical Journal* 39(5), 1253-1265, doi:10.1002/j.1538-7305.1960.tb03959.x. Elliott, E. O. (1963). "Estimates of error rates for codes on burst-noise channels." *Bell System Technical Journal* 42(5), 1977-1997, doi:10.1002/j.1538-7305.1963.tb00955.x. The two-state burst-loss model.
 - Diez, D., Çetinkaya-Rundel, M. & Barr, C. (2019). *OpenIntro Statistics*, 4th ed., section 2.1, for the summary statistics (as used in MA102 week 12).
 
 ## Interactive spec: examples/w02-jitter-buffer.html

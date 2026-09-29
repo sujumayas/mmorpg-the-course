@@ -217,7 +217,7 @@ Expected output: a card with the sentence, pillars, the density numbers (`P`, `h
 
 ## Sources
 
-- Wikipedia, "EVE Online" (accessed September 2026). Record of 65,303 concurrent accounts on one server on 5 May 2013; more than 5,000 known-space systems plus about 2,500 wormhole systems, around 7,800 visitable in total; Tranquility single-universe server.
+- Wikipedia, "EVE Online" (accessed September 2026). Record of 65,303 concurrent accounts on one server on 5 May 2013 (figure matches CCP's forum thread "SUCCESS NEW PCU RECORD (65,303)", archive.org copy of 10 May 2013); more than 5,000 known-space systems plus about 2,500 wormhole systems, around 7,800 visitable in total; Tranquility single-universe server.
 - Minecraft Wiki, "Server.properties" (Java Edition, accessed September 2026). Defaults `max-players=20`, `view-distance=10`, `simulation-distance=10`; view distance measured in chunks as a radius.
 - Minecraft Wiki, "Chunk" (Java Edition, accessed September 2026). Chunks are 16 by 16 blocks horizontally.
 - Guild Wars 2 Wiki, "Megaserver" (accessed September 2026). System completed 21 April 2014; placement by party, guild, language and home world.

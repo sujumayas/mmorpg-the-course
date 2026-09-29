@@ -313,7 +313,7 @@ Expected output: the four-class table with and without your split, your `h` resu
 - Guild Wars 2 Wiki, "Game updates/2018-08-28" (August 28, 2018). Prime Light Beam cooldown split, 60 to 75 seconds in PvP only.
 - Guild Wars Wiki, "PvP (effect)" and "List of PvE and PvP versions of skills" (accessed September 2026). Altered skills carry "(PvP)" in their names; added in the May 22, 2008 update; the category held 188 entries.
 - Warcraft Wiki, "PvP Resilience" (accessed September 2026). Introduced in patch 2.0.1; reduced crit chance until 4.0.1; linear scaling from 4.1.0 "in the same way armor and magic resistances do"; base resilience 65% in 5.3.0, 72% in 5.4.0, 77% in 5.4.7; base removed in 6.0.2; removed from remaining items in 8.3.0.
-- Warcraft Wiki, "Dampening" (accessed September 2026). 1% healing and absorb reduction per stack; December 14, 2020 hotfix applying it immediately in 2v2 and after 5 minutes in 3v3; a stack every 10 seconds.
+- Warcraft Wiki, "Dampening" (accessed September 2026). 1% healing and absorb reduction per stack; the wiki quotes Blizzard's 14 December 2020 hotfix note ("Dampening is applied immediately in 2v2 and after 5 minutes in 3v3"), the latest change it lists as of September 2026; a stack every 10 seconds. https://warcraft.wiki.gg/wiki/Dampening
 - League of Legends Wiki, "V26.06" (patch 26.06, 2026). ARAM: Mayhem mode-specific modifiers for Swain: incoming damage +15% to +5%, outgoing damage −5% to 0%, healing −20% to −10%.
 - Schreiber, I. & Romero, B. (2021). *Game Balance*. CRC Press.
 

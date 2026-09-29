@@ -176,7 +176,7 @@ Two lessons. First, a world's community can outlive its operator, and a publishe
 
 ### Tabula Rasa: an ending as content
 
-Tabula Rasa launched in November 2007 and lasted about sixteen months. The team announced the closure on 21 November 2008, citing lower than expected population. From 10 January 2009 the game was free to play until the servers closed on 28 February 2009. The day before, the official site asked players to join a final assault, which ended with the mutual destruction of the two sides.
+Tabula Rasa launched in November 2007 and lasted about sixteen months. The team announced the closure on 21 November 2008, saying the game "never achieved the player population we hoped for." From 10 January 2009 the game was free to play until the servers closed on 28 February 2009. The official site called players to one last battle against the Bane on that final day, starting in the evening and running until the servers shut down around midnight.
 
 Star Wars Galaxies did something similar in its last week, with a final player-versus-player battle between the two factions. These events do not save a world. They change how its players remember the end. A world that ends mid-sentence, with a login error, leaves players with nothing to point at. A world that ends with a story beat gives them a last shared memory.
 
@@ -186,7 +186,7 @@ The Matrix Online closed on 31 July 2009 with fewer than 500 active players repo
 
 ### WildStar: when the studio goes first
 
-WildStar launched on 3 June 2014 with a subscription and switched to free-to-play on 29 September 2015. On 6 September 2018, NCSoft closed Carbine Studios immediately and said it would begin winding the game down. The shutdown date of 28 November 2018 came later. Once the team that knows the code is gone, every option (a final event, a merge, a server-software release) becomes harder. Sunset plans have to be written while the team still exists.
+WildStar launched on 3 June 2014 with a subscription and switched to free-to-play on 29 September 2015. On 6 September 2018, NCSoft closed Carbine Studios immediately and said it would begin winding the game down. On 26 September 2018 the team set the shutdown for 28 November. Once the team that knows the code is gone, every option (a final event, a merge, a server-software release) becomes harder. Sunset plans have to be written while the team still exists.
 
 ## 4. Designing the ending
 
@@ -195,7 +195,7 @@ A world that will close someday should have an ending designed while it is healt
 A sunset plan answers five questions.
 
 1. **Trigger.** What measured condition starts the sunset? A players-per-shard floor, a revenue line, a licence date. Write it down with a number.
-2. **Notice period.** How long between the announcement and the last day? The cases above range from under two months (The Matrix Online, announced in June for 31 July) through about twelve weeks (WildStar) and thirteen weeks (City of Heroes) to nearly six months (Star Wars Galaxies). Longer notice lets players say goodbye and export what they can.
+2. **Notice period.** How long between the announcement and the last day? The cases above range from under two months (The Matrix Online, announced in June for 31 July) through about twelve weeks (WildStar, counted from the studio closure; the date itself came nine weeks ahead) and thirteen weeks (City of Heroes) to nearly six months (Star Wars Galaxies). Longer notice lets players say goodbye and export what they can.
 3. **Final content.** Is there a last event, a story conclusion, or a memory book? Who will build it if the studio is already closed?
 4. **What players keep.** Character data exports, screenshots of their houses, guild rosters, chat logs. Even a static web page of character sheets gives people something to keep.
 5. **Preservation.** Will the server software, a single-player mode, or a community hosting licence be released? What legal and licensing work does that need, and who signs it off?
@@ -249,9 +249,11 @@ Expected output: a half-page sheet with the cause analysis, the parameters and o
 - Wikipedia, "City of Heroes" (closure and later history sections, accessed September 2026). North American launch 28 April 2004; closure announced 31 August 2012, servers off 30 November 2012; "realignment of company focus and publishing support" as the stated reason; private server revealed April 2019; official licence to Homecoming Servers LLC on 4 January 2024.
 - Wikipedia, "Paragon Studios" (accessed September 2026). Studio liquidated 31 August 2012; more than 21,000 players signed a petition against the closure.
 - Wikipedia, "Star Wars Galaxies" (accessed September 2026). North American launch 26 June 2003; Combat Upgrade May 2005 and rising cancellations; NGE November 2005; closure announced 24 June 2011; servers off 15 December 2011; final PvP event; SWGEmu founded 2004.
-- Wikipedia, "Tabula Rasa (video game)" (accessed September 2026). Launch November 2007; closure announced 21 November 2008 citing lower than expected population; free play from 10 January 2009; final assault event 27 February 2009; closure 28 February 2009.
+- Tabula Rasa Team, "Message from the Tabula Rasa Team" (playtr.com, November 2008, archived 10 February 2009): population reason, free play from 10 January, closure 28 February 2009. "Tabula Rasa Shutdown Events" (archived 2 March 2009): final assault on 28 February.
+- Wikipedia, "Tabula Rasa (video game)" (September 2026). Launch November 2007; announcement on 21 November 2008.
 - Wikipedia, "The Matrix Online" (accessed September 2026). Launch March 2005; closure 31 July 2009; fewer than 500 active players; post-closure memory book.
-- Wikipedia, "WildStar (video game)" (accessed September 2026). Launch 3 June 2014; free-to-play 29 September 2015; studio closure 6 September 2018; shutdown 28 November 2018.
+- Wikipedia, "WildStar (video game)" (accessed September 2026). Launch 3 June 2014; free-to-play 29 September 2015; studio closure 6 September 2018 (cited to Kotaku, 6 September 2018).
+- Team WildStar, "Signing Off November 28" (wildstar-online.com, 26 September 2018, archived 7 October 2018). Shutdown date and refunds.
 - Wikipedia, "EverQuest" (accessed September 2026). European server merges into Antonius Bayle; Al'Kabor closed November 2013; operated by Daybreak Game Company; expansions in December 2024 and December 2025.
 - Warcraft Wiki, "Connected realms" (accessed September 2026). Introduced in patch 5.4 (September 2013); first US connections 25 September 2013; stated goal for low-population realms; shared guilds, trading and auction house.
 - Guild Wars 2 Wiki, "Megaserver" (accessed September 2026). System completed 21 April 2014 after the 15 April 2014 update; placement rules use party, guild, language and home world.

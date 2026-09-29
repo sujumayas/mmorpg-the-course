@@ -11,3 +11,9 @@ Reviewer pass, 28 September 2026. Every item in the author, builder and assessme
 | `lectures/w06-quest-anatomy-hook-objective-complication-reward.md` | The quest XP decay table is verified on the Warcraft Wiki, but that section is community-derived and names no patch. The lecture calls it classic era and says it is community-measured. | None unless a patch-dated source turns up. |
 | `lectures/w11-writing-for-localization.md` | The W3C copy of IBM's table prints 151-170% for 51-70 characters (checked on the W3C page), which breaks the falling trend. The row was removed from the taught table; the code, lab 11 starter docstring and test now use 1.6 for 31-70 characters (`budget("x" * 60) == 96`). | If someone finds IBM's original table, restore the row with the correct value and update the code, lab 11 and exam question 49 if it changes. |
 | `syllabus.md` | Still carries the generated-stub marker. Reviewer did not edit it, per instructions. | Orchestrator to finish the syllabus and run `tools/build_plan.py`. |
+
+## Fact sweep (29 September 2026)
+
+- Verified: none. The GamesRadar+ URL still returns 404, and Larian's Steam announcements for July to October 2024 do not contain the figure.
+- Hedged: w14 BG3 rare ending. The heading, hook and section 3 no longer state "34 players" as fact. The hook says GamesRadar+ reported "a few dozen players" and that the count is an unchecked press report. The source line records the 404. SWTOR roll winner: the SWTOR wiki "Conversations" codex entry still says only that winners get more social points, so the existing hedge stays.
+- Removed: none. Her Story result limit stays out. Bateman and Murray readings are reading pointers ("the course reader lists the pages"), not taught facts. The Bloomsbury table of contents could not be fetched, so they stay open for the course reader editor.

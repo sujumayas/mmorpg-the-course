@@ -171,7 +171,7 @@ A **restricted vocabulary** gives players a menu of messages the designer wrote.
 
 A **ping** attaches a meaning to a point in the game world. The player looks or points at something and presses a key, and teammates see a marker plus a short spoken or written label. The vocabulary is small, and the location does most of the work.
 
-Apex Legends (Respawn, February 2019) made the ping system famous. Its pings let a squad mark directions, loot, enemies and plans with one button, and reviewers wrote that it made voice chat with strangers largely unnecessary. Electronic Arts received a US patent on the system in 2021 and later made it available to other developers for free.
+Apex Legends (Respawn, February 2019) made the ping system famous. Its pings let a squad mark directions, loot, enemies and plans with one button, and reviewers wrote that it made voice chat with strangers largely unnecessary. Electronic Arts received a US patent on the system in August 2021 (US 11,097,189), and press coverage that month reported that EA would let other developers use it for free as part of an accessibility patent pledge.
 
 Price the ping with the same model. The player is usually already looking at the target, so there is no pointing cost:
 
@@ -263,9 +263,11 @@ Expected output: a one-page table of channels, one load calculation with numbers
 - Warcraft Wiki, "Trade chat" (accessed September 2026). Trade works only in capital cities and is linked across them on a realm; patch 9.2.7 (2022) added the Trade (Services) channel for services, leaving Trade for items and professions.
 - Warcraft Wiki, "Barrens chat" (accessed September 2026). The Barrens as the level 10-20 route for most Horde characters before patch 7.3.5; the channel's reputation for off-topic chatter and trolling.
 - League of Legends Wiki, "Ping" (accessed September 2026, current patches). Ping types; a limit of 2 to 7 pings per 5 seconds depending on Honor level, with a temporary lockout; per-type limits for some pings.
-- Hearthstone Wiki (wiki.gg), "Emote" (accessed September 2026). The six voluntary emotes; "Wow" replaced "Sorry" on April 24, 2016; squelch hides an opponent's emotes; emotes limited to one every few seconds.
+- Hearthstone Wiki (wiki.gg), "Emote" (accessed September 2026). The six voluntary emotes; squelch hides an opponent's emotes; emotes limited to one every few seconds.
+- Blizzard, "Hearthstone Patch Notes 5.0.0.12574, Whispers of the Old Gods" (24 April 2016), as reproduced with its original battle.net URL on the Hearthstone Wiki page "Patch 5.0.0.12574": "The 'Sorry' emote has been replaced with a new 'Wow' emote."
 - EVE University Wiki, "Wormhole space" (accessed September 2026). In wormhole space a pilot appears in Local only after speaking.
-- Wikipedia, "Apex Legends" (accessed September 2026). Release February 4, 2019; the ping system and its critical reception; EA's 2021 US patent and its later free availability to developers.
+- Wikipedia, "Apex Legends" (accessed September 2026). Release February 4, 2019; the ping system and its critical reception; EA's 2021 US patent and its free availability to developers (EA's own pledge page was not reachable on 29 September 2026).
+- Electronic Arts Inc., US Patent 11,097,189 B2, "Contextually aware communications system in video games", granted 24 August 2021 (Google Patents). One-button "smart ping" chosen from game state.
 - Wikipedia, "Dark Souls (video game)" (accessed September 2026). 2011 release; messages left for other players using preset phrases.
 - Wikipedia, "Toontown Online" (accessed September 2026). Launch June 2, 2003, closure September 19, 2013; SpeedChat, SpeedChat Plus with a word filter, True Friends codes, parental enablement for players under 13.
 - Final Fantasy XIV Online Wiki (consolegameswiki), "Auto-Translate" (accessed September 2026). Preset phrases shown in each reader's language, in English, Japanese, French and German.

@@ -19,3 +19,18 @@ Everything else in the QA checklist passed or was fixed in place. Fixes include:
 - the w11 potion-storage account;
 - the w14 legal figures;
 - the lab run paths.
+
+## Fact sweep (29 September 2026)
+
+Verified (4):
+- Gianvecchio et al. 2009 (w07): every detail matches the abstract (via OpenAlex). CCS 2009, 9 November 2009, pp. 256-268.
+- Kwon et al. (w10): the author order is now as IEEE deposited it with Crossref (Kwon, Mohaisen, Woo, H. K. Kim, Y. Kim, Lee).
+- EverQuest II 2005 (w11): read in the CNET/ZDNet article (Internet Archive, 2006 snapshot). The fifth-in-24-hours rise, auctions shut, accounts closed and duped platinum removed all match. The $70,000 figure is only a rumour the article mentions, and the lecture keeps "reportedly".
+- Star Wars Galaxies (w11): read in Koster's 30 April 2004 report (mass ban of those "clearly involved", trillions of credits removed from holding accounts and middlemen).
+
+Hedged (2):
+- Steam 15-day hold (w09): RPS (3 March 2016, via the Steam news feed) confirms the March 2016 tightening. The 15 days now reads as reported by Wikipedia and GameSpot. GameSpot is behind a bot check, and archive.org was down.
+- Bungie arbitration award (w14): no court record was found, so it stays "about $4 million", under appeal, per The Verge.
+
+Removed (1):
+- SWG "uninvolved players banned for accepting duped credits": this is not in Koster's report, and Wikipedia no longer says it. w11 now teaches the middlemen reach from the primary source.

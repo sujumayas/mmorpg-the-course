@@ -32,8 +32,8 @@ From Senet to MUDs to live-service worlds: how games evolved, and how to read th
 
 ## Signature worked examples
 
-- The 1983 crash in numbers: shelf supply vs demand chart (verify figures)
-- Timeline explorer: concurrent-user peaks of landmark MMOs (verify each figure)
+- The 1983 crash in numbers: shelf supply vs demand chart (figures verified and cited in GS101 w04)
+- Timeline explorer: concurrent-user peaks of landmark MMOs (figures verified and cited in GS101 w09)
 
 ## Labs
 

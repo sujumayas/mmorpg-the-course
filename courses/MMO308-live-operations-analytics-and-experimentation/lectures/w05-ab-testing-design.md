@@ -246,7 +246,7 @@ Expected output: one filled experiment plan per pair. For step 2, a player-level
 
 ## Sources
 
-- Andersen, E., O'Rourke, E., Liu, Y.-E., Snider, R., Lowdermilk, J., Truong, D., Cooper, S. & Popović, Z. (2012). "The Impact of Tutorials on Games of Varying Complexity." *Proceedings of CHI 2012*, doi:10.1145/2207676.2207687. Eight tutorial designs in Refraction, Hello Worlds and Foldit; over 45,000 players; random assignment of new players; Flash-cache tracking treating returning players as new if they cleared the cache or changed computers; Foldit players on several machines discarded. Read from the authors' PDF, September 2026.
+- Andersen, E., O'Rourke, E., Liu, Y.-E., Snider, R., Lowdermilk, J., Truong, D., Cooper, S. & Popović, Z. (2012). "The Impact of Tutorials on Games of Varying Complexity." *Proceedings of CHI 2012*, doi:10.1145/2207676.2207687 (published 5 May 2012; abstract checked via OpenAlex, September 2026). Eight tutorial designs in Refraction, Hello Worlds and Foldit; over 45,000 players; random assignment of new players; Flash-cache tracking treating returning players as new if they cleared the cache or changed computers; Foldit players on several machines discarded. Read from the authors' PDF, September 2026.
 - Guild Wars 2 Wiki, "Trading Post" (accessed 28 September 2026). The Trading Post lets players from all worlds, NA and EU, trade with each other.
 - Wikipedia, "Eve Online" (accessed 28 September 2026). One universe on the Tranquility cluster for players outside China; Serenity serves China separately; Singularity is a public test server.
 - Kish, L. (1965). *Survey Sampling*. Wiley. The design effect `1 + (m − 1)ρ`.

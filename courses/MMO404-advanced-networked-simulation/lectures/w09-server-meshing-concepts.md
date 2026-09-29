@@ -35,7 +35,7 @@ Meshing solves the problem of week 1 for spread-out players. It is much weaker a
 
 ### The hook
 
-Star Citizen's Alpha 4.0 put 500 players in one shard and spread them across several servers, each responsible for its own locations in two star systems. A natural reading is "more servers, more players, in proportion," and it holds as long as the players spread out over planets and stations. Now ask what happens if all 500 fly to one space station and start shooting. Every server that owns some of them must know about all of them. Where did the gain go?
+Star Citizen's Alpha 4.0 targeted 500 players in one shard and spread them across several servers, each responsible for its own locations in two star systems. A natural reading is "more servers, more players, in proportion," and it holds as long as the players spread out over planets and stations. Now ask what happens if all 500 fly to one space station and start shooting. Every server that owns some of them must know about all of them. Where did the gain go?
 
 ### The model
 
@@ -242,7 +242,7 @@ Expected output: a half-page table (servers, ghost share, layer load) before and
 ## Sources
 
 - Star Citizen Wiki, "Server meshing" (maintained wiki, accessed September 2026). Static and dynamic meshing defined; server meshing live with Alpha 4.0 in December 2024 at 500 players per shard; dynamic meshing still planned.
-- Star Citizen Wiki, "Update:Star Citizen Alpha 4.0.0" (maintained wiki, citing RSI patch notes "Star Citizen Alpha 4.0 Preview"). Release date 19 December 2024; first release of static server meshing; Pyro added beside Stanton; build information lists 500-player shards.
+- Star Citizen Wiki, "Update:Star Citizen Alpha 4.0.0" (maintained wiki, citing RSI patch notes "Star Citizen Alpha 4.0 Preview"). Release date 19 December 2024; first release of static server meshing; Pyro added beside Stanton; build information lists 500-player shards, and the quoted patch notes say "With this initial release we have targeted 500 players total on the shard" (wiki read via its API, September 2026).
 - Star Citizen Wiki, "Replication layer" (maintained wiki, citing "Inside Star Citizen: Dev Diary - Server Meshing", 4 July 2024). Introduced in Alpha 3.18; moved the state of the universe out of the dedicated game servers; clients and servers connect to it; crash recovery without resetting state.
 - Wikipedia, "Improbable (company)" (maintained article, accessed September 2026). SpatialOS open beta February 2017; Worlds Adrift among the first games built on it.
 - Wikipedia, "Worlds Adrift" (maintained article, accessed September 2026). Early access July 2017 on SpatialOS; development ceased 26 July 2019.

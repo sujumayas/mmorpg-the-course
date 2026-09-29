@@ -278,7 +278,7 @@ Expected output: an annotated route map, a table of noticed or not per signpost 
 
 - Gibson, J. J. (1979). *The Ecological Approach to Visual Perception*. Houghton Mifflin. The term "affordance" first appeared in Gibson's 1966 book *The Senses Considered as Perceptual Systems*. Summary checked against Wikipedia, "Affordance."
 - Norman, D. A. (2013). *The Design of Everyday Things* (revised and expanded ed.). Basic Books. Affordances determine possible actions; signifiers communicate where to act. The 1988 edition popularized the design sense of "affordance." Checked against Wikipedia, "Affordance."
-- Totten, C. W. (2019). *An Architectural Approach to Level Design* (2nd ed.). CRC Press. Chapter 5, "Symbols as Guides," "Contrast," "Framing," "Rule of Thirds."
+- Totten, C. W. (2019). *An Architectural Approach to Level Design* (2nd ed.). CRC Press. Chapter 5, "Communicating through Environment Art" (doi:10.1201/9781351116305-5, checked on Crossref, September 2026); section titles "Symbols as Guides," "Contrast," "Framing," "Rule of Thirds" not checked against the book.
 - Wikipedia, "Yellow paint in video games" (accessed September 2026). The yellow paint debate; Uncharted cited by IGN's Vikki Blake as an early example; The Stanley Parable (2013); Resident Evil 4 remake (2023) and Final Fantasy VII Rebirth (2024) in the debate; the "No More Yellow Paint" mod for Rebirth; Kotaku's 2024 summary of the trade-off; the "Shut Up Aloy" mod for Horizon Forbidden West.
 - Wikipedia, "Mirror's Edge." Runner Vision turns certain objects bold red to mark paths and escape routes. DICE, 2008.
 - Wikipedia, "Horizon Forbidden West." Aloy's Focus highlights climbable surfaces; critics' remarks on frequent spoken puzzle hints. Guerrilla Games, 2022.

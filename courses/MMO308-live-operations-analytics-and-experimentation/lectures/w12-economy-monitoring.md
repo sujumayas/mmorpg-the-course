@@ -37,11 +37,11 @@ The two failures trade against each other. A more sensitive rule catches leaks s
 
 ### The hook
 
-In April 2004, Raph Koster published a live server report for Star Wars Galaxies players about the game's economy. He showed the daily flow of credits into the game and noted that it rose and fell with how many people were playing, which varied by day of the week. He also explained how the team had found a duplication bug. For a while the game had run at a deficit, with more credits leaving through sinks than entering through faucets. Yet players weren't running short of money. Nobody went broke. The team concluded that counterfeit credits were entering by a path they weren't logging, went looking, found the dupe, banned many of the players involved, and removed trillions of credits.
+In April 2004, Raph Koster published a live server report for Star Wars Galaxies players about the game's economy. He showed the daily flow of credits into the game and noted that it rose and fell with how many people were playing, which varied by day of the week. He also explained how the team had found a duplication bug. By his account, for a while the game had run at a deficit, with more credits leaving through sinks than entering through faucets. Yet players weren't running short of money. Nobody went broke. The team concluded that counterfeit credits were entering by a path they weren't logging, went looking, found the dupe, banned many of the players involved, and removed trillions of credits.
 
 No alarm caught it. People did, by noticing over weeks that two numbers disagreed.
 
-Compare Old School RuneScape on 12 July 2018. An update introduced a bug that turned stacks of items into 2,147,483,647 coins, the largest amount a stack can hold. Jagex took the game offline, fixed it, and rolled back to the time of the update, so players lost up to 20 minutes of progress. That anomaly was enormous from the first minute. Any rule would have caught it.
+Compare Old School RuneScape on 12 July 2018. An update introduced a bug that turned stacks of items into 2,147,483,647 coins, the largest amount a stack can hold. Jagex took the game offline, fixed it, and rolled back to about the time of the update, so players lost what they had done since it went live (the OSRS Wiki puts the gap at about 20 minutes). That anomaly was enormous from the first minute. Any rule would have caught it.
 
 Spikes are easy. Leaks are hard, because each day's excess is smaller than the ordinary Saturday bump. So how do you build an alarm that ignores Saturdays and still catches a leak worth a few percent a day?
 
@@ -312,8 +312,9 @@ Expected output: the `z` column, the CUSUM column with the alarm day circled, an
 
 ## Sources
 
-- Koster, R. (2004, 30 April). "Economy Stats." Star Wars Galaxies live server report, retrieved from the Internet Archive copy of simbaspaws.org, September 2026. Faucet inflow varying by day of the week; a period of deficit with no shortage of money; the dupe found, many players banned and trillions of credits removed; monitoring of large individual wealth changes.
-- Old School RuneScape Wiki, "Rollback" (accessed September 2026). The coin pouch glitch of 12 July 2018: stackable items became 2,147,483,647 coins, servers offline for about six hours, rollback to the time of the update with up to 20 minutes of progress lost.
+- Koster, R. (2004, 30 April). "Economy Stats." Star Wars Galaxies live server report, read by the author from the Internet Archive copy of simbaspaws.org, September 2026; a re-check in the September 2026 fact sweep failed because the Internet Archive was offline, so the lecture reports it as Koster's account. Faucet inflow varying by day of the week; a period of deficit with no shortage of money; the dupe found, many players banned and trillions of credits removed; monitoring of large individual wealth changes.
+- Jagex, "Old School RuneScape Status Update" (Old School RuneScape news, 12 July 2018, read September 2026). Game offline after the weekly update; stacks of other items converted to 2.1b coins by faulty coin-pouch death logic; rollback to the approximate time of the update (11.30am BST); back online at the 18:11 update. https://secure.runescape.com/m=news/old-school-runescape-status-update?oldschool=1
+- Old School RuneScape Wiki, "Coin pouch glitch" (accessed September 2026). Stacks became 2,147,483,647 coins; servers taken offline about 20 minutes after the update went live.
 - Page, E. S. (1954). "Continuous Inspection Schemes." *Biometrika* 41(1-2), 100-115. doi:10.1093/biomet/41.1-2.100.
 - NIST/SEMATECH *e-Handbook of Statistical Methods*, section 6.3.2.3, "CUSUM Control Charts" (accessed September 2026). CUSUM more efficient than Shewhart charts for shifts of about 2σ or less.
 - Hutwagner, L., Thompson, W., Seeman, G. M. & Treadwell, T. (2003). "The bioterrorism preparedness and response Early Aberration Reporting System (EARS)." *Journal of Urban Health* 80(Suppl. 1), i89-i96. doi:10.1007/PL00022319. Method summary (C1, C2, C3 of increasing sensitivity, for short baselines) from a 2025 comparison study on PubMed Central (PMC12641150).

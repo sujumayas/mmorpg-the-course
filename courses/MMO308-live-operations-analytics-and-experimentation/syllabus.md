@@ -24,7 +24,7 @@ Running a world after launch: KPIs, cohorts, retention, A/B tests, patches and e
 | 8 | Event design and calendars | [lecture](lectures/w08-event-design-and-calendars.md) | [event-pull-forward](examples/w08-event-pull-forward.html) |
 | 9 | Patch management and hotfixes | [lecture](lectures/w09-patch-management-and-hotfixes.md) | [staged-rollout](examples/w09-staged-rollout.html) |
 | 10 | Player feedback loops: forums, surveys, polls | [lecture](lectures/w10-player-feedback-loops-forums-surveys-polls.md) | [who-gets-asked](examples/w10-who-gets-asked.html) |
-| 11 | Community-voted design (Old School RuneScape polls — verify thresholds) | [lecture](lectures/w11-community-voted-design-old-school-runescape-polls.md) | [poll-threshold](examples/w11-poll-threshold.html) |
+| 11 | Community-voted design (Old School RuneScape polls, 75% to 70% threshold, Oct 2022) | [lecture](lectures/w11-community-voted-design-old-school-runescape-polls.md) | [poll-threshold](examples/w11-poll-threshold.html) |
 | 12 | Economy monitoring | [lecture](lectures/w12-economy-monitoring.md) | [faucet-alarm](examples/w12-faucet-alarm.html) |
 | 13 | Incident response | [lecture](lectures/w13-incident-response.md) | [revert-or-fix](examples/w13-revert-or-fix.html) |
 | 14 | Sunsetting content and servers | [lecture](lectures/w14-sunsetting-content-and-servers.md) | [sunset-forecast](examples/w14-sunset-forecast.html) |

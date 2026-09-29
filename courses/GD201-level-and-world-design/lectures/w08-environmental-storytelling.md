@@ -235,7 +235,7 @@ Expected output: a floor plan, a table of four clues with tiers and `p`, the und
 - Smith, H. & Worch, M. (2010). "What Happened Here? Environmental Storytelling." Game Developers Conference 2010, GDC Vault (Arkane Studios and LucasArts). Cited for its title and subject.
 - Wikipedia, "Gone Home" (accessed September 2026), development section. No other characters on screen; the team's BioShock 2: Minerva's Den background and its audio logs that players seek out; the recognition that not every player finds every clue, so each thread is understandable without every element; the recently-moved family chosen so key objects stand out.
 - Wikipedia, "Portal (video game)" (accessed September 2026). GLaDOS directs and taunts the player; the backstage maintenance areas with graffiti including "the cake is a lie"; the dropped introduction of the Rat Man character to avoid too much narrative.
-- Totten, C. (2019). *An Architectural Approach to Level Design* (2nd ed.). A K Peters/CRC Press. Chapter 9.
+- Totten, C. (2019). *An Architectural Approach to Level Design* (2nd ed.). A K Peters/CRC Press. Chapter 9 (doi:10.1201/9781351116305-9; title checked on Crossref, September 2026).
 
 ## Interactive spec: examples/w08-clue-reliability.html
 

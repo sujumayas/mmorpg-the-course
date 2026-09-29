@@ -26,7 +26,7 @@ id Software's Wolfenstein 3D (May 1992) and Doom (December 1993) looked three-di
 
 A **polygon** is a flat shape, almost always a triangle, defined by its corners in 3D space. A **true 3D** engine builds everything (walls, floors, characters) from polygons and can draw them from any angle. id's Quake (June 1996) was the landmark on PC. Its engine used polygonal models instead of sprites and full 3D levels instead of a 2.5D map.
 
-Consoles moved at the same time. Sony's PlayStation launched in Japan on 3 December 1994 with a dedicated chip for 3D geometry. Nintendo's Nintendo 64 followed in Japan on 23 June 1996, with an analog stick designed for moving in 3D, launching alongside Super Mario 64. On PC, 3dfx sent its Voodoo Graphics 3D chip to manufacturing in November 1995. When id released GLQuake in January 1997, a version of Quake that used 3D acceleration cards, the Voodoo was the only consumer card at the time that ran it well.
+Consoles moved at the same time. Sony's PlayStation launched in Japan on 3 December 1994 with a dedicated chip for 3D geometry. Nintendo's Nintendo 64 followed in Japan on 23 June 1996, with an analog stick designed for moving in 3D, launching alongside Super Mario 64. On PC, 3dfx's Voodoo Graphics 3D chip went to manufacturing in November 1995, according to a trade-press report of that month cited by Wikipedia. When id put out a preliminary release of GLQuake on 22 January 1997, a version of Quake that used 3D acceleration cards, the Voodoo was the only consumer card at the time that ran it well.
 
 ### Vocabulary for this week
 
@@ -66,7 +66,7 @@ The last step comes from the area of a circular sector, `(θ/2) × d²`. That sq
 
 ### A spec-sheet number, read carefully
 
-Sony's published figures for the original PlayStation give 360,000 flat-shaded polygons per second and 180,000 texture-mapped polygons per second. Those are what the spec sheet shows. They are not what any given game computes. Real games draw textured, lit polygons, and they share the machine with everything else. So we will take `R = 180,000` and set `e = 0.5`, a round assumption, not a measured value. With the interactive you can change it.
+The spec figures reported for the original PlayStation in 1994 (GamePro, as cited by Wikipedia) give 360,000 flat-shaded polygons per second and 180,000 texture-mapped polygons per second. Those are what the spec sheet shows. They are not what any given game computes. Real games draw textured, lit polygons, and they share the machine with everything else. So we will take `R = 180,000` and set `e = 0.5`, a round assumption, not a measured value. With the interactive you can change it.
 
 ### Numbers you can check
 
@@ -102,7 +102,7 @@ The interactive has two linked views. The left view is a top-down map: the playe
 
 Now read three games as solutions to the same equation.
 
-**Turok: Dinosaur Hunter (Iguana Entertainment, Nintendo 64, 1997).** Dense jungle means a high `ρ`. A first-person view with enemies close to the player means a real fixed cost `C`. The equation says `d` must be small, and the game's answer was heavy distance fog. GameSpot's March 1997 review noted that the frame rate dropped when more than a few enemies were on screen, and that the fog was there to reduce the slowdown. That is the fixed cost `C` and the scenery budget fighting over the same `P`.
+**Turok: Dinosaur Hunter (Iguana Entertainment, Nintendo 64, 1997).** Dense jungle means a high `ρ`. A first-person view with enemies close to the player means a real fixed cost `C`. The equation says `d` must be small, and the game's answer was heavy distance fog. GameSpot's March 1997 review noted that the frame rate fell to "three or four frames per second" when many enemies were on screen, and that the mist, which kept visibility to about 25 yards, kept the on-screen polygon count down. That is the fixed cost `C` and the scenery budget fighting over the same `P`.
 
 **Silent Hill (Konami, PlayStation, 1999).** The same PlayStation budget, a detailed town (high `ρ`), and a third-person camera. Konami used fog and darkness to hide pop-in and the hardware's limits, and turned the short `d` into the game's mood. The constraint did not change. What Konami decided to make of it did. You can hear the difference in the reviews: Edge treated it as a design achievement, not a workaround.
 
@@ -216,13 +216,15 @@ Expected output: a trace log of at least five entries, one set of model values w
 ## Sources
 
 - Wikipedia, "Wolfenstein 3D" and "Doom (1993 video game)", accessed September 2026. Release dates of 5 May 1992 and 10 December 1993.
-- Wikipedia, "Quake (video game)", accessed September 2026. June 1996 release; polygonal models and full 3D levels instead of a 2.5D map; GLQuake beta on 22 January 1997 and the Voodoo as the only consumer card that ran it well.
-- Wikipedia, "3dfx", accessed September 2026. Voodoo Graphics chip released to manufacturing on 6 November 1995.
+- Wikipedia, "Quake (video game)", accessed September 2026. June 1996 release; polygonal models and full 3D levels instead of a 2.5D map; the Voodoo as the only consumer card that ran GLQuake well.
+- Carmack, J., .plan entry for 22 January 1997 (John Carmack .plan archive, github.com/ESWAT/john-carmack-plan-archive, by_year/johnc_plan_1997.txt, read September 2026). "A preliminary release of glquake and the 3dfx driver has been put on our ftp site."
+- Wikipedia, "3dfx", accessed September 2026. Voodoo Graphics chip released to manufacturing on 6 November 1995, citing Electronic News 41(2090), 6 November 1995, p. 84 (not seen; archive.org copy needs a login).
 - Wikipedia, "PlayStation (console)", accessed September 2026. Japanese launch on 3 December 1994.
-- Wikipedia, "PlayStation technical specifications", accessed September 2026. 360,000 flat-shaded polygons per second (citing GamePro no. 72, September 1994) and 180,000 texture-mapped polygons per second. These are manufacturer peak figures, not measured in-game rates.
+- Wikipedia, "PlayStation technical specifications", accessed September 2026. 360,000 flat-shaded polygons per second (citing GamePro no. 72, September 1994; not seen) and 180,000 texture-mapped polygons per second. These are manufacturer peak figures, not measured in-game rates.
 - Wikipedia, "Nintendo 64", accessed September 2026. Japanese launch on 23 June 1996.
 - Wikipedia, "Super Mario 64", accessed September 2026. Development starting with the camera system, the Lakitu camera, analog control, and the mixed reviews of the camera in Next Generation and Electronic Gaming Monthly.
-- Wikipedia, "Turok: Dinosaur Hunter", accessed September 2026. North American release on 4 March 1997; distance fog to reduce slowdown; Jeff Gerstmann's GameSpot review (4 March 1997) on slowdown with several enemies, fog used to reduce it, and enemies emerging from the mist.
+- Wikipedia, "Turok: Dinosaur Hunter", accessed September 2026. North American release on 4 March 1997; distance fog to reduce slowdown (Wikipedia's reading).
+- Gerstmann, J., "Turok: Dinosaur Hunter Review", GameSpot, 4 March 1997 (archived August 2015, read September 2026). Frame rate of "three or four frames per second" when many enemies are on screen; mist keeps visibility to "around 25 yards"; monsters "emerge from the mist fangs first"; the mist "conceals the N64's limitations by keeping the onscreen polygon count lower".
 - Konami of America press release, 23 February 1999 (konami.com/news/press/99/pr-990223.html, archived at web.archive.org/web/19990502204654/). North American release of Silent Hill, February 1999.
 - Wikipedia, "Silent Hill (video game)", accessed September 2026. North American release in February 1999 (Japan in March); fog and darkness used to hide hardware limits and pop-in; Edge's Gameplay Innovation runner-up citation.
 - Wikipedia, "Distance fog", accessed September 2026. Fogging as a response to limited processing power in mid-to-late 1990s games.

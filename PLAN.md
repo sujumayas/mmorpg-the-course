@@ -1280,7 +1280,7 @@ Running a world after launch: KPIs, cohorts, retention, A/B tests, patches and e
 8. Event design and calendars
 9. Patch management and hotfixes
 10. Player feedback loops: forums, surveys, polls
-11. Community-voted design (Old School RuneScape polls — verify thresholds)
+11. Community-voted design (Old School RuneScape polls, 75% to 70% threshold, Oct 2022)
 12. Economy monitoring
 13. Incident response
 14. Sunsetting content and servers
@@ -1648,7 +1648,7 @@ Why MMO launches fail and how some recover: case-based course on launches, relau
 3. Beta strategies
 4. Case: Final Fantasy XIV 1.0 to A Realm Reborn
 5. Case: Star Wars Galaxies and the NGE
-6. Case: Duplication exploits after launch (New World 2021, verify)
+6. Case: Duplication exploits after launch (New World 2021)
 7. Case: Classic/legacy servers
 8. Case: EVE's large-scale events
 9. Communication during crises

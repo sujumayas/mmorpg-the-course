@@ -26,3 +26,9 @@ Review date 2026-09-28. Everything fixed during the review is already in the lec
 - **File:** `lectures/w06-dictionaries-item-databases.md`, timing table.
 - **Problem:** the times are from an Apple M4 Pro with Python 3.13.5. A rerun in this review gave 265 µs for the 10,000-record list against 260 µs in the table. The shape matches and the numbers are close.
 - **Fix:** none needed. The review added a `timeit` snippet so students can reproduce the table, and the Sources line now points to it.
+
+## Fact sweep (29 September 2026)
+
+- No open unverified facts were listed for CS101, and no "(verify" markers remain.
+- Verified: 0. Hedged: 0. Removed: 0.
+- Background dates cited to Wikipedia (Space Invaders, Pac-Man level 256, Donkey Kong level 22, Nuclear Gandhi) were left as cited. Each is attributed in the text or Sources.

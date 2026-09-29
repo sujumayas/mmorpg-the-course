@@ -24,7 +24,7 @@ In week 4 you saw a closed platform. A console maker decides which cartridges or
 
 **Mouse and keyboard.** A mouse lets you point at any spot on the screen at once. A gamepad makes you walk a cursor there. Genres that need many precise selections per minute, like real-time strategy, grew up on the PC because the input device suited them.
 
-**Distribution over wires.** Before broadband, bulletin board systems and early internet sites let players copy files freely. id Software used this deliberately. At midnight on 10 December 1993, the team uploaded the first episode of Doom as shareware, free to copy, and sold the other two episodes directly. Shareware turned players into the distribution network.
+**Distribution over wires.** Before broadband, bulletin board systems and early internet sites let players copy files freely. id Software used this deliberately. On 10 December 1993, the team uploaded the first episode of Doom as shareware to a University of Wisconsin FTP server, free to copy, and sold the other two episodes directly. Shareware turned players into the distribution network.
 
 The same wires carried something else back the other way. Players did not only download games. They uploaded new levels, new rules and eventually whole new games built inside old ones. That is the modding scene, and it is the subject of the worked example.
 
@@ -33,7 +33,7 @@ The same wires carried something else back the other way. Players did not only d
 - A **host game** is the commercial game a mod runs inside.
 - A **mod** (modification) is player-made content that changes a host game. A **map** or **level** changes only the space. A **total conversion** replaces rules, art and setting while keeping the host's engine.
 - An **engine** is the reusable code that draws the screen, runs physics and handles input.
-- **Tools** are what a developer releases so players can make mods. That can be a level editor (Warcraft III shipped with its World Editor), a software development kit or SDK (Valve released the Half-Life SDK on 7 April 1999), or a scripting language (Quake's QuakeC).
+- **Tools** are what a developer releases so players can make mods. That can be a level editor (Warcraft III shipped with its World Editor), a software development kit or SDK (Valve released the Half-Life SDK in April 1999), or a scripting language (Quake's QuakeC).
 - A **standalone** game is a commercial product that no longer needs the host to run.
 
 ## 2. Worked example: the mod pipeline
@@ -79,7 +79,7 @@ Every date below comes from the Sources section. Compute the two lags yourself b
 
 A few notes on the coding, because coding is where historians disagree:
 
-- Team Fortress Classic was released in April 1999 as a free Half-Life mod made by Valve after Valve bought the original team's company in June 1998. It was a studio product, but it still needed Half-Life, so a strict reader would use Valve's standalone Team Fortress 1.5 (2000) and get `L_S = 4`. Either way the case stays third-party, because id Software owned Quake and Valve did not.
+- Team Fortress Classic was released in April 1999 as a free Half-Life mod made by Valve after Valve bought the original team's company in 1998. It was a studio product, but it still needed Half-Life, so a strict reader would use Valve's standalone Team Fortress 1.5 (2000) and get `L_S = 4`. Either way the case stays third-party, because id Software owned Quake and Valve did not.
 - Counter-Strike is host-owned because Valve, which made Half-Life, acquired the mod's rights and released the retail game on 9 November 2000.
 - DayZ is host-owned because Bohemia Interactive, which made Arma 2, hired the mod's designer, Dean Hall, and announced the standalone on 7 August 2012.
 - Brendan Greene's battle royale mod is dated "around 2013" in the sources. Using 2013 is a choice. Write it down when you make choices like this.
@@ -91,7 +91,7 @@ Now group the commercial lag `L_S` by owner:
 | host-owned | Counter-Strike, DayZ | 1, 1 | 1 year |
 | third-party | Team Fortress, League, Dota 2, PUBG | 3, 6, 10, 4 | 5 years |
 
-And look at the tool lag `L_M`. All six mods reached the public within four years of the host, and four of them within a year. Counter-Strike's first beta came out on 18 June 1999, about ten weeks after the Half-Life SDK was released on 7 April 1999. Tools arrive, mods follow fast.
+And look at the tool lag `L_M`. All six mods reached the public within four years of the host, and four of them within a year. Counter-Strike's first beta came out on 18 June 1999, a few months after Valve released the Half-Life SDK in April 1999. Tools arrive, mods follow fast.
 
 ### A visual you can move
 
@@ -109,7 +109,7 @@ A third party has neither. Riot Games had to build a new game for League of Lege
 
 The pipeline model is not only about famous genres. Rewrite these other cases in the same form and you will see the same two forces, tools and ownership.
 
-**Doom (id Software, December 1993).** Doom stored its levels and graphics in WAD files, separate from the engine, because John Carmack wanted fans to be able to modify the game. id released no editing instructions, yet players built the first full level editor, the Doom Editor Utility, on 26 January 1994, and the first custom level followed in March. That is a tool lag of about three months, even without official tools, because the data format was deliberately open. It is the lower bound for `L_M` in this era.
+**Doom (id Software, December 1993).** Doom stored its levels and graphics in WAD files, separate from the engine, because John Carmack wanted fans to be able to modify the game. id released no editing instructions, yet players built their own level editor. Wikipedia's history of Doom modding dates the first public Doom Editor Utility to 26 January 1994 and the first custom level to March; no primary record of those dates was reachable. On those dates, the tool lag is about three months, even without official tools, because the data format was deliberately open. It is the lower bound for `L_M` in this era.
 
 **Aeon of Strife to DotA (StarCraft custom map to Warcraft III map).** DotA itself was not the first step. Its first author, Eul, took inspiration from Aeon of Strife, a StarCraft custom map, and rebuilt the idea with the more capable Warcraft III World Editor in 2003. So DotA is a mod of an idea that already lived in another host. Pipelines chain. When you see a genre "invented" by one game, look one step upstream.
 
@@ -212,13 +212,16 @@ Expected output: one table row with three sourced dates, two lags, an owner code
 ## Sources
 
 - Wikipedia, "SimCity (1989 video game)", accessed September 2026. February 1989 release, publishers' refusals, Broderbund's distribution and suggested scenarios, 500,000 home-computer sales, the Raid on Bungeling Bay level-editor origin, the SimCity Terrain Editor add-on.
-- Wikipedia, "Doom (1993 video game)" and "Doom modding", accessed September 2026. Shareware upload at midnight on 10 December 1993, WAD files and Carmack's intent, Doom Editor Utility on 26 January 1994, first custom level in March 1994.
+- Doom Wiki, "Doom" (doomwiki.org, archived 14 January 2026, read September 2026). First release on 10 December 1993 as a shareware upload to an FTP server at the University of Wisconsin.
+- Wikipedia, "Doom (1993 video game)" and "Doom modding", accessed September 2026. WAD files and Carmack's intent; Doom Editor Utility on 26 January 1994 and first custom level in March 1994 (Wikipedia only; the Doom Wiki page on DEU was unreachable).
 - Wikipedia, "Civilization (video game)", accessed September 2026. September 1991 release by MicroProse, designers Meier and Shelley, 1.5 million copies, role in establishing 4X.
 - Wikipedia, "Dune II", "Warcraft: Orcs & Humans", "Command & Conquer (1995 video game)" and "StarCraft (video game)", accessed September 2026. Release dates and Dune II's template (harvesting, technology tree).
 - Wikipedia, "Quake (video game)", accessed September 2026. June 1996 release, QuakeC and its role in popularizing mods.
-- Wikipedia, "Team Fortress Classic", accessed September 2026. Team Fortress as a 1996 Quake mod, Valve's June 1998 acquisition of TF Software, April 1999 release, Team Fortress 1.5 in 2000.
-- Wikipedia, "Counter-Strike (video game)" and "Half-Life (video game)", accessed September 2026. Half-Life on 19 November 1998, Half-Life SDK on 7 April 1999, first Counter-Strike beta on 18 June 1999, Valve's acquisition of the rights, retail release on 9 November 2000.
-- Wikipedia, "Defense of the Ancients", "Warcraft III: Reign of Chaos", "League of Legends" and "Dota 2", accessed September 2026. Warcraft III on 3 July 2002 with World Editor, Eul's 2003 map, Aeon of Strife inspiration, Feak joining Riot, Valve's 2009 acquisition of DotA rights and hiring of IceFrog in October 2009, League of Legends on 27 October 2009, Dota 2 on 9 July 2013.
+- Wikipedia, "Team Fortress Classic", accessed September 2026. Team Fortress as a 1996 Quake mod, Valve's 1998 acquisition of TF Software (Wikipedia gives June 1998), April 1999 release, Team Fortress 1.5 in 2000.
+- Wikipedia, "Counter-Strike (video game)" and "Half-Life (video game)", accessed September 2026. Half-Life on 19 November 1998, Half-Life SDK on 7 April 1999 (Wikipedia only; the lecture gives the month), Valve's acquisition of the rights, retail release on 9 November 2000.
+- Jensen, J., "Counter-Strike Year 1", CS-Nation (csnation.counter-strike.net, archived 15 August 2000, read September 2026), page 2. Beta 1 released "June 18th, 1999 8:06 PM Pacific Time", "a few short months after the Half-Life SDK was released".
+- Wikipedia, "Defense of the Ancients", "Warcraft III: Reign of Chaos", "League of Legends" and "Dota 2", accessed September 2026. Warcraft III on 3 July 2002 with World Editor, Eul's 2003 map, Aeon of Strife inspiration, Feak joining Riot, Valve's 2009 acquisition of DotA rights, League of Legends on 27 October 2009 (Wikipedia only; the lecture relies on the year), Dota 2 on 9 July 2013.
+- O'Connor, A., "DotA Dev Joins Valve, Hints at Future Game", Shacknews, 5 October 2009 (archived April 2012, read September 2026). IceFrog announces he is leading a team at Valve.
 - Wikipedia, "Arma 2", "DayZ (video game mod)" and "DayZ (video game)", accessed September 2026. Arma 2 in May to July 2009 by region, DayZ mod reaching one million players by August 2012, standalone announced 7 August 2012, early access on 16 December 2013.
 - Wikipedia, "PUBG: Battlegrounds", accessed September 2026. Greene's DayZ: Battle Royale mod around 2013, H1Z1 consultancy, early access in March 2017, full release December 2017.
 - Primary release records on Steam (store.steampowered.com, and the Steam news feed for each app, accessed September 2026). Dota 2 (app 570) release date 9 July 2013. DayZ (app 221100) Steam announcement "DayZ is now live" and "Now Available on Steam Early Access," 16 December 2013. PUBG (app 578080) announcements "Early Access is now available!" and "Early Access Launch Day Patch Notes!", 23 March 2017. Half-Life (app 70) release date 19 November 1998. Steam lists Counter-Strike (app 10) as 1 November 2000; the retail boxed release by Sierra is dated 9 November 2000 in the Wikipedia article. Both fall in 2000, so the year coding does not change.

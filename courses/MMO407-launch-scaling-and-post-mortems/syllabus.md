@@ -18,7 +18,7 @@ Why MMO launches fail and how some recover: case-based course on launches, relau
 | 3 | Beta strategies | [lecture](lectures/w03-beta-strategies.md) | [beta-exposure](examples/w03-beta-exposure.html) |
 | 4 | Case: Final Fantasy XIV 1.0 to A Realm Reborn | [lecture](lectures/w04-case-ffxiv-1-0-to-a-realm-reborn.md) | [patch-or-rebuild](examples/w04-patch-or-rebuild.html) |
 | 5 | Case: Star Wars Galaxies and the NGE | [lecture](lectures/w05-case-star-wars-galaxies-and-the-nge.md) | [redesign-break-even](examples/w05-redesign-break-even.html) |
-| 6 | Case: Duplication exploits after launch (New World 2021, verify) | [lecture](lectures/w06-case-duplication-exploits-after-launch-new-world-2021.md) | [exploit-discovery-curve](examples/w06-exploit-discovery-curve.html) |
+| 6 | Case: Duplication exploits after launch (New World 2021) | [lecture](lectures/w06-case-duplication-exploits-after-launch-new-world-2021.md) | [exploit-discovery-curve](examples/w06-exploit-discovery-curve.html) |
 | 7 | Case: Classic/legacy servers | [lecture](lectures/w07-classic-and-legacy-servers.md) | [faction-tipping](examples/w07-faction-tipping.html) |
 | 8 | Case: EVE's large-scale events | [lecture](lectures/w08-eve-large-scale-events.md) | [battle-escalation](examples/w08-battle-escalation.html) |
 | 9 | Communication during crises | [lecture](lectures/w09-communication-during-crises.md) | [eta-announcer](examples/w09-eta-announcer.html) |

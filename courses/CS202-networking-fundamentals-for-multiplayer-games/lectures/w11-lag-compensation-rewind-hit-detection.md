@@ -208,7 +208,7 @@ peeker's advantage = RTT + server buffering + client buffering
 Riot's example assumes two frames of server buffering (half a frame waiting to be queued, half a frame of network buffering, one frame to apply and send the move) and three frames on the client (the same, except a full frame of network buffering, plus half a frame of render delay). With 128 tick servers, a 35 ms round trip and a 60 FPS client:
 
 ```
-35 + 2 × (1000 / 128) + 3 × (1000 / 60) = 35 + 15.6 + 50.0 = 100.6 ms       (Riot: about 101 ms)
+35 + 2 × (1000 / 128) + 3 × (1000 / 60) = 35 + 15.6 + 50.0 = 100.6 ms       (Riot: ~141 ms baseline minus ~40 ms)
 ```
 
 At 144 FPS the client term drops to `3 × 6.9 = 20.8` ms and the total to about 71 ms, which is the 49% reduction Riot reports against its unoptimized baseline.
@@ -271,7 +271,7 @@ Expected output: the three numbers from steps 1 to 3 and a one-paragraph cap pol
 - Valve Software, Source SDK 2013, `src/game/server/player_lagcompensation.cpp` (GitHub, ValveSoftware/source-sdk-2013, master branch, accessed September 2026). `sv_maxunlag` default 1.0 s and history pruned beyond it; target tick is the command's tick count minus the interpolation ticks; fallback to a latency-based target when the two differ by more than 0.2 s; `sv_lagcompensation_teleport_dist` default 64 units.
 - Bernier, Y. W. (2001). "Latency Compensating Methods in Client/Server In-game Protocol Design and Optimization." Game Developers Conference 2001; Valve Developer Community (archived copy of 18 June 2026). The lag compensation algorithm, extra state such as crouching or dead moved back too, the "shot around a corner" case at around 500 ms, the argument from field of view, and projectiles not lag compensated in Half-Life.
 - Gambetta, G. *Fast-Paced Multiplayer*, part IV, "Lag Compensation" (gabrielgambetta.com, accessed September 2026). The client sends the shot's timestamp and aim; the server reconstructs the world as that client saw it; a target can be shot shortly after taking cover, a trade the author judges worth making.
-- deWet, M. & Straily, D. (2020). "Peeking into VALORANT's Netcode." Riot Games technology blog, 28 July 2020. Peeker's advantage as round-trip latency plus buffering on both sides; two frames of server buffering and three of client buffering; 128 tick, 35 ms, 60 FPS gives about 101 ms; 144 FPS gives about 71 ms, a 49% reduction; rewind for hit registration with unpublished limits, and the 500 ms example.
+- deWet, M. & Straily, D. (2020). "Peeking into VALORANT's Netcode." Riot Games technology blog, 28 July 2020. Peeker's advantage as round-trip latency plus buffering on both sides; two frames of server buffering and three of client buffering; a ~141 ms baseline, and 128 tick at 60 FPS "shave off ~40ms (28%)" of it, which is about 101 ms by subtraction (the article does not print 101); 144 FPS gives about 71 ms, a 49% reduction; rewind for hit registration with unpublished limits, and the 500 ms example.
 
 ## Interactive spec: examples/w11-rewind-hit.html
 

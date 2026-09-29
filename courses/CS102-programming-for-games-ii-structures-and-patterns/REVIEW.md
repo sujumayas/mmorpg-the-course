@@ -10,3 +10,9 @@ Reviewer pass, 28 September 2026. Everything listed in the author notes was fixe
 | `labs/lab02/`, `labs/lab03/` | **Done, 28 September 2026.** Lab 02 ships `test_mine.py` (`make("mine")` must not raise, and the mine explodes on the first overlap). Lab 03 ships `test_table_agrees.py` (table and classes agree on the starter materials). Both fail on the starter and pass on reference solutions, run with `.venv/bin/python -m unittest`. Handouts updated. | None. |
 | `labs/lab04.md`, `labs/lab05.md` | **Done, 28 September 2026.** Lab 04 `proximity.py --check` asserts `naive_pairs` and `grid_pairs` agree on hits for uniform and clustered layouts at two radii and for the step 9 mixed-cluster layouts. It exits 1 on the starter (no `cluster_fraction_units`) and 0 on a solution. Handout updated. | None. |
 | `syllabus.md` | Still carries the generated-stub marker (reviewer did not edit it, per instructions). | Hand-finish the syllabus. |
+
+## Fact sweep (29 September 2026)
+
+- No open unverified facts were listed for CS102, and no "(verify" markers remain.
+- Super Mario 64 frame rate: the w11 lecture counts frames and never states a rate, so nothing to fix. The 20/24/30-frame airtimes stay labelled as invented.
+- Verified: 0. Hedged: 0. Removed: 0.

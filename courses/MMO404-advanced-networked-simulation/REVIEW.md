@@ -9,3 +9,10 @@ Items the September 2026 review could not fix inside its scope.
 | `lectures/w04-replication-prioritization-and-relevancy.md` | The Tribes networking paper (Frohnmayer and Gift) is cited without a GDC date. No dated source was found. | Find the GDC proceedings year, or keep the paper cited as undated. |
 | `lectures/w09`, `lectures/w03` | Star Citizen "about 100 players per server before Alpha 4.0" could not be verified. The lectures do not depend on it. | Verify against a Cloud Imperium source, or leave it out. |
 | `lectures/w06-massive-battles.md`, `lectures/w08`, `lectures/w10` | Week 6 now links CS202 week 12 for lockstep and Age of Empires. Weeks 8 and 10 also open their hooks by recalling Age of Empires. Each week's worked example is different (fan-out, lookahead, consistency), but students meet the same case three times. | Consider a different opening case for week 10, for example a shooter's client prediction first. |
+
+## Fact sweep (29 September 2026)
+
+- Tribes paper date: still undated. The lectures already cite it as undated, written while Tribes II was in development (hedged, no change needed).
+- Star Citizen "about 100 players per server before 4.0": no longer in any lecture (removed earlier).
+- Verified (1): the Alpha 4.0 shard size. The Star Citizen wiki API quotes RSI's patch notes, "targeted 500 players total on the shard", dated 19 December 2024. w02 and w09 now say "target of 500" and "targeted 500".
+- Verified: 1. Hedged: 1. Removed: 0 in this sweep.

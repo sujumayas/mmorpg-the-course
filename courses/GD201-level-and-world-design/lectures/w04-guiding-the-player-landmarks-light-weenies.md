@@ -34,7 +34,7 @@ This lecture is about the last one, plus light, which is how you make any of the
 
 Walt Disney's designers had a name for a landmark whose job is to pull people toward it. They called it a **weenie**, after the hot dog you wave in front of a dog to get it to follow you. Cinderella Castle at the Magic Kingdom in Florida is the textbook case. It stands at the end of Main Street, U.S.A., and it was conceived as the main weenie that draws guests from the entrance, up the street, to the central hub from which every other area of the park can be reached.
 
-The weenie gives you a direction and a reason to keep walking from the moment you enter. Totten brings the term into level design in today's reading. A weenie is a landmark with a job, placed to pull players along the route you want and sized so they can see it from where they start.
+The weenie gives you a direction and a reason to keep walking from the moment you enter. Totten brings the term into level design. A weenie is a landmark with a job, placed to pull players along the route you want and sized so they can see it from where they start.
 
 That second condition is where designers go wrong. "Visible" is not a feeling. It is a number of pixels, and you can compute it.
 
@@ -301,7 +301,7 @@ Expected output: two measured `f_min` values, a weenie height at 90° and at 110
 ## Sources
 
 - Lynch, K. (1960). *The Image of the City*. MIT Press. Paths, edges, districts, nodes and landmarks, from studies of Boston, Jersey City and Los Angeles. Summary checked against Wikipedia, "The Image of the City."
-- Totten, C. W. (2019). *An Architectural Approach to Level Design* (2nd ed.). CRC Press. Chapter 4 ("Pathfinding with Architectural Weenies," "Organizing the Sandbox: Kevin Lynch's Image of the City"), chapter 5 (contrast, symbols as guides), chapter 6 (shade and shadow). Table of contents checked on the publisher's page, Routledge.
+- Totten, C. W. (2019). *An Architectural Approach to Level Design* (2nd ed.). CRC Press. Chapter 4 ("Pathfinding with Architectural Weenies," "Organizing the Sandbox: Kevin Lynch's Image of the City"), chapter 5 (contrast, symbols as guides), chapter 6 (shade and shadow). Chapter numbers checked on Crossref (doi:10.1201/9781351116305-4 to -6); section titles unchecked.
 - Wikipedia, "Cinderella Castle." Height 183 ft (56 m) above water, 189 ft (58 m) including the moat; the castle conceived as the primary "weenie" drawing guests through Main Street, U.S.A.; forced perspective. Magic Kingdom, opened 1971.
 - Wikipedia, "Sleeping Beauty Castle." Height 77 ft (23 m); forced perspective with larger elements at the foundation and smaller ones at the turrets.
 - Wikipedia, "Journey (2012 video game)." The mountain with a glowing crevice seen from the first dune as the game's destination. thatgamecompany, 2012.

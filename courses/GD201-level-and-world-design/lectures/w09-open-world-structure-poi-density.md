@@ -223,7 +223,7 @@ Expected output: a hand-placed map, the four numbers (speed, gap, spacing, count
 - Minecraft Wiki, "Walking" and "Sprinting" (Java Edition). Walking 4.317 m/s (blocks per second), sprinting about 5.612 m/s, 30% faster.
 - Minecraft Wiki, "Structure set" (Java Edition, 1.21 era). Villages use separation 8 and spacing 34 chunks; spacing is the average distance between neighbouring generation attempts and separation the minimum. Minecraft Wiki, "Chunk": a chunk is 16 × 16 blocks.
 - Zelda Wiki, "Sheikah Tower" (*Breath of the Wild*, 2017). Fifteen towers; activating one gives a detailed map of the surrounding area.
-- Totten, C. (2019). *An Architectural Approach to Level Design* (2nd ed.). A K Peters/CRC Press. Chapters 7 and 10.
+- Totten, C. (2019). *An Architectural Approach to Level Design* (2nd ed.). A K Peters/CRC Press. Chapters 7 and 10 (doi:10.1201/9781351116305-7 and -10; titles checked on Crossref, September 2026).
 
 ## Interactive spec: examples/w09-poi-gap.html
 

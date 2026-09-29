@@ -8,7 +8,7 @@
 - Size a per-tick command budget from jitter and packet rate, and compute the largest burst a lag-switching client can get through it.
 - Write a validation checklist (range, rate, state, ownership, reach) for any client message.
 
-**Before class:** Gabriel Gambetta, *Fast-Paced Multiplayer*, part I, "Client-Server Game Architecture" (reread it; this week turns its first rule into numbers). Frohnmayer, M. & Gift, T. (2000), "The TRIBES Engine Networking Model", the overview and the "Move Stream Manager" section (about 10 minutes).
+**Before class:** Gabriel Gambetta, *Fast-Paced Multiplayer*, part I, "Client-Server Game Architecture" (reread it; this week turns its first rule into numbers). Frohnmayer, M. & Gift, T. (undated), "The TRIBES Engine Networking Model", the overview and the "Move Stream Manager" section (about 10 minutes).
 
 **Prerequisites from earlier courses:** [CS102 week 12, the command pattern](../../CS102-programming-for-games-ii-structures-and-patterns/lectures/w12-command-pattern-input-replay-undo.md) (an input as a command object is exactly what a client should send). [CS101 week 9, delta time](../../CS101-programming-for-games-i/lectures/w09-delta-time-and-frame-rate-independence.md) (speed times time step, which a server must check). [CS202 week 2](w02-latency-jitter-loss-measure-your-own.md) (jitter, and why packets bunch up) and [week 3](w03-topologies-peer-to-peer-client-server-relay.md) (topology is separate from authority).
 
@@ -248,7 +248,7 @@ Expected output: the rewritten protocol table with checks, and one number for th
 - Wikipedia, "Battle.net" (accessed September 2026). The original service (launched with *Diablo*, January 1997) stored only account data, so *Diablo* players could modify their game data locally, which led to widespread cheating. Wikipedia, "Diablo II" (accessed September 2026). Open and closed realms. Closed-realm characters stored on Blizzard's servers as a measure against cheating. Open-realm characters stored on players' own drives.
 - Valve, Source SDK 2013, `src/game/server/player.cpp` (GitHub, ValveSoftware/source-sdk-2013, master, accessed September 2026). `sv_maxusrcmdprocessticks` default 24. One tick of credit per server tick in `m_nMovementTicksForUserCmdProcessingRemaining`. The code comment on limiting game-time manipulation to about 0.25 s and on hitching for legitimate users. `src/game/shared/usercmd.h`. Fields of a user command.
 - Valve Developer Community, "Source Multiplayer Networking" (archived copy, 2024). Default server tick of 15 ms.
-- Frohnmayer, M. & Gift, T. (2000). "The TRIBES Engine Networking Model." Dynamix. Moves collected every 32 ms and used as the only means of player-controlled movement. The sliding window of outstanding moves that halts the client when full.
+- Frohnmayer, M. & Gift, T. (undated, written while *Tribes 2* was in development). "The TRIBES Engine Networking Model." Dynamix. Moves collected every 32 ms and used as the only means of player-controlled movement. The sliding window of outstanding moves that halts the client when full.
 - Minecraft Wiki, "Server.properties" (accessed September 2026, Java Edition). `allow-flight=false` kicks players in the air for at least 5 seconds. The wiki's note that descending a little every few seconds avoids the kick.
 - Gambetta, G. *Fast-Paced Multiplayer*, part I, "Client-Server Game Architecture" (gabrielgambetta.com). Don't trust the player. Clients send inputs and the server sends back state.
 

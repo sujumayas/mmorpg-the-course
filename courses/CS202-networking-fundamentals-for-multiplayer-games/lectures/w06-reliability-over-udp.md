@@ -8,7 +8,7 @@
 - Compare redundancy with ack-and-resend on delivery delay, and choose the right one for each message type.
 - Explain why a reliable ordered channel brings head-of-line blocking back, and design channels to contain it.
 
-**Before class:** Glenn Fiedler, "Reliability and Congestion Avoidance over UDP" (Gaffer on Games, 20 October 2008). Frohnmayer, M. & Gift, T. (2000), "The TRIBES Engine Networking Model", the opening list of data classes and the "Move Stream Manager" section. Reread MA102 week 3 on the complement rule.
+**Before class:** Glenn Fiedler, "Reliability and Congestion Avoidance over UDP" (Gaffer on Games, 20 October 2008). Frohnmayer, M. & Gift, T. (undated), "The TRIBES Engine Networking Model", the opening list of data classes and the "Move Stream Manager" section. Reread MA102 week 3 on the complement rule.
 
 **Prerequisites from earlier courses:** [MA102 week 3, the complement rule](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w03-complement-rule-chance-of-at-least-one-drop.md) (the chance that every copy is lost). [MA102 week 7, the geometric distribution](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w07-geometric-distribution-kills-until-the-drop.md) (copies until the first one gets through). [MA102 week 11, Monte Carlo simulation](../../MA102-mathematics-for-games-ii-probability-and-statist/lectures/w11-monte-carlo-simulation.md) (the lab checks a formula against an hour of simulated packets). [CS202 week 1](w01-networks-for-game-devs-tcp-vs-udp.md) (head-of-line blocking and the message table), [week 2](w02-latency-jitter-loss-measure-your-own.md) (bursty loss and `q`), [week 5](w05-serialization-and-bit-packing.md) (packing a header).
 
@@ -28,7 +28,7 @@ The third piece is where games differ from TCP. TCP treats every byte alike. A g
 
 ### Delivery classes
 
-The Tribes networking paper from 2000 sorted all of a game's data into four classes. The list is still the clearest way to think about it.
+The Tribes networking paper, written while *Tribes 2* was in development, sorted all of a game's data into four classes. The list is still the clearest way to think about it.
 
 | Class (Tribes name) | Meaning | Examples |
 |---|---|---|
@@ -73,7 +73,7 @@ When the sender learns a packet was lost, it does not resend that packet. The pa
 
 *Starsiege: Tribes* (1998) sent its players' input moves over UDP. Moves were the only thing that controlled a player's movement, so every one mattered, and they had to arrive quickly. The first version sent every move the server had not yet acknowledged in every packet. That guaranteed delivery. It also set off what the developers called a negative feedback loop. A dropped packet meant more unacknowledged moves, so the next packet was bigger. On a low-bandwidth internet connection, the bigger packet could exceed the connection's bandwidth, which dropped more packets, which made the next one bigger still.
 
-For *Tribes 2*, the design changed, as the 2000 paper describes it, written while *Tribes 2* was still in development. Each move was sent exactly three times, in three consecutive packets. If three packets in a row were lost, the moves unique to them were gone, and the player saw a brief warp. The developers wrote that this handled heavy loss better than the guaranteed version did.
+For *Tribes 2*, the design changed, as the paper describes it. The paper is undated and was written while *Tribes 2* was still in development, so this is the planned design, not a check of the shipped game. Each move was sent exactly three times, in three consecutive packets. If three packets in a row were lost, the moves unique to them were gone, and the player saw a brief warp. The developers wrote that this handled heavy loss better than the guaranteed version did.
 
 *Quake III Arena* (1999) made the same kind of choice with a setting players could change. Its client includes every command since a packet from `cl_packetdup` packets ago, so with the default of 1 each command rides in two consecutive packets. The setting is clamped between 0 and 5.
 
@@ -256,7 +256,7 @@ Expected output: a message table with class and channel, the two lost-per-hour f
 
 ## Sources
 
-- Frohnmayer, M. & Gift, T. (2000). "The TRIBES Engine Networking Model." Dynamix. The four data classes (non-guaranteed, guaranteed, most recent state, guaranteed quickest). Moves collected every 32 ms and sent three times in consecutive packets in the Tribes 2 design. The earlier *Starsiege: Tribes* scheme of sending every move in the window, and the negative feedback loop on low-bandwidth links. Per-connection packet rate and size, with the example of 10 packets per second of 200 bytes on a 28.8 modem.
+- Frohnmayer, M. & Gift, T. (undated). "The TRIBES Engine Networking Model." Dynamix. The paper carries no date or venue; its abstract says the model "is being developed for TRIBES II", so it was written after December 1998 and before *Tribes 2* shipped. Copy at https://www.gamedevs.org/uploads/tribes-networking-model.pdf. The four data classes (non-guaranteed, guaranteed, most recent state, guaranteed quickest). Moves collected every 32 ms and sent three times in consecutive packets in the Tribes 2 design. The earlier *Starsiege: Tribes* scheme of sending every move in the window, and the negative feedback loop on low-bandwidth links. Per-connection packet rate and size, with the example of 10 packets per second of 200 bytes on a 28.8 modem.
 - id Software, *Quake III Arena* client code as maintained in ioquake3, `code/client/cl_input.c`, `code/client/cl_main.c` and `code/qcommon/qcommon.h` (GitHub ioquake/ioq3, main branch, accessed September 2026). `cl_packetdup` default 1, clamped to 0 to 5. Commands resent from `cl_packetdup` packets back. `MAX_PACKET_USERCMDS` 32.
 - Fiedler, G. (2008). "Reliability and Congestion Avoidance over UDP." *Gaffer on Games*, 20 October 2008. 16-bit `sequence_greater_than` with wraparound. `ack` plus a 32-bit ack bitfield confirming 33 packets. Never resending a packet with the same sequence number. Congestion avoidance at 30 and 10 packets per second, a 250 ms RTT threshold, 10% RTT smoothing, and the doubling recovery timer up to 60 seconds.
 - Fiedler, G. (2016). "Reliable Ordered Messages." *Gaffer on Games*, 15 September 2016. Messages included in packets until acked, and only if not sent in the last 0.1 seconds.

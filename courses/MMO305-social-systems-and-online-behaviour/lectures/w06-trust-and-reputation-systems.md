@@ -168,7 +168,7 @@ Friedman and Resnick (2001) studied this exact situation with a game-theory mode
 
 They describe two ways out, both with costs:
 
-- **Entry fees.** Make a new identity cost something. Then newcomers can be trusted up to the value of the fee. A subscription, a box price or a phone number are all entry fees. Overwatch 2 launched in October 2022 requiring SMS phone verification, partly to make throwaway accounts harder to create; Blizzard relaxed the requirement within days for players with older accounts. The fee also keeps out honest players who can't or won't pay it.
+- **Entry fees.** Make a new identity cost something. Then newcomers can be trusted up to the value of the fee. A subscription, a box price or a phone number are all entry fees. Overwatch 2 launched in October 2022 requiring SMS phone verification, partly to make throwaway accounts harder to create. Within days, press reports said Blizzard would drop it for players who had played Overwatch since at least June 2021. The fee also keeps out honest players who can't or won't pay it.
 - **Unreplaceable identities.** Tie reputation to something a player can't easily get more of. Account-level rather than character-level reputation is the game version.
 
 In the model, you have a third lever: **the prior**. Replace `(r + 1) / (r + s + 2)` with
@@ -237,7 +237,7 @@ Expected output: a one-page spec with your three parameters, the numbers from st
 - Final Fantasy XIV Wiki (consolegameswiki), "Player Commendation" and "Mentor System and Novice Network" (current, Dawntrail era). One commendation per duty to a matched party member; not to members of a fully premade party; tanks and healers receive more; Battle Mentor requires 1,500 commendations and 1,000 completed duties among other achievements.
 - League of Legends Wiki, "Honor" (current). Levels 1 to 5 with level 3 neutral; votes for well-behaved players; progression not tied to a fixed vote count; penalties drop the account to level 1 and suspensions lock progression; system launched 2012, reworked in patch V7.13 and consolidated in V25.04.
 - Warcraft Wiki, "Dungeon Finder". Added in patch 3.3.0; groups formed from all realms in a battlegroup; vote-kick with 4 votes needed when 3 or more friends kick a stranger; 30-minute Deserter debuff.
-- Wikipedia, "Overwatch 2" (accessed 2026). SMS phone verification required at launch in October 2022 as an anti-smurfing measure, relaxed within days for accounts active since June 2021.
+- Wikipedia, "Overwatch 2" (accessed 29 September 2026). SMS phone verification required at launch in October 2022 as an anti-smurfing measure (citing Eurogamer, 4 October 2022); dropped by 7 October for players active since June 2021 (citing VG247, 6 October 2022). Blizzard's own announcement and the VG247 article could not be fetched, so the lecture reports this as a press account.
 - Worked-example values computed by the author from the model as stated.
 
 ## Interactive spec: examples/w06-reputation-memory.html

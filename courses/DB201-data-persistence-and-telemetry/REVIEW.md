@@ -21,3 +21,18 @@ Items the course reviewer could not fix inside DB201 (September 2026 review).
 | w12 | Roblox 10-K for 2025: 127 million average DAU and the edge cases of the 24-hour midnight rule | The lecture already says the filing leaves edge cases open; the 127 million figure was not re-fetched. |
 | w13 | Riot privacy notice (28 April 2026) and Blizzard privacy policy (27 June 2025) retention periods | Cited by the author; not re-fetched in this review. |
 | w14 | 3-2-1 backup rule | Given as an unattributed rule of thumb, which is accurate; no attribution needed. |
+
+## Fact sweep (29 September 2026)
+
+Verified (6):
+- Fortnite postmortem: re-read in full from the Internet Archive copy. 9 MongoDB shards with user data on 8, 124k requests/s, 318k reads/s and 132k writes/s, writes queued "in the 40k+ ms range", Memcached 100 ms timeouts, 2018-02-04 18:30 to 20:20 UTC, the call-reduction and bulk fixes. The page is dated 2.8.2018.
+- WoW 12.0.0: registering `COMBAT_LOG_EVENT` or `COMBAT_LOG_EVENT_UNFILTERED` errors (Warcraft Wiki API, build 65655, 28 January 2026). The 11 base parameters also match.
+- GameAnalytics: the 15,000/8,000/4,000 daily limits, the 1 October 2025 null rule, the 1 MB/413/2 MB limits and the resubmit rule. Fixed an error: `v` is the event version, not the game version (w10).
+- Roblox 10-K (EDGAR, filed 11 February 2026): "127 million average DAUs" for 2025.
+- Riot privacy notice (last modified 28 April 2026): 24 hours, 7 days, up to 2 years.
+- Blizzard privacy policy (27 June 2025): photo ID deleted after verification or 30 days, and transcripts deleted after toxicity action.
+
+Hedged (1):
+- Kleppmann's 256 TB: w04 Sources now says the figure was not re-read against the book and matches 500^4 x 4 KB.
+
+Not re-verified, kept as attributed paraphrase: the Kleppmann ch. 7 section names and wording (O'Reilly returns 403). Removed: 0.

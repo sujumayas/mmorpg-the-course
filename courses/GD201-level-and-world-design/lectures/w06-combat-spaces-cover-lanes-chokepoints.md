@@ -253,7 +253,7 @@ Expected output: an annotated arena sketch, a table of choke costs (all-in and s
 - Team Fortress 2 Wiki, "Chokepoint" (current). Definition; chokepoints on payload turns, between control points and on Dustbowl; explosive spam and area denial; Soldier and Demoman advantages.
 - XCOM Wiki (Fandom), "Cover" and "Aim (XCOM: Enemy Unknown)" for XCOM: Enemy Unknown (2012) and Enemy Within; "Cover (XCOM 2)" for XCOM 2 (2016). Chance to hit is aim minus defense plus a range modifier; rookie aim 65; half cover +20 and full cover +40 defense; flanking ignores the cover bonus; cover can be damaged or destroyed.
 - The Level Design Book (Robert Yang and contributors, book.leveldesignbook.com, accessed September 2026). "Cover": Space Invaders (1978), Kill Switch (2003) as the first recognized cover shooter, Gears of War (2006) popularizing the cover system; cover as maneuver, tactic and system. "Map balance": three or four chokepoints, one per lane; the Counter-Strike map de_cache as an example, including its rotation asymmetry.
-- Totten, C. W. (2019). *An Architectural Approach to Level Design* (2nd ed.). CRC Press. Chapter 6, "Prospect and Refuge Spatial Design."
+- Totten, C. W. (2019). *An Architectural Approach to Level Design* (2nd ed.). CRC Press. Chapter 6, "Building Exciting Levels with Dangerous Architecture" (doi:10.1201/9781351116305-6, checked on Crossref, September 2026); the section title "Prospect and Refuge Spatial Design" was not checked against the book.
 
 ## Interactive spec: examples/w06-chokepoint-law.html
 

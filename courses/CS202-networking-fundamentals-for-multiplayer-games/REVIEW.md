@@ -20,3 +20,19 @@ The reviewer fixed everything else in place. These items need a source or a deci
 
 - w01 head-of-line model: with two consecutive losses, the Lab 01 model resends packet `k` after packet `k + 3` arrives, while real TCP would need three duplicate ACKs from `k + 2` to `k + 4`. The lecture labels this a teaching model, and check-yourself question 2 says "the Lab 01 model".
 - w03 and w12 packet and unit sizes are labelled as illustrative assumptions.
+
+## Fact sweep (29 September 2026)
+
+Verified (7):
+- Quake III `msg.c` per-field change bits up to the last changed field, Huffman coding, `PACKET_BACKUP` 32, `sv_fps` default 20 (`sv_init.c`) and `snaps` default 20 (`cl_main.c`). Checked on the id-Software repository. w07 Sources now name the files.
+- Riot's figures, from the 28 July 2020 article: ~141 ms baseline, ~40 ms (28%) saved, ~71 ms at 144 FPS (49%). The article never prints "101". w11 now says 101 ms is the subtraction.
+- Apex Legends 60 players: EA's "About Apex Legends" page ("classic 60-person Battle Royale matches"). It replaces the fan wiki in w13.
+- EVE TiDi dev blog: CCP Veritas, 22 April 2011, read directly. The 10% floor comes from the EVE University wiki, and w13 says so.
+- clumsy 0.3 (released 21 October 2023): `KEEP_AT_MOST 2000` and `FLUSH_WHEN_FULL 800` in `src/lag.c`; drop default 10.0 with inbound and outbound on.
+- Gilbert (1960, BSTJ 39(5):1253-1265) and Elliott (1963, BSTJ 42(5):1977-1997): checked on Crossref. DOIs and pages added in w02 and w14.
+
+Hedged (2):
+- Tribes networking paper: the PDF has no date or venue. The abstract says the model "is being developed for TRIBES II". w04, w06 and w07 now cite it as undated and drop "2000" and "GDC 2000".
+- Tribes 2's move sent three times: w06 now says the paper describes the planned design, not the shipped game.
+
+Unchanged: WoW over TCP was already worded as an inference. Removed: 0.

@@ -8,7 +8,7 @@
 - Convert metrics into body heights to compare the scale of different games and to size your own spaces.
 - Build and run a metrics gym, and use it to correct a model against what the game really does.
 
-**Before class:** The Level Design Book, "Metrics" and "Quake metrics" (book.leveldesignbook.com, the Blockout section). Totten, *An Architectural Approach to Level Design* (2nd ed., 2019), the chapter on scale and proportion. Reread MA101 week 3, section 2, on designing a jump from height and time.
+**Before class:** The Level Design Book, "Metrics" and "Quake metrics" (book.leveldesignbook.com, the Blockout section). Totten, *An Architectural Approach to Level Design* (2nd ed., 2019). Use the index entries for "scale" and "proportion" and read those passages. Reread MA101 week 3, section 2, on designing a jump from height and time.
 
 **Prerequisites from earlier courses:** [MA101 week 3, polynomials and quadratic curves](../../MA101-mathematics-for-games-i-algebra-functions-trigon/lectures/w03-polynomials-and-quadratic-curves.md) (the jump as a parabola, `g = 2h / t_h²`, and the landing window on a ledge). [GD201 week 2, blockout and greyboxing](w02-blockout-and-greyboxing.md) (scale figures, doorway rules and timing the critical path). [GD201 week 7, verticality and navigation](w07-verticality-and-navigation.md) (safe drop height and one-way edges, which this week's metrics let you find). Kinematics in full is [MA201 week 6](../../MA201-linear-algebra-and-physics-for-games/lectures/w06-kinematics-position-velocity-acceleration.md). Here you need only the formulas from MA101.
 

@@ -301,7 +301,7 @@ Expected output: the two page counts from step 1, three `CREATE INDEX` statement
 - id Software, Quake source code (1996 game, GPL source release 1999), `WinQuake/common.c`. `MAX_FILES_IN_PACK 2048`; `COM_FindFile` compares names with `strcmp` in a loop over the pack directory. https://github.com/id-Software/Quake
 - PostgreSQL Global Development Group, *PostgreSQL 18 Documentation*: section 14.1 "Using EXPLAIN" (the `tenk1` example, 345 pages, cost 445); section 19.7.2 "Planner Cost Constants" (`seq_page_cost` 1.0, `random_page_cost` 4.0, `cpu_tuple_cost` 0.01, `cpu_index_tuple_cost` 0.005, `cpu_operator_cost` 0.0025, and the advice to lower `random_page_cost` for cached data); section 66.6 "Database Page Layout" (pages usually 8 kB). https://www.postgresql.org/docs/current/
 - SQLite, "Pragma statements", `page_size` (default 4,096 since 3.12.0, 2016-03-29), and "EXPLAIN QUERY PLAN" (`SCAN` against `SEARCH`, covering indexes). https://www.sqlite.org/pragma.html and https://www.sqlite.org/eqp.html
-- Kleppmann, M. (2017). *Designing Data-Intensive Applications*. O'Reilly. Chapter 3 (B-trees, branching factor, a four-level tree of 4 KB pages with branching factor 500 storing up to 256 TB).
+- Kleppmann, M. (2017). *Designing Data-Intensive Applications*. O'Reilly. Chapter 3 (B-trees, branching factor, the example of a four-level tree of 4 KB pages with branching factor 500). The book's "up to 256 TB" was not re-read against a copy for this course; it matches the arithmetic 500⁴ × 4,096 bytes ≈ 256 × 10¹² bytes.
 - Lab 04 measurements: DB201 lecturer's machine, Apple silicon, macOS, Python 3.13.5, SQLite 3.53.3, September 2026.
 
 ## Interactive spec: examples/w04-index-vs-scan.html

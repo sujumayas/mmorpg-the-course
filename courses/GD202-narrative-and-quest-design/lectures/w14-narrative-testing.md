@@ -37,11 +37,11 @@ The Elder Scrolls V: Skyrim (Bethesda, November 2011) has a murder-mystery quest
 
 Look at the shape of that bug. Each quest works on its own. The failure only exists in the combination "did the Dark Brotherhood contract, then visited Windhelm at night". A tester assigned to Blood on the Ice who played it on a fresh save would never see it. A tester assigned to the Dark Brotherhood would finish their quest and move on. The bug lived in a state neither of them visited. Keep that in mind for section 2. The question is always which states your testing reaches.
 
-## 2. Worked example: the ending 34 people saw
+## 2. Worked example: the ending almost nobody saw
 
 ### The hook
 
-Baldur's Gate 3 (Larian Studios, full release August 2023) has over 170 ending variations, as reported at launch. In August 2024, GamesRadar+ reported a Larian figure that one of those variations had been seen by only 34 players. Treat the exact number as a press report; the article is no longer online. Millions of people had played the game by then. If millions of players between them reached an ending only 34 times, how would a QA team of a few dozen people have ever seen it before launch?
+Baldur's Gate 3 (Larian Studios, full release August 2023) has over 170 ending variations, as reported at launch. In August 2024, GamesRadar+ reported Larian as saying that one of those variations had been seen by only a few dozen players. The article is no longer online and we could not find Larian's own statement, so treat the count as an unchecked press report. Millions of people had played the game by then. If millions of players between them reached an ending only a few dozen times, how would a QA team of a few dozen people have ever seen it before launch?
 
 They wouldn't, by playing normally. Let's count why, and then count what does work.
 
@@ -122,7 +122,7 @@ Uniform bots are the best case for random testing. Real players are worse, becau
 q = 0.1^6 = 0.000001
 ```
 
-With a million completed playthroughs, you expect about one player to see it, and the chance that anyone at all sees it is `1 − (1 − 10⁻⁶)^1,000,000 ≈ 63%`. The ending that 34 Baldur's Gate 3 players saw is a real case of this. The game's full choice structure is far more complex than a uniform tree, so don't try to recover its `q`. The lesson is the shape. Human choices concentrate on a few paths and starve the rest.
+With a million completed playthroughs, you expect about one player to see it, and the chance that anyone at all sees it is `1 − (1 − 10⁻⁶)^1,000,000 ≈ 63%`. The rare Baldur's Gate 3 ending is a real case of this, if the reported count is right. The game's full choice structure is far more complex than a uniform tree, so don't try to recover its `q`. The lesson is the shape. Human choices concentrate on a few paths and starve the rest.
 
 This has two consequences for testing.
 
@@ -317,7 +317,7 @@ Expected output: a list of bugs with paths, a `q` for each, the runs-needed numb
 
 - Unofficial Elder Scrolls Pages (UESP), "Skyrim:Blood on the Ice" (The Elder Scrolls V: Skyrim, 2011, original release with official patches to 1.9). Start conditions (Windhelm visit counter, night hours, required NPCs alive); the bug where Tova Shatter-Shield's death after the Dark Brotherhood contract on her daughter stops the quest from starting; fixed in Unofficial Skyrim Patch 1.2.1. https://en.uesp.net/wiki/Skyrim:Blood_on_the_Ice
 - Schreier, J. (3 August 2023). "The Strange Story Behind 'Baldur's Gate 3,' One of the Year's Biggest Releases." *Bloomberg News*. Over 170 ending variations; early access player numbers, as cited by Wikipedia's "Baldur's Gate 3" article.
-- Jones, A. (7 August 2024). "Baldur's Gate 3's least-popular Origin character has an ending so rare that Larian says only 34 players have ever even seen it." *GamesRadar+*.
+- Jones, A. (7 August 2024). "Baldur's Gate 3's least-popular Origin character has an ending so rare that Larian says only 34 players have ever even seen it." *GamesRadar+*. The URL returned 404 in September 2026 and the figure could not be checked against a Larian source, so the lecture does not rely on the exact count.
 - Wikipedia, "Baldur's Gate 3" (accessed September 2026). Early access from October 2020 with over 2.5 million players; Windows release 3 August 2023.
 - Bateman, C. (ed.) (2021). *Game Writing: Narrative Skills for Videogames*, 2nd ed. Bloomsbury.
 
