@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ops tax burn-up — PR402 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.insight{padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);margin:0 0 14px}
+.insight b{font-family:var(--sans)}
+.charts{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+@media (max-width:900px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;overflow:visible;touch-action:none}
+svg text{font-family:var(--sans);font-size:12px;fill:var(--ink-soft)}
+svg .lbl{fill:var(--ink);font-weight:600}
+.bar{cursor:ns-resize}
+.bar:focus{outline:none}
+.bar:focus-visible .hit{stroke:var(--focus);stroke-width:3}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.stat.warn b{color:var(--blood)}
+.controls{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,1fr)}}
+.controls label{display:block;font-weight:600;font-size:.88rem}
+.controls input[type=number]{width:100%;font:600 1rem var(--sans);padding:7px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:14px}
+button.btn{font:600 .92rem var(--sans);padding:8px 13px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.92rem}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.85rem;color:var(--ink-soft);margin:6px 0 0}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:540px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+tr.sum td{font-weight:700;background:var(--paper-2)}
+td.warn{color:var(--blood);font-weight:700}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR402 Capstone II · Week 1 · Worked example</p>
+  <h1>The plan fits. Then you tax it.</h1>
+  <p class="lede">Emberfall's 195-point backlog fits the naive capacity line with room to spare. Charge each week for crashes, deploys and tester questions and a third of it falls off, most of it after alpha.</p>
+</header>
+
+<section class="panel">
+  <p class="insight" id="insight" aria-live="polite"></p>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Burn-up: capacity against scope<small>Cumulative backlog points by the end of each week. Shaded band is 80% to 100% of the taxed line.</small></figcaption>
+      <svg id="burn" role="img" aria-label="Burn-up chart of naive and taxed capacity against the feature and total backlog"></svg>
+      <div class="legend">
+        <span id="lgNaive"><i style="background:var(--ink-soft)"></i>Naive capacity, v × w</span>
+        <span><i style="background:var(--steel)"></i>Taxed capacity</span>
+        <span><i style="background:var(--blood)"></i>Scope (feature, then total)</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Ops tax per week<small>Drag a bar, or focus it and use the up and down arrows (steps of 0.05).</small></figcaption>
+      <svg id="tax" aria-label="Ops tax per week, seven adjustable bars"></svg>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rR">—</b><span>rate r, points per hour</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rV">—</b><span>velocity v, points per week</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rF">—</b><span id="rFs">feature budget F</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rC">—</b><span id="rCs">content budget C</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rT">—</b><span id="rTs">taxed total</span></div>
+    <div class="stat" id="sFc" style="--c:var(--blood)"><b id="rFc">—</b><span id="rFcs">feature cut</span></div>
+    <div class="stat" id="sCc" style="--c:var(--blood)"><b id="rCc">—</b><span id="rCcs">content cut</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rFl">—</b><span>F low, at 80%</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rCl">—</b><span>C low, at 80%</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rN">—</b><span>naive total, 7 × v</span></div>
+  </div>
+
+  <div class="controls">
+    <div><label for="dp">Done points</label><input id="dp" type="number" min="1" step="1" value="32"></div>
+    <div><label for="dh">Done hours</label><input id="dh" type="number" min="1" step="1" value="92"></div>
+    <div><label for="hw">Weekly hours H</label><input id="hw" type="number" min="1" step="1" value="84"></div>
+    <div><label for="fb">Feature backlog</label><input id="fb" type="number" min="0" step="1" value="106"></div>
+    <div><label for="cb">Content backlog</label><input id="cb" type="number" min="0" step="1" value="89"></div>
+  </div>
+  <div class="row">
+    <button class="btn" id="reset" type="button">Reset to Emberfall</button>
+    <button class="btn" id="zero" type="button">Set every tax to 0</button>
+    <label class="check"><input type="checkbox" id="naive" checked>Show naive line</label>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Week by week capacity">
+      <thead><tr><th>Week</th><th>Milestone</th><th>Tax t</th><th>Backlog points c</th><th>Taxed cumulative</th><th>Naive cumulative</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from PR402 week 1, section 4: r = done points / done hours, v = r × H, c<sub>w</sub> = v × (1 − t<sub>w</sub>), F = c<sub>1</sub> + c<sub>2</sub> + c<sub>3</sub>, C = c<sub>4</sub> + … + c<sub>7</sub>, cut = max(0, backlog − budget). The 50% line is the toil cap from Beyer et al., <i>Site Reliability Engineering</i> (O'Reilly, 2016), chapter 5. Emberfall is the constructed PR401 teaching team, not a real studio.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const f1=n=>(Math.round(n*10)/10).toFixed(1);
+const DEF={dp:32,dh:92,hw:84,fb:106,cb:89,t:[0.10,0.15,0.20,0.45,0.55,0.50,0.45]};
+const MIL=['Sprint 1','Sprint 2','Sprint 3','Alpha','Closed beta','Telemetry review','Sprint 4, content lock'];
+const SHORT=['S1','S2','S3','Alpha','Beta','Review','S4'];
+let S={dp:32,dh:92,hw:84,fb:106,cb:89,t:DEF.t.slice(),naive:true};
+
+function model(){
+  const r=S.dh>0?S.dp/S.dh:0, v=r*S.hw;
+  const c=S.t.map(t=>v*(1-t));
+  const F=c[0]+c[1]+c[2], C=c[3]+c[4]+c[5]+c[6];
+  const cum=[0];c.forEach((x,i)=>cum.push(cum[i]+x));
+  return {r,v,c,F,C,cum,total:F+C,naive:7*v,fc:Math.max(0,S.fb-F),cc:Math.max(0,S.cb-C)};
+}
+
+function el(tag,attrs,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;return e;}
+function size(svg,h){const w=Math.max(260,svg.parentNode.getBoundingClientRect().width-24);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);while(svg.firstChild)svg.removeChild(svg.firstChild);return w;}
+function niceMax(x){const steps=[20,25,40,50,100];for(const s of steps){const m=Math.ceil(x/s)*s;if(m/s<=12)return m;}return Math.ceil(x/100)*100;}
+
+function drawBurn(m){
+  const svg=$('burn'),H=310,w=size(svg,H),p={l:44,r:16,t:28,b:34};
+  const yMax=Math.max(220,niceMax(Math.max(m.naive,S.fb+S.cb)*1.05));
+  const X=wk=>p.l+(w-p.l-p.r)*wk/7, Y=v=>p.t+(H-p.t-p.b)*(1-v/yMax);
+  const step=yMax<=240?20:yMax<=500?50:100;
+  for(let v=0;v<=yMax+1e-9;v+=step){svg.append(el('line',{x1:p.l,x2:w-p.r,y1:Y(v),y2:Y(v),style:'stroke:var(--grid)'}));svg.append(el('text',{x:p.l-6,y:Y(v)+4,'text-anchor':'end'},v));}
+  for(let k=0;k<=7;k++)svg.append(el('text',{x:X(k),y:H-p.b+16,'text-anchor':'middle'},k));
+  svg.append(el('text',{x:w-p.r,y:H-4,'text-anchor':'end'},'end of week'));
+  // band 0.8-1.0 of taxed
+  let d='';for(let k=0;k<=7;k++)d+=(k?'L':'M')+X(k)+' '+Y(m.cum[k]);for(let k=7;k>=0;k--)d+='L'+X(k)+' '+Y(0.8*m.cum[k]);
+  svg.append(el('path',{d:d+'Z',style:'fill:var(--steel);opacity:.18'}));
+  // milestone rules
+  [[3,'alpha: features due'],[7,'content lock']].forEach(([k,t])=>{
+    svg.append(el('line',{x1:X(k),x2:X(k),y1:p.t-14,y2:H-p.b,style:'stroke:var(--ink);stroke-dasharray:3 4;opacity:.55'}));
+    svg.append(el('text',{x:X(k)-5,y:p.t-16,'text-anchor':'end',class:'lbl'},t));
+  });
+  // scope
+  svg.append(el('line',{x1:X(0),x2:X(7),y1:Y(S.fb+S.cb),y2:Y(S.fb+S.cb),style:'stroke:var(--blood);stroke-width:2.5'}));
+  svg.append(el('line',{x1:X(0),x2:X(3),y1:Y(S.fb),y2:Y(S.fb),style:'stroke:var(--blood);stroke-width:2.5'}));
+  svg.append(el('text',{x:X(0)+4,y:Y(S.fb+S.cb)-6},'total backlog '+Math.round(S.fb+S.cb)));
+  svg.append(el('text',{x:X(0)+4,y:Y(S.fb)-6},'feature backlog '+Math.round(S.fb)));
+  // naive
+  if(S.naive){svg.append(el('line',{x1:X(0),y1:Y(0),x2:X(7),y2:Y(m.naive),style:'stroke:var(--ink-soft);stroke-width:2.5;stroke-dasharray:7 5'}));}
+  // taxed
+  let t='';for(let k=0;k<=7;k++)t+=(k?'L':'M')+X(k)+' '+Y(m.cum[k]);
+  svg.append(el('path',{d:t,style:'fill:none;stroke:var(--steel);stroke-width:3'}));
+  for(let k=1;k<=7;k++)svg.append(el('circle',{cx:X(k),cy:Y(m.cum[k]),r:3.5,style:'fill:var(--steel)'}));
+  // gaps
+  [[3,S.fb,m.cum[3],'feature cut'],[7,S.fb+S.cb,m.cum[7],'total cut']].forEach(([k,sc,cap,lab])=>{
+    if(sc-cap>0.05){
+      svg.append(el('line',{x1:X(k)-8,x2:X(k)-8,y1:Y(sc),y2:Y(cap),style:'stroke:var(--blood);stroke-width:2'}));
+      const tx=el('text',{x:X(k)-14,y:(Y(sc)+Y(cap))/2+4,'text-anchor':'end',style:'fill:var(--blood);font-weight:700'},lab+' '+f1(sc-cap));
+      svg.append(tx);
+    }
+  });
+}
+
+// tax bars: built once per size, updated in place
+let barEls=[];
+function buildTax(){
+  const svg=$('tax'),H=300,w=size(svg,H),p={l:40,r:10,t:22,b:44};
+  const X=i=>p.l+(w-p.l-p.r)*(i+0.5)/7, bw=Math.min(46,(w-p.l-p.r)/7*0.66), Y=v=>p.t+(H-p.t-p.b)*(1-v/0.8);
+  svg._geo={Y,H,p};
+  for(let v=0;v<=0.8001;v+=0.2){svg.append(el('line',{x1:p.l,x2:w-p.r,y1:Y(v),y2:Y(v),style:'stroke:var(--grid)'}));svg.append(el('text',{x:p.l-6,y:Y(v)+4,'text-anchor':'end'},v.toFixed(1)));}
+  svg.append(el('line',{x1:p.l+(w-p.l-p.r)*3/7,x2:p.l+(w-p.l-p.r)*3/7,y1:p.t-8,y2:H-p.b+30,style:'stroke:var(--ink);stroke-dasharray:3 4;opacity:.45'}));
+  svg.append(el('text',{x:p.l+(w-p.l-p.r)*1.5/7,y:H-4,'text-anchor':'middle'},'features'));
+  svg.append(el('text',{x:p.l+(w-p.l-p.r)*5/7,y:H-4,'text-anchor':'middle'},'content'));
+  barEls=[];
+  for(let i=0;i<7;i++){
+    const g=el('g',{class:'bar',tabindex:0,role:'slider','aria-valuemin':0,'aria-valuemax':0.8,'aria-orientation':'vertical','aria-label':`Week ${i+1} ${MIL[i]} ops tax`});
+    const hit=el('rect',{x:X(i)-bw/2-4,y:p.t-6,width:bw+8,height:H-p.t-p.b+6,rx:6,style:'fill:transparent;stroke:none',class:'hit'});
+    const bar=el('rect',{x:X(i)-bw/2,width:bw,rx:3});
+    const val=el('text',{x:X(i),'text-anchor':'middle',class:'lbl'});
+    g.append(hit,bar,val,el('text',{x:X(i),y:H-p.b+15,'text-anchor':'middle'},'W'+(i+1)),el('text',{x:X(i),y:H-p.b+29,'text-anchor':'middle',style:'font-size:10.5px'},SHORT[i]));
+    svg.append(g);barEls.push({g,bar,val});
+    g.addEventListener('keydown',e=>{
+      let v=S.t[i];
+      if(e.key==='ArrowUp'||e.key==='ArrowRight')v+=0.05;else if(e.key==='ArrowDown'||e.key==='ArrowLeft')v-=0.05;
+      else if(e.key==='PageUp')v+=0.2;else if(e.key==='PageDown')v-=0.2;else if(e.key==='Home')v=0;else if(e.key==='End')v=0.8;else return;
+      e.preventDefault();setTax(i,v);
+    });
+    g.addEventListener('pointerdown',e=>{g.focus();g.setPointerCapture(e.pointerId);drag(i,e);const mv=ev=>drag(i,ev),up=()=>{g.removeEventListener('pointermove',mv);g.removeEventListener('pointerup',up);g.removeEventListener('pointercancel',up);};g.addEventListener('pointermove',mv);g.addEventListener('pointerup',up);g.addEventListener('pointercancel',up);});
+  }
+  // cap line drawn on top so it stays visible
+  svg.append(el('line',{x1:p.l,x2:w-p.r,y1:Y(0.5),y2:Y(0.5),style:'stroke:var(--ochre);stroke-width:2;stroke-dasharray:6 4;pointer-events:none'}));
+  svg.append(el('text',{x:p.l+4,y:Y(0.5)-6,'text-anchor':'start',style:'fill:var(--ochre);font-weight:700;pointer-events:none'},'SRE toil cap 0.5'));
+  updateTax();
+}
+function drag(i,e){
+  const svg=$('tax'),r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal,{p,H}=svg._geo;
+  const y=(e.clientY-r.top)*vb.height/r.height;
+  const v=(1-(y-p.t)/(H-p.t-p.b))*0.8;
+  setTax(i,Math.round(v/0.05)*0.05);
+}
+function setTax(i,v){S.t[i]=Math.round(Math.min(0.8,Math.max(0,v))*100)/100;update();}
+function updateTax(){
+  const {Y}=$('tax')._geo;
+  barEls.forEach((b,i)=>{
+    const v=S.t[i];b.bar.setAttribute('y',Y(v));b.bar.setAttribute('height',Math.max(0,Y(0)-Y(v)));
+    b.bar.setAttribute('style','fill:'+(v>0.5+1e-9?'var(--blood)':'var(--steel)'));
+    b.val.setAttribute('y',Y(v)-6);b.val.textContent=v.toFixed(2);
+    b.g.setAttribute('aria-valuenow',v);b.g.setAttribute('aria-valuetext',`${v.toFixed(2)}, ${Math.round(v*100)} percent of hours`);
+  });
+}
+
+function readouts(m){
+  $('rR').textContent=m.r.toFixed(3);$('rV').textContent=f1(m.v);
+  $('rF').textContent=f1(m.F);$('rC').textContent=f1(m.C);$('rT').textContent=f1(m.total);$('rN').textContent=f1(m.naive);
+  $('rFl').textContent=f1(0.8*m.F);$('rCl').textContent=f1(0.8*m.C);
+  $('rFc').textContent=m.fc>0.049?f1(m.fc):'0.0';$('rCc').textContent=m.cc>0.049?f1(m.cc):'0.0';
+  $('rFcs').textContent=`feature cut, of ${Math.round(S.fb)}`;$('rCcs').textContent=`content cut, of ${Math.round(S.cb)}`;
+  $('sFc').classList.toggle('warn',m.fc>0.049);$('sCc').classList.toggle('warn',m.cc>0.049);
+  $('sFc').style.setProperty('--c',m.fc>0.049?'var(--blood)':'var(--moss)');$('sCc').style.setProperty('--c',m.cc>0.049?'var(--blood)':'var(--moss)');
+  const backlog=S.fb+S.cb,gap7=m.naive-m.total,gap3=3*m.v-m.F,allZero=S.t.every(t=>t===0);
+  let s;
+  if(allZero&&m.fc>0.049){
+    s=`With no tax at all, the feature budget is <b>${f1(m.F)}</b> and features still need a cut of <b>${f1(m.fc)}</b>. Features have only three weeks, so the feature backlog is too big even on the naive plan.`;
+  } else {
+    const cut=m.fc+m.cc;
+    s=`The ${Math.round(backlog)}-point backlog ${backlog<=m.naive+0.05?'fits':'misses'} the naive line (${f1(m.naive)}) and ${cut>0.049?`needs <b>${f1(cut)}</b> points cut to fit the taxed line (${f1(m.total)}), ${Math.round(100*cut/Math.max(1,backlog))}% of the backlog`:'fits the taxed line too'}. `;
+    if(gap7>0.05) s+=`Of the ${f1(gap7)}-point gap between the two lines, <b>${f1(gap7-gap3)}</b> opens after week 3, when outside testers arrive.`;
+  }
+  $('insight').innerHTML=s;
+  const rows=[];let naiveCum=0;
+  for(let i=0;i<7;i++){
+    naiveCum+=m.v;
+    rows.push(`<tr><td>${i+1}</td><td>${MIL[i]}</td><td>${S.t[i].toFixed(2)}</td><td>${f1(m.c[i])}</td><td>${f1(m.cum[i+1])}</td><td>${f1(naiveCum)}</td></tr>`);
+    if(i===2)rows.push(`<tr class="sum"><td></td><td>Feature budget F (backlog ${Math.round(S.fb)})</td><td></td><td>${f1(m.F)}</td><td colspan="2" class="${m.fc>0.049?'warn':''}">cut ${f1(m.fc)}</td></tr>`);
+  }
+  rows.push(`<tr class="sum"><td></td><td>Content budget C (backlog ${Math.round(S.cb)})</td><td></td><td>${f1(m.C)}</td><td colspan="2" class="${m.cc>0.049?'warn':''}">cut ${f1(m.cc)}</td></tr>`);
+  $('tbody').innerHTML=rows.join('');
+}
+
+function update(){const m=model();readouts(m);drawBurn(m);updateTax();}
+function syncInputs(){['dp','dh','hw','fb','cb'].forEach(k=>$(k).value=S[k]);$('naive').checked=S.naive;$('lgNaive').hidden=!S.naive;}
+
+['dp','dh','hw','fb','cb'].forEach(k=>$(k).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isFinite(v)&&v>=0){S[k]=v;update();}}));
+$('naive').addEventListener('change',e=>{S.naive=e.target.checked;$('lgNaive').hidden=!S.naive;update();});
+$('reset').addEventListener('click',()=>{Object.assign(S,{dp:32,dh:92,hw:84,fb:106,cb:89,t:DEF.t.slice(),naive:true});syncInputs();update();});
+$('zero').addEventListener('click',()=>{S.t=[0,0,0,0,0,0,0];update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{buildTax();update();},60);});
+buildTax();update();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{buildTax();update();});
+})();
+</script>
+</body>
+</html>

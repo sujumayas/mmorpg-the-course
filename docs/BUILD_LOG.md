@@ -157,3 +157,12 @@ Every running agent stopped with the weekly limit (HTTP 429). The limit resets o
 - Fact sweep: five agents, one per wave, stopped partway through. Some committed courses have partial edits (git status lists them). Before rerunning, review the diffs with `git diff courses/`. Then rerun each wave's sweep, which checks every "still unverified" item and hedges or removes the ones it can't confirm.
 - `h.html` in the repo root is a Blizzard page that a fact-sweep agent downloaded. It is not part of the curriculum. Delete it once the owner approves.
 - After the four studio courses are committed and the sweep is done, write "Wave 7 complete" here.
+- Fact sweep, waves 1-2 (2026-09-29): MA101, MA102, GD203, MMO303, GD101, GD102, MMO304, MMO401. Verified 9 (Halo 3 Wired, Celeste assist, Condor 1996, D2 death penalty, D2 vendor cap corrected to Hell-only 35,000, Guðmundsson 2007 via CCP blog, Lehdonvirta & Castronova chapter titles via Crossref, EQ2 dupe via CNET). Hedged 7, removed 1 (flOw 20 levels). Details in each course REVIEW.md "Fact sweep". Remaining "(verify" text is only in MA102 and MMO401 syllabus.md.
+
+## PR402 complete (29 Sep 2026)
+
+- The review renamed Saltmoor to Emberfall, a team of 7 at 12 h each (84 h/week). Week 1 now starts from the PR401 slice: 32 points in 92 h, r = 0.348, v = 29.2. Setting details that contradicted PR401 are gone. Harbour items are now towns, the Tide Cup is now an ash-storm event, the auction fee is now the 5% stall fee, and four classes are now two classes with two builds each.
+- These now agree across the course: 334 invited and 150 active testers, a 40-tester balance sample, closed beta in week 5, one-week sprints (R = 1.35), the shard knee min(z × 80, shared knee), a launch cohort of 260 (D7 70/260), content lock, bug severity S1-S4 mapped to SEV1-3, and `production/weekNN/` folders.
+- The launch-week budget now costs a second shard ($18.00). Totals are $743.50 naive and $448.30 fixed, against a $450 limit.
+- Fixed the WoW Classic date (26 Aug) and the Halo source wording. The reviewer found 18 other claims correct.
+- Still open: the peer-assessment brief uses a separate six-person example team, which is allowed. Confirm the New World Wikipedia article title.

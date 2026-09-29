@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pipeline bottleneck — PR402 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.insight{padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);margin:0 0 14px}
+.insight b{font-family:var(--sans)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.charts{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
+@media (max-width:900px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.stage{display:grid;grid-template-columns:5.2rem 1fr;gap:4px 10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--grid)}
+.stage:last-of-type{border-bottom:0}
+.sname{font-weight:700;font-size:.92rem}
+.track{position:relative;height:26px;background:var(--paper);border-radius:4px}
+.fill{position:absolute;left:0;top:3px;bottom:3px;background:var(--steel);border-radius:3px;transition:width .2s}
+.stage.neck .fill{background:var(--blood)}
+.stage.flash .fill{animation:flash 1s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--ochre)}30%{box-shadow:0 0 0 5px var(--ochre)}100%{box-shadow:0 0 0 0 transparent}}
+.mval{position:absolute;top:50%;transform:translateY(-50%);font-weight:700;font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:6px}
+.xline{position:absolute;top:-8px;bottom:-8px;width:0;border-left:2px dashed var(--ink);pointer-events:none;transition:left .2s}
+.steppers{grid-column:2;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;color:var(--ink-soft)}
+.steppers label{display:flex;align-items:center;gap:6px}
+.steppers input{width:4.6rem;font:600 .95rem var(--sans);padding:3px 6px;border-radius:var(--radius-sm);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.tag{font-size:.72rem;font-weight:700;color:var(--blood);text-transform:uppercase;letter-spacing:.04em;display:block}
+.axis{display:grid;grid-template-columns:5.2rem 1fr;gap:10px;font-size:.78rem;color:var(--ink-soft)}
+.axis div{position:relative;height:1.2em;font-variant-numeric:tabular-nums}
+.axis div span{position:absolute;transform:translateX(-50%)}
+.axis div span:first-child{transform:none}.axis div span:last-child{transform:translateX(-100%)}
+[hidden]{display:none!important}
+svg{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);font-size:12px;fill:var(--ink-soft)}
+svg .lbl{fill:var(--ink);font-weight:700}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.warn{color:var(--blood);font-weight:700;font-size:.9rem;margin:8px 0 0}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+.controls label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+.controls output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.controls input[type=number]{width:100%;font:600 1rem var(--sans);padding:6px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:460px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child,th:last-child,td:last-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR402 Capstone II · Week 2 · Worked example</p>
+  <h1>Help only counts at the bottleneck</h1>
+  <p class="lede">Each bar is how many quests a stage could finish per week. The pipeline ships at the speed of the shortest bar. Give the artist four more hours in plan A and watch the forecast stay put.</p>
+</header>
+
+<section class="panel">
+  <p class="insight" id="insight" aria-live="polite"></p>
+  <div class="presets" role="group" aria-label="Plans from the guide">
+    <button class="chip" type="button" data-plan="A" aria-pressed="true">Plan A</button>
+    <button class="chip" type="button" data-plan="B" aria-pressed="false">Plan B (more art)</button>
+    <button class="chip" type="button" data-plan="C" aria-pressed="false">Plan C</button>
+    <button class="chip" type="button" data-plan="Cart" aria-pressed="false">Plan C + art</button>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Stage capacity m = h / k<small>Quests per week each stage could finish. Dashed line is throughput X, the smallest bar. h is hours per week, k is hours per quest.</small></figcaption>
+      <div id="stages"></div>
+      <div class="axis" aria-hidden="true"><span></span><div><span style="left:0">0</span><span style="left:25%">1</span><span style="left:50%">2</span><span style="left:75%">3</span><span style="left:100%">4</span></div></div>
+    </figure>
+    <figure>
+      <figcaption>Forecast to content lock<small>One block per quest finished. Line is the target.</small></figcaption>
+      <svg id="col" role="img" aria-label="Quests forecast against target"></svg>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--blood)"><b id="rX">—</b><span>throughput X, quests/wk</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rN">—</b><span>quests N by content lock</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rMin">—</b><span>play minutes</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rGap">—</b><span>gap to target, minutes</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rW">—</b><span>lead time W = WIP / X, weeks</span></div>
+      </div>
+      <p class="warn" id="warn" hidden>Lead time longer than the time left.</p>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div><label for="weeks">Production weeks to content lock <output id="oWeeks">4</output></label><input id="weeks" type="range" min="1" max="8" step="1" value="4"></div>
+    <div><label for="wip">WIP limit <output id="oWip">8</output></label><input id="wip" type="range" min="1" max="12" step="1" value="8"></div>
+    <div><label for="mpi">Minutes per quest</label><input id="mpi" type="number" min="1" max="120" step="1" value="15"></div>
+    <div><label for="tgt">Target minutes</label><input id="tgt" type="number" min="0" max="600" step="5" value="180"></div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Stage capacities">
+      <thead><tr><th>Stage</th><th>h (h/week)</th><th>k (h/quest)</th><th>m (quests/week)</th><th>Role</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from PR402 week 2, section 4: m<sub>s</sub> = h<sub>s</sub> / k<sub>s</sub>, X = min m<sub>s</sub>, W = WIP / X (Little's law), N = floor(X × weeks). The forecast ignores pipeline fill time. Emberfall is the constructed PR401 teaching team. Content production runs in weeks 4 to 7. Bottleneck argument after Goldratt and Cox, <i>The Goal</i> (1984).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NAMES=['Write','Block out','Script','Dress','Audio','Test'];
+const A=[[8,6],[8,5],[9,9],[12,8],[4,2],[4,1.5]];
+const PLANS={
+  A:{st:A,weeks:4,wip:8},
+  B:{st:A.map((x,i)=>i===3?[16,8]:x),weeks:4,wip:8},
+  C:{st:A.map((x,i)=>i===0?[10,6]:i===2?[9,4]:x),weeks:4,wip:3},
+  Cart:{st:A.map((x,i)=>i===0?[10,6]:i===2?[9,4]:i===3?[16,8]:x),weeks:4,wip:3}
+};
+let S={st:A.map(x=>x.slice()),weeks:4,wip:8,mpi:15,tgt:180};
+let lastNeck=null;
+const f2=n=>n.toFixed(2);
+
+// build stage rows
+const rows=NAMES.map((n,i)=>{
+  const d=document.createElement('div');d.className='stage';
+  d.innerHTML=`<div class="sname">${n}<span class="tag" hidden>bottleneck</span></div>
+  <div class="track"><div class="fill"></div><span class="mval"></span><div class="xline"></div></div>
+  <div class="steppers">
+    <label>h <input type="number" min="0" max="20" step="1" aria-label="${n} hours per week"></label>
+    <label>k <input type="number" min="0.5" max="20" step="0.5" aria-label="${n} hours per quest"></label>
+  </div>`;
+  $('stages').append(d);
+  const [hIn,kIn]=d.querySelectorAll('input');
+  hIn.addEventListener('input',()=>{const v=parseFloat(hIn.value);if(isFinite(v)){S.st[i][0]=Math.min(20,Math.max(0,v));clearPreset();update();}});
+  kIn.addEventListener('input',()=>{const v=parseFloat(kIn.value);if(isFinite(v)&&v>=0.5){S.st[i][1]=Math.min(20,v);clearPreset();update();}});
+  return {d,hIn,kIn,fill:d.querySelector('.fill'),mval:d.querySelector('.mval'),x:d.querySelector('.xline'),tag:d.querySelector('.tag')};
+});
+
+function model(){
+  const m=S.st.map(([h,k])=>h/k);
+  let neck=0;m.forEach((v,i)=>{if(v<m[neck])neck=i;});
+  const X=m[neck], N=Math.floor(X*S.weeks+1e-9), W=X>0?S.wip/X:Infinity;
+  return {m,neck,X,N,W,min:N*S.mpi,gap:Math.max(0,S.tgt-N*S.mpi),tq:S.tgt/S.mpi};
+}
+
+function drawCol(r){
+  const svg=$('col'),H=250,w=Math.max(220,svg.parentNode.getBoundingClientRect().width-24);
+  svg.setAttribute('viewBox',`0 0 ${w} ${H}`);svg.setAttribute('height',H);
+  const p={l:34,r:10,t:14,b:22},top=Math.max(4,Math.ceil(Math.max(r.tq,r.N)+1));
+  const Y=q=>p.t+(H-p.t-p.b)*(1-q/top),cw=Math.min(120,(w-p.l-p.r)*0.42),cx=p.l+ (w-p.l-p.r)*0.3-cw/2;
+  let s='';const stepT=top>16?4:top>8?2:1;
+  for(let q=0;q<=top;q+=stepT)s+=`<line x1="${p.l}" x2="${w-p.r}" y1="${Y(q)}" y2="${Y(q)}" style="stroke:var(--grid)"/><text x="${p.l-6}" y="${Y(q)+4}" text-anchor="end">${q}</text>`;
+  const bh=Y(0)-Y(1);
+  for(let q=0;q<r.N;q++)s+=`<rect x="${cx}" y="${Y(q+1)+1}" width="${cw}" height="${Math.max(1,bh-2)}" rx="3" style="fill:var(--steel)"/>`;
+  if(r.N>0)s+=`<text x="${cx+cw/2}" y="${Y(r.N)-5}" text-anchor="middle" class="lbl">${r.N} quests</text>`;
+  s+=`<line x1="${p.l}" x2="${w-p.r}" y1="${Y(r.tq)}" y2="${Y(r.tq)}" style="stroke:var(--ochre);stroke-width:2.5;stroke-dasharray:7 4"/>`;
+  s+=`<text x="${w-p.r}" y="${Y(r.tq)-6}" text-anchor="end" style="fill:var(--ochre);font-weight:700">target ${+r.tq.toFixed(1)} quests</text>`;
+  if(r.N<r.tq){s+=`<line x1="${cx+cw+10}" x2="${cx+cw+10}" y1="${Y(r.tq)}" y2="${Y(r.N)}" style="stroke:var(--blood);stroke-width:2"/><text x="${cx+cw+16}" y="${(Y(r.tq)+Y(r.N))/2+4}" style="fill:var(--blood);font-weight:700">short ${+(r.tq-r.N).toFixed(1)}</text>`;}
+  s+=`<text x="${p.l}" y="${H-4}">quests by content lock</text>`;
+  svg.innerHTML=s;
+  svg.setAttribute('aria-label',`${r.N} quests forecast against a target of ${+r.tq.toFixed(1)}`);
+}
+
+function update(){
+  const r=model();
+  rows.forEach((row,i)=>{
+    const [h,k]=S.st[i],pc=Math.min(100,r.m[i]/4*100);
+    if(document.activeElement!==row.hIn)row.hIn.value=h;if(document.activeElement!==row.kIn)row.kIn.value=k;
+    row.fill.style.width=pc+'%';row.mval.style.left=Math.min(pc,82)+'%';row.mval.textContent=f2(r.m[i])+(r.m[i]>4?' (off scale)':'');
+    row.x.style.left=Math.min(100,r.X/4*100)+'%';
+    const neck=i===r.neck;row.d.classList.toggle('neck',neck);row.tag.hidden=!neck;
+  });
+  if(lastNeck!==null&&lastNeck!==r.neck){const d=rows[r.neck].d;d.classList.remove('flash');void d.offsetWidth;d.classList.add('flash');}
+  lastNeck=r.neck;
+  $('rX').textContent=f2(r.X);$('rN').textContent=r.N;$('rMin').textContent=r.min;$('rGap').textContent=r.gap;
+  $('rW').textContent=isFinite(r.W)?r.W.toFixed(1):'never';
+  $('warn').hidden=!(r.W>S.weeks);
+  $('oWeeks').textContent=S.weeks;$('oWip').textContent=S.wip;
+  $('weeks').value=S.weeks;$('wip').value=S.wip;
+  const second=r.m.map((v,i)=>[v,i]).filter(x=>x[1]!==r.neck).sort((a,b)=>a[0]-b[0])[0];
+  $('insight').innerHTML=`<b>${NAMES[r.neck]}</b> is the bottleneck at <b>${f2(r.X)}</b> quests a week, so ${S.weeks} weeks give <b>${r.N} quests</b> (${r.min} of ${S.tgt} minutes). Hours added to any other stage lengthen that bar and change nothing. Hours added to ${NAMES[r.neck].toLowerCase()} raise output until ${NAMES[second[1]].toLowerCase()} (${f2(second[0])}) becomes the limit.`;
+  $('tbody').innerHTML=S.st.map(([h,k],i)=>`<tr class="${i===r.neck?'here':''}"><td>${NAMES[i]}</td><td>${h}</td><td>${k}</td><td>${f2(r.m[i])}</td><td>${i===r.neck?'bottleneck':''}</td></tr>`).join('')+
+    `<tr><td>Throughput X</td><td></td><td></td><td>${f2(r.X)}</td><td>N ${r.N}, W ${isFinite(r.W)?r.W.toFixed(1):'never'} weeks</td></tr>`;
+  drawCol(r);
+}
+function clearPreset(){document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const P=PLANS[b.dataset.plan];S.st=P.st.map(x=>x.slice());S.weeks=P.weeks;S.wip=P.wip;
+  clearPreset();b.setAttribute('aria-pressed','true');update();
+}));
+$('weeks').addEventListener('input',e=>{S.weeks=+e.target.value;update();});
+$('wip').addEventListener('input',e=>{S.wip=+e.target.value;update();});
+$('mpi').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>0){S.mpi=v;update();}});
+$('tgt').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>=0){S.tgt=v;update();}});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+update();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+})();
+</script>
+</body>
+</html>

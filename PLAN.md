@@ -116,16 +116,16 @@ flowchart LR
 | MMO307 | finished | 14/14 | 14 (3) | 14 | 4 |
 | MMO308 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO309 | finished | 14/14 | 14 (2) | 11 | 4 |
-| PR301 | stub | 14/14 | 2 (0) | 14 | 2 |
+| PR301 | stub | 14/14 | 4 (0) | 14 | 10 |
 | MMO401 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO402 | finished | 14/14 | 14 (1) | 13 | 4 |
 | MMO403 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO404 | finished | 14/14 | 14 (1) | 14 | 3 |
-| PR401 | stub | 14/14 | 2 (0) | 14 | 3 |
+| PR401 | stub | 14/14 | 6 (0) | 14 | 15 |
 | MMO405 | finished | 14/14 | 14 (1) | 14 | 4 |
 | MMO406 | finished | 14/14 | 14 (0) | 14 | 3 |
 | MMO407 | finished | 14/14 | 14 (1) | 14 | 3 |
-| PR402 | stub | 14/14 | 5 (0) | 14 | 13 |
+| PR402 | finished | 14/14 | 5 (0) | 14 | 13 |
 
 ## Course details
 
