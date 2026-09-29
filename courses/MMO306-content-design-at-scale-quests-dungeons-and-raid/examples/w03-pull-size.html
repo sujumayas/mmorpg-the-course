@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pull size race — MMO306 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.top{display:grid;grid-template-columns:1.3fr 1fr;gap:12px 22px;align-items:end;margin-bottom:14px}
+@media (max-width:820px){.top{grid-template-columns:1fr}}
+.prompt{font-family:var(--serif);font-style:italic;color:var(--ochre);font-weight:400;margin-left:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg .lab{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px;min-width:42px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.charts{grid-template-columns:1fr}.charts .race{order:-1}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink)}
+svg .soft{fill:var(--ink-soft)}
+svg .halo{paint-order:stroke;stroke:var(--paper-2);stroke-width:4px;stroke-linejoin:round}
+.banner{font-weight:700;padding:7px 10px;border-radius:8px;margin:0 0 8px;font-variant-numeric:tabular-nums;border:1.5px solid currentColor}
+.banner.ok{color:var(--moss)}
+.banner.bad{color:var(--blood)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:6px 0 0}
+.legend svg{display:inline-block;width:26px;height:8px;vertical-align:middle;margin-right:6px}
+.small-toggle{display:flex;justify-content:flex-start;gap:6px;align-items:center;font-size:.85rem;font-weight:600;margin-top:6px;cursor:pointer}
+.small-toggle input{width:18px;height:18px;accent-color:var(--steel)}
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 22px;margin-top:14px}
+@media (max-width:820px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.ticks{position:relative;height:18px;font-size:.78rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+details{margin-top:10px;font-size:.92rem}
+summary{cursor:pointer;font-weight:600}
+.adv{display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:8px}
+.adv label{flex-direction:column;gap:2px;font-size:.85rem}
+.adv input{width:6.5em;font:600 1rem var(--sans);padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:820px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.formula{font-size:.85rem;color:var(--ink-soft);margin:14px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO306 Content Design at Scale · Week 3 · Worked example</p>
+  <h1>How big should a pull be?</h1>
+  <p class="lede">Under the target cap, area damage hits every enemy at once, so ten enemies die as fast as one. A bigger pull is free time, right up until the tank's health runs out before the pack's does.</p>
+</header>
+
+<section class="panel" aria-label="Pull size model">
+  <div class="top">
+    <div>
+      <label for="n"><span>Pull size <i>N</i><span class="prompt" id="prompt">Drag N up</span></span> <output id="oN">1</output></label>
+      <input id="n" type="range" min="1" max="20" step="1" value="1">
+    </div>
+    <div class="seg" role="group" aria-label="Target cap">
+      <span class="lab">Target cap <i>m</i></span>
+      <button class="chip cap" data-cap="3" aria-pressed="false">3</button>
+      <button class="chip cap" data-cap="5" aria-pressed="false">5</button>
+      <button class="chip cap" data-cap="10" aria-pressed="false">10</button>
+      <button class="chip cap" data-cap="20" aria-pressed="true">20</button>
+      <button class="chip cap" data-cap="0" aria-pressed="false">none</button>
+    </div>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Clear time vs pull size<small>Whole dungeon, minutes. Hatched pulls wipe: the tank dies before the pack.</small></figcaption>
+      <svg id="clear" role="img" aria-label="Clear time against pull size"></svg>
+      <label class="small-toggle" for="log"><input type="checkbox" id="log"> Log scale</label>
+    </figure>
+    <figure class="race">
+      <figcaption>One pull as a race<small>Share of health left, pack against tank, over seconds</small></figcaption>
+      <p class="banner ok" id="banner" aria-live="polite"></p>
+      <svg id="race" role="img" aria-label="Pack health and tank buffer over time"></svg>
+      <div class="legend">
+        <span><svg viewBox="0 0 26 8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--blood);stroke-width:3;stroke-dasharray:6 4"/></svg>Pack health, % of N × H</span>
+        <span><svg viewBox="0 0 26 8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--steel);stroke-width:3"/></svg>Tank buffer, % of B</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="s"><span>Enemy scaling (health and damage)</span> <output id="oS">1.00</output></label>
+      <input id="s" type="range" min="1" max="2.5" step="0.01" value="1" list="sTicks">
+      <datalist id="sTicks"><option value="1"></option><option value="1.47"></option><option value="2.16"></option></datalist>
+      <div class="ticks" aria-hidden="true"><span style="left:0;transform:none">1.00 (L0)</span><span style="left:calc(9px + (100% - 18px)*0.3133)">1.47 (L5)</span><span style="left:calc(9px + (100% - 18px)*0.7733)">2.16 (L10)</span></div>
+    </div>
+    <div>
+      <label for="a"><span>Group AoE <i>A</i> (dps per target)</span> <output id="oA">50</output></label>
+      <input id="a" type="range" min="10" max="150" step="5" value="50">
+    </div>
+    <div>
+      <label for="q"><span>Healing on tank <i>Q</i> (hps)</span> <output id="oQ">150</output></label>
+      <input id="q" type="range" min="0" max="400" step="10" value="150">
+    </div>
+    <div>
+      <label for="b"><span>Tank buffer <i>B</i></span> <output id="oB">3,200</output></label>
+      <input id="b" type="range" min="1000" max="8000" step="100" value="3200">
+    </div>
+  </div>
+  <details>
+    <summary>Advanced: fixed values <span id="fixed" style="font-weight:400;color:var(--ink-soft)"></span></summary>
+    <div class="adv">
+      <label for="H">Enemy health <i>H</i><input id="H" type="number" min="100" max="10000" step="100" value="1000"></label>
+      <label for="d">Enemy dps on tank <i>d</i><input id="d" type="number" min="1" max="200" step="1" value="30"></label>
+      <label for="w">Walk between pulls <i>w</i> (s)<input id="w" type="number" min="0" max="60" step="1" value="10"></label>
+      <label for="M">Trash enemies <i>M</i><input id="M" type="number" min="10" max="500" step="10" value="120"></label>
+    </div>
+  </details>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rKill">—</b><span>t<sub>kill</sub>, pack dies</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rSurv">—</b><span>t<sub>surv</sub>, tank lasts</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rPulls">—</b><span>pulls needed, M / N</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rPer">—</b><span>seconds per pull, kill + walk</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rClear">—</b><span>clear time (min)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rForces">—</b><span>enemy forces per second, walking included</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rBest">—</b><span>largest safe pull (fastest clear)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rBestT">—</b><span>clear time at that pull</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+  <p class="formula">t<sub>kill</sub> = H / A if N ≤ m, else H × N / (A × m) &nbsp;·&nbsp; t<sub>surv</sub> = B / (N × d − Q) &nbsp;·&nbsp; clear = (M / N) × (t<sub>kill</sub> + w) / 60</p>
+</section>
+
+<footer>All numbers are invented for teaching, as in the lecture. The scaling ticks use World of Warcraft Mythic+'s 8% per keystone level for enemy health and damage (Warcraft Wiki, "Mythic+", The War Within): 1.08<sup>5</sup> ≈ 1.47 and 1.08<sup>10</sup> ≈ 2.16.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+let N=1,cap=20,S=1,A=50,Q=150,B=3200,H0=1000,d0=30,w=10,M=120,logY=false,touched=false;
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const a in attrs)e.setAttribute(a,attrs[a]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+const W=svg=>Math.max(260,svg.parentNode.clientWidth-24);
+
+const H=()=>H0*S,d=()=>d0*S;
+function tKill(n){return (cap===0||n<=cap)?H()/A:H()*n/(A*cap);}
+function tSurv(n){const net=n*d()-Q;return net<=0?Infinity:B/net;}
+const works=n=>tKill(n)<=tSurv(n)+1e-9;
+const clearMin=n=>works(n)?(M/n)*(tKill(n)+w)/60:null;
+function best(){let b=0;for(let n=1;n<=20;n++)if(works(n))b=n;return b;}
+function hatch(defs,id,col){const p=el('pattern',{id,width:7,height:7,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},defs);
+  el('rect',{width:7,height:7,style:`fill:${col};fill-opacity:.1`},p);el('line',{x1:0,y1:0,x2:0,y2:7,style:`stroke:${col};stroke-width:2;stroke-opacity:.6`},p);}
+
+function drawClear(){
+  const svg=$('clear');svg.innerHTML='';
+  const w_=W(svg),H_=Math.round(Math.min(310,Math.max(240,w_*0.66))),pl=44,pr=12,pt=22,pb=34;
+  svg.setAttribute('viewBox',`0 0 ${w_} ${H_}`);svg.setAttribute('height',H_);
+  const defs=el('defs',{},svg);hatch(defs,'wipe','var(--blood)');
+  const vals=[];for(let n=1;n<=20;n++)vals.push(clearMin(n));
+  const maxV=Math.max(60,...vals.filter(v=>v!==null));
+  const yMax=maxV<=60?60:Math.ceil(maxV/20)*20;
+  const minV=Math.min(...vals.filter(v=>v!==null),60);
+  const lo=Math.pow(10,Math.floor(Math.log10(Math.max(0.1,minV)))),hi=Math.pow(10,Math.ceil(Math.log10(yMax)));
+  const X=n=>pl+(w_-pl-pr)*(n-0.5)/20,Y=v=>logY?pt+(H_-pt-pb)*(1-(Math.log10(v)-Math.log10(lo))/(Math.log10(hi)-Math.log10(lo))):pt+(H_-pt-pb)*(1-v/yMax);
+  const ticks=logY?[1,2,5,10,20,50,100,200,500,1000].filter(t=>t>=lo&&t<=hi):[0,1,2,3,4].map(i=>yMax*i/4);
+  ticks.forEach(t=>{const y=Y(t);el('line',{x1:pl,x2:w_-pr,y1:y,y2:y,style:'stroke:var(--grid)'},svg);
+    el('text',{x:pl-6,y:y+4,'text-anchor':'end','font-size':12,class:'soft'},svg,fmt(t));});
+  [1,5,10,15,20].forEach(n=>el('text',{x:X(n),y:H_-pb+18,'text-anchor':'middle','font-size':12,class:'soft'},svg,n));
+  el('text',{x:w_-pr,y:H_-2,'text-anchor':'end','font-size':11,class:'soft'},svg,'pull size N');
+  el('text',{x:pl-6,y:pt-8,'text-anchor':'end','font-size':11,class:'soft'},svg,'min');
+  // wipe zone (the safe set is always a prefix: t_kill never falls and t_surv never rises with N)
+  const b=best();
+  if(b<20){const x0=b===0?pl:X(b+0.5);
+    el('rect',{x:x0,y:pt,width:w_-pr-x0,height:H_-pt-pb,fill:'url(#wipe)'},svg);
+    const lx=(x0+w_-pr)/2;
+    if(w_-pr-x0>60)el('text',{x:lx,y:pt+18,'text-anchor':'middle','font-size':12,'font-weight':700,class:'halo',style:'fill:var(--blood)'},svg,'wipe zone');}
+  if(cap>0&&cap<20){const cx=X(cap+0.5);
+    el('line',{x1:cx,x2:cx,y1:pt,y2:H_-pb,style:'stroke:var(--steel);stroke-width:1.8;stroke-dasharray:6 4'},svg);
+    el('text',{x:cx+4,y:H_-pb-8,'font-size':11,'font-weight':700,class:'halo',style:'fill:var(--steel)'},svg,'target cap');}
+  // line through safe points
+  const pts=vals.map((v,i)=>v===null?null:[X(i+1),Y(v)]).filter(Boolean);
+  if(pts.length)el('path',{d:pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(''),style:'fill:none;stroke:var(--ochre);stroke-width:2.5'},svg);
+  pts.forEach(p=>el('circle',{cx:p[0],cy:p[1],r:3.2,style:'fill:var(--ochre)'},svg));
+  // current N guide
+  const cx=X(N);el('line',{x1:cx,x2:cx,y1:pt,y2:H_-pb,style:'stroke:var(--ink);stroke-opacity:.45;stroke-dasharray:3 4'},svg);
+  const cv=clearMin(N);
+  if(cv!==null)el('circle',{cx,cy:Y(cv),r:6,style:'fill:none;stroke:var(--ink);stroke-width:2'},svg);
+  if(b>0){const bv=clearMin(b),bx=X(b),by=Y(bv);
+    el('circle',{cx:bx,cy:by,r:7,style:'fill:var(--ochre);stroke:var(--paper);stroke-width:2'},svg);
+    const txt=`fastest safe: N = ${b}, ${bv.toFixed(1)} min`,right=bx+10+txt.length*6.6<w_-pr;
+    el('text',{x:right?bx+10:bx-10,y:Math.max(pt+30,by-12),'text-anchor':right?'start':'end','font-size':12,'font-weight':700,class:'halo'},svg,txt);}
+  svg.setAttribute('aria-label',`Clear time by pull size. Fastest safe pull N = ${b}${b?', '+clearMin(b).toFixed(1)+' minutes':''}.`);
+}
+
+function drawRace(){
+  const svg=$('race');svg.innerHTML='';
+  const w_=W(svg),H_=Math.round(Math.min(280,Math.max(220,w_*0.6))),pl=44,pr=14,pt=14,pb=34;
+  svg.setAttribute('viewBox',`0 0 ${w_} ${H_}`);svg.setAttribute('height',H_);
+  const tk=tKill(N),ts=tSurv(N);
+  const need=Math.max(tk,isFinite(ts)?Math.min(ts,tk*2):0);
+  const xMax=Math.max(60,Math.ceil(need*1.12/10)*10);
+  const X=t=>pl+(w_-pl-pr)*Math.min(t,xMax)/xMax,Y=f=>pt+(H_-pt-pb)*(1-f);
+  for(let i=0;i<=4;i++){const y=Y(i/4);el('line',{x1:pl,x2:w_-pr,y1:y,y2:y,style:'stroke:var(--grid)'},svg);
+    el('text',{x:pl-6,y:y+4,'text-anchor':'end','font-size':12,class:'soft'},svg,i*25+'%');}
+  const st=xMax<=60?10:xMax<=150?30:60;
+  for(let t=0;t<=xMax;t+=st)el('text',{x:X(t),y:H_-pb+18,'text-anchor':'middle','font-size':12,class:'soft'},svg,t);
+  el('text',{x:w_-pr,y:H_-2,'text-anchor':'end','font-size':11,class:'soft'},svg,'seconds');
+  // pack
+  el('line',{x1:X(0),y1:Y(1),x2:X(tk),y2:tk>xMax?Y(1-xMax/tk):Y(0),style:'stroke:var(--blood);stroke-width:3;stroke-dasharray:8 5'},svg);
+  // tank
+  if(isFinite(ts))el('line',{x1:X(0),y1:Y(1),x2:X(Math.min(ts,xMax)),y2:ts>xMax?Y(1-xMax/ts):Y(0),style:'stroke:var(--steel);stroke-width:3'},svg);
+  else el('line',{x1:X(0),y1:Y(1),x2:X(xMax),y2:Y(1),style:'stroke:var(--steel);stroke-width:3'},svg);
+  // zero crossings
+  const marks=[];
+  if(tk<=xMax)marks.push({t:tk,c:'var(--blood)',txt:`pack dead, ${tk.toFixed(1)} s`});
+  if(isFinite(ts)&&ts<=xMax)marks.push({t:ts,c:'var(--steel)',txt:`tank dead, ${ts.toFixed(1)} s`});
+  marks.sort((a,b)=>a.t-b.t);
+  marks.forEach((m,i)=>{const x=X(m.t),y=Y(0);
+    el('circle',{cx:x,cy:y,r:5.5,style:`fill:${m.c};stroke:var(--paper);stroke-width:2`},svg);
+    const right=x<w_*0.6,ly=y-12-i*18;
+    el('text',{x:right?x+8:x-8,y:ly,'text-anchor':right?'start':'end','font-size':12,'font-weight':700,class:'halo',style:`fill:${m.c}`},svg,m.txt);});
+  if(!isFinite(ts))el('text',{x:w_-pr,y:Y(1)+18,'text-anchor':'end','font-size':12,'font-weight':700,class:'halo',style:'fill:var(--steel)'},svg,'tank never drops: healing ≥ damage');
+  const ok=works(N),bn=$('banner');
+  bn.className='banner '+(ok?'ok':'bad');
+  bn.textContent=ok?(isFinite(ts)?`Pack dies first, with ${(ts-tk).toFixed(1)} s to spare`:'Pack dies first. The healer out-heals the whole pull.'):`Tank dies first, ${(tk-ts).toFixed(1)} s before the pack`;
+  svg.setAttribute('aria-label',`Pack dies at ${tk.toFixed(1)} seconds; tank ${isFinite(ts)?'dies at '+ts.toFixed(1)+' seconds':'never drops'}.`);
+}
+
+function readouts(){
+  $('oN').textContent=N;$('oS').textContent=S.toFixed(2);$('oA').textContent=A;$('oQ').textContent=Q;$('oB').textContent=fmt(B);
+  $('fixed').textContent=`H = ${fmt(H0)}, d = ${d0}, w = ${w} s, M = ${M}`;
+  const tk=tKill(N),ts=tSurv(N),ok=works(N);
+  $('rKill').textContent=tk.toFixed(1)+' s';
+  $('rSurv').textContent=isFinite(ts)?ts.toFixed(1)+' s':'never';
+  $('rPulls').textContent=(M/N).toFixed(1).replace(/\.0$/,'');
+  $('rPer').textContent=(tk+w).toFixed(1)+' s';
+  $('rClear').textContent=ok?clearMin(N).toFixed(1):'wipe';
+  $('rForces').textContent=ok?(N*100/M/(tk+w)).toFixed(3)+'%':'—';
+  const b=best();$('rBest').textContent=b?(b===20?'20 or more':'N = '+b):'none';
+  $('rBestT').textContent=b?clearMin(b).toFixed(1)+' min':'—';
+  const underCap=cap===0||N<=cap;
+  let s='';
+  if(!ok)s=`At N = ${N} the tank loses ${fmt(N*d()-Q)} health per second and lasts ${ts.toFixed(1)} s, but the pack needs ${tk.toFixed(1)} s to die. Pull ${b?'no more than '+b:'fewer'}${b?'':' or add healing'}.`;
+  else if(underCap)s=`${cap?'Under the target cap of '+cap+', the':'With no target cap, the'} pack dies in ${tk.toFixed(1)} s for any pull ${cap?'of up to '+cap+' enemies':'size'}, and this one holds ${N}. Only the tank's line moves as N rises, so the healer and the tank set the pull size, not the damage dealers.`;
+  else s=`Past the cap of ${cap}, the same area damage is shared by ${N} enemies, so the pack now takes ${tk.toFixed(1)} s instead of ${(H()/A).toFixed(1)} s. Bigger pulls still save walking time, but much less of it.`;
+  if(S>1.005)s+=` Scaling ×${S.toFixed(2)} makes enemies both tougher and harder-hitting, so the pack takes longer while the tank lasts less. The largest safe pull is ${b||'none'}.`;
+  $('insight').innerHTML=s;
+}
+function update(){readouts();drawClear();drawRace();}
+const bind=(id,fn)=>$(id).addEventListener('input',e=>{fn(+e.target.value);update();});
+bind('n',v=>{N=v;if(!touched){touched=true;$('prompt').hidden=true;}});
+bind('s',v=>S=v);bind('a',v=>A=v);bind('q',v=>Q=v);bind('b',v=>B=v);
+const num=(id,fn,lo)=>$(id).addEventListener('input',e=>{const v=+e.target.value;if(v>=lo){fn(v);update();}});
+num('H',v=>H0=v,1);num('d',v=>d0=v,0);num('w',v=>w=v,0);num('M',v=>M=v,1);
+document.querySelectorAll('.cap').forEach(bt=>bt.addEventListener('click',()=>{
+  document.querySelectorAll('.cap').forEach(x=>x.setAttribute('aria-pressed','false'));bt.setAttribute('aria-pressed','true');cap=+bt.dataset.cap;update();}));
+$('log').addEventListener('change',e=>{logY=e.target.checked;drawClear();});
+let raf=0;window.addEventListener('resize',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(update);});
+update();
+})();
+</script>
+</body>
+</html>

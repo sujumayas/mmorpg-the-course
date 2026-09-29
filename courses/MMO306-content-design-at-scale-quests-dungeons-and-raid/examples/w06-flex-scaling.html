@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flex raid scaling — MMO306 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:24px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.04rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
+.toolbar .lab{font-weight:600;font-size:.9rem;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-checked="true"],.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,svg:focus-visible,.tw:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:780px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;overflow:visible;border-radius:6px}
+svg text{font-family:var(--sans);fill:var(--ink);font-size:12px}
+svg .soft{fill:var(--ink-soft)}
+svg .halo{paint-order:stroke;stroke:var(--paper-2);stroke-width:4px;stroke-linejoin:round}
+svg .b{font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:20px;height:0;border-top:2px solid var(--ink-soft);vertical-align:middle;margin-right:5px}
+.legend .o{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-right:5px}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:14px 0 0;padding:10px 14px;border-radius:10px;background:var(--paper-2)}
+.caption small{display:block;font-family:var(--sans);font-size:.88rem;color:var(--ink-soft);margin-top:4px}
+.tw{overflow-x:auto;margin-top:14px;max-width:100%}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:600px}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-size:.8rem;color:var(--ink-soft);font-weight:600}
+th:first-child,td:first-child{text-align:left}
+td.fail{color:var(--blood);font-weight:700}
+td.pass{color:var(--moss);font-weight:700}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+.group h2{font:700 .78rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 4px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.check{display:flex;gap:8px;align-items:center;justify-content:flex-start;cursor:pointer;margin:6px 0}
+.check input{width:20px;height:20px;accent-color:var(--steel);margin:0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO306 Content Design at Scale · Week 6 · Worked example</p>
+  <h1>Flex scaling: health and mechanics pull in opposite directions</h1>
+  <p class="lede">Scale boss health with raid size and small groups need more damage per dealer. Keep every mechanic per player and big groups miss more often. One formula fixes the first problem. Nothing fixes the second for free.</p>
+</header>
+
+<section class="panel" aria-label="Flex scaling model">
+  <div class="toolbar" role="radiogroup" aria-label="Health rule">
+    <span class="lab">Health rule</span>
+    <button class="chip" role="radio" data-rule="linear" aria-checked="true">Linear: H20 &times; N / 20</button>
+    <button class="chip" role="radio" data-rule="neutral" aria-checked="false" tabindex="-1">Neutral: per dealer</button>
+    <button class="chip" role="radio" data-rule="custom" aria-checked="false" tabindex="-1">Custom: a + bN</button>
+  </div>
+  <div class="charts">
+    <figure>
+      <figcaption>Damage: what each dealer must bring<small>Per-dealer effective DPS needed to kill before the enrage. Use arrow keys or hover to inspect a size.</small></figcaption>
+      <svg id="sDmg" tabindex="0" role="img" aria-label="Per-dealer DPS required against raid size"></svg>
+      <div class="legend" aria-hidden="true">
+        <span><i style="border-top:2.5px solid var(--steel)"></i>linear</span>
+        <span><i style="border-top:2.5px solid var(--moss)"></i>neutral</span>
+        <span id="lgCustom" hidden><i style="border-top:2.5px dashed var(--ink)"></i>custom</span>
+        <span><i style="border-top:2.5px solid var(--ochre)"></i>your group</span>
+        <span><span class="o" style="background:var(--ink)"></span>passes</span>
+        <span><span class="o" style="border:2px solid var(--blood)"></span>fails</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Execution: chance of a clean pull<small id="exSub">One mechanic cast k times per pull. Clean means nobody is late.</small></figcaption>
+      <svg id="sExe" role="img" aria-label="Clean-pull chance against raid size"></svg>
+      <div class="legend" aria-hidden="true">
+        <span><i style="border-top:4px solid var(--blood)"></i>raid-wide (everyone)</span>
+        <span><i style="border-top:2.5px solid var(--steel)"></i>targeted, N/5 players</span>
+        <span id="lgFixed"><i style="border-top:2.5px dashed var(--ink)"></i>fixed m targets</span>
+      </div>
+    </figure>
+  </div>
+  <p class="caption">Health scaling can be made neutral with one formula. Mechanic scaling has to be decided one mechanic at a time.<small id="dyn"></small></p>
+
+  <div class="tw" tabindex="0" role="region" aria-label="Readout table by raid size">
+    <table>
+      <thead><tr><th>N</th><th>Tanks</th><th>Healers</th><th>Dealers d</th><th>Health H(N)</th><th>Per dealer r(N)</th><th>Your group</th><th id="thRW">Raid-wide clean</th><th id="thTg">Targeted clean</th></tr></thead>
+      <tbody id="tb" aria-live="polite"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div class="group">
+      <h2>Boss</h2>
+      <label for="H20">Health at 20 players <output id="oH20"></output></label>
+      <input id="H20" type="range" min="2000000" max="10000000" step="10000" value="5040000">
+      <label for="T">Enrage timer T <output id="oT"></output></label>
+      <input id="T" type="range" min="180" max="600" step="10" value="300">
+      <label for="tax">Uptime tax (movement, mechanics) <output id="oTax"></output></label>
+      <input id="tax" type="range" min="0" max="0.4" step="0.01" value="0.2">
+      <div id="customWrap" hidden>
+        <label for="a">Custom intercept a <output id="oA"></output></label>
+        <input id="a" type="range" min="-0.5" max="1" step="0.05" value="0.2">
+      </div>
+    </div>
+    <div class="group">
+      <h2>Your group</h2>
+      <label for="dps">Per-dealer effective DPS <output id="oDps"></output></label>
+      <input id="dps" type="range" min="1000" max="2000" step="10" value="1550">
+      <label for="tanks">Tanks <output id="oTanks"></output></label>
+      <input id="tanks" type="range" min="1" max="3" step="1" value="2">
+      <label class="check"><input id="t3" type="checkbox"> 3 tanks at 25+ players</label>
+    </div>
+    <div class="group">
+      <h2>Mechanic</h2>
+      <label for="tel">Telegraph <output id="oTel"></output></label>
+      <input id="tel" type="range" min="800" max="1600" step="10" value="1100">
+      <label for="sd">Reaction spread &sigma; <output id="oSd"></output></label>
+      <input id="sd" type="range" min="50" max="300" step="5" value="150">
+      <label for="k">Casts per pull k <output id="oK"></output></label>
+      <input id="k" type="range" min="1" max="10" step="1" value="5">
+      <label class="check"><input id="fx" type="checkbox" checked> Show fixed-target mechanic</label>
+      <label for="m">Fixed targets m <output id="oM"></output></label>
+      <input id="m" type="range" min="1" max="10" step="1" value="3">
+      <label class="check"><input id="pen" type="checkbox"> Penalty mode (show expected misses)</label>
+    </div>
+  </div>
+</section>
+
+<footer>Model: healers h(N) = floor(N / 5), dealers d(N) = N &minus; tanks &minus; h(N). Per-dealer requirement r(N) = H(N) / (T &times; (1 &minus; tax) &times; d(N)). Neutral rule H(N) = r20 &times; T &times; (1 &minus; tax) &times; d(N). Per-player success p = &Phi;((telegraph &minus; 700 ms) / &sigma;); raid-wide clean pull p<sup>N k</sup>, targeted p<sup>floor(N/5) k</sup>, fixed p<sup>m k</sup>. &Phi; uses the Abramowitz and Stegun 7.1.26 erf approximation.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+function E(tag,a,p,txt){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;if(p)p.appendChild(e);return e;}
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const fmt1=n=>{const r=Math.round(n*10)/10;return r.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:1});};
+const pct=x=>(x*100).toFixed(1)+'%';
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
+  return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));}
+const Phi=z=>0.5*(1+erf(z/Math.SQRT2));
+
+const S={rule:'linear',H20:5040000,T:300,tax:.2,a:.2,dps:1550,tanks:2,t3:false,tel:1100,sd:150,k:5,m:3,fx:true,pen:false,sel:null};
+const tk=N=>(S.t3&&N>=25)?3:S.tanks;
+const hl=N=>Math.floor(N/5);
+const dd=N=>N-tk(N)-hl(N);
+const u=()=>1-S.tax;
+const r20=()=>S.H20/(S.T*u()*dd(20));
+const Hof={linear:N=>S.H20*N/20,neutral:N=>r20()*S.T*u()*dd(N),custom:N=>S.H20*(S.a+(1-S.a)/20*N)};
+const req=(rule,N)=>Hof[rule](N)/(S.T*u()*dd(N));
+const passes=r=>Math.round(r*10)/10<=S.dps+1e-9;
+const p=()=>Phi((S.tel-700)/S.sd);
+const rw=N=>S.pen?N*S.k*(1-p()):Math.pow(p(),N*S.k);
+const tg=N=>S.pen?hl(N)*S.k*(1-p()):Math.pow(p(),hl(N)*S.k);
+const fxd=()=>S.pen?S.m*S.k*(1-p()):Math.pow(p(),S.m*S.k);
+const Ns=[];for(let n=10;n<=30;n++)Ns.push(n);
+
+function frame(svg,o){
+  const w=Math.max(240,svg.getBoundingClientRect().width||600),h=o.h,pd=o.pad;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);svg.innerHTML='';
+  const X=v=>pd.l+(w-pd.l-pd.r)*(v-o.x0)/(o.x1-o.x0),Y=v=>pd.t+(h-pd.t-pd.b)*(1-(v-o.y0)/(o.y1-o.y0));
+  const g=E('g',{},svg);
+  o.yt.forEach(v=>{E('line',{x1:pd.l,x2:w-pd.r,y1:Y(v),y2:Y(v),style:'stroke:var(--grid)'},g);E('text',{x:pd.l-6,y:Y(v)+4,'text-anchor':'end',class:'soft'},g,o.yf(v));});
+  E('line',{x1:pd.l,x2:w-pd.r,y1:Y(o.y0),y2:Y(o.y0),style:'stroke:var(--ink-soft)'},g);
+  o.xt.forEach(v=>E('text',{x:X(v),y:h-pd.b+16,'text-anchor':'middle',class:'soft'},g,String(v)));
+  E('text',{x:w-pd.r,y:h-4,'text-anchor':'end',class:'soft'},g,o.xl);
+  return {X,Y,w,h,g,pd};
+}
+const poly=(pts,X,Y)=>pts.map((q,i)=>(i?'L':'M')+X(q[0]).toFixed(1)+' '+Y(q[1]).toFixed(1)).join('');
+const clampY=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+
+function drawDmg(){
+  const svg=$('sDmg'),y0=1000,y1=2000;
+  const c=frame(svg,{h:260,pad:{l:50,r:14,t:12,b:34},x0:10,x1:30,y0,y1,xt:[10,15,20,25,30],yt:[1000,1250,1500,1750,2000],yf:v=>fmt(v),xl:'players N'});
+  const {X,Y,g}=c,cy=v=>Y(clampY(v,y0-20,y1+20));
+  const line=(rule,style)=>E('path',{d:Ns.map((n,i)=>(i?'L':'M')+X(n).toFixed(1)+' '+cy(req(rule,n)).toFixed(1)).join(''),style:'fill:none;'+style},g);
+  line('linear','stroke:var(--steel);stroke-width:2.5');
+  line('neutral','stroke:var(--moss);stroke-width:2.5');
+  if(S.rule==='custom')line('custom','stroke:var(--ink);stroke-width:2.5;stroke-dasharray:7 5');
+  E('line',{x1:X(10),x2:X(30),y1:Y(S.dps),y2:Y(S.dps),style:'stroke:var(--ochre);stroke-width:3'},g);
+  E('text',{x:X(30)-2,y:Y(S.dps)-7,'text-anchor':'end',class:'halo b',style:'fill:var(--ochre)'},g,'your group '+fmt(S.dps));
+  Ns.forEach(n=>{const r=req(S.rule,n),ok=passes(r),col=S.rule==='linear'?'--steel':S.rule==='neutral'?'--moss':'--ink';
+    E('circle',{cx:X(n),cy:cy(r),r:ok?4.5:5,style:ok?`fill:var(${col});stroke:var(--paper-2);stroke-width:1.5`:'fill:var(--paper-2);stroke:var(--blood);stroke-width:2.2'},g);});
+  // hover/focus inspector
+  if(S.sel!=null){const n=S.sel,r=req(S.rule,n),ok=passes(r),px=X(n),py=cy(r);
+    E('line',{x1:px,x2:px,y1:Y(y1),y2:Y(y0),style:'stroke:var(--ink);stroke-opacity:.35;stroke-dasharray:3 3'},g);
+    E('circle',{cx:px,cy:py,r:8,style:'fill:none;stroke:var(--focus);stroke-width:2'},g);
+    const txt=`N ${n}: ${fmt1(r)} per dealer, ${ok?'passes':'fails'}`;
+    const right=px<c.w/2,t=E('text',{x:px+(right?12:-12),y:Math.max(28,py-12),'text-anchor':right?'start':'end',class:'halo b',style:`fill:var(${ok?'--ink':'--blood'})`},g,txt);
+  }
+  svg.setAttribute('aria-label',`Per-dealer DPS required against raid size, ${S.rule} rule. `+[10,15,20,25,30].map(n=>`N ${n}: ${fmt1(req(S.rule,n))} ${passes(req(S.rule,n))?'passes':'fails'}`).join('; '));
+}
+function drawExe(){
+  const svg=$('sExe'),y1=S.pen?5:1;
+  const c=frame(svg,{h:260,pad:{l:44,r:14,t:12,b:34},x0:10,x1:30,y0:0,y1,xt:[10,15,20,25,30],yt:S.pen?[0,1,2,3,4,5]:[0,.25,.5,.75,1],yf:v=>S.pen?String(v):Math.round(v*100)+'%',xl:'players N'});
+  const {X,Y,g}=c,cl=v=>Math.min(y1*1.03,v);
+  if(S.fx){E('line',{x1:X(10),x2:X(30),y1:Y(cl(fxd())),y2:Y(cl(fxd())),style:'stroke:var(--ink);stroke-width:2;stroke-dasharray:7 5'},g);}
+  E('path',{d:poly(Ns.map(n=>[n,cl(tg(n))]),X,Y),style:'fill:none;stroke:var(--steel);stroke-width:2.5'},g);
+  E('path',{d:poly(Ns.map(n=>[n,cl(rw(n))]),X,Y),style:'fill:none;stroke:var(--blood);stroke-width:4;stroke-linejoin:round'},g);
+  const lab=v=>S.pen?v.toFixed(2):pct(v);
+  [[10,'start',8],[30,'end',-8]].forEach(([n,anc,dx])=>{
+    const v=rw(n),py=Y(cl(v));E('circle',{cx:X(n),cy:py,r:4.5,style:'fill:var(--blood)'},g);
+    E('text',{x:X(n)+dx,y:py+(S.pen?-8:16),'text-anchor':anc,class:'halo b',style:'fill:var(--blood)'},g,lab(v));
+  });
+  if(S.sel!=null){const px=X(S.sel);E('line',{x1:px,x2:px,y1:Y(y1),y2:Y(0),style:'stroke:var(--ink);stroke-opacity:.35;stroke-dasharray:3 3'},g);
+    E('text',{x:px+(px<c.w/2?6:-6),y:Y(y1)+14,'text-anchor':px<c.w/2?'start':'end',class:'halo'},g,`N ${S.sel}: raid-wide ${lab(rw(S.sel))}, targeted ${lab(tg(S.sel))}`);}
+  $('exSub').textContent=S.pen?'Expected misses per pull for one mechanic cast k times.':'One mechanic cast k times per pull. Clean means nobody is late.';
+  svg.setAttribute('aria-label',(S.pen?'Expected misses':'Clean-pull chance')+` against raid size. Raid-wide falls from ${lab(rw(10))} at 10 to ${lab(rw(30))} at 30.`);
+}
+function table(){
+  const rows=[10,15,20,25,30].map(n=>{const H=Hof[S.rule](n),r=req(S.rule,n),ok=passes(r);
+    return `<tr><td>${n}</td><td>${tk(n)}</td><td>${hl(n)}</td><td>${dd(n)}</td><td>${fmt(H)}</td><td>${fmt1(r)}</td><td class="${ok?'pass':'fail'}">${ok?'passes':'fails'}</td><td>${S.pen?rw(n).toFixed(2):pct(rw(n))}</td><td>${S.pen?tg(n).toFixed(2):pct(tg(n))}</td></tr>`;});
+  $('tb').innerHTML=rows.join('');
+  $('thRW').textContent=S.pen?'Raid-wide misses':'Raid-wide clean';$('thTg').textContent=S.pen?'Targeted misses':'Targeted clean';
+  const fails=Ns.filter(n=>!passes(req(S.rule,n)));
+  const fs=fails.length?`fails at ${fails.length===Ns.length?'every size':fails.length>6?fails.length+' of 21 sizes':'N = '+fails.join(', ')}`:'passes at every size from 10 to 30';
+  $('dyn').textContent=`p = ${p().toFixed(5)} per player per cast. Your group ${fs} under the ${S.rule} rule. ${S.fx?`A mechanic with ${S.m} fixed targets gives ${S.pen?fxd().toFixed(2)+' misses':pct(fxd())} at every N.`:''}`;
+}
+function outs(){
+  $('oH20').textContent=fmt(S.H20);$('oT').textContent=S.T+' s';$('oTax').textContent=Math.round(S.tax*100)+'%';$('oA').textContent=S.a.toFixed(2)+' (b '+((1-S.a)/20).toFixed(4)+')';
+  $('oDps').textContent=fmt(S.dps);$('oTanks').textContent=S.tanks;$('oTel').textContent=fmt(S.tel)+' ms';$('oSd').textContent=S.sd+' ms';$('oK').textContent=S.k;$('oM').textContent=S.m;
+  $('customWrap').hidden=S.rule!=='custom';$('lgCustom').hidden=S.rule!=='custom';$('lgFixed').hidden=!S.fx;$('m').disabled=!S.fx;
+}
+function update(){outs();table();drawDmg();drawExe();}
+
+[['H20','H20'],['T','T'],['tax','tax'],['a','a'],['dps','dps'],['tanks','tanks'],['tel','tel'],['sd','sd'],['k','k'],['m','m']].forEach(([id,key])=>$(id).addEventListener('input',e=>{S[key]=+e.target.value;update();}));
+[['t3','t3'],['fx','fx'],['pen','pen']].forEach(([id,key])=>$(id).addEventListener('change',e=>{S[key]=e.target.checked;update();}));
+const chips=[...document.querySelectorAll('.chip[data-rule]')];
+function pick(b,focus){chips.forEach(x=>{const on=x===b;x.setAttribute('aria-checked',on);x.tabIndex=on?0:-1;});S.rule=b.dataset.rule;if(focus)b.focus();update();}
+chips.forEach((b,i)=>{b.addEventListener('click',()=>pick(b));b.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();pick(chips[(i+1)%3],true);}
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();pick(chips[(i+2)%3],true);}});});
+// inspector on the damage chart
+const sd=$('sDmg');
+function nFromEvent(e){const r=sd.getBoundingClientRect(),w=r.width,x=e.clientX-r.left;const n=Math.round(10+20*(x-50)/(w-64));return Math.max(10,Math.min(30,n));}
+sd.addEventListener('pointermove',e=>{const n=nFromEvent(e);if(n!==S.sel){S.sel=n;drawDmg();drawExe();}});
+sd.addEventListener('pointerleave',()=>{if(document.activeElement!==sd){S.sel=null;drawDmg();drawExe();}});
+sd.addEventListener('focus',()=>{if(S.sel==null)S.sel=Ns.find(n=>!passes(req(S.rule,n)))||20;drawDmg();drawExe();});
+sd.addEventListener('blur',()=>{S.sel=null;drawDmg();drawExe();});
+sd.addEventListener('keydown',e=>{let d=0;if(e.key==='ArrowRight'||e.key==='ArrowUp')d=1;if(e.key==='ArrowLeft'||e.key==='ArrowDown')d=-1;if(e.key==='Home'){S.sel=10;}if(e.key==='End'){S.sel=30;}
+  if(d||e.key==='Home'||e.key==='End'){e.preventDefault();if(d)S.sel=Math.max(10,Math.min(30,(S.sel||20)+d));drawDmg();drawExe();}});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

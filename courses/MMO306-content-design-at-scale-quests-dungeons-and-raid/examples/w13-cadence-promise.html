@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cadence promise — MMO306 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.04rem;margin:0}
+.tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 12px}
+.presets>span{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.charts{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px}
+@media (max-width:820px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cCal{height:300px}
+#cS{height:300px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:820px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.copyrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:10px 0 0;font-size:.9rem}
+#copyText{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84rem;background:var(--paper-2);padding:8px 10px;border-radius:8px;margin:0;white-space:pre-wrap;word-break:break-word;flex:1 1 320px;user-select:all}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+.group h2{font:700 .78rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 4px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+input[type=number],select{font:600 1rem var(--sans);padding:5px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=number]{width:5.5em}
+.stepper{display:flex;align-items:center;gap:8px;margin:2px 0 8px}
+.stepper output{font:700 1.3rem var(--sans);min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
+button{font:600 .9rem var(--sans);padding:6px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.inline{display:flex;align-items:center;gap:8px;justify-content:flex-start;margin:4px 0 8px}
+.insight{margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.fignote{font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+/* slip or cut */
+.fixed{font-size:.9rem;color:var(--ink-soft);margin:8px 0 0}
+.bars{margin-top:14px;display:grid;gap:10px}
+.brow{display:grid;grid-template-columns:8.5em minmax(0,1fr);gap:4px 12px;align-items:center}
+@media (max-width:520px){.brow{grid-template-columns:1fr}}
+.brow .who{font-size:.88rem;font-variant-numeric:tabular-nums}
+.brow .who b{display:block;font-size:.95rem}
+.pair{display:grid;gap:3px}
+.bar{display:flex;align-items:center;gap:8px;font-size:.84rem;font-variant-numeric:tabular-nums}
+.bar i{display:block;height:16px;border:1.5px solid var(--blood);border-radius:3px;min-width:0}
+.bar.slip i{background:var(--blood)}
+.bar.cut i{background:repeating-linear-gradient(45deg,var(--blood) 0 2px,transparent 2px 7px)}
+.bar span{white-space:nowrap}
+.bar.zero i{border-style:dashed;border-color:var(--ink-soft);width:2px!important}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin-top:10px}
+.key i{display:inline-block;width:22px;height:12px;border:1.5px solid var(--blood);vertical-align:middle;margin-right:6px;border-radius:2px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO306 Content Design at Scale · Week 13 · Worked example</p>
+  <h1>A cadence planned on the mean build time is a coin flip</h1>
+  <p class="lede">Two teams, 160 days apart, and a drop that takes 320 days on average. On paper it fits. Every bell curve on the left hangs half past its release date, and the plan's dot on the right sits on the 50% line.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Calendar and on-time curves</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Slip or cut</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="presets" role="group" aria-label="Plan presets">
+    <span>Plans</span>
+    <button class="chip" data-n="2" data-p="160" aria-pressed="true">Mean plan (2 teams, 160 d)</button>
+    <button class="chip" data-n="2" data-p="175" aria-pressed="false">Two teams, 175</button>
+    <button class="chip" data-n="3" data-p="133" aria-pressed="false">Three teams, 133</button>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Two-year calendar<small>One row per team. Each bar runs from the day a team starts a drop to its release date. The bell is the build time; the hatched part is late.</small></figcaption>
+      <canvas id="cCal" role="img" aria-label="Release calendar with build-time distributions"></canvas>
+      <p class="fignote">Heavy outline: the highlighted drop (the first team's second drop), which the late-start field affects.</p>
+    </figure>
+    <figure>
+      <figcaption>On time vs cadence<small>q = Φ((nP − μ) / σ), one S-curve per team count. Ticks on the target line mark the fastest cadence each n allows.</small></figcaption>
+      <canvas id="cS" role="img" aria-label="On-time chance versus cadence for one to five teams"></canvas>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rQ">—</b><span>on-time chance q</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rLate">—</b><span>average days late per drop</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rTeams">—</b><span id="rTeamsL">teams needed for target</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rFast">—</b><span id="rFastL">fastest cadence at target</span></div>
+  </div>
+  <div class="copyrow">
+    <p id="copyText" aria-live="polite"></p>
+    <button id="copy" type="button">Copy numbers</button>
+  </div>
+  <div class="copyrow">
+    <label for="lateStart" style="justify-content:flex-start;align-items:center">Late start (days) for the highlighted drop</label>
+    <input id="lateStart" type="number" min="0" max="365" step="1" value="0">
+    <span id="rHi" aria-live="polite" style="font-variant-numeric:tabular-nums"></span>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div class="group">
+      <h2>Three-point estimate</h2>
+      <label for="a">Optimistic a <output id="oa">240</output></label>
+      <input id="a" type="range" min="30" max="400" step="5" value="240">
+      <label for="m">Most likely m <output id="om">300</output></label>
+      <input id="m" type="range" min="30" max="500" step="5" value="300">
+      <label for="b">Pessimistic b <output id="ob">480</output></label>
+      <input id="b" type="range" min="60" max="800" step="5" value="480">
+    </div>
+    <div class="group">
+      <h2>Plan</h2>
+      <span style="font-weight:600;font-size:.92rem" id="nLab">Teams n</span>
+      <div class="stepper" role="group" aria-labelledby="nLab">
+        <button id="nDown" type="button" aria-label="Fewer teams">−</button>
+        <output id="on" aria-live="polite">2</output>
+        <button id="nUp" type="button" aria-label="More teams">+</button>
+      </div>
+      <label for="P">Cadence P (days) <output id="oP">160</output></label>
+      <input id="P" type="range" min="30" max="400" step="1" value="160">
+    </div>
+    <div class="group">
+      <h2>Promise</h2>
+      <label for="target" style="justify-content:flex-start;align-items:center">Target on-time rate
+        <select id="target">
+          <option value="0.5">50%</option><option value="0.75">75%</option><option value="0.9" selected>90%</option><option value="0.95">95%</option><option value="0.99">99%</option>
+        </select>
+      </label>
+      <p class="fignote">z* for the target: <b id="rZs">1.2816</b>. Teams needed = ceil((μ + z*σ) / P). Fastest cadence = (μ + z*σ) / n.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <p style="margin:0;font-family:var(--serif)">A drop is <b id="xTxt">21</b> days late. Slip it and every player who ran out waits the full delay. Cut it and each player loses a share of their own exhaustion time <i>T</i>.</p>
+  <p class="fixed">Fixed from week 1's design B: content C = 20 hours, replay r = 6. T = 7 × C × r / h.</p>
+  <div class="controls">
+    <div>
+      <label for="X">Days late X <output id="oX">21</output></label>
+      <input id="X" type="range" min="0" max="90" step="1" value="21">
+    </div>
+    <div>
+      <label for="s">Cut share s <output id="os">15%</output></label>
+      <input id="s" type="range" min="0" max="50" step="1" value="15">
+    </div>
+    <div>
+      <label for="P2">Cadence P (days, shared) <output id="oP2">175</output></label>
+      <input id="P2" type="range" min="30" max="400" step="1" value="175">
+    </div>
+  </div>
+  <div class="key"><span><i style="background:var(--blood)"></i>Slip: extra drought if the drop ships X days late</span><span><i style="background:repeating-linear-gradient(45deg,var(--blood) 0 2px,transparent 2px 7px)"></i>Cut: extra drought if it ships on time, cut by s</span></div>
+  <div class="bars" id="bars" aria-hidden="true"></div>
+  <div class="table-wrap">
+    <table aria-label="Slip or cut by hours played per week">
+      <thead><tr><th>Hours / week</th><th>T (days)</th><th>Slip, extra days</th><th>Cut, extra days</th><th>Cheaper</th></tr></thead>
+      <tbody id="tbody" aria-live="polite"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 13 lecture: PERT three-point estimate, build time treated as normal with mean μ and spread σ. Estimates, team counts and the player population are invented for teaching. The slip-or-cut population is week 1's design B.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f1=x=>(Math.round(x*10)/10).toFixed(1);
+const ZS={0.5:0,0.75:0.674,0.9:1.2816,0.95:1.6449,0.99:2.3263};
+const TEAM=['A','B','C','D','E'];
+const DASH=[[],[8,4],[2,3],[10,3,2,3],[5,5]];
+let a=240,m=300,b=480,n=2,P=160,tgt=0.9,late=0,X=21,s=15,slipVisited=false;
+
+function erf(x){ // Abramowitz and Stegun 7.1.26, |error| < 1.5e-7
+  const sg=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return sg*y;}
+const Phi=z=>0.5*(1+erf(z/Math.SQRT2));
+const phi=z=>Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);
+function est(){return {mu:(a+4*m+b)/6,sd:(b-a)/6};}
+function onTime(W){const {mu,sd}=est();if(sd<=0)return W>=mu?1:0;return Phi((W-mu)/sd);}
+function meanLate(W){const {mu,sd}=est();if(sd<=0)return Math.max(0,mu-W);const z=(W-mu)/sd;return Math.max(0,sd*(phi(z)-z*(1-Phi(z))));}
+function need(){const {mu,sd}=est();return mu+ZS[tgt]*sd;}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function hatch(g,color){const p=document.createElement('canvas');p.width=p.height=8;const x=p.getContext('2d');
+  x.strokeStyle=color;x.lineWidth=1.6;x.beginPath();x.moveTo(-2,10);x.lineTo(10,-2);x.moveTo(-2,2);x.lineTo(2,-2);x.moveTo(6,10);x.lineTo(10,6);x.stroke();return g.createPattern(p,'repeat');}
+function halo(g,t,x,y){g.lineWidth=4;g.strokeStyle=css('--paper-2');g.lineJoin='round';g.strokeText(t,x,y);g.fillText(t,x,y);}
+
+/* ---------- calendar ---------- */
+function drawCal(){
+  const c=$('cCal'),rowH=Math.max(66,Math.min(118,250/n)),top=10,axis=30;
+  c.style.height=(top+n*rowH+axis)+'px';
+  const {g,w,h}=setup(c),{mu,sd}=est();
+  const L=52,R=10,X0=L,X1=w-R,D=730,sx=d=>X0+(X1-X0)*d/D;
+  g.clearRect(0,0,w,h);
+  const ink=css('--ink'),soft=css('--ink-soft'),blood=css('--blood'),steel=css('--steel'),grid=css('--grid'),p2=css('--paper-2');
+  const pat=hatch(g,blood);
+  g.font='12px '+css('--sans');
+  // axis
+  const step=w<500?200:100;
+  g.strokeStyle=grid;g.lineWidth=1;g.fillStyle=soft;g.textAlign='center';g.textBaseline='top';
+  for(let d=0;d<=D;d+=step){const x=sx(d);g.beginPath();g.moveTo(x,top);g.lineTo(x,top+n*rowH);g.stroke();g.fillText(d,x,top+n*rowH+6);}
+  g.textAlign='right';g.fillText('day',X1,top+n*rowH+18);
+  // today
+  g.strokeStyle=ink;g.lineWidth=1.5;g.beginPath();g.moveTo(sx(0),top-4);g.lineTo(sx(0),top+n*rowH);g.stroke();
+  // rows
+  const hiK=n+1;
+  for(let t=0;t<n;t++){
+    const y0=top+t*rowH;
+    g.fillStyle=ink;g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='middle';
+    g.fillText('Team '+TEAM[t],2,y0+rowH-34);
+    // dash sample under name
+    g.strokeStyle=ink;g.lineWidth=1.5;g.setLineDash(DASH[t]);g.beginPath();g.moveTo(3,y0+rowH-24);g.lineTo(L-8,y0+rowH-24);g.stroke();g.setLineDash([]);
+    if(t>0){g.strokeStyle=grid;g.beginPath();g.moveTo(L,y0);g.lineTo(X1,y0);g.stroke();}
+  }
+  g.font='12px '+css('--sans');
+  for(let k=1;;k++){
+    const start=(k-n)*P,due=k*P;if(start>=D)break;
+    const t=(k-1)%n,y0=top+t*rowH,barY=y0+rowH-29,hi=k===hiK;
+    const shift=hi?late:0,W=n*P-shift,q=onTime(W);
+    // bar
+    const xs=sx(Math.max(0,start)),xe=sx(Math.min(D,due));
+    if(xe>xs){g.fillStyle=p2;g.fillRect(xs,barY,xe-xs,10);
+      g.strokeStyle=ink;g.lineWidth=hi?3:1.5;g.setLineDash(DASH[t]);g.strokeRect(xs,barY,xe-xs,10);g.setLineDash([]);}
+    if(start<0&&due>0){ // pre-launch arrow
+      g.fillStyle=ink;g.beginPath();g.moveTo(X0-1,barY+5);g.lineTo(X0+7,barY-1);g.lineTo(X0+7,barY+11);g.closePath();g.fill();}
+    if(xe-xs>40&&due>0){g.fillStyle=ink;g.textAlign='left';g.textBaseline='top';g.font=(hi?'700 ':'')+'11px '+css('--sans');g.fillText('Drop '+k,Math.max(xs,X0+9)+2,barY+13);g.font='12px '+css('--sans');}
+    if(due<=0||due>D+3*sd)continue;
+    // bell centred at start+shift+mu
+    const cen=start+shift+mu,bh=rowH-50,base=barY-2;
+    if(sd>0){
+      const pts=[];for(let i=0;i<=60;i++){const d=cen-3*sd+6*sd*i/60;pts.push([d,Math.exp(-Math.pow((d-cen)/sd,2)/2)]);}
+      const px=d=>sx(Math.max(0,Math.min(D,d)));
+      g.save();g.beginPath();g.rect(X0,top,X1-X0,n*rowH);g.clip();
+      // on-time part
+      g.beginPath();g.moveTo(px(pts[0][0]),base);pts.forEach(p=>{if(p[0]<=due)g.lineTo(px(p[0]),base-bh*p[1]);});
+      const dd=Math.min(Math.max(due,cen-3*sd),cen+3*sd),yd=Math.exp(-Math.pow((dd-cen)/sd,2)/2);
+      g.lineTo(px(dd),base-bh*yd);g.lineTo(px(dd),base);g.closePath();g.globalAlpha=.28;g.fillStyle=steel;g.fill();g.globalAlpha=1;
+      // late part
+      if(due<cen+3*sd){g.beginPath();g.moveTo(px(dd),base);g.lineTo(px(dd),base-bh*yd);pts.forEach(p=>{if(p[0]>dd)g.lineTo(px(p[0]),base-bh*p[1]);});g.lineTo(px(cen+3*sd),base);g.closePath();g.fillStyle=pat;g.fill();}
+      g.beginPath();pts.forEach((p,i)=>i?g.lineTo(px(p[0]),base-bh*p[1]):g.moveTo(px(p[0]),base-bh*p[1]));g.strokeStyle=ink;g.lineWidth=1;g.stroke();
+      g.restore();
+    }
+    // due tick
+    if(due<=D){const x=sx(due);g.strokeStyle=blood;g.lineWidth=2;g.beginPath();g.moveTo(x,y0+4);g.lineTo(x,barY+10);g.stroke();
+      const lab=f1((1-q)*100)+'% late',tw=g.measureText(lab).width;
+      const room=sx(due+P*n)-x; // space until this team's next release date
+      if(1-q>0.0005&&x+4+tw<X1&&(room>tw+8||due+P*n>D)){g.fillStyle=blood;g.textAlign='left';g.textBaseline='top';g.font='600 11px '+css('--sans');halo(g,lab,x+4,y0+3);g.font='12px '+css('--sans');}
+    }
+  }
+}
+
+/* ---------- S-curves ---------- */
+function drawS(){
+  const c=$('cS'),{g,w,h}=setup(c),{mu,sd}=est();
+  const pad={l:42,r:10,t:12,b:32},Pm=30,PM=400,sx=p=>pad.l+(w-pad.l-pad.r)*(p-Pm)/(PM-Pm),sy=q=>pad.t+(h-pad.t-pad.b)*(1-q);
+  g.clearRect(0,0,w,h);
+  const ink=css('--ink'),soft=css('--ink-soft'),steel=css('--steel'),ochre=css('--ochre'),grid=css('--grid');
+  g.font='12px '+css('--sans');g.strokeStyle=grid;g.lineWidth=1;g.fillStyle=soft;
+  for(let i=0;i<=4;i++){const y=sy(i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(i*25+'%',pad.l-6,y);}
+  const xt=w<500?[30,100,200,300,400]:[30,50,100,150,200,250,300,350,400];
+  xt.forEach(p=>{g.textAlign='center';g.textBaseline='top';g.fillText(p,sx(p),h-pad.b+6);});
+  g.textAlign='right';g.fillText('cadence P (days)',w-pad.r,h-14);
+  // target line
+  const ty=sy(tgt);g.strokeStyle=css('--moss');g.lineWidth=1.8;g.setLineDash([6,5]);g.beginPath();g.moveTo(pad.l,ty);g.lineTo(w-pad.r,ty);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--moss');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';halo(g,'target '+Math.round(tgt*100)+'%',pad.l+4,ty-2);
+  // curves
+  for(let k=1;k<=5;k++){
+    const cur=k===n;g.strokeStyle=cur?steel:soft;g.lineWidth=cur?3.2:1.5;g.globalAlpha=cur?1:.85;g.setLineDash(DASH[k-1]);g.beginPath();
+    for(let i=0;i<=240;i++){const p=Pm+(PM-Pm)*i/240,q=onTime(k*p);i?g.lineTo(sx(p),sy(q)):g.moveTo(sx(p),sy(q));}
+    g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    // label at a staggered height on the curve
+    const lv=0.08+0.16*(k-1);let pl=sd>0?(mu+sd*zOf(lv))/k:mu/k;
+    if(pl>=Pm&&pl<=PM){g.fillStyle=cur?steel:soft;g.font=(cur?'700 ':'600 ')+'12px '+css('--sans');g.textAlign='left';g.textBaseline='middle';halo(g,'n = '+k,sx(pl)+5,sy(lv));}
+    // tick on target line
+    const pmin=need()/k;if(pmin>=Pm&&pmin<=PM){g.strokeStyle=ink;g.lineWidth=cur?2.5:1.5;g.beginPath();g.moveTo(sx(pmin),ty-6);g.lineTo(sx(pmin),ty+6);g.stroke();}
+  }
+  // current dot
+  const q=onTime(n*P),x=sx(Math.max(Pm,Math.min(PM,P))),y=sy(q);
+  g.strokeStyle=ink;g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=ochre;g.beginPath();g.arc(x,y,8,0,Math.PI*2);g.fill();g.strokeStyle=ink;g.lineWidth=2;g.stroke();
+  g.fillStyle=ink;g.font='700 13px '+css('--sans');g.textBaseline='middle';const lab='q = '+f1(q*100)+'%';const tw=g.measureText(lab).width;
+  const lx=x+12+tw>w-pad.r?x-12-tw:x+12;g.textAlign='left';halo(g,lab,lx,Math.max(pad.t+8,Math.min(h-pad.b-8,y+(q>0.85?14:-14))));
+}
+function zOf(p){ // inverse normal by bisection, fine for labels
+  let lo=-6,hi=6;for(let i=0;i<50;i++){const mid=(lo+hi)/2;Phi(mid)<p?lo=mid:hi=mid;}return (lo+hi)/2;}
+
+/* ---------- readouts ---------- */
+function readouts(){
+  const {mu,sd}=est(),W=n*P,z=sd>0?(W-mu)/sd:(W>=mu?Infinity:-Infinity),q=onTime(W),lt=meanLate(W),nd=need();
+  const teams=Math.ceil(nd/P-1e-9),fast=nd/n,tp=Math.round(tgt*100);
+  $('rQ').textContent=f1(q*100)+'%';$('rLate').textContent=f1(lt)+' d';
+  $('rTeams').textContent=teams;$('rTeamsL').textContent='teams for '+tp+'% at P = '+P;
+  $('rFast').textContent=f1(fast)+' d';$('rFastL').textContent='fastest cadence at '+tp+'% with n = '+n;
+  $('rZs').textContent=ZS[tgt];
+  const Wh=W-late,qh=onTime(Wh);
+  $('rHi').textContent='Drop '+(n+1)+' (Team A): window '+Wh+' d, q = '+f1(qh*100)+'%';
+  $('copyText').textContent=`a=${a} m=${m} b=${b}  mu=${f1(mu)} sigma=${f1(sd)}  n=${n} P=${P} W=${W} z=${isFinite(z)?z.toFixed(2):(z>0?'inf':'-inf')}  q=${f1(q*100)}%  late=${f1(lt)} d  teams for ${tp}%=${teams}  fastest at ${tp}% (n=${n})=${f1(fast)} d`+(late?`  late start ${late} d: q=${f1(qh*100)}%`:'');
+  ['a','m','b','P'].forEach(k=>$('o'+k).textContent=({a,m,b,P})[k]);$('on').textContent=n;
+  $('nDown').disabled=n<=1;$('nUp').disabled=n>=5;
+  document.querySelectorAll('#p1 .chip').forEach(c=>c.setAttribute('aria-pressed',String(+c.dataset.n===n&&+c.dataset.p===P)));
+  let t=`Window W = n × P = ${W} days against a mean build of ${f1(mu)}. `;
+  if(q<tgt) t+=`At ${f1(q*100)}% on time, the plan misses the ${tp}% target. With ${n} team${n>1?'s':''} the fastest cadence you can promise is ${f1(fast)} days; at ${P} days you need ${teams} teams.`;
+  else t+=`At ${f1(q*100)}% on time, the plan meets the ${tp}% target, with ${f1(P-fast)} days of spare cadence before it drops below.`;
+  $('insight').textContent=t;
+}
+function update(){readouts();drawCal();drawS();}
+
+/* ---------- slip or cut ---------- */
+function drawSlip(){
+  const C=20,r=6,sh=s/100,H=[3,5,6,10,16,34,60];
+  $('oX').textContent=X;$('xTxt').textContent=X;$('os').textContent=s+'%';$('oP2').textContent=P;
+  const rows=H.map(h=>{const T=7*C*r/h;return {h,T,slip:Math.min(X,Math.max(0,P+X-T)),cut:Math.max(0,P-(1-sh)*T)-Math.max(0,P-T)};});
+  const mx=Math.max(1,...rows.map(o=>Math.max(o.slip,o.cut)));
+  $('bars').innerHTML=rows.map(o=>`<div class="brow"><div class="who"><b>${o.h} h/week</b>T = ${f1(o.T)} d</div><div class="pair">
+    <div class="bar slip${o.slip<0.05?' zero':''}"><i style="width:${(o.slip/mx*80).toFixed(1)}%"></i><span>slip +${f1(o.slip)} d</span></div>
+    <div class="bar cut${o.cut<0.05?' zero':''}"><i style="width:${(o.cut/mx*80).toFixed(1)}%"></i><span>cut +${f1(o.cut)} d</span></div></div></div>`).join('');
+  $('tbody').innerHTML=rows.map(o=>{const d=o.slip-o.cut;return `<tr><td>${o.h}</td><td>${f1(o.T)}</td><td>${f1(o.slip)}</td><td>${f1(o.cut)}</td><td>${Math.abs(d)<0.05?'same':d>0?'cut':'slip'}</td></tr>`;}).join('');
+}
+
+/* ---------- events ---------- */
+function setA(v){a=v;if(m<a)m=a;if(b<m)b=m;$('m').value=m;$('b').value=b;}
+function setM(v){m=v;if(m<a){a=m;$('a').value=a;}if(m>b){b=m;$('b').value=b;}}
+function setB(v){b=v;if(m>b){m=b;$('m').value=m;}if(a>m){a=m;$('a').value=a;}}
+$('a').addEventListener('input',e=>{setA(+e.target.value);update();});
+$('m').addEventListener('input',e=>{setM(+e.target.value);update();});
+$('b').addEventListener('input',e=>{setB(+e.target.value);update();});
+$('P').addEventListener('input',e=>{P=+e.target.value;$('P2').value=P;update();});
+$('P2').addEventListener('input',e=>{P=+e.target.value;$('P').value=P;drawSlip();readouts();});
+$('nDown').addEventListener('click',()=>{if(n>1){n--;update();}});
+$('nUp').addEventListener('click',()=>{if(n<5){n++;update();}});
+$('target').addEventListener('change',e=>{tgt=+e.target.value;update();});
+$('lateStart').addEventListener('input',e=>{late=Math.max(0,Math.min(365,+e.target.value||0));update();});
+$('X').addEventListener('input',e=>{X=+e.target.value;drawSlip();});
+$('s').addEventListener('input',e=>{s=+e.target.value;drawSlip();});
+document.querySelectorAll('#p1 .chip').forEach(c=>c.addEventListener('click',()=>{n=+c.dataset.n;P=+c.dataset.p;$('P').value=P;$('P2').value=P;update();}));
+$('copy').addEventListener('click',()=>{const t=$('copyText').textContent;
+  try{navigator.clipboard.writeText(t).then(()=>{$('copy').textContent='Copied';setTimeout(()=>$('copy').textContent='Copy numbers',1500);},()=>{});}catch(e){}});
+const tabs=[$('t1'),$('t2')];
+function sel(t){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});t.focus();
+  if(t.id==='t2'){if(!slipVisited){slipVisited=true;P=175;$('P').value=P;$('P2').value=P;readouts();}drawSlip();}else update();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2]);}});});
+const redraw=()=>{if(!$('p1').hidden){drawCal();drawS();}};
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+update();drawSlip();
+})();
+</script>
+</body>
+</html>

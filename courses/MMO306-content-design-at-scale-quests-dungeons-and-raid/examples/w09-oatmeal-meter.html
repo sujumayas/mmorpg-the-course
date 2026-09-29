@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oatmeal meter — MMO306 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:22px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.1;margin:0 0 8px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:780px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:250px}
+.bars{display:grid;gap:12px;margin-top:4px}
+.bar-row .bl{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;font-weight:600}
+.bar-row .bl b{font-variant-numeric:tabular-nums}
+.track{position:relative;height:22px;border-radius:5px;background:var(--paper);border:1px solid var(--grid)}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--c);transition:width .25s ease}
+.ticks{position:relative;height:18px;font-size:.74rem;color:var(--ink-soft);margin-top:2px}
+.ticks span{position:absolute;transform:translateX(-50%)}
+.ticks span:first-child{transform:none}.ticks span:last-child{transform:translateX(-100%)}
+.bnote{font-family:var(--serif);font-size:.95rem;margin:8px 0 0;min-height:2.9em}
+.bnote.hot{color:var(--blood)}
+.readout{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.axes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+@media (max-width:900px){.axes{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.axes{grid-template-columns:1fr}}
+.axis{background:var(--paper-2);border-radius:10px;padding:10px 12px}
+.axis h3{margin:0 0 6px;font-size:.95rem;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.axis h3 small{font-weight:400;color:var(--ink-soft);font-size:.78rem;font-variant-numeric:tabular-nums}
+.stepper{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.stepper span{font-size:.86rem;font-weight:600;flex:1}
+.stepper button{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);font:700 1.1rem var(--sans);cursor:pointer;line-height:1}
+.stepper button:disabled{opacity:.35;cursor:default}
+.stepper output{min-width:2ch;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:1.05rem}
+.wbars{display:flex;gap:2px;align-items:flex-end;height:26px;margin-top:6px}
+.wbars i{flex:1;background:var(--steel);border-radius:2px 2px 0 0;min-height:1px}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:14px}
+@media (max-width:780px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+select{font:600 .95rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);width:100%;margin-top:4px}
+.small-btn{font:600 .8rem var(--sans);padding:4px 8px;border-radius:7px;border:1.5px solid var(--ochre);background:transparent;color:var(--ink);cursor:pointer}
+.small-btn[aria-pressed="true"]{background:var(--ochre);color:var(--paper)}
+.toggle{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem;justify-content:flex-start}
+.toggle input{width:20px;height:20px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+@media (max-width:480px){table{font-size:.8rem}th,td{padding:5px 6px}}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+[hidden]{display:none!important}
+footer{margin-top:20px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO306 Content Design at Scale · Week 9 · Worked example</p>
+  <h1>The oatmeal meter</h1>
+  <p class="lede">The tallest bar does nothing. Find the one that does.</p>
+</header>
+
+<section class="panel" aria-label="Variety and repeats">
+  <div class="charts">
+    <figure>
+      <figcaption>How much variety?<small>Log scale, 1 to 10<sup>15</sup></small></figcaption>
+      <div class="bars">
+        <div class="bar-row"><div class="bl"><span>Raw outputs <span style="font-weight:400;color:var(--ink-soft)">M × 2<sup>b</sup></span></span><b id="vRaw">—</b></div><div class="track"><div class="fill" id="fRaw" style="--c:var(--ink-soft)"></div></div></div>
+        <div class="bar-row"><div class="bl"><span>Perceived variety M</span><b id="vM">—</b></div><div class="track"><div class="fill" id="fM" style="--c:var(--steel)"></div></div></div>
+        <div class="bar-row"><div class="bl"><span>Effective variety M<sub>eff</sub></span><b id="vMe">—</b></div><div class="track"><div class="fill" id="fMe" style="--c:var(--ochre)"></div></div></div>
+      </div>
+      <div class="ticks" aria-hidden="true"><span style="left:0">1</span><span style="left:33.33%">10<sup>5</sup></span><span style="left:66.67%">10<sup>10</sup></span><span style="left:100%">10<sup>15</sup></span></div>
+      <p class="bnote" id="bnote" aria-live="polite"></p>
+    </figure>
+    <figure>
+      <figcaption>Chance a player has met a repeat<small>After n runs. Dashed line is 50%.</small></figcaption>
+      <canvas id="cP" role="img" aria-label="Chance of a repeated dungeon signature versus runs"></canvas>
+      <div class="legend"><span><i style="background:var(--ochre)"></i>formula, M<sub>eff</sub></span><span id="lgSim" hidden><i style="background:var(--moss)"></i>simulated, 5,000 players, memory rule</span></div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rM">—</b><span>M</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rMe">—</b><span>M<sub>eff</sub></span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rP10">—</b><span>P(10)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rP20">—</b><span>P(20)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rN50">—</b><span>n₅₀, runs</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rSim">—</b><span>simulated n₅₀</span></div>
+  </div>
+
+  <div class="presets" role="group" aria-label="Lecture settings">
+    <button class="chip" data-p="def" aria-pressed="true">Lecture defaults</button>
+    <button class="chip" data-p="even" aria-pressed="false">Modifiers even</button>
+    <button class="chip" data-p="lay8" aria-pressed="false">Layouts 8</button>
+    <button class="chip" data-p="weather" aria-pressed="false">+ weather 4</button>
+    <button class="chip" data-p="camps" aria-pressed="false">One axis, 12 values (giant camps)</button>
+  </div>
+
+  <div class="axes" id="axes"></div>
+
+  <div class="controls">
+    <div>
+      <label for="bits">Decoration seed bits b <output id="oBits">32</output></label>
+      <input id="bits" type="range" min="0" max="32" step="1" value="32">
+    </div>
+    <div>
+      <label for="week">Runs per week <output id="oWeek">21</output></label>
+      <input id="week" type="range" min="1" max="40" step="1" value="21">
+    </div>
+    <div>
+      <label for="mem">Memory rule</label>
+      <select id="mem">
+        <option value="0">none</option>
+        <option value="1">not the last 1</option>
+        <option value="3">not the last 3</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table aria-label="Chance of a repeat by run count">
+      <thead><tr><th>Runs n</th><th>P(repeat), formula</th><th>P(repeat), exact</th><th id="thSim">simulated</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the lecture: M = Π v<sub>i</sub>, M<sub>eff</sub> = Π 1/Σ p<sub>ij</sub><sup>2</sup>, P(n) ≈ 1 − exp(−n(n−1)/(2M<sub>eff</sub>)), n₅₀ = 0.5 + √(0.25 + 2 ln 2 × M<sub>eff</sub>). The exact column multiplies out every signature's probability (no approximation). The simulation uses a fixed seed, so the same settings give the same curve. The giant-camp preset follows the lecture's Skyrim "Bounty: Giant" example, drawn uniformly.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f1=x=>x.toFixed(1);
+const pc=x=>(x*100).toFixed(1)+'%';
+const LECT=[4,3,1,1,1];
+const axes=[
+  {id:'layout',name:'Layout',v:6,s:0,lect:false,on:true},
+  {id:'boss',name:'Boss',v:4,s:0,lect:false,on:true},
+  {id:'mod',name:'Modifier',v:5,s:0,lect:true,on:true},
+  {id:'weather',name:'Weather',v:4,s:0,lect:false,on:false,noSkew:true}
+];
+let bits=32,week=21,mem=0,lastMoved='',prevN50=null,sim=null,simToken=0;
+
+function weights(a){
+  let w;
+  if(a.lect&&a.v===5) w=LECT.slice();
+  else {w=[];for(let j=0;j<a.v;j++) w.push((1-a.s)+(j===0?a.s*a.v:0));}
+  const t=w.reduce((x,y)=>x+y,0);return w.map(x=>x/t);
+}
+function active(){return axes.filter(a=>a.on);}
+function model(){
+  let M=1,Me=1;
+  for(const a of active()){M*=a.v;const p=weights(a);Me*=1/p.reduce((s,x)=>s+x*x,0);}
+  return {M,Me};
+}
+const P=(n,Me)=>1-Math.exp(-n*(n-1)/(2*Me));
+const n50=Me=>0.5+Math.sqrt(0.25+2*Math.LN2*Me);
+
+// exact P(repeat within n) for independent weighted axes: 1 - n! e_n(p)
+function exactCurve(nMax){
+  let probs=[1];
+  for(const a of active()){const p=weights(a),next=[];for(const x of probs)for(const y of p)next.push(x*y);probs=next;}
+  const f=new Float64Array(nMax+1);f[0]=1; // f_k = k! e_k
+  for(const p of probs){if(p===0)continue;for(let k=nMax;k>=1;k--) f[k]+=k*p*f[k-1];}
+  const out=[0];for(let n=1;n<=nMax;n++) out.push(Math.min(1,Math.max(0,1-f[n])));
+  return out;
+}
+
+function sci(x){
+  if(x<1e4 && Number.isInteger(x)) return x.toLocaleString('en-US');
+  const e=Math.floor(Math.log10(x)),m=x/Math.pow(10,e);
+  return m.toFixed(1)+' × 10'+String(e).split('').map(c=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[+c]).join('');
+}
+function barW(x){return Math.max(0.6,Math.min(100,Math.log10(Math.max(1,x))/15*100));}
+
+// ---------- axis cards ----------
+function buildAxes(){
+  $('axes').innerHTML=axes.map((a,i)=>`
+  <div class="axis" data-i="${i}">
+    <h3>${a.id==='weather'?`<label class="toggle" style="margin:0"><input type="checkbox" id="wOn"> Add a fourth axis: weather</label>`:a.name}<small id="me${i}"></small></h3>
+    <div class="stepper"><span id="vl${i}">Values</span>
+      <button type="button" data-d="-1" aria-label="Fewer ${a.name.toLowerCase()} values">−</button>
+      <output id="v${i}" aria-labelledby="vl${i}">${a.v}</output>
+      <button type="button" data-d="1" aria-label="More ${a.name.toLowerCase()} values">+</button></div>
+    ${a.noSkew?'<div style="font-size:.8rem;color:var(--ink-soft)">Even weights</div>':`<label for="s${i}">Skew <output id="os${i}">0.00</output></label>
+    <input type="range" id="s${i}" min="0" max="1" step="0.05" value="${a.s}">`}
+    ${a.id==='mod'?'<button type="button" class="small-btn" id="lectBtn" aria-pressed="true">lecture weights 4 : 3 : 1 : 1 : 1</button>':''}
+    <div class="wbars" id="wb${i}" aria-hidden="true"></div>
+  </div>`).join('');
+  axes.forEach((a,i)=>{
+    const card=document.querySelector(`.axis[data-i="${i}"]`);
+    card.querySelectorAll('.stepper button').forEach(b=>b.addEventListener('click',()=>{
+      a.v=Math.min(12,Math.max(1,a.v+ +b.dataset.d));if(a.id==='mod'&&a.v!==5)a.lect=false;lastMoved='axis';clearPreset();refresh();
+    }));
+    const s=$('s'+i);if(s)s.addEventListener('input',()=>{a.s=+s.value;a.lect=false;lastMoved='axis';clearPreset();refresh();});
+  });
+  $('lectBtn').addEventListener('click',()=>{const a=axes[2];a.lect=!a.lect;if(a.lect){a.v=5;}lastMoved='axis';clearPreset();refresh();});
+  $('wOn').addEventListener('change',e=>{axes[3].on=e.target.checked;lastMoved='axis';clearPreset();refresh();});
+}
+function syncAxes(){
+  axes.forEach((a,i)=>{
+    $('v'+i).textContent=a.v;
+    const card=document.querySelector(`.axis[data-i="${i}"]`);
+    const [dn,up]=card.querySelectorAll('.stepper button');dn.disabled=a.v<=1||!a.on;up.disabled=a.v>=12||!a.on;
+    if($('s'+i)){$('s'+i).value=a.s;$('os'+i).textContent=a.lect&&a.v===5?'lecture':a.s.toFixed(2);$('s'+i).disabled=!a.on;}
+    const p=weights(a);$('me'+i).textContent=a.on?'M_eff '+(1/p.reduce((s,x)=>s+x*x,0)).toFixed(2):'off';
+    const mx=Math.max(...p);$('wb'+i).innerHTML=p.map(x=>`<i style="height:${(x/mx*100).toFixed(1)}%;opacity:${a.on?1:.3}"></i>`).join('');
+  });
+  $('lectBtn').setAttribute('aria-pressed',axes[2].lect&&axes[2].v===5);
+  $('wOn').checked=axes[3].on;
+}
+
+// ---------- drawing ----------
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:44,r:12,t:12,b:32};
+function draw(m){
+  const {g,w,h}=setupCanvas($('cP')),X=n=>pad.l+(w-pad.l-pad.r)*(n-1)/59,Y=p=>pad.t+(h-pad.t-pad.b)*(1-p);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  // week band
+  g.fillStyle=css('--moss');g.globalAlpha=.13;g.fillRect(X(1),pad.t,X(Math.max(1,week))-X(1),h-pad.t-pad.b);g.globalAlpha=1;
+  g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='top';
+  if(X(week)-X(1)>70) g.fillText('one week of play',X(1)+5,pad.t+3);
+  // grid
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Y(i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillStyle=css('--ink-soft');g.fillText(i*25+'%',pad.l-6,y);}
+  [1,10,20,30,40,50,60].forEach(n=>{g.textAlign='center';g.textBaseline='top';g.fillText(n,X(n),h-pad.b+6);});
+  g.textAlign='right';g.fillText('runs',w-pad.r,h-14);
+  // 50% line
+  g.strokeStyle=css('--ink');g.setLineDash([5,5]);g.globalAlpha=.6;g.beginPath();g.moveTo(pad.l,Y(.5));g.lineTo(w-pad.r,Y(.5));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // sim curve
+  if(mem>0&&sim&&sim.cdf){
+    g.strokeStyle=css('--moss');g.lineWidth=2.5;g.beginPath();
+    for(let n=1;n<=60;n++){const px=X(n),py=Y(sim.cdf[n]);n===1?g.moveTo(px,py):g.lineTo(px,py);}g.stroke();
+  }
+  // formula curve
+  g.strokeStyle=css('--ochre');g.lineWidth=3;g.beginPath();
+  for(let i=0;i<=236;i++){const n=1+i/4,px=X(n),py=Y(P(n,m.Me));i?g.lineTo(px,py):g.moveTo(px,py);}g.stroke();
+  // n50 dot
+  const n5=n50(m.Me);
+  if(n5<=60){
+    const px=X(n5),py=Y(.5);
+    g.fillStyle=css('--blood');g.beginPath();g.arc(px,py,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.fillStyle=css('--ink');g.font='600 13px '+css('--sans');g.textBaseline='bottom';
+    const lab='n₅₀ ≈ '+f1(n5)+' runs';g.textAlign=px>w*0.6?'right':'left';
+    g.fillText(lab,px+(px>w*0.6?-10:10),py-8);
+  } else {
+    g.fillStyle=css('--ink');g.font='600 13px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('n₅₀ ≈ '+f1(n5)+' runs (off chart)',w-pad.r,Y(.5)-6);
+  }
+}
+
+// ---------- Monte Carlo ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function runSim(){
+  const tok=++simToken;
+  if(mem===0){sim=null;finishSim();return;}
+  const ax=active().map(a=>{const p=weights(a),c=[];let s=0;for(const x of p){s+=x;c.push(s);}return {c,v:a.v};});
+  const m=model(),support=ax.reduce((s,a)=>s*a.c.filter((x,j)=>j===0?x>0:x>a.c[j-1]).length,1);
+  const k=Math.min(mem,support-1);
+  const rnd=mulberry32(90210),players=5000,firstRep=new Int32Array(61);let done=0;
+  sim={cdf:null,running:true};$('rSim').textContent='…';
+  function draw1(){let s=0;for(const a of ax){const u=rnd();let j=0;while(j<a.v-1&&u>=a.c[j])j++;s=s*a.v+j;}return s;}
+  function chunk(){
+    if(tok!==simToken) return;
+    const end=Math.min(players,done+500);
+    for(;done<end;done++){
+      const seen=new Set(),hist=[];let rep=0;
+      for(let n=1;n<=60;n++){
+        let sig=draw1(),tries=0;
+        if(k>0) while(hist.slice(-k).includes(sig)&&tries<500){sig=draw1();tries++;}
+        if(seen.has(sig)){rep=n;break;}
+        seen.add(sig);hist.push(sig);
+      }
+      if(rep)firstRep[rep]++;
+    }
+    if(done<players) setTimeout(chunk,0);
+    else{
+      const cdf=[0];let acc=0;for(let n=1;n<=60;n++){acc+=firstRep[n];cdf.push(acc/players);}
+      sim={cdf,running:false};finishSim();
+    }
+  }
+  setTimeout(chunk,0);
+}
+function finishSim(){
+  $('lgSim').hidden=mem===0;
+  if(mem===0||!sim||!sim.cdf){$('rSim').textContent='—';$('thSim').textContent='simulated (memory rule off)';}
+  else{
+    let n=sim.cdf.findIndex(x=>x>=0.5);
+    let est='> 60';
+    if(n>0){const a=sim.cdf[n-1],b=sim.cdf[n];est=f1(n-1+(0.5-a)/(b-a));}
+    $('rSim').textContent=est;$('thSim').textContent='simulated, not the last '+mem;
+  }
+  const m=model();draw(m);table(m);
+}
+
+// ---------- readouts ----------
+function table(m){
+  const ex=exactCurve(60);
+  $('tbody').innerHTML=[5,10,15,20,30,40].map(n=>`<tr><td>${n}</td><td>${pc(P(n,m.Me))}</td><td>${pc(ex[n])}</td><td>${mem>0&&sim&&sim.cdf?pc(sim.cdf[n]):'—'}</td></tr>`).join('')+
+    `<tr><td>Median first repeat</td><td>run ${Math.ceil(n50(m.Me))}</td><td>run ${(()=>{const i=ex.findIndex(x=>x>=.5);return i>0?i:'> 60';})()}</td><td>${mem>0&&sim&&sim.cdf?(()=>{const i=sim.cdf.findIndex(x=>x>=.5);return i>0?'run '+i:'> 60';})():'—'}</td></tr>`;
+}
+function refresh(){
+  syncAxes();
+  const m=model(),raw=m.M*Math.pow(2,bits),n5=n50(m.Me);
+  $('vRaw').textContent=sci(raw);$('vM').textContent=m.M.toLocaleString('en-US')+'.0';$('vMe').textContent=f1(m.Me);
+  $('vM').textContent=f1(m.M);
+  $('fRaw').style.width=barW(raw)+'%';$('fM').style.width=barW(m.M)+'%';$('fMe').style.width=barW(m.Me)+'%';
+  $('rM').textContent=m.M.toLocaleString('en-US');$('rMe').textContent=f1(m.Me);
+  $('rP10').textContent=pc(P(10,m.Me));$('rP20').textContent=pc(P(20,m.Me));$('rN50').textContent=f1(n5);
+  $('oBits').textContent=bits;$('oWeek').textContent=week;
+  const bn=$('bnote');
+  if(lastMoved==='bits'){bn.textContent='raw outputs changed; n₅₀ did not';bn.classList.add('hot');}
+  else{bn.classList.remove('hot');
+    bn.textContent=prevN50!==null&&Math.abs(prevN50-n5)>1e-9?`n₅₀ moved from ${f1(prevN50)} to ${f1(n5)} runs.`:`The raw bar is ${Math.round(Math.log10(raw/m.Me))} orders of magnitude taller than the bar that sets repeats.`;}
+  prevN50=n5;
+  const inWeek=n5<=week;
+  $('insight').innerHTML=`Half of players meet a repeated dungeon by run <b>${Math.ceil(n5)}</b>. `+
+    (inWeek?`That is inside one week of play (${week} runs). `:`That is past one week of play (${week} runs). `)+
+    `To double that number you need <b>${f1(4*m.Me)}</b> effective variety, four times what you have, because runs to a repeat grow with √M<sub>eff</sub>. Seed bits never enter the formula.`;
+  draw(m);table(m);runSim();
+}
+function clearPreset(){document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));}
+const PRE={
+  def:[[6,0,false],[4,0,false],[5,0,true],false],
+  even:[[6,0,false],[4,0,false],[5,0,false],false],
+  lay8:[[8,0,false],[4,0,false],[5,0,true],false],
+  weather:[[6,0,false],[4,0,false],[5,0,true],true],
+  camps:[[12,0,false],[1,0,false],[1,0,false],false]
+};
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const p=PRE[b.dataset.p];
+  for(let i=0;i<3;i++){axes[i].v=p[i][0];axes[i].s=p[i][1];axes[i].lect=p[i][2];}
+  axes[3].on=p[3];axes[3].v=4;
+  clearPreset();b.setAttribute('aria-pressed','true');lastMoved='preset';refresh();
+}));
+$('bits').addEventListener('input',e=>{bits=+e.target.value;lastMoved='bits';refresh();});
+$("week").addEventListener("input",e=>{week=+e.target.value;lastMoved="week";refresh();});
+$('mem').addEventListener('change',e=>{mem=+e.target.value;lastMoved='mem';refresh();});
+window.addEventListener('resize',()=>draw(model()));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>draw(model()));
+buildAxes();refresh();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>draw(model()));
+})();
+</script>
+</body>
+</html>

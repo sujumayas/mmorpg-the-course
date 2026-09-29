@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Event clock — MMO306 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:22px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.1;margin:0 0 8px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+.views{display:grid;gap:12px;min-width:0}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+figcaption .tag{font-family:var(--sans);font-weight:700;font-size:.9rem;font-variant-numeric:tabular-nums}
+canvas{display:block;width:100%}
+#cDay{height:210px}
+#cT{height:250px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.side{display:flex;flex-direction:column;gap:10px}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:1fr 1fr}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.status{padding:10px 12px;border-radius:10px;font-weight:700;border:2px solid var(--c);color:var(--ink)}
+.status small{display:block;font-weight:400;font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+.ctl{background:var(--paper-2);border-radius:10px;padding:10px 12px}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.tctl{margin-top:8px}.trow{display:flex;gap:10px;align-items:center}.trow input{flex:1}
+.btn{white-space:nowrap;font:600 .88rem var(--sans);padding:7px 12px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.solid{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+@media (max-width:480px){table{font-size:.8rem}th,td{padding:5px 6px}}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:20px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO306 Content Design at Scale · Week 11 · Worked example</p>
+  <h1>The event clock</h1>
+  <p class="lede">Space a world boss closer and more players can reach it, but each fight is thinner. Past the knee, spacing it wider only shuts people out.</p>
+</header>
+
+<section class="panel" aria-label="World boss schedule">
+  <div class="layout">
+    <div class="views">
+      <figure>
+        <figcaption><span>A day on the map<small>World boss starts (red) and the join window after each. Each bar below is one player's session.</small></span><span class="tag" id="caught">caught — of 60</span></figcaption>
+        <canvas id="cDay" role="img" aria-label="24-hour strip of world boss occurrences and 60 sample player sessions"></canvas>
+        <div class="legend"><span><i style="background:var(--blood)"></i>world boss start</span><span><i style="background:var(--ochre)"></i>session that catches one</span><span><i style="background:var(--ink-soft);opacity:.5"></i>session that misses</span><span id="lgPlan" hidden><i style="background:var(--steel)"></i>planners at the planned occurrence</span></div>
+      </figure>
+      <figure>
+        <figcaption><span>Reach and crowd against the interval<small>Interval T on a log scale. Band is the crowd the fight is tuned for.</small></span></figcaption>
+        <canvas id="cT" role="img" aria-label="Reach and crowd per occurrence versus interval between world boss spawns"></canvas>
+        <div class="legend"><span><i style="background:var(--moss)"></i>reach (left axis)</span><span><i style="background:var(--blood)"></i>crowd (right axis)</span><span id="lgPc" hidden><i style="background:repeating-linear-gradient(90deg,var(--blood) 0 5px,transparent 5px 8px)"></i>crowd + planners, planned occurrence</span><span><i style="background:var(--ochre);height:8px;opacity:.4"></i>n<sub>min</sub> to n<sub>max</sub></span></div>
+        <div class="tctl"><label for="tIdx">Interval T <output id="oT">60 min</output></label>
+        <div class="trow"><input id="tIdx" type="range" min="0" max="11" step="1" value="3"><button class="btn solid" type="button" id="knee">Snap to knee</button></div></div>
+      </figure>
+    </div>
+    <div class="side">
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--moss)"><b id="rReach">—</b><span>reach, min(1, (S + W)/T)</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rCrowd">—</b><span>crowd per occurrence</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rShut">—</b><span>players shut out per day</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rKnee">—</b><span>knee S + W, minutes</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rCrit">—</b><span>N<sub>crit</sub> = 1440 n<sub>min</sub>/(S + W)</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rPlan">—</b><span>planned-occurrence crowd, C + pN</span></div>
+      </div>
+      <div class="status" id="status" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="N">Players online per day N <output id="oN">3,000</output></label>
+      <input id="N" type="range" min="100" max="10000" step="100" value="3000">
+      <label for="p">Planners p <output id="oP">0.00</output></label>
+      <input id="p" type="range" min="0" max="0.5" step="0.05" value="0">
+    </div>
+    <div class="ctl">
+      <label for="S">Session length S <output id="oS">90 min</output></label>
+      <input id="S" type="range" min="15" max="240" step="5" value="90">
+      <label for="W">Join window W <output id="oW">15 min</output></label>
+      <input id="W" type="range" min="0" max="60" step="5" value="15">
+    </div>
+    <div class="ctl">
+      <label for="nmin"><span>Smallest crowd that fills, n<sub>min</sub></span> <output id="oNmin">40</output></label>
+      <input id="nmin" type="range" min="5" max="200" step="1" value="40">
+      <label for="nmax"><span>Largest crowd before copies, n<sub>max</sub></span> <output id="oNmax">300</output></label>
+      <input id="nmax" type="range" min="50" max="500" step="1" value="300">
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table aria-label="Reach, crowd and players shut out by interval">
+      <thead><tr><th>Interval T</th><th>Reach</th><th>Crowd per occurrence</th><th>Shut out per day</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the lecture: a player online for S minutes catches an occurrence if one starts between W minutes before they log in and the moment they log off, so reach = min(1, (S + W)/T) and crowd = N × min(S + W, T)/1440. Sessions in the strip use a fixed seed; the 60 samples approximate reach, the readouts are exact. Planners are extra players who log in for the planned occurrence (the one nearest 20:00).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SNAP=[15,30,45,60,90,105,120,180,240,360,720,1440];
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f1=x=>x.toFixed(1);
+let T=60,N=3000,S=90,W=15,nmin=40,nmax=300,p=0;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rnd=mulberry32(2024),starts=[];for(let i=0;i<60;i++)starts.push(Math.floor(rnd()*1440));
+const tl=m=>{if(m<60)return m+' min';const h=Math.floor(m/60),r=m%60;return r?`${h} h ${r} min`:`${h} h`;};
+const hhmm=m=>{m=((Math.round(m)%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
+const reach=t=>Math.min(1,(S+W)/t);
+const crowd=t=>N*Math.min(S+W,t)/1440;
+function occ(t){const o=[];for(let k=0;k*t<1440;k++)o.push(k*t);return o;}
+function catches(ss,o){
+  for(const d of [-1440,0,1440])for(const t of o){const x=t+d;if(x>=ss-W&&x<=ss+S)return true;}return false;
+}
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=v);}
+function plannedT(o){let best=o[0];for(const t of o)if(Math.abs(t-1200)<Math.abs(best-1200))best=t;return best;}
+
+function drawDay(){
+  const c=$('cDay'),nPl=Math.round(p*60);
+  const rows=60+nPl,rowH=Math.max(2,Math.min(3,150/rows));
+  c.style.height=(22+16+rows*(rowH+0.6)+26)+'px';
+  const {g,w,h}=setupCanvas(c),pad={l:8,r:8,t:6};
+  const X=m=>pad.l+(w-pad.l-pad.r)*m/1440,o=occ(T);
+  g.clearRect(0,0,w,h);
+  const top=pad.t+18,bot=h-22;
+  // join windows
+  g.fillStyle=css('--blood');g.globalAlpha=.12;
+  o.forEach(t=>{const x1=X(t),x2=X(Math.min(1440,t+W));g.fillRect(x1,top,Math.max(1,x2-x1),bot-top);});g.globalAlpha=1;
+  // strip base
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(X(0),top);g.lineTo(X(1440),top);g.stroke();
+  // ticks
+  g.strokeStyle=css('--blood');g.lineWidth=T>=60?2:1.3;
+  o.forEach(t=>{g.beginPath();g.moveTo(X(t),top-12);g.lineTo(X(t),top+4);g.stroke();});
+  // sessions
+  let caught=0,y=top+10;
+  starts.forEach(ss=>{
+    const ok=catches(ss,o);if(ok)caught++;
+    g.fillStyle=ok?css('--ochre'):css('--ink-soft');g.globalAlpha=ok?1:.4;
+    const e=ss+S;g.fillRect(X(ss),y,X(Math.min(1440,e))-X(ss),rowH);
+    if(e>1440)g.fillRect(X(0),y,X(e-1440)-X(0),rowH);
+    y+=rowH+0.6;
+  });
+  g.globalAlpha=1;
+  if(nPl){const pt=plannedT(o);g.fillStyle=css('--steel');for(let i=0;i<nPl;i++){g.fillRect(X(pt),y,Math.max(3,X(Math.max(W,20))-X(0)),rowH);y+=rowH+0.6;}}
+  // hour labels
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textBaseline='top';
+  const step=w<500?6:3;
+  for(let hr=0;hr<=24;hr+=step){g.textAlign=hr===0?'left':hr===24?'right':'center';g.fillText(String(hr).padStart(2,'0')+':00',X(hr*60),h-16);}
+  $('caught').textContent=`caught ${caught} of 60`+(nPl?` + ${nPl} planners`:'');
+}
+function drawT(){
+  const {g,w,h}=setupCanvas($('cT')),pad={l:44,r:48,t:14,b:32};
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  const L=Math.log10(15),R=Math.log10(1440),X=t=>pad.l+(w-pad.l-pad.r)*(Math.log10(t)-L)/(R-L);
+  const cM=niceMax(Math.max(crowd(1440)+p*N,nmax)*1.08);
+  const Yr=v=>pad.t+(h-pad.t-pad.b)*(1-v),Yc=v=>pad.t+(h-pad.t-pad.b)*(1-v/cM);
+  // band
+  g.fillStyle=css('--ochre');g.globalAlpha=.18;g.fillRect(pad.l,Yc(Math.min(nmax,cM)),w-pad.l-pad.r,Yc(nmin)-Yc(Math.min(nmax,cM)));g.globalAlpha=1;
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Yr(i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--moss');g.textAlign='right';g.textBaseline='middle';g.fillText(i*25+'%',pad.l-6,y);
+    g.fillStyle=css('--blood');g.textAlign='left';g.fillText(fmt(cM*i/4),w-pad.r+6,y);}
+  const xt=w<500?[[15,'15m'],[60,'1h'],[240,'4h'],[1440,'24h']]:[[15,'15m'],[30,'30m'],[60,'1h'],[120,'2h'],[240,'4h'],[360,'6h'],[720,'12h'],[1440,'24h']];
+  g.fillStyle=css('--ink-soft');xt.forEach(([t,l])=>{g.textAlign='center';g.textBaseline='top';g.fillText(l,X(t),h-pad.b+6);});
+  // knee
+  const k=S+W;
+  if(k>=15&&k<=1440){g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(X(k),pad.t);g.lineTo(X(k),h-pad.b);g.stroke();
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign=X(k)>w*0.7?'right':'left';g.textBaseline='top';g.fillText('knee '+k+' min',X(k)+(X(k)>w*0.7?-5:5),pad.t+2);g.font='12px '+css('--sans');}
+  const line=(f,Y,color,dash,wd)=>{g.strokeStyle=color;g.lineWidth=wd||2.5;g.setLineDash(dash||[]);g.beginPath();
+    for(let i=0;i<=240;i++){const t=Math.pow(10,L+(R-L)*i/240),px=X(t),py=Y(f(t));i?g.lineTo(px,py):g.moveTo(px,py);}g.stroke();g.setLineDash([]);};
+  if(p>0)line(t=>crowd(t)+p*N,Yc,css('--blood'),[6,4],2);
+  line(crowd,Yc,css('--blood'));
+  line(reach,Yr,css('--moss'));
+  // cursor
+  const px=X(T);g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(px,pad.t);g.lineTo(px,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  [[Yr(reach(T)),css('--moss')],[Yc(crowd(T)),css('--blood')]].forEach(([py,c])=>{g.fillStyle=c;g.beginPath();g.arc(px,py,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+}
+function update(){
+  const r=reach(T),C=crowd(T),k=S+W,crit=1440*nmin/k;
+  $('oT').textContent=tl(T)+(SNAP.includes(T)?'':' (knee)');$('tIdx').setAttribute('aria-valuetext',tl(T));
+  $('oN').textContent=fmt(N);$('oS').textContent=S+' min';$('oW').textContent=W+' min';$('oNmin').textContent=nmin;$('oNmax').textContent=nmax;$('oP').textContent=p.toFixed(2);
+  $('rReach').textContent=(r*100).toFixed(1)+'%';$('rCrowd').textContent=f1(C);$('rShut').textContent=fmt(N*(1-r));
+  $('rKnee').textContent=k;$('rCrit').textContent=f1(crit);$('rPlan').textContent=p>0?f1(C+p*N):'—';
+  $('lgPlan').hidden=!(p>0);$('lgPc').hidden=!(p>0);
+  const st=$('status');let msg,sub,col;
+  if(C>nmax){msg='Over the band, needs copies';sub=`${f1(C)} players is above n_max = ${nmax}. Split into instances or layers.`;col='--blood';}
+  else if(C>=nmin){msg='Fills';sub=`${f1(C)} players sits inside ${nmin} to ${nmax}.`;col='--moss';}
+  else{msg='Too thin';sub=`${f1(C)} players is below n_min = ${nmin}.`+(N<crit?` At N = ${fmt(N)} no interval can fill it: N_crit is ${f1(crit)}.`:'');col='--ochre';}
+  st.style.setProperty('--c',`var(${col})`);st.innerHTML=msg+'<small>'+sub+'</small>';
+  let s;
+  if(T<k) s=`Below the knee. Every player online can reach a spawn, and stretching T toward ${k} minutes grows each crowd.`;
+  else if(T===k) s=`At the knee. Reach is still 100% and the crowd is as large as it will ever get, ${f1(C)} players.`;
+  else s=`Past the knee. The crowd is stuck at ${f1(crowd(k))}, and ${fmt(N*(1-r))} players a day never see the world boss.`;
+  if(N<crit) s+=` With ${fmt(N)} players online, even the knee gives only ${f1(crowd(k))}, below n<sub>min</sub>. You need ${f1(crit)} players, or a longer join window.`;
+  $('insight').innerHTML=s;
+  const rows=[30,60,k,180,360,1440].filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a-b);
+  if(!rows.includes(T)){rows.push(T);rows.sort((a,b)=>a-b);}
+  $('tbody').innerHTML=rows.map(t=>`<tr class="${t===T?'here':''}"><td>${tl(t)}${t===k?' (knee)':''}</td><td>${(reach(t)*100).toFixed(1)}%</td><td>${f1(crowd(t))}</td><td>${fmt(N*(1-reach(t)))}</td></tr>`).join('');
+  drawDay();drawT();
+}
+function nearestIdx(t){let b=0;SNAP.forEach((v,i)=>{if(Math.abs(Math.log(v/t))<Math.abs(Math.log(SNAP[b]/t)))b=i;});return b;}
+$('tIdx').addEventListener('input',e=>{T=SNAP[+e.target.value];update();});
+$('knee').addEventListener('click',()=>{T=Math.max(15,Math.min(1440,S+W));$('tIdx').value=nearestIdx(T);update();});
+[['N',v=>N=v],['S',v=>S=v],['W',v=>W=v],['p',v=>p=v],['nmin',v=>nmin=v],['nmax',v=>nmax=v]].forEach(([id,f])=>$(id).addEventListener('input',e=>{f(+e.target.value);update();}));
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

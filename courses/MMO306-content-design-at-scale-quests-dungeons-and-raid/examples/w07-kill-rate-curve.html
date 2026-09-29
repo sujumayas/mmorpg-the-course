@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kill rate curve — MMO306 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:22px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 4px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.4rem);line-height:1.1;margin:0 0 6px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.04rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:780px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink);font-size:12px}
+svg .soft{fill:var(--ink-soft)}
+svg .halo{paint-order:stroke;stroke:var(--paper-2);stroke-width:4px;stroke-linejoin:round}
+svg .b{font-weight:700}
+.readout{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:860px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+button{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px;font-variant-numeric:tabular-nums}
+.check{display:flex;gap:8px;align-items:center;justify-content:flex-start;cursor:pointer;margin:6px 0}
+.check input{width:20px;height:20px;accent-color:var(--steel);margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO306 Content Design at Scale · Week 7 · Worked example</p>
+  <h1>Where boss health tuning bites</h1>
+  <p class="lede">Drag health. Watch how much the kill rate moves.</p>
+</header>
+
+<section class="panel" aria-label="Kill rate model">
+  <div class="charts">
+    <figure>
+      <figcaption>Groups by best raid DPS<small id="leftSub">Log-normal spread of group DPS. Groups right of the red line can beat the enrage.</small></figcaption>
+      <svg id="sDist" role="img" aria-label="Distribution of group DPS with the required DPS line"></svg>
+    </figure>
+    <figure>
+      <figcaption>Kill rate vs boss health<small>Share of groups that can kill, as health changes. The short segment is the slope.</small></figcaption>
+      <svg id="sK" role="img" aria-label="Kill rate against boss health"></svg>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rH">—</b><span>boss health H</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rR">—</b><span id="rRl">required DPS R = H / T</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rZ">—</b><span>z = ln(R / m) / &sigma;</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rK">—</b><span id="rKl">kill rate K</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rS">—</b><span>points per 1% health</span></div>
+    <div class="stat" style="--c:var(--ink)" id="stSample"><b id="rN">—</b><span>sample groups that can kill</span></div>
+  </div>
+  <p class="insight" id="insight"></p>
+
+  <div class="controls">
+    <div>
+      <label for="H">Boss health <output id="oH"></output></label>
+      <input id="H" type="range" min="300" max="600" step="1" value="440">
+      <div class="btns"><button id="minus" aria-label="Cut health by 5%">&minus;5%</button><button id="plus" aria-label="Raise health by 5%">+5%</button></div>
+      <label for="T">Enrage timer T <output id="oT"></output></label>
+      <input id="T" type="range" min="300" max="600" step="10" value="400">
+    </div>
+    <div>
+      <label for="m">Median group DPS m <output id="oM"></output></label>
+      <input id="m" type="range" min="700000" max="1400000" step="10000" value="1000000">
+      <label for="s">Spread &sigma; <output id="oS"></output></label>
+      <input id="s" type="range" min="0.05" max="0.40" step="0.005" value="0.15">
+      <label for="e">Player damage buff e <output id="oE"></output></label>
+      <input id="e" type="range" min="0" max="20" step="1" value="0">
+    </div>
+    <div>
+      <label class="check"><input id="smp" type="checkbox" checked> Show the 20-group sample</label>
+      <label class="check"><input id="bias" type="checkbox"> Logged guilds only (upload bias)</label>
+      <p style="font-size:.86rem;color:var(--ink-soft);margin:4px 0 0">Upload bias: groups above the median upload 80% of their logs, groups below upload 20%. The chart then shows what a log site sees.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Model: required DPS R = H / T, divided by (1 + e) with a damage buff. z = ln(R / m) / &sigma;, kill rate K = 1 &minus; &Phi;(z), &Phi; from the Abramowitz and Stegun 7.1.26 erf approximation. The slope label is 100 &times; &phi;(z) &times; 0.01 / &sigma;: a 1% health change moves ln H by about 0.01, which is how the lecture's table is computed. The twenty sample groups are the invented guilds from the lecture, not real data.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+function E(tag,a,p,txt){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;if(p)p.appendChild(e);return e;}
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const pct=x=>(x*100).toFixed(1)+'%';
+const sgn=(v,d)=>{const s=v.toFixed(d);return (/^-0\.0*$/.test(s)?s.slice(1):s).replace('-','−');};
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
+  return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));}
+const Phi=z=>0.5*(1+erf(z/Math.SQRT2));
+const phi=z=>Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);
+const SAMPLE=[1380,1290,1210,1160,1120,1080,1060,1050,1020,990,970,940,910,890,860,830,800,760,720,650].map(v=>v*1000);
+const RM=matchMedia('(prefers-reduced-motion: reduce)');
+
+const S={H:440,T:400,m:1e6,s:.15,e:0,smp:true,bias:false};
+const Rraw=H=>H*1e6/S.T;
+const Reff=H=>Rraw(H)/(1+S.e);
+const zOf=H=>Math.log(Reff(H)/S.m)/S.s;
+const Kof=H=>1-Phi(zOf(H));
+function Klogged(z){const above=z>=0?0.8*(1-Phi(z)):0.4+0.2*(0.5-Phi(z));return above/0.5;}
+const slope=z=>100*phi(z)*0.01/S.s;
+const dens=D=>phi((Math.log(D)-Math.log(S.m))/S.s)/(S.s*D);
+const shown=D=>S.bias?dens(D)*(D>=S.m?0.8:0.2)/0.5:dens(D);
+const fmtH=H=>(Math.abs(H-Math.round(H))<0.05?fmt(H):H.toFixed(1))+'M';
+const fmtD=v=>v>=1e6?(v/1e6).toFixed(1).replace(/\.0$/,'')+'M':Math.round(v/1000)+'k';
+
+function frame(svg,o){
+  const w=Math.max(240,svg.getBoundingClientRect().width||600),h=o.h,pd=o.pad;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);svg.innerHTML='';
+  const X=v=>pd.l+(w-pd.l-pd.r)*(v-o.x0)/(o.x1-o.x0),Y=v=>pd.t+(h-pd.t-pd.b)*(1-(v-o.y0)/(o.y1-o.y0));
+  const g=E('g',{},svg);
+  (o.yt||[]).forEach(v=>{E('line',{x1:pd.l,x2:w-pd.r,y1:Y(v),y2:Y(v),style:'stroke:var(--grid)'},g);E('text',{x:pd.l-6,y:Y(v)+4,'text-anchor':'end',class:'soft'},g,o.yf(v));});
+  E('line',{x1:pd.l,x2:w-pd.r,y1:Y(o.y0),y2:Y(o.y0),style:'stroke:var(--ink-soft)'},g);
+  o.xt.forEach(v=>E('text',{x:X(v),y:h-pd.b+16,'text-anchor':'middle',class:'soft'},g,o.xf(v)));
+  E('text',{x:w-pd.r,y:h-3,'text-anchor':'end',class:'soft'},g,o.xl);
+  return {X,Y,w,h,g};
+}
+
+function drawDist(){
+  const svg=$('sDist'),x0=5e5,x1=1.8e6;
+  let ymax=0;for(let i=0;i<=300;i++)ymax=Math.max(ymax,shown(x0+(x1-x0)*i/300));ymax*=1.3;
+  const c=frame(svg,{h:250,pad:{l:14,r:14,t:10,b:66},x0,x1,y0:0,y1:ymax,xt:[6e5,9e5,1.2e6,1.5e6,1.8e6],xf:fmtD,xl:'raid DPS'});
+  const {X,Y,g}=c,R=Reff(S.H);
+  const area=(a,b,style)=>{if(b<=a)return;let d=`M${X(a)} ${Y(0)}`;for(let i=0;i<=200;i++){const x=a+(b-a)*i/200;d+=`L${X(x).toFixed(1)} ${Y(shown(x)).toFixed(1)}`;}E('path',{d:d+`L${X(b)} ${Y(0)}Z`,style},g);};
+  area(x0,x1,'fill:var(--ink-soft);fill-opacity:.2');
+  const Rc=Math.max(x0,Math.min(x1,R));
+  area(Rc,x1,'fill:var(--moss);fill-opacity:.55');
+  let d='';for(let i=0;i<=240;i++){const x=x0+(x1-x0)*i/240;d+=(i?'L':'M')+X(x).toFixed(1)+' '+Y(shown(x)).toFixed(1);}
+  E('path',{d,style:'fill:none;stroke:var(--ink-soft);stroke-width:1.6'},g);
+  const K=S.bias?Klogged(zOf(S.H)):Kof(S.H);
+  if(R>=x0&&R<=x1){const rx=X(R);
+    E('line',{x1:rx,x2:rx,y1:Y(ymax*.98),y2:Y(0),style:'stroke:var(--blood);stroke-width:2.5'},g);
+    const rr=rx<c.w-110;
+    E('text',{x:rx+(rr?6:-6),y:Y(ymax*.98)+10,'text-anchor':rr?'start':'end',class:'halo b',style:'fill:var(--blood)'},g,'required DPS');
+  }
+  const kx=Math.min(c.w-16,Math.max(X(Rc)+8,X(Rc)+8)),kr=kx<c.w-120;
+  E('text',{x:kr?kx:c.w-16,y:Y(ymax*.62),'text-anchor':kr?'start':'end',class:'halo b',style:'fill:var(--moss);font-size:14px'},g,(S.bias?'logged, can kill: ':'can kill: ')+pct(K));
+  if(S.smp){const yy=c.h-66+38;
+    SAMPLE.forEach((v,i)=>{const ok=v>=R;E('circle',{cx:X(v),cy:yy+((i%2)?-4:4)-4,r:4.5,style:ok?'fill:var(--moss);stroke:var(--paper-2);stroke-width:1':'fill:var(--paper-2);stroke:var(--ink);stroke-width:1.6'},g);});
+    E('text',{x:14,y:c.h-3,class:'b',style:'fill:var(--moss)'},g,SAMPLE.filter(v=>v>=R).length+' of 20 sample groups');
+  }
+  svg.setAttribute('aria-label',`Group DPS distribution. Required DPS ${fmt(R)}. ${S.bias?'Logged':'True'} share that can kill ${pct(K)}.`);
+}
+function drawK(){
+  const svg=$('sK');
+  const c=frame(svg,{h:250,pad:{l:44,r:14,t:10,b:40},x0:300,x1:600,y0:0,y1:1,xt:[300,400,500,600],xf:v=>v+'M',yt:[0,.25,.5,.75,1],yf:v=>Math.round(v*100)+'%',xl:'boss health'});
+  const {X,Y,g}=c;
+  let d='';for(let i=0;i<=240;i++){const H=300+300*i/240;d+=(i?'L':'M')+X(H).toFixed(1)+' '+Y(Kof(H)).toFixed(1);}
+  E('path',{d,style:'fill:none;stroke:var(--ochre);stroke-width:3'},g);
+  const H=S.H,K=Kof(H),z=zOf(H),dKdH=-phi(z)/(S.s*H);
+  const px=X(H),py=Y(K),sx=(X(301)-X(300)),sy=(Y(0)-Y(1));
+  const L=46,ang=Math.atan2(-dKdH*sy,sx),dx=L*Math.cos(ang),dy=L*Math.sin(ang);
+  E('line',{x1:px-dx,y1:py-dy,x2:px+dx,y2:py+dy,style:'stroke:var(--ink);stroke-width:2.5;stroke-linecap:round'},g);
+  E('circle',{cx:px,cy:py,r:7,style:'fill:var(--ochre);stroke:var(--paper-2);stroke-width:2.5'},g);
+  const lab=`≈ ${slope(z).toFixed(1)} points per 1% health`;
+  const tx=c.w-16;
+  E('text',{x:tx,y:Y(1)+16,'text-anchor':'end',class:'halo b',style:'fill:var(--ochre);font-size:15px'},g,'K = '+pct(K));
+  E('text',{x:tx,y:Y(1)+34,'text-anchor':'end',class:'halo b'},g,lab);
+  svg.setAttribute('aria-label',`Kill rate against boss health. At ${fmtH(H)} the kill rate is ${pct(K)}, ${lab}.`);
+}
+function readouts(){
+  const H=S.H,R=Reff(H),z=zOf(H),K=Kof(H),k=SAMPLE.filter(v=>v>=R).length;
+  $('rH').textContent=fmtH(H);$('rR').textContent=fmt(R);$('rRl').textContent=S.e?`required DPS R = H / T / ${(1+S.e).toFixed(2)}`:'required DPS R = H / T';
+  $('rZ').textContent=sgn(z,3);
+  $('rK').textContent=S.bias?pct(Klogged(z)):pct(K);
+  $('rKl').textContent=S.bias?`logged K (true K ${pct(K)})`:'kill rate K';
+  $('rS').textContent=slope(z).toFixed(1);
+  $('rN').textContent=`${k}/20`;$('stSample').hidden=!S.smp;
+  $('oH').textContent=fmtH(H);$('oT').textContent=S.T+' s';$('oM').textContent=fmt(S.m);$("oS").textContent=S.s.toFixed(3).replace(/0$/,"");$('oE').textContent=Math.round(S.e*100)+'%';
+  const up=1-Phi(Math.log(Reff(H*0.99)/S.m)/S.s)-K;
+  let t=`At ${fmtH(H)}, cutting health by 1% adds ${(up*100).toFixed(1)} points of kill rate. `;
+  t+=Math.abs(z)<0.5?'The red line sits in the thick middle of the field, so every percent of health moves many groups across it.':
+     Math.abs(z)<1.2?'The line is on the shoulder of the curve. Health changes still move groups, but fewer per percent.':
+     'The line is out in a tail. A health change here barely moves the kill rate, because few groups live near the line.';
+  if(S.bias)t+=` A log site sees ${pct(Klogged(z))}, not the true ${pct(K)}: strong groups upload more.`;
+  $('insight').textContent=t;
+}
+function update(){readouts();drawDist();drawK();}
+function setH(v){S.H=Math.max(300,Math.min(600,v));$('H').value=Math.round(S.H);update();}
+let anim=null;
+function animateTo(target){
+  target=Math.max(300,Math.min(600,target));cancelAnimationFrame(anim);
+  if(RM.matches){setH(target);return;}
+  const from=S.H,t0=performance.now(),dur=450;
+  const step=now=>{const f=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-f,3);setH(from+(target-from)*e);if(f<1)anim=requestAnimationFrame(step);else setH(target);};
+  anim=requestAnimationFrame(step);
+}
+$('H').addEventListener('input',e=>{cancelAnimationFrame(anim);S.H=+e.target.value;update();});
+$('minus').addEventListener('click',()=>animateTo(Math.round(S.H*0.95*1000)/1000));
+$('plus').addEventListener('click',()=>animateTo(Math.round(S.H/0.95*1000)/1000));
+$('T').addEventListener('input',e=>{S.T=+e.target.value;update();});
+$('m').addEventListener('input',e=>{S.m=+e.target.value;update();});
+$('s').addEventListener('input',e=>{S.s=+e.target.value;update();});
+$('e').addEventListener('input',e=>{S.e=+e.target.value/100;update();});
+$('smp').addEventListener('change',e=>{S.smp=e.target.checked;update();});
+$('bias').addEventListener('change',e=>{S.bias=e.target.checked;update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>
