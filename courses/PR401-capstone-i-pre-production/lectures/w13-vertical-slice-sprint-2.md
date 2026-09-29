@@ -43,7 +43,7 @@ This asymmetry is the whole problem. A class playtest piles up client exposure f
 
 ### The hook
 
-In 2019, before World of Warcraft Classic launched, Blizzard ran three public stress tests (22 to 23 May, 19 to 20 June and 25 to 26 July). Stress test realms capped characters at level 5, so thousands of players crowded into the same starting areas, and the announcement said the aim was to push the technology to its limit. CCP does something similar for EVE Online. It runs mass tests on its public test server, Singularity, and rewards the pilots who show up, often with millions of skill points to use on that server.
+In 2019, before World of Warcraft Classic launched, Blizzard ran three public stress tests (22 to 23 May, 19 to 20 June and 25 to 26 July). Stress test realms capped characters at level 5, so thousands of players crowded into the same starting areas, and the announcement said the aim was to push the technology to its limit. CCP does something similar for EVE Online. It runs mass tests on its public test server, Singularity, and rewards the pilots who show up. In its 2021 and 2022 mass-test posts the reward was 2 million skill points per character, usable only on that server.
 
 Why recruit a crowd for a few hours instead of running a small group of testers for weeks? Because a server fails under load, and the only way to get server-hours at load is to put the load on the server. A small group piles up player-hours. It doesn't pile up server-hours at launch-like concurrency. Your capstone has the same problem at a smaller scale.
 
@@ -204,8 +204,8 @@ The instructor checks, at the start of the week 14 review:
 
 ## Sources
 
-- Blizzard Entertainment, "Mark Your Calendars: WoW Classic Launch and Testing Schedule" (World of Warcraft news, 14 May 2019), as cited in MMO302 week 11 of this program. Warcraft Wiki, "Stress test" (read September 2026): stress tests on 22 to 23 May, 19 to 20 June and 25 to 26 July 2019 (the third first scheduled for 18 to 19 July), level cap of five on stress-test realms.
-- EVE University Wiki, "Singularity" (read September 2026). Singularity is CCP's public test server; CCP runs mass tests there, and participants are usually rewarded, often with millions of skill points for use on that server.
+- Blizzard Entertainment, "Mark Your Calendars: WoW Classic Launch and Testing Schedule" (World of Warcraft news, 14 May 2019), as cited in MMO302 week 11 of this program. Checked against the Internet Archive copy of that post (3 July 2019) and Kaivax, "WoW Classic Beta Update" (Blizzard forums, 3 July 2019), which moved the third test to 25 to 26 July. Warcraft Wiki, "Stress test" (read September 2026): stress tests on 22 to 23 May, 19 to 20 June and 25 to 26 July 2019 (the third first scheduled for 18 to 19 July), level cap of five on stress-test realms.
+- EVE University Wiki, "Singularity" (read September 2026). Singularity is CCP's public test server, and CCP runs mass tests there. CCP forum posts "Mass Test on Singularity" for 26 January 2021, 24 February 2022 and 9 June 2022 (EVE Online forums, read 29 September 2026) each state that 2M skill points will be awarded on Singularity.
 - Firebase, "Understand crash-free metrics" (Crashlytics documentation, read September 2026). Crash-free users and crash-free sessions defined as one minus the share of users or sessions with a crash.
 - Hanley, J. A. & Lippman-Hand, A. (1983). "If nothing goes wrong, is everything all right? Interpreting zero numerators." *JAMA*, 249(13), 1743-1745. The rule of three, as used in MA102 week 13 and PR201 week 13.
 - Wikipedia, "Poisson distribution", section "Confidence interval" (read September 2026). The exact interval from chi-squared quantiles, citing Garwood (1936); the one-sided 95% upper limits `U(k)` above are half the 0.95 chi-squared quantile with `2k + 2` degrees of freedom.

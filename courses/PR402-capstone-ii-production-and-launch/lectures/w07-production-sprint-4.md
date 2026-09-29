@@ -208,7 +208,7 @@ The instructor checks, at the week 8 meeting:
 
 - Schwaber, K. and Sutherland, J. *The Scrum Guide*, November 2020 edition (scrumguides.org, read September 2026). Sprints of one month or less; the sprint goal as the single objective of the sprint; scope clarified and renegotiated with the product owner as more is learned.
 - Keith, C. (2010). *Agile Game Development with Scrum*. Addison-Wesley. Scrum practice adapted to game teams, as covered in PR101 week 5.
-- Wikipedia, "New World: Aeternum" (read September 2026). Final open beta from 9 to 12 September 2021; global release on 28 September 2021.
+- Wikipedia, "New World (video game)" (read September 2026; "New World: Aeternum" redirects there). Final open beta from 9 to 12 September 2021; global release on 28 September 2021.
 - Velocities, availability, bug counts and backlog items in section 5 are invented teaching values.
 
 ## Interactive spec: examples/w07-sprint-buffer-burndown.html

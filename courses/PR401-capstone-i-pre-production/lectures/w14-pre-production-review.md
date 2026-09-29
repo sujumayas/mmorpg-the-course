@@ -196,9 +196,9 @@ The panel and the instructor check:
 
 ## Sources
 
-- Kollar, P. "Final Fantasy 14 killed by Square Enix's stubbornness, reborn by a new approach." Polygon, 20 March 2014 (read via the Internet Archive copy of 21 March 2015). Report of Naoki Yoshida's GDC 2014 talk: the original version's areas looked slightly better but were empty; the flowerpot with over 1,000 polygons and 150 lines of shader code, as many resources as one player character; player characters on screen limited to 20. Paraphrased; one short phrase quoted in MMO306 week 12 is not repeated here.
+- Kollar, P. "Final Fantasy 14 killed by Square Enix's stubbornness, reborn by a new approach." Polygon, 20 March 2014 (live page read 29 September 2026; Internet Archive copy of 21 March 2015). Report of Naoki Yoshida's GDC 2014 talk: the original version's areas looked slightly better but were empty; the flowerpot with over 1,000 polygons and 150 lines of shader code, as many resources as one player character; player characters on screen limited to 20. Paraphrased; one short phrase quoted in MMO306 week 12 is not repeated here.
 - Wikipedia, "Final Fantasy XIV" (read September 2026). The development team schedules a major update approximately every three months.
-- Wikipedia, "Experience curve effects" (read September 2026). Wright, T. P. (1936), "Factors Affecting the Cost of Airplanes," *Journal of the Aeronautical Sciences*: labour per airplane fell by about 20% with each doubling of total production; the power-law form `C_x = C_1 x^(log2 b)`.
+- Wikipedia, "Experience curve effects" (read September 2026). Wright, T. P. (1936), "Factors Affecting the Cost of Airplanes," *Journal of the Aeronautical Sciences* 3(4), 122-128, February 1936, doi:10.2514/8.155 (details checked on Crossref): labour per airplane fell by about 20% with each doubling of total production; the power-law form `C_x = C_1 x^(log2 b)`.
 - The *Emberfall* hours, learning-rate plan, triggers and review format are a constructed teaching example continuing weeks 6, 11, 12 and 13. They are not data from a real team.
 
 ## Interactive spec: examples/w14-slice-to-production.html

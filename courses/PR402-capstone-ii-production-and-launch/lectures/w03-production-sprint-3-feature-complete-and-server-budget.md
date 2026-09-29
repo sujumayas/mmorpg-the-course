@@ -249,6 +249,6 @@ The instructor checks at the end of week 3 and at the start of week 4:
 ## Sources
 
 - Wikipedia, "Palworld" (read September 2026). Early access on 19 January 2024; one million copies in eight hours, two million in 24 hours, eight million by day 6; over two million concurrent players on Steam on 24 January and 2,101,867 on 27 January 2024; server issues from the player count.
-- Wikipedia, "New World: Aeternum" (read September 2026). PC release on 28 September 2021; over 700,000 concurrent players on Steam that day; servers had difficulty handling the load.
+- Wikipedia, "New World (video game)" (read September 2026; "New World: Aeternum" redirects there). PC release on 28 September 2021; over 700,000 concurrent players on Steam that day; servers had difficulty handling the load.
 - Beyer, B. et al. (eds.) (2016). *Site Reliability Engineering*. O'Reilly. Background on capacity planning and headroom; the Pokémon GO figures are taken from MMO302 week 13 and its sources.
 - The Emberfall sign-ups, conversion, session length, knee, machine prices, egress price and grant are invented for teaching. Real cloud prices vary by provider, region and date; the lab requires your provider's current prices.

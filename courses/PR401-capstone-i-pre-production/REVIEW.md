@@ -49,3 +49,18 @@ Reviewer pass on 29 September 2026 against ORCHESTRATION.md §4, the studio-cour
 - Finish the syllabus: run `finish_syllabus.py PR401` and replace `_todo_` example cells with "—". Then `check_course.py PR401` should print OK.
 - `k` means three things in this course: the authoring ratio (weeks 1 and 9), group size (week 5) and the interest cap (week 7). Each week defines it locally, so it was left as is. Rename the week 7 cap to `a` if a later pass wants no overlap.
 - Week 6 computes capacity as H = 112 hours per person over the build window, while week 11 uses the weekly model (12 × 8 × f). The two agree, but week 6 could show the weekly form.
+
+## Fact sweep (29 September 2026)
+
+Each item from "Still unverified" was retried against a primary or maintained source.
+
+- Mortal Online 2 business model. Star Vault's FAQ (mortalonline2.com/faq) says the game is sold on Star Vault's store, Steam and the Epic Games Store, and needs a monthly subscription of US$14.29. So the row breaks the model. Week 2 now says so and treats the row as a lower bound for owners and revenue. `lab02-starter/comps.csv` marks it `paid_plus_offsite`. The checker numbers are unchanged, and the row now prints the lower-bound note.
+- Project: Gorgon. Verified. The Steam news API for app 342940 gives 7 April 2018 as the earliest announcement. Week 2 sources give the date.
+- Stacking. Verified as February 2011 (THQ, Xbox 360 and PS3) from Wikipedia's "Stacking (video game)". The source was added to week 4.
+- EVE Singularity mass-test rewards. Verified from CCP's own forum posts. The January 2021, February 2022 and June 2022 mass tests each awarded 2M skill points on Singularity. Week 13 now states that figure.
+- WoW Classic stress tests. Verified against Blizzard's 14 May 2019 post (archived 3 July 2019) and Kaivax's 3 July 2019 forum post that moved test 3 to 25 to 26 July.
+- EverQuest mercenaries. The Seeds of Destruction release (21 October 2008) and mercenaries are confirmed by the EverQuest Wiki. The motive (hard to find group members) is only in Wikipedia, so week 10 now attributes it.
+- Horizon Zero Dawn GDC 2017. Verified on Guerrilla's publication page, dated 1 March 2017, with the GDC 2017 slides. The citation now points there.
+- Polygon report of Yoshida's GDC 2014 talk. Verified on the live Polygon page (Kollar, 20 March 2014). The flowerpot, the 1,000 polygons and 150 shader lines, the 20-character limit and the "empty" areas all match.
+- Wright (1936). The bibliographic details are confirmed on Crossref (doi:10.2514/8.155, 3(4), 122-128). The 20% per doubling still comes through Wikipedia, not the paper's text.
+- Not retried: the WoW Token and Diablo III auction house facts cited through MMO304.

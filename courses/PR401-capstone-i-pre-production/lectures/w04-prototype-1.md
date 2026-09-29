@@ -185,6 +185,7 @@ The instructor checks prototype 1 when:
 ## Sources
 
 - Wikipedia, "Amnesia Fortnight" (accessed September 2026). Double Fine; started around 2007 during the development of *Brütal Legend*; two-week prototyping in small teams; *Costume Quest* (2010) and *Stacking* (2011) prototyped in the 2009 round; Tim Schafer's remarks on keeping the company viable.
+- Wikipedia, "Stacking (video game)" (read 29 September 2026). Published by THQ in February 2011 for Xbox 360 and PlayStation 3.
 - Boehm, B. W. (1991). "Software risk management: principles and practices." *IEEE Software* 8(1), 32 to 41. doi:10.1109/52.62930. Risk exposure as probability times loss, and risk reduction leverage.
 - MMO403 week 14 and PR101 weeks 4 and 6 in this repository.
 - *Emberfall*, its risks, probabilities, costs and `q` values are invented for teaching. The prototype budget follows the course convention `H = 8` for PR401.

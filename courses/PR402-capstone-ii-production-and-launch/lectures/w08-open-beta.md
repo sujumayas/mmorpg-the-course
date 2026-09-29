@@ -235,6 +235,6 @@ The instructor checks, at the week 9 meeting:
 ## Sources
 
 - Wikipedia, "SimCity (2013 video game)" (read September 2026). Closed beta sign-ups from August 2012; closed betas in January and February 2013 to load-test the servers; release in early March 2013; network outages, disconnections and lost save data at launch.
-- Wikipedia, "New World: Aeternum" (read September 2026). Server capacity of 2,000 players each and queues reaching the 25,000-person limit at launch in September 2021, as used in MMO407 week 2.
+- Wikipedia, "New World (video game)" (read September 2026; "New World: Aeternum" redirects there). Server capacity of 2,000 players each and queues reaching the 25,000-person limit at launch in September 2021, as used in MMO407 week 2.
 - MMO407 week 3 (this program) for the exposure model and the rule of three, with its sources.
 - All sign-up counts, rates, shares, knee values and headroom in sections 2 to 6 are invented teaching values.

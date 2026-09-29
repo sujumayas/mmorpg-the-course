@@ -216,3 +216,28 @@ Every running agent stopped with the weekly limit (HTTP 429). The limit resets o
 - Weeks 8 and 12 plan in estimate-hours against f × U. Week 12's polish budget is 9.5 h, and hit feedback is cut.
 - M2 asks only for a save format and an atomic file save. The database criteria move to M3, after DB201.
 - Labs 03, 05, 08, 09 and 12, their checkers, both examples and exam questions 10 and 11 were rerun. check_course and check_examples pass. No new game facts.
+
+## Fact sweep for PR401 and PR402 (29 Sep 2026)
+
+- Corrected: Mortal Online 2 is also sold on Star Vault's own store and the Epic Games Store, and it needs a US$14.29/month subscription. PR401 week 2 now treats the Steam row as a lower bound.
+- Verified:
+  - Project: Gorgon's first Steam announcement, 7 Apr 2018.
+  - Stacking, Feb 2011.
+  - The EVE Singularity mass-test rewards.
+  - The WoW Classic 2019 stress tests.
+  - The HZD GDC 2017 session.
+  - The Polygon report of the Yoshida talk.
+  - Wright (1936), via Crossref.
+  - EverQuest mercenaries, 21 Oct 2008.
+- PR402 now cites the article as "New World (video game)".
+
+## Wave 7 complete (29 Sep 2026)
+
+PR201, PR301, PR401 and PR402 are committed. All 39 courses pass check_course. Every course had a final fact sweep: each fact was verified and cited, or hedged, or removed. Each course's REVIEW.md "Fact sweep" section lists what is still hedged. curriculum.yaml and the syllabi have no "(verify" tags left.
+
+Owner decisions still open:
+- Delete the unused `courses/MMO303-*/examples/w10-counter-triangle.html`.
+- Delete `h.html` in the repo root. A fact-sweep agent downloaded this Blizzard page. It is not course material.
+- Confirm that GD203 lab 10 has no late window.
+- The em dash in the lecture title line (`# CODE · Week NN — Title`) conflicts with the plain-writing rule.
+- Approve the studio-course template in BUILD_CONVENTIONS.md.

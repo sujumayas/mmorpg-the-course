@@ -118,7 +118,7 @@ The four levers, in the model's terms:
 
 - **World of Warcraft, Dungeon Finder (2009).** Pooling realms raised `M`, the number of players the finder could draw from, without changing anyone's behaviour.
 - **World of Warcraft, Call to Arms (2011), and Final Fantasy XIV's "In Need" bonus.** Both reward whichever role the queue lacks. In this model they raise `p` for the scarce role.
-- **EverQuest, mercenaries (Seeds of Destruction, 2008).** NPC companions that join a group in place of a human, added because players found it harder to find others of the right level. That lowers `m`, exactly as *Emberfall*'s militia does.
+- **EverQuest, mercenaries (Seeds of Destruction, 21 October 2008).** NPC companions that join a group in place of a human. Wikipedia's account says they answered the growing difficulty of finding players of the right level. That lowers `m`, exactly as *Emberfall*'s militia does.
 - **Guild Wars 2, dynamic events.** Open-world events scale to whoever is present and reward each participant without a party, as MMO305 week 3 describes. That sets `m = 1`: the activity works with whoever turns up.
 
 ### Eyes-open judgment
@@ -183,6 +183,7 @@ The instructor checks in the submission and at the week 11 stand-up:
 - Warcraft Wiki, "Patch 3.3.0" (accessed September 2026). Released 8 December 2009; cross-realm Dungeon Finder connecting the realms in each battlegroup. https://warcraft.wiki.gg/wiki/Patch_3.3.0
 - Warcraft Wiki, "Call to Arms (dungeon)" (accessed September 2026). Introduced in patch 4.1.0 on 26 April 2011; a reward satchel for queuing in the least represented role. https://warcraft.wiki.gg/wiki/Call_to_Arms_(dungeon)
 - Final Fantasy XIV Online Wiki (consolegameswiki), "Duty Roulette" (accessed September 2026). "In Need" bonus for the role most needed in a roulette. https://ffxiv.consolegameswiki.com/wiki/Duty_Roulette
+- EverQuest Wiki (Fandom), "EverQuest: Seeds of Destruction" (read 29 September 2026). Released 21 October 2008; features include mercenaries and a level cap of 85.
 - Wikipedia, "EverQuest" (accessed September 2026). Seeds of Destruction (2008) introduced mercenaries that join groups in place of human players, in response to growing difficulty finding group members.
 - MMO305 week 3 of this program, for Guild Wars 2's dynamic events and its sources.
 - The *Emberfall* population, play-time split, town sizes and raid rules are invented for teaching and continue weeks 1 to 9. The safety minimums are this course's requirements.

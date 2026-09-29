@@ -223,7 +223,7 @@ The instructor checks, at the week 10 meeting:
 
 ## Sources
 
-- Wikipedia, "New World: Aeternum" (read September 2026). Global release on 28 September 2021; over 700,000 concurrent players recorded on Steam on release day; 2,000 players per server; queues on the most popular servers reaching the 25,000-person limit.
+- Wikipedia, "New World (video game)" (read September 2026; "New World: Aeternum" redirects there). Global release on 28 September 2021; over 700,000 concurrent players recorded on Steam on release day; 2,000 players per server; queues on the most popular servers reaching the 25,000-person limit.
 - Warcraft Wiki, "World of Warcraft: Classic" (read September 2026). Global launch on 26 August 2019 (Pacific time, so 27 August in Europe); larger server sizes than the original and temporary layering; extreme login queues and rapid creation of additional servers in all regions.
 - MMO407 week 2 (this program) for the cumulative-curve queue model and the launch-night against day-30 trade-off, with its sources.
 - All caps, rates, session lengths, thresholds and forecasts in sections 3 to 6 are invented teaching values.

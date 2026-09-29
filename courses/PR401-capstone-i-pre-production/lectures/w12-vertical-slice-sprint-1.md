@@ -186,6 +186,6 @@ The instructor checks, at the end of the week 12 meeting and again at the week 1
 
 ## Sources
 
-- van Muijden, J. "GPU-Based Run-Time Procedural Placement in 'Horizon: Zero Dawn'." GDC 2017, GDC Vault session page (read September 2026). The session summary describes a GPU-based system that builds the world around the player at run time, including sounds, effects, wildlife and gameplay elements, from data artists can modify. No figures on time saved are claimed here.
+- van Muijden, J. "GPU-Based Run-Time Procedural Placement in 'Horizon: Zero Dawn'." GDC 2017. Guerrilla Games publication page "GPU-Based Procedural Placement in Horizon Zero Dawn" (dated 1 March 2017, with the GDC 2017 slides as PDF and PPT, read 29 September 2026). The page summary describes a GPU-based system that builds the world around the player at run time, including sounds, effects, wildlife and gameplay elements, from data artists can modify. No figures on time saved are claimed here.
 - Munroe, R. "Is It Worth the Time?" xkcd comic 1205 (read September 2026). A table of how long you can spend making a routine task more efficient before you lose time over five years, by task frequency and time saved.
 - The *Emberfall* hours, the bounty tool estimate and the brush tool are a constructed teaching example continuing weeks 6, 9 and 11. They are not data from a real team. `H = 8` for PR401 is the course convention from week 1.
