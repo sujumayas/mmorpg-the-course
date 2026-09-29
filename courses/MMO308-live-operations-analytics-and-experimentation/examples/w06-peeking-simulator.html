@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peeking simulator · MMO308 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+figcaption b{font-family:var(--sans);color:var(--blood)}
+canvas{display:block;width:100%;height:300px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.stat.wide{grid-column:span 2}
+.stat.wide b{font-size:1rem;overflow-wrap:anywhere}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label.sl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+fieldset{border:0;padding:0;margin:0 0 10px}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;width:1px;height:1px}
+.opt span{display:inline-block;font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);cursor:pointer}
+.opt input:checked+span{background:var(--steel);color:var(--paper)}
+.opt input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:600 .9rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.check{font-size:.9rem;display:inline-flex;gap:6px;align-items:center}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+@media (max-width:520px){table{font-size:.8rem}th,td{padding:5px 4px!important}}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO308 Live Operations, Analytics and Experimentation · Week 6 · Worked example</p>
+  <h1>Peek 14 times and 1 in 5 A/A tests "wins"</h1>
+  <p class="lede">Every path below is an A/A test. Both arms are identical, so any winner is a false positive. Stop at the first look with |z| &gt; 1.96 and far more than 5% escape the band. Switch to a boundary built for repeated looks and the same paths stay inside.</p>
+</header>
+
+<section class="panel" aria-label="Peeking simulator">
+  <div class="charts">
+    <figure>
+      <figcaption id="leftCap">40 experiments, looked at 14 times<small><b id="stopped">Stopped as winners: 0 of 40</b> · <span id="seedLbl">seed 6</span></small></figcaption>
+      <canvas id="cPaths" role="img" aria-label="z statistic paths for 40 simulated tests"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel);opacity:.6"></i>stayed inside</span>
+        <span><i style="background:var(--blood)"></i>crossed, dot marks the stop</span>
+        <span><i style="background:var(--ochre)"></i>boundary</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Real false-positive rate<small>Share of A/A tests that stop, against number of looks (log scale). 2,000 simulated tests per point.</small></figcaption>
+      <canvas id="cRate" role="img" aria-label="Simulated false-positive rate versus number of looks"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>simulated, current boundary</span>
+        <span><i style="height:0;border-top:2px dashed var(--ink-soft)"></i>promised 5%</span>
+        <span><i style="background:var(--ink);width:10px"></i>exact value</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rK"></b><span>looks K</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rType"></b><span>boundary</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rFp"></b><span id="rFpL">false-positive rate</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rPast"></b><span id="rPastL">of runs that stopped, still past 1.96 at the last look (press Run 20,000)</span></div>
+    <div class="stat wide" style="--c:var(--ochre)"><b id="rB"></b><span>boundary |z| at each look</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rPow">—</b><span>power (effect on)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rSam">—</b><span>average share of planned sample used</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label class="sl" for="K">Looks K <output id="oK">14</output></label>
+      <input id="K" type="range" min="0" max="8" step="1" value="5">
+      <fieldset>
+        <legend>Boundary</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="bt" value="peek" checked><span>1.96 every look (peeking)</span></label>
+          <label class="opt"><input type="radio" name="bt" value="pocock"><span>Pocock</span></label>
+          <label class="opt"><input type="radio" name="bt" value="obf"><span>O'Brien-Fleming</span></label>
+          <label class="opt"><input type="radio" name="bt" value="bonf"><span>Bonferroni α/K</span></label>
+        </div>
+      </fieldset>
+    </div>
+    <div>
+      <fieldset>
+        <legend>True effect</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="eff" value="0" checked><span>None (A/A)</span></label>
+          <label class="opt"><input type="radio" name="eff" value="1"><span>Sized for 80% power at the end</span></label>
+        </div>
+      </fieldset>
+      <div class="btns">
+        <button class="btn" id="newPaths">New 40 paths</button>
+        <button class="btn primary" id="run">Run 20,000</button>
+        <label class="check"><input type="checkbox" id="fixed" checked>Fixed seed</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tCap">All four rules at K = 14, 20,000 simulated tests each</caption>
+      <thead><tr><th>Rule</th><th>Last-look bound</th><th>False positives</th><th>Power</th><th>Avg. sample</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <p class="sr" id="sum" aria-live="polite"></p>
+</section>
+
+<footer>Model from the lecture: batch increments X<sub>i</sub> ~ Normal(θ/√K, 1), z<sub>k</sub> = S<sub>k</sub>/√k, stop at the first |z<sub>k</sub>| &gt; b<sub>k</sub>. θ = 1.96 + 0.8416 gives 80% power for one look at the end. Pocock and O'Brien-Fleming constants for two-sided α = 0.05 with equally spaced looks were computed for this page by recursive numerical integration (Armitage, McPherson and Rowe 1969) and checked with 1,000,000 simulated tests per K. Random numbers: mulberry32 with Box-Muller.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const KS=[1,2,3,5,10,14,20,30,50];
+// Two-sided alpha = 0.05, equally spaced looks. Computed by numerical integration, verified by 1e6-run simulation.
+const POCOCK={1:1.95996,2:2.17827,3:2.28948,5:2.41318,10:2.55501,14:2.61455,20:2.67197,30:2.73096,50:2.79708};
+const OBF={1:1.95996,2:1.97743,3:2.00404,5:2.04007,10:2.08650,14:2.10655,20:2.12565,30:2.14467,50:2.16475};
+// Exact false-positive rates (%) from the same integration, drawn as reference ticks.
+const EXACT={peek:[5.00,8.31,10.72,14.17,19.33,21.96,24.79,28.01,32.04],pocock:KS.map(()=>5),obf:KS.map(()=>5),bonf:[5.00,4.28,3.84,3.27,2.53,2.19,1.86,1.53,1.17]};
+const NAMES={peek:'1.96 every look',pocock:'Pocock',obf:"O'Brien-Fleming",bonf:'Bonferroni α/K'};
+const THETA=1.96+0.8416;
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function normalGen(rng){let spare=null;return function(){if(spare!==null){const s=spare;spare=null;return s;}let u=0;while(u===0)u=rng();const v=rng(),r=Math.sqrt(-2*Math.log(u));spare=r*Math.sin(2*Math.PI*v);return r*Math.cos(2*Math.PI*v);};}
+// Acklam's inverse normal CDF
+function qnorm(p){const a=[-39.69683028665376,220.9460984245205,-275.9285104469687,138.3577518672690,-30.66479806614716,2.506628277459239],b=[-54.47609879822406,161.5858368580409,-155.6989798598866,66.80131188771972,-13.28068155288572],c=[-7.784894002430293e-03,-0.3223964580411365,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783],d=[7.784695709041462e-03,0.3224671290700398,2.445134137142996,3.754408661907416],pl=0.02425;let q,r;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));return(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));return-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  q=p-0.5;r=q*q;return(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+function bounds(type,K){
+  if(type==='peek')return Array(K).fill(1.96);
+  if(type==='bonf'){const b=qnorm(1-0.025/K);return Array(K).fill(b);}
+  if(type==='pocock')return Array(K).fill(POCOCK[K]);
+  return Array.from({length:K},(_,i)=>OBF[K]*Math.sqrt(K/(i+1)));
+}
+function simulate(type,K,effect,n,seed){
+  const b=bounds(type,K),nrm=normalGen(mulberry32(seed)),drift=effect?THETA/Math.sqrt(K):0;
+  let stops=0,used=0,past=0;const sq=b.map((_,i)=>Math.sqrt(i+1));
+  for(let r=0;r<n;r++){let S=0,stop=0;
+    for(let k=0;k<K;k++){S+=nrm()+drift;const z=S/sq[k];if(!stop&&Math.abs(z)>b[k])stop=k+1;}
+    // S now holds the full-data sum: z at the last look
+    if(stop){stops++;used+=stop/K;if(Math.abs(S/sq[K-1])>1.96)past++;}else used+=1;}
+  return {rate:stops/n,used:used/n,past:stops?past/stops:0};
+}
+
+let K=14,type='peek',effect=false,fixed=true,seed=6,run20=null;
+const curveCache={};
+function simSeed(salt){return fixed?(seed*7919+salt)>>>0:Math.floor(Math.random()*4294967296);}
+function curve(){
+  const key=type+'|'+(fixed?seed:'r');
+  if(!fixed||!curveCache[key])curveCache[key]=KS.map((k,i)=>simulate(type,k,false,2000,simSeed(100+i)).rate);
+  return curveCache[key];
+}
+function paths(){
+  const nrm=normalGen(mulberry32(fixed?seed:(seed=Math.floor(Math.random()*1e9)))),drift=effect?THETA/Math.sqrt(K):0,out=[];
+  for(let j=0;j<40;j++){let S=0;const z=[];for(let k=1;k<=K;k++){S+=nrm()+drift;z.push(S/Math.sqrt(k));}out.push(z);}
+  return out;
+}
+let P=[];
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function alpha(col,a){const g=document.createElement('canvas').getContext('2d');g.fillStyle=col;const hex=g.fillStyle;if(hex[0]!=='#')return col;const n=parseInt(hex.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+
+function drawPaths(){
+  const {g,w,h}=setupCanvas($('cPaths'));g.clearRect(0,0,w,h);
+  const pad={l:34,r:10,t:10,b:30},b=bounds(type,K),xMax=K+0.5,yM=5;
+  const X=k=>pad.l+(w-pad.l-pad.r)*k/xMax,Y=z=>pad.t+(h-pad.t-pad.b)*(1-(Math.max(-yM,Math.min(yM,z))+yM)/(2*yM));
+  // acceptance region
+  g.fillStyle=alpha(css('--ochre'),.14);
+  for(let k=1;k<=K;k++){const x0=X(k-0.5),x1=X(k+0.5),bb=Math.min(b[k-1],yM);g.fillRect(x0,Y(bb),x1-x0,Y(-bb)-Y(bb));}
+  // grid
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='middle';
+  for(let z=-4;z<=4;z+=2){const y=Y(z);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(z,pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';
+  const step=K<=14?(w<520&&K>7?2:1):K<=30?5:10;
+  for(let k=1;k<=K;k++)if(k===1||k%step===0||k===K){if(k!==K&&K-k<step*0.6&&k!==1)continue;g.fillText(k,X(k),h-pad.b+6);}
+  g.textAlign="right";g.textBaseline="bottom";g.fillText("look",w-pad.r,h-pad.b-2);
+  // boundary lines (step)
+  g.strokeStyle=css('--ochre');g.lineWidth=2;
+  [1,-1].forEach(s=>{g.beginPath();for(let k=1;k<=K;k++){const y=Y(s*b[k-1]);k===1?g.moveTo(X(0.5),y):g.lineTo(X(k-0.5),y);g.lineTo(X(k+0.5),y);}g.stroke();});
+  // paths
+  let stopped=0;const blood=css('--blood'),steel=css('--steel'),dots=[];
+  P.forEach(z=>{
+    let stop=0;for(let k=0;k<K;k++)if(Math.abs(z[k])>b[k]){stop=k+1;break;}
+    const pts=[[X(0),Y(0)]].concat(z.map((v,i)=>[X(i+1),Y(v)]));
+    if(!stop){g.strokeStyle=alpha(steel,.5);g.lineWidth=1.2;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();return;}
+    stopped++;
+    g.strokeStyle=alpha(blood,.22);g.lineWidth=1.2;g.beginPath();pts.slice(stop).forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();
+    g.strokeStyle=blood;g.lineWidth=1.8;g.beginPath();pts.slice(0,stop+1).forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();
+    dots.push(pts[stop]);
+  });
+  dots.forEach(p=>{g.fillStyle=blood;g.beginPath();g.arc(p[0],p[1],4.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=1.5;g.stroke();});
+  $('stopped').textContent=`Stopped as winners: ${stopped} of 40`;
+  $('leftCap').firstChild.textContent=`40 experiments, looked at ${K} time${K>1?'s':''}`;
+  $('seedLbl').textContent=fixed?`seed ${seed}`:'random seed';
+  return stopped;
+}
+function drawRate(rates){
+  const {g,w,h}=setupCanvas($('cRate'));g.clearRect(0,0,w,h);
+  const pad={l:40,r:12,t:12,b:30},yM=45;
+  const X=k=>pad.l+(w-pad.l-pad.r)*Math.log(k)/Math.log(50),Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yM);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  for(let v=0;v<=40;v+=10){const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v+'%',pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';
+  [1,2,5,10,20,50].forEach(k=>{g.fillText(k,X(k),h-pad.b+6);});
+  g.textAlign='right';g.fillText('looks K',w-pad.r,h-pad.b-16);
+  g.strokeStyle=css('--ink-soft');g.setLineDash([6,5]);g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(5));g.lineTo(w-pad.r,Y(5));g.stroke();g.setLineDash([]);
+  // exact ticks
+  g.strokeStyle=css('--ink');g.lineWidth=2;
+  EXACT[type].forEach((v,i)=>{const x=X(KS[i]);g.beginPath();g.moveTo(x-5,Y(v));g.lineTo(x+5,Y(v));g.stroke();});
+  // simulated line
+  g.strokeStyle=css('--blood');g.lineWidth=2.5;g.beginPath();
+  rates.forEach((r,i)=>{const x=X(KS[i]),y=Y(r*100);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+  g.fillStyle=css('--blood');rates.forEach((r,i)=>{g.beginPath();g.arc(X(KS[i]),Y(r*100),2.5,0,Math.PI*2);g.fill();});
+  // marker
+  const i=KS.indexOf(K),x=X(K),y=Y(rates[i]*100);
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--blood');g.beginPath();g.arc(x,y,6.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.fillStyle=css('--ink');g.font='700 13px '+css('--sans');g.textBaseline='bottom';
+  const right=x>w*0.65;g.textAlign=right?'right':'left';g.fillText((rates[i]*100).toFixed(1)+'%',x+(right?-10:10),y-8);
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText('5%',pad.l+4,Y(5)-2);
+}
+const f3=v=>v.toFixed(3),pc=v=>(v*100).toFixed(1)+'%';
+function boundaryText(){
+  const b=bounds(type,K).map(f3);
+  if(type==='peek'||type==='pocock'||type==='bonf')return (K>1?'all ':'')+b[0];
+  return K>8?b.slice(0,5).join(', ')+', ..., '+b[K-1]:b.join(', ');
+}
+function table(){
+  const rows=['peek','pocock','obf','bonf'].map((t,i)=>{
+    const a=simulate(t,K,false,20000,simSeed(9000+i*2)),e=simulate(t,K,true,20000,simSeed(9001+i*2)),b=bounds(t,K);
+    return {t,a,e,last:b[K-1]};
+  });
+  const one=simulate('peek',1,true,20000,simSeed(8999));
+  $('tbody').innerHTML=`<tr><td>One look at the end</td><td>1.960</td><td>5.0%</td><td>${pc(one.rate)}</td><td>100%</td></tr>`+
+    rows.map(r=>`<tr class="${r.t===type?'here':''}"><td>${NAMES[r.t]}</td><td>${f3(r.last)}</td><td>${pc(r.a.rate)}</td><td>${pc(r.e.rate)}</td><td>${Math.round(r.e.used*100)}%</td></tr>`).join('');
+  $('tCap').textContent=`All four rules at K = ${K}, 20,000 simulated tests each`;
+}
+function update(newTable){
+  const rates=curve(),i=KS.indexOf(K);
+  const stopped=drawPaths();drawRate(rates);
+  $('rK').textContent=K;$('oK').textContent=K;$('rType').textContent=NAMES[type];$('rB').textContent=boundaryText();
+  if(run20){$("rPastL").textContent="of runs that stopped, still past 1.96 at the last look";$('rFp').textContent=pc(run20.rate);$('rFpL').textContent='false-positive rate, 20,000 runs';$("rPast").textContent=(run20.past*100).toFixed(1)+"%";}
+  else{$('rFp').textContent=pc(rates[i]);$("rPastL").textContent="of runs that stopped, still past 1.96 at the last look (press Run 20,000)";$('rFpL').textContent='false-positive rate, 2,000 runs';$("rPast").textContent="—";}
+  if(effect){const e=simulate(type,K,true,20000,simSeed(9001+['peek','pocock','obf','bonf'].indexOf(type)*2));$('rPow').textContent=pc(e.rate);$('rSam').textContent=Math.round(e.used*100)+'%';}
+  else{$('rPow').textContent='—';$('rSam').textContent='—';}
+  if(newTable)table();
+  const r=rates[i]*100;let s;
+  if(effect)s=`The effect is real here, so stopping is correct. Compare the power and sample columns below. Peeking stops earliest and most often, but only because its false-positive rate is ${EXACT.peek[i].toFixed(1)}%, not 5%.`;
+  else if(type==='peek')s=K===1?`One look at the end gives the 5% you were promised. Now drag K up.`:`Each look alone has a 5% false-positive rate, yet checking ${K} times and stopping at the first |z| &gt; 1.96 declares a winner in <b>${EXACT.peek[i].toFixed(1)}%</b> of A/A tests (exact value; this simulation says ${r.toFixed(1)}%). Most crossings happen early, and many faint tails drift back inside. The "winner" was noise.`;
+  else if(type==='bonf')s=`Bonferroni tests every look at α/K. It is safe, but the looks are correlated, so the real rate is only ${EXACT.bonf[i].toFixed(2)}% and you give up power for nothing.`;
+  else if(type==='pocock')s=`Pocock raises the bar to ${f3(POCOCK[K])} at every look. The rate returns to 5%, at the cost of a final-look bar well above 1.96.`;
+  else s=`O'Brien-Fleming starts at ${f3(OBF[K]*Math.sqrt(K))} and falls to ${f3(OBF[K])} at the last look. Early looks almost never stop a test, the rate is back at 5%, and the final bar is close to 1.96.`;
+  $('insight').innerHTML=s;
+  $('sum').textContent=`${stopped} of 40 paths stopped. Simulated false-positive rate at K = ${K}: ${r.toFixed(1)} percent.`;
+}
+function reset(){P=paths();run20=null;}
+$('K').addEventListener('input',e=>{K=KS[+e.target.value];reset();update(true);});
+document.querySelectorAll('input[name=bt]').forEach(r=>r.addEventListener('change',()=>{type=r.value;run20=null;update(false);document.querySelectorAll('#tbody tr').forEach((tr,i)=>tr.className=(i>0&&['peek','pocock','obf','bonf'][i-1]===type)?'here':'');}));
+document.querySelectorAll('input[name=eff]').forEach(r=>r.addEventListener('change',()=>{effect=r.value==='1';reset();update(false);}));
+$('newPaths').addEventListener('click',()=>{if(fixed)seed++;P=paths();update(false);});
+$('fixed').addEventListener('change',e=>{fixed=e.target.checked;if(fixed)seed=6;reset();update(true);});
+$('run').addEventListener('click',()=>{run20=simulate(type,K,false,20000,simSeed(9000+['peek','pocock','obf','bonf'].indexOf(type)*2));if(!fixed)table();update(false);});
+window.addEventListener('resize',()=>update(false));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>update(false));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>update(false));
+reset();update(true);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Revert or fix forward — MMO308 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 20px;margin-bottom:14px}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:330px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+select{font:600 .9rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);width:100%;margin-top:4px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.bar-row{margin:8px 0 12px}
+.bar-name{font-weight:600;font-size:.9rem;display:flex;align-items:center;gap:8px}
+.bar-track{position:relative;height:26px;margin-top:4px}
+.bar{height:100%;border-radius:4px;transition:width .25s ease;min-width:2px}
+.bar.ff{background:repeating-linear-gradient(90deg,var(--ochre) 0 12px,transparent 12px 16px);border:2px solid var(--ochre)}
+.bar.rv{background:var(--steel)}
+.bar-val{font-variant-numeric:tabular-nums;font-size:.9rem;margin-top:3px}
+.bar-val b{font-size:1.15rem}
+.swatch{display:inline-block;width:22px;height:0;border-top:3px solid var(--steel)}
+.swatch.ff{border-top:3px dashed var(--ochre)}
+canvas{display:block;width:100%}
+#cBelief{height:112px}
+#cSurv{height:280px}
+.qlabel{font-variant-numeric:tabular-nums;font-size:.95rem;margin:6px 0 0}
+.qlabel b{font-size:1.1rem}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper)}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:10px}
+.btn{font:600 .9rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--paper)}
+.note{font-size:.86rem;color:var(--ink-soft);margin:6px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:6px 0 0}
+h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:16px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO308 Live Operations · Week 13 · Worked example</p>
+  <h1>Revert first, even when you doubt it</h1>
+  <p class="lede">A 60% hunch that the last patch broke the game is far more than you need. Reverting pays whenever your belief beats q*, and q* falls as the bug gets harder to find.</p>
+</header>
+
+<section class="panel" aria-label="Revert or fix forward">
+  <div class="controls">
+    <div><label for="q">q, cause belief <output id="oq"></output></label><input id="q" type="range" min="0" max="1" step="0.01" value="0.6"></div>
+    <div><label for="p">p, find chance <output id="op"></output></label><input id="p" type="range" min="0.02" max="0.8" step="0.01" value="0.25"></div>
+    <div><label for="r">r, min per round <output id="or"></output></label><input id="r" type="range" min="10" max="60" step="5" value="30"></div>
+    <div><label for="F">F, min to fix <output id="oF"></output></label><input id="F" type="range" min="10" max="120" step="5" value="45"></div>
+    <div><label for="R">R, min to revert <output id="oR"></output></label><input id="R" type="range" min="1" max="180" step="1" value="20"></div>
+    <div><label for="N">N, players <output id="oN"></output></label><input id="N" type="range" min="1000" max="200000" step="1000" value="40000"></div>
+    <div><label for="preset">Presets</label>
+      <select id="preset">
+        <option value="def">Lecture default</option>
+        <option value="hard">Hard bug (p = 0.05)</option>
+        <option value="slow">Slow revert (R = 90)</option>
+        <option value="kill">Kill switch (R = 2, q = 0.9)</option>
+        <option value="custom" hidden>Custom</option>
+      </select>
+    </div>
+  </div>
+  <p class="note" style="margin:-4px 0 14px">q is your belief that the last change caused the outage. p is the chance one diagnosis round of r minutes finds the cause. F is the time to ship a fix once found. R is the time to revert. N only scales player-hours.</p>
+
+  <div class="views">
+    <figure>
+      <figcaption>Expected outage<small>Mean minutes from the page to players back in, and the same in player-hours (minutes × N / 60).</small></figcaption>
+      <div aria-live="polite">
+        <div class="bar-row">
+          <div class="bar-name"><span class="swatch ff" aria-hidden="true"></span>Fix forward: E_A = r/p + F</div>
+          <div class="bar-track"><div class="bar ff" id="barA"></div></div>
+          <div class="bar-val" id="valA"></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-name"><span class="swatch" aria-hidden="true"></span>Revert first: E_B = R + (1 − q) × E_A</div>
+          <div class="bar-track"><div class="bar rv" id="barB"></div></div>
+          <div class="bar-val" id="valB"></div>
+        </div>
+      </div>
+      <canvas id="cBelief" role="img" aria-label="Belief axis from 0 to 1 with the current q and the break-even q star"></canvas>
+      <p class="qlabel" id="qlabel" aria-live="polite"></p>
+    </figure>
+    <figure>
+      <figcaption>Still down after t<small>Chance the incident is still open t hours after the page.</small></figcaption>
+      <canvas id="cSurv" role="img" aria-label="Step curves of the chance of still being down, fix forward versus revert first, over eight hours"></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><span class="swatch ff"></span> Fix forward, S_A(t)</span>
+        <span><span class="swatch"></span> Revert first, S_B(t)</span>
+        <span id="simLegend" hidden>· dots are simulated incidents</span>
+      </div>
+      <div class="table-wrap">
+        <table aria-label="Chance still down at 1, 2, 4, 6 and 8 hours">
+          <thead><tr><th>t</th><th>Fix forward S_A</th><th>Revert first S_B</th></tr></thead>
+          <tbody id="tSurv"></tbody>
+        </table>
+      </div>
+      <div class="row">
+        <button class="btn" id="sim" type="button">Simulate 2,000 incidents each</button>
+        <span class="note" id="simNote" aria-live="polite"></span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <h2>How q* moves with p</h2>
+  <div class="table-wrap">
+    <table aria-label="Expected fix-forward outage and break-even belief for several values of p">
+      <thead><tr><th>p</th><th>E_A (min)</th><th>q*</th></tr></thead>
+      <tbody id="tP"></tbody>
+    </table>
+  </div>
+  <p class="note">r, F and R come from the sliders. The row matching your current p is highlighted when it is in the list.</p>
+</section>
+
+<footer>Model: MMO308 week 13, section 2. Diagnosis rounds are independent, each finds the cause with chance p, so the round count is geometric (MA102 week 7). A revert either removes the cause (chance q) or returns you to the start of a fix-forward diagnosis. The numbers are invented for teaching. The simulation uses a seeded mulberry32 generator, seed 13.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+// round half to even at 3 decimals, so exact ties such as 0.5625 read 0.562 like the lecture's Python output
+function f3(x){const v=x*1000,fl=Math.floor(v),d=v-fl;let n=d>0.5+1e-9?fl+1:d<0.5-1e-9?fl:(fl%2===0?fl:fl+1);return (n/1000).toFixed(3);}
+const DEF={q:0.6,p:0.25,r:30,F:45,R:20,N:40000};
+const PRE={def:{},hard:{p:0.05},slow:{R:90},kill:{R:2,q:0.9}};
+let st={...DEF},sim=null;
+const keys=['q','p','r','F','R','N'];
+
+const EA=()=>st.r/st.p+st.F, EB=()=>st.R+(1-st.q)*EA(), QS=()=>st.R/EA();
+function SA(t){if(t<st.F+st.r)return 1;return Math.pow(1-st.p,Math.floor((t-st.F)/st.r));}
+function SB(t){if(t<st.R)return 1;return (1-st.q)*SA(t-st.R);}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+
+function drawBelief(){
+  const {g,w,h}=setupCanvas($('cBelief')),pl=14,pr=14,y=62;
+  const X=v=>pl+(w-pl-pr)*v;g.clearRect(0,0,w,h);
+  const qs=QS(),qc=Math.min(1,qs);
+  if(qs<=1){g.fillStyle=css('--steel');g.globalAlpha=.2;g.fillRect(X(qc),y-16,X(1)-X(qc),32);g.globalAlpha=1;
+    g.font='600 12px '+css('--sans');g.fillStyle=css('--steel');g.textBaseline='middle';
+    const txt='revert first wins',tw=g.measureText(txt).width;
+    if(X(1)-X(qc)>tw+12){g.textAlign='right';g.fillText(txt,X(1)-6,y-22);}
+    else {g.textAlign='left';g.fillText(txt,Math.max(pl,X(qc)-tw-6),y-22);}
+  }
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(X(0),y);g.lineTo(X(1),y);g.stroke();
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  for(let i=0;i<=10;i++){const x=X(i/10);g.beginPath();g.moveTo(x,y-4);g.lineTo(x,y+4);g.stroke();if(i%2===0)g.fillText((i/10).toFixed(1),x,y+22);}
+  if(qs<=1){g.strokeStyle=css('--blood');g.lineWidth=2.5;g.setLineDash([4,3]);g.beginPath();g.moveTo(X(qc),y-18);g.lineTo(X(qc),y+18);g.stroke();g.setLineDash([]);
+    g.font='600 12px '+css('--sans');g.fillStyle=css('--blood');g.textBaseline='middle';const t='q* = '+qs.toFixed(3),tw=g.measureText(t).width;g.textAlign='left';g.fillText(t,Math.min(Math.max(pl,X(qc)-tw/2),w-pr-tw),y-38);}
+  else{g.font='600 12px '+css('--sans');g.fillStyle=css('--blood');g.textAlign='right';g.textBaseline='middle';g.fillText('q* > 1: revert never wins',X(1),y-30);}
+  // q marker: triangle pointing up + label
+  const qx=X(st.q);g.fillStyle=css('--ink');g.beginPath();g.moveTo(qx,y+3);g.lineTo(qx-7,y+16);g.lineTo(qx+7,y+16);g.closePath();g.fill();
+  g.font='600 12px '+css('--sans');g.textBaseline='top';g.textAlign=st.q>0.9?'right':st.q<0.1?'left':'center';g.fillText('q',qx,y+36);
+}
+
+function drawSurv(){
+  const c=setupCanvas($('cSurv')),{g,w,h}=c,pad={l:40,r:12,t:12,b:34},T=480;
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/T,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=i/4;g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(v.toFixed(2),pad.l-6,Y(v));}
+  g.textAlign='center';g.textBaseline='top';
+  for(let hr=0;hr<=8;hr++){g.fillStyle=css('--ink-soft');g.fillText(hr+'h',X(hr*60),h-pad.b+6);}
+  [1,2,4,6,8].forEach(hr=>{g.strokeStyle=css('--ink-soft');g.globalAlpha=.45;g.setLineDash([2,3]);g.beginPath();g.moveTo(X(hr*60),pad.t);g.lineTo(X(hr*60),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;});
+  function step(f,color,dash,width){
+    g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash);g.beginPath();
+    let prev=f(0);g.moveTo(X(0),Y(prev));
+    for(let t=1;t<=T;t++){const v=f(t);if(v!==prev){g.lineTo(X(t),Y(prev));g.lineTo(X(t),Y(v));prev=v;}}
+    g.lineTo(X(T),Y(prev));g.stroke();g.setLineDash([]);
+  }
+  if(sim){
+    [['a',css('--ochre')],['b',css('--steel')]].forEach(([k,col])=>{g.fillStyle=col;g.globalAlpha=.55;
+      for(let t=0;t<=T;t+=10){const v=sim[k].filter(x=>x>t).length/sim[k].length;g.beginPath();g.arc(X(t),Y(v),2.2,0,7);g.fill();}g.globalAlpha=1;});
+  }
+  step(SA,css('--ochre'),[8,5],2.5);
+  step(SB,css('--steel'),[],2.5);
+}
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function simulate(){
+  const rng=mulberry32(13),n=2000;
+  const fix=()=>{let k=1;while(rng()>=st.p)k++;return st.F+k*st.r;};
+  const a=[],b=[];
+  for(let i=0;i<n;i++)a.push(fix());
+  for(let i=0;i<n;i++)b.push(rng()<st.q?st.R:st.R+fix());
+  const mean=x=>x.reduce((s,v)=>s+v,0)/x.length;
+  sim={a,b,key:JSON.stringify(st)};
+  $('simNote').textContent=`Simulated means: fix forward ${mean(a).toFixed(0)} min, revert first ${mean(b).toFixed(0)} min (formulas ${Math.round(EA())} and ${Math.round(EB())}). Gaps of a few percent are sampling noise from 2,000 draws.`;
+  $('simLegend').hidden=false;
+}
+
+function update(){
+  $('oq').textContent=st.q.toFixed(2);$('op').textContent=st.p.toFixed(2);$('or').textContent=st.r;$('oF').textContent=st.F;$('oR').textContent=st.R;$('oN').textContent=fmt(st.N);
+  const ea=EA(),eb=EB(),qs=QS(),mx=Math.max(ea,eb);
+  $('barA').style.width=(100*ea/mx)+'%';$('barB').style.width=(100*eb/mx)+'%';
+  $('valA').innerHTML=`<b>${fmt(ea)} min</b> · ${fmt(ea*st.N/60)} player-hours`;
+  $('valB').innerHTML=`<b>${fmt(eb)} min</b> · ${fmt(eb*st.N/60)} player-hours`;
+  $('qlabel').innerHTML=qs>1?`q* = ${qs.toFixed(3)}: <b>revert never wins in expectation</b>, because a revert takes longer than the whole expected fix.`:`<b>q* = ${qs.toFixed(3)}</b> = R / E_A = ${st.R} / ${fmt(ea)}. Your q = ${st.q.toFixed(2)}.`;
+  const rows=[1,2,4,6,8].map(hr=>`<tr><td>${hr} h</td><td>${f3(SA(hr*60))}</td><td>${f3(SB(hr*60))}</td></tr>`);
+  $('tSurv').innerHTML=rows.join('');
+  $('tP').innerHTML=[0.5,0.25,0.1,0.05].map(pp=>{const e=st.r/pp+st.F;return `<tr class="${Math.abs(pp-st.p)<1e-9?'here':''}"><td>${pp.toFixed(2)}</td><td>${fmt(e)}</td><td>${(st.R/e).toFixed(3)}</td></tr>`;}).join('');
+  let s;
+  const diff=ea-eb;
+  if(qs>1)s=`A revert takes ${st.R} minutes, longer than the ${fmt(ea)} minutes a fix is expected to take. Make the revert faster before you rely on it.`;
+  else if(st.q>qs)s=`Revert first. At q = ${st.q.toFixed(2)} it saves ${fmt(diff)} minutes on average, ${fmt(diff*st.N/60)} player-hours. It would still win at any belief above ${qs.toFixed(3)}. Two hours in, a fix-forward team is still down ${Math.round(SA(120)*100)}% of the time; a revert-first team ${Math.round(SB(120)*100)}%.`;
+  else if(Math.abs(st.q-qs)<0.005)s=`Break-even. At q = ${st.q.toFixed(2)} both strategies expect about ${fmt(ea)} minutes.`;
+  else s=`Fix forward. At q = ${st.q.toFixed(2)} a revert usually fails and costs ${fmt(-diff)} minutes on average. Reverting would win only above q* = ${qs.toFixed(3)}. Lower R, and that line moves left.`;
+  $('insight').textContent=s;
+  if(sim&&sim.key!==JSON.stringify(st)){sim=null;$('simNote').textContent='';$('simLegend').hidden=true;}
+  drawBelief();drawSurv();
+}
+keys.forEach(k=>$(k).addEventListener('input',e=>{st[k]=+e.target.value;$('preset').value='custom';update();}));
+$('preset').addEventListener('change',e=>{const v=e.target.value;if(!PRE[v])return;st={...DEF,...PRE[v]};keys.forEach(k=>$(k).value=st[k]);update();});
+$('sim').addEventListener('click',()=>{simulate();drawSurv();});
+window.addEventListener('resize',()=>{drawBelief();drawSurv();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawBelief();drawSurv();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawBelief();drawSurv();});
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Event pull-forward · MMO308 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px}
+@media (max-width:860px){.layout{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cDaily{height:260px}#cCum{height:230px}
+.readout{display:flex;flex-direction:column;gap:10px}
+@media (max-width:860px){.readout{display:grid;grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.tag{display:inline-block;margin-top:4px;font-size:.78rem;font-weight:700;color:var(--paper);background:var(--blood);padding:1px 7px;border-radius:999px}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 22px;margin:14px 0}
+@media (max-width:860px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+label.sl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 4px}
+.num{font-weight:600;font-size:.9rem;display:flex;flex-direction:column;gap:2px}
+input[type=number]{font:600 1rem var(--sans);width:9em;padding:6px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+fieldset{border:0;padding:0;margin:0}
+legend{font-weight:600;font-size:.9rem;padding:0;margin-bottom:4px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;width:1px;height:1px}
+.opt span{display:inline-block;font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);cursor:pointer}
+.opt input:checked+span{background:var(--steel);color:var(--paper)}
+.opt input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.btn{font:600 .9rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0}
+.sw{display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:5px;border-radius:2px}
+.hg{background:repeating-linear-gradient(45deg,var(--moss) 0 2px,transparent 2px 5px);border:1px solid var(--moss)}
+.hb{background:repeating-linear-gradient(-45deg,var(--blood) 0 2px,transparent 2px 5px),repeating-linear-gradient(45deg,var(--blood) 0 1px,transparent 1px 7px);border:1px solid var(--blood)}
+h2{font-family:var(--serif);font-size:1.2rem;margin:22px 0 4px}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+@media (max-width:520px){table{font-size:.8rem}th,td{padding:5px 4px}}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO308 Live Operations, Analytics and Experimentation · Week 8 · Worked example</p>
+  <h1>A +60% spike that adds 25,000 hours, not 60,000</h1>
+  <p class="lede">Players wait for an announced event, then rest after it. Both dips pay for part of the spike. The bottom chart keeps a running total from the announcement. It sinks, climbs through the event, sinks again, and settles at what the event really added.</p>
+</header>
+
+<section class="panel" aria-label="Event pull-forward explorer">
+  <div class="layout">
+    <div style="min-width:0">
+      <figure>
+        <figcaption>Daily player-hours<small id="dailyCap">Dashed line = baseline. Day 0 is the first event day.</small></figcaption>
+        <canvas id="cDaily" role="img" aria-label="Daily player-hours with baseline, gain and borrowed areas"></canvas>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--steel)"></span>daily player-hours</span>
+          <span><span class="sw hg"></span>gain above baseline</span>
+          <span><span class="sw hb"></span>borrowed below baseline</span>
+        </div>
+      </figure>
+
+      <div class="controls">
+        <label class="num" for="B">Baseline B, player-hours per day<input id="B" type="number" min="100" step="1000" value="10000"></label>
+        <div><label class="sl" for="a">Announcement lead a <output id="oa"></output></label><input id="a" type="range" min="0" max="21" step="1" value="14"></div>
+        <div><label class="sl" for="dpre">Pre-dip <output id="odpre"></output></label><input id="dpre" type="range" min="0" max="30" step="1" value="10"></div>
+        <div><label class="sl" for="E">Event length E <output id="oE"></output></label><input id="E" type="range" min="1" max="14" step="1" value="10"></div>
+        <div><label class="sl" for="L">Lift L <output id="oL"></output></label><input id="L" type="range" min="0" max="150" step="1" value="60"></div>
+        <div><label class="sl" for="h">Post length h <output id="oh"></output></label><input id="h" type="range" min="0" max="30" step="1" value="14"></div>
+        <div><label class="sl" for="dpost">Post-dip <output id="odpost"></output></label><input id="dpost" type="range" min="0" max="60" step="0.5" value="15"></div>
+        <fieldset>
+          <legend>Baseline used in the report</legend>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="base" value="true" checked><span>True baseline</span></label>
+            <label class="opt"><input type="radio" name="base" value="week"><span>Week before event</span></label>
+          </div>
+        </fieldset>
+        <div style="align-self:end"><button class="btn" id="reset">Reset</button></div>
+      </div>
+
+      <figure>
+        <figcaption>Cumulative lift from the announcement<small>Running total of daily hours minus the true baseline</small></figcaption>
+        <canvas id="cCum" role="img" aria-label="Cumulative lift over time with peak and net markers"></canvas>
+      </figure>
+    </div>
+
+    <div class="readout" aria-live="polite">
+      <div class="stat" style="--c:var(--moss)"><b id="rG"></b><span>gross lift = B·L·E</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rBo"></b><span>borrowed = B(d<sub>pre</sub>·a + d<sub>post</sub>·h)</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rN"></b><span>net lift = gross − borrowed</span><div id="costTag" class="tag" hidden>the event cost hours</div></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rRatio"></b><span>incrementality ratio net / gross</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rWk"></b><span>week-before baseline, per day</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rRep"></b><span id="rRepL">reported gross</span></div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <h2>How often to run events</h2>
+  <p style="margin:0;font-size:.92rem;max-width:72ch">Recovery model L(g) = L<sub>max</sub>(1 − e<sup>−g/τ</sup>). The longer the gap g since the last event, the more lift the next one gets. Gross lift-days per year = 365/g × L(g) × E, with E from the event-length slider above.</p>
+  <div class="controls" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+    <div><label class="sl" for="Lmax"><span>L<sub>max</sub>, full-recovery lift</span> <output id="oLmax"></output></label><input id="Lmax" type="range" min="10" max="150" step="1" value="60"></div>
+    <div><label class="sl" for="tau">τ, recovery days <output id="otau"></output></label><input id="tau" type="range" min="5" max="90" step="1" value="30"></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Gap g (days)</th><th>Events / year</th><th>Lift per event L(g)</th><th>Gross lift-days / year</th><th>Relative cost L(120)/L(g)</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <p class="sr" id="sum" aria-live="polite"></p>
+</section>
+
+<footer>Model from the lecture: flat phases, whole days. Pre phase a days at B(1 − d<sub>pre</sub>), event E days at B(1 + L), post phase h days at B(1 − d<sub>post</sub>), baseline B otherwise. The peak of the cumulative line is gross lift minus the pre-dip, because the running total starts at the announcement. All numbers are illustrative, not measured from a real game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const D={B:10000,a:14,dpre:10,E:10,L:60,h:14,dpost:15,base:'true',Lmax:60,tau:30};
+let S={...D};
+const fmt=n=>{const r=Math.round(n);return (r<0?'−':'')+Math.abs(r).toLocaleString('en-US');};
+const sfmt=n=>(Math.round(n)>0?'+':'')+fmt(n);
+const pct=v=>(+v.toFixed(2)).toString()+'%';
+
+function model(){
+  const B=S.B,a=S.a,E=S.E,h=S.h,dp=S.dpre/100,dq=S.dpost/100,L=S.L/100;
+  const x0=-21,x1=Math.max(30,E+h+2),days=[];
+  for(let t=x0;t<=x1;t++){let A=B,ph='base';
+    if(t>=-a&&t<0){A=B*(1-dp);ph='pre';}else if(t>=0&&t<E){A=B*(1+L);ph='event';}else if(t>=E&&t<E+h){A=B*(1-dq);ph='post';}
+    days.push({t,A,ph});}
+  const gross=B*L*E,borrowed=B*(dp*a+dq*h),net=gross-borrowed;
+  const wk=days.filter(d=>d.t>=-7&&d.t<0).reduce((s,d)=>s+d.A,0)/7;
+  const reported=E*(B*(1+L)-wk);
+  let C=0;const cum=days.map(d=>{if(d.t>=-a){C+=d.A-B;return C;}return null;});
+  return {B,a,E,h,L,dp,dq,x0,x1,days,gross,borrowed,net,wk,reported,cum};
+}
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function pattern(g,col,dir){const p=document.createElement('canvas');p.width=p.height=8;const q=p.getContext('2d');q.globalAlpha=.25;q.fillStyle=col;q.fillRect(0,0,8,8);q.globalAlpha=1;q.strokeStyle=col;q.lineWidth=1.6;q.beginPath();
+  if(dir>0){q.moveTo(0,8);q.lineTo(8,0);q.moveTo(-2,2);q.lineTo(2,-2);q.moveTo(6,10);q.lineTo(10,6);}else{q.moveTo(0,0);q.lineTo(8,8);q.moveTo(-2,6);q.lineTo(2,10);q.moveTo(6,-2);q.lineTo(10,2);}
+  q.stroke();return g.createPattern(p,'repeat');}
+const kfmt=v=>Math.abs(v)>=1000?(v/1000).toLocaleString('en-US',{maximumFractionDigits:1})+'k':String(Math.round(v));
+function niceStep(range,n){const raw=range/n,mag=Math.pow(10,Math.floor(Math.log10(raw)));return [1,2,2.5,5,10].map(m=>m*mag).find(s=>s>=raw);}
+function xAxis(g,w,h,pad,m,X){
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';g.strokeStyle=css('--grid');g.lineWidth=1;
+  const step=w<520?14:7;
+  for(let t=-21;t<=m.x1;t+=step){g.fillText(t,X(t+0.5),h-pad.b+6);}
+  g.textAlign='right';g.fillText('day',w-pad.r,h-pad.b+6);
+}
+function drawDaily(m){
+  const {g,w,h}=setupCanvas($('cDaily'));g.clearRect(0,0,w,h);
+  const pad={l:44,r:10,t:26,b:26},yMax=Math.max(m.B*(1+m.L),m.B)*1.12;
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t-m.x0)/(m.x1+1-m.x0),Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  const st=niceStep(yMax,4);g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='middle';
+  for(let v=0;v<=yMax;v+=st){const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(kfmt(v),pad.l-6,y);}
+  const base=S.base==='week'?m.wk:m.B;
+  // phase bands and labels
+  const phases=[['pre',-m.a,0,'pre'],['event',0,m.E,'event'],['post',m.E,m.E+m.h,'post']];
+  g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  phases.forEach(([k,s,e,lab])=>{if(e<=s)return;g.fillStyle=css('--paper');g.globalAlpha=.5;g.fillRect(X(s),pad.t,X(e)-X(s),Y(0)-pad.t);g.globalAlpha=1;
+    g.strokeStyle=css('--ink-soft');g.beginPath();g.moveTo(X(s)+1,6);g.lineTo(X(s)+1,14);g.moveTo(X(s)+1,10);g.lineTo(X(e)-1,10);g.moveTo(X(e)-1,6);g.lineTo(X(e)-1,14);g.stroke();
+    if(X(e)-X(s)>26){g.fillStyle=css('--ink');g.fillText(lab,(X(s)+X(e))/2,12);}});
+  // bars
+  const gain=pattern(g,css('--moss'),1),bor=pattern(g,css('--blood'),-1);
+  m.days.forEach(d=>{const x=X(d.t)+0.5,bw=Math.max(1,X(d.t+1)-X(d.t)-1);
+    g.fillStyle=css('--steel');g.globalAlpha=.35;g.fillRect(x,Y(d.A),bw,Y(0)-Y(d.A));g.globalAlpha=1;
+    if(d.A>base+1e-9){g.fillStyle=gain;g.fillRect(x,Y(d.A),bw,Y(base)-Y(d.A));}
+    else if(d.A<base-1e-9){g.fillStyle=bor;g.fillRect(x,Y(base),bw,Y(d.A)-Y(base));}
+    g.fillStyle=css('--steel');g.fillRect(x,Y(d.A)-1,bw,2.5);
+  });
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.setLineDash([7,5]);g.beginPath();g.moveTo(pad.l,Y(base));g.lineTo(w-pad.r,Y(base));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';
+  g.fillText((S.base==='week'?'week-before baseline ':'baseline ')+fmt(base),pad.l+4,Y(base)-3);
+  xAxis(g,w,h,pad,m,X);
+}
+function drawCum(m){
+  const {g,w,h}=setupCanvas($('cCum'));g.clearRect(0,0,w,h);
+  const vals=m.cum.filter(v=>v!==null).concat([0]);
+  let lo=Math.min(...vals),hi=Math.max(...vals);const span=Math.max(hi-lo,m.B);lo-=span*0.12;hi+=span*0.18;
+  const pad={l:52,r:10,t:12,b:26};
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t-m.x0)/(m.x1+1-m.x0),Y=v=>pad.t+(h-pad.t-pad.b)*(hi-v)/(hi-lo);
+  const st=niceStep(hi-lo,4);g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='middle';
+  for(let v=Math.ceil(lo/st)*st;v<=hi;v+=st){const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(kfmt(v),pad.l-6,y);}
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(0));g.lineTo(w-pad.r,Y(0));g.stroke();
+  // line (value at end of each day)
+  g.strokeStyle=css('--ochre');g.lineWidth=3;g.beginPath();let first=true;
+  m.days.forEach((d,i)=>{const v=m.cum[i];if(v===null)return;if(first){g.moveTo(X(d.t),Y(0));first=false;}g.lineTo(X(d.t+1),Y(v));});
+  g.stroke();
+  // peak and net markers
+  const endEvent=m.cum[m.days.findIndex(d=>d.t===m.E-1)],startEvent=-m.dp*m.a*m.B,net=m.cum[m.cum.length-1];
+  const lab=(y,txt,col)=>{g.strokeStyle=col;g.lineWidth=1.5;g.setLineDash([5,4]);g.beginPath();g.moveTo(pad.l,Y(y));g.lineTo(w-pad.r,Y(y));g.stroke();g.setLineDash([]);
+    g.font='700 12px '+css('--sans');const tw=g.measureText(txt).width;g.fillStyle=css('--paper-2');g.fillRect(w-pad.r-tw-8,Y(y)-17,tw+8,15);g.fillStyle=col;g.textAlign='right';g.textBaseline='bottom';g.fillText(txt,w-pad.r-4,Y(y)-3);};
+  lab(endEvent,`peak ${fmt(endEvent)}`,css('--ink'));
+  lab(net,`net ${fmt(net)}`,net<0?css('--blood'):css('--moss'));
+  // gross bracket during event
+  const xb=X(m.E)+4;g.strokeStyle=css('--moss');g.lineWidth=2;g.beginPath();g.moveTo(xb,Y(startEvent));g.lineTo(xb+6,Y(startEvent));g.lineTo(xb+6,Y(endEvent));g.lineTo(xb,Y(endEvent));g.stroke();
+  g.fillStyle=css('--moss');g.font='700 12px '+css('--sans');g.textAlign='left';g.textBaseline='middle';
+  const my=(Y(startEvent)+Y(endEvent))/2,gt=`event climb = gross ${fmt(m.gross)}`,gw=g.measureText(gt).width;let gx=xb+10;if(gx+gw>w-pad.r){gx=Math.max(pad.l+2,xb-gw-6);g.fillStyle=css("--paper-2");g.fillRect(gx-3,my-9,gw+6,18);g.fillStyle=css("--moss");}g.fillText(gt,gx,my);
+  xAxis(g,w,h,pad,m,X);
+}
+function table(){
+  const Lm=S.Lmax/100,tau=S.tau,L=g=>Lm*(1-Math.exp(-g/tau)),L120=L(120);
+  $('tbody').innerHTML=[30,45,60,90,120].map(g=>`<tr><td>${g}</td><td>${(365/g).toFixed(1)}</td><td>${(L(g)*100).toFixed(1)}%</td><td>${(365/g*L(g)*S.E).toFixed(1)}</td><td>${(L120/L(g)).toFixed(2)}</td></tr>`).join('');
+  $('oLmax').textContent=S.Lmax+'%';$('otau').textContent=tau+' days';
+}
+function update(){
+  const m=model();
+  $('rG').textContent=fmt(m.gross);$('rBo').textContent=fmt(m.borrowed);$('rN').textContent=fmt(m.net);
+  {const q=m.gross>0?+(m.net/m.gross).toFixed(2):null;$("rRatio").textContent=q===null?"n/a":(q<0?"−":"")+Math.abs(q).toFixed(2);}
+  $('costTag').hidden=!(m.net<-0.5);
+  $('rWk').textContent=fmt(m.wk);
+  const rep=S.base==='week'?m.reported:m.gross,err=m.gross>0?(rep/m.gross-1)*100:0;
+  $('rRep').textContent=fmt(rep)+(m.gross>0?` (${err>=0.05?'+':err<=-0.05?'−':''}${Math.abs(err).toFixed(1)}%)`:'');
+  $('rRepL').textContent=S.base==='week'?'reported gross vs week-before baseline (error vs true gross)':'reported gross vs true baseline';
+  $('oa').textContent=S.a+' days';$('odpre').textContent=S.dpre+'%';$('oE').textContent=S.E+' days';$('oL').textContent='+'+S.L+'%';$('oh').textContent=S.h+' days';$('odpost').textContent=pct(S.dpost);
+  $('dailyCap').textContent=(S.base==='week'?'Dashed line = mean of the 7 days before the event, what a naive report uses. ':'Dashed line = true baseline. ')+'Day 0 is the first event day.';
+  drawDaily(m);drawCum(m);table();
+  let s=`The event shows +${S.L}% for ${S.E} days, a gross lift of ${fmt(m.gross)} player-hours. Players held back ${fmt(m.B*m.dp*m.a)} hours before it and rested ${fmt(m.B*m.dq*m.h)} hours after it, so it added <b>${fmt(m.net)}</b>`+(m.gross>0?`, ${Math.round(m.net/m.gross*100)}% of what the spike suggests.`:'.');
+  if(m.net<-0.5)s+=` The event cost hours, because the hangover is larger than the spike.`;
+  if(S.base==='week'&&Math.abs(m.reported-m.gross)>0.5)s+=` A report that uses the week before as baseline (${fmt(m.wk)} per day) shows ${fmt(m.reported)} gross, ${sfmt(m.reported-m.gross)} off.`;
+  $('insight').innerHTML=s;
+  $('sum').textContent=`Gross ${fmt(m.gross)}, borrowed ${fmt(m.borrowed)}, net ${fmt(m.net)} player-hours.`;
+}
+['a','dpre','E','L','h','dpost','Lmax','tau'].forEach(k=>$(k).addEventListener('input',e=>{S[k]=+e.target.value;update();}));
+$('B').addEventListener('input',e=>{const v=+e.target.value;if(isFinite(v)&&v>0){S.B=v;update();}});
+document.querySelectorAll('input[name=base]').forEach(r=>r.addEventListener('change',()=>{S.base=r.value;update();}));
+$('reset').addEventListener('click',()=>{S={...D};['B','a','dpre','E','L','h','dpost','Lmax','tau'].forEach(k=>$(k).value=S[k]);document.querySelector('input[name=base][value=true]').checked=true;update();});
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

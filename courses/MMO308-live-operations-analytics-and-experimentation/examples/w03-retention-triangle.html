@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The retention triangle · MMO308 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--heat-lo:#f6eedb;--heat-hi:#5e3c06;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--heat-lo:#26324a;--heat-hi:#f5c86a}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--heat-lo:#26324a;--heat-hi:#f5c86a}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px}
+.layout{display:grid;gap:14px;grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"dau side" "tri side" "chk side" "read read"}
+.a-dau{grid-area:dau}.a-tri{grid-area:tri}.a-chk{grid-area:chk}.a-side{grid-area:side;align-self:start;position:sticky;top:12px}.a-read{grid-area:read}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"dau" "side" "tri" "chk" "read"}.a-side{position:static}}
+@media (max-width:520px){.panel{padding:10px}figure{padding:10px 8px 6px!important}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:210px}
+#cTri{height:auto}
+canvas:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.cellread{font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem;margin:8px 0 0;min-height:1.5em}
+.ramp{margin-top:8px;max-width:360px}
+.ramp .bar{height:10px;border-radius:3px;background:linear-gradient(to right,var(--heat-lo),var(--heat-hi))}
+.ramp .ticks{position:relative;height:1.2em;font-size:.75rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.side{display:flex;flex-direction:column;gap:10px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .82rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+fieldset{border:1px solid var(--grid);border-radius:10px;padding:6px 10px 10px;margin:0;display:flex;flex-direction:column;gap:6px}
+legend{font-size:.85rem;font-weight:700;padding:0 4px}
+label{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+.check,.radio{justify-content:flex-start;align-items:center;gap:8px}
+.check input,.radio input{width:17px;height:17px;margin:0;accent-color:var(--steel)}
+input[type=range]{width:100%;accent-color:var(--steel);height:24px;margin:0}
+input:disabled{opacity:.45}
+.row{display:flex;gap:8px;align-items:center;font-size:.85rem}
+.row button{font:600 .82rem var(--sans);padding:5px 10px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.reads{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+@media (max-width:760px){.reads{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.cols{grid-template-columns:minmax(0,1fr)}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+@media (max-width:520px){table{font-size:.8rem}th,td{padding:5px 4px}}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.muted{color:var(--ink-soft);font-size:.85rem}
+.ramp .ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}.ramp .ticks span:first-child{transform:none}.ramp .ticks span:last-child{transform:translateX(-100%)}
+[hidden]{display:none!important}
+footer{margin-top:18px;font-size:.85rem;color:var(--ink-soft);max-width:78ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO308 Live Operations, Analytics and Experimentation · Week 3 · Worked example</p>
+  <h1>Which one broke the game?</h1>
+  <p class="lede">Two things happened. On day 20 a patch broke onboarding. On day 40 the servers went down for a day. The DAU chart screams about the outage and barely shows the patch. The triangle below shows the patch as a horizontal seam that never heals, and the outage as one thin diagonal.</p>
+</header>
+
+<div class="layout">
+  <section class="panel a-dau" aria-labelledby="hDau">
+    <figure>
+      <figcaption id="hDau">What the dashboard shows<small>Daily active users by calendar day. Click a day, or focus the chart and use the arrow keys, to light up that day's diagonal in the triangle.</small></figcaption>
+      <canvas id="cDau" tabindex="0" role="img" aria-label="DAU by calendar day"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ink)"></i>DAU</span>
+        <span><i style="background:var(--ink-soft);opacity:.5"></i>Without the break or the outage</span>
+      </div>
+      <p class="cellread" id="dayRead" aria-live="polite"></p>
+    </figure>
+  </section>
+
+  <section class="panel a-tri" aria-labelledby="hTri">
+    <figure>
+      <figcaption id="hTri">The triangle<small>Rows are install days 0 to 60, columns are ages 0 to 30 days. Each cell is the share of that day's installs who played at that age. Hover a cell, or focus the triangle and use the arrow keys (Page Up and Page Down jump 10 rows).</small></figcaption>
+      <canvas id="cTri" tabindex="0" role="application" aria-roledescription="retention heat map" aria-label="Retention triangle. Arrow keys move between cells." aria-describedby="cellRead"></canvas>
+      <p class="cellread" id="cellRead" aria-live="polite"></p>
+      <div class="ramp" aria-hidden="true"><div class="bar" id="rampBar"></div><div class="ticks" id="rampTicks"></div></div>
+    </figure>
+  </section>
+
+  <section class="panel a-chk" aria-labelledby="hChk">
+    <figure>
+      <figcaption id="hChk">Checkpoints by install day<small>D1, D7 and D30 for each cohort, drawn only once the cohort is old enough to have the value. Click a point to select that cohort.</small></figcaption>
+      <canvas id="cChk" role="img" aria-label="D1, D7 and D30 by install day"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>D1</span>
+        <span><i style="background:var(--moss)"></i>D7</span>
+        <span><i style="background:var(--ochre)"></i>D30</span>
+      </div>
+      <p class="cellread" id="cohRead" aria-live="polite"></p>
+    </figure>
+  </section>
+
+  <aside class="panel side a-side" aria-labelledby="hCtl">
+    <h2 id="hCtl">Scenario</h2>
+    <div class="presets" role="group" aria-label="Presets">
+      <button class="chip" data-p="lecture" aria-pressed="true">Lecture example</button>
+      <button class="chip" data-p="outage" aria-pressed="false">Outage only</button>
+      <button class="chip" data-p="break" aria-pressed="false">Break only</button>
+      <button class="chip" data-p="endgame" aria-pressed="false">Endgame patch</button>
+      <button class="chip" data-p="fix" aria-pressed="false">Break then fix</button>
+    </div>
+    <fieldset>
+      <legend>Patch</legend>
+      <label class="radio" for="mOnb"><input type="radio" name="mode" id="mOnb" value="onb" checked> Onboarding (cohorts from day P)</label>
+      <label class="radio" for="mEnd"><input type="radio" name="mode" id="mEnd" value="end"> Endgame (calendar days from P)</label>
+      <label class="check" for="brk"><input type="checkbox" id="brk" checked> Patch is live</label>
+      <div><label for="P">Patch day, P <output id="oP"></output></label><input id="P" type="range" min="5" max="60" step="1"></div>
+      <div id="wbWrap"><label for="wB">Stayer share after the break <output id="oWB"></output></label><input id="wB" type="range" min="0.05" max="0.35" step="0.01"><span class="muted">Normal is 0.25.</span></div>
+      <div id="qaWrap" hidden><label for="qA">Stayer daily survival after P <output id="oQA"></output></label><input id="qA" type="range" min="0.90" max="0.995" step="0.005"><span class="muted">Normal is 0.985.</span></div>
+      <label class="check" for="fix" id="fixWrap"><input type="checkbox" id="fix"> Fix ships: cohorts from day 50 are normal again</label>
+    </fieldset>
+    <fieldset>
+      <legend>Outage</legend>
+      <label class="check" for="out"><input type="checkbox" id="out" checked> One-day outage</label>
+      <div><label for="O">Outage day, O <output id="oO"></output></label><input id="O" type="range" min="5" max="70" step="1"></div>
+      <div><label for="m">Share who can still play, m <output id="oM"></output></label><input id="m" type="range" min="0" max="1" step="0.05"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Sample</legend>
+      <div><label for="I">Installs per day <output id="oI"></output></label><input id="I" type="range" min="250" max="5000" step="250"></div>
+      <label class="check" for="noise"><input type="checkbox" id="noise"> Add sampling noise</label>
+      <div class="row"><span>Seed <b id="seed">1</b></span><button id="reroll" type="button">Reroll</button></div>
+    </fieldset>
+  </aside>
+
+  <section class="panel a-read" aria-labelledby="hRead">
+    <h2 id="hRead">What the numbers say</h2>
+    <div class="reads" aria-live="polite">
+      <div class="stat" style="--c:var(--ink)"><b id="rD70">—</b><span>DAU on day 70</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rGap">—</b><span>gap to no-break, no-outage DAU</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="rOut">—</b><span>DAU on the outage day vs without</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="rOutDays">—</b><span>install days where the outage shows at D1 / D7 / D30</span></div>
+    </div>
+    <div class="cols">
+      <div id="sigBox">
+        <h2>The step at install day <span id="sigP">20</span></h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Check­point</th><th>Normal</th><th>Broken</th><th>Step</th><th>SE</th><th>Step / SE</th></tr></thead>
+            <tbody id="sig"></tbody>
+          </table>
+        </div>
+        <p class="muted" id="sigNote"></p>
+      </div>
+      <div id="endBox" hidden>
+        <h2>Endgame patch fingerprint</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Cell</th><th>Patched</th><th>Unpatched</th></tr></thead>
+            <tbody id="endT"></tbody>
+          </table>
+        </div>
+        <p class="muted" id="endNote"></p>
+      </div>
+      <div>
+        <h2>DAU by day</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Day</th><th>DAU</th><th>Without</th><th>Gap</th></tr></thead>
+            <tbody id="dauT"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="insight" id="insight"></div>
+  </section>
+</div>
+
+<footer>Model: each install day's players are a mix of stayers (daily survival 0.985) and tourists (0.30): R(c, a) = w × 0.985<sup>a</sup> + (1 − w) × 0.30<sup>a</sup>. An onboarding break lowers w for cohorts installed from day P. An endgame patch lowers stayer survival on calendar days after P. An outage multiplies every cell on calendar day O by m. Noise draws each cell as Binomial(installs, R) from a seeded generator. Invented game. The Destiny 2 case is discussed in the lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const p1=v=>(v*100).toFixed(1);
+const minus=s=>String(s).replace('-','−');
+const QS=0.985,QT=0.30,TMAX=70,CMAX=60,AMAX=30,WN=0.25,FIXC=50;
+const BASE={mode:'onb',breakOn:true,P:20,wB:.15,qA:.97,fixOn:false,outOn:true,O:40,m:.4,I:2000,noise:false,seed:1};
+const PRE={
+  lecture:{},
+  outage:{breakOn:false},
+  break:{outOn:false},
+  endgame:{mode:'end',P:45,outOn:false},
+  fix:{fixOn:true,outOn:false}
+};
+let S=Object.assign({},BASE);
+let act={c:20,a:7},diagDay=27,lastSrc='cell';
+
+// ---------- model ----------
+function wOf(s,c){if(s.mode==='onb'&&s.breakOn&&c>=s.P&&!(s.fixOn&&c>=FIXC))return s.wB;return WN;}
+function Rm(s,c,a){
+  if(a===0)return 1;
+  let r;
+  if(s.mode==='end'&&s.breakOn){const after=Math.max(0,Math.min(a,c+a-s.P));r=WN*Math.pow(QS,a-after)*Math.pow(s.qA,after)+(1-WN)*Math.pow(QT,a);}
+  else{const w=wOf(s,c);r=w*Math.pow(QS,a)+(1-w)*Math.pow(QT,a);}
+  if(s.outOn&&c+a===s.O)r*=s.m;
+  return r;
+}
+function mulberry32(x){return function(){x|=0;x=x+0x6D2B79F5|0;let t=Math.imul(x^x>>>15,1|x);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function binom(n,p,rng){if(p<=0)return 0;if(p>=1)return n;let k=0;for(let i=0;i<n;i++)if(rng()<p)k++;return k;}
+function cells(s,noisy){
+  const C=[];
+  for(let c=0;c<=TMAX;c++){const row=[];for(let a=0;a<=TMAX-c;a++){
+    let r=Rm(s,c,a);
+    if(noisy&&a>0){const rng=mulberry32((s.seed*1000003)^(c*7919+a*104729));r=binom(s.I,r,rng)/s.I;}
+    row.push(r);}C.push(row);}
+  return C;
+}
+function dauOf(C,I){const d=[];for(let t=0;t<=TMAX;t++){let x=0;for(let c=0;c<=t;c++)x+=I*C[c][t-c];d.push(x);}return d;}
+let C,D,Cf,Dcf;
+function recompute(){
+  C=cells(S,S.noise);D=dauOf(C,S.I);
+  const cf=Object.assign({},S,{breakOn:false,outOn:false});Cf=cells(cf,false);Dcf=dauOf(Cf,S.I);
+}
+
+// ---------- canvas helpers ----------
+function setup(c,hgt){const dpr=window.devicePixelRatio||1;if(hgt)c.style.height=hgt+'px';const r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);g.font='12px '+css('--sans');return {g,w:r.width,h:r.height};}
+function niceMax(v){v=Math.max(v,1)*1.04;const m=Math.pow(10,Math.floor(Math.log10(v/4)));for(const k of [1,2,2.5,5,10]){const st=k*m,n=Math.ceil(v/st);if(n<=5)return {max:n*st,n};}return {max:v,n:4};}
+function yGrid(g,w,h,pad,max,n,f){g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=n;i++){const y=pad.t+(h-pad.t-pad.b)*(1-i/n);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(f(max*i/n),pad.l-6,y);}}
+function vrule(g,x,t,b,color,label,align,alpha){g.strokeStyle=color;g.globalAlpha=alpha||.8;g.setLineDash([4,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(x,t);g.lineTo(x,b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  if(label){g.fillStyle=css('--ink');g.font='600 11px '+css('--sans');g.textAlign=align||'left';g.textBaseline='top';g.fillText(label,x+(align==='right'?-4:4),t-14);g.font='12px '+css('--sans');}}
+function dot(g,x,y,color,r){g.fillStyle=color;g.beginPath();g.arc(x,y,r||5,0,7);g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();}
+function hexRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');return [0,2,4].map(i=>parseInt(h.substr(i,2),16));}
+let LO,HI;
+const GAM=0.6;
+function heat(r){const t=Math.pow(Math.max(0,Math.min(1,r/0.5)),GAM);return `rgb(${LO.map((v,i)=>Math.round(v+(HI[i]-v)*t)).join(',')})`;}
+
+// ---------- DAU view ----------
+const padD={l:48,r:12,t:22,b:24};
+let dayScale={max:1};
+function drawDau(){
+  const {g,w,h}=setup($('cDau'));const X=t=>padD.l+(w-padD.l-padD.r)*t/TMAX;
+  const nm=niceMax(Math.max(...Dcf,...D));dayScale=nm;const Y=v=>padD.t+(h-padD.t-padD.b)*(1-v/nm.max);
+  yGrid(g,w,h,padD,nm.max,nm.n,v=>v>=1000?(+(v/1000).toFixed(1))+'k':fmt(v));
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  for(let t=0;t<=70;t+=10)g.fillText(t,X(t),h-padD.b+6);
+  g.textAlign='left';g.fillText('day',2,h-padD.b+6);
+  if(S.breakOn)vrule(g,X(S.P),padD.t,h-padD.b,css('--ochre'),w<560?'patch':'patch, day '+S.P,S.P>55?'right':'left');
+  if(S.outOn)vrule(g,X(S.O),padD.t,h-padD.b,css('--blood'),'outage',S.O>60||(S.breakOn&&Math.abs(S.O-S.P)<14&&S.O>S.P)?'right':'left');
+  if(S.fixOn&&S.mode==='onb'&&S.breakOn)vrule(g,X(FIXC),padD.t,h-padD.b,css('--moss'),'fix',FIXC>60?'right':'left');
+  g.strokeStyle=css('--ink-soft');g.globalAlpha=.5;g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();Dcf.forEach((v,t)=>t?g.lineTo(X(t),Y(v)):g.moveTo(X(t),Y(v)));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();D.forEach((v,t)=>t?g.lineTo(X(t),Y(v)):g.moveTo(X(t),Y(v)));g.stroke();
+  const t=diagDay;g.strokeStyle=css('--focus');g.lineWidth=1.5;g.beginPath();g.moveTo(X(t),padD.t);g.lineTo(X(t),h-padD.b);g.stroke();
+  dot(g,X(t),Y(Dcf[t]),css('--ink-soft'),4);dot(g,X(t),Y(D[t]),css('--ink'));
+  const gap=D[t]/Dcf[t]-1;
+  $('dayRead').textContent=`Day ${t}: DAU ${fmt(D[t])}, without the break or outage ${fmt(Dcf[t])} (${minus((gap*100).toFixed(1))}%). Its diagonal is lit in the triangle.`;
+  $('cDau').setAttribute('aria-label',`DAU by day. Day 19: ${fmt(D[19])}. Day ${S.O}: ${fmt(D[S.O])}. Day 70: ${fmt(D[70])}, against ${fmt(Dcf[70])} without the break or outage. Selected day ${t}: ${fmt(D[t])}.`);
+}
+
+// ---------- triangle ----------
+let TG={};
+function drawTri(){
+  const c=$('cTri');const w=c.getBoundingClientRect().width;
+  const pad={l:34,r:26,t:26,b:4};const cw=(w-pad.l-pad.r)/(AMAX+1);const rh=Math.max(6,Math.min(9,cw*.45));
+  const h=pad.t+pad.b+rh*(CMAX+1);const {g}=setup(c,h);TG={pad,cw,rh,w,h};
+  for(let r=0;r<=CMAX;r++)for(let a=0;a<=AMAX;a++){
+    if(r+a>TMAX)continue;g.fillStyle=heat(C[r][a]);g.fillRect(pad.l+a*cw,pad.t+r*rh,Math.ceil(cw),Math.ceil(rh));}
+  // axes labels
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+  for(let a=5;a<=AMAX;a+=5)g.fillText(a,pad.l+(a+.5)*cw,pad.t-3);
+  g.textAlign='left';g.fillText('age 0',pad.l-30,pad.t-3);
+  g.textAlign='right';g.textBaseline='middle';
+  for(let r=0;r<=CMAX;r+=10)g.fillText(r,pad.l-5,pad.t+(r+.5)*rh);
+  // P marker
+  const mark=(row,col,lab)=>{const y=pad.t+(row+.5)*rh,x=pad.l+Math.min(AMAX+1,TMAX-row+1)*cw+3;g.fillStyle=css(col);g.beginPath();g.moveTo(x,y);g.lineTo(x+6,y-4);g.lineTo(x+6,y+4);g.fill();g.font='700 10px '+css('--sans');g.textAlign='left';g.textBaseline='middle';g.fillText(lab,x+8,y);g.font='11px '+css('--sans');};
+  if(S.breakOn&&S.mode==='onb'){mark(S.P,'--ochre','P');if(S.fixOn&&FIXC<=CMAX)mark(FIXC,'--moss','fix');}
+  // highlights: row, column, diagonal
+  const cx=a=>pad.l+a*cw,cy=r=>pad.t+r*rh;
+  g.lineWidth=1.5;g.strokeStyle=css('--ink');
+  if(lastSrc==='cell'){
+    g.strokeRect(cx(0)+.5,cy(act.c)+.5,Math.min(AMAX,TMAX-act.c)*cw+cw-1,rh-1);
+    g.strokeRect(cx(act.a)+.5,cy(0)+.5,cw-1,Math.min(CMAX,TMAX-act.a)*rh+rh-1);
+  }
+  const d=diagDay;g.strokeStyle=css('--focus');g.lineWidth=2;g.beginPath();let first=true;
+  for(let a=0;a<=AMAX;a++){const r=d-a;if(r<0||r>CMAX)continue;const x=cx(a)+cw/2,y=cy(r)+rh/2;first?g.moveTo(x,y):g.lineTo(x,y);first=false;}
+  g.stroke();
+  if(lastSrc==='cell'){g.strokeStyle=css('--focus');g.lineWidth=2.5;g.strokeRect(cx(act.a)-1,cy(act.c)-1,cw+2,rh+2);}
+  cellText();
+}
+function cellText(){
+  const {c,a}=act;const v=C[c][a];
+  $('cellRead').textContent=`Cohort ${c}, age ${a}, calendar day ${c+a}, retention ${p1(v)}%`+(S.noise?` (${fmt(v*S.I)} of ${fmt(S.I)} players)`:'');
+}
+function cellFromPoint(e){const r=$('cTri').getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  const a=Math.floor((x-TG.pad.l)/TG.cw),c=Math.floor((y-TG.pad.t)/TG.rh);
+  if(a<0||a>AMAX||c<0||c>CMAX||c+a>TMAX)return null;return {c,a};}
+function setCell(cell){act=cell;diagDay=cell.c+cell.a;lastSrc='cell';drawTri();drawDau();drawChk();}
+$('cTri').addEventListener('pointermove',e=>{const cell=cellFromPoint(e);if(cell&&(cell.c!==act.c||cell.a!==act.a||lastSrc!=='cell'))setCell(cell);});
+$('cTri').addEventListener('click',e=>{const cell=cellFromPoint(e);if(cell)setCell(cell);});
+$('cTri').addEventListener('keydown',e=>{
+  let {c,a}=act;const k=e.key;
+  if(k==='ArrowRight')a++;else if(k==='ArrowLeft')a--;else if(k==='ArrowDown')c++;else if(k==='ArrowUp')c--;
+  else if(k==='PageDown')c+=10;else if(k==='PageUp')c-=10;else if(k==='Home')a=0;else if(k==='End')a=Math.min(AMAX,TMAX-c);else return;
+  e.preventDefault();c=Math.max(0,Math.min(CMAX,c));a=Math.max(0,Math.min(AMAX,a));if(c+a>TMAX){if(k==='ArrowDown'||k==='PageDown')a=TMAX-c;else a=TMAX-c;}
+  setCell({c,a});});
+$('cTri').addEventListener('focus',()=>{if(lastSrc!=='cell')setCell(act);});
+
+// ---------- checkpoints ----------
+const padC={l:44,r:40,t:14,b:24};
+const CK=[[1,'--steel','D1'],[7,'--moss','D7'],[30,'--ochre','D30']];
+function drawChk(){
+  const {g,w,h}=setup($('cChk'));const X=c=>padC.l+(w-padC.l-padC.r)*c/CMAX;const Y=v=>padC.t+(h-padC.t-padC.b)*(1-v/.6);
+  yGrid(g,w,h,padC,.6,3,v=>Math.round(v*100)+'%');
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';for(let c=0;c<=60;c+=10)g.fillText(c,X(c),h-padC.b+6);
+  g.textAlign='left';g.fillText('install',2,h-padC.b+6);
+  if(S.breakOn&&S.mode==='onb')vrule(g,X(S.P),padC.t,h-padC.b,css('--ochre'),null);
+  CK.forEach(([n,col,lab])=>{g.strokeStyle=css(col);g.lineWidth=2;g.beginPath();let last=null;
+    for(let c=0;c<=CMAX&&c+n<=TMAX;c++){const x=X(c),y=Y(C[c][n]);last?g.lineTo(x,y):g.moveTo(x,y);last=[x,y];}g.stroke();
+    if(last){g.fillStyle=css('--ink');g.font='600 11px '+css('--sans');g.textAlign='left';g.textBaseline='middle';g.fillText(lab,last[0]+5,last[1]);g.font='12px '+css('--sans');}});
+  const c=act.c;
+  CK.forEach(([n,col])=>{if(c+n<=TMAX)dot(g,X(c),Y(C[c][n]),css(col),4.5);});
+  g.strokeStyle=css('--focus');g.globalAlpha=.6;g.lineWidth=1;g.beginPath();g.moveTo(X(c),padC.t);g.lineTo(X(c),h-padC.b);g.stroke();g.globalAlpha=1;
+  const f=n=>c+n<=TMAX?p1(C[c][n])+'%':'not yet (day '+(c+n)+')';
+  $('cohRead').textContent=`Cohort ${c}: D1 ${f(1)}, D7 ${f(7)}, D30 ${f(30)}`;
+}
+$('cChk').addEventListener('click',e=>{const r=$('cChk').getBoundingClientRect(),x=e.clientX-r.left;const c=Math.max(0,Math.min(CMAX,Math.round((x-padC.l)/(r.width-padC.l-padC.r)*CMAX)));
+  const a=[1,7,30].includes(act.a)&&c+act.a<=TMAX?act.a:Math.min(7,TMAX-c);setCell({c,a});});
+
+// DAU interactions
+function setDay(t){diagDay=Math.max(0,Math.min(TMAX,t));lastSrc='day';drawDau();drawTri();}
+$('cDau').addEventListener('click',e=>{const r=$('cDau').getBoundingClientRect(),x=e.clientX-r.left;setDay(Math.round((x-padD.l)/(r.width-padD.l-padD.r)*TMAX));});
+$('cDau').addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowUp'){e.preventDefault();setDay(diagDay+1);}else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){e.preventDefault();setDay(diagDay-1);}
+  else if(e.key==='Home'){e.preventDefault();setDay(0);}else if(e.key==='End'){e.preventDefault();setDay(TMAX);}});
+
+// ---------- readouts ----------
+function readouts(){
+  const g=D[70]-Dcf[70];
+  $('rD70').textContent=fmt(D[70]);$('rGap').textContent=minus(fmt(g))+' ('+minus((g/Dcf[70]*100).toFixed(1))+'%)';
+  if(S.outOn){$('rOut').textContent=fmt(D[S.O])+' vs '+fmt(Dcf[S.O]);
+    $('rOutDays').textContent=[1,7,30].map(n=>S.O-n>=0&&S.O-n<=CMAX?S.O-n:'—').join(' / ');}
+  else{$('rOut').textContent='no outage';$('rOutDays').textContent='—';}
+  const onb=S.mode==='onb';$('sigBox').hidden=!onb;$('endBox').hidden=onb;
+  if(onb){
+    $('sigP').textContent=S.P;
+    $('sig').innerHTML=[1,7,30].map(n=>{const a=WN*Math.pow(QS,n)+(1-WN)*Math.pow(QT,n),b=S.wB*Math.pow(QS,n)+(1-S.wB)*Math.pow(QT,n);
+      const se=Math.sqrt(a*(1-a)/S.I+b*(1-b)/S.I),d=a-b;
+      return `<tr><td>D${n}</td><td>${p1(a)}%</td><td>${p1(b)}%</td><td>${minus((d*100).toFixed(2))} pts (${minus((d/a*100).toFixed(1))}%)</td><td>${(se*100).toFixed(2)}</td><td>${minus((d/se).toFixed(1))}</td></tr>`;}).join('');
+    $('sigNote').textContent=`Step = cohort ${S.P-1} minus cohort ${S.P} before any outage, from the model. SE is the standard error of the difference for one cohort of ${fmt(S.I)} installs each, in points. D1 is readable 1 day after the patch, D7 after 7 and D30 after 30.`+(S.breakOn?'':' The patch is off, so the triangle shows no step; the table shows what it would be.');
+  }else{
+    const U=Object.assign({},S,{breakOn:false,outOn:false}),Pt=Object.assign({},S,{outOn:false});
+    const cellsList=[[10,40],[50,7],[act.c,act.a]];
+    $('endT').innerHTML=cellsList.map(([c,a],i)=>`<tr><td>${i===2?'selected: ':''}R(${c}, ${a})</td><td>${(Rm(Pt,c,a)*100).toFixed(2)}%</td><td>${(Rm(U,c,a)*100).toFixed(2)}%</td></tr>`).join('');
+    const first=n=>{for(let c=0;c<=CMAX;c++){if(c+n>TMAX)break;if(Math.abs(Rm(Pt,c,n)-Rm(U,c,n))>1e-12)return c;}return '—';};
+    $('endNote').textContent=S.breakOn?`The endgame patch bends every cohort at the same calendar day, so it draws a diagonal edge, not a horizontal seam. D30 first differs from install day ${first(30)}, D7 from ${first(7)}, D1 from ${first(1)}. Outage excluded from this table.`:'The patch is off.';
+  }
+  $('dauT').innerHTML=[19,25,30,39,40,41,60,70].map(t=>`<tr${t===S.O&&S.outOn?' style="font-weight:700"':''}><td>${t}</td><td>${fmt(D[t])}</td><td>${fmt(Dcf[t])}</td><td>${minus(Math.round((D[t]/Dcf[t]-1)*100))}%</td></tr>`).join('');
+  let s='';
+  if(S.mode==='onb'&&S.breakOn){
+    s+=`The break costs ${minus((g/Dcf[70]*-100).toFixed(0))}% of DAU by day 70 and the gap keeps widening, yet the DAU line never dips: new cohorts keep arriving, so it keeps rising. In the triangle it is a seam at row ${S.P}${S.fixOn?`, and a second seam at row ${FIXC} where the fix lands`:''}. `;
+  } else if(S.mode==='end'&&S.breakOn){
+    s+=`The endgame patch hits every cohort on the same calendar days, so its edge in the triangle runs along the diagonal of day ${S.P}. Older cohorts show it at every age after that day. `;
+  }
+  if(S.outOn)s+=`The outage takes DAU on day ${S.O} to ${fmt(D[S.O])} against ${fmt(Dcf[S.O])}, then DAU snaps back the next day. In the triangle it is one diagonal line of pale cells; each row is fine on either side of it.`;
+  if(!S.outOn&&!S.breakOn)s='Nothing is broken. The triangle is smooth from top to bottom.';
+  if(S.noise)s+=` Noise is on: with ${fmt(S.I)} installs a day, one cohort's D7 has a standard error of about ${(Math.sqrt(.225*.775/S.I)*100).toFixed(1)} points. Look for the seam across many rows, not in one cell.`;
+  $('insight').innerHTML=s;
+}
+
+// ---------- controls ----------
+function syncUI(){
+  $('mOnb').checked=S.mode==='onb';$('mEnd').checked=S.mode==='end';$('brk').checked=S.breakOn;$('P').value=S.P;$('wB').value=S.wB;$('qA').value=S.qA;$('fix').checked=S.fixOn;
+  $('out').checked=S.outOn;$('O').value=S.O;$('m').value=S.m;$('I').value=S.I;$('noise').checked=S.noise;labels();
+}
+function labels(){
+  $('oP').textContent=S.P;$('oWB').textContent=S.wB.toFixed(2);$('oQA').textContent=S.qA.toFixed(3);$('oO').textContent=S.O;$('oM').textContent=S.m.toFixed(2);$('oI').textContent=fmt(S.I);$('seed').textContent=S.seed;
+  const onb=S.mode==='onb';$('wbWrap').hidden=!onb;$('fixWrap').hidden=!onb;$('qaWrap').hidden=onb;
+  $('P').disabled=$('wB').disabled=$('qA').disabled=$('fix').disabled=!S.breakOn;$('O').disabled=$('m').disabled=!S.outOn;$('reroll').disabled=!S.noise;
+}
+function update(){labels();recompute();drawDau();drawTri();drawChk();readouts();}
+function unpreset(){document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));}
+const num=(id,k)=>$(id).addEventListener('input',e=>{S[k]=+e.target.value;unpreset();update();});
+num('P','P');num('wB','wB');num('qA','qA');num('O','O');num('m','m');num('I','I');
+$('brk').addEventListener('change',e=>{S.breakOn=e.target.checked;unpreset();update();});
+$('fix').addEventListener('change',e=>{S.fixOn=e.target.checked;unpreset();update();});
+$('out').addEventListener('change',e=>{S.outOn=e.target.checked;unpreset();update();});
+$('noise').addEventListener('change',e=>{S.noise=e.target.checked;update();});
+$('reroll').addEventListener('click',()=>{S.seed=S.seed%9999+1;update();});
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',e=>{S.mode=e.target.value;S.P=S.mode==='end'?45:20;$('P').value=S.P;unpreset();update();}));
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  unpreset();b.setAttribute('aria-pressed','true');S=Object.assign({},BASE,PRE[b.dataset.p],{noise:S.noise,seed:S.seed,I:S.I});syncUI();
+  act=b.dataset.p==='endgame'?{c:10,a:30}:b.dataset.p==='outage'?{c:33,a:7}:{c:20,a:7};diagDay=act.c+act.a;lastSrc='cell';update();}));
+function colors(){LO=hexRgb(css('--heat-lo'));HI=hexRgb(css('--heat-hi'));
+  const st=[];for(let i=0;i<=20;i++){const r=0.5*i/20;st.push(heat(r)+' '+(Math.pow(r/0.5,GAM)*100).toFixed(1)+'%');}
+  $('rampBar').style.background='linear-gradient(to right,'+st.join(',')+')';
+  $('rampTicks').innerHTML=[0,5,10,20,30,50].map(v=>`<span style="left:${(Math.pow(v/50,GAM)*100).toFixed(1)}%">${v}%${v===50?'+':''}</span>`).join('');}
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{drawDau();drawTri();drawChk();},60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{colors();drawDau();drawTri();drawChk();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawDau();drawTri();drawChk();});
+colors();syncUI();update();
+window.__w03={get S(){return S;},get C(){return C;},get D(){return D;},get Dcf(){return Dcf;}};
+})();
+</script>
+</body>
+</html>

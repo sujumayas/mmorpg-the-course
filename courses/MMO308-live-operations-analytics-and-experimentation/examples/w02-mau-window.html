@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MAU counts touches · MMO308 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:0 0 8px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:14px}
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}
+@media (max-width:820px){.two{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:220px}
+canvas.strip{height:120px;margin-top:4px}
+canvas.hist{height:340px}
+@media (max-width:520px){.panel{padding:10px}figure{padding:10px 8px 6px}}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.sq{width:11px;height:11px;border-radius:2px}
+.tabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"],.chip[aria-checked="true"]{background:var(--steel);color:var(--paper)}
+.ctrl{display:flex;flex-direction:column;gap:10px}
+label,.lbl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 0}
+@media (max-width:820px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:520px){table{font-size:.8rem}th,td{padding:5px 4px}}
+details{margin-top:8px;font-size:.88rem}
+summary{cursor:pointer;font-weight:600}
+[hidden]{display:none!important}
+footer{margin-top:18px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO308 Live Operations, Analytics and Experimentation · Week 2 · Worked example</p>
+  <h1>MAU counts touches. DAU counts play.</h1>
+  <p class="lede">In month 3 an update brings 500,000 extra tourists who play two days each. MAU jumps 50%. Mean DAU moves 17.7%, and stickiness falls. The bottom view shows where the new MAU landed: a tall red column at two days played.</p>
+</header>
+
+<section class="panel" aria-labelledby="hTop">
+  <div class="two">
+    <figure>
+      <figcaption id="hTop">What the dashboard shows<small>MAU and mean DAU, each indexed to 100 in month 1. Click a month to select it.</small></figcaption>
+      <canvas id="cIdx" role="img" aria-label="Indexed MAU and DAU by month"></canvas>
+      <canvas id="cStk" class="strip" role="img" aria-label="Stickiness by month"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ochre)"></i>MAU index</span>
+        <span><i style="background:var(--steel)"></i>Mean DAU index</span>
+        <span><i style="background:var(--ink)"></i>Stickiness, DAU / MAU (own scale, 0 to 0.6)</span>
+      </div>
+    </figure>
+    <div>
+      <h2>Six months</h2>
+      <div class="table-wrap" style="margin-top:0">
+        <table>
+          <thead><tr><th>Month</th><th>MAU</th><th>Mean DAU</th><th>Sticki­ness</th></tr></thead>
+          <tbody id="mTable"></tbody>
+        </table>
+      </div>
+      <p style="font-size:.88rem;color:var(--ink-soft);margin:10px 0 0">Stickiness has its own chart because it is a ratio, not a count. Two y-scales on one chart would let the lines cross wherever the scales put them.</p>
+    </div>
+  </div>
+</section>
+
+<div class="tabs" role="tablist" aria-label="Bottom view">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Who is behind it</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Rolling window</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="two">
+    <figure>
+      <figcaption>Who is behind month <span id="hMonth">3</span><small>Players by days played in the month. One square = 10,000 players.</small></figcaption>
+      <canvas id="cHist" class="hist" role="img" aria-label="Histogram of players by days played"></canvas>
+      <div class="legend">
+        <span><i class="sq" style="background:var(--steel)"></i>Regulars</span>
+        <span><i class="sq" style="background:var(--blood)"></i>Tourists</span>
+      </div>
+      <details>
+        <summary>Counts per days-played bucket (text alternative)</summary>
+        <div class="table-wrap"><table><thead><tr><th>Days played</th><th>Regulars</th><th>Tourists</th><th>Total</th></tr></thead><tbody id="hTable"></tbody></table></div>
+      </details>
+    </figure>
+    <div class="ctrl">
+      <div>
+        <span class="lbl">Month</span>
+        <div class="seg" role="radiogroup" aria-label="Month" id="months"></div>
+      </div>
+      <div class="seg" role="group" aria-label="Presets">
+        <button class="chip preset" data-p="lecture" aria-pressed="true">Lecture example</button>
+        <button class="chip preset" data-p="drop" aria-pressed="false">Engagement drop</button>
+        <button class="chip preset" data-p="leave" aria-pressed="false">Tourists leave</button>
+      </div>
+      <div><label for="R">Regulars, R <output id="oR"></output></label><input id="R" type="range" min="0" max="3000000" step="50000"></div>
+      <div><label for="p">Regular share of days, p <output id="oP"></output></label><input id="p" type="range" min="0.05" max="0.90" step="0.01"></div>
+      <div><label for="T">Tourists, T <output id="oT"></output></label><input id="T" type="range" min="0" max="3000000" step="50000"></div>
+      <div><label for="k">Tourist days, k <output id="oK"></output></label><input id="k" type="range" min="1" max="5" step="1"></div>
+    </div>
+  </div>
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ochre)"><b id="rMau">—</b><span>MAU</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rDau">—</b><span>mean DAU</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rStk">—</b><span>stickiness</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rPd">—</b><span>player-days</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rTm">—</b><span>tourist share of MAU</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rTd">—</b><span>tourist share of player-days</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rMomM">—</b><span>MAU vs previous month</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rMomD">—</b><span>mean DAU vs previous month</span></div>
+  </div>
+  <div class="insight" id="insight1"></div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <div class="two">
+    <figure>
+      <figcaption>Rolling window, days −10 to 45<small>1,000,000 regulars at p = 0.40, plus a one-day event on day 0. Click a day to scrub.</small></figcaption>
+      <canvas id="cRoll" role="img" aria-label="DAU and rolling MAU by day"></canvas>
+      <canvas id="cRollS" class="strip" role="img" aria-label="Daily stickiness by day"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ochre)"></i>Rolling MAU</span>
+        <span><i style="background:var(--steel)"></i>DAU</span>
+        <span><i style="background:var(--ink)"></i>Daily stickiness (own scale, 0 to 0.6)</span>
+      </div>
+    </figure>
+    <div class="ctrl">
+      <div><label for="E">Event tourists, E <output id="oE"></output></label><input id="E" type="range" min="0" max="1000000" step="50000" value="300000"></div>
+      <div>
+        <span class="lbl">Window length, W</span>
+        <div class="seg" role="radiogroup" aria-label="Window length" id="wins">
+          <button class="chip" role="radio" data-w="7" aria-checked="false" tabindex="-1">7 days</button>
+          <button class="chip" role="radio" data-w="30" aria-checked="true">30 days</button>
+        </div>
+      </div>
+      <div><label for="day">Day <output id="oDay"></output></label><input id="day" type="range" min="-10" max="45" step="1" value="0"></div>
+      <div class="readout" aria-live="polite" style="grid-template-columns:1fr 1fr">
+        <div class="stat" style="--c:var(--steel)"><b id="rrDau">—</b><span>DAU</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rrMau">—</b><span>rolling MAU</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rrStk">—</b><span>daily stickiness</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rrIn">—</b><span>event tourists in window</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="insight" id="insight2"></div>
+</section>
+
+<footer>Model: MAU = R + T; player-days = R × p × 30 + T × k; mean DAU = player-days / 30. Regulars' days played follow a binomial(30, p) histogram, computed exactly. Rolling MAU = R × (1 − (1 − p)<sup>W</sup>) plus event tourists while they are inside the window. Invented game. The Blizzard MAU figures are discussed in the lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const pct1=n=>(n*100).toFixed(1)+'%';
+const sgn=n=>(n>=0?'+':'−')+Math.abs(n*100).toFixed(1)+'%';
+const BEFORE={R:1000000,p:.40,T:200000,k:2},UPD={R:1100000,p:.40,T:700000,k:2},AFTER={R:1100000,p:.40,T:100000,k:2};
+const PRE={
+  lecture:()=>[BEFORE,BEFORE,UPD,AFTER,AFTER,AFTER],
+  drop:()=>[0,1,2,3,4,5].map(i=>Object.assign({},BEFORE,i>=3?{p:.30}:{})),
+  leave:()=>[BEFORE,BEFORE,UPD,AFTER,AFTER,AFTER].map((m,i)=>Object.assign({},m,{R:1000000},i>=3?{T:0}:{}))
+};
+let M=PRE.lecture().map(o=>Object.assign({},o)),sel=2;
+let E=300000,W=30,day=0;
+function stats(m){const mau=m.R+m.T,pd=m.R*m.p*30+m.T*m.k,dau=pd/30;return {mau,pd,dau,stk:mau?dau/mau:0,tm:mau?m.T/mau:0,td:pd?m.T*m.k/pd:0};}
+function binom(n,p){const out=[];let c=1;for(let k=0;k<=n;k++){out.push(c*Math.pow(p,k)*Math.pow(1-p,n-k));c=c*(n-k)/(k+1);}return out;}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);g.font='12px '+css('--sans');return {g,w:r.width,h:r.height};}
+function niceMax(v){v=Math.max(v,1)*1.04;const m=Math.pow(10,Math.floor(Math.log10(v/4)));for(const k of [1,2,2.5,5,10]){const st=k*m,n=Math.ceil(v/st);if(n<=5)return {max:n*st,n};}return {max:v,n:4};}
+function yGrid(g,w,h,pad,max,n,f){g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=n;i++){const y=pad.t+(h-pad.t-pad.b)*(1-i/n);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(f(max*i/n),pad.l-6,y);}}
+function line(g,pts,color,wd,dash){g.strokeStyle=color;g.lineWidth=wd||2.5;g.setLineDash(dash||[]);g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();g.setLineDash([]);}
+function dot(g,x,y,color){g.fillStyle=color;g.beginPath();g.arc(x,y,5,0,7);g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();}
+const kf=v=>v>=1e6?(+(v/1e6).toFixed(2))+'M':v>=1000?(+(v/1000).toFixed(0))+'k':fmt(v);
+
+// ---------- top: indexed + stickiness ----------
+const padI={l:44,r:72,t:14,b:26};
+const mx=(i,w)=>padI.l+(w-padI.l-padI.r)*i/5;
+function drawTop(){
+  const S=M.map(stats),b0=S[0];
+  const idxM=S.map(s=>b0.mau?100*s.mau/b0.mau:0),idxD=S.map(s=>b0.dau?100*s.dau/b0.dau:0);
+  let {g,w,h}=setupCanvas($('cIdx'));
+  const nm=niceMax(Math.max(150,...idxM,...idxD));
+  const Y=v=>padI.t+(h-padI.t-padI.b)*(1-v/nm.max);
+  yGrid(g,w,h,padI,nm.max,nm.n,v=>Math.round(v));
+  g.fillStyle=css('--paper');g.globalAlpha=.7;g.fillRect(mx(sel,w)-18,padI.t,36,h-padI.t-padI.b);g.globalAlpha=1;
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  for(let i=0;i<6;i++){g.font=(i===sel?'700 ':'')+'12px '+css('--sans');g.fillStyle=i===sel?css('--ink'):css('--ink-soft');g.fillText('M'+(i+1),mx(i,w),h-padI.b+6);}
+  g.font='12px '+css('--sans');
+  line(g,idxM.map((v,i)=>[mx(i,w),Y(v)]),css('--ochre'));line(g,idxD.map((v,i)=>[mx(i,w),Y(v)]),css('--steel'));
+  idxM.forEach((v,i)=>dot(g,mx(i,w),Y(v),css('--ochre')));idxD.forEach((v,i)=>dot(g,mx(i,w),Y(v),css('--steel')));
+  g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='middle';g.fillStyle=css('--ink');
+  let yM=Y(idxM[5]),yD=Y(idxD[5]);if(Math.abs(yM-yD)<14){if(yM<yD){yM-=7;yD+=7}else{yM+=7;yD-=7}}
+  g.fillText('MAU '+idxM[5].toFixed(0),mx(5,w)+9,yM);g.fillText('DAU '+idxD[5].toFixed(0),mx(5,w)+9,yD);
+  // selected month values
+  g.textAlign='center';g.textBaseline='bottom';g.font='600 11px '+css('--sans');
+  const ys=Math.min(Y(idxM[sel]),Y(idxD[sel]));g.fillText(idxM[sel].toFixed(1)+' / '+idxD[sel].toFixed(1),Math.min(w-padI.r-10,Math.max(padI.l+40,mx(sel,w))),ys-8);
+  // stickiness strip
+  ({g,w,h}=setupCanvas($('cStk')));const pS={l:44,r:72,t:10,b:8};const Ys=v=>pS.t+(h-pS.t-pS.b)*(1-v/.6);
+  yGrid(g,w,h,pS,.6,3,v=>v.toFixed(1));
+  g.fillStyle=css('--paper');g.globalAlpha=.7;g.fillRect(mx(sel,w)-18,pS.t,36,h-pS.t-pS.b);g.globalAlpha=1;
+  line(g,S.map((s,i)=>[mx(i,w),Ys(s.stk)]),css('--ink'),2);S.forEach((s,i)=>dot(g,mx(i,w),Ys(s.stk),css('--ink')));
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='middle';g.fillText(S[5].stk.toFixed(3),mx(5,w)+9,Ys(S[5].stk));
+  g.textAlign='center';g.textBaseline='bottom';g.fillText(S[sel].stk.toFixed(3),Math.min(w-padI.r-10,Math.max(padI.l+20,mx(sel,w))),Ys(S[sel].stk)-8);
+  $('cIdx').setAttribute('aria-label','Indexed MAU by month: '+idxM.map(v=>v.toFixed(1)).join(', ')+'. Indexed DAU: '+idxD.map(v=>v.toFixed(1)).join(', ')+'.');
+  $('cStk').setAttribute('aria-label','Stickiness by month: '+S.map(s=>s.stk.toFixed(3)).join(', ')+'.');
+  $('mTable').innerHTML=S.map((s,i)=>`<tr class="${i===sel?'here':''}"><td>${i+1}</td><td>${fmt(s.mau)}</td><td>${fmt(s.dau)}</td><td>${s.stk.toFixed(3)}</td></tr>`).join('');
+}
+function pickMonth(c,e){const r=c.getBoundingClientRect(),x=e.clientX-r.left;const i=Math.round((x-padI.l)/(r.width-padI.l-padI.r)*5);setSel(Math.max(0,Math.min(5,i)));}
+$('cIdx').addEventListener('click',e=>pickMonth($('cIdx'),e));$('cStk').addEventListener('click',e=>pickMonth($('cStk'),e));
+
+// ---------- histogram ----------
+function drawHist(){
+  const m=M[sel],pr=binom(30,m.p),reg=pr.map(x=>x*m.R),tour=new Array(31).fill(0);tour[m.k]=m.T;
+  const {g,w,h}=setupCanvas($('cHist'));const pad={l:10,r:10,t:26,b:28};
+  const colW=(w-pad.l-pad.r)/30;let maxSq=0;
+  for(let d=1;d<=30;d++)maxSq=Math.max(maxSq,(reg[d]+tour[d])/10000);
+  const avail=h-pad.t-pad.b;const sq=Math.max(1.5,Math.min(colW-1.5,avail/Math.max(1,maxSq)));
+  const gap=sq>5?1.5:sq>2.5?.6:0;
+  g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,h-pad.b+.5);g.lineTo(w-pad.r,h-pad.b+.5);g.stroke();
+  for(let d=1;d<=30;d++){
+    const x0=pad.l+colW*(d-1)+(colW-sq)/2;let y=h-pad.b;
+    const draw=(n,color)=>{g.fillStyle=color;let full=Math.floor(n),frac=n-full;
+      for(let i=0;i<full;i++){g.fillRect(x0,y-sq+gap/2,sq,sq-gap);y-=sq;}
+      if(frac>0.02){const hh=sq*frac;g.globalAlpha=.55;g.fillRect(x0,y-hh+gap/2,sq,Math.max(.5,hh-gap));g.globalAlpha=1;y-=hh;}};
+    draw(reg[d]/10000,css('--steel'));draw(tour[d]/10000,css('--blood'));
+    if(d===1||d%5===0||d===m.k){g.fillStyle=d===m.k&&m.T>0?css('--blood'):css('--ink-soft');g.font=(d===m.k&&m.T>0?'700 ':'')+'11px '+css('--sans');g.textAlign='center';g.textBaseline='top';g.fillText(d,pad.l+colW*(d-.5),h-pad.b+6);}
+  }
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText('x-axis: days played in the month',w-pad.r,2);
+  if(m.T>0){const x=pad.l+colW*(m.k-.5),top=h-pad.b-(reg[m.k]+tour[m.k])/10000*sq;
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign=m.k<8?'left':'center';g.textBaseline='bottom';
+    g.fillText(fmt(m.T)+' tourists',m.k<8?x-6:x,Math.max(14,top-4));}
+  // regulars peak label
+  let pk=1;for(let d=1;d<=30;d++)if(reg[d]>reg[pk])pk=d;
+  const xp=pad.l+colW*(pk-.5),tp=h-pad.b-(reg[pk]+tour[pk])/10000*sq;
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+  if(Math.abs(pk-m.k)>4||m.T===0)g.fillText(fmt(m.R)+' regulars',Math.min(w-60,Math.max(60,xp)),Math.max(14,tp-4));
+  const sqLabel=sq<3?' (squares shrink to fit)':'';
+  $('cHist').setAttribute('aria-label',`Histogram for month ${sel+1}: ${fmt(m.R)} regulars spread around ${Math.round(30*m.p)} days played, ${fmt(m.T)} tourists all at ${m.k} days.${sqLabel}`);
+  $('hTable').innerHTML=Array.from({length:30},(_,i)=>i+1).map(d=>`<tr${d===m.k&&m.T>0?' class="here"':''}><td>${d}</td><td>${fmt(reg[d])}</td><td>${fmt(tour[d])}</td><td>${fmt(reg[d]+tour[d])}</td></tr>`).join('')+
+    (reg[0]>=500?`<tr><td>0 (inactive regulars)</td><td>${fmt(reg[0])}</td><td>0</td><td>${fmt(reg[0])}</td></tr>`:'');
+}
+function readM(){
+  const s=stats(M[sel]),m=M[sel];
+  $('rMau').textContent=fmt(s.mau);$('rDau').textContent=fmt(s.dau);$('rStk').textContent=s.stk.toFixed(3);$('rPd').textContent=fmt(s.pd);
+  $('rTm').textContent=pct1(s.tm);$('rTd').textContent=pct1(s.td);
+  if(sel>0){const q=stats(M[sel-1]);$('rMomM').textContent=q.mau?sgn(s.mau/q.mau-1):'—';$('rMomD').textContent=q.dau?sgn(s.dau/q.dau-1):'—';}
+  else{$('rMomM').textContent='—';$('rMomD').textContent='—';}
+  $('hMonth').textContent=sel+1;
+  $('oR').textContent=fmt(m.R);$('oP').textContent=m.p.toFixed(2);$('oT').textContent=fmt(m.T);$('oK').textContent=m.k;
+  let t=`Month ${sel+1}: tourists are <b>${pct1(s.tm)}</b> of MAU but only <b>${pct1(s.td)}</b> of player-days. `;
+  if(sel>0){const q=stats(M[sel-1]),dm=s.mau/q.mau-1,dd=s.dau/q.dau-1;
+    t+=`Against month ${sel}, MAU moved ${sgn(dm)} and mean DAU ${sgn(dd)}. `;
+    if(Math.abs(dm)>Math.abs(dd)*1.5+.01)t+=`MAU moved much more than DAU, so the change is in who touched the game, not in how much it was played.`;
+    else if(Math.abs(dd)>Math.abs(dm)+.01)t+=`DAU moved more than MAU. The same people are playing a different amount. That is an engagement change, and MAU hides it.`;
+    else t+=`The two lines tell the same story this month.`;}
+  $('insight1').innerHTML=t;
+}
+function syncSliders(){const m=M[sel];$('R').value=m.R;$('p').value=m.p;$('T').value=m.T;$('k').value=m.k;}
+function monthButtons(){
+  $('months').innerHTML=M.map((_,i)=>`<button class="chip" role="radio" aria-checked="${i===sel}" tabindex="${i===sel?0:-1}" data-i="${i}">${i+1}</button>`).join('');
+  $('months').querySelectorAll('button').forEach(b=>{b.addEventListener('click',()=>setSel(+b.dataset.i,true));
+    b.addEventListener('keydown',e=>{if(['ArrowRight','ArrowDown','ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();const d=(e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1;setSel((sel+d+6)%6,true);}});});
+}
+function setSel(i,focus){sel=i;monthButtons();if(focus)$('months').querySelector(`[data-i="${i}"]`).focus();syncSliders();updM();}
+function updM(){readM();drawTop();drawHist();}
+[['R','R'],['p','p'],['T','T'],['k','k']].forEach(([id,k])=>$(id).addEventListener('input',e=>{M[sel]=Object.assign({},M[sel],{[k]:+e.target.value});
+  document.querySelectorAll('.preset').forEach(x=>x.setAttribute('aria-pressed','false'));updM();}));
+document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.preset').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');
+  M=PRE[b.dataset.p]().map(o=>Object.assign({},o));syncSliders();updM();}));
+
+// ---------- rolling ----------
+const RR=1000000,RP=.40,D0=-10,D1=45;
+const rDau=t=>RR*RP+(t===0?E:0);
+const rMau=t=>RR*(1-Math.pow(1-RP,W))+(t>=0&&t<=W-1?E:0);
+function drawRoll(){
+  let {g,w,h}=setupCanvas($('cRoll'));const pad={l:44,r:12,t:18,b:26};
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t-D0)/(D1-D0);
+  const nm=niceMax(RR+E);const Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/nm.max);
+  yGrid(g,w,h,pad,nm.max,nm.n,kf);
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  for(let t=-10;t<=45;t+=(w<420?10:5))g.fillText(t,X(t),h-pad.b+6);
+  const rules=[[0,'event'],[W,'event leaves window']];
+  rules.forEach(([t,l],i)=>{g.strokeStyle=css('--blood');g.globalAlpha=.7;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(t),pad.t);g.lineTo(X(t),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    g.fillStyle=css('--ink');g.font='600 11px '+css('--sans');const tw=g.measureText(l).width;const right=i&&X(t)+4+tw>w-2;g.textAlign=(i&&!right)?'left':'right';g.textBaseline='top';g.fillText(l,X(t)+((i&&!right)?4:-4),2);g.font='12px '+css('--sans');});
+  const ts=[];for(let t=D0;t<=D1;t++)ts.push(t);
+  const stepPts=f=>{const pts=[];ts.forEach(t=>{pts.push([X(t-.5),Y(f(t))]);pts.push([X(t+.5),Y(f(t))]);});pts[0][0]=X(D0);pts[pts.length-1][0]=X(D1);return pts;};
+  line(g,stepPts(rMau),css('--ochre'));line(g,stepPts(rDau),css('--steel'));
+  g.strokeStyle=css('--ink');g.globalAlpha=.5;g.beginPath();g.moveTo(X(day),pad.t);g.lineTo(X(day),h-pad.b);g.stroke();g.globalAlpha=1;
+  dot(g,X(day),Y(rMau(day)),css('--ochre'));dot(g,X(day),Y(rDau(day)),css('--steel'));
+  ({g,w,h}=setupCanvas($('cRollS')));const pS={l:44,r:12,t:10,b:8};const Ys=v=>pS.t+(h-pS.t-pS.b)*(1-v/.6);
+  yGrid(g,w,h,pS,.6,3,v=>v.toFixed(1));
+  const sp=[];ts.forEach(t=>{const v=rDau(t)/rMau(t);sp.push([X(t-.5),Ys(v)]);sp.push([X(t+.5),Ys(v)]);});sp[0][0]=X(D0);sp[sp.length-1][0]=X(D1);
+  line(g,sp,css('--ink'),2);
+  g.strokeStyle=css('--ink');g.globalAlpha=.5;g.lineWidth=1;g.beginPath();g.moveTo(X(day),pS.t);g.lineTo(X(day),h-pS.b);g.stroke();g.globalAlpha=1;
+  dot(g,X(day),Ys(rDau(day)/rMau(day)),css('--ink'));
+  $('cRoll').setAttribute('aria-label',`DAU and rolling ${W}-day MAU. Event of ${fmt(E)} tourists on day 0 leaves the window on day ${W}.`);
+}
+function readR(){
+  const d=rDau(day),m=rMau(day);
+  $('rrDau').textContent=fmt(d);$('rrMau').textContent=fmt(m);$('rrStk').textContent=(d/m).toFixed(3);
+  $('rrIn').textContent=fmt(day>=0&&day<=W-1?E:0);$('oE').textContent=fmt(E);$('oDay').textContent=day;
+  const s0=rDau(-1)/rMau(-1),s1=rDau(1)/rMau(1);
+  $('insight2').innerHTML=`The event adds ${fmt(E)} players for one day. DAU spikes on day 0 only, but rolling MAU carries them for ${W} days, so stickiness sits at <b>${s1.toFixed(3)}</b> instead of <b>${s0.toFixed(3)}</b> until day ${W}. On day ${W} MAU drops by ${fmt(E)} and nothing happened in the game that day.`;
+}
+function updR(){readR();drawRoll();}
+$('E').addEventListener('input',e=>{E=+e.target.value;updR();});
+$('day').addEventListener('input',e=>{day=+e.target.value;updR();});
+const winB=[...document.querySelectorAll('#wins .chip')];
+function setW(b,focus){winB.forEach(x=>{const on=x===b;x.setAttribute('aria-checked',on);x.tabIndex=on?0:-1;});W=+b.dataset.w;if(focus)b.focus();updR();}
+winB.forEach((b,i)=>{b.addEventListener('click',()=>setW(b));b.addEventListener('keydown',e=>{if(e.key.startsWith('Arrow')){e.preventDefault();setW(winB[1-i],true);}});});
+$('cRoll').addEventListener('click',e=>{const r=$('cRoll').getBoundingClientRect(),x=e.clientX-r.left;day=Math.max(D0,Math.min(D1,Math.round(D0+(x-44)/(r.width-56)*(D1-D0))));$('day').value=day;updR();});
+
+// ---------- tabs ----------
+const tabs=[$('t1'),$('t2')];
+function tabSel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});if(focus)t.focus();redraw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>tabSel(t));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();tabSel(tabs[1-i],true);}});});
+function redraw(){updM();if(!$('p2').hidden)updR();}
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(redraw,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+monthButtons();syncSliders();updM();readR();
+})();
+</script>
+</body>
+</html>

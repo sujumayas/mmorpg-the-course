@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cluster design effect · MMO308 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cGrid{height:190px}#cMde{height:300px}
+.bars{margin-top:10px;font-size:.86rem}
+.bar{display:grid;grid-template-columns:8.5em 1fr;gap:8px;align-items:center;margin:6px 0}
+.bar .track{position:relative;height:22px;border-left:1.5px solid var(--ink-soft)}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0}
+.bar .val{position:absolute;top:1px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.axis{display:grid;grid-template-columns:8.5em 1fr;gap:8px;font-size:.75rem;color:var(--ink-soft)}
+.axis div{position:relative;height:16px}.axis div span{position:absolute;transform:translateX(-50%)}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.sw{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO308 Live Operations, Analytics and Experimentation · Week 5 · Worked example</p>
+  <h1>You buy precision with servers, not players</h1>
+  <p class="lede">When you randomize whole servers, players on the same server move together. A test with 100,000 players per arm can be as precise as one with 2,000. Make the servers bigger and almost nothing changes. Add servers and the smallest detectable effect drops.</p>
+</header>
+
+<section class="panel" aria-label="Cluster randomized test explorer">
+  <div class="charts">
+    <figure>
+      <figcaption>Who is in the test<small id="gridCap">Each square is one cluster; area grows with players per cluster.</small></figcaption>
+      <canvas id="cGrid" role="img" aria-label="Grid of clusters in arm A and arm B"></canvas>
+      <div class="legend"><span><span class="sw" style="background:var(--steel)"></span>Arm A (control)</span><span><span class="sw" style="background:var(--ochre)"></span>Arm B (variant)</span></div>
+      <div class="bars" aria-live="polite">
+        <div class="bar"><span>Players per arm</span><div class="track"><div class="fill" id="bN" style="background:var(--steel)"></div><span class="val" id="vN"></span></div></div>
+        <div class="bar"><span>Effective players</span><div class="track"><div class="fill" id="bE" style="background:var(--blood)"></div><span class="val" id="vE"></span></div></div>
+        <div class="axis"><span></span><div id="axisTicks"></div></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Smallest effect you can detect<small>MDE at 5% significance and 80% power, in percentage points, against clusters per arm (log scale)</small></figcaption>
+      <canvas id="cMde" role="img" aria-label="Minimum detectable effect versus clusters per arm for several ICC values"></canvas>
+      <div class="legend">
+        <span><i style="height:0;border-top:2px dotted var(--ink-soft)"></i>ρ = 0 (player-level)</span>
+        <span><i style="background:var(--moss)"></i>ρ = 0.001</span>
+        <span><i style="background:var(--steel)"></i>ρ = 0.01</span>
+        <span><i style="background:var(--blood)"></i>ρ = 0.05</span>
+        <span><i style="background:var(--ochre);height:0;border-top:2px dashed var(--ochre)"></i>target MDE</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rP"></b><span>baseline rate p</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rM"></b><span>players per cluster m</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rK"></b><span>clusters per arm k</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rR"></b><span>ICC ρ</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rN"></b><span>players per arm n = k·m</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rD"></b><span>design effect 1 + (m−1)ρ</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rNe"></b><span>effective players n / deff</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rC"></b><span>ceiling k/ρ on n_eff</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rMde"></b><span>MDE, points</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rKn"></b><span id="rKnL">clusters per arm for target</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <span style="font-weight:600;font-size:.92rem">Randomization unit</span>
+      <div class="presets" role="group" aria-label="Unit presets">
+        <button class="chip" data-m="1" data-r="0" data-k="100000" aria-pressed="false">Player</button>
+        <button class="chip" data-m="20" data-r="0.05" data-k="5000" aria-pressed="false">Guild</button>
+        <button class="chip" data-m="5000" data-r="0.01" data-k="20" aria-pressed="true">Server</button>
+      </div>
+      <label for="m">Players per cluster m <output id="oM"></output></label>
+      <input id="m" type="range" min="0" max="9" step="1" value="7">
+      <label for="k">Clusters per arm k <output id="oK"></output></label>
+      <input id="k" type="range" min="0" max="98" step="1" value="18">
+      <label for="r">ICC ρ <output id="oR"></output></label>
+      <input id="r" type="range" min="0" max="7" step="1" value="4">
+    </div>
+    <div>
+      <label for="p">Baseline rate p <output id="oP"></output></label>
+      <input id="p" type="range" min="5" max="90" step="1" value="30">
+      <label for="t">Target MDE <output id="oT"></output></label>
+      <input id="t" type="range" min="0.5" max="10" step="0.5" value="2">
+      <p style="font-size:.86rem;color:var(--ink-soft);margin:6px 0 0">The k range widens when clusters are small. It goes up to 5,000 when m ≤ 20, and up to 100,000 for single players (m = 1).</p>
+    </div>
+  </div>
+  <p class="sr" id="sum" aria-live="polite"></p>
+</section>
+
+<footer>Formulas as in the lecture: n = k·m, deff = 1 + (m − 1)ρ, n_eff = n/deff, MDE = (1.96 + 0.8416)·√(2p(1 − p)/n_eff). Since n_eff = k·m/(1 + (m − 1)ρ) &lt; k/ρ, a cluster test can never have more effective players than k/ρ, however large each cluster grows (Donner and Klar, cluster randomization trials). All numbers are illustrative, not measured from a real game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const Z=1.96+0.8416;
+const MS=[1,5,20,100,500,1000,2000,5000,10000,20000];
+const RS=[0,0.001,0.002,0.005,0.01,0.02,0.05,0.1];
+function kList(max){const a=[];for(let k=2;k<=100;k++)a.push(k);for(let k=110;k<=1000;k+=10)a.push(k);for(let k=1100;k<=10000;k+=100)a.push(k);for(let k=11000;k<=100000;k+=1000)a.push(k);return a.filter(k=>k<=max);}
+let m=5000,k=20,rho=0.01,p=0.30,T=2;
+function kMax(){return m===1?100000:(m<=20?5000:100);}
+function axisMax(){return m===1?100000:(m<=20?10000:100);}
+let KS=kList(kMax());
+const deff=(mm,r)=>1+(mm-1)*r;
+const mde=(kk,mm,r)=>Z*Math.sqrt(2*p*(1-p)/(kk*mm/deff(mm,r)))*100;
+function kNeeded(){
+  const nen=2*p*(1-p)*Math.pow(Z/(T/100),2);
+  const kn=Math.ceil(nen*deff(m,rho)/m-1e-9);
+  return kn;
+}
+function trim(x,d){return x.toFixed(d).replace(/\.?0+$/,'');}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+
+function drawGrid(){
+  const {g,w,h}=setupCanvas($('cGrid'));g.clearRect(0,0,w,h);
+  const shown=Math.min(k,100),cols=Math.ceil(Math.sqrt(shown*1.6)),rows=Math.ceil(shown/cols);
+  const gap=14,armW=(w-gap)/2,top=18,armH=h-top-4;
+  const cell=Math.min(armW/cols,armH/rows);
+  const frac=Math.sqrt(Math.min(m,20000)/20000);
+  const side=Math.max(2,cell*0.9*frac);
+  g.font='600 12px '+css('--sans');g.textBaseline='top';
+  [['A',css('--steel'),0],['B',css('--ochre'),armW+gap]].forEach(([lab,col,x0])=>{
+    g.fillStyle=css('--ink');g.textAlign='left';
+    g.fillText(`Arm ${lab}: ${fmt(k)} cluster${k>1?'s':''}`+(k>shown?` (100 drawn)`:''),x0,0);
+    g.fillStyle=col;
+    for(let i=0;i<shown;i++){const cx=x0+(i%cols)*cell+cell/2,cy=top+Math.floor(i/cols)*cell+cell/2;g.fillRect(cx-side/2,cy-side/2,side,side);}
+  });
+  $('gridCap').textContent=`Each square is one cluster of ${fmt(m)} player${m>1?'s':''}; area grows with m (capped at 20,000).`;
+}
+const LMIN=1,LMAX=7;
+function logPos(v){return Math.max(0,Math.min(1,(Math.log10(Math.max(v,10))-LMIN)/(LMAX-LMIN)))*100;}
+function bars(n,ne){
+  const pn=logPos(n),pe=logPos(ne);
+  $('bN').style.width=pn+'%';$('bE').style.width=pe+'%';
+  const place=(el,pos)=>{if(pos>62){el.style.left='';el.style.right=(100-pos+1)+'%';el.style.color=css('--paper');}else{el.style.right='';el.style.left=(pos+1)+'%';el.style.color=css('--ink');}};
+  $('vN').textContent=fmt(n);$('vE').textContent=fmt(ne);place($('vN'),pn);place($('vE'),pe);
+}
+function ticks(){const t=$('axisTicks');t.innerHTML='';for(let e=LMIN;e<LMAX;e++){const s=document.createElement('span');s.style.left=((e-LMIN)/(LMAX-LMIN)*100)+'%';s.textContent=e>=6?(10**(e-6))+'M':e>=3?(10**(e-3))+'k':String(10**e);if(e===LMAX)s.style.transform='translateX(-100%)';if(e===LMIN)s.style.transform='none';t.appendChild(s);}}
+
+function drawMde(){
+  const {g,w,h}=setupCanvas($('cMde'));g.clearRect(0,0,w,h);
+  const pad={l:40,r:12,t:12,b:34},xMax=axisMax(),yMax=15;
+  const X=kk=>pad.l+(w-pad.l-pad.r)*Math.log(kk/2)/Math.log(xMax/2);
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-Math.min(v,yMax*1.02)/yMax);
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;g.font='12px '+css('--sans');
+  for(let v=0;v<=15;v+=5){const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v,pad.l-6,y);}
+  const xt=[2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000].filter(v=>v<=xMax);
+  const lab=v=>v>=1000?(v/1000)+'k':String(v);
+  let lastX=-99;g.textAlign='center';g.textBaseline='top';
+  xt.forEach(v=>{const x=X(v);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();if(x-lastX>26){g.fillText(lab(v),x,h-pad.b+6);lastX=x;}});
+  g.textAlign='right';g.fillText('clusters per arm k',w-pad.r,h-16);
+  function curve(r,col,wid,dash){
+    g.strokeStyle=col;g.lineWidth=wid;g.setLineDash(dash||[]);g.beginPath();let started=false;
+    for(let i=0;i<=240;i++){const kk=2*Math.pow(xMax/2,i/240),v=r<0?Z*Math.sqrt(2*p*(1-p)/(kk*m))*100:mde(kk,m,r);
+      if(v>yMax*1.02){started=false;continue;}const x=X(kk),y=Y(v);started?g.lineTo(x,y):g.moveTo(x,y);started=true;}
+    g.stroke();g.setLineDash([]);
+  }
+  curve(-1,css('--ink-soft'),2,[2,3]);
+  curve(0.001,css('--moss'),2.5);curve(0.01,css('--steel'),2.5);curve(0.05,css('--blood'),2.5);
+  if(![0,0.001,0.01,0.05].includes(rho))curve(rho,css('--ink'),2,[6,4]);
+  // target
+  g.strokeStyle=css('--ochre');g.lineWidth=2;g.setLineDash([7,5]);g.beginPath();g.moveTo(pad.l,Y(T));g.lineTo(w-pad.r,Y(T));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ochre');g.textAlign='left';g.textBaseline='bottom';g.font='600 12px '+css('--sans');g.fillText(`target ${trim(T,1)}`,pad.l+4,Y(T)-2);
+  // marker
+  const v=mde(k,m,rho),x=X(k),y=Y(v),col=rho===0.001?css('--moss'):rho===0.01?css('--steel'):rho===0.05?css('--blood'):css('--ink');
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=col;g.beginPath();g.arc(x,Math.max(y,pad.t),6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  const txt=v>yMax?`${v.toFixed(2)} (off scale)`:v.toFixed(2)+' pts';
+  g.font='700 13px '+css('--sans');g.fillStyle=css('--ink');g.textBaseline='bottom';
+  g.textAlign=x>w*0.6?'right':'left';g.fillText(txt,x+(x>w*0.6?-9:9),Math.max(y,pad.t+16)-6);
+}
+
+function update(){
+  const n=k*m,d=deff(m,rho),ne=n/d,v=mde(k,m,rho);
+  $('rP').textContent=Math.round(p*100)+'%';$('rM').textContent=fmt(m);$('rK').textContent=fmt(k);$('rR').textContent=String(rho);
+  $('rN').textContent=fmt(n);$('rD').textContent=d.toFixed(2);$('rNe').textContent=fmt(ne);
+  $('rC').textContent=rho===0?'none':fmt(k/rho);$('rMde').textContent=v.toFixed(2);
+  const kn=kNeeded(),kmx=kMax();
+  $('rKn').textContent=kn>kmx?`more than ${fmt(kmx)}`:fmt(kn);
+  $('rKnL').textContent=`clusters per arm for ${trim(T,1)}-pt target`;
+  $('oM').textContent=fmt(m);$('oK').textContent=fmt(k);$('oR').textContent=String(rho);$('oP').textContent=Math.round(p*100)+'%';$('oT').textContent=trim(T,1)+' pts';
+  bars(n,ne);drawGrid();drawMde();
+  // insight: double m vs double k
+  const m2=Math.min(m*2,40000),vm=mde(k,m2,rho),vk=mde(k*2,m,rho);
+  let s=`With ${fmt(k)} cluster${k>1?'s':''} of ${fmt(m)} per arm, ${fmt(n)} players count as <b>${fmt(ne)}</b> independent ones (design effect ${d.toFixed(2)}). `;
+  s+=`Doubling each cluster to ${fmt(m2)} players moves the MDE from ${v.toFixed(2)} to ${vm.toFixed(2)} points. Doubling the clusters to ${fmt(k*2)} moves it to <b>${vk.toFixed(2)}</b>. `;
+  if(rho>0)s+=`However big the clusters get, n_eff stays below k/ρ = ${fmt(k/rho)}.`;
+  else s+=`With ρ = 0 players are independent, so only the total n matters.`;
+  if(v>T)s+=` You need ${kn>kmx?'more than '+fmt(kmx):fmt(kn)} clusters per arm to reach the ${trim(T,1)}-point target.`;
+  else s+=` This design already meets the ${trim(T,1)}-point target.`;
+  $('insight').innerHTML=s;
+  $('sum').textContent=`Players per arm ${fmt(n)}, effective ${fmt(ne)}, MDE ${v.toFixed(2)} points.`;
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.m===m&&+b.dataset.r===rho&&+b.dataset.k===k)));
+}
+function syncK(){KS=kList(kMax());if(k>kMax())k=kMax();let i=KS.findIndex(v=>v>=k);if(i<0)i=KS.length-1;k=KS[i];const s=$('k');s.max=KS.length-1;s.value=i;}
+$('m').addEventListener('input',e=>{m=MS[+e.target.value];syncK();update();});
+$('k').addEventListener('input',e=>{k=KS[+e.target.value];update();});
+$('r').addEventListener('input',e=>{rho=RS[+e.target.value];update();});
+$('p').addEventListener('input',e=>{p=+e.target.value/100;update();});
+$('t').addEventListener('input',e=>{T=+e.target.value;update();});
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  m=+b.dataset.m;rho=+b.dataset.r;k=+b.dataset.k;
+  $('m').value=MS.indexOf(m);$('r').value=RS.indexOf(rho);syncK();update();
+}));
+ticks();syncK();
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

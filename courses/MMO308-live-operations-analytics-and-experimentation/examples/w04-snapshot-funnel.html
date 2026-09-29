@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Snapshot funnel · MMO308 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0 0 8px}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;margin-bottom:14px}
+@media (max-width:520px){.panel{padding:10px}figure{padding:10px 8px 6px!important}}
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;grid-template-areas:"snap end" "ctl ctl"}
+.f-snap{grid-area:snap}.f-end{grid-area:end}.controls{grid-area:ctl}
+@media (max-width:760px){.charts{grid-template-columns:minmax(0,1fr);grid-template-areas:"snap" "ctl" "end"}}
+figure{display:flex;flex-direction:column}figure canvas{margin-top:auto}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.eq{font-variant-numeric:tabular-nums;font-weight:700;font-size:.95rem;margin:0 0 4px}
+canvas{display:block;width:100%;height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:2px}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.controls{grid-template-columns:minmax(0,1fr)}}
+.seg,.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"],.chip[aria-checked="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+label,.lbl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+.ctl{display:flex;flex-direction:column;gap:10px}
+.reads{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 12px}
+@media (max-width:760px){.reads{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+td.bad{color:var(--blood);font-weight:700}
+@media (max-width:520px){table{font-size:.8rem}th,td{padding:5px 4px}}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+[hidden]{display:none!important}
+footer{margin-top:18px;font-size:.85rem;color:var(--ink-soft);max-width:78ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO308 Live Operations, Analytics and Experimentation · Week 4 · Worked example</p>
+  <h1>The funnel that isn't finished yet</h1>
+  <p class="lede">Every step converts 90% of the players who stay. A 30-day-old cohort still shows step 10 at 2.1% and a step-10 conversion of 42.7%, because most players have not got there yet. Drag the age and watch the left funnel fill in to the right one.</p>
+</header>
+
+<section class="panel" aria-labelledby="hViews">
+  <h2 id="hViews" hidden>Funnel views</h2>
+  <div class="charts">
+    <figure class="f-snap">
+      <figcaption>What the dashboard shows<small id="leftSub">Share of one cohort that has reached each step at age 30 days. Between bars: step conversion.</small></figcaption>
+      <p class="eq" id="leftEq">&nbsp;</p>
+      <canvas id="cSnap" role="img" aria-label="Snapshot funnel"></canvas>
+      <div class="legend"><span><i style="background:var(--steel)"></i>Reached the step so far</span><span><i style="background:var(--blood)"></i>Step conversion more than 5 points below c</span></div>
+    </figure>
+    <figure class="f-end">
+      <figcaption>Where it ends up<small>Eventual share c<sup>k</sup> (solid) with today's snapshot as outlines.</small></figcaption>
+      <p class="eq" id="rightEq">&nbsp;</p>
+      <canvas id="cEnd" role="img" aria-label="Eventual funnel with snapshot outlines"></canvas>
+      <div class="legend"><span><i style="background:var(--ochre)"></i>Eventual share</span><span><i style="border:2px solid var(--steel)"></i>Snapshot now</span></div>
+    </figure>
+
+  <div class="controls">
+    <div class="ctl">
+      <span class="lbl">Who is in the snapshot</span>
+      <div class="seg" role="radiogroup" aria-label="Mode" id="modes">
+        <button class="chip" role="radio" data-m="one" aria-checked="true">One cohort</button>
+        <button class="chip" role="radio" data-m="all" aria-checked="false" tabindex="-1">All installs since launch</button>
+      </div>
+      <div><label for="age" id="ageLbl">Cohort age, t (days) <output id="oAge"></output></label><input id="age" type="range" min="1" max="365" step="1"></div>
+    </div>
+    <div class="ctl">
+      <div><label for="q">Daily progress rate, q <output id="oQ"></output></label><input id="q" type="range" min="0.02" max="0.50" step="0.01" value="0.18"></div>
+      <div><label for="h">Daily quit hazard, h <output id="oH"></output></label><input id="h" type="range" min="0" max="0.10" step="0.005" value="0.02"></div>
+    </div>
+    <div class="ctl">
+      <span class="lbl">Presets</span>
+      <div class="presets" role="group" aria-label="Presets">
+        <button class="chip preset" data-p="young" aria-pressed="true">Young game</button>
+        <button class="chip preset" data-p="mature" aria-pressed="false">Mature</button>
+        <button class="chip preset" data-p="l90" aria-pressed="false">Launch + 90 days</button>
+        <button class="chip preset" data-p="l730" aria-pressed="false">Launch + 2 years</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="hRead">
+  <h2 id="hRead">The numbers</h2>
+  <div class="reads" aria-live="polite">
+    <div class="stat" style="--c:var(--ink)"><b id="rAge">—</b><span id="rAgeL">age</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rMode">—</b><span>mode</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rQ">—</b><span>q, daily progress</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rH">—</b><span>h, daily quit hazard</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rC">—</b><span>c = q / (q + h)</span></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Step</th><th>Snapshot share</th><th>Snapshot step conversion</th><th>True conversion c</th><th>Eventual share</th></tr></thead>
+      <tbody id="tbl"></tbody>
+    </table>
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+</section>
+
+<footer>Model: every day a player still playing with k steps done finishes the next step with probability q, quits with probability h, or stays put. A player who quits keeps the steps they reached. Reached step k at age t sums everyone, playing or gone, with at least k steps. "All installs" averages cohorts aged 1 to L days, as if installs were spread evenly since launch and the snapshot is taken on day L. Invented game. The Lost Ark codex numbers are discussed in the lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const pct1=v=>(v*100).toFixed(1)+'%';
+const N=10;
+let mode='one',tAge=30,L=90,q=.18,h=.02;
+const PRE={young:{mode:'one',t:30},mature:{mode:'one',t:180},l90:{mode:'all',L:90},l730:{mode:'all',L:730}};
+
+function step(act,gone){const a2=new Array(N+1).fill(0);
+  for(let k=0;k<N;k++){a2[k+1]+=q*act[k];gone[k]+=h*act[k];a2[k]+=(1-q-h)*act[k];}
+  a2[N]+=(1-h)*act[N];gone[N]+=h*act[N];return a2;}
+function reached(act,gone){const r=new Array(N+1).fill(0);let s=0;for(let k=N;k>=0;k--){s+=act[k]+gone[k];r[k]=s;}return r;}
+function cohort(t){let act=[1].concat(new Array(N).fill(0)),gone=new Array(N+1).fill(0);for(let i=0;i<t;i++)act=step(act,gone);return reached(act,gone);}
+function blended(Ld){let act=[1].concat(new Array(N).fill(0)),gone=new Array(N+1).fill(0);const acc=new Array(N+1).fill(0);
+  for(let a=1;a<=Ld;a++){act=step(act,gone);const r=reached(act,gone);for(let k=0;k<=N;k++)acc[k]+=r[k];}return acc.map(x=>x/Ld);}
+function snap(){return mode==='one'?cohort(tAge):blended(L);}
+const cOf=()=>q+h>0?q/(q+h):null;
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);return {g,w:r.width,h:r.height};}
+const pad={l:40,r:8,t:22,b:44};
+function frame(g,w,hh){
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;g.font='11px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=pad.t+(hh-pad.t-pad.b)*(1-i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(i*25+'%',pad.l-5,y);}
+}
+function geom(w,hh){const bw=(w-pad.l-pad.r)/N;return {bw,x:k=>pad.l+bw*(k-1),Y:v=>pad.t+(hh-pad.t-pad.b)*(1-v),base:hh-pad.b};}
+function roundTop(g,x,y,wd,ht,r){r=Math.min(r,wd/2,ht);g.beginPath();g.moveTo(x,y+ht);g.lineTo(x,y+r);g.quadraticCurveTo(x,y,x+r,y);g.lineTo(x+wd-r,y);g.quadraticCurveTo(x+wd,y,x+wd,y+r);g.lineTo(x+wd,y+ht);g.closePath();}
+function drawSnap(R,c){
+  const {g,w,h:hh}=setup($('cSnap'));frame(g,w,hh);const G=geom(w,hh);const small=G.bw<40;const fs=small?9.5:11;
+  for(let k=1;k<=N;k++){const x=G.x(k)+G.bw*.15,bw=G.bw*.7,y=G.Y(R[k]);
+    g.fillStyle=css('--steel');roundTop(g,x,y,bw,G.base-y,3);g.fill();
+    g.fillStyle=css('--ink');g.font='600 '+fs+'px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText(small?(R[k]*100).toFixed(1):pct1(R[k]),x+bw/2,y-3);
+    g.fillStyle=css('--ink-soft');g.font=fs+'px '+css('--sans');g.textBaseline='top';g.fillText(k,x+bw/2,G.base+4);
+    if(k>=2){const conv=R[k-1]>0?R[k]/R[k-1]:0,bad=c!==null&&(c-conv)*100>5;
+      g.fillStyle=bad?css('--blood'):css('--ink-soft');g.font=(bad?'700 ':'')+fs+'px '+css('--sans');g.fillText(R[k-1]>0?(conv*100).toFixed(1):'—',G.x(k),G.base+22);}
+  }
+  g.fillStyle=css('--ink-soft');g.font=fs+'px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+  g.fillText('step',2,G.base+4);g.fillText('conv.%',2,G.base+22);
+}
+function drawEnd(R,c){
+  const {g,w,h:hh}=setup($('cEnd'));frame(g,w,hh);const G=geom(w,hh);const small=G.bw<40;const fs=small?9.5:11;
+  for(let k=1;k<=N;k++){const x=G.x(k)+G.bw*.15,bw=G.bw*.7;const e=c===null?R[k]:Math.pow(c,k);const y=G.Y(e);
+    g.fillStyle=css('--ochre');roundTop(g,x,y,bw,G.base-y,3);g.fill();
+    const ys=G.Y(R[k]);g.strokeStyle=css('--steel');g.lineWidth=2;g.strokeRect(x+1,ys+1,bw-2,Math.max(0,G.base-ys-1));
+    g.fillStyle=css('--ink');g.font='600 '+fs+'px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText(small?(e*100).toFixed(1):pct1(e),x+bw/2,Math.min(y,ys)-3);
+    g.fillStyle=css('--ink-soft');g.font=fs+'px '+css('--sans');g.textBaseline='top';g.fillText(k,x+bw/2,G.base+4);
+    if(k>=2&&c!==null){g.fillText((c*100).toFixed(1),G.x(k),G.base+22);}
+  }
+  g.fillStyle=css('--ink-soft');g.textAlign='left';g.textBaseline='top';g.fillText('step',2,G.base+4);g.fillText('conv.%',2,G.base+22);
+}
+function update(){
+  if(q+h>1)h=Math.max(0,1-q);
+  const R=snap(),c=cOf();
+  const ageV=mode==='one'?tAge:L;
+  $('oAge').textContent=ageV;$('oQ').textContent=q.toFixed(2);$('oH').textContent=h.toFixed(3);
+  $('ageLbl').firstChild.textContent=mode==='one'?'Cohort age, t (days) ':'Days since launch, L ';
+  $('leftSub').textContent=mode==='one'?`Share of one cohort that has reached each step at age ${tAge} days. Between bars: step conversion.`:`Share of all installs from the last ${L} days that has reached each step. Between bars: step conversion.`;
+  $('leftEq').textContent=(mode==='one'?`Cohort age ${tAge} days`:`${L} days since launch`)+` · step 10: ${pct1(R[10])}`;
+  $('rightEq').textContent=c===null?'no movement (q + h = 0)':`c = q/(q+h) = ${c.toFixed(3)} · mean days per step 1/(q+h) = ${(1/(q+h)).toFixed(1)}`;
+  drawSnap(R,c);drawEnd(R,c);
+  $('rAge').textContent=ageV+' days';$('rAgeL').textContent=mode==='one'?'cohort age, t':'days since launch, L';
+  $('rMode').textContent=mode==='one'?'One cohort':'All installs';$('rQ').textContent=q.toFixed(2);$('rH').textContent=h.toFixed(3);$('rC').textContent=c===null?'—':(c*100).toFixed(1)+'%';
+  $('tbl').innerHTML=Array.from({length:N},(_,i)=>i+1).map(k=>{const conv=k>=2&&R[k-1]>0?R[k]/R[k-1]:null;const bad=conv!==null&&c!==null&&(c-conv)*100>5;
+    return `<tr><td>${k}</td><td>${pct1(R[k])}</td><td class="${bad?'bad':''}">${conv===null?'—':pct1(conv)}</td><td>${k>=2&&c!==null?pct1(c):'—'}</td><td>${c===null?'—':pct1(Math.pow(c,k))}</td></tr>`;}).join('');
+  const conv10=R[9]>0?R[10]/R[9]:0,firstBad=(()=>{for(let k=2;k<=N;k++){if(c!==null&&R[k-1]>0&&(c-R[k]/R[k-1])*100>5)return k;}return null;})();
+  let s;
+  if(c===null)s='Nobody moves, so the funnel is empty past step 0.';
+  else if(firstBad){s=`The dashboard says step 10 converts <b>${pct1(conv10)}</b>. The true rate is <b>${pct1(c)}</b> at every step. From step ${firstBad} on, the snapshot reads more than 5 points low only because players are still on their way: a step takes ${(1/(q+h)).toFixed(1)} days on average, so reaching step 10 takes about ${(10/(q+h)).toFixed(0)} days. `+(mode==='all'?'Blending in recent installs keeps the young-cohort bias alive long after launch.':'Wait, or compare cohorts of the same age.');}
+  else s=`At this age the snapshot is within 5 points of the true ${pct1(c)} at every step. Step 10 reads ${pct1(R[10])} against an eventual ${pct1(Math.pow(c,10))}. The leak you see now is real quitting, not players in transit.`;
+  $('insight').innerHTML=s;
+  $('cSnap').setAttribute('aria-label',`Snapshot funnel: `+R.slice(1).map((v,i)=>`step ${i+1} ${pct1(v)}`).join(', '));
+  $('cEnd').setAttribute('aria-label',c===null?'No movement':`Eventual funnel: step 1 ${pct1(c)}, step 10 ${pct1(Math.pow(c,10))}`);
+}
+function syncAge(){const s=$('age');s.max=mode==='one'?365:730;s.value=mode==='one'?tAge:L;}
+function setMode(m,focus){mode=m;document.querySelectorAll('#modes .chip').forEach(b=>{const on=b.dataset.m===m;b.setAttribute('aria-checked',on);b.tabIndex=on?0:-1;if(on&&focus)b.focus();});syncAge();update();}
+function unpreset(){document.querySelectorAll('.preset').forEach(x=>x.setAttribute('aria-pressed','false'));}
+document.querySelectorAll('#modes .chip').forEach(b=>{b.addEventListener('click',()=>{unpreset();setMode(b.dataset.m);});
+  b.addEventListener('keydown',e=>{if(e.key.startsWith('Arrow')){e.preventDefault();unpreset();setMode(mode==='one'?'all':'one',true);}});});
+$('age').addEventListener('input',e=>{if(mode==='one')tAge=+e.target.value;else L=+e.target.value;unpreset();update();});
+$('q').addEventListener('input',e=>{q=+e.target.value;if(q+h>1){h=1-q;$('h').value=h;}unpreset();update();});
+$('h').addEventListener('input',e=>{h=+e.target.value;if(q+h>1){h=1-q;$('h').value=h;}unpreset();update();});
+document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>{unpreset();b.setAttribute('aria-pressed','true');const p=PRE[b.dataset.p];
+  q=.18;h=.02;$('q').value=q;$('h').value=h;if(p.t)tAge=p.t;if(p.L)L=p.L;setMode(p.mode);}));
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+syncAge();update();
+})();
+</script>
+</body>
+</html>

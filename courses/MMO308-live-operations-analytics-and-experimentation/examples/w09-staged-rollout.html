@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Staged rollout harm — MMO308 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:0 0 4px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px}
+.sub{color:var(--ink-soft);font-size:.86rem;margin:0 0 12px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0 14px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.stages{display:flex;flex-direction:column;gap:10px}
+.srow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:6px 16px;align-items:end;background:var(--paper-2);border-radius:10px;padding:10px 12px}
+@media (max-width:640px){.srow{grid-template-columns:1fr}}
+.shead{display:flex;justify-content:space-between;gap:8px;font-size:.86rem;flex-wrap:wrap}
+.shead b{font-weight:700}
+.shead .reach{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.track{position:relative;height:18px;border-radius:4px;background:var(--paper);border:1px solid var(--grid);margin-top:4px;overflow:hidden}
+.track .prev{position:absolute;top:0;bottom:0;left:0;background:var(--grid)}
+.track .new{position:absolute;top:0;bottom:0;background:var(--steel);min-width:2px}
+.harm{display:flex;align-items:center;gap:10px;min-width:0}
+.harm b{font-size:1.25rem;font-variant-numeric:tabular-nums;min-width:4.5ch;color:var(--blood)}
+.dots{display:flex;flex-wrap:wrap;gap:3px;align-items:center;min-height:18px;font-size:.8rem;color:var(--ink-soft)}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--blood);display:inline-block}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;align-items:center}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 .95rem var(--sans);width:8.5em;padding:5px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.88rem;color:var(--ink-soft)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stagelist{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stagelist input{width:6.2em}
+.stagelist span{font-size:.85rem;color:var(--ink-soft)}
+.msg{font-size:.85rem;color:var(--blood);min-height:1.2em;margin:4px 0 0}
+.rule{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);font-size:.98rem}
+.rule .ok{color:var(--moss);font-weight:600}.rule .no{color:var(--blood);font-weight:600}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px}
+canvas{display:block;width:100%;height:340px;cursor:crosshair;touch-action:pan-y}
+@media (max-width:640px){canvas{height:280px}}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.86rem;margin:8px 0 4px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:520px;width:100%}
+caption{text-align:left;font-weight:600;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tfoot td{font-weight:700}
+@media (max-width:640px){table{min-width:0;font-size:.8rem}th,td{padding:5px 4px}th{font-size:.75rem}.cn{display:none}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO308 Live Operations · Week 9 · Worked example</p>
+  <h1>How many players does a bad patch hit?</h1>
+  <p class="lede">A big bang release hits <em>N</em>&nbsp;&times;&nbsp;<em>p</em> players, a straight line in the bug rate. A staged rollout hits a few players for almost any bug rate, because the canary finds common bugs and rare bugs hit few people anyway. Poor detection pulls it back toward the big bang.</p>
+</header>
+
+<section class="panel" aria-labelledby="h-plan">
+  <h2 id="h-plan">This bug, this plan</h2>
+  <p class="sub">Each bar is the share of players newly exposed at that stage. Dots are expected players hit, one dot per player (rounded).</p>
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rTot">—</b><span>expected players hit, staged</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rBig">—</b><span>big bang (N &times; p)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rRatio">—</b><span>big bang &divide; staged</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rQ">—</b><span>chance one player sees it and you notice (q = p&middot;d)</span></div>
+  </div>
+  <div class="stages" id="stages"></div>
+</section>
+
+<section class="panel" aria-labelledby="h-ctl">
+  <h2 id="h-ctl">Controls</h2>
+  <div class="controls">
+    <div>
+      <label for="nS">Players N <output id="oN">200,000</output></label>
+      <input id="nS" type="range" min="4" max="6" step="0.01" value="5.30103" aria-describedby="nHint">
+      <div class="row" id="nHint"><label for="nIn" style="font-weight:400">exact</label><input id="nIn" type="number" min="10000" max="1000000" step="1000" value="200000"></div>
+
+      <label for="pS" style="margin-top:12px">Bug rate p <output id="oP">1 in 2,000</output></label>
+      <input id="pS" type="range" min="1" max="6" step="0.01" value="3.30103">
+      <div class="row"><label for="pIn" style="font-weight:400">1 in</label><input id="pIn" type="number" min="10" max="1000000" step="1" value="2000"><span>players has the setup that triggers the bug</span></div>
+
+      <label for="dS" style="margin-top:12px">Detection d <output id="oD">1.00</output></label>
+      <input id="dS" type="range" min="0.05" max="1" step="0.05" value="1">
+      <div class="row">Chance that a player who hits the bug makes it show up in your alerts or reports.</div>
+    </div>
+    <div>
+      <span class="lbl" id="stLbl">Stages (cumulative share of players, %)</span>
+      <div class="presets" role="group" aria-label="Stage presets">
+        <button class="chip" data-st="100">Big bang</button>
+        <button class="chip" data-st="1,10,100">1-10-100</button>
+        <button class="chip" data-st="1,5,25,100">1-5-25-100</button>
+        <button class="chip" data-st="0.1,1,10,100">0.1-1-10-100</button>
+      </div>
+      <div class="stagelist" id="stageList" role="group" aria-labelledby="stLbl"></div>
+      <div class="row" style="margin-top:8px">
+        <button class="chip" id="addSt" type="button">Add stage</button>
+        <button class="chip" id="rmSt" type="button">Remove stage</button>
+      </div>
+      <p class="msg" id="stMsg" aria-live="polite"></p>
+      <div class="rule" id="rule" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="h-all">
+  <h2 id="h-all">Every bug rate</h2>
+  <p class="sub">Expected players hit against bug rate, both on log scales. Click or drag on the chart to move the marker; the top view follows.</p>
+  <figure>
+    <canvas id="chart" role="img" aria-describedby="chartSum" aria-label="Expected players hit versus bug rate, big bang line and staged curve"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--blood)"></i>Big bang, N &times; p</span>
+      <span><i style="background:var(--steel)"></i>Staged plan</span>
+      <span><i style="background:var(--ink);opacity:.5"></i>Current p</span>
+    </div>
+  </figure>
+  <p class="insight" id="chartSum"></p>
+  <div class="table-wrap">
+    <table>
+      <caption>Per stage, for the current settings</caption>
+      <thead><tr><th scope="col">Stage</th><th scope="col">Cumulative share</th><th scope="col">Newly exposed</th><th scope="col">P(reach)</th><th scope="col">Expected hit</th></tr></thead>
+      <tbody id="tbody"></tbody>
+      <tfoot><tr><td>Total</td><td></td><td></td><td></td><td id="tTot"></td></tr></tfoot>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the lecture: q = p &times; d; reach<sub>1</sub> = 1; reach<sub>i+1</sub> = reach<sub>i</sub> &times; (1 &minus; q)<sup>new<sub>i</sub></sup>; harm<sub>i</sub> = reach<sub>i</sub> &times; new<sub>i</sub> &times; p. The rollout stops at the first stage where anyone reports the bug. Rule of three canary size: ceil(ln 0.05 / ln(1 &minus; q)). All numbers are expectations, not a simulation.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+let N=200000,p=1/2000,d=1,stages=[1,10,100];
+
+function sig2(x){const e=Math.pow(10,Math.floor(Math.log10(x))-1);return Math.round(x/e)*e;}
+function fmtShare(s){return (s<1?s.toFixed(s<0.1?2:1):(+s.toFixed(2)).toString())+'%';}
+function fmtHarm(v){if(v>=1000)return fmt(v);if(v>=1)return v.toFixed(2);if(v>=0.001)return v.toFixed(3);if(v===0)return '0';return '< 0.001';}
+function fmtTot(v){if(v>=1000)return fmt(v);if(v>=10)return v.toFixed(1);return v.toFixed(2);}
+function fmtBig(v){return Number.isInteger(+v.toFixed(6))?fmt(v):fmtTot(v);}
+function fmtReach(r){if(r>=0.9995)return r===1?'1':r.toFixed(3);if(r<1e-6)return '< 0.000001';return (+r.toPrecision(3)).toString();}
+function oneIn(pp){const x=1/pp;return '1 in '+(x>=100?fmt(x):(+x.toPrecision(3)).toString());}
+
+function model(N,p,d,st){
+  const lq=Math.log1p(-p*d);let reach=1,prev=0,tot=0;const rows=[];
+  for(const f of st){
+    const nw=N*(f-prev)/100,h=reach*nw*p;
+    rows.push({f,nw,reach,h});tot+=h;reach*=Math.exp(nw*lq);prev=f;
+  }
+  return {rows,tot};
+}
+
+function drawStages(m){
+  const box=$('stages');box.innerHTML='';let prev=0;
+  m.rows.forEach((r,i)=>{
+    const el=document.createElement('div');el.className='srow';
+    const k=Math.round(r.h),shown=Math.min(k,50);
+    let dots='';for(let j=0;j<shown;j++)dots+='<i></i>';
+    if(k>50)dots+=` <span>+${fmt(k-50)}</span>`;
+    if(k===0)dots='<span>under half a player expected</span>';
+    el.innerHTML=`<div><div class="shead"><span><b>Stage ${i+1}${i===0&&m.rows.length>1?' (canary)':''}</b> · ${fmtShare(r.f)} cumulative · ${fmt(r.nw)} new</span><span class="reach">P(reach) ${fmtReach(r.reach)}</span></div>
+      <div class="track" aria-hidden="true"><div class="prev" style="width:${prev}%"></div><div class="new" style="left:${prev}%;width:${r.f-prev}%"></div></div></div>
+      <div class="harm"><b>${fmtHarm(r.h)}</b><div class="dots" aria-hidden="true">${dots}</div><span class="sr">expected players hit in stage ${i+1}</span></div>`;
+    box.appendChild(el);prev=r.f;
+  });
+}
+
+// Log chart
+const X0=-6,X1=-1,Y0=-1,Y1=5;
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function pad(w){return {l:w<500?46:58,r:12,t:12,b:40};}
+function drawChart(){
+  const c=$('chart'),{g,w,h}=setup(c),P=pad(w);
+  const px=lx=>P.l+(w-P.l-P.r)*(lx-X0)/(X1-X0),py=ly=>P.t+(h-P.t-P.b)*(1-(Math.max(Y0,Math.min(Y1+.2,ly))-Y0)/(Y1-Y0));
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  const yl=['0.1','1','10','100','1,000','10,000','100,000'];
+  for(let e=Y0;e<=Y1;e++){const y=py(e);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(P.l,y);g.lineTo(w-P.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(w<500&&e>=4?(e===4?'10k':'100k'):yl[e-Y0],P.l-6,y);}
+  const xl={'-6':'1 in 1M','-5':'1 in 100k','-4':'1 in 10k','-3':'1 in 1,000','-2':'1 in 100','-1':'1 in 10'};
+  for(let e=X0;e<=X1;e++){const x=px(e);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,P.t);g.lineTo(x,h-P.b);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign=e===X0?'left':e===X1?'right':'center';g.textBaseline='top';
+    if(w>=500||e%2===0)g.fillText(xl[e],x,h-P.b+6);}
+  g.textAlign='right';g.fillText('bug rate p →',w-P.r,h-16);
+  g.save();g.translate(12,P.t+(h-P.t-P.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='top';g.fillText('players hit',0,-8);g.restore();
+  g.save();g.beginPath();g.rect(P.l,P.t,w-P.l-P.r,h-P.t-P.b);g.clip();
+  const line=(f,col,wd,dash)=>{g.strokeStyle=col;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();for(let i=0;i<=240;i++){const lx=X0+(X1-X0)*i/240,v=f(Math.pow(10,lx)),ly=Math.log10(Math.max(v,1e-3));const X=px(lx),Y=py(ly);i?g.lineTo(X,Y):g.moveTo(X,Y);}g.stroke();g.setLineDash([]);};
+  line(pp=>N*pp,css('--blood'),2.5,[7,5]);
+  line(pp=>model(N,pp,d,stages).tot,css('--steel'),3);
+  const lx=Math.log10(p),X=px(lx);
+  g.strokeStyle=css('--ink');g.globalAlpha=.5;g.setLineDash([4,4]);g.beginPath();g.moveTo(X,P.t);g.lineTo(X,h-P.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  const dot=(v,col)=>{g.fillStyle=col;g.strokeStyle=css('--paper');g.lineWidth=2;g.beginPath();g.arc(X,py(Math.log10(Math.max(v,1e-3))),5.5,0,7);g.fill();g.stroke();};
+  dot(N*p,css('--blood'));dot(model(N,p,d,stages).tot,css('--steel'));
+  g.restore();
+}
+
+function chartSummary(m){
+  let peak=0;for(let i=0;i<=150;i++){const pp=Math.pow(10,X0+3*i/150),v=model(N,pp,d,stages).tot;if(v>peak)peak=v;}
+  const big=N*p;
+  let s=`At ${oneIn(p)}, the staged plan hits ${fmtTot(m.tot)} players and the big bang hits ${fmtBig(big)}. `;
+  if(stages.length===1)s+='With a single stage the two lines are the same: nobody is protected by staging.';
+  else s+=`For every bug rarer than 1 in 1,000, the staged plan hits at most ${fmtTot(peak)} players; the big bang hits up to ${fmtBig(N/1000)} there. For more common bugs the canary itself sets the harm, about ${fmtBig(N*stages[0]/100)} &times; p. `+(d<1?`Detection d = ${d.toFixed(2)} means each exposed player counts as only ${d.toFixed(2)} of a report, so each stage has to expose more players before you notice.`:'Lower d and watch the curve rise toward the big bang line.');
+  $("chartSum").innerHTML=s;
+}
+
+function ruleOfThree(){
+  const q=p*d,need=Math.ceil(Math.log(0.05)/Math.log1p(-q)),first=N*stages[0]/100;
+  const ok=first>=need;
+  $('rule').innerHTML=`<b>Rule of three.</b> To catch a ${oneIn(p)} bug with 95% probability at d = ${d.toFixed(2)}, the canary needs <b>${fmt(need)}</b> players. Your first stage exposes ${fmt(first)}: <span class="${ok?'ok':'no'}">${ok?'large enough':'too small'}</span>.`;
+}
+
+function renderList(){
+  const L=$('stageList');L.innerHTML='';
+  stages.forEach((f,i)=>{
+    const last=i===stages.length-1;
+    const inp=document.createElement('input');inp.type='number';inp.min='0.01';inp.max='100';inp.step='any';inp.value=f;inp.setAttribute('aria-label',`Stage ${i+1} cumulative share, percent`);
+    if(last){inp.readOnly=true;inp.title='The last stage is always 100%';}
+    inp.addEventListener('change',()=>{
+      let v=+inp.value;const lo=i?stages[i-1]:0,hi=stages[i+1];
+      if(!(v>lo&&v<hi)){v=Math.min(Math.max(v||lo,lo+0.01),hi-0.01);v=+v.toFixed(2);$('stMsg').textContent=`Stage ${i+1} must be between ${lo}% and ${hi}%; set to ${v}%.`;}else $('stMsg').textContent='';
+      stages[i]=v;inp.value=v;markPreset();update();
+    });
+    L.appendChild(inp);
+    if(!last){const s=document.createElement('span');s.textContent='→';s.setAttribute('aria-hidden','true');L.appendChild(s);}
+  });
+  $('addSt').disabled=stages.length>=6;$('rmSt').disabled=stages.length<=1;
+}
+function markPreset(){const k=stages.join(',');document.querySelectorAll('[data-st]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.st===k?'true':'false'));}
+
+function update(){
+  const m=model(N,p,d,stages),big=N*p;
+  $('oN').textContent=fmt(N);$('oP').textContent=oneIn(p);$('oD').textContent=d.toFixed(2);
+  $('rTot').textContent=fmtTot(m.tot);$('rBig').textContent=fmtBig(big);
+  $('rRatio').textContent=(big/m.tot>=100?fmt(big/m.tot):(big/m.tot).toFixed(1))+'×';
+  const q=p*d;$('rQ').textContent=oneIn(q);
+  drawStages(m);
+  $('tbody').innerHTML=m.rows.map((r,i)=>`<tr><td>${i+1}${i===0&&m.rows.length>1?'<span class="cn"> (canary)</span>':''}</td><td>${fmtShare(r.f)}</td><td>${fmt(r.nw)}</td><td>${fmtReach(r.reach)}</td><td>${fmtHarm(r.h)}</td></tr>`).join('');
+  $('tTot').textContent=fmtTot(m.tot);
+  ruleOfThree();chartSummary(m);drawChart();
+}
+
+// controls
+function setN(v,fromSlider){N=Math.min(1e6,Math.max(1e4,Math.round(v)));if(!fromSlider)$('nS').value=Math.log10(N);$('nIn').value=N;update();}
+function setP(x,fromSlider){x=Math.min(1e6,Math.max(10,x));p=1/x;if(!fromSlider)$('pS').value=Math.log10(x);$('pIn').value=+x.toPrecision(6);update();}
+$('nS').addEventListener('input',e=>setN(sig2(Math.pow(10,+e.target.value)),true));
+$('nIn').addEventListener('change',e=>setN(+e.target.value||200000));
+$('pS').addEventListener('input',e=>setP(sig2(Math.pow(10,+e.target.value)),true));
+$('pIn').addEventListener('change',e=>setP(+e.target.value||2000));
+$('dS').addEventListener('input',e=>{d=+e.target.value;update();});
+document.querySelectorAll('[data-st]').forEach(b=>b.addEventListener('click',()=>{stages=b.dataset.st.split(',').map(Number);$('stMsg').textContent='';renderList();markPreset();update();}));
+$('addSt').addEventListener('click',()=>{if(stages.length>=6)return;const a=stages.length>1?stages[stages.length-2]:0;const v=+(a+(100-a)/2).toFixed(2);stages.splice(stages.length-1,0,v);renderList();markPreset();update();});
+$('rmSt').addEventListener('click',()=>{if(stages.length<=1)return;stages.splice(stages.length-2,1);renderList();markPreset();update();});
+// chart pointer sets p
+const cv=$('chart');let drag=false;
+function fromPointer(e){const r=cv.getBoundingClientRect(),P=pad(r.width);const t=(e.clientX-r.left-P.l)/(r.width-P.l-P.r);if(t<0||t>1)return;const x=sig2(Math.pow(10,-(X0+(X1-X0)*t)));setP(x);}
+cv.addEventListener('pointerdown',e=>{drag=true;fromPointer(e);});
+cv.addEventListener('pointermove',e=>{if(drag)fromPointer(e);});
+window.addEventListener('pointerup',()=>{drag=false;});
+window.addEventListener('resize',drawChart);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawChart);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawChart);
+renderList();markPreset();update();
+})();
+</script>
+</body>
+</html>

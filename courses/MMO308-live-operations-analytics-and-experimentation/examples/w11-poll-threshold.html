@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Poll threshold — MMO308 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:14px}
+@media (max-width:860px){.views{grid-template-columns:1fr}}
+.view{background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+.sub{color:var(--ink-soft);font-size:.84rem;margin:2px 0 8px}
+.verdict{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:6px 0 4px}
+.verdict b{font-size:clamp(2rem,5.5vw,2.8rem);font-variant-numeric:tabular-nums;line-height:1.05}
+.tag{font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:6px;border:2px solid currentColor}
+.tag.pass{color:var(--moss)}.tag.fail{color:var(--blood);border-style:dashed}
+.tag.flash{animation:flash .7s ease 1}
+@keyframes flash{0%{transform:scale(1)}30%{transform:scale(1.18);background:var(--paper)}100%{transform:scale(1)}}
+canvas{display:block;width:100%}
+#cBallot{height:120px}
+#cHist{height:300px;cursor:pointer}
+@media (max-width:640px){#cHist{height:240px}}
+.ballotNote{font-family:var(--serif);font-size:.96rem;margin:8px 0 0}
+select,input[type=number]{font:600 .92rem var(--sans);padding:6px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=number]{width:8.5em}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.88rem;margin-top:6px}
+.row label{font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:-2px;margin-right:6px}
+.lg-pass{background:var(--moss)}
+.lg-fail{background:repeating-linear-gradient(45deg,var(--blood) 0 3px,transparent 3px 6px);border:1.5px solid var(--blood)}
+.lg-band{border:2px dashed var(--ink)}
+.tip{min-height:1.4em;font-size:.88rem;margin:6px 0 0;font-variant-numeric:tabular-nums}
+.readout{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0 0}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.summary{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label.sl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label.sl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+fieldset{border:0;padding:0;margin:12px 0 0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:460px}
+caption{text-align:left;font-weight:600;padding-bottom:6px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:640px){table{min-width:0;font-size:.8rem}th,td{padding:5px 4px}th{font-size:.74rem}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+footer a{color:var(--steel)}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO308 Live Operations · Week 11 · Worked example</p>
+  <h1>A supermajority line only decides the close calls</h1>
+  <p class="lede">Old School RuneScape content needs a supermajority of Yes votes. Move the line from 75% to 70% and Sailing flips from fail to pass, along with a thin band of other questions. Most questions sit far above both lines. At low turnout, a very small group can block anything.</p>
+</header>
+
+<section class="panel" aria-label="Ballot and archive">
+  <div class="views">
+    <div class="view">
+      <h2>One ballot</h2>
+      <p class="sub">Yes on the left, No on the right. The solid line is the threshold; the dashed line is the No count that would block.</p>
+      <div class="row"><label for="ballot">Ballot</label>
+        <select id="ballot">
+          <option value="sail">Sailing, 2023 (112,976 / 44,153)</option>
+          <option value="ward">Warding, 2019 (82,633 / 41,726)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="row" id="customRow" hidden>
+        <label for="cY">Yes</label><input id="cY" type="number" min="0" step="1" value="1000">
+        <label for="cN">No</label><input id="cN" type="number" min="0" step="1" value="400">
+      </div>
+      <div class="verdict" aria-live="polite"><b id="ySh">—</b><span class="tag" id="tag">—</span></div>
+      <canvas id="cBallot" role="img" aria-describedby="ballotNote"></canvas>
+      <p class="ballotNote" id="ballotNote"></p>
+    </div>
+    <div class="view">
+      <h2>Every question since 2013</h2>
+      <p class="sub">Yes share of each of the <span id="nEra">3,304</span> poll questions, 1-point bins. Click a bar, or focus the chart and use the arrow keys.</p>
+      <canvas id="cHist" tabindex="0" role="img" aria-label="Histogram of yes shares" aria-describedby="histSum"></canvas>
+      <div class="legend" aria-hidden="true"><span><i class="lg-pass"></i>passes at T</span><span><i class="lg-fail"></i>fails at T</span><span><i class="lg-band"></i>70% to 75% band</span><span><i style="border-left:2px dashed var(--ochre);width:2px;border-radius:0"></i>comparison threshold</span></div>
+      <p class="tip" id="tip" aria-live="polite"></p>
+    </div>
+  </div>
+  <p class="summary" id="histSum" aria-live="polite"></p>
+  <div class="readout">
+    <div class="stat" style="--c:var(--moss)"><b id="rPass">—</b><span>questions pass at T</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rShare">—</b><span>share passing</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rDiff">—</b><span id="rDiffL">results differ from 75%</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rMed">—</b><span>median yes share</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rX">—</b><span>Yes votes one No cancels</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rBlock">—</b><span>smallest blocking group, % of eligible players</span></div>
+  </div>
+</section>
+
+<section class="panel" aria-label="Controls">
+  <div class="controls">
+    <div>
+      <label class="sl" for="T">Threshold T <output id="oT">75%</output></label>
+      <input id="T" type="range" min="50" max="90" step="0.5" value="75">
+      <div class="chips" role="group" aria-label="Historic thresholds">
+        <button class="chip" data-t="75" type="button">75% (2013-2022)</button>
+        <button class="chip" data-t="70" type="button">70% (since Oct 2022)</button>
+      </div>
+      <div class="row"><label for="cmp">Compare with</label><input id="cmp" type="number" min="50" max="90" step="0.1" value="70"><span>%</span></div>
+    </div>
+    <div>
+      <label class="sl" for="tau">Turnout &tau; <output id="oTau">6%</output></label>
+      <input id="tau" type="range" min="1" max="50" step="0.5" value="6">
+      <fieldset>
+        <legend>Era</legend>
+        <div class="chips" role="group">
+          <button class="chip" data-era="all" type="button">All</button>
+          <button class="chip" data-era="before" type="button">Before 27 Oct 2022</button>
+          <button class="chip" data-era="after" type="button">From 27 Oct 2022</button>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <caption>Thresholds side by side (current era and turnout)</caption>
+      <thead><tr><th scope="col">Threshold T</th><th scope="col">Questions passing</th><th scope="col">Share</th><th scope="col">Yes per No</th><th scope="col">Blocking group</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Vote counts: Old School RuneScape Wiki poll pages (3,304 yes/no questions, 14 March 2013 to 21 September 2026), tallied for this course in September 2026 and licensed <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>; this page is shared under the same licence. Yes share = Yes / (Yes + No); skips are left out. Shares are stored as whole hundredths of a percent, rounded down, so pass and fail at any threshold on that grid match the exact counts. The threshold fell from 75% to 70% on 27 October 2022. Old School RuneScape is a Jagex game; this page is not affiliated with Jagex.</footer>
+</main>
+
+<script>
+const BP=[8468,5215,8806,8326,8700,8446,7015,8257,8132,8448,9101,9190,6341,8906,6999,9443,6149,8548,8507,7512,6412,6609,4434,3672,2885,2679,2502,4988,3220,5116,5907,7121,3926,3699,3909,2827,3263,5268,3582,5743,9358,8111,8306,9676,9468,9339,9521,6759,5058,3632,3200,4090,5632,3811,5106,4674,4068,6552,4341,2769,6291,6023,6183,5224,5113,4780,5433,3277,4729,5092,5201,5687,4303,6765,4880,6342,5021,6520,5869,4639,5362,3814,4714,5110,6241,6241,4823,5274,4164,5967,4430,5577,4062,4527,6610,4259,5147,5258,4558,6010,9245,8705,9064,8262,9175,9091,9220,8978,8818,8935,8945,7723,8626,8422,9280,9313,9479,7736,6449,6762,6386,6642,8153,9444,9334,8930,7429,8871,7663,7814,8315,8810,7781,8274,8892,8702,8911,8367,8586,9317,8935,9403,5246,7019,6558,6823,7675,8898,8876,8928,8489,8722,8353,9768,9659,9301,9457,9092,6939,9019,8853,8657,8554,5657,9190,4862,5248,6188,7797,7236,8131,7524,6058,7875,7332,7399,7148,6894,7914,8057,7403,7300,7565,8142,7307,7315,7229,7151,6889,7197,6914,7923,9039,9154,9608,9509,7425,7776,7945,9128,8246,8412,7594,7182,7288,4281,8735,9356,9367,9469,4286,8359,8724,8627,8788,8961,8446,8788,6678,8794,8471,8892,8870,8019,8986,7778,8893,8658,8865,8043,7067,9203,9149,7925,8503,7712,8460,8340,8585,8790,7070,8068,8887,8325,6654,7287,6199,4479,8037,7837,7956,3798,6113,6793,7287,8452,8289,6639,8042,8405,7152,6787,4548,6187,4154,8643,8536,8574,9104,8817,9019,9483,8759,7648,8542,8477,8224,2907,8667,7687,6834,7674,8393,8037,8047,6787,5064,5154,6010,6112,8083,8771,9536,9498,8097,7575,3116,9312,9014,8927,8442,8691,7882,8559,9118,9775,7666,9286,8763,5402,7719,9165,8794,6640,9146,8779,8469,6914,9105,9010,9060,9235,7067,8214,7183,9187,9276,9311,8190,7710,8951,5724,5501,6198,7640,8404,8663,8694,8488,4390,8561,7692,8339,8478,6118,8510,7968,8876,7127,7888,7673,7373,8995,7091,8660,7888,6893,8868,8211,9398,7342,7510,8093,8858,9516,8658,7481,7331,7721,7041,7810,8485,8611,6809,6789,9306,9101,9395,8834,9273,9168,8359,8159,7454,8013,7356,8278,8434,6745,8926,7380,8545,8231,8309,8421,7356,8926,8012,8549,8052,9019,7860,6390,4810,7157,7583,7656,6671,7767,6786,6985,7144,8891,8617,7522,7986,6896,7809,8432,8714,9595,8664,8640,8921,9313,9054,7318,8721,9505,7436,7091,7535,7222,7274,7450,6987,7615,7634,7534,7717,7709,7907,7216,7265,8500,8376,7961,7929,9187,8014,8654,7757,9271,7265,9347,9376,9069,8334,8881,7198,8683,7173,8570,5881,6418,8229,7613,8055,6686,7959,8962,7087,8423,8584,8487,9038,8638,8748,8585,8182,8910,8947,8601,8425,8679,6181,9060,5656,6470,6930,7449,6991,6987,7154,6259,6382,6283,6234,6549,6580,6612,7011,6194,7035,8654,9384,9320,8721,8404,8603,9184,7090,8035,8911,8420,8049,8456,8286,9292,8398,8449,9413,8696,9031,8846,7797,7456,7312,7573,7155,7929,7879,6701,7292,7758,8319,7332,7011,7867,7694,8630,7522,6608,6205,7631,6000,4482,3978,4411,3769,3607,6518,8214,8992,9188,9171,9140,8926,9374,9283,8224,7286,7149,8951,7971,7957,7790,7767,7705,8504,9275,8894,7505,8957,8605,6311,8710,8602,8873,8677,5134,8751,7066,8774,7844,8992,7420,8210,7116,7698,8981,9189,9425,9019,9107,8997,9135,6181,9032,8458,8908,9689,8012,8914,8104,6424,7316,9208,9032,8595,7994,5599,6358,6963,5913,7444,8858,9009,9554,9574,9285,8810,9206,8576,8821,8710,7620,8568,9484,8894,8810,7789,8991,6579,8677,8068,8936,8268,9454,9048,8082,9223,9249,6747,4837,8504,8605,8700,6862,8589,8769,8388,8707,9030,8929,7012,6627,5876,8298,9188,7836,9263,7832,7980,9290,9224,8348,9326,7292,8618,8951,8055,8036,8908,8682,8450,9574,8963,9480,8813,9503,7932,8389,8250,7874,9222,7644,9169,8027,8918,6820,7422,8710,9182,9184,7973,8766,8634,9126,7459,7214,8682,9493,8031,9034,8963,8557,8883,7337,8345,8830,8986,8647,6797,9349,8841,6025,7910,8958,8972,9384,8326,8794,9042,8874,8849,9418,6791,6146,7532,9092,8453,8590,8972,8979,9013,9152,8809,8613,8606,8568,9037,8258,6286,9209,5473,8406,8996,8448,8908,8923,8503,9013,9264,8586,8944,6193,7688,8526,8442,7571,8901,9337,7903,9056,6517,7232,8446,7034,9180,8450,6748,8136,8463,8221,9070,8436,9077,8746,8703,5736,8096,9306,8040,6390,7583,9431,8669,8975,7773,8749,9168,8486,6793,8637,8465,8997,7120,8558,8798,4738,8224,8708,8876,8241,7855,8570,5872,8581,6875,8858,8290,6148,8963,8279,6926,9098,7845,7648,6899,9353,6679,7466,8450,9241,8169,7637,8459,9075,7747,8028,8262,8767,7856,5306,7541,9183,8708,9096,8974,8681,7846,8277,7544,7907,6418,6038,6547,9004,8863,9194,7245,7085,6589,6422,7097,6248,7675,7100,8431,8795,8965,8510,8615,8569,8572,8803,8673,8655,7886,8433,7046,8400,8447,8453,8286,8740,9169,8225,8770,8415,8483,8682,9540,8655,9157,9221,6630,7717,9227,8839,8954,9301,8045,6969,9491,7899,8894,7714,6765,9162,7367,9519,5596,6092,8121,9109,6512,6661,7219,9156,7639,6997,6720,8755,9233,9493,9117,8584,8569,9440,8969,9672,9038,9590,9073,7508,6187,5990,7402,6017,8531,8741,9337,9310,8869,9248,9104,8228,8524,8510,9102,9237,4615,8685,7689,9367,9064,8687,8941,9183,8597,8058,9076,8484,7003,6893,8097,9608,8557,9052,9369,8552,9180,7980,8840,8191,8708,9193,9311,8499,8572,8614,8686,8298,8097,7754,8091,7827,9496,8881,9453,9395,9065,8651,9066,8007,8026,8882,9346,6965,9418,8115,8010,7188,7772,8761,8123,8206,8789,9132,9339,5727,5730,9101,9022,9734,9317,9089,9390,8150,8733,8854,8884,8530,8470,9199,9129,9356,7386,9307,8454,6996,8726,8529,6785,9055,7828,9159,9240,8796,9160,6367,8875,9107,9097,7939,8305,9252,6835,8478,8975,7430,9016,7790,8690,8067,9522,8583,8877,5061,9205,8805,7824,8795,7538,5669,8867,8783,8458,8644,8202,8983,9131,8734,8959,9568,9329,9396,9231,8809,8190,9141,8789,8352,9095,8726,8019,8270,8972,8015,8959,9229,9357,8605,9061,8371,9420,8721,8363,7919,8891,7241,7659,7672,8322,7724,7609,8112,8028,9338,9319,7723,9379,8922,9392,9303,9082,9211,8492,8034,9268,8212,8201,8635,9045,8882,8423,8809,9467,9352,8465,8927,8971,8520,8098,6478,6228,8518,9437,8035,7168,7717,9044,9067,7991,9001,9042,7853,8903,8872,8570,7794,8352,8178,7918,7516,8439,8552,8025,7104,7060,7109,9352,8534,7502,9066,9280,8900,8702,9174,8636,9231,8051,9128,9169,8511,9119,8394,5957,8618,9173,8788,8372,8998,9023,8698,9510,9372,4633,7910,7179,9204,8818,7847,7523,8245,7502,9289,8528,9035,7344,7354,8227,9125,6268,8615,9327,7468,3090,5224,4348,7809,5679,6646,6457,6665,9167,9438,6918,8585,9191,7900,9020,8338,9102,7889,9109,9110,9253,8957,9501,9222,9415,9258,9169,8247,8746,8733,8612,6463,5177,4851,8686,8097,5903,8803,7609,9256,8225,9455,9175,8804,8020,7234,8860,9208,9249,3440,7998,8907,8100,8363,9272,9253,9280,9372,8606,9296,6903,8563,7867,8346,8615,8644,8960,9204,8942,8494,8593,8715,9270,9014,8984,9184,7848,6235,7861,8968,9096,9370,8713,8999,9330,9185,7126,7406,8842,8559,7946,9335,9245,8965,8636,8726,8882,8577,9290,8968,8875,8812,9762,8808,8892,8225,8312,9162,6987,8537,8829,9173,8685,8534,9091,9020,8460,8921,8526,8445,8433,7125,9112,8910,9342,7896,8112,8918,8551,8591,8634,9676,9017,9035,8536,8821,9324,9069,9397,9179,8243,5900,9109,8764,9052,6979,3830,7284,8936,9424,7149,9281,8831,8780,5385,8609,9506,9530,7895,8947,9288,9062,9193,5688,4486,9564,8597,9233,9314,8109,8909,8728,8855,8399,8945,7529,8149,9391,9434,8429,8494,8734,9295,9175,9170,8292,9369,8648,9036,8057,9409,6896,8795,8837,8491,8450,8956,9330,9568,9211,8724,8959,8993,9603,9405,8389,9307,8738,8537,8714,7357,8972,9418,8976,8966,8570,8757,8495,8804,8960,9096,9341,9029,8902,8296,8483,8812,8660,7837,8241,9058,7816,6913,9060,7562,7171,8833,8847,8341,8589,8734,8116,9405,9047,9317,8948,8273,8723,8729,8553,8513,8874,9027,9024,8847,8989,8778,8887,9385,8705,9113,8876,9585,9048,8080,7189,9061,8402,7134,7108,7070,8501,8283,8385,8279,8118,8006,8158,7741,7891,7176,7228,6299,7388,6952,6940,6931,6914,6866,7032,6316,6725,7264,8041,7104,9033,8558,8985,8556,8311,8884,8942,8816,8716,8942,7664,5502,8489,8152,7953,9130,8549,9357,9351,9136,9159,8410,9413,9199,9229,8634,8441,9185,9474,8939,8393,9018,7786,8723,9242,8567,8874,8684,9132,8988,9410,9095,8966,7888,9200,9155,9008,9013,9457,9316,8922,8476,8378,8416,8240,9631,9501,7033,8961,9326,8580,8333,9243,9279,9368,9323,9325,9113,9344,9277,9246,9504,9396,9420,8644,9629,9306,9319,9310,9170,9347,9333,9222,9298,9275,8889,9347,9137,9305,8907,8902,9154,8437,8922,6521,6762,6088,7683,7340,8297,7910,4924,7957,9319,9117,9161,9528,9479,8971,8466,9327,9387,9579,9349,8819,9057,9203,8351,7943,9111,8780,7995,9346,8975,8936,8291,8147,7149,7219,7171,8552,6373,8057,8369,7932,7486,8005,8698,9123,8702,7997,9542,9452,7405,8904,9216,9321,8999,8573,9226,7972,6473,9250,9506,9437,9492,9477,9482,8552,7982,7664,9398,8256,8183,8441,8641,7946,6450,8358,8271,8194,7565,7165,6520,5886,5874,5904,9289,8758,8371,9131,8869,9190,8961,8809,8434,8574,9164,8897,9143,9132,9305,8939,9643,9313,9593,8709,9066,9399,9215,8838,9021,8332,7673,7820,7766,7816,6556,6499,6386,6518,6452,6386,6421,6421,6429,6592,6312,6306,6481,6959,6935,6962,6925,6928,6896,6836,9433,9259,9135,9128,9150,9409,9375,5270,9404,8569,7516,8233,9131,9272,9177,8772,8876,8866,9593,9418,8807,8782,9148,8794,8202,8452,7999,8466,9193,9186,8995,8740,9006,9057,9346,9091,8964,8804,9181,9293,9142,9416,9172,9219,9387,8937,9047,9335,8442,9065,9151,9144,9131,9186,9242,8903,9124,9185,9084,9300,9226,9229,8885,9194,8660,8744,9223,8019,8648,8379,4870,8877,7466,8360,8909,8716,9091,9527,9524,8368,7919,7667,8712,8663,8639,8487,9169,8772,7742,9312,2510,2579,5549,3926,9082,8668,8049,8869,8058,9111,9417,9085,9179,9291,8933,8322,8760,8351,9433,8506,9139,9245,9250,9373,9003,3643,7364,7280,6488,6742,6764,7176,8814,8801,8119,6658,9547,9574,8318,9436,9419,9230,9501,8109,9019,8991,9549,9597,8491,8816,9360,8738,9509,9254,8493,9484,9467,9432,9056,8729,8140,9223,9251,8601,8561,8581,8481,9209,9023,8722,9067,8850,9100,4884,6408,5644,7858,8404,8968,8779,9513,9565,8307,9364,9527,7873,6787,9478,8711,8253,9554,9271,8737,9258,9386,8611,7783,8068,8986,8697,9126,8987,9097,9540,9121,9586,8992,9386,9454,8626,8602,7751,8256,7047,9365,9236,9046,8918,9043,7650,7715,7700,7333,7328,7523,9190,8571,8487,8780,8549,9172,7716,9205,8145,9179,8842,7307,7194,7041,6219,6517,8015,9052,3252,3014,3090,3030,3141,3024,3185,3026,3012,3029,2902,2823,2922,2910,2821,2936,2902,2933,2891,2774,2906,2847,2759,9334,9462,9285,9151,9291,8144,8184,9567,9048,8835,8520,8583,8323,8732,8198,9211,9234,6644,7129,7235,7135,7208,7227,7139,7200,7156,6819,6748,7249,7055,7037,6644,6978,6890,6959,6476,6900,6935,7048,7375,9091,9293,8753,8472,8106,7579,8090,8080,7935,8069,7755,7519,7820,7453,7393,7035,6628,8217,9498,9368,8683,8964,9162,6179,7626,6143,6153,6931,6283,5827,6036,6826,6396,6450,4216,6880,7046,7357,7468,7368,7501,6462,8178,7979,6652,7315,6029,5949,5983,6025,5976,5950,6450,4962,7866,7528,7653,7678,7817,7390,7769,6336,6484,7713,9399,8758,8349,9419,9436,8514,9474,8722,8900,9232,9380,9511,9200,9039,7639,8123,8966,8016,8048,8117,8374,6418,9139,8937,8958,9233,8890,8657,8819,9446,8924,7639,9260,7260,8840,9008,9381,9315,9162,9233,9122,8692,8425,8181,8045,8144,8140,8413,8810,9454,8763,9035,8998,8934,9284,8898,8677,9112,9413,9203,8657,9149,6187,6271,8536,8254,7885,5986,7967,9018,8932,9290,8882,9368,9365,8972,8958,8448,8933,9348,8829,9398,8195,8590,8792,9330,8820,8565,8596,8095,9110,9165,9143,8517,9006,5154,8234,6333,7227,8104,8402,9308,8499,9298,8833,8964,9203,9371,9203,8888,8390,8658,9089,9209,8823,9055,8945,8699,8928,8876,9402,8914,9247,9163,9060,7273,9297,9521,8238,9366,9388,9126,9113,9354,9402,9089,9033,9703,8560,9452,8208,6868,5940,9286,8697,8295,9010,7849,9156,9587,7324,9068,8805,8823,9429,8738,9294,8706,7343,8070,9295,8488,8412,9569,8982,9439,9072,8857,8421,7891,8858,9047,8338,8900,8684,8868,8358,8907,8346,8354,8731,8707,8758,9301,9520,7196,9408,8449,8526,8204,8958,9563,8682,9688,8674,8107,9014,8951,8899,8926,8826,8872,8608,8745,9282,9627,8616,7995,7980,8450,8338,8425,5862,8837,7088,9413,9213,8752,8327,8987,8812,8750,9368,8891,9411,7653,9240,9201,8767,8933,8694,8816,9036,8884,8816,7868,8664,7751,8835,6433,8069,8227,8268,8213,8288,8269,9141,9107,8702,9296,8998,8093,8981,8725,8896,7575,7951,8928,8951,8830,6543,8517,6948,9181,8860,9531,8731,9100,8379,8943,9211,9108,8592,7681,9268,9102,8577,8524,8374,8905,8819,8682,8578,8281,8692,8698,8664,8571,8702,8745,8960,8749,8308,9302,9117,9140,9507,9669,9560,8656,9008,9244,8088,8825,9027,9254,9113,8926,9228,9026,9298,9200,9482,9431,9026,7458,8456,7624,7484,8924,8506,8209,8530,8830,8858,9042,8689,8695,8656,8686,8678,8870,8365,9315,9255,8140,8312,7920,7836,8563,8154,7699,7338,8518,8768,9096,8070,8370,8359,8375,9043,9190,9131,8642,8677,9276,9004,9346,8974,9274,9104,8219,8536,8626,8999,9173,9126,8804,8177,9198,8695,8341,9088,8196,8315,8849,8918,8915,8955,8951,9032,8034,9438,9517,9267,9404,9172,9283,8992,9505,9128,8661,9212,8318,8916,8914,6638,8856,8853,8567,8710,9114,9257,8677,9108,8766,9071,8443,7966,8185,8342,9288,8955,9214,9382,9055,8838,8942,8725,8011,8714,9034,9124,8714,8757,8646,8878,9062,8545,8803,8724,8343,8283,8511,8597,8615,9307,9030,9477,9175,9243,9379,9194,8431,9896,8801,8774,9806,9258,9253,8757,8969,8522,8941,8287,8885,9272,9073,9127,8908,9107,7482,9037,8649,9476,8767,9404,8841,8435,7525,9317,9261,8106,7786,9198,9429,8985,9109,9617,9667,9657,8505,8931,9188,7756,9529,9530,9208,9644,8815,8389,8694,8874,8747,8328,9215,9096,8673,7381,7119,7386,4938,5298,5390,5358,5351,5342,6677,4173,9034,9061,8993,8402,8369,8974,8524,8830,8904,9091,9083,9354,9263,7049,5463,6997,5430,7053,5419,7972,7839,7903,6970,7080,6850,6452,6701,6882,6501,7004,7994,8607,8272,7943,7100,8877,8788,8790,8755,8513,7550,7894,4742,8227,8335,8457,8807,6153,7940,8520,8848,8805,9082,9619,8510,9523,7456,9303,9307,8866,8433,9254,8384,8667,8854,8171,8263,8829,8073,7863,8220,8876,8834,9015,8824,8477,8448,9223,8022,8085,9477,9086,8628,9067,6679,5888,5325,9425,9478,8864,8914,9474,9634,7472,7639,7261,7779,8726,8098,9480,8828,9378,9201,7321,8496,8814,5425,8720,8859,9020,6359,6595,9171,8898,7713,8721,8019,9282,7409,7881,8878,8257,9231,8714,8687,6977,8401,9371,8900,9291,8807,9334,9189,8182,7383,7423,8201,7918,7845,7880,7840,7975,8025,7693,8065,7507,8039,8239,7825,8329,8778,8544,9404,8419,8674,8451,9224,9051,8778,8936,8661,9071,7829,9165,9494,8526,8681,9135,9219,9169,8022,8883,7448,7241,7392,7938,7860,7829,7773,7680,7069,6663,8044,8103,8017,8035,8000,8096,8909,8989,8829,8498,8970,9005,9189,9150,9181,9104,8742,8283,7776,8674,9158,8801,9135,6195,7052,6438,8037,8252,8026,8070,8194,7900,7905,8487,9589,9314,9292,9442,9561,7190,9106,9312,9326,9248,3315,9225,8819,9353,8992,9168,9443,9186,8962,9164,8111,9527,9009,9453,8010,8115,8227,9321,9226,9113,9439,8461,8659,8760,9199,9167,9185,9168,9363,8667,7661,9696,8912,9382,9547,8838,8307,9582,9665,9607,9251,9156,9265,9535,8735,9229,9542,9224,9350,9404,9089,9447,9400,9196,9273,9069,9552,9040,9334,8491,8471,8259,8007,7264,7130,8161,8070,8120,8195,9366,9376,9193,9381,7630,8875,7082,9793,9294,9277,8708,9239,9032,7939,8776,9223,9265,9016,9123,8908,7330,6270,6342,7285,8177,8036,6709,7511,6888,7971,8970,8125,7776,8098,8444,8412,8419,8301,7996,8443,8105,8047,9107,9436,9524,8413,9412,9474,9240,9159,9414,9230,9192,9338,9175,9335,9247,9380,9323,9447,9418,8835,9246,9389,8730,9592,8917,9269,9490,8805,8817,8683,8199,9093,8962,9179,8512,9057,8980,9136,8722,8288,7760,7812,7619,7795,7797,8155,8109,9277,9096,9065,8502,9269,8814,9382,9020,8840,9102,8820,9015,8853,9091,9322,9389,9279,9114,8362,8367,9544,7916,9176,9100,9395,8643,7687,8831,9288,5984,9467,9541,9355,9551,7451,9712,9191,8040,9432,9338,9556,9380,9350,9561,9355,4907,8907,9345,8442,8487,8808,7840,9527,9564,9593,9608,9274,9029,9449,8962,8463,9320,8966,8472,9242,9100,9311,9057,9013,9165,9261,9046,9149,8377,6558,8597,8808,8543,9074,7733,8602,8271,7440,8715,9015,7843,9068,8968,8454,8639,9432,9539,9533,9258,9311,9178,9266,9308,9362,9362,9230,8746,8215,8511,9008,9385,9431,8531,7339,8953,8934,9004,8342,9199,9005,8798,9495,8730,9475,8573,8808,8707,9697,9642,9681,9591,8968,7604,9487,7581,7716,8433,8984,8217,8359,8973,2137,8867,9345,9215,9035,8479,9131,8819,8573,8148,8441,8189,9217,6047,9554,9352,9349,9335,8621,9656,9081,9047,9109,9139,8767,9132,8441,8303,8143,8204,8416,8374,8167,8839,8665,8983,8983,8976,9022,8949,8824,8996,8950,8978,9038,9060,8767,9323,8032,8094,8191,9465,9402,9014,8976,9255,8706,9160,8985,8978,8988,9203,6485,8215,9725,9336,8832,8568,8618,8459,9106,9344,9771,9534,9411,9573,9415,9299,8658,7612,8235,7338,9633,9611,9438,8641,9679,9316,9513,9414,9262,9611,9613,9142,8806,9342,9105,9267,9170,8750,9248,8941,9168,8839,9453,6664,9202,9393,9326,8192,9288,8809,9318,7858,8862,9500,9386,9241,9132,9121,8833,8688,9371,8368,6828,9348,8944,9525,9015,8607,8393,9247,9336,9480,9602,9515,9497,9218,8886,9347,8840,9213,9419,9316,9645,9251,7511,9176,8585,8377,8580,9545,9184,9322,9013,9023,9455,9393,9391,9354,9628,9371,9169,9289,9257,8764,8479,9395,9248,8447,8314,9309,8830,8700,8043,9066,8583,8073,9035,8607,8561,8839,9386,6436,8951,8844,8263,7873,8869,8940,9390,9128,9251,9146];
+const RUNS=[["2013-03-14",9],["2013-04-04",9],["2013-04-10",2],["2013-04-17",20],["2013-04-25",8],["2013-05-08",52],["2013-05-16",17],["2013-06-06",10],["2013-06-27",6],["2013-07-14",14],["2013-08-08",6],["2013-09-03",17],["2013-09-18",23],["2013-10-10",13],["2013-11-01",11],["2013-11-21",25],["2013-12-19",34],["2014-01-22",30],["2014-02-12",28],["2014-03-06",6],["2014-03-19",15],["2014-03-31",4],["2014-04-16",22],["2014-05-07",20],["2014-05-28",7],["2014-06-11",21],["2014-07-09",34],["2014-07-17",2],["2014-08-06",22],["2014-08-21",17],["2014-08-28",20],["2014-09-08",16],["2014-09-18",20],["2014-09-25",10],["2014-10-03",2],["2014-10-09",12],["2014-10-30",24],["2014-11-07",8],["2014-11-27",6],["2014-12-04",4],["2015-01-12",18],["2015-01-22",5],["2015-01-28",1],["2015-02-12",16],["2015-03-06",1],["2015-03-13",13],["2015-04-16",22],["2015-05-14",24],["2015-06-18",37],["2015-07-09",1],["2015-07-30",29],["2015-09-10",1],["2015-09-17",26],["2015-09-24",2],["2015-10-15",2],["2015-10-22",18],["2015-11-02",6],["2015-11-12",2],["2015-12-03",1],["2016-01-14",31],["2016-01-28",11],["2016-02-04",10],["2016-02-11",12],["2016-02-18",10],["2016-02-25",4],["2016-03-07",13],["2016-03-31",27],["2016-04-14",10],["2016-05-13",17],["2016-05-26",1],["2016-06-20",31],["2016-07-21",26],["2016-08-11",38],["2016-09-08",32],["2016-09-22",2],["2016-10-07",15],["2016-10-20",1],["2016-11-03",11],["2016-11-10",24],["2017-01-19",26],["2017-01-31",4],["2017-02-04",10],["2017-02-10",10],["2017-02-17",13],["2017-02-24",20],["2017-03-24",5],["2017-04-04",25],["2017-04-20",11],["2017-05-03",21],["2017-06-15",15],["2017-07-07",30],["2017-07-24",9],["2017-08-03",24],["2017-08-24",2],["2017-09-28",39],["2017-10-19",25],["2017-11-02",21],["2017-11-14",7],["2017-11-23",9],["2018-01-16",13],["2018-01-31",33],["2018-02-07",34],["2018-02-14",15],["2018-02-21",19],["2018-03-20",15],["2018-03-28",20],["2018-04-19",3],["2018-04-25",7],["2018-07-02",27],["2018-07-26",4],["2018-08-15",28],["2018-08-22",1],["2018-09-13",16],["2018-09-21",1],["2018-10-12",44],["2018-11-08",6],["2018-11-15",3],["2018-11-22",2],["2019-01-22",17],["2019-01-31",11],["2019-02-08",14],["2019-02-15",10],["2019-02-22",20],["2019-02-26",12],["2019-03-08",13],["2019-03-15",8],["2019-04-12",21],["2019-05-17",18],["2019-05-24",5],["2019-06-17",11],["2019-07-03",23],["2019-07-12",17],["2019-07-19",23],["2019-07-30",1],["2019-08-09",3],["2019-08-16",14],["2019-08-30",5],["2019-09-09",15],["2019-09-27",16],["2019-10-18",7],["2019-10-25",6],["2019-11-20",37],["2019-12-06",8],["2020-02-26",1],["2020-03-04",11],["2020-03-17",39],["2020-05-06",40],["2020-07-31",27],["2020-08-10",7],["2020-08-21",2],["2020-09-08",8],["2020-09-23",23],["2020-10-09",26],["2020-10-30",1],["2020-11-27",16],["2020-12-09",25],["2020-12-17",22],["2021-01-20",29],["2021-02-19",10],["2021-02-26",8],["2021-04-30",52],["2021-05-12",9],["2021-06-15",9],["2021-07-22",6],["2021-09-15",2],["2021-10-07",6],["2021-11-15",11],["2022-01-06",10],["2022-02-02",14],["2022-02-17",27],["2022-03-10",8],["2022-04-22",12],["2022-05-12",9],["2022-05-23",4],["2022-06-06",17],["2022-09-07",5],["2022-10-10",7],["2022-10-21",15],["2022-11-02",15],["2022-11-23",7],["2022-12-10",1],["2022-12-20",5],["2023-01-23",24],["2023-02-17",6],["2023-03-01",18],["2023-03-08",17],["2023-03-27",22],["2023-04-25",16],["2023-06-28",5],["2023-07-19",15],["2023-08-07",8],["2023-08-19",11],["2023-09-01",10],["2023-09-27",22],["2023-10-16",26],["2023-11-06",9],["2023-11-13",1],["2023-11-20",5],["2024-01-15",3],["2024-01-20",9],["2024-02-02",3],["2024-03-01",23],["2024-03-18",26],["2024-05-01",9],["2024-05-17",4],["2024-05-28",7],["2024-06-04",4],["2024-07-01",9],["2024-07-22",27],["2024-09-07",19],["2024-10-03",13],["2024-11-18",4],["2024-12-09",25],["2025-02-06",3],["2025-03-01",3],["2025-03-17",6],["2025-03-31",3],["2025-04-14",20],["2025-05-08",2],["2025-05-15",5],["2025-06-02",4],["2025-07-14",9],["2025-08-08",28],["2025-09-10",3],["2025-09-29",15],["2025-12-01",4],["2026-01-13",16],["2026-01-25",34],["2026-02-02",1],["2026-03-03",4],["2026-04-09",25],["2026-04-27",1],["2026-05-15",10],["2026-05-29",10],["2026-07-08",5],["2026-08-03",6],["2026-08-05",1],["2026-08-14",6],["2026-09-11",1],["2026-09-21",4]];
+
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const CUT='2022-10-27';
+// expand date runs into an era flag per question
+const ERA=[];RUNS.forEach(([d,c])=>{for(let i=0;i<c;i++)ERA.push(d<CUT?0:1);});
+const BALLOTS={sail:[112976,44153],ward:[82633,41726]};
+let T=75,cmp=70,tau=6,era='all',ballot='sail',sel=-1,lastPass=null;
+
+const tb=x=>Math.round(x*100); // percent -> basis points (integer)
+function eraList(){return BP.filter((_,i)=>era==='all'||(era==='before'?ERA[i]===0:ERA[i]===1));}
+function passCount(L,t){const b=tb(t);let c=0;for(const v of L)if(v>=b)c++;return c;}
+function median(L){const s=[...L].sort((a,b)=>a-b),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;}
+function pctStr(x,dp){return (+x.toFixed(dp)).toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp})+'%';}
+function exStr(t){return (+(t/(100-t)).toFixed(2)).toString();}
+function bgStr(x){let s=x.toFixed(2).replace(/0$/,'');return s+'%';}
+function tStr(t){return (Number.isInteger(t)?t:t.toFixed(1))+'%';}
+function yesNo(){if(ballot==='custom')return [Math.max(0,Math.floor(+$('cY').value||0)),Math.max(0,Math.floor(+$('cN').value||0))];return BALLOTS[ballot];}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function hatch(g,col){const p=document.createElement('canvas');p.width=p.height=6;const x=p.getContext('2d');x.strokeStyle=col;x.lineWidth=2;x.beginPath();x.moveTo(-1,7);x.lineTo(7,-1);x.stroke();return g.createPattern(p,'repeat');}
+
+function drawBallot(){
+  const [Y,N]=yesNo(),b=tb(T),tot=Y+N;
+  const pass=tot>0&&Y*10000>=b*tot;
+  const Nb=b>0?Math.floor(Y*(10000-b)/b)+1:Infinity;
+  const {g,w,h}=setup($('cBallot'));g.clearRect(0,0,w,h);
+  if(tot===0){$('ySh').textContent='—';$('tag').textContent='no votes';$('tag').className='tag';$('ballotNote').textContent='Enter some votes.';return;}
+  const scale=Math.max(tot,Y+Nb)*1.04,L=8,R=w-8,X=v=>L+(R-L)*v/scale,top=30,bh=40;
+  g.fillStyle=css('--moss');g.fillRect(X(0),top,X(Y)-X(0),bh);
+  g.fillStyle=hatch(g,css('--blood'));g.fillRect(X(Y),top,X(tot)-X(Y),bh);
+  g.strokeStyle=css('--blood');g.lineWidth=1.5;g.strokeRect(X(Y),top,X(tot)-X(Y),bh);
+  g.font='600 12px '+css('--sans');g.textBaseline='middle';
+  g.fillStyle=css('--paper');g.textAlign='left';if(X(Y)-X(0)>90)g.fillText('Yes '+fmt(Y),X(0)+6,top+bh/2);
+  g.fillStyle=css('--ink');g.textAlign='right';if(X(tot)-X(Y)>80){g.fillStyle=css('--paper-2');g.fillRect(X(tot)-6-g.measureText('No '+fmt(N)).width-4,top+bh/2-9,g.measureText('No '+fmt(N)).width+8,18);g.fillStyle=css('--ink');g.fillText('No '+fmt(N),X(tot)-6,top+bh/2);}
+  // threshold line on this ballot's total
+  const xt=X(tot*b/10000);g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();g.moveTo(xt,top-10);g.lineTo(xt,top+bh+6);g.stroke();
+  g.fillStyle=css('--ink');g.textBaseline='bottom';g.textAlign=xt>w-60?'right':xt<60?'left':'center';g.fillText('T = '+tStr(T),xt,top-11);
+  // blocking marker
+  const xb=X(Y+Nb);g.setLineDash([5,4]);g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(xb,top-4);g.lineTo(xb,top+bh+18);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--blood');g.textBaseline='top';const lab='blocked at N = '+fmt(Nb);g.textAlign=xb>w-90?'right':xb<90?'left':'center';g.fillText(lab,xb,top+bh+20);
+  const share=Y/tot*100;
+  $('ySh').textContent=pctStr(share,1)+' yes';
+  const tag=$('tag');tag.textContent=pass?'PASSES':'FAILS';tag.className='tag '+(pass?'pass':'fail');
+  if(lastPass!==null&&lastPass!==pass&&!reduce.matches){void tag.offsetWidth;tag.classList.add('flash');}
+  lastPass=pass;
+  $('ballotNote').textContent=pass
+    ?`At ${tStr(T)} it passes; it would be blocked at N = ${fmt(Nb)} No votes. It has ${fmt(N)}, so ${fmt(Nb-N)} more No vote${Nb-N===1?'':'s'} would block it.`
+    :`At ${tStr(T)} it fails; it could have at most ${fmt(Nb-1)} No votes to pass (blocked at N = ${fmt(Nb)}). It has ${fmt(N)}, ${fmt(N-Nb+1)} too many.`;
+}
+
+let bins=[],binsPass=[],hGeom=null;
+function drawHist(){
+  const L=eraList(),b=tb(T);
+  bins=new Array(100).fill(0);binsPass=new Array(100).fill(0);
+  for(const v of L){const k=Math.min(99,Math.floor(v/100));bins[k]++;if(v>=b)binsPass[k]++;}
+  const {g,w,h}=setup($('cHist'));g.clearRect(0,0,w,h);
+  const P={l:36,r:8,t:10,b:28},max=Math.max(...bins,1),yMax=Math.ceil(max/40)*40;
+  const X=v=>P.l+(w-P.l-P.r)*v/100,Y=v=>P.t+(h-P.t-P.b)*(1-v/yMax);
+  hGeom={P,w,h,X};
+  g.font='11px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=yMax*i/4,y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(P.l,y);g.lineTo(w-P.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(v),P.l-5,y);}
+  for(let p=0;p<=100;p+=(w<500?20:10)){g.textAlign=p===100?'right':'center';g.textBaseline='top';g.fillStyle=css('--ink-soft');g.fillText(p+'%',p===100?X(p)+2:X(p),h-P.b+6);}
+  const fp=hatch(g,css('--blood')),bw=X(1)-X(0);
+  for(let k=0;k<100;k++){
+    if(!bins[k])continue;const x=X(k)+.5,wd=Math.max(1,bw-1),ps=binsPass[k],fl=bins[k]-ps;
+    if(fl){g.fillStyle=fp;g.fillRect(x,Y(fl),wd,Y(0)-Y(fl));g.strokeStyle=css('--blood');g.lineWidth=1;g.strokeRect(x,Y(fl),wd,Y(0)-Y(fl));}
+    if(ps){g.fillStyle=css('--moss');g.fillRect(x,Y(bins[k]),wd,Y(fl)-Y(bins[k]));}
+    if(k>=70&&k<75){g.strokeStyle=css('--ink');g.setLineDash([3,2]);g.lineWidth=1.5;g.strokeRect(x-.5,Y(bins[k])-1,wd+1,Y(0)-Y(bins[k])+1);g.setLineDash([]);}
+    if(k===sel){g.strokeStyle=css('--focus');g.lineWidth=2.5;g.strokeRect(x-1.5,Y(bins[k])-2,wd+3,Y(0)-Y(bins[k])+2);}
+  }
+  const xt=X(T);g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();g.moveTo(xt,P.t);g.lineTo(xt,h-P.b);g.stroke();
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText('T = '+tStr(T),xt-5,P.t+2);
+  if(cmp!==T){const xc=X(cmp);g.strokeStyle=css('--ochre');g.setLineDash([6,4]);g.lineWidth=2;g.beginPath();g.moveTo(xc,P.t+18);g.lineTo(xc,h-P.b);g.stroke();g.setLineDash([]);}
+}
+function showBin(){
+  if(sel<0){$('tip').textContent='';return;}
+  const k=sel;$('tip').textContent=`${k}% to ${k+1}%${k===99?' (including 100%)':''}: ${fmt(bins[k])} question${bins[k]===1?'':'s'}, ${fmt(binsPass[k])} pass and ${fmt(bins[k]-binsPass[k])} fail at ${tStr(T)}.`;
+}
+
+function readouts(){
+  const L=eraList(),n=L.length,pass=passCount(L,T);
+  const lo=Math.min(tb(T),tb(cmp)),hi=Math.max(tb(T),tb(cmp));let diff=0;for(const v of L)if(v>=lo&&v<hi)diff++;
+  $('nEra').textContent=fmt(n);
+  $('rPass').textContent=fmt(pass);$('rShare').textContent=pctStr(pass/n*100,1);
+  $('rDiff').textContent=fmt(diff);$('rDiffL').textContent=`results differ from ${tStr(cmp)}`;
+  $('rMed').textContent=pctStr(median(L)/100,1);
+  $('rX').textContent=exStr(T);
+  $('rBlock').textContent=bgStr(tau*(100-T)/100);
+  const eraName={all:'',before:' before 27 Oct 2022',after:' from 27 Oct 2022'}[era];
+  $('histSum').textContent=`${fmt(pass)} of ${fmt(n)} questions${eraName} pass at ${tStr(T)}. ${cmp===T?`Move T away from the comparison line (${tStr(cmp)}) to count the results that flip. `:`${fmt(diff)} questions get a different result at ${tStr(cmp)}. `}With ${tStr(tau)} turnout, a group of ${$('rBlock').textContent} of eligible players voting No can block any question.`;
+  const rows=[50,60,66.7,70,75,80,90];if(!rows.includes(T))rows.push(T);rows.sort((a,b)=>a-b);
+  $('tbody').innerHTML=rows.map(t=>{const c=passCount(L,t),ex=t/(100-t);return `<tr class="${t===T?'here':''}"><td>${tStr(t)}</td><td>${fmt(c)}</td><td>${pctStr(c/n*100,1)}</td><td>${exStr(t)}</td><td>${bgStr(tau*(100-t)/100)}</td></tr>`;}).join('');
+}
+function mark(){document.querySelectorAll('[data-t]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.t===T?'true':'false'));document.querySelectorAll('[data-era]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.era===era?'true':'false'));}
+function update(){$('oT').textContent=tStr(T);$('oTau').textContent=tStr(tau);mark();drawBallot();drawHist();showBin();readouts();}
+
+$('T').addEventListener('input',e=>{T=+e.target.value;update();});
+document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{T=+b.dataset.t;$('T').value=T;update();}));
+$('cmp').addEventListener('change',e=>{let v=+e.target.value;if(!(v>=50&&v<=90))v=70;cmp=Math.round(v*10)/10;e.target.value=cmp;update();});
+$('tau').addEventListener('input',e=>{tau=+e.target.value;update();});
+document.querySelectorAll('[data-era]').forEach(b=>b.addEventListener('click',()=>{era=b.dataset.era;update();}));
+$('ballot').addEventListener('change',e=>{ballot=e.target.value;$('customRow').hidden=ballot!=='custom';lastPass=null;update();});
+['cY','cN'].forEach(id=>$(id).addEventListener('input',()=>{update();}));
+const hc=$('cHist');
+hc.addEventListener('click',e=>{if(!hGeom)return;const r=hc.getBoundingClientRect(),v=(e.clientX-r.left-hGeom.P.l)/(r.width-hGeom.P.l-hGeom.P.r)*100;if(v<0||v>=100)return;sel=Math.floor(v);drawHist();showBin();});
+hc.addEventListener('keydown',e=>{if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;e.preventDefault();if(sel<0)sel=Math.floor(T);else sel=Math.max(0,Math.min(99,sel+(e.key==='ArrowRight'?1:-1)));drawHist();showBin();});
+window.addEventListener('resize',()=>{drawBallot();drawHist();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawBallot();drawHist();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawBallot();drawHist();});
+update();
+})();
+</script>
+</body>
+</html>
