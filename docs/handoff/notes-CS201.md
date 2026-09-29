@@ -6,3 +6,5 @@ w04-06: Mike Acton employer omitted; lab06 SoA slowdown at 100k probably cache-s
 w03 lecture button names 'Next file'/'Allocate' vs spec 'Next step'/'Allocate request': align lecture.
 w10 spec test B=40 not on snap list (example adds Exact B field): fix spec.
 w05 'The visual': archetype counter climbs by 224 per toggle; spec rule makes repeat toggles 112 bytes (entity is last row): fix lecture.
+w14 spec first screen 'expected 23.0' vs formula 23.06 (page 23.1; seeded grid 23). w12 spec 'last 8 boxes' hides v1-v4; example shows v1-v4, gap, last 4: update spec.
+From assessments: w13 section 2 '100/3.2 ~ 31 frames' should be 32 (round up; lab13 checker expects 32).
