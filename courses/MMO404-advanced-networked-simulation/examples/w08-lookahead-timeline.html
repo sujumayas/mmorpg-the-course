@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lookahead between two servers, MMO404 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.08rem;margin:0 0 6px}
+.top{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media (min-width:901px){.top{grid-template-columns:minmax(0,2.1fr) minmax(0,1fr)}}
+.bottom{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px;margin-top:14px}
+@media (max-width:700px){.bottom{grid-template-columns:minmax(0,1fr)}}
+.capbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:0;flex:1 1 260px}
+.cta{font:700 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:2px solid var(--ochre);background:var(--ochre);color:var(--paper);cursor:pointer}
+.cta:disabled{opacity:.45;cursor:not-allowed}
+.tl-wrap{overflow-x:auto;background:var(--paper-2);border-radius:10px;padding:6px 0}
+.tl-wrap:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+#cTl{display:block;height:190px}
+.sub{font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:.8rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.hatch{background:repeating-linear-gradient(45deg,var(--blood) 0 2px,transparent 2px 5px);outline:1px solid var(--blood)}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 10px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+#cChart{display:block;width:100%;height:240px}
+.ctl{margin-top:10px}
+label{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+input[type=range]:disabled{opacity:.45}
+.num input,.num select{width:100%;font:inherit;font-weight:400;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+.num label{flex-direction:column;gap:2px;font-size:.84rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.check{display:flex;gap:8px;align-items:flex-start;justify-content:flex-start;font-weight:400;font-size:.9rem;margin-top:6px}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--steel);flex:none}
+.check.strong{font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px;min-width:0}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.76rem;color:var(--ink-soft)}
+.finish{font-size:.84rem;font-variant-numeric:tabular-nums;margin:10px 0 0}
+.lockmsg{font-size:.86rem;margin:6px 0 0;color:var(--blood);font-weight:600}
+.note{font-size:.8rem;color:var(--ink-soft);margin:10px 0 0}
+.note b{color:var(--ochre)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.84rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO404 Advanced Networked Simulation · Week 8 · Worked example</p>
+  <h1>How far can two servers drift apart?</h1>
+  <p class="lede">Server A and server B share a border. Tick k on one may start once its own tick k − 1 is done and the neighbour's tick k − L has arrived. L is the lookahead.</p>
+</header>
+
+<div class="top">
+  <section class="panel" aria-labelledby="hTl">
+    <div class="capbar">
+      <p class="caption" id="caption"></p>
+      <button class="cta" id="cta">Give them 2 ticks of lookahead</button>
+    </div>
+    <h2 id="hTl">Two servers, ticks 1 to 40</h2>
+    <div class="tl-wrap" id="tlWrap" tabindex="0" role="region" aria-label="Timeline of ticks, scroll sideways for later ticks">
+      <canvas id="cTl" role="img" aria-label="Tick boxes for server A and server B with stalls and border messages"></canvas>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--steel)"></i>tick compute (A)</span>
+      <span><i style="background:var(--ochre)"></i>tick compute (B)</span>
+      <span><i class="hatch"></i>stall, waiting on neighbour</span>
+      <span>solid arrow: the message that binds; faint: arrived in time</span>
+    </div>
+    <p class="sub">Scroll sideways (or focus the timeline and use arrow keys) to see up to tick 40. Real time in ms runs left to right.</p>
+    <p class="finish" id="finish"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="hCtl">
+    <h2 id="hCtl">Controls</h2>
+    <div class="ctl"><label for="L">Lookahead L <output id="oL">1 tick</output></label><input id="L" type="range" min="1" max="8" step="1" value="1"></div>
+    <p class="lockmsg" id="lockMsg" hidden></p>
+    <div class="ctl"><label for="delay">Message delay δ <output id="oD">20 ms</output></label><input id="delay" type="range" min="0" max="100" step="5" value="20"></div>
+    <div class="two num" style="margin-top:10px">
+      <label>Tick pattern<select id="pattern"><option value="phase">Out of phase</option><option value="random">Random</option><option value="custom">Custom</option></select></label>
+      <label>Seed<input type="number" id="seed" min="0" max="999999" value="404"></label>
+    </div>
+    <div class="two num" id="randBox" hidden style="margin-top:8px">
+      <label>Min ms<input type="number" id="lo" min="1" max="500" value="30"></label>
+      <label>Max ms<input type="number" id="hi" min="1" max="500" value="70"></label>
+    </div>
+    <div class="num" id="customBox" hidden style="margin-top:8px">
+      <label>Server A ticks, ms<input type="text" id="cA" value="30, 70" inputmode="decimal"></label>
+      <label style="margin-top:6px">Server B ticks, ms<input type="text" id="cB" value="70, 30" inputmode="decimal"></label>
+      <p class="note" style="margin-top:4px">Comma-separated, repeated to fill 100 ticks.</p>
+    </div>
+    <p class="note" id="patNote"></p>
+    <div class="nums" aria-live="polite">
+      <div class="stat" style="--c:var(--blood)"><b id="nEff">-</b><span>effective ms per tick (measured)</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="nEst">-</b><span>estimate max(X̄, (X̄ + δ) / L)</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="nHz">-</b><span>equivalent tick rate, Hz</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="nMean">-</b><span>mean tick X̄, ms</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="nSA">-</b><span>total stall, A, ms</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="nSB">-</b><span>total stall, B, ms</span></div>
+    </div>
+  </section>
+</div>
+
+<div class="bottom">
+  <section class="panel" aria-labelledby="hChart">
+    <figure>
+      <figcaption id="hChart">Effective tick length against lookahead<small>Measured over the whole run. Dashed: the mean tick X̄, the best possible.</small></figcaption>
+      <canvas id="cChart" role="img" aria-label="Milliseconds per tick versus lookahead for current delay and zero delay"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood);height:3px"></i>current delay</span>
+        <span><i style="background:var(--steel);height:3px"></i>delay 0</span>
+        <span><i style="height:0;border-top:2px dashed var(--ink-soft)"></i>mean tick</span>
+      </div>
+    </figure>
+  </section>
+
+  <section class="panel" aria-labelledby="hAb">
+    <h2 id="hAb">Abilities that cross the border</h2>
+    <p class="note" style="margin-top:0">Lookahead in ticks at 20 Hz (50 ms per tick), from the lecture's table.</p>
+    <div id="abList">
+      <label class="check"><input type="checkbox" data-l="1" data-n="Melee hit, next tick" checked> Melee hit, next tick (1)</label>
+      <label class="check"><input type="checkbox" data-l="2" data-n="Arrow, 5 m minimum range at 50 m/s"> Arrow, 5 m minimum range at 50 m/s (2)</label>
+      <label class="check"><input type="checkbox" data-l="20" data-n="Handoff band walk"> Handoff band walk (20)</label>
+      <label class="check"><input type="checkbox" data-l="30" data-n="1.5 s cast"> 1.5 s cast (30)</label>
+      <label class="check"><input type="checkbox" data-l="1" data-n="Blink strike, instant"> Blink strike, instant (1)</label>
+    </div>
+    <p class="finish" id="abOut"></p>
+    <label class="check strong"><input type="checkbox" id="lock"> Lock L to the abilities</label>
+    <p class="note">The slider tops out at 8, where the random run stops improving; a border allowing more than 8 ticks is set to 8.</p>
+  </section>
+</div>
+
+<footer>Model from MMO404 week 8, section 2. F_A(k) = max(F_A(k−1), F_B(k−L) + δ) + X_A(k), and the same for B, with F(k) = 0 for k ≤ 0 and the second term dropped when k − L &lt; 1. Effective tick = max(F_A(N), F_B(N)) / N, with N = 100 for fixed patterns and 10,000 for random. Random ticks use the lecture's mulberry32 generator, A's 10,000 draws first, then B's. The 40/60 pattern and the 30 to 70 ms range are invented teaching values.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+const S={L:1,delay:20,pattern:'phase',seed:404,lo:30,hi:70,lock:false};
+let XA=[],XB=[],cacheKey='';
+
+function parseList(s){const v=s.split(/[,\s]+/).map(Number).filter(x=>isFinite(x)&&x>0);return v.length?v:[50];}
+function ticks(){
+  const key=[S.pattern,S.seed,S.lo,S.hi,$('cA').value,$('cB').value].join('|');
+  if(key===cacheKey)return;cacheKey=key;
+  if(S.pattern==='phase'){XA=[];XB=[];for(let i=0;i<100;i++){XA.push(i%2?60:40);XB.push(i%2?40:60);}}
+  else if(S.pattern==='random'){const r=mulberry32(S.seed),N=10000,lo=Math.min(S.lo,S.hi),hi=Math.max(S.lo,S.hi);
+    XA=[];XB=[];for(let i=0;i<N;i++)XA.push(lo+(hi-lo)*r());for(let i=0;i<N;i++)XB.push(lo+(hi-lo)*r());}
+  else{const a=parseList($('cA').value),b=parseList($('cB').value);XA=[];XB=[];for(let i=0;i<100;i++){XA.push(a[i%a.length]);XB.push(b[i%b.length]);}}
+}
+function sim(L,d){
+  const N=XA.length,fa=new Float64Array(N+1),fb=new Float64Array(N+1);
+  const sa=new Float64Array(N+1),sb=new Float64Array(N+1);
+  let stA=0,stB=0;
+  for(let k=1;k<=N;k++){
+    const need=k-L;
+    const wa=need>=1?fb[need]+d:0, wb=need>=1?fa[need]+d:0;
+    sa[k]=Math.max(fa[k-1],wa);sb[k]=Math.max(fb[k-1],wb);
+    stA+=sa[k]-fa[k-1];stB+=sb[k]-fb[k-1];
+    fa[k]=sa[k]+XA[k-1];fb[k]=sb[k]+XB[k-1];
+  }
+  return {fa,fb,sa,sb,stA,stB,eff:Math.max(fa[N],fb[N])/N,N};
+}
+function meanTick(){let s=0;for(let i=0;i<XA.length;i++)s+=XA[i]+XB[i];return s/(2*XA.length);}
+
+function setup(c,wCss){const dpr=window.devicePixelRatio||1;
+  if(wCss){c.style.width=wCss+'px';}
+  const r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+
+function drawTimeline(R){
+  const wrap=$('tlWrap'),vis=wrap.clientWidth,K=Math.min(40,R.N),K12=Math.min(12,R.N);
+  const padL=26,padR=10;
+  const t12=Math.max(R.fa[K12],R.fb[K12]),t40=Math.max(R.fa[K],R.fb[K]);
+  const scale=Math.max((vis-padL-padR)/t12,0.75);
+  const W=Math.ceil(padL+padR+t40*scale);
+  const c=setup($('cTl'),W),g=c.g,h=c.h;g.clearRect(0,0,c.w,h);
+  const X=t=>padL+t*scale;
+  const rowA={y:28,h:42},rowB={y:118,h:42};
+  // time grid every 50 ms
+  g.font='10px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  const step=t40>2000?200:(t40>800?100:50);
+  for(let t=0;t<=t40;t+=step){const x=X(t);g.beginPath();g.moveTo(x,16);g.lineTo(x,h-14);g.stroke();g.textAlign='center';g.textBaseline='bottom';g.fillText(t,x,h-1);}
+  g.font='700 13px '+css('--sans');g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='middle';
+  g.fillText('A',6,rowA.y+rowA.h/2);g.fillText('B',6,rowB.y+rowB.h/2);
+  const hatch=(x0,x1,row)=>{g.save();g.beginPath();g.rect(x0,row.y,x1-x0,row.h);g.clip();g.strokeStyle=css('--blood');g.lineWidth=1.5;
+    for(let x=x0-row.h;x<x1;x+=5){g.beginPath();g.moveTo(x,row.y+row.h);g.lineTo(x+row.h,row.y);g.stroke();}g.restore();
+    g.strokeStyle=css('--blood');g.lineWidth=1;g.strokeRect(x0,row.y,x1-x0,row.h);};
+  const rows=[[R.fa,R.sa,rowA,css('--steel'),R.fb,rowB],[R.fb,R.sb,rowB,css('--ochre'),R.fa,rowA]];
+  // arrows first
+  rows.forEach(([f,s,row,col,fo,rowO])=>{
+    for(let k=1;k<=K;k++){const need=k-S.L;if(need<1)continue;
+      const from=fo[need],arr=from+S.delay,binding=arr>=f[k-1]-1e-9&&arr>0;
+      const x0=X(from),x1=X(arr);
+      const y0=rowO===rowB?rowO.y:rowO.y+rowO.h, y1=row===rowA?row.y+row.h:row.y;
+      g.strokeStyle=binding?css('--ink'):css('--ink-soft');g.globalAlpha=binding?.9:.25;g.lineWidth=binding?1.6:1;
+      g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();
+      const ang=Math.atan2(y1-y0,x1-x0);g.fillStyle=g.strokeStyle;g.beginPath();g.moveTo(x1,y1);
+      g.lineTo(x1-7*Math.cos(ang-.4),y1-7*Math.sin(ang-.4));g.lineTo(x1-7*Math.cos(ang+.4),y1-7*Math.sin(ang+.4));g.closePath();g.fill();
+      g.globalAlpha=1;}
+  });
+  rows.forEach(([f,s,row,col])=>{
+    for(let k=1;k<=K;k++){
+      const stall=s[k]-f[k-1];
+      if(stall>1e-9){hatch(X(f[k-1]),X(s[k]),row);
+        if(X(s[k])-X(f[k-1])>18){g.fillStyle=css('--blood');g.font='700 10px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+          g.fillText(fmt(stall,stall%1?1:0),(X(f[k-1])+X(s[k]))/2,row===rowA?row.y-2:row.y+row.h+11);}}
+      g.fillStyle=col;const x0=X(s[k]),x1=X(f[k]);g.fillRect(x0+.5,row.y,Math.max(1,x1-x0-1),row.h);
+      g.fillStyle=css('--paper');g.font='700 11px '+css('--sans');g.textAlign='center';g.textBaseline='middle';
+      if(x1-x0>14)g.fillText(k,(x0+x1)/2,row.y+row.h/2);
+    }
+  });
+}
+
+function drawChart(){
+  const c=setup($('cChart')),g=c.g,w=c.w,h=c.h,pad={l:44,r:14,t:12,b:30};
+  g.clearRect(0,0,w,h);
+  const cur=[],zero=[];for(let L=1;L<=8;L++){cur.push(sim(L,S.delay).eff);zero.push(sim(L,0).eff);}
+  const mean=meanTick();
+  let yMin=40,yMax=120;const hi=Math.max(...cur,...zero,mean),lo=Math.min(...cur,...zero,mean);
+  if(hi>yMax)yMax=Math.ceil(hi/20)*20;if(lo<yMin)yMin=Math.floor(lo/20)*20;
+  const X=L=>pad.l+(w-pad.l-pad.r)*(L-1)/7,Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-yMin)/(yMax-yMin));
+  g.font='11px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  const ys=(yMax-yMin)/4;
+  for(let k=0;k<=4;k++){const v=yMin+ys*k,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(v),pad.l-6,y);}
+  for(let L=1;L<=8;L++){g.textAlign='center';g.textBaseline='top';g.fillText(L,X(L),h-pad.b+5);}
+  g.textAlign='right';g.fillText('lookahead L',w-pad.r,h-12);
+  g.strokeStyle=css('--ink-soft');g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,Y(mean));g.lineTo(w-pad.r,Y(mean));g.stroke();g.setLineDash([]);
+  const line=(arr,col)=>{g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();arr.forEach((v,i)=>{i?g.lineTo(X(i+1),Y(v)):g.moveTo(X(1),Y(v));});g.stroke();
+    g.fillStyle=col;arr.forEach((v,i)=>{g.beginPath();g.arc(X(i+1),Y(v),2.5,0,7);g.fill();});};
+  line(zero,css('--steel'));line(cur,css('--blood'));
+  const v=cur[S.L-1],px=X(S.L),py=Y(v);
+  g.fillStyle=css('--blood');g.beginPath();g.arc(px,py,6.5,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.fillStyle=css('--ink');g.font='700 12px '+css('--sans');g.textAlign=S.L>6?'right':'left';g.textBaseline='bottom';
+  g.fillText(fmt(v,1)+' ms',px+(S.L>6?-9:9),py-6);
+}
+
+function abilities(){
+  const on=[...document.querySelectorAll('#abList input')].filter(x=>x.checked);
+  if(!on.length)return null;
+  let m=on[0];on.forEach(x=>{if(+x.dataset.l<+m.dataset.l)m=x;});
+  return {L:+m.dataset.l,name:m.dataset.n,names:on.filter(x=>+x.dataset.l===+m.dataset.l).map(x=>x.dataset.n)};
+}
+
+function render(){
+  ticks();
+  const ab=abilities();
+  $('abOut').innerHTML=ab?`Border lookahead: <b>${ab.L} tick${ab.L>1?'s':''}</b> (${ab.L*50} ms), set by ${ab.names.join(' and ')}.`:'No ability crosses the border: lookahead is limited only by the slider.';
+  if(S.lock&&ab){S.L=Math.min(8,ab.L);$('L').value=S.L;}
+  $('L').disabled=S.lock&&!!ab;
+  $('lockMsg').hidden=!(S.lock&&ab);
+  if(S.lock&&ab)$('lockMsg').textContent='Lookahead set by: '+ab.names.join(', ')+(ab.L>8?' (capped at 8 here)':'');
+  $('cta').disabled=S.lock&&!!ab&&ab.L<2;
+  const R=sim(S.L,S.delay),mean=meanTick();
+  $('oL').textContent=S.L+' tick'+(S.L>1?'s':'');$('oD').textContent=S.delay+' ms';
+  $('nEff').textContent=fmt(R.eff,1);
+  $('nEst').textContent=fmt(Math.max(mean,(mean+S.delay)/S.L),1);
+  $('nHz').textContent=fmt(1000/R.eff,1);
+  $('nMean').textContent=fmt(mean,1);
+  $('nSA').textContent=fmt(R.stA);$('nSB').textContent=fmt(R.stB);
+  const list=f=>[1,2,3,4].map(k=>fmt(f[k],f[k]%1?1:0)).join(', ');
+  $('finish').innerHTML=`Finish times of ticks 1 to 4. A: <b>${list(R.fa)}</b> · B: <b>${list(R.fb)}</b> ms. Run length N = ${fmt(R.N)} ticks.`;
+  const slow=R.eff>mean*1.02;
+  let cap=S.pattern==='phase'?'Neither server is slow on average. ':'';
+  cap+=slow?`Both run at ${fmt(Math.round(R.eff))} ms per tick instead of ${fmt(Math.round(mean))}.`:`The pair runs at ${fmt(R.eff,1)} ms per tick, within 2% of the ${fmt(mean,1)} ms mean. The slack absorbs the waiting.`;
+  $('caption').textContent=cap;
+  $('patNote').textContent=S.pattern==='phase'?'A: 40, 60, 40, 60 ms. B: 60, 40, 60, 40 ms. 100 ticks.':S.pattern==='random'?'Uniform ticks from mulberry32(seed), 10,000 per server.':'Your own tick lists, 100 ticks.';
+  $('randBox').hidden=S.pattern!=='random';$('customBox').hidden=S.pattern!=='custom';
+  drawTimeline(R);drawChart();
+}
+$('L').addEventListener('input',e=>{S.L=+e.target.value;render();});
+$('delay').addEventListener('input',e=>{S.delay=+e.target.value;render();});
+$('pattern').addEventListener('change',e=>{S.pattern=e.target.value;render();});
+$('seed').addEventListener('change',e=>{S.seed=Math.max(0,Math.round(+e.target.value||0));render();});
+['lo','hi'].forEach(k=>$(k).addEventListener('change',e=>{const v=+e.target.value;if(v>0){S[k]=v;render();}}));
+['cA','cB'].forEach(k=>$(k).addEventListener('change',render));
+$('lock').addEventListener('change',e=>{S.lock=e.target.checked;render();});
+document.querySelectorAll('#abList input').forEach(x=>x.addEventListener('change',render));
+$('cta').addEventListener('click',()=>{if(!$('L').disabled){S.L=2;$('L').value=2;render();}});
+$('tlWrap').addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.currentTarget.scrollLeft+=80;e.preventDefault();}if(e.key==='ArrowLeft'){e.currentTarget.scrollLeft-=80;e.preventDefault();}});
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+render();
+})();
+</script>
+</body>
+</html>

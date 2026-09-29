@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seam hysteresis · MMO404 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+--srvA:#2f4f6a;--srvB:#d99a2b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--srvA:#5d8bb3;--srvB:#f0cf7e}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--srvA:#5d8bb3;--srvB:#f0cf7e}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:14px}
+@media (max-width:820px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cMap{aspect-ratio:4/5.5;height:auto;max-width:420px;margin:0 auto}
+#cCost{height:460px}
+@media (max-width:820px){#cCost{height:270px}}
+.maphead{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.86rem;color:var(--ink-soft);margin:0 0 8px;font-variant-numeric:tabular-nums}
+.maphead b{color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 10px;margin:16px 0 4px}
+@media (max-width:820px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 20px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:minmax(0,1fr)}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 8px}
+.chip,.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn.ghost{border-color:var(--ink-soft)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dot{width:10px;height:10px;border-radius:50%}
+.busy{font-size:.82rem;color:var(--ochre);font-weight:600;min-height:1.2em;margin:4px 0 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO404 Advanced Networked Simulation · Week 2 · Worked example</p>
+  <h1>How wide should the seam be?</h1>
+  <p class="lede">With a sharp border, players standing near the line change server many times a second. A band a few metres wide stops most of that. Past the distance players wander, a wider band only adds ghosts, so the seam's cost curve is a U with a flat bottom.</p>
+</header>
+
+<section class="panel" aria-label="Seam model">
+  <div class="views">
+    <figure>
+      <figcaption>The seam from above<small>400 m × 500 m. Dots are coloured by the server that owns them. A ring marks a handoff.</small></figcaption>
+      <p class="maphead" id="mapHead"></p>
+      <canvas id="cMap" role="img" aria-label="Map of the seam between server A and server B with player dots"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--srvA)"></i>owned by A</span>
+        <span><i class="dot" style="background:var(--srvB)"></i>owned by B</span>
+        <span><i style="background:var(--ink-soft);height:10px;opacity:.35"></i>hysteresis band</span>
+      </div>
+      <div class="row" role="group" aria-label="Simulation">
+        <button class="btn" id="play" aria-pressed="true">Pause</button>
+        <button class="btn" id="step">Step 1 s</button>
+        <button class="chip" data-speed="1" aria-pressed="true">1×</button>
+        <button class="chip" data-speed="5" aria-pressed="false">5×</button>
+        <button class="chip" data-speed="20" aria-pressed="false">20×</button>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Seam CPU cost against band width<small>H(w) from headless runs of the same simulation, 8 seeds × 120 s at each width, interpolated between points</small></figcaption>
+      <canvas id="cCost" role="img" aria-label="Seam cost versus band width: handoff cost falls, ghost cost rises, their sum has a minimum"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>handoff CPU H(w)·E<sub>h</sub></span>
+        <span><i style="background:var(--steel)"></i>ghost CPU G(w)·T·c<sub>g</sub></span>
+        <span><i style="background:var(--ink);height:4px"></i>seam cost S(w)</span>
+      </div>
+      <p class="busy" id="busy" aria-live="polite"></p>
+    </figure>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rW">—</b><span>band width w</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rH">—</b><span>handoffs per second H</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rG">—</b><span>ghosts G(w)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rS">—</b><span>seam cost S</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rHC">—</b><span>handoff CPU</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rGC">—</b><span>ghost CPU</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rHr">—</b><span>handoffs per hour</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rMin">—</b><span>cheapest band</span></div>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="controls">
+    <div>
+      <label for="w">Band width w <output id="oW">0 m</output></label>
+      <input id="w" type="range" min="0" max="60" step="1" value="0">
+      <div class="row" role="group" aria-label="Band presets">
+        <button class="btn" data-w="0">0</button><button class="btn" data-w="5">5</button><button class="btn" data-w="10">10</button><button class="btn" data-w="15">15</button><button class="btn" data-w="40">40</button>
+      </div>
+    </div>
+    <div>
+      <label for="sig">Dweller spread σ <output id="oSig">4 m</output></label>
+      <input id="sig" type="range" min="1" max="12" step="1" value="4">
+      <label for="R">AOI radius R <output id="oR">100 m</output></label>
+      <input id="R" type="range" min="50" max="150" step="10" value="100">
+    </div>
+    <div>
+      <label for="eh"><span>Handoff cost E<sub>h</sub></span> <output id="oEh">1 ms</output></label>
+      <input id="eh" type="range" min="0.25" max="4" step="0.25" value="1">
+      <div class="row"><button class="btn ghost" id="reset">Reset</button></div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model: G(w) = 2ρL(R + w) with ρ = 0.002 per m² and L = 500 m. S(w) = H(w)·E<sub>h</sub> + G(w)·10·0.003 ms per second. H(w) comes from the lecture's simulation: 100 travellers at ±5 m/s, 300 dwellers pulled back to a fixed spot with spread σ, dt = 0.1 s, seeded PRNG (mulberry32). The cost curve averages 8 seeds because a single run at w = 0 depends on how many dwellers happen to stand near the line (the Python reference ranges from 6.2 to 10.9 handoffs per second across seeds 1 to 8). The live map runs one seed. The constants are teaching values, so expect H to differ from the lecture table by a few percent.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f2=v=>v.toFixed(2);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const BAND=200,L=500,RHO=400/(400*500),T=10,CG=0.003,DT=0.1,NT=100,ND=300;
+const WS=[0,1,2,3,5,7,10,15,20,30,40,60];
+const DEF={w:0,sig:4,R:100,eh:1};
+let S=Object.assign({},DEF);
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function makeSim(seed,sig){
+  const r=mulberry32(seed);let spare=null;
+  const gauss=()=>{if(spare!==null){const s=spare;spare=null;return s;}let u=0;while(u===0)u=r();const v=r(),m=Math.sqrt(-2*Math.log(u));spare=m*Math.sin(2*Math.PI*v);return m*Math.cos(2*Math.PI*v);};
+  const x=new Float64Array(NT+ND),v=new Float64Array(NT),a=new Float64Array(ND),onB=new Uint8Array(NT+ND);
+  for(let i=0;i<NT;i++)x[i]=-BAND+2*BAND*r();
+  for(let i=0;i<NT;i++)v[i]=r()<0.5?-5:5;
+  for(let i=0;i<ND;i++){a[i]=-BAND+2*BAND*r();x[NT+i]=a[i];}
+  for(let i=0;i<NT+ND;i++)onB[i]=x[i]>0?1:0;
+  const sq=Math.sqrt(DT);
+  return {x,onB,
+    step(w,flips){let c=0;
+      for(let i=0;i<NT;i++){if(r()<0.05*DT)v[i]=-v[i];x[i]+=v[i]*DT;if(Math.abs(x[i])>BAND)v[i]=-v[i];}
+      for(let i=0;i<ND;i++){const j=NT+i;x[j]+=0.5*(a[i]-x[j])*DT+sig*sq*gauss();}
+      const hw=w/2;
+      for(let i=0;i<NT+ND;i++){if(!onB[i]&&x[i]>hw){onB[i]=1;c++;flips&&flips.push(i);}else if(onB[i]&&x[i]<-hw){onB[i]=0;c++;flips&&flips.push(i);}}
+      return c;}};
+}
+
+// headless sweep
+let sweep=null,sweepSig=null,sweepTimer=null;
+const SWEEP_S=120,SEEDS=[1,2,3,4,5,6,7,8];
+function runSweep(){
+  sweep=null;$('busy').textContent='Computing the sweep for σ = '+S.sig+' m…';drawCost();
+  const sig=S.sig,res=[];let k=0;
+  clearTimeout(sweepTimer);
+  const next=()=>{
+    if(sig!==S.sig)return;
+    const w=WS[k];let c=0;
+    for(const sd of SEEDS){const sim=makeSim(sd,sig);for(let t=0;t<SWEEP_S/DT;t++)c+=sim.step(w);}
+    res.push(c/(SWEEP_S*SEEDS.length));k++;
+    if(k<WS.length)sweepTimer=setTimeout(next,0);
+    else{sweep=res;sweepSig=sig;$('busy').textContent='';update();}
+  };
+  sweepTimer=setTimeout(next,30);
+}
+function H(w){if(!sweep)return NaN;for(let i=1;i<WS.length;i++)if(w<=WS[i]){const u=(w-WS[i-1])/(WS[i]-WS[i-1]);return sweep[i-1]+(sweep[i]-sweep[i-1])*u;}return sweep[sweep.length-1];}
+const G=w=>2*RHO*L*(S.R+w);
+const ghostCPU=w=>G(w)*T*CG;
+const cost=w=>H(w)*S.eh+ghostCPU(w);
+function minimum(){let best=0;for(let w=1;w<=60;w++)if(cost(w)<cost(best)-1e-12)best=w;return best;}
+
+// live sim
+let sim,yPos,rings,tickLog,totalH,simTime,acc=0,speed=1,playing=!reduce,last=null;
+function resetLive(){
+  sim=makeSim(4,S.sig);
+  const ry=mulberry32(99);yPos=new Float64Array(NT+ND);for(let i=0;i<NT+ND;i++)yPos[i]=ry();
+  rings=new Map();tickLog=[];totalH=0;simTime=0;
+}
+function clearCounters(){tickLog=[];totalH=0;simTime=0;}
+function simTick(now){
+  const flips=[];const c=sim.step(S.w,flips);
+  totalH+=c;simTime+=DT;tickLog.push(c);if(tickLog.length>100)tickLog.shift();
+  if(!reduce)for(const i of flips)rings.set(i,now);
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function rgba(hex,a){const m=hex.replace('#','');const v=parseInt(m,16);return `rgba(${v>>16&255},${v>>8&255},${v&255},${a})`;}
+
+let mapC=null;
+function drawMap(now){
+  if(!mapC)mapC=setupCanvas($('cMap'));
+  const g=mapC.g,W=mapC.w,Hh=mapC.h;g.clearRect(0,0,W,Hh);
+  const top=18,bot=38,side=2,h=Hh-top-bot,w=W-2*side;
+  const X=x=>side+(x+BAND)/(2*BAND)*w,Y=y=>top+y*h;
+  const A=css('--srvA'),B=css('--srvB');
+  g.fillStyle=css('--paper');g.fillRect(side,top,w,h);
+  // ghost strips
+  const hw=S.w/2;
+  const strip=(x0,x1,col,label,yl)=>{const a=X(Math.max(-BAND,x0)),b=X(Math.min(BAND,x1));g.fillStyle=rgba(col,0.13);g.fillRect(a,top,b-a,h);g.strokeStyle=col;g.setLineDash([5,4]);g.lineWidth=1.5;g.strokeRect(a+.5,top+.5,b-a-1,h-1);g.setLineDash([]);
+    g.font='600 11px '+css('--sans');g.fillStyle=col;g.fillRect(a,top+h+yl+5,b-a,3);g.fillStyle=css('--ink');g.textBaseline='top';g.textAlign='center';g.fillText(label,(a+b)/2,top+h+yl+9);};
+  strip(-hw-S.R,hw,B,'B holds ghosts of A',-4);
+  strip(-hw,hw+S.R,A,'A holds ghosts of B',14);
+  // band
+  if(S.w>0){g.fillStyle=rgba(css('--ink-soft'),0.28);g.fillRect(X(-hw),top,X(hw)-X(-hw),h);}
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(X(0),top);g.lineTo(X(0),top+h);g.stroke();
+  g.lineWidth=1.5;g.strokeRect(side+.75,top+.75,w-1.5,h-1.5);
+  g.font='700 12px '+css('--sans');g.textBaseline='bottom';g.fillStyle=A;g.textAlign='left';g.fillText('Server A',side,top-3);g.fillStyle=B;g.textAlign='right';g.fillText('Server B',W-side,top-3);
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.font='11px '+css('--sans');g.fillText('x = 0',X(0),top-3);
+  // dots
+  const x=sim.x,onB=sim.onB;
+  for(let i=0;i<NT+ND;i++){
+    const px=X(Math.max(-BAND,Math.min(BAND,x[i]))),py=Y(yPos[i]);
+    g.fillStyle=onB[i]?B:A;g.beginPath();
+    if(i<NT){g.rect(px-2.6,py-2.6,5.2,5.2);}else g.arc(px,py,2.7,0,Math.PI*2);
+    g.fill();
+  }
+  for(const [i,t0] of rings){const age=(now-t0)/500;if(age>=1){rings.delete(i);continue;}
+    const px=X(x[i]),py=Y(yPos[i]);g.strokeStyle=css('--blood');g.globalAlpha=1-age;g.lineWidth=2;g.beginPath();g.arc(px,py,4+10*age,0,Math.PI*2);g.stroke();g.globalAlpha=1;}
+  const last10=tickLog.reduce((s,v)=>s+v,0);
+  $('mapHead').innerHTML=`<span>last 10 s <b>${fmt(last10)}</b> handoffs</span><span>running mean <b>${simTime>0?f2(totalH/simTime):'—'}</b>/s</span><span>G(w) <b>${fmt(G(S.w))}</b> ghosts</span><span>sim time <b>${fmt(simTime)}</b> s</span>`;
+}
+
+function drawCost(){
+  const c=setupCanvas($('cCost')),g=c.g,W=c.w,Hh=c.h;g.clearRect(0,0,W,Hh);
+  const p={l:44,r:14,t:28,b:40};
+  let yMax=16;
+  if(sweep){const m=Math.max(cost(0),ghostCPU(60)*1.05,cost(60));yMax=[5,10,15,20,25,30,40,50,60,80,100,120,150].find(v=>v>=m*1.05)||Math.ceil(m/50)*50;}
+  const X=w=>p.l+(W-p.l-p.r)*w/60,Y=v=>p.t+(Hh-p.t-p.b)*(1-Math.min(v,yMax*1.02)/yMax);
+  g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=5;i++){const v=yMax*i/5,y=Y(v);g.beginPath();g.moveTo(p.l,y);g.lineTo(W-p.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(+v.toFixed(1),p.l-6,y);}
+  for(let w=0;w<=60;w+=10){g.textAlign='center';g.textBaseline='top';g.fillText(w,X(w),Hh-p.b+6);}
+  g.textAlign='right';g.fillText('band width w (m)',W-p.r,Hh-p.b+22);
+  g.textAlign='left';g.textBaseline='top';g.fillText('ms of CPU per second',4,0);
+  // current w marker
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(S.w),p.t);g.lineTo(X(S.w),Hh-p.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  if(!sweep)return;
+  const line=(f,col,wd)=>{g.strokeStyle=col;g.lineWidth=wd;g.beginPath();for(let i=0;i<=240;i++){const w=60*i/240,v=f(w);i?g.lineTo(X(w),Y(v)):g.moveTo(X(w),Y(v));}g.stroke();};
+  line(w=>H(w)*S.eh,css('--blood'),2.5);
+  line(ghostCPU,css('--steel'),2.5);
+  line(cost,css('--ink'),3.5);
+  // sweep points on sum
+  g.fillStyle=css('--ink');for(const w of WS){g.beginPath();g.arc(X(w),Y(cost(w)),2.2,0,Math.PI*2);g.fill();}
+  const mw=minimum(),mv=cost(mw);
+  g.fillStyle=css('--moss');g.beginPath();g.arc(X(mw),Y(mv),7,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.font='700 12px '+css('--sans');g.fillStyle=css('--moss');g.textBaseline='bottom';const t=`min at w = ${mw} m, ${f2(mv)}`;const tw=g.measureText(t).width;g.textAlign='left';
+  g.fillText(t,Math.max(p.l+2,Math.min(W-p.r-tw,X(mw)-tw/2)),Y(mv)-11);
+  g.fillStyle=css('--ink');g.beginPath();g.arc(X(S.w),Y(cost(S.w)),5,0,Math.PI*2);g.fill();
+}
+
+let liveT=null;
+function update(){
+  $('oW').textContent=S.w+' m';$('oSig').textContent=S.sig+' m';$('oR').textContent=S.R+' m';$('oEh').textContent=(+S.eh.toFixed(2))+' ms';
+  $('rW').textContent=S.w+' m';$('rG').textContent=fmt(G(S.w));$('rGC').textContent=f2(ghostCPU(S.w))+' ms/s';
+  if(sweep){
+    const h=H(S.w),mw=minimum();
+    $('rH').textContent=f2(h)+' /s';$('rHC').textContent=f2(h*S.eh)+' ms/s';$('rS').textContent=f2(cost(S.w))+' ms/s';
+    $('rHr').textContent=fmt(h*3600);$('rMin').textContent=mw+' m';
+    const h0=H(0),s0=cost(0),within=[];for(let w=0;w<=60;w++)if(cost(w)<=cost(mw)*1.03)within.push(w);
+    let s=`At w = ${S.w} m the seam hands off <b>${f2(h)}</b> players per second and holds ${fmt(G(S.w))} ghosts, for <b>${f2(cost(S.w))} ms</b> of CPU per second. `;
+    if(S.w===0)s+=`Dwellers near the line cross it on many ticks. Drag w to 5 m and watch the flicker stop.`;
+    else s+=`That is ${Math.round(100*(1-h/h0))}% fewer handoffs than a sharp border, and ${Math.round(100*(1-cost(S.w)/s0))}% ${cost(S.w)<=s0?'cheaper':'more expensive'} overall.`;
+    s+=` The cheapest band for σ = ${S.sig} m is <b>${mw} m</b>; anything from ${within[0]} to ${within[within.length-1]} m is within 3% of it.`;
+    $('insight').innerHTML=s;
+    clearTimeout(liveT);liveT=setTimeout(()=>{$('live').textContent=`Band ${S.w} metres, seam cost ${f2(cost(S.w))} milliseconds per second, minimum at ${mw} metres.`;},500);
+  } else ['rH','rHC','rS','rHr','rMin'].forEach(id=>$(id).textContent='…');
+  drawCost();
+}
+
+// loop
+function frame(now){
+  if(last===null)last=now;
+  const dtReal=Math.min(0.25,(now-last)/1000);last=now;
+  if(playing){acc+=dtReal*speed*10;let n=0;while(acc>=1&&n<400){simTick(now);acc-=1;n++;}}
+  drawMap(now);requestAnimationFrame(frame);
+}
+function stepOne(){const now=performance.now();for(let i=0;i<10;i++)simTick(now);drawMap(now);}
+
+// controls
+$('w').addEventListener('input',e=>{S.w=+e.target.value;clearCounters();update();});
+document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{S.w=+b.dataset.w;$('w').value=S.w;clearCounters();update();}));
+$('sig').addEventListener('input',e=>{S.sig=+e.target.value;resetLive();update();clearTimeout(sweepTimer);sweepTimer=setTimeout(runSweep,150);});
+$('R').addEventListener('input',e=>{S.R=+e.target.value;update();});
+$('eh').addEventListener('input',e=>{S.eh=+e.target.value;update();});
+function setPlay(on){playing=on;$('play').textContent=on?'Pause':'Play';$('play').setAttribute('aria-pressed',on);}
+$('play').addEventListener('click',()=>setPlay(!playing));
+$('step').addEventListener('click',stepOne);
+document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',()=>{speed=+b.dataset.speed;document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x===b));}));
+$('reset').addEventListener('click',()=>{const sigChanged=S.sig!==DEF.sig;S=Object.assign({},DEF);$('w').value=0;$('sig').value=4;$('R').value=100;$('eh').value=1;resetLive();update();if(sigChanged)runSweep();});
+const redraw=()=>{mapC=null;update();};
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+window.__seam={S,H:w=>H(w),cost:w=>cost(w),minimum,ready:()=>!!sweep&&sweepSig===S.sig};
+
+resetLive();setPlay(!reduce);update();runSweep();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

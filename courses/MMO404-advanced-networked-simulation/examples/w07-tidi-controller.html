@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A time-dilation controller, MMO404 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-areas:"charts controls" "charts numbers";gap:14px;align-items:start}
+@media (max-width:700px){.layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"charts" "controls" "numbers"}}
+.a-charts{grid-area:charts}.a-controls{grid-area:controls}.a-numbers{grid-area:numbers}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.08rem;margin:0 0 8px}
+.capbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.caption{font-family:var(--serif);font-size:1.05rem;margin:0;flex:1 1 280px}
+.cta{font:700 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:2px solid var(--ochre);background:var(--ochre);color:var(--paper);cursor:pointer}
+.cta[aria-pressed="true"]{background:transparent;color:var(--ink)}
+figure{margin:0 0 10px;background:var(--paper-2);border-radius:10px;padding:10px 10px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+canvas{display:block;width:100%;height:220px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:.8rem;margin:6px 0 2px;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend i.line{height:3px}
+.banner{margin:0 0 8px;padding:8px 12px;border-radius:10px;background:var(--blood);color:var(--paper);font-weight:700;font-size:.92rem}
+.ctl{margin-top:10px}
+label{font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.num label{flex-direction:column;gap:2px;font-size:.84rem}
+.num input{width:100%;font:inherit;font-weight:400;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+.check{display:flex;gap:8px;align-items:center;justify-content:flex-start;margin-top:10px}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font:600 .82rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+fieldset{border:0;padding:0;margin:10px 0 0}
+legend{font-weight:600;font-size:.88rem;padding:0}
+.radio{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:.86rem}
+.radio label{font-weight:400;justify-content:flex-start;align-items:center;gap:6px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px;min-width:0}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.76rem;color:var(--ink-soft)}
+.early{font-size:.84rem;margin:10px 0 0;font-variant-numeric:tabular-nums}
+.note{font-size:.8rem;color:var(--ink-soft);margin:10px 0 0}
+.note b{color:var(--ochre)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.84rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO404 Advanced Networked Simulation · Week 7 · Worked example</p>
+  <h1>A controller that pays back its debt</h1>
+  <p class="lede">A node hosts a battle. Each real second it measures the cost of one game-second, tracks the CPU work it still owes (the backlog, which players feel as lag), and picks the next second's game speed.</p>
+</header>
+
+<div class="layout">
+  <section class="panel a-charts" aria-label="Charts">
+    <div class="capbar">
+      <p class="caption" id="caption">The first second always overruns. How long the lag lives is your choice.</p>
+      <button class="cta" id="cta" aria-pressed="false">Turn on payback</button>
+    </div>
+    <div class="banner" id="banner" role="status" hidden></div>
+    <figure>
+      <figcaption>Pilots and game speed<small>Grey: pilots (right axis). Line: game speed f (left axis). Shaded: seconds at the floor.</small></figcaption>
+      <canvas id="cTop" role="img" aria-label="Pilot count and game speed over real time"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--grid);outline:1px solid var(--ink-soft)"></i>pilots</span>
+        <span><i class="line" style="background:var(--steel)"></i>game speed f</span>
+        <span><i style="background:var(--ochre);opacity:.35"></i>at the floor</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Backlog: extra seconds a new command waits<small>CPU-seconds still owed, with C = 1. Dashed line at 1 s, where players notice.</small></figcaption>
+      <canvas id="cLag" role="img" aria-label="Lag in seconds over real time"></canvas>
+    </figure>
+  </section>
+
+  <section class="panel a-controls" aria-labelledby="hCtl">
+    <h2 id="hCtl">Controller</h2>
+    <div class="row" role="group" aria-label="Presets">
+      <button class="chip" data-p="none">No dilation</button>
+      <button class="chip" data-p="fast">Lecture: fast both ways</button>
+      <button class="chip" data-p="slow">Slow both ways</button>
+      <button class="chip" data-p="asym">Fast down, slow up</button>
+    </div>
+    <label class="check"><input type="checkbox" id="tidi" checked> Time dilation on</label>
+    <div class="ctl"><label for="u">Aim (share of C) <output id="oU">0.90</output></label><input id="u" type="range" min="0.5" max="1" step="0.01" value="0.9"></div>
+    <label class="check"><input type="checkbox" id="pay"> Payback term q / τ</label>
+    <div class="ctl"><label for="tau">Payback time τ <output id="oTau">5 s</output></label><input id="tau" type="range" min="1" max="30" step="1" value="5"></div>
+    <div class="two">
+      <div class="ctl"><label for="aD">α down <output id="oAD">1.00</output></label><input id="aD" type="range" min="0.05" max="1" step="0.05" value="1"></div>
+      <div class="ctl"><label for="aU">α up <output id="oAU">1.00</output></label><input id="aU" type="range" min="0.05" max="1" step="0.05" value="1"></div>
+      <div class="ctl"><label for="noise">Noise ± <output id="oNoise">0.00</output></label><input id="noise" type="range" min="0" max="0.5" step="0.05" value="0"></div>
+      <div class="ctl"><label for="floor">Floor <output id="oFloor">10%</output></label><input id="floor" type="range" min="0.05" max="0.5" step="0.01" value="0.1"></div>
+    </div>
+    <div class="two num" style="margin-top:10px">
+      <label>Wave 1 pilots<input type="number" id="w1" min="0" max="5000" step="100" value="2000"></label>
+      <label>Wave 2 pilots<input type="number" id="w2" min="0" max="5000" step="100" value="2800"></label>
+      <label>Seed<input type="number" id="seed" min="0" max="99999" value="7"></label>
+    </div>
+    <fieldset>
+      <legend>Timeline</legend>
+      <div class="radio">
+        <label><input type="radio" name="tl" value="battle" checked> Battle, 180 s</label>
+        <label><input type="radio" name="tl" value="const"> Wave 1 only, 60 s</label>
+      </div>
+    </fieldset>
+    <p class="note" id="tlNote"></p>
+  </section>
+
+  <section class="panel a-numbers" aria-labelledby="hNum">
+    <h2 id="hNum">Numbers</h2>
+    <div class="nums" aria-live="polite">
+      <div class="stat" style="--c:var(--blood)"><b id="mMax">-</b><span>max backlog, s</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="mMean">-</b><span>mean backlog, s</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="mJit">-</b><span>jitter, mean |Δf| / f</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="mGame">-</b><span>game-seconds delivered</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b id="mFloor">-</b><span>seconds at the floor</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="mCap">-</b><span>pilots the floor holds at this aim</span></div>
+    </div>
+    <p class="early" id="early"></p>
+    <p class="note"><b>Model constants.</b> work(n) = 0.0003 n + 0.000001 n² and C = 1 are MMO302 week 12's teaching node, not measured EVE numbers. The battle timeline and wave sizes are invented. The 10% floor is EVE Online's. Noise uses the lecture's seeded mulberry32 generator.</p>
+  </section>
+</div>
+
+<footer>Model from MMO404 week 7, sections 2 and 3. Each real second: m = work(n)(1 + noise(2r − 1)); q (the backlog) = max(0, q + f m − C); target = clamp((aim × C − q/τ) / m, floor, 1); f += α(target − f), with α_down when the target is below f. f and q are recorded before the control update, as in the lecture's code.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(n,d=0)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const A=0.0003,B=0.000001,C=1;
+const work=n=>A*n+B*n*n;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+const S={tidi:true,u:0.9,pay:false,tau:5,aD:1,aU:1,noise:0,floor:0.1,w1:2000,w2:2800,seed:7,tl:'battle'};
+
+function timeline(){
+  if(S.tl==='const') return Array(60).fill(S.w1);
+  return [].concat(Array(10).fill(500),Array(50).fill(S.w1),Array(60).fill(S.w2),Array(60).fill(800));
+}
+function run(){
+  const P=timeline(),rnd=mulberry32(S.seed);
+  let f=1,q=0,jit=0;const rows=[];
+  for(const n of P){
+    const r=rnd();
+    const m=work(n)*(1+S.noise*(2*r-1));
+    q=Math.max(0,q+f*m-C);
+    rows.push({n,f,q});
+    if(S.tidi){
+      const want=S.u*C-(S.pay?q/S.tau:0);
+      const target=Math.min(1,Math.max(S.floor,want/m));
+      const nf=f+(target<f?S.aD:S.aU)*(target-f);
+      jit+=Math.abs(nf-f)/f;f=nf;
+    }
+  }
+  const qs=rows.map(r=>r.q);
+  const t0=S.tl==='const'?0:10;
+  let clear=null;for(let t=1;t0+t<rows.length;t++){if(rows[t0+t].q<0.05){clear=t;break;}}
+  return {rows,max:Math.max(...qs),mean:qs.reduce((a,b)=>a+b,0)/qs.length,jit:jit/rows.length,
+    game:rows.reduce((a,r)=>a+r.f,0),atFloor:rows.filter(r=>S.tidi&&r.f<=S.floor+1e-9).length,clear,t0};
+}
+function floorCap(){const c=-S.u/S.floor;return (-A+Math.sqrt(A*A-4*B*c))/(2*B);}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+
+function xAxis(g,w,h,pad,T){
+  g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');g.strokeStyle=css('--grid');g.lineWidth=1;
+  const step=T>60?30:10;
+  for(let t=0;t<=T;t+=step){const x=pad.l+(w-pad.l-pad.r)*t/T;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    g.textAlign='center';g.textBaseline='top';g.fillText(t,x,h-pad.b+5);}
+  g.textAlign='right';g.fillText('real s',w-pad.r,h-12);
+}
+function drawTop(R){
+  const c=setup($('cTop')),g=c.g,w=c.w,h=c.h,pad={l:40,r:44,t:10,b:30},T=R.rows.length;
+  g.clearRect(0,0,w,h);
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/T,ph=h-pad.t-pad.b;
+  const nMax=Math.max(3500,...R.rows.map(r=>r.n));
+  const Yn=v=>pad.t+ph*(1-v/nMax),Yf=v=>pad.t+ph*(1-v);
+  // pilots area
+  g.fillStyle=css('--grid');g.beginPath();g.moveTo(X(0),Yn(0));
+  R.rows.forEach((r,i)=>{g.lineTo(X(i),Yn(r.n));g.lineTo(X(i+1),Yn(r.n));});g.lineTo(X(T),Yn(0));g.closePath();g.fill();
+  // floor shading
+  g.fillStyle=css('--ochre');g.globalAlpha=.3;
+  R.rows.forEach((r,i)=>{if(S.tidi&&r.f<=S.floor+1e-9)g.fillRect(X(i),pad.t,X(i+1)-X(i)+.5,ph);});g.globalAlpha=1;
+  xAxis(g,w,h,pad,T);
+  g.font='11px '+css('--sans');g.fillStyle=css('--ink-soft');
+  for(let k=0;k<=4;k++){const y=Yf(k/4);g.textAlign='right';g.textBaseline='middle';g.fillText((k/4).toFixed(2).replace(/0$/,''),pad.l-5,y);}
+  g.textAlign='left';g.textBaseline='middle';for(let v=0;v<=nMax;v+=1000)g.fillText(v?fmt(v/1000)+'k':'0',w-pad.r+5,Yn(v));
+  // floor dotted line
+  g.strokeStyle=css('--ochre');g.setLineDash([2,4]);g.lineWidth=2;g.beginPath();g.moveTo(pad.l,Yf(S.floor));g.lineTo(w-pad.r,Yf(S.floor));g.stroke();g.setLineDash([]);
+  // f line (stepped)
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  R.rows.forEach((r,i)=>{i?g.lineTo(X(i),Yf(r.f)):g.moveTo(X(0),Yf(r.f));g.lineTo(X(i+1),Yf(r.f));});g.stroke();
+  g.fillStyle=css('--steel');g.textAlign='left';g.textBaseline='bottom';g.font='600 11px '+css('--sans');g.fillText('f',pad.l+4,pad.t+26);
+}
+function drawLag(R){
+  const c=setup($('cLag')),g=c.g,w=c.w,h=c.h,pad={l:40,r:44,t:10,b:30},T=R.rows.length;
+  g.clearRect(0,0,w,h);
+  const yMax=R.max>10?Math.ceil(R.max*1.1/5)*5:10;
+  const X=t=>pad.l+(w-pad.l-pad.r)*t/T,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  g.font='11px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let k=0;k<=5;k++){const v=yMax*k/5,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(v),pad.l-5,y);}
+  xAxis(g,w,h,pad,T);
+  g.fillStyle=css('--blood');g.globalAlpha=.35;g.beginPath();g.moveTo(X(0),Y(0));
+  R.rows.forEach((r,i)=>{g.lineTo(X(i),Y(r.q));g.lineTo(X(i+1),Y(r.q));});g.lineTo(X(T),Y(0));g.closePath();g.fill();g.globalAlpha=1;
+  g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();
+  R.rows.forEach((r,i)=>{i?g.lineTo(X(i),Y(r.q)):g.moveTo(X(0),Y(r.q));g.lineTo(X(i+1),Y(r.q));});g.stroke();
+  g.strokeStyle=css('--ink');g.setLineDash([6,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(1));g.lineTo(w-pad.r,Y(1));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink');g.textAlign='right';g.textBaseline='bottom';g.font='600 11px '+css('--sans');g.fillText('players notice',w-pad.r-4,Y(1)-2);
+}
+
+function render(){
+  const R=run();
+  $('mMax').textContent=fmt(R.max,2);$('mMean').textContent=fmt(R.mean,2);$('mJit').textContent=R.jit.toFixed(3);
+  $('mGame').textContent=fmt(R.game,1);$('mFloor').textContent=fmt(R.atFloor);$('mCap').textContent=fmt(floorCap());
+  const q=t=>R.rows[R.t0+t]?fmt(R.rows[R.t0+t].q,2):'-';
+  $('early').innerHTML=`${R.t0?'Measured from wave 1 arrival (real s 10). ':''}f(1) = <b>${R.rows[R.t0+1].f.toFixed(3)}</b> · backlog at 1, 5, 10 s: <b>${q(1)}, ${q(5)}, ${q(10)}</b> · clears at <b>${R.clear===null?'never':'t = '+R.clear+' s'}</b>`;
+  // banner: some wave cannot fit even at the floor (or at full speed with dilation off)
+  const worst=Math.max(...R.rows.map(r=>r.n));
+  const minF=S.tidi?S.floor:1;
+  const over=minF*work(worst)>C;
+  const n120=R.rows.length>=180&&R.rows[179].q>R.rows[119].q+5;
+  $('banner').hidden=!(over||n120);
+  if(over)$('banner').textContent=`Backlog growing without limit: ${fmt(worst)} pilots at ${Math.round(minF*100)}% speed demand ${fmt(minF*work(worst),2)} CPU-s per second, above C = 1.`;
+  const pay=S.pay&&S.tidi;
+  $('cta').setAttribute('aria-pressed',String(S.pay));$('cta').textContent=S.pay?'Turn off payback':'Turn on payback';
+  let cap='The first second always overruns. How long the lag lives is your choice.';
+  if(!S.tidi) cap+=' With no dilation the node never catches up during a wave.';
+  else if(pay) cap+=` With payback, the ${fmt(R.max,1)} s spike is paid back by dropping speed for a few seconds.`;
+  else cap+=' Without payback, only headroom drains the debt, 1 − aim per second.';
+  $('caption').textContent=cap;
+  drawTop(R);drawLag(R);
+  // labels
+  $('oU').textContent=S.u.toFixed(2);$('oTau').textContent=S.tau+' s';$('oAD').textContent=S.aD.toFixed(2);$('oAU').textContent=S.aU.toFixed(2);
+  $('oNoise').textContent=S.noise.toFixed(2);$('oFloor').textContent=Math.round(S.floor*100)+'%';
+  $('tau').disabled=!S.pay;
+  $('tlNote').textContent=S.tl==='const'?`${fmt(S.w1)} pilots from t = 0 for 60 s, the lecture's section 2 test.`:`500 pilots for 10 s, wave 1 for 50 s, wave 2 for 60 s, 800 for 60 s.`;
+}
+function sync(){['u','tau','aD','aU','noise','floor'].forEach(k=>$(k).value=S[k]);$('tidi').checked=S.tidi;$('pay').checked=S.pay;$('seed').value=S.seed;$('w1').value=S.w1;$('w2').value=S.w2;}
+['u','tau','aD','aU','noise','floor'].forEach(k=>$(k).addEventListener('input',e=>{S[k]=+e.target.value;render();}));
+$('tidi').addEventListener('change',e=>{S.tidi=e.target.checked;render();});
+$('pay').addEventListener('change',e=>{S.pay=e.target.checked;render();});
+$('cta').addEventListener('click',()=>{S.pay=!S.pay;sync();render();});
+[['w1','w1'],['w2','w2'],['seed','seed']].forEach(([id,k])=>$(id).addEventListener('input',e=>{const v=+e.target.value;if(e.target.value!==''&&v>=0){S[k]=Math.min(k==='seed'?99999:5000,Math.round(v));render();}}));
+document.querySelectorAll('input[name=tl]').forEach(r=>r.addEventListener('change',e=>{S.tl=e.target.value;render();}));
+const PRE={none:{tidi:false},fast:{tidi:true,u:0.9,pay:true,tau:5,aD:1,aU:1,noise:0.3,seed:7},slow:{tidi:true,u:0.9,pay:true,tau:5,aD:0.3,aU:0.3,noise:0.3,seed:7},asym:{tidi:true,u:0.9,pay:true,tau:5,aD:1,aU:0.2,noise:0.3,seed:7}};
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
+  Object.assign(S,PRE[b.dataset.p]);
+  document.querySelectorAll('[data-p]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  sync();render();}));
+document.querySelectorAll('[data-p]').forEach(x=>x.setAttribute('aria-pressed','false'));
+window.addEventListener('resize',render);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+sync();render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mesh crowd capacity · MMO404 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.caption{font-family:var(--serif);font-size:clamp(1.3rem,3vw,1.7rem);font-weight:600;margin:0 0 12px}
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:14px}
+@media (max-width:700px){.charts{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cMap{aspect-ratio:1/1;max-height:420px}
+#cCap{height:340px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.legend .dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--steel)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:700px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 10px}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;margin:4px 0 10px}
+.seg button{font:600 .92rem var(--sans);padding:8px 16px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.go{font:600 .92rem var(--sans);padding:9px 14px;border-radius:8px;border:1.5px solid var(--moss);background:transparent;color:var(--ink);cursor:pointer;margin:0 0 10px}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0 4px}
+@media (max-width:700px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.stat.over b{color:var(--blood)}
+.stat.over{--c:var(--blood)!important}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+details{margin-top:14px;font-size:.92rem}
+summary{cursor:pointer;font-weight:600}
+.adv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+@media (max-width:700px){.adv{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.adv label{flex-direction:column;gap:2px;font-weight:600}
+.adv input{font:inherit;width:100%;padding:6px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+.small{font-size:.84rem;color:var(--ink-soft);margin:8px 0 0}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:560px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO404 Advanced Networked Simulation · Week 9 · Worked example</p>
+  <h1>Four times the servers, twice the crowd</h1>
+  <p class="lede">Split a crowd where everyone can hit everyone across <i>k</i> servers. Each server owns a strip but must ghost the whole crowd, and the pair work grows with the square of the crowd. Capacity follows the square root of <i>k</i>, and ghosts put a ceiling on it.</p>
+</header>
+
+<section class="panel" aria-label="Mesh model">
+  <p class="caption" id="caption" aria-live="polite">16 servers, 4 times the crowd.</p>
+  <div class="charts">
+    <figure>
+      <figcaption>The crowd, split into strips<small id="mapSub">Filled: server 1's players. Outlined: players server 1 must ghost.</small></figcaption>
+      <canvas id="cMap" role="img" aria-label="Top-down map of a 50 metre disc crowd split into vertical strips, one per server"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Largest crowd that fits the 50 ms tick<small>Log-log. Crowd capacity against server count.</small></figcaption>
+      <canvas id="cCap" role="img" aria-label="Log-log chart of crowd capacity against number of servers"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--steel)"></i>Crowd mode</span>
+        <span><i style="border-color:var(--moss)"></i>Spread mode</span>
+        <span><i style="border-color:var(--ink-soft);border-top-style:dashed"></i>Linear (slope 1)</span>
+        <span><i style="border-color:var(--ink-soft);border-top-style:dotted"></i>Square root (slope 1/2)</span>
+        <span><i style="border-color:var(--blood);border-top-style:dashed"></i>Ghost ceiling</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="kIn"><span>Servers <i>k</i></span> <output id="oK">16</output></label>
+      <input id="kIn" type="range" min="0" max="10" step="1" value="4" aria-valuetext="16 servers">
+      <label for="nIn"><span>Crowd size <i>N</i> for the tick readout</span> <output id="oN">1,000</output></label>
+      <input id="nIn" type="range" min="100" max="3000" step="50" value="1000">
+    </div>
+    <div>
+      <span class="lbl" id="modeLbl">Interaction mode</span>
+      <div class="seg" role="group" aria-labelledby="modeLbl">
+        <button id="mCrowd" aria-pressed="true">Crowd</button>
+        <button id="mSpread" aria-pressed="false">Spread</button>
+      </div>
+      <div><button class="go" id="toggle">Spread the players out</button></div>
+      <div id="mWrap">
+        <label for="mIn"><span>Interactions per player <i>m</i> (spread mode)</span> <output id="oM">30</output></label>
+        <input id="mIn" type="range" min="10" max="100" step="1" value="30">
+      </div>
+    </div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rCap">—</b><span>crowd capacity at this <i>k</i></span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rRatio">—</b><span>capacity vs 1 server</span></div>
+    <div class="stat" id="sTick" style="--c:var(--ink)"><b id="rTick">—</b><span id="rTickL">tick at N</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rShare">—</b><span>ghost share of the budget, at capacity</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rGhost">—</b><span id="rGhostL">ghost updates per tick, at capacity</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rFew">—</b><span id="rFewL">fewest servers for N</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <details>
+    <summary>Advanced: cost constants</summary>
+    <div class="adv">
+      <label for="cp">c<sub>p</sub> (µs per owned player)<input id="cp" type="number" min="0.1" step="0.1" value="20"></label>
+      <label for="ci">c<sub>i</sub> (µs per interacting pair)<input id="ci" type="number" min="0.01" step="0.1" value="2"></label>
+      <label for="cg">c<sub>g</sub> (µs per ghost)<input id="cg" type="number" min="0.1" step="0.1" value="4"></label>
+      <label for="bud">Budget (ms per tick)<input id="bud" type="number" min="1" step="1" value="50"></label>
+    </div>
+    <p class="small">These are the course's model constants from week 1 and this lecture. They are invented, illustrative costs, not measurements from any game. <button class="go" id="reset" style="margin:6px 0 0">Reset to lecture values</button></p>
+  </details>
+
+  <div class="table-wrap">
+    <table aria-label="Capacity table for the active mode">
+      <thead><tr><th><i>k</i></th><th>Crowd</th><th>vs k = 1</th><th id="thTick">Tick at N</th><th>Ghost share</th><th>Ghost updates per tick</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from MMO404 week 9, section 2: T<sub>k</sub>(N) = c<sub>p</sub>N/k + c<sub>i</sub>N²/k + c<sub>g</sub>N(1 − 1/k). Spread mode: each player interacts with min(N, m) others and each server ghosts min(N(1 − 1/k), 2m) players. The map is a schematic of 50 m radius with up to 2,000 dots drawn (seeded sample). All cost constants are invented for teaching.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const KS=[1,2,4,8,16,32,64,128,256,512,1024];
+const fmt0=n=>Math.round(n).toLocaleString('en-US');
+const fmt1=n=>n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const S={cp:20e-6,ci:2e-6,cg:4e-6,B:0.050,k:16,N:1000,mode:'crowd',m:30};
+
+// ---- model ----
+function ghostsSpread(N,k){return Math.min(N*(1-1/k),2*Math.min(N,S.m));}
+function tick(N,k,mode){
+  mode=mode||S.mode;
+  if(mode==='crowd') return S.cp*N/k+S.ci*N*N/k+S.cg*N*(1-1/k);
+  const m=Math.min(N,S.m);
+  return S.cp*N/k+S.ci*(N/k)*m+S.cg*ghostsSpread(N,k);
+}
+function capacity(k,mode){
+  mode=mode||S.mode;
+  if(mode==='crowd'){
+    const a=S.ci/k,b=S.cp/k+S.cg*(1-1/k);
+    return (-b+Math.sqrt(b*b+4*a*S.B))/(2*a);
+  }
+  let lo=1,hi=1e6;
+  if(tick(hi,k,mode)<=S.B) return hi;
+  if(tick(lo,k,mode)>S.B) return 0;
+  while(hi-lo>0.01){const mid=(lo+hi)/2;if(tick(mid,k,mode)<=S.B)lo=mid;else hi=mid;}
+  return lo;
+}
+function ghostCount(N,k,mode){return (mode||S.mode)==='crowd'?N*(1-1/k):ghostsSpread(N,k);}
+function ghostUpdates(N,k,mode){return (mode||S.mode)==='crowd'?N*(k-1):k*ghostsSpread(N,k);}
+function fewest(N){
+  for(let k=1;k<=100000;k++) if(tick(N,k)<=S.B) return k;
+  return null;
+}
+
+// ---- crowd points, mulberry32(9), uniform in a 50 m disc ----
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const rnd=mulberry32(9),PTS=[];
+for(let i=0;i<2000;i++){const r=50*Math.sqrt(rnd()),th=2*Math.PI*rnd();PTS.push({x:r*Math.cos(th),y:r*Math.sin(th)});}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+
+function drawMap(){
+  const {g,w,h}=setupCanvas($('cMap'));g.clearRect(0,0,w,h);
+  const R=Math.min(w,h)/2-10,cx=w/2,cy=h/2,sc=R/50;
+  const n=Math.min(S.N,2000),pts=PTS.slice(0,n).map((p,i)=>({x:p.x,y:p.y,i})).sort((a,b)=>a.x-b.x);
+  const k=S.k,cols=[css('--ochre'),css('--moss'),css('--ink-soft'),css('--steel')];
+  pts.forEach((p,r)=>{p.s=Math.floor(r*k/n);});
+  // strip 1 boundary
+  let bx=50;const last0=pts.filter(p=>p.s===0).pop(),first1=pts.find(p=>p.s>0);
+  if(first1&&last0) bx=(last0.x+first1.x)/2;
+  // disc
+  g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.fillStyle=css('--paper');g.fill();
+  g.save();g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.clip();
+  g.fillStyle=css('--steel');g.globalAlpha=.16;g.fillRect(cx-R,cy-R,(bx+50)*sc,2*R);g.globalAlpha=1;
+  if(k<=64){g.strokeStyle=css('--grid');g.lineWidth=1;
+    for(let s=1;s<k;s++){const a=pts.filter(p=>p.s===s-1).pop(),b=pts.find(p=>p.s===s);if(!a||!b)continue;const x=cx+(a.x+b.x)/2*sc;g.beginPath();g.moveTo(x,cy-R);g.lineTo(x,cy+R);g.stroke();}
+  }
+  g.strokeStyle=css('--steel');g.lineWidth=2;g.beginPath();g.moveTo(cx+bx*sc,cy-R);g.lineTo(cx+bx*sc,cy+R);g.stroke();
+  g.restore();
+  g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.strokeStyle=css('--ink');g.lineWidth=1.5;g.stroke();
+  // which non-owned dots are ghosted
+  const others=pts.filter(p=>p.s>0);
+  let nGhostDraw=others.length;
+  if(S.mode==='spread') nGhostDraw=Math.round(ghostCount(S.N,k)/S.N*n);
+  const ghostSet=new Set(others.slice().sort((a,b)=>Math.abs(a.x-bx)-Math.abs(b.x-bx)).slice(0,nGhostDraw).map(p=>p.i));
+  const rad=n>1200?2.2:n>500?2.8:3.4;
+  for(const p of pts){
+    const x=cx+p.x*sc,y=cy+p.y*sc;
+    g.beginPath();g.arc(x,y,rad,0,Math.PI*2);
+    if(p.s===0){g.fillStyle=css('--steel');g.fill();}
+    else if(ghostSet.has(p.i)){g.strokeStyle=cols[(p.s-1)%cols.length];g.lineWidth=1.2;g.stroke();}
+    else{g.fillStyle=cols[(p.s-1)%cols.length];g.globalAlpha=.3;g.fill();g.globalAlpha=1;}
+  }
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+  g.fillText('100 m across',6,4);
+  g.textAlign='right';g.fillText((n<S.N?`${fmt0(n)} of ${fmt0(S.N)} drawn`:`${fmt0(n)} players`),w-6,4);
+}
+
+function drawCap(){
+  const {g,w,h}=setupCanvas($('cCap'));g.clearRect(0,0,w,h);
+  const pad={l:50,r:14,t:12,b:34},X0=1,X1=1024,Y0=100,Y1=20000;
+  const px=k=>pad.l+(w-pad.l-pad.r)*Math.log(k/X0)/Math.log(X1/X0);
+  const py=v=>pad.t+(h-pad.t-pad.b)*(1-Math.log(v/Y0)/Math.log(Y1/Y0));
+  g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');
+  [100,200,500,1000,2000,5000,10000,20000].forEach(v=>{const y=py(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v>=1000?(v/1000)+'k':v,pad.l-6,y);});
+  const ticks=w<420?[1,4,16,64,256,1024]:KS;
+  ticks.forEach(k=>{const x=px(k);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.textAlign='center';g.textBaseline='top';g.fillText(fmt0(k),x,h-pad.b+6);});
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('servers k',w-pad.r,h-2);
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  const line=(f,color,wd,dash)=>{g.strokeStyle=color;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();let st=false;
+    for(let i=0;i<=160;i++){const k=Math.pow(1024,i/160),v=f(k);if(!(v>0)){st=false;continue;}const y=py(Math.min(Math.max(v,Y0/2),Y1*2));st?g.lineTo(px(k),y):g.moveTo(px(k),y);st=true;}
+    g.stroke();g.setLineDash([]);};
+  const c1=capacity(1);
+  line(k=>c1*k,css('--ink-soft'),1.5,[7,5]);
+  line(k=>c1*Math.sqrt(k),css('--ink-soft'),2,[2,4]);
+  const ceil=S.B/S.cg;
+  g.strokeStyle=css('--blood');g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,py(ceil));g.lineTo(w-pad.r,py(ceil));g.stroke();g.setLineDash([]);
+  line(k=>capacity(k,'crowd'),css('--steel'),S.mode==='crowd'?3:1.8);
+  line(k=>capacity(k,'spread'),css('--moss'),S.mode==='spread'?3:1.8);
+  g.restore();
+  // labels
+  g.font='600 12px '+css('--sans');g.textBaseline='bottom';g.textAlign='right';
+  if(ceil<Y1&&ceil>Y0){g.fillStyle=css('--blood');g.textBaseline='top';g.fillText('ghost ceiling '+fmt0(ceil),w-pad.r-4,py(ceil)+4);g.textBaseline='bottom';}
+  g.textAlign='left';g.fillStyle=css('--ink-soft');
+  const kl=Math.min(512,1500/c1);if(kl>1.3)g.fillText('linear',px(kl)+6,py(c1*kl)+4);
+  g.fillText('square root',px(24),py(c1*Math.sqrt(24))+16);
+  // marker
+  const v=capacity(S.k),col=S.mode==='crowd'?css('--steel'):css('--moss');
+  if(v>=Y0&&v<=Y1){const x=px(S.k),y=py(v);
+    g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    g.fillStyle=col;g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();}
+}
+
+function readouts(){
+  const k=S.k,cap=capacity(k),c1=capacity(1),ratio=cap/c1,t=tick(S.N,k)*1000;
+  $('oK').textContent=fmt0(k);$('oN').textContent=fmt0(S.N);$('oM').textContent=S.m;
+  $('kIn').setAttribute('aria-valuetext',fmt0(k)+(k===1?' server':' servers'));
+  $('rCap').textContent=cap>=1e6?'≥ 1,000,000':fmt1(cap);
+  $('rRatio').textContent=ratio.toFixed(2)+'×';
+  $('rTick').textContent=fmt1(t)+' ms'+(t>S.B*1000?' · over budget':'');
+  $('rTickL').textContent=`tick per server at N = ${fmt0(S.N)} (budget ${fmt0(S.B*1000)} ms)`;
+  $('sTick').classList.toggle('over',t>S.B*1000);
+  const share=S.cg*ghostCount(cap,k)/S.B;
+  $('rShare').textContent=(share*100).toFixed(1)+'%';
+  const gu=ghostUpdates(cap,k);
+  $('rGhost').textContent=fmt0(gu);
+  $('rGhostL').textContent=`ghost updates per tick at capacity, ${fmt0(gu*20)} per second at 20 Hz`;
+  const f=fewest(S.N);
+  $('rFew').textContent=f===null?'no mesh fits':fmt0(f);
+  $('rFewL').textContent=`fewest servers for N = ${fmt0(S.N)}`+(S.mode==='crowd'?` (ghost ceiling ${fmt0(S.B/S.cg)})`:'');
+  const times=Math.round(ratio*10)/10;
+  $('caption').textContent=k===1?`1 server holds a crowd of ${fmt0(cap)}.`:`${fmt0(k)} servers, ${times.toLocaleString('en-US')} times the crowd.`;
+  let s;
+  if(S.mode==='crowd'){
+    s=`Crowd mode. ${fmt0(k)} ${k===1?'server holds':'servers hold'} <b>${fmt1(cap)}</b> players, ${ratio.toFixed(2)}× one server, where linear scaling would give ${fmt0(k)}×. `+
+      `Each server owns ${fmt1(cap/k)} of them and ghosts the other ${fmt1(cap*(1-1/k))}. The pair term c<sub>i</sub>N²/k dominates, so doubling the crowd needs four times the servers. `+
+      `No mesh of any size passes ${fmt0(S.B/S.cg)}, where ghosts alone fill the tick.`;
+  }else{
+    s=`Spread mode, m = ${S.m}. Each player interacts with ${S.m} others and each server ghosts at most ${2*S.m} players, so ${fmt0(k)} ${k===1?'server holds':'servers hold'} <b>${fmt1(cap)}</b>, ${ratio.toFixed(2)}× one server. `+
+      `The ghost cost stays flat as k grows, which keeps the curve on the linear line. Switch back to Crowd to see what a single fight does to the same fleet.`;
+  }
+  $('insight').innerHTML=s;
+  $('thTick').textContent=`Tick at N = ${fmt0(S.N)}`;
+  const rows=[];
+  for(const kk of [1,2,4,16,64,256,1024]){
+    const c=capacity(kk),tt=tick(S.N,kk)*1000;
+    rows.push(`<tr class="${kk===k?'here':''}"><td>${fmt0(kk)}</td><td>${fmt1(c)}</td><td>${(c/c1).toFixed(2)}×</td><td>${fmt1(tt)} ms</td><td>${(S.cg*ghostCount(c,kk)/S.B*100).toFixed(1)}%</td><td>${fmt0(ghostUpdates(c,kk))}</td></tr>`);
+  }
+  $('tbody').innerHTML=rows.join('');
+}
+function update(){readouts();drawMap();drawCap();}
+
+function setMode(m){
+  S.mode=m;$('mCrowd').setAttribute('aria-pressed',m==='crowd');$('mSpread').setAttribute('aria-pressed',m==='spread');
+  $('toggle').textContent=m==='crowd'?'Spread the players out':'Pack them into one fight';
+  $('mapSub').textContent=m==='crowd'?"Filled: server 1's players. Outlined: players server 1 must ghost, which in a crowd is everyone else.":"Filled: server 1's players. Outlined: the nearest players it ghosts, at most 2m. Faded: players it can ignore.";
+  update();
+}
+$('kIn').addEventListener('input',e=>{S.k=KS[+e.target.value];update();});
+$('nIn').addEventListener('input',e=>{S.N=+e.target.value;update();});
+$('mIn').addEventListener('input',e=>{S.m=+e.target.value;update();});
+$('mCrowd').addEventListener('click',()=>setMode('crowd'));
+$('mSpread').addEventListener('click',()=>setMode('spread'));
+$('toggle').addEventListener('click',()=>setMode(S.mode==='crowd'?'spread':'crowd'));
+const num=(id,scale,key)=>$(id).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>0){S[key]=v*scale;update();}});
+num('cp',1e-6,'cp');num('ci',1e-6,'ci');num('cg',1e-6,'cg');num('bud',1e-3,'B');
+$('reset').addEventListener('click',()=>{$('cp').value=20;$('ci').value=2;$('cg').value=4;$('bud').value=50;Object.assign(S,{cp:20e-6,ci:2e-6,cg:4e-6,B:.05});update();});
+window.addEventListener('resize',()=>{drawMap();drawCap();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawMap();drawCap();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+setMode('crowd');
+})();
+</script>
+</body>
+</html>

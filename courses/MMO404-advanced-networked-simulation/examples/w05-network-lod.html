@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Network LOD: tiers vs error-driven, MMO404 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.7rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:700px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+.panel+.panel{margin-top:16px}
+h2{font-family:var(--serif);font-weight:600;font-size:1.12rem;margin:0 0 4px}
+.sub{font-size:.84rem;color:var(--ink-soft);margin:0 0 10px}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.paths{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 10px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px;display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap}
+figcaption small{font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+canvas{display:block;width:100%}
+#cTier,#cErr{height:190px}
+#cBars{height:190px}
+.pstats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.78rem;color:var(--ink-soft)}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 0}
+.chip,.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.caption{font-family:var(--serif);font-size:1.02rem;margin:12px 0 0;padding:10px 12px;border-radius:10px;background:var(--paper-2)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.legend i.line{height:3px}
+.legend i.dash{height:0;border-top:2.5px dashed var(--ink)}
+.ctl{margin-top:12px}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.check{display:flex;gap:8px;align-items:center;justify-content:flex-start;font-weight:600;font-size:.9rem;margin-top:10px}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.custom{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 8px;align-items:center;margin-top:8px;font-size:.86rem}
+.custom input{width:100%;font:inherit;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);min-width:0}
+.custom .h{color:var(--ink-soft);font-size:.78rem}
+.table-wrap{overflow-x:auto;margin-top:6px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.84rem;width:100%}
+th,td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.76rem;color:var(--ink-soft);font-weight:600}
+tr.tot td{font-weight:700;border-top:1.5px solid var(--ink)}
+tr.here td:first-child{box-shadow:inset 3px 0 0 var(--steel)}
+td small{display:block;font-size:.72rem;color:var(--ink-soft)}
+@media (max-width:420px){th,td{padding:5px 4px}table{font-size:.8rem}}
+.big{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 10px}
+.big .stat b{font-size:1.35rem}
+.invented{font-size:.8rem;color:var(--ink-soft);margin:10px 0 0}
+.invented b{color:var(--ochre)}
+table.noflat th:last-child,table.noflat td:last-child{display:none}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.84rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO404 Advanced Networked Simulation · Week 5 · Worked example</p>
+  <h1>Fix the bytes, or fix the error</h1>
+  <p class="lede">A 300-entity city hub under distance tiers and under error-driven (dead-reckoning) updates. Slide the crowd from idle to panic and watch which bar moves.</p>
+</header>
+
+<div class="layout">
+<div>
+  <section class="panel" aria-labelledby="hPath">
+    <h2 id="hPath">One walker, two policies</h2>
+    <p class="sub">Solid line: true path over the last 3 s. Dashed: the client's dead-reckoned guess. Dots: updates sent. Red: current error.</p>
+    <div class="paths">
+      <figure>
+        <figcaption>Tiers <small id="tierLbl">20 Hz</small></figcaption>
+        <canvas id="cTier" role="img" aria-label="Walker path and client guess under distance tiers"></canvas>
+        <div class="pstats">
+          <div class="stat" style="--c:var(--steel)"><b id="tRate">-</b><span>updates/s (this walker)</span></div>
+          <div class="stat" style="--c:var(--blood)"><b id="tErr">-</b><span>max angle error, last 3 s</span></div>
+        </div>
+      </figure>
+      <figure>
+        <figcaption>Error-driven <small id="errLbl">ε = 0.175 m</small></figcaption>
+        <canvas id="cErr" role="img" aria-label="Walker path and client guess under error-driven updates"></canvas>
+        <div class="pstats">
+          <div class="stat" style="--c:var(--steel)"><b id="eRate">-</b><span>updates/s (this walker)</span></div>
+          <div class="stat" style="--c:var(--blood)"><b id="eErr">-</b><span>max angle error, last 3 s</span></div>
+        </div>
+      </figure>
+    </div>
+    <div class="row" role="group" aria-label="Distance band for the walker">
+      <button class="chip" data-band="0" aria-pressed="true">Near, 10 m</button>
+      <button class="chip" data-band="1" aria-pressed="false">Mid, 40 m</button>
+      <button class="chip" data-band="2" aria-pressed="false">Far, 100 m</button>
+      <button class="btn" id="play" aria-pressed="false">Pause</button>
+    </div>
+    <p class="caption" id="caption">Tiers pay every tick. Error-driven pays when the guess is wrong.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="hBars">
+    <h2 id="hBars">The whole hub, kbit/s</h2>
+    <p class="sub">Bars stacked by band. The vertical line is the client budget.</p>
+    <canvas id="cBars" role="img" aria-label="Hub bandwidth per policy, stacked by band, against the client budget"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--steel)"></i>Near</span>
+      <span><i style="background:var(--ochre)"></i>Mid</span>
+      <span><i style="background:var(--moss)"></i>Far</span>
+      <span><i class="line" style="background:var(--blood)"></i>Client budget</span>
+    </div>
+    <label class="check"><input type="checkbox" id="showFlat"> Show the flat 20 Hz policy (axis grows to fit)</label>
+  </section>
+</div>
+
+<aside>
+  <section class="panel" aria-labelledby="hNum">
+    <h2 id="hNum">Numbers</h2>
+    <div class="big" aria-live="polite">
+      <div class="stat" style="--c:var(--ink-soft)" id="flatStat"><b id="kFlat">-</b><span>flat kbit/s</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="kTier">-</b><span>tiers kbit/s</span></div>
+      <div class="stat" style="--c:var(--blood)"><b id="kErr">-</b><span>error-driven kbit/s</span></div>
+    </div>
+    <div class="table-wrap">
+      <table aria-label="Rate per entity and bytes per second, by band and policy">
+        <thead>
+          <tr><th>Band</th><th>Tier Hz</th><th>Tier B/s</th><th>Err Hz<br>moving</th><th>Err B/s</th><th>Flat B/s</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="invented">Idle entities send at the 0.2 Hz heartbeat. 20 B per error-driven update. kbit/s = B/s × 8 / 1000.</p>
+
+    <div class="ctl">
+      <label for="crowd">Crowd behaviour <output id="oCrowd">quiet hub</output></label>
+      <input id="crowd" type="range" min="0" max="4" step="1" value="1" aria-describedby="crowdDesc">
+      <p class="invented" id="crowdDesc" style="margin:0">-</p>
+    </div>
+    <div class="ctl">
+      <label for="theta">Threshold θ <output id="oTheta">1°</output></label>
+      <input id="theta" type="range" min="0.25" max="4" step="0.25" value="1">
+    </div>
+    <div class="ctl">
+      <label for="acc">Lateral acceleration a <output id="oAcc">2 m/s²</output></label>
+      <input id="acc" type="range" min="0.5" max="6" step="0.5" value="2">
+    </div>
+    <div class="ctl">
+      <label for="budget">Client budget <output id="oBudget">96 kbit/s</output></label>
+      <input id="budget" type="range" min="32" max="256" step="8" value="96">
+    </div>
+    <label class="check"><input type="checkbox" id="summary"> Crowd summary for the far band (12 cells × 8 B/s)</label>
+    <label class="check"><input type="checkbox" id="customOn"> Custom hub (edit counts and distances)</label>
+    <div class="custom" id="customBox" hidden>
+      <span></span><span class="h">Count</span><span class="h">Distance m</span>
+      <span>Near</span><input type="number" id="n0" min="0" max="2000" value="30" aria-label="Near count"><input type="number" id="d0" min="1" max="500" value="10" aria-label="Near distance in metres">
+      <span>Mid</span><input type="number" id="n1" min="0" max="2000" value="90" aria-label="Mid count"><input type="number" id="d1" min="1" max="500" value="40" aria-label="Mid distance in metres">
+      <span>Far</span><input type="number" id="n2" min="0" max="2000" value="180" aria-label="Far count"><input type="number" id="d2" min="1" max="500" value="100" aria-label="Far distance in metres">
+    </div>
+    <p class="invented"><b>Invented constants.</b> The hub (counts, distances, a = 2 m/s², sudden changes c per second, moving share) is invented but typical, as in the lecture. The walker's speed (3.5 m/s) and its cycle (1 s straight, 1 s turn, 0.6 s stopped) are invented for this page. The crowd summary's 12 cells × 8 B are the lecture's illustration.</p>
+  </section>
+</aside>
+</div>
+
+<footer>Model from MMO404 week 5, section 2. Moving error-driven rate = min(20, max(0.2, √(a / (2θd)) + c)). Tiers: near 20 Hz × 20 B, mid 5 Hz × 12 B, far 1 Hz × 6 B. The walker view samples error at each 20 Hz server tick, after that tick's send decision; tiers extrapolate too. Heartbeat of 5 s after DIS (Aronson, 1997).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f1=n=>n.toFixed(1), f2=n=>n.toFixed(2);
+const DEG=Math.PI/180;
+
+// ---------- hub model (lecture section 2) ----------
+const DEF=[{name:'Near',n:30,d:10},{name:'Mid',n:90,d:40},{name:'Far',n:180,d:100}];
+const TIERS=[[20,20],[5,12],[1,6]];
+const STOPS=[
+  {label:'idle',ms:0,c:1,desc:'Nobody moves. Every entity sends only the 0.2 Hz heartbeat.'},
+  {label:'quiet hub',ms:0.5,c:1,desc:'Half the crowd walks, one sudden change per second (c = 1).'},
+  {label:'everyone walking',ms:1,c:1,desc:'Everyone walks, c = 1.'},
+  {label:'half dodging',ms:0.5,c:3,desc:'Half the crowd dodges, three sudden changes per second (c = 3).'},
+  {label:'panic',ms:1,c:3,desc:'World boss spawn. Everyone runs and dodges, c = 3.'}
+];
+let bands=DEF.map(b=>({...b})), stop=1, theta=1, acc=2, budget=96, summary=false, showFlat=false, band=0;
+
+function errRate(d){return Math.min(20,Math.max(0.2,Math.sqrt(acc/(2*theta*DEG*d))+STOPS[stop].c));}
+function hub(){
+  const ms=STOPS[stop].ms;
+  return bands.map((b,i)=>{
+    const rm=errRate(b.d);
+    const sum=summary&&i===2;
+    const tier=sum?96:b.n*TIERS[i][0]*TIERS[i][1];
+    const err=sum?96:20*(b.n*ms*rm+b.n*(1-ms)*0.2);
+    return {rm,tier,err,flat:b.n*20*20,sum};
+  });
+}
+
+// ---------- canvas helpers ----------
+function setup(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v*1.02);}
+
+function drawBars(H){
+  const c=setup($('cBars')),g=c.g,w=c.w,h=c.h;
+  g.clearRect(0,0,w,h);
+  const rows=[];
+  if(showFlat) rows.push(['Flat 20 Hz',H.map(x=>x.flat)]);
+  rows.push(['Tiers',H.map(x=>x.tier)]);
+  rows.push(['Error-driven',H.map(x=>x.err)]);
+  const tot=rows.map(r=>r[1].reduce((a,b)=>a+b,0)*8/1000);
+  const xMax=niceMax(Math.max(budget,...tot));
+  const pad={l:92,r:52,t:8,b:28};
+  const pw=w-pad.l-pad.r, rowH=(h-pad.t-pad.b)/rows.length;
+  const X=v=>pad.l+pw*v/xMax;
+  g.font='12px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const x=X(xMax*i/4);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();
+    g.textAlign='center';g.textBaseline='top';g.fillText(fmt(xMax*i/4),x,h-pad.b+6);}
+  const cols=[css('--steel'),css('--ochre'),css('--moss')];
+  rows.forEach((r,ri)=>{
+    const y=pad.t+ri*rowH+rowH*0.2,bh=rowH*0.6;let x0=0;
+    g.fillStyle=css('--ink');g.textAlign='right';g.textBaseline='middle';g.font='600 13px '+css('--sans');
+    g.fillText(r[0],pad.l-8,y+bh/2);
+    r[1].forEach((v,bi)=>{const k=v*8/1000;g.fillStyle=cols[bi];g.fillRect(X(x0),y,Math.max(0,X(x0+k)-X(x0)),bh);x0+=k;});
+    g.fillStyle=css('--ink');g.textAlign='left';g.font='700 13px '+css('--sans');
+    g.fillText(f1(tot[ri]),X(x0)+6,y+bh/2);
+  });
+  const bx=X(budget);
+  g.strokeStyle=css('--blood');g.lineWidth=2.5;g.beginPath();g.moveTo(bx,pad.t);g.lineTo(bx,h-pad.b);g.stroke();
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText('kbit/s',w-4,h-pad.b+6);
+}
+
+function renderNumbers(){
+  const H=hub();
+  const T=k=>H.reduce((a,x)=>a+x[k],0);
+  $('kFlat').textContent=f1(T('flat')*8/1000);
+  $('kTier').textContent=f1(T('tier')*8/1000);
+  $('kErr').textContent=f1(T('err')*8/1000);
+  $('flatStat').hidden=!showFlat;document.querySelector('table').classList.toggle('noflat',!showFlat);
+  const rows=H.map((x,i)=>`<tr class="${i===band?'here':''}"><td>${bands[i].name}<small>${fmt(bands[i].n)} @ ${fmt(bands[i].d)} m</small></td>
+    <td>${x.sum?'summary':TIERS[i][0]}</td><td>${fmt(x.tier)}</td><td>${x.sum?'summary':f2(x.rm)}</td><td>${fmt(x.err)}</td><td>${fmt(x.flat)}</td></tr>`);
+  rows.push(`<tr class="tot"><td>Total B/s</td><td></td><td>${fmt(T('tier'))}</td><td></td><td>${fmt(T('err'))}</td><td>${fmt(T('flat'))}</td></tr>`);
+  rows.push(`<tr class="tot"><td>kbit/s</td><td></td><td>${f1(T('tier')*8/1000)}</td><td></td><td>${f1(T('err')*8/1000)}</td><td>${f1(T('flat')*8/1000)}</td></tr>`);
+  $('tbody').innerHTML=rows.join('');
+  $('oCrowd').textContent=STOPS[stop].label;$('crowdDesc').textContent=STOPS[stop].desc;
+  $('crowd').setAttribute('aria-valuetext',STOPS[stop].label);
+  $('oTheta').textContent=theta+'°';$('oAcc').textContent=acc+' m/s²';$('oBudget').textContent=budget+' kbit/s';
+  drawBars(H);
+  const e=T('err')*8/1000,t=T('tier')*8/1000;
+  let s='Tiers pay every tick. Error-driven pays when the guess is wrong. ';
+  if(e>t) s+=`Right now error-driven costs ${f1(e)} kbit/s, more than the tiers' ${f1(t)}.`;
+  else s+=`Right now error-driven costs ${f1(e)} kbit/s against the tiers' ${f1(t)}.`;
+  if(e>budget) s+=` It is over the ${budget} kbit/s budget, so a shaper has to queue ${f1(e-budget)} kbit/s.`;
+  $('caption').textContent=s;
+}
+
+// ---------- walker simulation ----------
+const V=3.5, TICK=0.05, SUB=12, DT=TICK/SUB, WIN=3, HEART=5; // invented walker speed and cycle
+const CYC=[1,1,0.6]; // straight, turn, stop (seconds)
+let sim;
+function reset(){
+  sim={t:0,x:0,y:0,h:0.3,cycle:0,ph:0,pt:0,fine:[],ticks:[],tier:null,err:null,k:0};
+  // pre-run so both panels show a full window
+  for(let i=0;i<Math.round(4.2/TICK);i++) tick();
+}
+function vel(){if(sim.ph===2)return [0,0];return [V*Math.cos(sim.h),V*Math.sin(sim.h)];}
+function stepFine(){
+  const dir=(sim.cycle%2?-1:1);
+  if(sim.ph===1) sim.h+=dir*(acc/V)*DT;
+  const [vx,vy]=vel();sim.x+=vx*DT;sim.y+=vy*DT;sim.t+=DT;sim.pt+=DT;
+  if(sim.pt>=CYC[sim.ph]-1e-9){sim.pt=0;sim.ph=(sim.ph+1)%3;if(sim.ph===0)sim.cycle++;}
+  sim.fine.push([sim.t,sim.x,sim.y]);
+}
+function guess(s,t){return [s.x+s.vx*(t-s.t),s.y+s.vy*(t-s.t)];}
+function tick(){
+  for(let i=0;i<SUB;i++) stepFine();
+  sim.k++;
+  const t=sim.t,[vx,vy]=vel(),d=bands[band].d,eps=theta*DEG*d;
+  const snap={t,x:sim.x,y:sim.y,vx,vy};
+  const every=Math.max(1,Math.round(20/TIERS[band][0]));
+  let tSent=false,eSent=false;
+  if(!sim.tier||sim.k%every===0){sim.tier=snap;tSent=true;}
+  if(!sim.err){sim.err=snap;eSent=true;}
+  else{const g=guess(sim.err,t);const e=Math.hypot(g[0]-sim.x,g[1]-sim.y);
+    if(e>eps||t-sim.err.t>=HEART-1e-9){sim.err=snap;eSent=true;}}
+  const gt=guess(sim.tier,t),ge=guess(sim.err,t);
+  sim.ticks.push({t,x:sim.x,y:sim.y,tierSent:tSent,errSent:eSent,tier:{...sim.tier},err:{...sim.err},
+    tierE:Math.hypot(gt[0]-sim.x,gt[1]-sim.y),errE:Math.hypot(ge[0]-sim.x,ge[1]-sim.y)});
+  const cut=t-WIN-0.2;
+  while(sim.fine.length&&sim.fine[0][0]<cut)sim.fine.shift();
+  while(sim.ticks.length&&sim.ticks[0].t<cut)sim.ticks.shift();
+}
+function drawPath(cv,key){
+  const c=setup(cv),g=c.g,w=c.w,h=c.h;g.clearRect(0,0,w,h);
+  const t=sim.t,from=t-WIN;
+  const fine=sim.fine.filter(p=>p[0]>=from),ticks=sim.ticks.filter(p=>p.t>=from);
+  let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;fine.forEach(p=>{x0=Math.min(x0,p[1]);x1=Math.max(x1,p[1]);y0=Math.min(y0,p[2]);y1=Math.max(y1,p[2]);});
+  const s=Math.min(w/Math.max(10,x1-x0+3),h/Math.max(10,y1-y0+3)), cx=(x0+x1)/2, cy=(y0+y1)/2;
+  const P=(x,y)=>[w/2+(x-cx)*s,h/2-(y-cy)*s];
+  // metre grid
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let gx=Math.floor(cx-w/s/2);gx<=cx+w/s/2;gx++){const p=P(gx,0)[0];g.beginPath();g.moveTo(p,0);g.lineTo(p,h);g.stroke();}
+  for(let gy=Math.floor(cy-h/s/2);gy<=cy+h/s/2;gy++){const p=P(0,gy)[1];g.beginPath();g.moveTo(0,p);g.lineTo(w,p);g.stroke();}
+  // guess: straight segments from each update to the next update
+  g.strokeStyle=css('--ink');g.lineWidth=1.8;g.setLineDash([5,4]);
+  const sends=ticks.filter(p=>p[key+'Sent']);
+  const starts=[ticks.length?ticks[0][key]:null].concat(sends.map(p=>p[key]));
+  starts.forEach((st,i)=>{if(!st)return;const a=Math.max(st.t,from),b=(i+1<starts.length)?starts[i+1].t:t;
+    if(b<=a)return;const p0=P(...guess(st,a)),p1=P(...guess(st,b));g.beginPath();g.moveTo(...p0);g.lineTo(...p1);g.stroke();});
+  g.setLineDash([]);
+  // true path
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();
+  fine.forEach((p,i)=>{const q=P(p[1],p[2]);i?g.lineTo(...q):g.moveTo(...q);});g.stroke();
+  // update dots
+  g.fillStyle=css('--ochre');
+  const rr=sends.length>15?1.8:3.2;sends.forEach(p=>{const q=P(p.x,p.y);g.beginPath();g.arc(q[0],q[1],rr,0,7);g.fill();});
+  // current error
+  const last=ticks[ticks.length-1];
+  if(last){const gq=P(...guess(last[key],t)),tq=P(sim.x,sim.y);
+    g.strokeStyle=css('--blood');g.lineWidth=3;g.beginPath();g.moveTo(...tq);g.lineTo(...gq);g.stroke();
+    g.fillStyle=css('--ink');g.beginPath();g.arc(tq[0],tq[1],4.5,0,7);g.fill();}
+  // scale bar 2 m
+  g.strokeStyle=css('--ink-soft');g.lineWidth=2;g.beginPath();g.moveTo(8,h-10);g.lineTo(8+2*s,h-10);g.stroke();
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText('2 m',8,h-13);
+  const n=sends.filter(p=>p.t>t-WIN+1e-6).length, mx=Math.max(0,...ticks.filter(p=>p.t>t-WIN+1e-6).map(p=>p[key+'E']));
+  return {rate:n/WIN,ang:Math.atan(mx/bands[band].d)/DEG};
+}
+function drawWalker(){
+  const a=drawPath($('cTier'),'tier'),b=drawPath($('cErr'),'err');
+  $('tRate').textContent=f1(a.rate);$('tErr').textContent=f2(a.ang)+'°';
+  $('eRate').textContent=f1(b.rate);$('eErr').textContent=f2(b.ang)+'°';
+  $('tierLbl').textContent=TIERS[band][0]+' Hz, '+TIERS[band][1]+' B';
+  $('errLbl').textContent='ε = θd = '+(theta*DEG*bands[band].d).toFixed(3)+' m';
+}
+
+// ---------- animation ----------
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let playing=!reduce,lastTs=null,acc_t=0;
+function frame(ts){
+  if(!playing){lastTs=null;return;}
+  if(lastTs!==null){acc_t+=Math.min(0.2,(ts-lastTs)/1000);while(acc_t>=TICK){tick();acc_t-=TICK;}}
+  lastTs=ts;drawWalker();requestAnimationFrame(frame);
+}
+function setPlay(p){playing=p;$('play').textContent=p?'Pause':'Play';$('play').setAttribute('aria-pressed',String(!p));if(p)requestAnimationFrame(frame);}
+
+// ---------- events ----------
+$('crowd').addEventListener('input',e=>{stop=+e.target.value;renderNumbers();});
+$('theta').addEventListener('input',e=>{theta=+e.target.value;renderNumbers();reset();drawWalker();});
+$('acc').addEventListener('input',e=>{acc=+e.target.value;renderNumbers();reset();drawWalker();});
+$('budget').addEventListener('input',e=>{budget=+e.target.value;renderNumbers();});
+$('summary').addEventListener('change',e=>{summary=e.target.checked;renderNumbers();});
+$('showFlat').addEventListener('change',e=>{showFlat=e.target.checked;renderNumbers();});
+$('customOn').addEventListener('change',e=>{
+  $('customBox').hidden=!e.target.checked;
+  if(!e.target.checked){bands=DEF.map(b=>({...b}));DEF.forEach((b,i)=>{$('n'+i).value=b.n;$('d'+i).value=b.d;});reset();drawWalker();}
+  renderNumbers();
+});
+[0,1,2].forEach(i=>{['n','d'].forEach(k=>$(k+i).addEventListener('input',e=>{
+  const v=parseFloat(e.target.value);if(!(v>=0))return;
+  if(k==='n')bands[i].n=Math.round(v);else if(v>=1){bands[i].d=v;reset();drawWalker();}
+  renderNumbers();}));});
+document.querySelectorAll('[data-band]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-band]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');band=+b.dataset.band;reset();drawWalker();renderNumbers();
+}));
+$('play').addEventListener('click',()=>setPlay(!playing));
+function redrawAll(){renderNumbers();drawWalker();}
+window.addEventListener('resize',redrawAll);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redrawAll);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redrawAll);
+reset();redrawAll();setPlay(playing);
+})();
+</script>
+</body>
+</html>
