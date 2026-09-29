@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reading error bars · MMO405 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.insight{padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);margin:0 0 14px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px}
+#cDiff{height:130px}
+.under{font-size:.92rem;margin:6px 0 0;font-variant-numeric:tabular-nums}
+.under b{font-weight:700}
+.caption{font-size:.84rem;color:var(--ink-soft);margin:2px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;margin:6px 0 0}
+.legend svg{vertical-align:-2px;margin-right:4px}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 0}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.55rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.verdict{margin:12px 0 0;padding:8px 12px;border-radius:8px;font-weight:700;border:2px solid var(--vc,var(--ink))}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 20px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+label,.lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{font:600 .88rem var(--sans);padding:8px 13px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.readrow{display:flex;flex-wrap:wrap;gap:6px 24px;align-items:baseline;margin-top:16px;font-variant-numeric:tabular-nums}
+.readrow b{font-size:1.3rem}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-weight:600;color:var(--ink-soft);font-size:.84rem}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:600px){table{font-size:.82rem}th,td{padding:5px 5px}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO405 Research Methods in Online Games · Week 14 · Worked example</p>
+  <h1>Same data, three pictures</h1>
+  <p class="lede">Switch the error bars between SD, SE and 95% CI. The slide on the left goes from "overlap" to "gap". The test on the right does not move, because it never depended on the bars you drew.</p>
+</header>
+
+<section class="panel">
+  <p class="insight" id="insight"></p>
+  <div class="charts">
+    <figure>
+      <figcaption>What the slide shows<small id="capL">Two server means with error bars</small></figcaption>
+      <canvas id="cBars" role="img" aria-label="Two means with error bars"></canvas>
+      <p class="caption" id="barCap">Error bars: 95% CI</p>
+      <div class="legend" id="legL">
+        <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="var(--steel)"/></svg><span id="lgA">Server A</span></span>
+        <span><svg width="12" height="12" aria-hidden="true"><rect x="1" y="1" width="10" height="10" fill="var(--ochre)"/></svg><span id="lgB">Server B</span></span>
+      </div>
+      <p class="under" id="rangeA"></p>
+      <p class="under" id="rangeB"></p>
+      <p class="under" id="ovl"></p>
+    </figure>
+    <figure>
+      <figcaption>What the test says<small id="capR">Difference m₂ − m₁ with its 95% interval</small></figcaption>
+      <canvas id="cDiff" role="img" aria-label="Difference between means with its 95% interval on a number line with zero marked"></canvas>
+      <div class="big" aria-live="polite">
+        <div class="stat" style="--c:var(--ochre)"><b id="rDiff">1.20</b><span>difference m₂ − m₁</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rSe">0.566</b><span>SE of difference</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rZ">2.12</b><span>z</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rP">0.034</b><span>p (two-sided)</span></div>
+      </div>
+      <p class="under" id="ci"></p>
+      <p class="verdict" id="verdict"></p>
+    </figure>
+  </div>
+
+  <div class="readrow">
+    <span>Means apart: <b id="apart">3.00</b> s</span>
+    <span class="caption" id="apartNote">s = SD / √n, the SE of one mean</span>
+  </div>
+  <div class="table-wrap">
+    <table aria-label="Lecture table of pictures and p-values for independent means">
+      <thead><tr><th>Picture (independent means)</th><th>Means apart (in s)</th><th>z</th><th>p</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div><label for="m1"><span id="m1l">Mean A m₁</span> <output id="om1">6.0</output></label><input id="m1" type="range" min="0" max="60" step="0.1" value="6"></div>
+    <div><label for="m2"><span id="m2l">Mean B m₂</span> <output id="om2">7.2</output></label><input id="m2" type="range" min="0" max="60" step="0.1" value="7.2"></div>
+    <div><label for="sd">SD of players <output id="osd">4.0</output></label><input id="sd" type="range" min="0.5" max="30" step="0.1" value="4"></div>
+    <div><label for="n">Players per group n <output id="on">100</output></label><input id="n" type="range" min="5" max="2000" step="1" value="100"></div>
+    <div>
+      <span class="lab" id="btL">Bar type</span>
+      <div class="seg" role="group" aria-labelledby="btL">
+        <button class="chip" data-bt="sd" aria-pressed="false">SD</button>
+        <button class="chip" data-bt="se" aria-pressed="false">SE</button>
+        <button class="chip" data-bt="ci" aria-pressed="true">95% CI</button>
+      </div>
+    </div>
+    <div>
+      <span class="lab" id="pmL">Paired mode</span>
+      <div class="seg" role="group" aria-labelledby="pmL">
+        <button class="chip" id="paired" aria-pressed="false">Off: two servers</button>
+      </div>
+    </div>
+    <div id="rhoWrap" hidden><label for="rho">Correlation ρ <output id="orho">0.90</output></label><input id="rho" type="range" min="0" max="0.99" step="0.01" value="0.9"></div>
+  </div>
+  <div class="buttons">
+    <button class="btn primary" id="bSlide">Slide case</button>
+    <button class="btn primary" id="bPatch">Patch case</button>
+    <button class="btn" id="bFind">Find p = .05</button>
+    <button class="btn" id="bReset">Reset</button>
+  </div>
+</section>
+
+<footer>Formulas use the large-sample 1.96 throughout, as the lecture does. The error-bar study is Belia, Fidler, Williams and Cumming (2005), "Researchers misunderstand confidence intervals and standard error bars", Psychological Methods 10(4). Rules of eye after Cumming and Finch (2005). The servers and the patch are invented.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function erfc(x){const z=Math.abs(x),t=1/(1+0.5*z);
+  const r=t*Math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));
+  return x>=0?r:2-r;}
+const upper=x=>0.5*erfc(x/Math.SQRT2);
+const Z05=1.959963985;
+const DEF={m1:6.0,m2:7.2,sd:4.0,n:100,bt:'ci',paired:false,rho:0.9};
+let st={...DEF};
+const ROWS=[['SE bars overlap by one arm',1],['SE bars just touch',2],['SE bars with a gap of one SE',3],['95% CI arm reaches the other mean',1.96],['95% CIs overlap by half an arm',2.94],['95% CIs just touch',3.92]];
+const fmtP=p=>p<0.0001?'< 0.0001':(p<0.01?p.toFixed(4):p.toFixed(3));
+const f=(x,d)=>(Math.abs(x)<0.5*Math.pow(10,-d)?0:x).toFixed(d);
+const fm=x=>Math.abs(x*10-Math.round(x*10))<1e-9?x.toFixed(1):x.toFixed(2);
+
+function calc(){
+  const s=st.sd/Math.sqrt(st.n),arm=st.bt==='sd'?st.sd:(st.bt==='se'?s:1.96*s);
+  const se=st.paired?st.sd*Math.sqrt(2*(1-st.rho))/Math.sqrt(st.n):Math.SQRT2*s;
+  const d=st.m2-st.m1,z=se>0?d/se:Infinity,p=2*upper(Math.abs(z));
+  return{s,arm,se,d,z,p,lo:d-1.96*se,hi:d+1.96*se,apart:Math.abs(d)/s,ov:2*arm-Math.abs(d)};
+}
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g,w:r.width,h:r.height};}
+function niceStep(range,target){const raw=range/target,mag=Math.pow(10,Math.floor(Math.log10(raw)));return [1,2,2.5,5,10].map(m=>m*mag).find(v=>v>=raw);}
+const unit=()=>st.paired?'minutes':'hours';
+const names=()=>st.paired?['Week before','Week after']:['Server A','Server B'];
+
+function drawBars(k){
+  const c=setup($('cBars')),g=c.g,w=c.w,h=c.h,pad={l:54,r:14,t:14,b:30};
+  const ymin0=Math.min(st.m1,st.m2)-k.arm,ymax0=Math.max(st.m1,st.m2)+k.arm,span=Math.max(ymax0-ymin0,0.1),padv=span*0.12;
+  const step=niceStep(span+2*padv,5),y0=Math.floor((ymin0-padv)/step)*step,y1=Math.ceil((ymax0+padv)/step)*step;
+  const Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-y0)/(y1-y0));
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  const dec=step<0.1?2:(step<1?1:0);
+  for(let v=y0;v<=y1+step/2;v+=step){const y=Y(v);g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(f(v,dec),pad.l-6,y);}
+  g.save();g.translate(13,pad.t+(h-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillStyle=css('--ink-soft');
+  g.fillText(st.paired?'raid clear time (minutes)':'weekly raid hours',0,0);g.restore();
+  const xs=[pad.l+(w-pad.l-pad.r)*0.3,pad.l+(w-pad.l-pad.r)*0.7],ms=[st.m1,st.m2],cols=[css('--steel'),css('--ochre')];
+  // overlap shading
+  const aHi=st.m1+k.arm,aLo=st.m1-k.arm,bHi=st.m2+k.arm,bLo=st.m2-k.arm,oLo=Math.max(aLo,bLo),oHi=Math.min(aHi,bHi);
+  if(oHi>oLo){g.fillStyle=css('--blood');g.globalAlpha=.13;g.fillRect(pad.l,Y(oHi),w-pad.l-pad.r,Y(oLo)-Y(oHi));g.globalAlpha=1;
+    g.strokeStyle=css('--blood');g.setLineDash([4,3]);g.lineWidth=1;[oLo,oHi].forEach(v=>{g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();});g.setLineDash([]);}
+  else{const gLo=Math.min(aHi,bHi),gHi=Math.max(aLo,bLo);g.strokeStyle=css('--moss');g.setLineDash([4,3]);g.lineWidth=1;[gLo,gHi].forEach(v=>{g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();});g.setLineDash([]);}
+  names().forEach((nm,i)=>{const x=xs[i],m=ms[i];
+    g.strokeStyle=cols[i];g.lineWidth=2.5;g.beginPath();g.moveTo(x,Y(m-k.arm));g.lineTo(x,Y(m+k.arm));
+    g.moveTo(x-10,Y(m-k.arm));g.lineTo(x+10,Y(m-k.arm));g.moveTo(x-10,Y(m+k.arm));g.lineTo(x+10,Y(m+k.arm));g.stroke();
+    g.fillStyle=cols[i];g.strokeStyle=css('--paper-2');g.lineWidth=2;g.beginPath();
+    if(i===0)g.arc(x,Y(m),7,0,Math.PI*2);else g.rect(x-7,Y(m)-7,14,14);g.fill();g.stroke();
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='top';g.fillText(nm,x,h-pad.b+8);});
+}
+function drawDiff(k){
+  const c=setup($('cDiff')),g=c.g,w=c.w,h=c.h,pad={l:16,r:16,t:16,b:30};
+  const M=Math.max(Math.abs(k.lo),Math.abs(k.hi),1e-6)*1.15,step=niceStep(2*M,w<420?4:6),R=Math.ceil(M/step)*step;
+  const X=v=>pad.l+(w-pad.l-pad.r)*(v+R)/(2*R),base=h-pad.b;
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  const dec=step<0.1?2:(step<1?1:0);
+  for(let v=-R;v<=R+step/2;v+=step){const x=X(v);g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,base);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.fillText(f(v,dec),x,base+6);}
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,base);g.lineTo(w-pad.r,base);g.stroke();
+  g.lineWidth=2;g.beginPath();g.moveTo(X(0),pad.t-4);g.lineTo(X(0),base);g.stroke();
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('0',X(0)+4,pad.t-6);
+  const y=pad.t+(base-pad.t)/2,sig=k.p<0.05,col=sig?css('--moss'):css('--blood');
+  g.strokeStyle=col;g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(X(k.lo),y);g.lineTo(X(k.hi),y);g.stroke();g.lineCap='butt';
+  g.fillStyle=css('--ink');g.beginPath();g.arc(X(k.d),y,7,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();
+}
+function update(){
+  const k=calc(),[A,B]=names(),u=unit(),bl={sd:'SD',se:'SE',ci:'95% CI'}[st.bt];
+  $('om1').textContent=fm(st.m1);$('om2').textContent=fm(st.m2);$('osd').textContent=st.sd.toFixed(1);$('on').textContent=st.n.toLocaleString('en-US');$('orho').textContent=st.rho.toFixed(2);
+  $('m1l').textContent=(st.paired?'Mean before':'Mean A')+' m₁';$('m2l').textContent=(st.paired?'Mean after':'Mean B')+' m₂';
+  $('lgA').textContent=A;$('lgB').textContent=B;
+  document.querySelectorAll('[data-bt]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.bt===st.bt)));
+  $('paired').setAttribute('aria-pressed',String(st.paired));$('paired').textContent=st.paired?'On: same players twice':'Off: two servers';
+  $('rhoWrap').hidden=!st.paired;
+  $('barCap').textContent=`Error bars: ${bl}. Arm = ${k.arm.toFixed(3)} ${u}.`+(st.paired?' The bars do not depend on ρ.':'');
+  $('capL').textContent=st.paired?`The same ${st.n.toLocaleString('en-US')} players, one week before and one week after`:`${st.n.toLocaleString('en-US')} players per server`;
+  $('rangeA').innerHTML=`${A}: <b>${(st.m1-k.arm).toFixed(3)} to ${(st.m1+k.arm).toFixed(3)}</b>`;
+  $('rangeB').innerHTML=`${B}: <b>${(st.m2-k.arm).toFixed(3)} to ${(st.m2+k.arm).toFixed(3)}</b>`;
+  $('ovl').innerHTML=k.ov>1e-9?`overlap: <b>${k.ov.toFixed(3)} ${u}</b> (${(k.ov/k.arm).toFixed(2)} of an arm)`:(k.ov<-1e-9?`gap: <b>${(-k.ov).toFixed(3)} ${u}</b> (${(-k.ov/k.arm).toFixed(2)} of an arm)`:`the bars just touch`);
+  $('capR').textContent=st.paired?`Change after − before, SE_diff = SD × √(2(1 − ρ)) / √n`:`Difference m₂ − m₁, SE_diff = √2 × s`;
+  $('rDiff').textContent=k.d.toFixed(2);$('rSe').textContent=k.se.toFixed(3);$('rZ').textContent=isFinite(k.z)?k.z.toFixed(2):'∞';$('rP').textContent=fmtP(k.p);
+  $('ci').innerHTML=`95% interval of the difference: <b>${k.lo.toFixed(3)} to ${k.hi.toFixed(3)}</b> ${u}`;
+  const sig=k.p<0.05,edge=Math.abs(k.p-0.05)<5e-5;$('verdict').textContent=edge?'exactly on the .05 line':(sig?'significant at .05':'not significant at .05');$('verdict').style.setProperty('--vc',sig?'var(--moss)':'var(--blood)');
+  $('apart').textContent=k.apart.toFixed(2);
+  $('apartNote').textContent=`s = SD / √n = ${k.s.toFixed(3)} ${u}, the SE of one mean`+(st.paired?'. The table below is for independent means.':'');
+  $('tb').innerHTML=ROWS.map(r=>{const z=r[1]/Math.SQRT2,p=2*upper(z),here=!st.paired&&Math.abs(k.apart-r[1])<=0.02;
+    return `<tr class="${here?'here':''}"><td>${r[0]}</td><td>${r[1].toFixed(2)}</td><td>${z.toFixed(2)}</td><td>${fmtP(p)}</td></tr>`;}).join('');
+  const look=k.ov>1e-9?'overlap':'a gap';
+  $('insight').innerHTML=`The slide shows ${look} with ${bl} bars. The test says <b>p = ${fmtP(k.p)}</b>, ${sig?'significant':'not significant'} at .05. `+
+    (st.paired?`In paired mode the bars on each week stay fixed. Move ρ and only the right view changes.`:`Switch the bar type: the left picture changes, the right one does not.`);
+  drawBars(k);drawDiff(k);
+}
+function sync(){$('m1').value=st.m1;$('m2').value=st.m2;$('sd').value=st.sd;$('n').value=st.n;$('rho').value=st.rho;}
+['m1','m2','sd','n','rho'].forEach(id=>$(id).addEventListener('input',e=>{st[id]=+e.target.value;update();}));
+document.querySelectorAll('[data-bt]').forEach(b=>b.addEventListener('click',()=>{st.bt=b.dataset.bt;update();}));
+$('paired').addEventListener('click',()=>{st.paired=!st.paired;update();});
+$('bSlide').addEventListener('click',()=>{Object.assign(st,{m1:6.0,m2:7.2,sd:4.0,n:100,paired:false,bt:'ci'});sync();update();});
+$('bPatch').addEventListener('click',()=>{Object.assign(st,{m1:42.0,m2:40.5,sd:20,n:400,paired:true,rho:0.9,bt:'ci'});sync();update();});
+$('bFind').addEventListener('click',()=>{const k=calc(),sgn=k.d<0?-1:1;let m2=st.m1+sgn*Z05*k.se;
+  if(m2>60||m2<0)m2=st.m1-sgn*Z05*k.se;st.m2=Math.max(0,Math.min(60,m2));sync();update();});
+$('bReset').addEventListener('click',()=>{st={...DEF};sync();update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+window.__eb={set:o=>{Object.assign(st,o);sync();update();}};
+update();
+})();
+</script>
+</body>
+</html>

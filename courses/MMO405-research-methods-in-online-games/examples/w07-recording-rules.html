@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scan vs one-zero sampling, MMO405 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.charts{display:grid;gap:12px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#cTime{display:block;width:100%;height:136px}
+#cEst{display:block;width:100%;height:250px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend svg{vertical-align:middle;margin-right:5px}
+.seg{display:inline-flex;border:1.5px solid var(--steel);border-radius:8px;overflow:hidden;margin:6px 0 2px}
+.seg button{font:600 .85rem var(--sans);padding:6px 11px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1.5px solid var(--steel)}
+.seg button[aria-checked="true"]{background:var(--steel);color:var(--paper)}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.insight b{font-family:var(--sans)}
+.small{font-size:.82rem;color:var(--ink-soft);margin:8px 0 0}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 20px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+.hint{font-size:.78rem;color:var(--ink-soft);display:block}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
+.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.seed{font-size:.85rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO405 Research Methods in Online Games · Week 7 · Worked example</p>
+  <h1>Same evening, two recording rules, two answers</h1>
+  <p class="lede">You watch a guild for two hours and want the share of time spent arguing over loot. A scan sample lands on the true share on average. A one-zero score marks a whole interval if the behavior happens at any point in it, so it overstates the share by about 1 + T/b.</p>
+</header>
+
+<section class="panel" aria-label="Recording rules model">
+  <div class="layout">
+    <div class="charts">
+      <figure>
+        <figcaption>The evening<small>Bouts of the behavior on one track. Scan ticks below, one-zero intervals behind.</small></figcaption>
+        <div class="seg" role="radiogroup" aria-label="Show on timeline">
+          <button role="radio" data-mode="scan" aria-checked="false" tabindex="-1">Scan ticks</button>
+          <button role="radio" data-mode="oz" aria-checked="false" tabindex="-1">One-zero bands</button>
+          <button role="radio" data-mode="both" aria-checked="true" tabindex="0">Both</button>
+        </div>
+        <canvas id="cTime" role="img" aria-label="Timeline of bouts with scan points and one-zero intervals"></canvas>
+        <div class="legend">
+          <span><svg width="22" height="10" aria-hidden="true"><rect width="22" height="10" rx="2" fill="var(--ink)"/></svg>Bout</span>
+          <span><svg width="14" height="12" aria-hidden="true"><path d="M7 1 L13 11 L1 11 Z" fill="var(--steel)"/></svg>Scan hit</span>
+          <span><svg width="14" height="12" aria-hidden="true"><path d="M7 1 L13 11 L1 11 Z" fill="none" stroke="var(--ink-soft)" stroke-width="1.5"/></svg>Scan miss</span>
+          <span><svg width="22" height="12" aria-hidden="true"><defs><pattern id="lh" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="var(--blood)" opacity=".22"/><rect width="1.6" height="5" fill="var(--blood)" opacity=".7"/></pattern></defs><rect width="22" height="12" fill="url(#lh)"/></svg>One-zero interval scored 1 (hatched)</span>
+        </div>
+      </figure>
+      <figure>
+        <figcaption>Estimate versus interval T<small>Scan is averaged over every start offset. One-zero is this evening's score.</small></figcaption>
+        <canvas id="cEst" role="img" aria-label="Estimated time share versus sampling interval for each rule"></canvas>
+        <div class="legend">
+          <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--moss)" stroke-width="7" opacity=".55"/></svg>True share p (scan sits on it)</span>
+          <span><svg width="26" height="10" aria-hidden="true"><line x1="0" y1="5" x2="26" y2="5" stroke="var(--steel)" stroke-width="2"/><circle cx="13" cy="5" r="3" fill="var(--steel)"/></svg>Scan, averaged over offsets</span>
+          <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--blood)" stroke-width="3"/></svg>One-zero, this evening</span>
+          <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--ochre)" stroke-width="2.5" stroke-dasharray="7 5"/></svg>Formula min(1, n(T + b)/L)</span>
+        </div>
+      </figure>
+    </div>
+    <div>
+      <div class="readout">
+        <div class="stat" style="--c:var(--moss)"><b id="rP">—</b><span>true share p</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rScan">—</b><span>scan at this offset</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rAvg">—</b><span>scan, average over offsets</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rOz">—</b><span>one-zero p<sub>10</sub></span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rF">—</b><span>formula n(T + b)/L</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rBias">—</b><span>observed bias p<sub>10</sub>/p</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rFb">—</b><span>formula bias 1 + T/b</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rB">—</b><span>bout length b, min</span></div>
+      </div>
+      <div class="insight" id="insight"></div>
+      <p class="small" id="gapNote"></p>
+      <p class="sr" id="srSum" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div><label for="L">Session length L <output id="oL"></output></label><input id="L" type="range" min="60" max="240" step="30" value="120"></div>
+    <div><label for="n">Number of bouts n <output id="on"></output></label><input id="n" type="range" min="1" max="8" step="1" value="4"></div>
+    <div><label for="tot">Total minutes in bouts <output id="otot"></output></label><input id="tot" type="range" min="5" max="60" step="1" value="24"><span class="hint">Bout length b = total / n</span></div>
+    <div><label for="T">Interval T <output id="oT"></output></label><input id="T" type="range" min="1" max="30" step="1" value="15"></div>
+    <div><label for="off">Scan offset <output id="ooff"></output></label><input id="off" type="range" min="0" max="14" step="1" value="0"><span class="hint">Minute of the first scan, 0 to T − 1</span></div>
+  </div>
+  <div class="presets" role="group" aria-label="Bout placement">
+    <button class="chip" id="bEven" aria-pressed="true">Even spacing</button>
+    <button class="chip" id="bLect" aria-pressed="false">Lecture evening</button>
+    <button class="chip" id="bShuf" aria-pressed="false">Shuffle bouts</button>
+    <span class="seed" id="seed"></span>
+  </div>
+</section>
+
+<footer>Abstract timeline, no real footage. Recording rules after Altmann (1974), "Observational Study of Behavior: Sampling Methods". Scan sampling is unbiased for time share; one-zero sampling scores an interval 1 when any part of a bout falls in it, so each bout of length b is counted for about T + b minutes. Shuffle uses the mulberry32 seeded generator: the same seed, L, n and total always give the same evening.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let L=120,n=4,tot=24,T=15,off=0,mode='both',place='even',seed=1;
+let bouts=[];
+const LECTURE=[[3,9],[31,37],[58,64],[95,101]];
+
+// mulberry32: small, documented 32-bit seeded PRNG (Tommy Ettinger's public-domain design).
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+function layout(){
+  const b=tot/n;
+  if(place==='lecture'){bouts=LECTURE.map(x=>x.slice());return;}
+  if(place==='even'){
+    const s=[];for(let i=0;i<n;i++)s.push(Math.min(Math.round(i*L/n+3),L-b));
+    for(let i=1;i<n;i++)s[i]=Math.max(s[i],s[i-1]+b);        // no overlap
+    for(let i=n-1;i>=0;i--)s[i]=Math.min(s[i],(i===n-1?L:s[i+1])-b); // end by L
+    bouts=s.map(x=>[x,x+b]);return;
+  }
+  // shuffle: n integer gap positions in [0, L - total], sorted, then add i*b
+  const rng=mulberry32(seed),free=L-tot,u=[];
+  for(let i=0;i<n;i++)u.push(Math.floor(rng()*(free+1)));
+  u.sort((x,y)=>x-y);bouts=u.map((x,i)=>[x+i*b,x+i*b+b]);
+}
+const inBout=t=>bouts.some(([s,e])=>s<=t&&t<e);
+function trueP(){return bouts.reduce((a,[s,e])=>a+(e-s),0)/L;}
+function pScan(T,o){let hit=0,pts=0;for(let t=o;t<L;t+=T){pts++;if(inBout(t))hit++;}return pts?hit/pts:0;}
+function scanAvg(T){let s=0;for(let o=0;o<T;o++)s+=pScan(T,o);return s/T;}
+function blockHit(T,k){return bouts.some(([s,e])=>s<(k+1)*T&&e>k*T);}
+function p10(T){const K=Math.ceil(L/T);let h=0;for(let k=0;k<K;k++)if(blockHit(T,k))h++;return h/K;}
+function formula(T){const b=tot/n;return Math.min(1,n*(T+b)/L);}
+
+const pc=v=>(Math.round(v*1000)/10).toFixed(1)+'%';
+const f2=v=>(Math.round(v*100)/100).toFixed(2);
+const f1=v=>{const r=Math.round(v*10)/10;return r%1===0?r.toFixed(0):r.toFixed(1);};
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function hatch(g){
+  const p=document.createElement('canvas');p.width=p.height=8;const x=p.getContext('2d');
+  x.fillStyle=css('--blood');x.globalAlpha=.2;x.fillRect(0,0,8,8);x.globalAlpha=.75;x.strokeStyle=css('--blood');x.lineWidth=1.4;
+  x.beginPath();x.moveTo(-2,2);x.lineTo(2,-2);x.moveTo(0,8);x.lineTo(8,0);x.moveTo(6,10);x.lineTo(10,6);x.stroke();
+  return g.createPattern(p,'repeat');
+}
+function drawTime(){
+  const {g,w,h}=setupCanvas($('cTime')),pad={l:10,r:10};
+  const X=m=>pad.l+(w-pad.l-pad.r)*m/L,bandT=6,bandB=h-40,trackY=30,trackH=24,tickY=bandB+8;
+  g.clearRect(0,0,w,h);
+  const K=Math.ceil(L/T),showOz=mode!=='scan',showScan=mode!=='oz';
+  if(showOz){
+    const pat=hatch(g);
+    for(let k=0;k<K;k++){
+      const x0=X(k*T),x1=X(Math.min(L,(k+1)*T));
+      g.fillStyle=css('--grid');g.globalAlpha=k%2?0.55:0.25;g.fillRect(x0,bandT,x1-x0,bandB-bandT);g.globalAlpha=1;
+      if(blockHit(T,k)){g.fillStyle=pat;g.fillRect(x0,bandT,x1-x0,bandB-bandT);}
+    }
+  }
+  // track
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.beginPath();g.moveTo(X(0),trackY+trackH/2);g.lineTo(X(L),trackY+trackH/2);g.stroke();
+  g.fillStyle=css('--ink');
+  bouts.forEach(([s,e])=>{const x0=X(s),x1=Math.max(X(e),x0+2);g.beginPath();g.roundRect?g.roundRect(x0,trackY,x1-x0,trackH,3):g.rect(x0,trackY,x1-x0,trackH);g.fill();});
+  // scan ticks
+  if(showScan){
+    const sz=T<3?3:5;
+    for(let t=off;t<L;t+=T){
+      const x=X(t),hit=inBout(t);
+      g.strokeStyle=css('--ink-soft');g.globalAlpha=.5;g.beginPath();g.moveTo(x,trackY+trackH);g.lineTo(x,tickY-sz);g.stroke();g.globalAlpha=1;
+      g.beginPath();g.moveTo(x,tickY-sz);g.lineTo(x+sz,tickY+sz);g.lineTo(x-sz,tickY+sz);g.closePath();
+      if(hit){g.fillStyle=css('--steel');g.fill();}else{g.strokeStyle=css('--ink-soft');g.lineWidth=1.2;g.stroke();}
+    }
+  }
+  // minute axis
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  const step=L>150||w<500?60:30;
+  for(let m=0;m<=L;m+=step){g.fillText(m+(m===L?' min':''),Math.min(Math.max(X(m),14),w-24),h-17);}
+}
+function drawEst(){
+  const {g,w,h}=setupCanvas($('cEst')),pad={l:44,r:12,t:10,b:32};
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t-1)/29,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const v=i/4;g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(v*100)+'%',pad.l-6,Y(v));}
+  [1,5,10,15,20,25,30].forEach(t=>{g.textAlign='center';g.textBaseline='top';g.fillText(t,X(t),h-pad.b+6);});
+  g.textAlign='right';g.fillText('T, minutes',w-pad.r,h-14);
+  const Ts=[];for(let t=1;t<=30;t++)Ts.push(t);
+  const ln=(f,col,wd,dash)=>{g.strokeStyle=col;g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();Ts.forEach((t,i)=>{const v=f(t);i?g.lineTo(X(t),Y(v)):g.moveTo(X(t),Y(v));});g.stroke();g.setLineDash([]);};
+  const p=trueP();
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(T),pad.t);g.lineTo(X(T),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.globalAlpha=.55;ln(()=>p,css('--moss'),8);g.globalAlpha=1;
+  ln(formula,css('--ochre'),2.5,[7,5]);
+  ln(p10,css('--blood'),3);
+  const sa=Ts.map(scanAvg);
+  ln(t=>sa[t-1],css('--steel'),2);
+  g.fillStyle=css('--steel');Ts.forEach(t=>{g.beginPath();g.arc(X(t),Y(sa[t-1]),2.5,0,Math.PI*2);g.fill();});
+  // current T markers
+  [[p10(T),'--blood'],[sa[T-1],'--steel']].forEach(([v,c])=>{g.fillStyle=css(c);g.beginPath();g.arc(X(T),Y(v),6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+}
+function update(){
+  layout();
+  const b=tot/n,p=trueP(),ps=pScan(T,off),sa=scanAvg(T),oz=p10(T),fo=formula(T),bias=oz/p,fb=1+T/b;
+  $('oL').textContent=L+' min';$('on').textContent=n;$('otot').textContent=tot+' min';$('oT').textContent=T+' min';$('ooff').textContent=off;
+  $('rP').textContent=pc(p);$('rScan').textContent=pc(ps);$('rAvg').textContent=pc(sa);$('rOz').textContent=pc(oz);$('rF').textContent=pc(fo);
+  $('rBias').textContent='×'+f2(bias);$('rFb').textContent='×'+f2(fb);$('rB').textContent=f1(b);
+  $('insight').innerHTML=`One-zero overstates time by <b>×${f2(bias)}</b> at this interval. The scan average is ${pc(sa)} against a true ${pc(p)}${Math.abs(sa-p)<0.0005?', exactly on target':''}. Split the same ${tot} minutes into more, shorter bouts and the one-zero score climbs, because every bout claims about T + b minutes.`;
+  let gmin=Infinity;for(let i=1;i<bouts.length;i++)gmin=Math.min(gmin,bouts[i][0]-bouts[i-1][1]);
+  $('gapNote').textContent=gmin<T?`The formula assumes gaps between bouts of at least T. Here the smallest gap is ${f1(gmin)} min, so two bouts can share an interval and the observed score falls below the formula.`:(fo>=1?'The formula caps at 100%: every interval is scored 1.':(Math.abs(oz-fo)>0.0005?`This evening scores ${pc(oz)}, not the formula's ${pc(fo)}. The formula averages over where bouts fall against the interval edges. Try Shuffle or move a bout across an edge.`:''));
+  $('srSum').textContent=`True share ${pc(p)}. Scan average ${pc(sa)}. One-zero ${pc(oz)}. Bias factor ${f2(bias)}.`;
+  $('seed').textContent=place==='shuffle'?'Seed '+seed:'';
+  ['bEven','bLect','bShuf'].forEach((id,i)=>$(id).setAttribute('aria-pressed',place===['even','lecture','shuffle'][i]));
+  drawTime();drawEst();
+}
+function setOffMax(){const o=$('off');o.max=T-1;if(off>T-1)off=T-1;o.value=off;}
+function sync(){$('L').value=L;$('n').value=n;$('tot').value=tot;$('T').value=T;setOffMax();}
+function shapeChange(){if(place==='lecture')place='even';update();}
+$('L').addEventListener('input',e=>{L=+e.target.value;shapeChange();});
+$('n').addEventListener('input',e=>{n=+e.target.value;shapeChange();});
+$('tot').addEventListener('input',e=>{tot=+e.target.value;shapeChange();});
+$('T').addEventListener('input',e=>{T=+e.target.value;setOffMax();update();});
+$('off').addEventListener('input',e=>{off=+e.target.value;update();});
+$('bEven').addEventListener('click',()=>{place='even';update();});
+$('bLect').addEventListener('click',()=>{place='lecture';L=120;n=4;tot=24;sync();update();});
+$('bShuf').addEventListener('click',()=>{if(place==='shuffle')seed++;place='shuffle';update();});
+const radios=[...document.querySelectorAll('.seg [role=radio]')];
+function pick(r){radios.forEach(x=>{const on=x===r;x.setAttribute('aria-checked',on);x.tabIndex=on?0:-1;});mode=r.dataset.mode;drawTime();}
+radios.forEach((r,i)=>{r.addEventListener('click',()=>pick(r));r.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();const t=radios[(i+1)%radios.length];pick(t);t.focus();}
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();const t=radios[(i+radios.length-1)%radios.length];pick(t);t.focus();}});});
+window.addEventListener('resize',()=>{drawTime();drawEst();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawTime();drawEst();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawTime();drawEst();});
+sync();update();
+})();
+</script>
+</body>
+</html>

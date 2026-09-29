@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pooled vs split: difference-in-differences, MMO405 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.charts{display:grid;gap:12px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:230px}
+.summary{font-size:.88rem;color:var(--ink);margin:6px 0 2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:4px 0 0}
+.legend svg{vertical-align:middle;margin-right:5px}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.stat{border-left:4px solid var(--c,var(--ink));padding:3px 0 3px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.stat.wide{grid-column:1/-1}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 20px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+.hint{font-size:.78rem;color:var(--ink-soft);display:block}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{background:var(--paper-2)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+@media (max-width:560px){table{font-size:.8rem}th,td{padding:5px 4px}}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO405 Research Methods in Online Games · Week 5 · Worked example</p>
+  <h1>The pooled line went up. The policy worked.</h1>
+  <p class="lede">A rule limits minors' play in the same week an expansion launches for everyone. The top chart is all the telemetry shows without age data. The bottom chart splits the same accounts by who the rule applies to.</p>
+</header>
+
+<section class="panel" aria-label="Difference-in-differences model">
+  <div class="layout">
+    <div class="charts">
+      <figure>
+        <figcaption>What pooled telemetry shows<small>Share of accounts playing heavily, % (all accounts)</small></figcaption>
+        <canvas id="cTop" role="img" aria-label="Pooled heavy play by week"></canvas>
+        <div class="legend">
+          <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--ochre)" stroke-width="3"/></svg>Pooled</span>
+          <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--ink-soft)" stroke-width="1.5" stroke-dasharray="4 4"/></svg>Rule starts (week 0)</span>
+        </div>
+        <p class="summary" id="sumTop" aria-live="polite"></p>
+      </figure>
+      <figure>
+        <figcaption>Split by the group the rule applies to<small>Same accounts. Shaded bands mark the averaging windows.</small></figcaption>
+        <canvas id="cBot" role="img" aria-label="Minors and adults heavy play by week with the minors counterfactual"></canvas>
+        <div class="legend">
+          <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--blood)" stroke-width="3"/></svg>Minors (treated)</span>
+          <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--steel)" stroke-width="3" stroke-dasharray="2 3"/></svg>Adults (comparison)</span>
+          <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="var(--blood)" stroke-width="2" stroke-dasharray="8 5"/></svg>Minors without the rule</span>
+        </div>
+        <p class="summary" id="sumBot" aria-live="polite"></p>
+      </figure>
+    </div>
+
+    <div>
+      <div class="readout">
+        <div class="stat" style="--c:var(--ochre)"><b id="rPre">—</b><span>pooled before (wk −4 to −1)</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rPost">—</b><span>pooled after (wk 0 to 3)</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rPc">—</b><span>pooled change, points</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rOr">—</b><span>pooled odds ratio</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rMin">—</b><span>minors-only change</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rDid">—</b><span>DiD estimate</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rPlac">—</b><span>placebo DiD (pre vs early-pre)</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rTrue">—</b><span>true effect e</span></div>
+        <div class="stat wide" style="--c:var(--ink-soft)"><b id="rBias">—</b><span>bias = DiD − e</span></div>
+      </div>
+      <div class="insight" id="insight" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div><label for="w">Minors' share of accounts, w <output id="ow"></output></label><input id="w" type="range" min="0.02" max="0.5" step="0.01" value="0.10"></div>
+    <div><label for="c">Common shock at week 0, c <output id="oc"></output></label><input id="c" type="range" min="-2" max="2" step="0.1" value="1"><span class="hint">An expansion that hits everyone</span></div>
+    <div><label for="e">True effect on minors, e <output id="oe"></output></label><input id="e" type="range" min="-3" max="1" step="0.1" value="-2"></div>
+    <div><label for="g">Common weekly trend, g <output id="og"></output></label><input id="g" type="range" min="-0.2" max="0.2" step="0.01" value="0"></div>
+    <div><label for="d">Extra weekly trend for minors, d <output id="od"></output></label><input id="d" type="range" min="-0.3" max="0.3" step="0.05" value="0"><span class="hint">Anything but 0 breaks parallel trends</span></div>
+  </div>
+  <div class="presets" role="group" aria-label="Presets">
+    <button class="chip" id="bReset">Reset</button>
+    <button class="chip" id="bTencent">Tencent-sized group (w = 0.064)</button>
+    <button class="chip" id="bBreak">Break parallel trends (d = 0.25)</button>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Window means by group">
+      <thead><tr><th>Group</th><th>Early-pre (−8 to −5)</th><th>Pre (−4 to −1)</th><th>Post (0 to 3)</th><th>Post − pre</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Invented game, realistic structure. Values are percentage points of accounts playing heavily. Model: adult(t) = 3.0 + g·t + c·[t ≥ 0]; minor(t) = 4.0 + (g + d)·t + (c + e)·[t ≥ 0]; pooled = w·minor + (1 − w)·adult. The real case the lecture discusses: Zendle et al. (2023), Unity telemetry around China's November 2019 play-time rule for minors, and the reply by Karhulahti, Huntington-Klein, Ballou and Ropovik (2026, <i>Collabra: Psychology</i>). The 6.4% preset is the minors' playtime share on Tencent games in China, September 2020, as cited by Zendle et al.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DEF={w:0.10,c:1,e:-2,g:0,d:0};
+let S=Object.assign({},DEF);
+const WEEKS=[];for(let t=-8;t<=7;t++)WEEKS.push(t);
+
+const adult=t=>3.0+S.g*t+S.c*(t>=0?1:0);
+const minor=t=>4.0+(S.g+S.d)*t+(S.c+S.e)*(t>=0?1:0);
+const minorCf=t=>minor(t)-S.e;
+const pooled=t=>S.w*minor(t)+(1-S.w)*adult(t);
+const mean=(f,a,b)=>{let s=0,n=0;for(let t=a;t<=b;t++){s+=f(t);n++;}return s/n;};
+const odds=p=>p/(1-p);
+
+// Formatting: two decimals, true minus sign, no negative zero.
+function r2(v){v=Math.round(v*100)/100;return Math.abs(v)<0.005?0:v;}
+function num(v){v=r2(v);return (v<0?'−':'')+Math.abs(v).toFixed(2);}
+function sgn(v){v=r2(v);return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);}
+function wfmt(w){const m=Math.round(w*1000);return (m/1000).toFixed(m%10===0?2:3);}
+
+function compute(){
+  const R={};
+  R.pPre=mean(pooled,-4,-1);R.pPost=mean(pooled,0,3);R.pChange=R.pPost-R.pPre;
+  R.or=odds(R.pPost/100)/odds(R.pPre/100);
+  R.mEarly=mean(minor,-8,-5);R.mPre=mean(minor,-4,-1);R.mPost=mean(minor,0,3);
+  R.aEarly=mean(adult,-8,-5);R.aPre=mean(adult,-4,-1);R.aPost=mean(adult,0,3);
+  R.pEarly=mean(pooled,-8,-5);
+  R.minChange=R.mPost-R.mPre;
+  R.did=(R.mPost-R.mPre)-(R.aPost-R.aPre);
+  R.placebo=(R.mPre-R.mEarly)-(R.aPre-R.aEarly);
+  R.bias=R.did-S.e;
+  return R;
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function yRange(){
+  let lo=Infinity,hi=-Infinity;
+  WEEKS.forEach(t=>{[adult(t),minor(t),pooled(t),t>=0?minorCf(t):minor(t)].forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});});
+  lo=Math.floor(lo-0.3);hi=Math.ceil(hi+0.3);if(hi-lo<2)hi=lo+2;return [lo,hi];
+}
+const pad={l:40,r:10,t:18,b:30};
+function frame(c,yr,bands){
+  const {g,w,h}=c,X=t=>pad.l+(w-pad.l-pad.r)*(t+8.5)/16,Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-yr[0])/(yr[1]-yr[0]));
+  g.clearRect(0,0,w,h);
+  if(bands){
+    [[-8,-5,'early-pre'],[-4,-1,'pre'],[0,3,'post']].forEach(([a,b,lab],i)=>{
+      g.fillStyle=css('--grid');g.globalAlpha=i===0?.35:.6;g.fillRect(X(a-.5),pad.t,X(b+.5)-X(a-.5),h-pad.t-pad.b);g.globalAlpha=1;
+      g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText(lab,(X(a-.5)+X(b+.5))/2,h-pad.b-3);
+    });
+  }
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  const step=(yr[1]-yr[0])>6?2:1;
+  for(let v=yr[0];v<=yr[1]+1e-9;v+=step){const y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v.toFixed(0),pad.l-6,y);}
+  const narrow=w<420;
+  WEEKS.forEach(t=>{if(narrow&&t%2!==0)return;g.textAlign='center';g.textBaseline='top';g.fillText(t<0?'−'+(-t):String(t),X(t),h-pad.b+6);});
+  // rule line
+  g.strokeStyle=css('--ink-soft');g.setLineDash([4,4]);g.lineWidth=1.5;g.beginPath();g.moveTo(X(0),pad.t);g.lineTo(X(0),h-pad.b);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='top';g.font='600 11px '+css('--sans');g.fillText('rule starts',X(0)+4,pad.t+2);
+  return {X,Y};
+}
+function line(g,X,Y,ts,f,color,width,dash,dots){
+  g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash||[]);g.beginPath();
+  ts.forEach((t,i)=>{const px=X(t),py=Y(f(t));i?g.lineTo(px,py):g.moveTo(px,py);});g.stroke();g.setLineDash([]);
+  if(dots){g.fillStyle=color;ts.forEach(t=>{g.beginPath();g.arc(X(t),Y(f(t)),2.6,0,Math.PI*2);g.fill();});}
+}
+function draw(){
+  const yr=yRange();
+  let c=setupCanvas($('cTop'));let {X,Y}=frame(c,yr,false);
+  line(c.g,X,Y,WEEKS,pooled,css('--ochre'),3,null,true);
+  c=setupCanvas($('cBot'));({X,Y}=frame(c,yr,true));
+  const g=c.g,post=WEEKS.filter(t=>t>=0);
+  // effect shading
+  if(Math.abs(S.e)>1e-9){
+    g.fillStyle=css('--blood');g.globalAlpha=.16;g.beginPath();
+    post.forEach((t,i)=>{i?g.lineTo(X(t),Y(minor(t))):g.moveTo(X(t),Y(minor(t)));});
+    post.slice().reverse().forEach(t=>g.lineTo(X(t),Y(minorCf(t))));g.closePath();g.fill();g.globalAlpha=1;
+    const tm=5.5,ym=Y(minor(tm)+0.78*(minorCf(tm)-minor(tm)));
+    g.fillStyle=css('--blood');g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='middle';
+    if(Math.abs(Y(minor(tm))-Y(minorCf(tm)))>30){g.fillText('effect',X(tm),ym);}
+  }
+  line(g,X,Y,WEEKS,adult,css('--steel'),3,[2,3],true);
+  line(g,X,Y,[-1].concat(post),t=>t<0?minor(t):minorCf(t),css('--blood'),2,[8,5],false);
+  line(g,X,Y,WEEKS,minor,css('--blood'),3,null,true);
+}
+function update(){
+  const R=compute();
+  $('ow').textContent=wfmt(S.w);$('oc').textContent=sgn(S.c).replace(/0$/,'');$('oe').textContent=sgn(S.e).replace(/0$/,'');
+  $('og').textContent=sgn(S.g);$('od').textContent=sgn(S.d);
+  $('rPre').textContent=num(R.pPre);$('rPost').textContent=num(R.pPost);$('rPc').textContent=sgn(R.pChange);
+  $('rOr').textContent=(Math.round(R.or*100)/100).toFixed(2);$('rMin').textContent=sgn(R.minChange);
+  $('rDid').textContent=sgn(R.did);$('rPlac').textContent=sgn(R.placebo);$('rTrue').textContent=sgn(S.e);$('rBias').textContent=sgn(R.bias);
+  const up=r2(R.pChange)>0?'rises':r2(R.pChange)<0?'falls':'does not move';
+  $('sumTop').textContent=`Pooled heavy play ${up}: ${num(R.pPre)} before, ${num(R.pPost)} after, a change of ${sgn(R.pChange)} points (odds ratio ${(Math.round(R.or*100)/100).toFixed(2)}).`;
+  $('sumBot').textContent=`Minors change by ${sgn(R.minChange)}, adults by ${sgn(R.aPost-R.aPre)}. DiD = ${sgn(R.did)}, true effect ${sgn(S.e)}, placebo ${sgn(R.placebo)}.`;
+  let s;
+  if(Math.abs(r2(R.placebo))>0){
+    s=`Parallel trends are broken. The placebo DiD, comparing two windows before the rule, should be 0 and is <b>${sgn(R.placebo)}</b>. The DiD of ${sgn(R.did)} is off by ${sgn(R.bias)}, which is 4 × d, because each comparison spans four weeks. Always run the placebo before you trust the estimate.`;
+  }else if(r2(R.pChange)*r2(S.e)<0){
+    s=`The pooled series says heavy play went <b>${r2(R.pChange)>0?'up':'down'}</b> by ${sgn(R.pChange)}. The rule actually moved minors by <b>${sgn(S.e)}</b>, and DiD recovers it exactly. With minors at ${Math.round(S.w*1000)/10}% of accounts, the common shock of ${sgn(S.c)} swamps their effect. No amount of staring at the top chart reveals the bottom one.`;
+  }else{
+    s=`Here the pooled change (${sgn(R.pChange)}) and the true effect (${sgn(S.e)}) point the same way or one is zero, so the pooled series happens not to mislead about direction. Its size is still wrong: DiD gives ${sgn(R.did)}. Try a positive shock with a negative effect.`;
+  }
+  $('insight').innerHTML=s;
+  const row=(n,a,b,c)=>`<tr><td>${n}</td><td>${num(a)}</td><td>${num(b)}</td><td>${num(c)}</td><td>${sgn(c-b)}</td></tr>`;
+  $('tbody').innerHTML=row('Minors',R.mEarly,R.mPre,R.mPost)+row('Adults',R.aEarly,R.aPre,R.aPost)+row('Pooled',R.pEarly,R.pPre,R.pPost);
+  draw();
+}
+function setSliders(){['w','c','e','g','d'].forEach(k=>{$(k).value=S[k];});}
+['w','c','e','g','d'].forEach(k=>$(k).addEventListener('input',ev=>{S[k]=+ev.target.value;update();}));
+$('bReset').addEventListener('click',()=>{S=Object.assign({},DEF);setSliders();update();});
+$('bTencent').addEventListener('click',()=>{S.w=0.064;setSliders();update();});
+$('bBreak').addEventListener('click',()=>{S.d=0.25;setSliders();update();});
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+})();
+</script>
+</body>
+</html>

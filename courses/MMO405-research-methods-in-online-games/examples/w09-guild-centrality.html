@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guild Centrality Explorer · MMO405 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:4px solid var(--ochre);font-family:var(--serif);font-size:1.02rem;max-width:90ch}
+.controls{display:grid;grid-template-columns:auto 1fr auto;gap:14px 22px;align-items:end;background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+@media (max-width:900px){.controls{grid-template-columns:1fr}}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend,.lab{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg label{font:600 .9rem var(--sans);padding:7px 12px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer;display:inline-block}
+.seg input:checked+label{background:var(--ink);color:var(--paper)}
+.seg input:focus-visible+label,button:focus-visible,input:focus-visible,select:focus-visible,.node:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.node:focus{outline:none}.node:focus-visible circle.body{stroke:var(--focus);stroke-width:4}
+.mdesc{font-size:.85rem;color:var(--ink-soft);margin:6px 0 0;max-width:52ch}
+.sl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.btn[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.panels{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}
+@media (max-width:900px){.panels{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+h2{font-family:var(--serif);font-weight:600;font-size:1.12rem;margin:0}
+.sub{font-size:.84rem;color:var(--ink-soft);margin:0 0 8px}
+svg{display:block;width:100%;height:auto;background:var(--paper-2);border-radius:10px;touch-action:manipulation}
+.node{cursor:pointer}
+.nlabel{font:600 15px var(--sans);fill:var(--ink);paint-order:stroke;stroke:var(--paper-2);stroke-width:4px;stroke-linejoin:round}
+.hlabel{font:600 11px var(--sans);fill:var(--ink-soft);paint-order:stroke;stroke:var(--paper-2);stroke-width:3px}
+.badge rect{fill:var(--ink)}.badge text{font:700 10px var(--sans);fill:var(--paper)}
+@media (max-width:600px){.nlabel{font-size:21px;stroke-width:5px}.hlabel{font-size:15px}.badge text{font-size:14px}}
+.gleg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--ink-soft);margin:8px 0 0}
+.gleg svg{display:inline-block;width:30px;height:10px;background:none;vertical-align:middle;margin-right:5px}
+.pair{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair label{font-weight:600;font-size:.88rem;display:block}
+select{width:100%;font:500 .95rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+.paths{grid-column:1/-1;font-size:.92rem;margin:0}
+.paths ol{margin:6px 0 0;padding-left:1.4em}
+.paths li.thru{color:var(--blood);font-weight:700}
+.bars{display:grid;gap:6px;margin-top:4px}
+.row{display:grid;grid-template-columns:4.6em 2.4em 1fr 3.6em;align-items:center;gap:6px;font-size:.92rem}
+.row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .tag{font:700 .7rem var(--sans);text-align:center;border-radius:4px;padding:1px 0}
+.row .tag.on{background:var(--ink);color:var(--paper)}
+.row .track{height:18px;position:relative}
+.row .fill{position:absolute;left:0;top:0;bottom:0;background:var(--ochre);border-radius:3px;transition:width .25s}
+.row.top .fill{background:var(--blood)}
+.row.sel .nm{text-decoration:underline;text-decoration-thickness:2px}
+.row .val{font-variant-numeric:tabular-nums;text-align:right;font-weight:700}
+.row .iso{font-size:.82rem;color:var(--ink-soft);font-style:italic}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:560px}
+caption{text-align:left;font-family:var(--serif);font-weight:600;font-size:1.02rem;margin-bottom:6px}
+th,td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+td.cur,th.cur{background:var(--paper-2);font-weight:700}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO405 Research Methods in Online Games · Week 9 · Worked example</p>
+  <h1>The rank chart says Rowan. The co-play network says Tamsin.</h1>
+  <p class="lede">An invented ten-person guild and one month of hours spent grouped together. Pick a centrality measure and raise the tie threshold. The member at the centre changes, and none of them is the guild master.</p>
+</header>
+
+<p class="insight" id="insight" aria-live="polite"></p>
+
+<section class="controls" aria-label="Controls">
+  <fieldset>
+    <legend>Centrality measure</legend>
+    <div class="seg">
+      <input type="radio" name="m" id="m-degree" value="degree"><label for="m-degree">Degree</label>
+      <input type="radio" name="m" id="m-strength" value="strength"><label for="m-strength">Strength</label>
+      <input type="radio" name="m" id="m-betw" value="betw" checked><label for="m-betw">Betweenness</label>
+      <input type="radio" name="m" id="m-eig" value="eig"><label for="m-eig">Eigenvector</label>
+    </div>
+    <p class="mdesc" id="mdesc"></p>
+  </fieldset>
+  <div class="sl">
+    <label for="th">Minimum hours for a tie <output id="oTh">0</output></label>
+    <input id="th" type="range" min="0" max="10" step="1" value="0" aria-describedby="thNote">
+    <p class="mdesc" id="thNote"></p>
+  </div>
+  <div class="btns">
+    <button class="btn" id="sortRank" aria-pressed="false">Sort by rank</button>
+    <button class="btn" id="reset">Reset</button>
+  </div>
+</section>
+
+<div class="panels">
+  <section class="panel" aria-labelledby="gH">
+    <h2 id="gH">Who plays with whom</h2>
+    <p class="sub">Node size = selected measure. Line width = hours. Dashed ties fall below the threshold and are cut. Select a member (click, or Tab then Enter) to see which shortest paths run through them.</p>
+    <svg id="g" viewBox="0 0 520 420" role="group" aria-label="Guild co-play network"></svg>
+    <div class="gleg" aria-hidden="true">
+      <span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="currentColor" stroke-width="4"/></svg>kept tie</span>
+      <span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3" opacity=".5"/></svg>cut by threshold</span>
+      <span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--steel)" stroke-width="5"/></svg>shortest path</span>
+      <span><svg viewBox="0 0 30 10"><line x1="0" y1="5" x2="30" y2="5" stroke="var(--blood)" stroke-width="5"/></svg>path through selected member</span>
+    </div>
+    <div class="pair">
+      <div><label for="src">From</label><select id="src"></select></div>
+      <div><label for="dst">To</label><select id="dst"></select></div>
+      <div class="paths" id="paths" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="rH">
+    <h2 id="rH">Ranking</h2>
+    <p class="sub" id="rSub"></p>
+    <div class="bars" id="bars" aria-hidden="true"></div>
+    <div class="readout">
+      <div class="stat" style="--c:var(--blood)"><b id="sTop">—</b><span id="sTopL">top member</span></div>
+      <div class="stat" style="--c:var(--ink)"><b id="sGM">—</b><span>guild master Rowan</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="sTies">—</b><span>ties kept of 16</span></div>
+      <div class="stat" style="--c:var(--moss)"><b id="sIso">—</b><span>isolated members</span></div>
+    </div>
+  </section>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <caption id="tCap">All four measures</caption>
+    <thead><tr><th scope="col">Member</th><th scope="col">Rank</th><th scope="col" data-m="degree">Degree</th><th scope="col" data-m="strength">Strength (h)</th><th scope="col">Betweenness raw</th><th scope="col" data-m="betw">Betweenness</th><th scope="col" data-m="eig">Eigenvector</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<footer>Invented guild and hours, from the lecture's section 2 table. Ties are counted as in Ducheneaut, Yee, Nickell and Moore (CHI 2007): grouped in the same non-city zone, weighted by time together. Betweenness after Freeman (1977, 1978), normalised by (n − 1)(n − 2)/2 = 36 with n = 10 always. Eigenvector: start everyone at 1, then 200 rounds of x(v) + sum of neighbours' x, rescaled so the top member is 1. Degree, betweenness and eigenvector use unweighted kept ties; strength sums their hours.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const M=['Tamsin','Kest','Bo','Ria','Juno','Mira','Pell','Nox','Ash','Rowan'];
+const POS={Tamsin:[205,228],Kest:[110,120],Bo:[48,238],Ria:[100,345],Juno:[215,365],Mira:[360,130],Pell:[350,300],Nox:[468,215],Ash:[468,358],Rowan:[262,48]};
+const RANK={Rowan:'Guild Master',Kest:'Officer',Mira:'Officer'};
+const BADGE={Rowan:'GM',Kest:'Off',Mira:'Off'};
+const rankOf=v=>RANK[v]||'Member';
+const TIES=[['Tamsin','Kest',20],['Tamsin','Bo',18],['Tamsin','Ria',15],['Tamsin','Juno',12],['Kest','Bo',10],['Bo','Ria',8],['Ria','Juno',6],['Tamsin','Mira',5],['Tamsin','Pell',4],['Mira','Pell',9],['Mira','Nox',7],['Pell','Nox',6],['Nox','Ash',5],['Pell','Ash',3],['Rowan','Kest',3],['Rowan','Mira',2]];
+const N=M.length,PAIRS=(N-1)*(N-2)/2;
+const MEAS={
+  degree:{name:'degree',desc:'Share of the other nine members this person has a kept tie with: deg / 9.',fmt:v=>v.toFixed(3)},
+  strength:{name:'strength',desc:'Hours spent grouped with guildmates, summed over kept ties.',fmt:v=>String(Math.round(v))},
+  betw:{name:'betweenness',desc:'How often this person sits on the shortest route between two others. Raw score / 36 pairs.',fmt:v=>v.toFixed(3)},
+  eig:{name:'eigenvector',desc:'High when tied to members who are themselves well connected. Top member = 1.00.',fmt:v=>v.toFixed(2)}
+};
+const D={measure:'betw',th:0,sortRank:false,sel:null,src:'Kest',dst:'Nox'};
+
+function graph(th){const a={};M.forEach(v=>a[v]=new Set());TIES.forEach(([x,y,h])=>{if(h>=th){a[x].add(y);a[y].add(x);}});return a;}
+function bfs(adj,s){const dist={[s]:0},paths={[s]:1},q=[s];while(q.length){const v=q.shift();for(const w of adj[v]){if(!(w in dist)){dist[w]=dist[v]+1;paths[w]=0;q.push(w);}if(dist[w]===dist[v]+1)paths[w]+=paths[v];}}return{dist,paths};}
+function compute(th){
+  const adj=graph(th),sp={};M.forEach(v=>sp[v]=bfs(adj,v));
+  const raw={};M.forEach(v=>raw[v]=0);
+  for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){
+    const s=M[i],t=M[j],A=sp[s],B=sp[t];if(!(t in A.dist))continue;
+    M.forEach(v=>{if(v!==s&&v!==t&&(v in A.dist)&&(v in B.dist)&&A.dist[v]+B.dist[v]===A.dist[t])raw[v]+=A.paths[v]*B.paths[v]/A.paths[t];});
+  }
+  let x={};M.forEach(v=>x[v]=1);
+  for(let r=0;r<200;r++){const y={};M.forEach(v=>{let s=x[v];adj[v].forEach(u=>s+=x[u]);y[v]=s;});const top=Math.max(...M.map(v=>y[v]));M.forEach(v=>x[v]=y[v]/top);}
+  const out={};M.forEach(v=>{
+    const str=TIES.reduce((s,[a,b,h])=>s+((a===v||b===v)&&h>=th?h:0),0);
+    out[v]={degree:adj[v].size/(N-1),strength:str,betwRaw:raw[v],betw:raw[v]/PAIRS,eig:x[v],iso:adj[v].size===0};
+  });
+  return{adj,sp,m:out};
+}
+function shortestPaths(adj,s,t){
+  const {dist}=bfs(adj,s);if(!(t in dist))return[];
+  const res=[];(function walk(v,acc){if(v===s){res.push([s,...acc]);return;}adj[v].forEach(u=>{if(dist[u]===dist[v]-1)walk(u,[v,...acc]);});})(t,[]);
+  const idx=p=>p.map(v=>M.indexOf(v));
+  res.sort((a,b)=>{const A=idx(a),B=idx(b);for(let i=0;i<A.length;i++)if(A[i]!==B[i])return A[i]-B[i];return 0;});
+  return res;
+}
+const ord=n=>n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th');
+function placeOf(m,v,key){const val=m[v][key];let above=0,same=0;M.forEach(u=>{if(m[u].iso)return;const d=m[u][key]-val;if(d>1e-9)above++;else if(Math.abs(d)<=1e-9&&u!==v)same++;});return{pos:above+1,tied:same>0};}
+
+// ---------- SVG build ----------
+const svg=$('g');const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e;};
+const gEdges=el('g',{}),gHi=el('g',{}),gHL=el('g',{}),gNodes=el('g',{});
+const edgeEls=TIES.map(([a,b,h])=>{const [x1,y1]=POS[a],[x2,y2]=POS[b];
+  const line=el('line',{x1,y1,x2,y2,'stroke-linecap':'round'},gEdges);
+  const mx=(x1+x2)/2,my=(y1+y2)/2;const t=el('text',{x:mx,y:my+4,'text-anchor':'middle',class:'hlabel'},gHL);t.textContent=h+'h';
+  return{a,b,h,line,t};});
+const nodeEls={};
+M.forEach(v=>{const [x,y]=POS[v];const g=el('g',{class:'node',tabindex:'0',role:'button','aria-pressed':'false'},gNodes);
+  const halo=el('circle',{cx:x,cy:y,r:14,fill:'none',stroke:'var(--blood)','stroke-width':'4',opacity:'0'},g);
+  const c=el('circle',{cx:x,cy:y,r:14,class:'body','stroke-width':'2'},g);
+  const lab=el('text',{x:x,y:y,'text-anchor':'middle',class:'nlabel'},g);lab.textContent=v;
+  let badge=null;if(BADGE[v]){badge=el('g',{class:'badge'},g);const br=el('rect',{rx:4},badge);const bt=el('text',{'text-anchor':'middle'},badge);bt.textContent=BADGE[v];badge._r=br;badge._t=bt;}
+  nodeEls[v]={g,c,halo,lab,badge};
+  const toggle=()=>{D.sel=D.sel===v?null:v;render();};
+  g.addEventListener('click',toggle);
+  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+});
+
+// ---------- selects ----------
+['src','dst'].forEach(id=>{const s=$(id);M.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v+(BADGE[v]?' ('+rankOf(v)+')':'');s.appendChild(o);});s.addEventListener('change',()=>{D[id]=s.value;render();});});
+
+let BH=15;
+function sizeBadges(){const small=matchMedia('(max-width:600px)').matches;BH=small?20:15;const w=small?36:26;
+  M.forEach(v=>{const b=nodeEls[v].badge;if(!b)return;b._r.setAttribute('width',w);b._r.setAttribute('height',BH);b._t.setAttribute('x',w/2);b._t.setAttribute('y',small?15:11);});}
+function render(){
+  sizeBadges();
+  const {adj,m}=compute(D.th),meas=MEAS[D.measure],key=D.measure;
+  $('oTh').textContent=D.th;$('mdesc').textContent=meas.desc;
+  $('src').value=D.src;$('dst').value=D.dst;
+  document.querySelectorAll('input[name=m]').forEach(r=>r.checked=r.value===key);
+  $('sortRank').setAttribute('aria-pressed',D.sortRank);
+  const kept=TIES.filter(t=>t[2]>=D.th).length;
+  const live=M.filter(v=>!m[v].iso);
+  const maxV=Math.max(1e-9,...live.map(v=>m[v][key]));
+  const order=[...M].sort((a,b)=>{
+    if(D.sortRank){const r=v=>v==='Rowan'?0:RANK[v]?1:2;return r(a)-r(b)||a.localeCompare(b);}
+    if(m[a].iso!==m[b].iso)return m[a].iso?1:-1;
+    return (m[b][key]-m[a][key])||(M.indexOf(a)-M.indexOf(b));
+  });
+  const topV=Math.max(...live.map(v=>m[v][key]));
+  const tops=live.filter(v=>Math.abs(m[v][key]-topV)<1e-9);
+
+  // paths
+  const paths=D.src===D.dst?null:shortestPaths(adj,D.src,D.dst);
+  const onPath=new Set(),thruSel=new Set();
+  if(paths)paths.forEach(p=>{const through=D.sel&&p.slice(1,-1).includes(D.sel);for(let i=0;i<p.length-1;i++){const k=[p[i],p[i+1]].sort().join('|');onPath.add(k);if(through)thruSel.add(k);}});
+
+  // edges
+  gHi.innerHTML='';
+  edgeEls.forEach(E=>{const on=E.h>=D.th,w=1+6*(E.h-2)/18;
+    E.line.setAttribute('stroke','var(--ink-soft)');
+    E.line.setAttribute('stroke-width',on?w.toFixed(2):'1.5');
+    E.line.setAttribute('stroke-dasharray',on?'':'5 4');
+    E.line.setAttribute('opacity',on?'.75':'.45');
+    E.t.setAttribute('opacity',on?'1':'.55');
+    const k=[E.a,E.b].sort().join('|');
+    if(on&&onPath.has(k)){const [x1,y1]=POS[E.a],[x2,y2]=POS[E.b];el('line',{x1,y1,x2,y2,stroke:thruSel.has(k)?'var(--blood)':'var(--steel)','stroke-width':Math.max(5,w+3).toFixed(1),'stroke-linecap':'round',opacity:'.85'},gHi);}
+  });
+  // nodes
+  M.forEach(v=>{const N_=nodeEls[v],d=m[v],[x,y]=POS[v];
+    const r=d.iso?10:10+18*(d[key]/maxV);
+    N_.c.setAttribute('r',r.toFixed(1));N_.halo.setAttribute('r',(r+5).toFixed(1));
+    const isTop=tops.includes(v);
+    N_.c.setAttribute('fill',d.iso?'var(--paper-2)':isTop?'var(--blood)':'var(--ochre)');
+    N_.c.setAttribute('stroke',d.iso?'var(--ink-soft)':'var(--ink)');
+    N_.c.setAttribute('stroke-dasharray',d.iso?'3 3':'');
+    N_.halo.setAttribute('opacity',D.sel===v?'1':'0');
+    const under=['Juno','Ash','Ria','Bo'].includes(v);
+    N_.lab.setAttribute('x',v==='Rowan'?x+r+6:x);N_.lab.setAttribute('text-anchor',v==='Rowan'?'start':'middle');
+    N_.lab.setAttribute('y',(v==='Rowan'?y+5:under?y+r+16:y-r-7).toFixed(1));
+    if(N_.badge){const len=N_.lab.getComputedTextLength(),lx=+N_.lab.getAttribute('x'),ly=+N_.lab.getAttribute('y');
+      const bx=v==='Rowan'?lx+len+5:lx+len/2+5;N_.badge.setAttribute('transform',`translate(${bx.toFixed(1)},${(ly-BH+3).toFixed(1)})`);}
+    N_.g.setAttribute('aria-pressed',D.sel===v);
+    N_.g.setAttribute('aria-label',`${v}, ${rankOf(v)}, ${d.iso?'isolated':meas.name+' '+meas.fmt(d[key])}`);
+  });
+
+  // bars
+  $('rSub').textContent=D.sortRank?`Sorted by formal rank: guild master, officers, members. Bars still show ${meas.name}.`:`Sorted by ${meas.name}, highest first. Badges show formal rank.`;
+  $('bars').innerHTML=order.map(v=>{const d=m[v],w=d.iso?0:100*d[key]/maxV;
+    return `<div class="row${tops.includes(v)?' top':''}${D.sel===v?' sel':''}"><span class="nm">${v}</span><span class="tag${BADGE[v]?' on':''}">${BADGE[v]||''}</span>`+
+      (d.iso?`<span class="iso">isolated</span><span class="val">—</span>`:`<span class="track"><span class="fill" style="width:${w.toFixed(1)}%"></span></span><span class="val">${meas.fmt(d[key])}</span>`)+`</div>`;}).join('');
+
+  // table (mirror of bars, same order)
+  $('tCap').textContent=`All four measures at minimum ${D.th} hours, in the bar chart's order`;
+  document.querySelectorAll('thead th').forEach(th=>th.classList.toggle('cur',th.dataset.m===key));
+  $('tbody').innerHTML=order.map(v=>{const d=m[v];const c=k=>k===key?' class="cur"':'';
+    if(d.iso)return `<tr><td>${v}</td><td>${rankOf(v)}</td><td${c('degree')}>0.000</td><td${c('strength')}>0</td><td>0.00</td><td${c('betw')}>isolated</td><td${c('eig')}>isolated</td></tr>`;
+    return `<tr><td>${v}</td><td>${rankOf(v)}</td><td${c('degree')}>${d.degree.toFixed(3)}</td><td${c('strength')}>${d.strength}</td><td>${d.betwRaw.toFixed(2)}</td><td${c('betw')}>${d.betw.toFixed(3)}</td><td${c('eig')}>${d.eig.toFixed(2)}</td></tr>`;}).join('');
+
+  // readouts
+  $('sTop').textContent=tops.join(', ')+' '+meas.fmt(topV);
+  $('sTopL').textContent=`top by ${meas.name} (${tops.map(rankOf).join(', ')})`;
+  const gm=m.Rowan,gp=placeOf(m,'Rowan',key);
+  $('sGM').textContent=gm.iso?'isolated':`${meas.fmt(gm[key])}, ${gp.tied?'joint ':''}${ord(gp.pos)}`;
+  $('sTies').textContent=kept;
+  const iso=M.filter(v=>m[v].iso);$('sIso').textContent=iso.length?iso.join(', '):'none';
+  $('thNote').textContent=D.th===0?'All 16 ties kept.':`${16-kept} tie${16-kept===1?'':'s'} under ${D.th} hours cut (dashed). n stays 10.`;
+
+  // insight
+  let s=`<b>${tops.join(' and ')}</b>, rank ${tops.map(rankOf).join(' and ')}, tops ${meas.name} at <b>${meas.fmt(topV)}</b>. `;
+  if(gm.iso)s+=`Guild master Rowan's ties are all under ${D.th} hours, so he is <b>isolated</b> (degree 0). `;
+  else s+=`Guild master Rowan is ${gp.tied?'joint ':''}${ord(gp.pos)} of ${live.length} at ${meas.fmt(gm[key])}. `;
+  if(key==='betw'&&D.th>=5&&m.Mira.betw>m.Pell.betw+1e-9&&!m.Mira.iso)s+=`With the Tamsin-Pell tie cut, officer Mira is the only way into the casual group: ${m.Mira.betw.toFixed(3)} (raw ${m.Mira.betwRaw.toFixed(2)}). `;
+  if(D.th>0)s+=`Nothing about the guild changed. Only the threshold did.`;
+  else s+=`Raise the threshold to 5 hours and watch Rowan and Mira.`;
+  $('insight').innerHTML=s;
+
+  // path list
+  let p='';
+  if(!paths)p='<p>Pick two different members.</p>';
+  else if(!paths.length)p=`<p><b>${D.src}</b> and <b>${D.dst}</b> are not connected at ${D.th} hours, so this pair adds nothing to anyone's betweenness.</p>`;
+  else{
+    const L=paths[0].length-1,thru=D.sel?paths.filter(q=>q.slice(1,-1).includes(D.sel)).length:0;
+    p=`<p><b>σ = ${paths.length}</b> shortest path${paths.length>1?'s':''} of length ${L} from ${D.src} to ${D.dst}.`;
+    if(D.sel){p+=(D.sel===D.src||D.sel===D.dst)?` ${D.sel} is an endpoint, so this pair gives ${D.sel} nothing.`:` <b>${thru}</b> of them pass through ${D.sel}, so this pair adds ${thru}/${paths.length} = ${(thru/paths.length).toFixed(3)} to ${D.sel}'s raw betweenness.`;}
+    else p+=' Select a member in the graph to count the paths through them.';
+    p+='</p><ol>'+paths.map(q=>{const t=D.sel&&q.slice(1,-1).includes(D.sel);return `<li${t?' class="thru"':''}>${q.join('-')}${t?' (through '+D.sel+')':''}</li>`;}).join('')+'</ol>';
+  }
+  $('paths').innerHTML=p;
+}
+
+document.querySelectorAll('input[name=m]').forEach(r=>r.addEventListener('change',()=>{D.measure=r.value;render();}));
+$('th').addEventListener('input',e=>{D.th=+e.target.value;render();});
+$('sortRank').addEventListener('click',()=>{D.sortRank=!D.sortRank;render();});
+$('reset').addEventListener('click',()=>{Object.assign(D,{measure:'betw',th:0,sortRank:false,sel:null,src:'Kest',dst:'Nox'});$('th').value=0;render();});
+window.__guild={compute,shortestPaths,D,render};
+render();
+window.addEventListener('resize',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>
