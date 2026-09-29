@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cut line and build order · PR101 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+--on-dark:#ffffff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--on-dark:#172031}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--on-dark:#172031}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.layout{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.layout{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-template-areas:"bar side" "list side"}.v-bar{grid-area:bar}.v-list{grid-area:list}.side{grid-area:side}}
+figure,.box{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption,.box h2{font-family:var(--serif);font-size:1rem;font-weight:400;margin:0 0 6px}
+figcaption small,.box h2 small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+/* build bar */
+.track-wrap{position:relative;padding-top:44px;padding-bottom:44px}
+.track{position:relative;height:60px;background:var(--paper);border:1.5px solid var(--ink);border-radius:6px}
+.clip{position:absolute;left:0;top:0;bottom:0;overflow:hidden}
+.blk{position:absolute;top:0;bottom:0;border-right:1.5px solid var(--paper);display:flex;align-items:center;justify-content:center;overflow:hidden;font:700 .74rem var(--sans);color:var(--on-dark);white-space:nowrap;transition:left .35s ease,width .35s ease}
+.blk.MVP{background:var(--steel)}.blk.Slice{background:var(--ochre)}.blk.Polish{background:var(--ink-soft)}
+.blk.over{opacity:.45;background-image:repeating-linear-gradient(45deg,transparent 0 5px,rgba(255,255,255,.55) 5px 8px)}
+.blk .ic{position:absolute;left:3px;top:3px;width:7px;height:7px}
+.ic.MVP{background:var(--on-dark)} .ic.Polish{border:1.5px solid var(--on-dark)}
+.vline{position:absolute;top:0;bottom:-6px;width:0;border-left:2px solid var(--ink)}
+.vline.p{border-left-style:dashed}
+.vlab{position:absolute;font-size:.76rem;font-weight:700;white-space:nowrap;transform:translateX(-100%);padding-right:5px;line-height:1.1}
+.mvp-mark{position:absolute;top:100%;margin-top:4px;transform:translateX(-50%);text-align:center;font-size:.76rem;font-weight:700;white-space:nowrap;color:var(--moss);transition:left .35s ease}
+.mvp-mark::before{content:"";display:block;margin:0 auto 2px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid currentColor}
+.mvp-mark.bad{color:var(--blood)}
+.mvp-mark.right{transform:translateX(-100%);text-align:right}.mvp-mark.right::before{margin-right:0}
+.mvp-mark.left{transform:none;text-align:left}.mvp-mark.left::before{margin-left:0}
+.tiers{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;color:var(--ink-soft)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:5px;position:relative}
+.sw.MVP{background:var(--steel)}.sw.Slice{background:var(--ochre)}.sw.Polish{background:var(--ink-soft)}
+.tico{display:inline-block;width:8px;height:8px;margin-right:5px;vertical-align:0}
+.tico.MVP{background:currentColor}.tico.Polish{border:1.5px solid currentColor}.tico.Slice{background:linear-gradient(135deg,currentColor 50%,transparent 50%);border:1px solid currentColor}
+/* task list */
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--grid);vertical-align:middle}
+th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}
+thead th{font-size:.8rem;color:var(--ink-soft)}
+tbody tr.task{cursor:default}
+tbody tr.task:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
+tr.cut td{border-bottom:3px solid var(--blood);padding:4px 6px;text-align:left;font-size:.8rem;font-weight:700;color:var(--blood)}
+tr.below td{color:var(--ink-soft)}
+td.st{font-size:.8rem;white-space:nowrap}
+td.st.done{color:var(--moss);font-weight:700}
+td.st.part{color:var(--ochre);font-weight:700}
+.mv{display:flex;gap:3px;justify-content:flex-end}
+.mv button{font:700 .8rem var(--sans);width:28px;height:28px;border-radius:6px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);cursor:pointer;padding:0}
+.mv button:disabled{opacity:.3;cursor:default}
+@media (max-width:520px){table{font-size:.8rem}th,td{padding:5px 3px}.mv button{width:26px;height:26px}.hide-sm,.tier-t{display:none}}
+/* safety strips */
+.strips{position:relative;margin:4px 0 0;padding-top:20px;padding-bottom:22px}
+.strip{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:8px;margin:0 0 26px}
+.strip .nm{font-size:.82rem;font-weight:700}
+.strip .bar{position:relative;height:30px;border:1.5px solid var(--ink);border-radius:5px;overflow:visible;background:var(--paper)}
+.strip .ok{position:absolute;left:0;top:0;bottom:0;background:var(--moss)}
+.strip .no{position:absolute;right:0;top:0;bottom:0;background-color:var(--paper);background-image:repeating-linear-gradient(45deg,var(--grid) 0 4px,transparent 4px 8px)}
+.strip .tick{position:absolute;top:-4px;bottom:-4px;border-left:2px solid var(--ink)}
+.strip .tlab{position:absolute;top:100%;margin-top:4px;font-size:.74rem;font-weight:700;white-space:nowrap;transform:translateX(-50%)}
+.axis{position:relative;height:16px;margin-left:86px;font-size:.74rem;color:var(--ink-soft)}
+.axis span{position:absolute;transform:translateX(-50%)}
+.mline{position:absolute;top:18px;bottom:18px;border-left:2px dashed var(--blood);pointer-events:none}
+.mline b{position:absolute;top:-16px;transform:translateX(-50%);font-size:.72rem;color:var(--blood);white-space:nowrap}
+/* readouts, controls */
+.readout{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 10px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px}
+.stat b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.atm{margin:10px 0 0;font-size:.9rem;font-variant-numeric:tabular-nums}
+.atm p{margin:0 0 4px}
+.yes{color:var(--moss);font-weight:700}.no{color:var(--blood);font-weight:700}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 4px}
+input[type=number]{font:600 .95rem var(--sans);width:90px;padding:5px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip,.btn{font:600 .84rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip:disabled{opacity:.4;cursor:default}
+.btn{border-color:var(--ink)}
+.chip:focus-visible,.btn:focus-visible,input:focus-visible,textarea:focus-visible,.mv button:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.glabel{font-weight:600;font-size:.9rem;display:block;margin:8px 0 4px}
+details{margin-top:10px}
+summary{cursor:pointer;font-weight:600;font-size:.9rem}
+textarea{width:100%;min-height:120px;font:.85rem ui-monospace,Menlo,Consolas,monospace;padding:8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);margin-top:6px}
+.err{color:var(--blood);font-size:.84rem;margin:4px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:6px 0 0}
+kbd{font:600 .76rem var(--sans);border:1px solid var(--ink-soft);border-radius:4px;padding:0 4px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR101 Game Production I · Week 4 · Worked example</p>
+  <h1>Same tasks, same estimates, very different safety</h1>
+  <p class="lede">Both plans below hold the same 16 tasks for the jam game <i>Lantern</i>. Drag the overrun slider. The vertical order keeps a playable game until estimates run 3.5&times; long. The by-system order loses the win and lose loop at 1.24&times;.</p>
+</header>
+
+<section class="panel" aria-label="Cut line model">
+  <div class="layout">
+    <figure class="v-bar">
+      <figcaption>The build bar<small id="barSub">Tasks laid end to end in build order, each as wide as estimate &times; overrun</small></figcaption>
+      <div class="track-wrap" id="trackWrap">
+        <div class="track" id="track" role="img" aria-label="Build bar">
+          <div class="clip" id="clip"></div>
+        </div>
+      </div>
+      <div class="tiers">
+        <span><span class="sw MVP"></span><span class="tico MVP" style="color:var(--steel)"></span>MVP</span>
+        <span><span class="sw Slice"></span>Slice</span>
+        <span><span class="sw Polish"></span><span class="tico Polish" style="color:var(--ink-soft)"></span>Polish</span>
+        <span>Faded and hatched: runs past time&rsquo;s up</span>
+      </div>
+      <div class="insight" id="insight" aria-live="polite"></div>
+    </figure>
+
+    <div class="side">
+      <div class="box">
+        <label for="m">Overrun m (actual &divide; estimate) <output id="oM">1.00</output></label>
+        <input id="m" type="range" min="1" max="4" step="0.05" value="1">
+        <label for="b">Buffer b <output id="oB">0.25</output></label>
+        <input id="b" type="range" min="0" max="0.5" step="0.05" value="0.25">
+        <div class="row" style="justify-content:space-between">
+          <label for="C" style="align-items:center">Capacity C (team-hours)</label>
+          <input id="C" type="number" min="20" max="200" step="1" value="84">
+        </div>
+        <span class="glabel" id="ordL">Build order</span>
+        <div class="row" role="group" aria-labelledby="ordL">
+          <button class="chip" data-mode="vertical" aria-pressed="true">Vertical (as listed)</button>
+          <button class="chip" data-mode="system" aria-pressed="false">By system (P, E, L, then U and A)</button>
+          <button class="chip" data-mode="custom" aria-pressed="false" disabled>Custom</button>
+        </div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="reset">Reset to Lantern</button></div>
+      </div>
+
+      <div class="box" aria-live="polite">
+        <h2>Readouts<small id="roSub">Current order, C = 84, b = 0.25</small></h2>
+        <div class="readout">
+          <div class="stat" style="--c:var(--ink)"><b id="rP"></b><span>plan limit P = (1 &minus; b) &times; C</span></div>
+          <div class="stat" style="--c:var(--steel)"><b id="rPlan"></b><span>planned (above the cut line)</span></div>
+          <div class="stat" style="--c:var(--ink-soft)"><b id="rCut"></b><span>cut list (below the line)</span></div>
+          <div class="stat" style="--c:var(--ochre)"><b id="rS"></b><span>S<sub>MVP</sub>, hours until the MVP is done</span></div>
+          <div class="stat" style="--c:var(--moss)"><b id="rMmax"></b><span>m<sub>max</sub> = C / S<sub>MVP</sub>, this order</span></div>
+          <div class="stat" style="--c:var(--blood)"><b id="rMsys"></b><span>m<sub>max</sub>, by-system order</span></div>
+        </div>
+        <div class="atm" id="atm"></div>
+      </div>
+
+      <figure>
+        <figcaption>Safety across overruns<small>Solid green: the MVP finishes inside C. Hatched: no playable game.</small></figcaption>
+        <div class="strips" id="strips">
+          <div class="strip"><span class="nm">Your order</span><div class="bar" id="s1"><div class="ok"></div><div class="no"></div><div class="tick"></div><span class="tlab"></span></div></div>
+          <div class="strip"><span class="nm">By system</span><div class="bar" id="s2"><div class="ok"></div><div class="no"></div><div class="tick"></div><span class="tlab"></span></div></div>
+          <div class="axis" id="axis"></div>
+          <div class="mline" id="mline"><b id="mlab"></b></div>
+        </div>
+      </figure>
+    </div>
+
+    <figure class="v-list">
+      <figcaption>Task list in build order<small>Focus a row and press <kbd>Alt</kbd>+<kbd>&uarr;</kbd> or <kbd>Alt</kbd>+<kbd>&darr;</kbd> to move it, or use the arrow buttons. The red rule is the cut line.</small></figcaption>
+      <table>
+        <thead><tr><th>#</th><th>Task</th><th><span class="hide-sm">Tier</span></th><th>Est</th><th>S<sub>k</sub></th><th id="thAt">At m</th><th><span class="hide-sm">Move</span></th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <details>
+        <summary>Custom list (CSV)</summary>
+        <p class="hint">One task per line: <code>name,system,tier,estimate</code>. Tier is MVP, Slice or Polish. Systems P, E, L, then U and A set the by-system order; any other system goes last.</p>
+        <label for="csv" style="margin-top:6px">Tasks</label>
+        <textarea id="csv" spellcheck="false"></textarea>
+        <div class="row" style="margin-top:6px"><button class="btn" id="applyCsv">Replace list</button></div>
+        <p class="err" id="csvErr" role="alert"></p>
+      </details>
+    </figure>
+  </div>
+</section>
+
+<footer>Model and the <i>Lantern</i> task list from PR101 week 4. Overrun m multiplies every estimate by the same factor; real overruns are uneven, which makes an early MVP even more valuable. Blocks are plain rectangles with task names.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const LANTERN=[
+ ['Player run and jump','P','MVP',6],['Lantern drains, light radius shrinks','P','MVP',4],['One hazard that kills on touch','E','MVP',4],
+ ['One graybox level, start to exit','L','MVP',6],['Win, lose and restart loop','U','MVP',4],['Player sprite and animations','P','Slice',8],
+ ['Hazard art and death feedback','E','Slice',5],['Three sounds: jump, death, ambience','A','Slice',4],['Title screen and how-to-play','U','Slice',5],
+ ['Level 1 dressed in final tiles','L','Slice',7],['Oil pickups refill the lantern','P','Polish',4],['Second hazard: moth swarm','E','Polish',8],
+ ['Levels 2 and 3','L','Polish',12],['Music loop','A','Polish',6],['Particles and screen shake','A','Polish',5],['Best-time board','U','Polish',5]];
+const EPS=1e-9;
+let tasks=[],order=[],customOrder=null,mode='vertical',m=1,b=0.25,C=84;
+
+function load(list){tasks=list.map((t,i)=>({id:i+1,name:t[0],sys:t[1],tier:t[2],est:t[3]}));order=tasks.map((_,i)=>i);customOrder=null;mode='vertical';
+  $('csv').value=list.map(t=>`${t[0].replace(/,/g,'')},${t[1]},${t[2]},${t[3]}`).join('\n');}
+const P=()=>(1-b)*C;
+function sysOrder(){const idx=tasks.map((_,i)=>i),grp=t=>({P:0,E:1,L:2,U:3,A:3}[t.sys]??4);return idx.slice().sort((a,c)=>grp(tasks[a])-grp(tasks[c])||a-c);}
+const seq=o=>o.map(i=>tasks[i]);
+function cut(s){let t=0,k=0;for(const x of s){if(t+x.est>P()+EPS)break;t+=x.est;k++;}return{k,planned:t};}
+function finish(s,mm){let t=0;const done=[];for(const x of s){if(t+x.est*mm<=C+EPS){t+=x.est*mm;done.push(x);}else return{done,partial:{task:x,h:(C-t)/mm}};}return{done,partial:null};}
+function sMvp(s){const need=s.filter(x=>x.tier==='MVP').length;if(!need)return 0;let t=0,c=0;for(const x of s){t+=x.est;if(x.tier==='MVP'&&++c===need)return t;}return t;}
+const playable=(s,mm)=>{const v=sMvp(s);return v*mm<=C+EPS;};
+const f2=x=>(Math.round(x*100)/100).toFixed(2).replace(/\.?0+$/,'');
+const h=x=>{const r=Math.round(x*10)/10;return (Number.isInteger(r)?r:r.toFixed(1))+' h';};
+function ids(list){ // compress consecutive ids into ranges
+  const out=[];let i=0;while(i<list.length){let j=i;while(j+1<list.length&&list[j+1]===list[j]+1)j++;
+    if(j-i>=2)out.push(list[i]+'-'+list[j]);else for(let q=i;q<=j;q++)out.push(String(list[q]));i=j+1;}return out.join(', ')||'none';}
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function currentOrder(){return mode==='system'?sysOrder():mode==='custom'&&customOrder?customOrder:tasks.map((_,i)=>i);}
+
+function renderBar(s){
+  const span=C*1.12,clip=$('clip'),track=$('track');
+  clip.style.width=(100*C/span)+'%';
+  const clipW=track.clientWidth*C/span;
+  let t=0,html='';
+  for(const x of s){
+    const w=x.est*m,left=t,end=t+w;t=end;if(left>=C-EPS)continue;
+    const px=clipW*w/C,over=end>C+EPS;
+    let lab='';const full=`${x.id} ${x.name}`;
+    if(px>=full.length*6.2+18)lab=full;else if(px>=16)lab=String(x.id);
+    html+=`<div class="blk ${x.tier}${over?' over':''}" style="left:${100*left/C}%;width:${100*w/C}%" title="${esc(full)}: ${x.tier}, ${x.est} h estimate${over?', runs past time’s up':''}">${x.tier!=='Slice'&&px>=12?`<span class="ic ${x.tier}"></span>`:''}<span>${esc(lab)}</span></div>`;
+  }
+  clip.innerHTML=html;
+  // lines and labels
+  track.querySelectorAll('.vline,.mvp-mark').forEach(e=>e.remove());
+  $('trackWrap').querySelectorAll('.vlab').forEach(e=>e.remove());
+  const pos=x=>100*x/span;
+  const addLine=(x,cls,txt,row,col)=>{const l=document.createElement('div');l.className='vline '+cls;l.style.left=pos(x)+'%';l.style.top=(row===0?-40:-20)+'px';l.style.borderColor=col;track.appendChild(l);
+    const lb=document.createElement('div');lb.className='vlab';lb.style.left=pos(x)+'%';lb.style.top=(row===0?0:20)+'px';lb.style.color=col;lb.textContent=txt;$('trackWrap').appendChild(lb);
+    if(lb.getBoundingClientRect().left<$('trackWrap').getBoundingClientRect().left){lb.style.transform='none';lb.style.paddingRight='0';lb.style.paddingLeft='5px';}};
+  addLine(C,'c',`time’s up, C = ${f2(C)} h`,0,'var(--ink)');
+  addLine(P(),'p',`plan limit P = ${f2(P())} h`,1,'var(--ink)');
+  const sm=sMvp(s)*m,ok=sm<=C+EPS,mk=document.createElement('div');
+  mk.className='mvp-mark'+(ok?'':' bad');
+  const x=ok?sm:span*0.985;mk.style.left=pos(x)+'%';
+  mk.textContent=ok?`MVP playable at ${h(sm)}`:`no playable game (MVP needs ${h(sm)})`;
+  track.appendChild(mk);
+  const r=mk.getBoundingClientRect(),tr=$('trackWrap').getBoundingClientRect();
+  if(r.right>tr.right)mk.classList.add('right');else if(r.left<tr.left)mk.classList.add('left');
+  track.setAttribute('aria-label',`Build bar: ${s.length} tasks, capacity ${f2(C)} hours, overrun ${f2(m)}. MVP ${ok?'playable at '+h(sm):'not finished, no playable game'}.`);
+}
+
+function renderList(s){
+  const c=cut(s),fin=finish(s,m),doneIds=new Set(fin.done.map(x=>x.id));
+  let t=0,rows='';
+  s.forEach((x,i)=>{
+    t+=x.est;const below=i>=c.k;
+    let st='—',cls='';
+    if(doneIds.has(x.id)){st='done';cls='done';}else if(fin.partial&&fin.partial.task.id===x.id){st=h(fin.partial.h)+' done';cls='part';}
+    rows+=`<tr class="task${below?' below':''}" tabindex="0" data-pos="${i}" aria-label="Position ${i+1}: task ${x.id}, ${esc(x.name)}, ${x.tier}, ${x.est} hours${below?', below the cut line':''}"><td><b>${x.id}</b></td><td>${esc(x.name)}</td><td><span class="tico ${x.tier}" aria-hidden="true"></span><span class="tier-t">${x.tier}</span></td><td>${x.est}</td><td>${t}</td><td class="st ${cls}">${st}</td><td><div class="mv"><button data-mv="-1" data-pos="${i}" aria-label="Move task ${x.id} up" ${i===0?'disabled':''}>&uarr;</button><button data-mv="1" data-pos="${i}" aria-label="Move task ${x.id} down" ${i===s.length-1?'disabled':''}>&darr;</button></div></td></tr>`;
+    if(i===c.k-1||(c.k===0&&i===-1))rows+=`<tr class="cut"><td colspan="7">Cut line: ${h(c.planned)} planned within P = ${h(P())}. Below it: the cut list.</td></tr>`;
+  });
+  if(c.k===0)rows=`<tr class="cut"><td colspan="7">Cut line: nothing fits within P = ${h(P())}.</td></tr>`+rows;
+  $('tbody').innerHTML=rows;
+  $('thAt').textContent='At m '+f2(m);
+}
+
+function stripSet(el,mm){
+  const lo=1,hi=4,frac=v=>Math.max(0,Math.min(1,(v-lo)/(hi-lo)));
+  const okF=mm===Infinity?1:frac(mm);
+  el.querySelector('.ok').style.width=(100*okF)+'%';el.querySelector('.no').style.width=(100*(1-okF))+'%';
+  const tick=el.querySelector('.tick'),lab=el.querySelector('.tlab');
+  if(mm===Infinity){tick.style.display='none';lab.textContent='no MVP tasks';lab.style.left='50%';return;}
+  tick.style.display='';tick.style.left=(100*okF)+'%';
+  lab.textContent=mm>hi?`m_max = ${f2(mm)} (off scale)`:mm<lo?`m_max = ${f2(mm)} (below 1)`:`m_max = ${f2(mm)}`;
+  lab.style.left=(100*okF)+'%';lab.style.transform=okF>0.8?'translateX(-100%)':okF<0.2?'none':'translateX(-50%)';
+}
+
+function render(){
+  order=currentOrder();const s=seq(order),sys=seq(sysOrder());
+  $('oM').textContent=m.toFixed(2);$('oB').textContent=b.toFixed(2);
+  document.querySelectorAll('[data-mode]').forEach(x=>{x.setAttribute('aria-pressed',x.dataset.mode===mode);if(x.dataset.mode==='custom')x.disabled=!customOrder;});
+  const c=cut(s),total=s.reduce((a,x)=>a+x.est,0),sv=sMvp(s),ss=sMvp(sys);
+  const mmax=sv?C/sv:Infinity,msys=ss?C/ss:Infinity;
+  $('rP').textContent=h(P());$('rPlan').textContent=h(c.planned);$('rCut').textContent=h(total-c.planned);
+  $('rS').textContent=sv?h(sv):'—';$('rMmax').textContent=sv?f2(mmax):'—';$('rMsys').textContent=ss?f2(msys):'—';
+  $('roSub').textContent=`${mode==='system'?'By-system':mode==='custom'?'Custom':'Vertical'} order, C = ${f2(C)}, b = ${b.toFixed(2)}`;
+  const line=(name,sq)=>{const f=finish(sq,m),p=playable(sq,m),cc=cut(sq),mvpIn=sq.slice(0,cc.k).filter(x=>x.tier==='MVP').length===sq.filter(x=>x.tier==='MVP').length;
+    return `<p><b>${name}</b>: plan = tasks ${ids(sq.slice(0,cc.k).map(x=>x.id))} (${h(cc.planned)}), MVP ${mvpIn?'inside':'<span class="no">not inside</span>'} the plan. At m = ${f2(m)}: finished tasks ${ids(f.done.map(x=>x.id))}${f.partial?`; task ${f.partial.task.id} partial with ${f.partial.h.toFixed(1)} estimated hours done`:''}; playable: ${p?'<span class="yes">yes</span>':'<span class="no">no</span>'}.</p>`;};
+  $('atm').innerHTML=line(mode==='system'?'Your order (by system)':'Your order',s)+(mode==='system'?'':line('By system',sys));
+  renderBar(s);renderList(s);
+  stripSet($('s1'),mmax);stripSet($('s2'),msys);
+  // m line across strips
+  const bar=$('s1').getBoundingClientRect(),wrap=$('strips').getBoundingClientRect(),fx=(m-1)/3;
+  $('mline').style.left=(bar.left-wrap.left+bar.width*fx)+'px';$('mlab').textContent='m = '+f2(m);$('mlab').style.transform=fx>0.85?'translateX(-100%)':fx<0.1?'none':'translateX(-50%)';
+  $('axis').innerHTML=[1,1.5,2,2.5,3,3.5,4].map(v=>`<span style="left:${100*(v-1)/3}%">${v.toFixed(1)}</span>`).join('');
+  $('axis').style.marginLeft=(bar.left-wrap.left)+'px';$('axis').style.width=bar.width+'px';
+  // insight
+  const pv=playable(s,m),ps=playable(sys,m),f=finish(s,m);
+  let t;
+  if(mode!=='system'&&pv&&!ps)t=`At m = ${f2(m)} your order still ships a playable game; ${f.partial?`the clock runs out on task ${f.partial.task.id}, a ${f.partial.task.tier} task, so you lose ${f.partial.task.tier==='Slice'?'slice and polish work':'polish'}, not the game`:'everything fits'}. The same tasks built by system run out before the win and lose loop exists.`;
+  else if(pv&&ps)t=`At m = ${f2(m)} both orders reach a playable game. Push the overrun past ${f2(Math.min(mmax,msys))} and see which one breaks first.`;
+  else if(!pv&&!ps)t=`At m = ${f2(m)} neither order finishes the MVP inside ${f2(C)} team-hours. Only a smaller MVP or more capacity helps now.`;
+  else t=`At m = ${f2(m)} your order has no playable game but the by-system order does. Check whether an MVP task has slipped below slice or polish work.`;
+  $('insight').innerHTML=t;
+}
+
+function move(pos,dir){
+  const o=currentOrder().slice(),q=pos+dir;if(q<0||q>=o.length)return;
+  [o[pos],o[q]]=[o[q],o[pos]];customOrder=o;mode='custom';render();
+  const row=document.querySelector(`#tbody tr.task[data-pos="${q}"]`);if(row)row.focus();
+}
+$('tbody').addEventListener('click',e=>{const bt=e.target.closest('button[data-mv]');if(!bt)return;const pos=+bt.dataset.pos,dir=+bt.dataset.mv;move(pos,dir);
+  const nb=document.querySelector(`#tbody button[data-pos="${pos+dir}"][data-mv="${dir}"]`);if(nb&&!nb.disabled)nb.focus();});
+$('tbody').addEventListener('keydown',e=>{const row=e.target.closest('tr.task');if(!row||e.target!==row)return;
+  if(e.altKey&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();move(+row.dataset.pos,e.key==='ArrowUp'?-1:1);}});
+$('m').addEventListener('input',e=>{m=+e.target.value;render();});
+$('b').addEventListener('input',e=>{b=+e.target.value;render();});
+$('C').addEventListener('input',e=>{const v=+e.target.value;if(v>=20&&v<=200){C=v;render();}});
+$('C').addEventListener('change',e=>{let v=Math.round(+e.target.value)||84;v=Math.max(20,Math.min(200,v));e.target.value=v;C=v;render();});
+document.querySelectorAll('[data-mode]').forEach(x=>x.addEventListener('click',()=>{mode=x.dataset.mode;render();}));
+$('reset').addEventListener('click',()=>{load(LANTERN);m=1;b=0.25;C=84;$('m').value=1;$('b').value=0.25;$('C').value=84;$('csvErr').textContent='';render();});
+$('applyCsv').addEventListener('click',()=>{
+  const lines=$('csv').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean),out=[],bad=[];
+  lines.forEach((l,i)=>{const p=l.split(',').map(x=>x.trim());const tier={mvp:'MVP',slice:'Slice',polish:'Polish'}[(p[2]||'').toLowerCase()];const est=+p[3];
+    if(p.length!==4||!p[0]||!p[1]||!tier||!(est>0))bad.push(i+1);else out.push([p[0],p[1].toUpperCase(),tier,est]);});
+  if(bad.length||!out.length){$('csvErr').textContent=bad.length?`Could not read line${bad.length>1?'s':''} ${bad.join(', ')}. Use name,system,tier,estimate.`:'The list is empty.';return;}
+  $('csvErr').textContent='';load(out);render();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(render,60);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+load(LANTERN);render();
+})();
+</script>
+</body>
+</html>

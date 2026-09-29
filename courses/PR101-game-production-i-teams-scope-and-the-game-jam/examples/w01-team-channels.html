@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Team channels and capacity · PR101 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1.25fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cGraph{height:300px}
+#cCap{height:300px}
+.big{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums;margin:4px 0 0;text-align:center}
+.big span{font-size:.9rem;font-weight:400;color:var(--ink-soft)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+input[type=range]:disabled{opacity:.4}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.group-label{font-weight:600;font-size:.92rem;display:block;margin-top:10px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+@media (max-width:520px){table{font-size:.8rem}th,td{padding:5px 4px!important}}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+td.neg{color:var(--blood)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR101 Game Production I · Week 1 · Worked example</p>
+  <h1>Every new person adds hours and a set of new conversations</h1>
+  <p class="lede">With full mesh communication, channels grow with pairs, n(n&minus;1)/2. Useful capacity rises, flattens, then falls. Switch to sub-teams with leads and most of the pairs disappear.</p>
+</header>
+
+<section class="panel" aria-label="Team size model">
+  <div class="charts">
+    <figure>
+      <figcaption>The team graph<small id="graphSub">Every pair is a channel someone has to keep up to date</small></figcaption>
+      <canvas id="cGraph" role="img" aria-label="Team members as dots with a line for every communication channel"></canvas>
+      <p class="big" aria-live="polite">Channels: <span id="bigCh" style="font-size:inherit;font-weight:inherit;color:inherit">0</span></p>
+    </figure>
+    <figure>
+      <figcaption>Useful capacity per week<small>Hours of real work left after coordination, for team sizes 1 to 20</small></figcaption>
+      <canvas id="cCap" role="img" aria-label="Useful capacity versus team size for full mesh and sub-teams"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--ochre)"></i>Full mesh</span>
+        <span><i style="border-color:var(--moss);border-top-style:dashed"></i>Sub-teams with leads</span>
+        <span>&#9650; full-mesh peak n*</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rCh">0</b><span id="rChL">channels</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rCoord">0</b><span>coordination hours</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rCap">0</b><span>useful capacity (h)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rStar">0</b><span id="rStarL">full-mesh peak</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="n">Team size n <output id="oN">8</output></label>
+      <input id="n" type="range" min="1" max="20" step="1" value="8">
+      <label for="H">Hours per person H <output id="oH">10</output></label>
+      <input id="H" type="range" min="5" max="40" step="1" value="10">
+      <label for="c">Cost per channel per person c (h) <output id="oC">0.5</output></label>
+      <input id="c" type="range" min="0.25" max="5" step="0.25" value="0.5">
+    </div>
+    <div>
+      <span class="group-label" id="structL">Structure</span>
+      <div class="presets" role="group" aria-labelledby="structL">
+        <button class="chip" id="bMesh" aria-pressed="true">Full mesh</button>
+        <button class="chip" id="bTeams" aria-pressed="false">Sub-teams with leads</button>
+      </div>
+      <label for="s" style="margin-top:12px">Sub-team size s <output id="oS">4</output></label>
+      <input id="s" type="range" min="2" max="8" step="1" value="4" disabled>
+      <span class="group-label" id="presetL">Presets</span>
+      <div class="presets" role="group" aria-labelledby="presetL">
+        <button class="chip" data-h="10" data-c="0.5">Semester (H 10, c 0.5)</button>
+        <button class="chip" data-h="30" data-c="3">Jam weekend (H 30, c 3)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Current settings</caption>
+      <thead><tr><th>Structure</th><th>n</th><th>Channels</th><th>Total h</th><th>Coord. h</th><th>Capacity h</th></tr></thead>
+      <tbody id="tNow"></tbody>
+    </table>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <caption>By team size (capacity = nH &minus; 2c &times; channels)</caption>
+      <thead><tr><th>n</th><th>Mesh channels</th><th>Mesh capacity</th><th id="thS">Sub-team channels (s 4)</th><th>Sub-team capacity</th></tr></thead>
+      <tbody id="tAll"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from PR101 week 1: every channel costs each of its two people c hours a week. The pair count n(n&minus;1)/2 is the same one Brooks used in <i>The Mythical Man-Month</i>. Dots are generic team members, labelled A, B, C.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const num=x=>{const r=Math.round(x*100)/100;return (Number.isInteger(r)?r.toLocaleString('en-US'):r.toLocaleString('en-US',{maximumFractionDigits:2}));};
+let n=8,H=10,c=0.5,s=4,teams=false;
+
+const mesh=n=>n*(n-1)/2;
+function sizes(n,s){const k=Math.ceil(n/s),a=[];for(let i=0;i<k-1;i++)a.push(s);a.push(n-s*(k-1));return a;}
+function teamCh(n,s){const z=sizes(n,s),k=z.length;return z.reduce((t,x)=>t+x*(x-1)/2,0)+k*(k-1)/2;}
+const cap=(n,ch)=>n*H-2*c*ch;
+const capMesh=n=>cap(n,mesh(n)), capTeam=n=>cap(n,teamCh(n,s));
+
+function setup(cv){const d=window.devicePixelRatio||1,r=cv.getBoundingClientRect();cv.width=Math.max(1,r.width*d);cv.height=Math.max(1,r.height*d);const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);return{g,w:r.width,h:r.height};}
+
+function drawGraph(){
+  const {g,w,h}=setup($('cGraph'));g.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,R=Math.min(w,h)/2-22,pts=[];
+  const dotR=n>14?8:(n>9?10:11);
+  let lines=[];
+  if(!teams||n<=s){
+    for(let i=0;i<n;i++){const a=-Math.PI/2+2*Math.PI*i/n;pts.push({x:cx+R*Math.cos(a),y:cy+R*Math.sin(a),lead:false});}
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)lines.push([i,j,'in']);
+    if(teams)pts[0].lead=true;
+  }else{
+    const z=sizes(n,s),k=z.length;let idx=0;const leads=[];
+    const Rc=k>1?R*0.7:0, chord=k>1?2*Rc*Math.sin(Math.PI/k):2*R, need=s*2.5*dotR/(2*Math.PI), r0=Math.max(need,Math.min(chord*0.34,R*0.3));
+    z.forEach((sz,ci)=>{
+      const a=-Math.PI/2+2*Math.PI*ci/k,ccx=cx+Rc*Math.cos(a),ccy=cy+Rc*Math.sin(a),first=idx;
+      for(let j=0;j<sz;j++){const b=a+Math.PI+2*Math.PI*j/Math.max(sz,1);const rr=sz===1?0:r0;pts.push({x:ccx+rr*Math.cos(b),y:ccy+rr*Math.sin(b),lead:j===0});idx++;}
+      for(let i=first;i<idx;i++)for(let j=i+1;j<idx;j++)lines.push([i,j,'in']);
+      leads.push(first);
+    });
+    for(let i=0;i<leads.length;i++)for(let j=i+1;j<leads.length;j++)lines.push([leads[i],leads[j],'lead']);
+  }
+  const ink=css('--ink'),steel=css('--steel');
+  lines.forEach(([i,j,t])=>{g.strokeStyle=t==='lead'?steel:ink;g.globalAlpha=t==='lead'?0.9:(n>12&&!teams?0.28:0.45);g.lineWidth=t==='lead'?2.5:1.2;g.beginPath();g.moveTo(pts[i].x,pts[i].y);g.lineTo(pts[j].x,pts[j].y);g.stroke();});
+  g.globalAlpha=1;g.font='700 '+(dotR>9?11:10)+'px '+css('--sans');g.textAlign='center';g.textBaseline='middle';
+  pts.forEach((p,i)=>{
+    g.fillStyle=css('--paper');g.strokeStyle=ink;g.lineWidth=1.5;g.beginPath();g.arc(p.x,p.y,dotR,0,Math.PI*2);g.fill();g.stroke();
+    if(p.lead){g.strokeStyle=steel;g.lineWidth=2.5;g.beginPath();g.arc(p.x,p.y,dotR+4,0,Math.PI*2);g.stroke();}
+    g.fillStyle=ink;g.fillText(String.fromCharCode(65+i),p.x,p.y+.5);
+  });
+}
+
+function drawCap(){
+  const {g,w,h}=setup($('cCap'));g.clearRect(0,0,w,h);
+  const pad={l:48,r:14,t:34,b:34};
+  const star=(H+c)/(2*c), starCap=star*H-c*star*(star-1);
+  let vals=[];for(let i=1;i<=20;i++){vals.push(capMesh(i),capTeam(i));}
+  if(star>=1&&star<=20)vals.push(starCap);
+  let yMax=Math.max(...vals,1),yMin=Math.min(0,...vals);
+  const step=niceStep((yMax-yMin)/5);yMax=Math.ceil(yMax*1.05/step)*step;yMin=Math.floor(yMin/step)*step;
+  const X=x=>pad.l+(w-pad.l-pad.r)*(x-1)/19, Y=y=>pad.t+(h-pad.t-pad.b)*(yMax-y)/(yMax-yMin);
+  // negative band
+  if(yMin<0){g.fillStyle=css('--blood');g.globalAlpha=.1;g.fillRect(pad.l,Y(0),w-pad.l-pad.r,Y(yMin)-Y(0));g.globalAlpha=1;
+    g.fillStyle=css('--blood');g.font='600 11px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText('coordination exceeds work',pad.l+6,Y(0)+4);}
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let y=yMin;y<=yMax+1e-9;y+=step){g.strokeStyle=y===0?css('--ink-soft'):css('--grid');g.lineWidth=y===0?1.5:1;g.beginPath();g.moveTo(pad.l,Y(y));g.lineTo(w-pad.r,Y(y));g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(num(y),pad.l-6,Y(y));}
+  g.textAlign='center';g.textBaseline='top';
+  [1,5,10,15,20].forEach(x=>g.fillText(x,X(x),h-pad.b+6));
+  g.textAlign='right';g.fillText('team size n',w-pad.r,h-14);
+  // current n
+  g.strokeStyle=css('--ink');g.globalAlpha=.35;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(n),pad.t);g.lineTo(X(n),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  series(g,X,Y,capMesh,css('--ochre'),[]);
+  series(g,X,Y,capTeam,css('--moss'),[6,4]);
+  // triangle at n*
+  if(star>=1&&star<=20){const px=X(star),py=Y(starCap);
+    g.strokeStyle=css('--ink');g.globalAlpha=.5;g.lineWidth=1;g.setLineDash([2,3]);g.beginPath();g.moveTo(px,pad.t-10);g.lineTo(px,py-8);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    g.fillStyle=css('--ink');g.beginPath();g.moveTo(px,py-3);g.lineTo(px-6,py-13);g.lineTo(px+6,py-13);g.closePath();g.fill();
+    g.font='600 11px '+css('--sans');g.textBaseline='bottom';const lab='n* = (H + c)/(2c) = '+star.toFixed(1);g.textAlign=px>w*0.6?'right':(px<w*0.4?'left':'center');g.fillText(lab,px+(g.textAlign==='right'?6:g.textAlign==='left'?-6:0),pad.t-12);}
+  // current dots
+  [[capMesh(n),css('--ochre')],[capTeam(n),css('--moss')]].forEach(([v,col],i)=>{
+    const px=X(n),py=Y(v);g.fillStyle=col;g.beginPath();g.arc(px,py,6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.fillStyle=col;g.font='700 12px '+css('--sans');g.textBaseline='middle';const right=px<w-80;g.textAlign=right?'left':'right';
+    const other=i?capMesh(n):capTeam(n),dy=Math.abs(Y(other)-py)<14?(v>=other?-8:8):0;
+    g.lineWidth=3;g.strokeStyle=css('--paper-2');g.strokeText(num(v)+' h',px+(right?10:-10),py+dy);g.fillText(num(v)+' h',px+(right?10:-10),py+dy);
+  });
+}
+function series(g,X,Y,f,col,dash){g.strokeStyle=col;g.lineWidth=2.5;g.setLineDash(dash);g.beginPath();for(let i=1;i<=20;i++){i===1?g.moveTo(X(i),Y(f(i))):g.lineTo(X(i),Y(f(i)));}g.stroke();g.setLineDash([]);
+  g.fillStyle=col;for(let i=1;i<=20;i++){g.beginPath();g.arc(X(i),Y(f(i)),2.6,0,Math.PI*2);g.fill();}}
+function niceStep(r){const m=Math.pow(10,Math.floor(Math.log10(r||1)));return [1,2,2.5,5,10].map(x=>x*m).find(x=>x>=r);}
+
+function readouts(){
+  const ch=teams?teamCh(n,s):mesh(n),coord=2*c*ch;
+  $('oN').textContent=n;$('oH').textContent=H;$('oC').textContent=num(c);$('oS').textContent=s;
+  $('bigCh').textContent=num(ch);
+  $('rCh').textContent=num(ch);$('rChL').textContent=teams?'channels (sub-teams)':'channels (full mesh)';
+  $('rCoord').textContent=num(coord);$('rCap').textContent=num(n*H-coord);
+  const star=(H+c)/(2*c);let best=[],bv=-Infinity;
+  for(let i=1;i<=20;i++){const v=capMesh(i);if(v>bv+1e-9){bv=v;best=[i];}else if(Math.abs(v-bv)<1e-9)best.push(i);}
+  $('rStar').textContent='n* = '+star.toFixed(1);
+  $('rStarL').textContent='mesh peak; best whole n: '+best.join(' and ')+' ('+num(bv)+' h)';
+  $('graphSub').textContent=teams?'Lines inside each sub-team, plus one line between every pair of leads (ringed)':'Every pair is a channel someone has to keep up to date';
+  const marg=H-2*c*n;
+  let t;
+  if(!teams){
+    t=`With ${n} people in full mesh, person ${n+1} would add ${H} hours of work and ${n} new channels costing ${num(2*c*n)} hours, so capacity changes by <b>${marg>=0?'+':''}${num(marg)} h</b>. `;
+    t+=marg>0?`Adding people still helps, but by less each time.`:`Past n* = ${star.toFixed(1)}, each new person costs more coordination than the work they bring.`;
+  }else{
+    const k=Math.ceil(n/s);
+    t=`${n} people in ${k} sub-team${k>1?'s':''} of up to ${s}: <b>${num(teamCh(n,s))} channels</b> instead of ${num(mesh(n))}. That frees ${num(2*c*(mesh(n)-teamCh(n,s)))} hours a week, and capacity is ${num(capTeam(n))} h instead of ${num(capMesh(n))} h.`;
+  }
+  $('insight').innerHTML=t;
+  const row=(name,ch)=>`<tr><td>${name}</td><td>${n}</td><td>${num(ch)}</td><td>${num(n*H)}</td><td>${num(2*c*ch)}</td><td class="${n*H-2*c*ch<0?'neg':''}">${num(n*H-2*c*ch)}</td></tr>`;
+  $('tNow').innerHTML=row('Full mesh',mesh(n))+row('Sub-teams, s '+s,teamCh(n,s));
+  $('thS').textContent='Sub-team channels (s '+s+')';
+  const list=[1,2,3,4,5,6,8,10,11,12,15,16,20];if(!list.includes(n)){list.push(n);list.sort((a,b)=>a-b);}
+  $('tAll').innerHTML=list.map(i=>`<tr class="${i===n?'here':''}"><td>${i}</td><td>${num(mesh(i))}</td><td class="${capMesh(i)<0?'neg':''}">${num(capMesh(i))}</td><td>${num(teamCh(i,s))}</td><td class="${capTeam(i)<0?'neg':''}">${num(capTeam(i))}</td></tr>`).join('');
+}
+function update(){readouts();drawGraph();drawCap();}
+
+$('n').addEventListener('input',e=>{n=+e.target.value;update();});
+$('H').addEventListener('input',e=>{H=+e.target.value;update();});
+$('c').addEventListener('input',e=>{c=+e.target.value;update();});
+$('s').addEventListener('input',e=>{s=+e.target.value;update();});
+function setMode(t){teams=t;$('bMesh').setAttribute('aria-pressed',!t);$('bTeams').setAttribute('aria-pressed',t);$('s').disabled=!t;update();}
+$('bMesh').addEventListener('click',()=>setMode(false));
+$('bTeams').addEventListener('click',()=>setMode(true));
+document.querySelectorAll('[data-h]').forEach(b=>b.addEventListener('click',()=>{H=+b.dataset.h;c=+b.dataset.c;$('H').value=H;$('c').value=c;update();}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+w11-14: team 'Saltmoor'; Buehler 1994 via Wikipedia only; SRE toil cap, LoL 2026 patch schedule, OSRS GE tax 2021/2025, EVE Aug 2025 MER verified. Specs w11 live-capacity, w13 wealth-per-player (plain text, link after build). w01-10 authors told to reuse Saltmoor.
+w06-10: New World, WoW Classic, SimCity 2013, Scrum Guide 2020, SRE on-call verified; Halo 3 Wired reused; New World beta peak dropped. Spec w07 sprint-buffer-burndown. PR401 and PR301 syllabus links: upgrade now lectures exist. Check team name in w06-10 (told Saltmoor after writing?).

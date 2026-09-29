@@ -1,0 +1,1 @@
+w01-05: running pitch 'Saltmarch' (w06 by another author doesn't mention it, nor w05's evidence table handoff to greenlight): unify. Notation clash rho (w02 realized-price factor vs w05 intra-group correlation). Mortal Online 2 paid on Steam (unverified); Steam counts/prices dated 29 Sep 2026. Specs w04 prototype-picker, w05 test-size. Author added a BUILD_LOG entry.

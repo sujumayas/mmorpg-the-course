@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Free riding in a team · PR101 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1240px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.verdict{font-family:var(--serif);font-size:1.08rem;margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:5px solid var(--c,var(--ink))}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;grid-template-areas:'main ctl' 'tbl ctl';gap:0 18px;align-items:start}
+.mainv{grid-area:main;min-width:0}.controls{grid-area:ctl}.tbl{grid-area:tbl;min-width:0}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 10px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;padding-left:2px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+/* bar chart built from HTML so the sliders sit under their bars */
+.bars{position:relative;display:grid;grid-template-columns:34px 1fr;height:230px;margin-top:18px}
+.yax{position:relative}
+.yax span{position:absolute;right:6px;transform:translateY(50%);font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.plotarea{position:relative;background:var(--paper);border-bottom:1.5px solid var(--ink-soft)}
+.gl{position:absolute;left:0;right:0;border-top:1px solid var(--grid)}
+.allline{position:absolute;left:0;right:0;border-top:2px dashed var(--ink);z-index:2}
+.allline span{position:absolute;right:4px;bottom:2px;font-size:11px;font-weight:600;background:var(--paper);padding:0 3px;color:var(--ink)}
+.cols{position:absolute;inset:0;display:grid;gap:6px;padding:0 6px;align-items:end}
+.col{display:flex;flex-direction:column;justify-content:flex-end;height:100%;position:relative;min-width:0}
+.col .tot{position:relative;z-index:3;text-align:center;font-weight:700;font-size:.85rem;font-variant-numeric:tabular-nums;line-height:1.2;margin-bottom:2px}
+.stack{display:flex;flex-direction:column-reverse;width:min(100%,52px);margin:0 auto}
+.stack i{display:block;width:100%}
+.seg-share{background:var(--steel)}.seg-credit{background:var(--ochre)}.seg-out{background:var(--ink-soft);opacity:.45}
+.sliders{display:grid;grid-template-columns:34px 1fr;margin-top:6px}
+.srow{display:grid;gap:6px;padding:0 6px}
+.mem{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.mem input[type=range]{writing-mode:vertical-lr;direction:rtl;width:28px;height:96px;accent-color:var(--steel);margin:0}
+.mem .who{font-size:.78rem;font-weight:600;white-space:nowrap}
+.mem output{font-size:.78rem;font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.mem.rider .who{color:var(--blood)}
+svg.plot{display:block;width:100%;height:330px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:10px 0 2px;color:var(--ink-soft)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.best{font-size:.92rem;margin:6px 0 0}
+.controls{display:flex;flex-direction:column;gap:12px}
+.ctl label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+.ctl .sub{font-size:.8rem;color:var(--ink-soft);margin:0}
+.ctl input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:2px 0 0}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+button{font:600 .88rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.cur td{background:var(--paper-2);font-weight:700}
+td.below{color:var(--blood)}
+.two{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}
+h2{font-family:var(--serif);font-weight:600;font-size:1.02rem;margin:14px 0 0}
+.note{font-family:var(--serif);font-size:.96rem;margin:12px 0 0;max-width:75ch}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (max-width:1100px){.layout{grid-template-columns:1fr;grid-template-areas:'main' 'ctl' 'tbl';gap:12px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px}}
+@media (max-width:760px){.charts,.two{grid-template-columns:1fr}.controls{grid-template-columns:1fr}.readout{grid-template-columns:repeat(2,1fr)}svg.plot{height:270px}th,td{padding:5px 5px;font-size:.85rem}.cols,.srow{gap:3px;padding:0 3px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR101 Game Production I · Week 11 · Worked example</p>
+  <h1>When an hour of team work returns less than an hour, free riding pays</h1>
+  <p class="lede">Each hour you put into the project returns m&nbsp;/&nbsp;n from the shared result plus k in individual credit. In a bigger team that falls under 1, and doing nothing beats contributing for each person, even though everyone prefers the team where all contribute. Individual credit lifts the curve, and the lift you need grows with team size.</p>
+</header>
+
+<section class="panel" aria-label="Free rider model">
+  <p class="verdict" id="verdict" aria-live="polite"></p>
+  <div class="layout">
+    <div class="mainv">
+      <div class="charts">
+        <figure>
+          <figcaption>Who comes out ahead<small>Each member's payoff: shared share + individual credit + value of hours spent elsewhere. <span id="allLab"></span></small></figcaption>
+          <div class="bars" aria-hidden="true">
+            <div class="yax" id="yax"></div>
+            <div class="plotarea" id="plotarea"><div id="gls"></div><div class="allline" id="allline"></div><div class="cols" id="cols"></div></div>
+          </div>
+          <div class="sliders"><div></div><div class="srow" id="srow" role="group" aria-label="Hours each member puts into the project"></div></div>
+        </figure>
+        <figure>
+          <figcaption>Your return per project hour<small>R(n) = m / n + k, by team size</small></figcaption>
+          <svg class="plot" id="svgR" role="img" aria-labelledby="verdict"></svg>
+        </figure>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--steel)"></i>shared share (m/n) &times; X</span>
+        <span><i class="sw" style="background:var(--ochre)"></i>individual credit k &times; x<sub>i</sub></span>
+        <span><i class="sw" style="background:var(--ink-soft);opacity:.45"></i>outside value H &minus; x<sub>i</sub></span>
+        <span><svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" style="stroke:var(--ink);stroke-width:2;stroke-dasharray:5 3"/></svg>if everyone contributes</span>
+        <span><svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" style="stroke:var(--steel);stroke-width:2.5"/></svg>R(n) with current k</span>
+        <span><svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" style="stroke:var(--ink-soft);stroke-width:1.5;stroke-dasharray:2 3"/></svg>R(n) with k = 0</span>
+      </div>
+      <div class="readout">
+        <div class="stat" style="--c:var(--steel)"><b id="rR">—</b><span>return per project hour, R = m/n + k</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rK">—</b><span>credit needed, k* = max(0, 1 &minus; m/n)</span></div>
+        <div class="stat" style="--c:var(--ink)"><b id="rX">—</b><span>team project hours X</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rSum">—</b><span>total payoff, all members</span></div>
+      </div>
+      <p class="best" id="best"></p>
+    </div>
+
+    <div class="controls" aria-label="Model controls">
+      <div class="ctl"><label for="n">Team size n <output id="oN"></output></label><input id="n" type="range" min="2" max="8" step="1" value="4"></div>
+      <div class="ctl"><label for="m">Value per project hour m <output id="oM"></output></label><input id="m" type="range" min="1" max="4" step="0.1" value="2"><p class="sub">Team value one project hour creates, in units of an hour spent elsewhere</p></div>
+      <div class="ctl"><label for="k">Individual credit k <output id="oK"></output></label><input id="k" type="range" min="0" max="1" step="0.05" value="0"><p class="sub">Value to you alone per hour you contribute (grades, visible credit)</p></div>
+      <div class="ctl"><label for="H">Hours available H <output id="oH"></output></label><input id="H" type="range" min="4" max="20" step="1" value="10"></div>
+      <div class="ctl">
+        <div class="presets" role="group" aria-label="Contribution presets">
+          <button data-p="all">All contribute</button><button data-p="one">One free rider</button><button data-p="none">Nobody contributes</button>
+        </div>
+      </div>
+      <div><button id="reset">Reset</button></div>
+    </div>
+
+    <div class="tbl">
+      <div class="two">
+        <div>
+          <h2>Payoff by member</h2>
+          <div class="table-wrap"><table aria-label="Payoff by member">
+            <thead><tr><th>Member</th><th>Hours</th><th>Shared</th><th>Credit</th><th>Outside</th><th>Total</th></tr></thead>
+            <tbody id="mBody"></tbody></table></div>
+        </div>
+        <div>
+          <h2>Return and credit needed by team size</h2>
+          <div class="table-wrap"><table aria-label="Return per hour by team size">
+            <thead><tr><th>n</th><th>m / n</th><th>R = m/n + k</th><th>k*</th></tr></thead>
+            <tbody id="nBody"></tbody></table></div>
+        </div>
+      </div>
+      <p class="note">Model: X = sum of hours x<sub>i</sub>. Payoff u<sub>i</sub> = (m / n) &times; X + k &times; x<sub>i</sub> + (H &minus; x<sub>i</sub>). One more project hour gives you m / n + k and costs you the 1 it was worth elsewhere, so free riding pays when R &lt; 1.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Model from PR101 week 11, section 2: the linear public goods game with a marginal per capita return m / n, plus an individual credit k. Members are plain numbered bars.</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const DEF={n:4,m:2,k:0,H:10};
+const TOL=1e-9;
+let hours=[10,10,10,10];
+const num=v=>{const r=Math.round(v*100)/100;return Number.isInteger(r)?String(r):r.toFixed(2).replace(/0$/,'');};
+const f2=v=>v.toFixed(2);
+
+function params(){return {n:+$('n').value,m:+$('m').value,k:+$('k').value,H:+$('H').value};}
+function niceMax(v){const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,2,4,5,6,8,10].map(x=>x*m).find(x=>x>=v*1.12)||v;}
+
+function buildSliders(){
+  const {n,H}=params(),row=$('srow');
+  row.style.gridTemplateColumns=`repeat(${n},1fr)`;$('cols').style.gridTemplateColumns=`repeat(${n},1fr)`;
+  row.innerHTML='';
+  for(let i=0;i<n;i++){
+    const d=document.createElement('div');d.className='mem';
+    d.innerHTML=`<input type="range" id="x${i}" min="0" max="${H}" step="1" value="${hours[i]}" aria-label="Member ${i+1} hours"><output id="ox${i}">${hours[i]} h</output><span class="who">M${i+1}</span>`;
+    row.appendChild(d);
+    d.querySelector('input').addEventListener('input',e=>{hours[i]=+e.target.value;clearPreset();render();});
+  }
+}
+function resize(){ // keep hours array matched to n, new members default to H
+  const {n,H}=params();
+  hours=hours.slice(0,n).map(x=>Math.min(x,H));while(hours.length<n)hours.push(H);
+  buildSliders();
+}
+function clearPreset(){document.querySelectorAll('.presets button').forEach(b=>b.setAttribute('aria-pressed','false'));}
+
+function render(){
+  const {n,m,k,H}=params();
+  $('oN').textContent=n;$('oM').textContent=m.toFixed(1);$('oK').textContent=f2(k);$('oH').textContent=H;
+  const X=hours.reduce((a,b)=>a+b,0);
+  const rows=hours.map((x,i)=>{const sh=m/n*X,cr=k*x,out=H-x;return {i,x,sh,cr,out,u:sh+cr+out};});
+  const all=m*H+k*H;
+  const yMax=niceMax(Math.max(all,...rows.map(r=>r.u)));
+  // axis + gridlines
+  const pct=v=>(v/yMax*100)+'%';
+  let ya='',gl='';for(let i=0;i<=4;i++){const v=yMax*i/4;ya+=`<span style="bottom:${pct(v)}">${num(v)}</span>`;if(i)gl+=`<div class="gl" style="bottom:${pct(v)}"></div>`;}
+  $('yax').innerHTML=ya;$('gls').innerHTML=gl;
+  $('allline').style.bottom=pct(all);$('allLab').textContent=`Dashed line: each payoff if everyone contributes, ${num(all)}.`;
+  $('cols').innerHTML=rows.map(r=>`<div class="col"><div class="tot"><span style="background:var(--paper);padding:0 3px;border-radius:3px">${num(r.u)}</span></div><div class="stack" style="height:${pct(r.u)}"><i class="seg-share" style="height:${r.u?r.sh/r.u*100:0}%"></i><i class="seg-credit" style="height:${r.u?r.cr/r.u*100:0}%"></i><i class="seg-out" style="height:${r.u?r.out/r.u*100:0}%"></i></div></div>`).join('');
+  // .col height is 100% of plot; stack height relative to plot needs col to be plot height minus nothing; tot sits above stack
+  rows.forEach(r=>{const o=$('ox'+r.i);if(o)o.textContent=r.x+' h';const mm=$('x'+r.i);if(mm){mm.max=H;mm.value=r.x;mm.parentElement.classList.toggle('rider',r.x===0);}});
+  const R=m/n+k,kstar=Math.max(0,1-m/n);
+  $('rR').textContent=f2(R);$('rK').textContent=f2(kstar);$('rX').textContent=num(X);$('rSum').textContent=num(rows.reduce((a,r)=>a+r.u,0));
+  // verdict
+  const v=$('verdict');
+  if(R<1-TOL){
+    v.textContent=`With ${n} members, each hour you work returns ${f2(R)} to you. Free riding pays. Individual credit of at least ${f2(kstar)} would fix it.`+(k>0?` It is ${f2(k)} now.`:'');
+    v.style.setProperty('--c','var(--blood)');
+  } else {
+    v.textContent=`Contributing pays for everyone. Return per hour: ${f2(R)}.`+(Math.abs(R-1)<=TOL?' That is exactly break-even, so each member is indifferent between working and not.':'');
+    v.style.setProperty('--c','var(--moss)');
+  }
+  const br=R>1+TOL?`contribute all ${H} hours`:R<1-TOL?'contribute 0 hours':'indifferent: any number of hours gives the same payoff';
+  $('best').innerHTML=`<b>Best response</b> for every member, whatever the others do: ${br}.`;
+  // tables
+  $('mBody').innerHTML=rows.map(r=>`<tr><td>Member ${r.i+1}</td><td>${r.x}</td><td>${num(r.sh)}</td><td>${num(r.cr)}</td><td>${num(r.out)}</td><td><b>${num(r.u)}</b></td></tr>`).join('');
+  let nb='';for(let s=2;s<=12;s++){const Rs=m/s+k;nb+=`<tr class="${s===n?'cur':''}"><td>${s}</td><td>${f2(m/s)}</td><td class="${Rs<1-TOL?'below':''}">${f2(Rs)}</td><td>${f2(Math.max(0,1-m/s))}</td></tr>`;}
+  $('nBody').innerHTML=nb;
+  drawCurve(n,m,k);
+}
+
+function el(name,attrs,parent){const e=document.createElementNS(NS,name);for(const a in attrs)e.setAttribute(a,attrs[a]);if(parent)parent.appendChild(e);return e;}
+function drawCurve(n,m,k){
+  const svg=$('svgR'),b=svg.getBoundingClientRect(),W=Math.max(220,b.width),H=Math.max(200,b.height);
+  const L=34,Rr=12,T=14,B=34,pw=W-L-Rr,ph=H-T-B;
+  const x=s=>L+pw*(s-2)/10,y=v=>T+ph*(1-Math.min(2.08,Math.max(0,v))/2);
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.textContent='';
+  el('rect',{x:L,y:T,width:pw,height:ph,style:'fill:var(--paper)'},svg);
+  el('rect',{x:L,y:y(1),width:pw,height:y(0)-y(1),style:'fill:var(--blood);fill-opacity:.10'},svg);
+  const txt=(tx,ty,s,a,st)=>{const e=el('text',{x:tx,y:ty,'text-anchor':a||'middle',style:st||'fill:var(--ink-soft);font:11px var(--sans)'},svg);e.textContent=s;return e;};
+  [0,0.5,1.5,2].forEach(v=>el('line',{x1:L,x2:L+pw,y1:y(v),y2:y(v),style:'stroke:var(--grid)'},svg));
+  [0,0.5,1,1.5,2].forEach(v=>txt(L-5,y(v)+4,v.toFixed(1),'end'));
+  for(let s=2;s<=12;s++)txt(x(s),T+ph+15,String(s));
+  txt(L+pw/2,H-4,'team size n');
+  // allowed range of n in the model
+  el('rect',{x:x(8),y:T,width:x(12)-x(8),height:ph,style:'fill:var(--ink);fill-opacity:.05'},svg);
+  txt(x(10),T+14,'larger teams','middle','fill:var(--ink-soft);font:10px var(--sans)');
+  el('line',{x1:L,x2:L+pw,y1:y(1),y2:y(1),style:'stroke:var(--ink);stroke-width:2'},svg);
+  const halo='paint-order:stroke;stroke:var(--paper);stroke-width:3;';
+  txt(L+pw-4,y(1)-6,'break-even','end',halo+'fill:var(--ink);font:600 11px var(--sans)');
+  txt(L+pw-4,y(0)-8,'free riding pays','end',halo+'fill:var(--blood);font:600 11px var(--sans)');
+  const clip='cR'+Math.random().toString(36).slice(2,7);
+  const cp=el('clipPath',{id:clip},el('defs',{},svg));el('rect',{x:L,y:T-6,width:pw,height:ph+6},cp);
+  const g=el('g',{'clip-path':`url(#${clip})`},svg);
+  const pts=kk=>{const a=[];for(let s=2;s<=12;s++)a.push(`${x(s)},${y(m/s+kk)}`);return a.join(' ');};
+  if(k>0)el('polyline',{points:pts(0),style:'fill:none;stroke:var(--ink-soft);stroke-width:1.5;stroke-dasharray:2 3'},g);
+  el('polyline',{points:pts(k),style:'fill:none;stroke:var(--steel);stroke-width:2.5;stroke-linejoin:round'},g);
+  for(let s=2;s<=12;s++){const v=m/s+k;if(v<=2.08)el('circle',{cx:x(s),cy:y(v),r:3,style:'fill:var(--steel)'},g);}
+  const R=m/n+k,cx=x(n),cy=y(R);
+  el('line',{x1:cx,x2:cx,y1:T,y2:T+ph,style:'stroke:var(--focus);stroke-width:1;stroke-dasharray:2 3'},svg);
+  el('circle',{cx,cy,r:7,style:'fill:var(--paper);stroke:var(--focus);stroke-width:3'},svg);
+  const lab=R>2.08?`n = ${n}: ${f2(R)} (off the chart)`:`n = ${n}: ${f2(R)}`;
+  const right=n<7;
+  txt(cx+(right?11:-11),Math.max(T+12,Math.min(cy,T+ph)-10),lab,right?'start':'end',halo+'fill:var(--ink);font:700 12px var(--sans)');
+}
+
+// events
+$('n').addEventListener('input',()=>{resize();clearPreset();render();});
+$('H').addEventListener('input',()=>{const H=+$('H').value;hours=hours.map(x=>Math.min(x,H));buildSliders();render();});
+['m','k'].forEach(id=>$(id).addEventListener('input',render));
+document.querySelectorAll('.presets button').forEach(b=>b.addEventListener('click',()=>{
+  const {n,H}=params();
+  if(b.dataset.p==='all')hours=Array(n).fill(H);
+  else if(b.dataset.p==='none')hours=Array(n).fill(0);
+  else{hours=Array(n).fill(H);hours[n-1]=0;}
+  clearPreset();b.setAttribute('aria-pressed','true');buildSliders();render();
+}));
+$('reset').addEventListener('click',()=>{for(const kk in DEF)$(kk).value=DEF[kk];hours=Array(DEF.n).fill(DEF.H);clearPreset();buildSliders();render();});
+let rz=0;window.addEventListener('resize',()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(render);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+buildSliders();render();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+w01-05: Warcraft Wiki 'fast respawn' page undated (labelled current retail, undated). Team 'Saltmarsh' (focus factor 0.46 at w04); w06-14 authors told to reuse. w05 interactive spec examples/w05-spawn-supply.html.

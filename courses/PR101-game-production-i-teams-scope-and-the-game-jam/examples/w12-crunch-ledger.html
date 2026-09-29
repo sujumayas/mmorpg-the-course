@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crunch ledger — PR101 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.verdict{font-family:var(--serif);font-size:1.12rem;margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:5px solid var(--ochre)}
+.verdict b{font-variant-numeric:tabular-nums}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+@media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0 0 12px;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;position:relative}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cTop{height:230px}#cCum{height:270px;touch-action:none;cursor:ew-resize}
+.plotwrap{position:relative}
+#dHandle{position:absolute;top:0;width:28px;height:100%;margin-left:-14px;border-radius:6px;background:transparent;cursor:ew-resize}
+#dHandle:focus-visible{outline:3px solid var(--focus);outline-offset:-2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 2px}
+.legend i{display:inline-block;width:14px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0 12px}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:flex;flex-direction:column;gap:12px}
+.ctl label,.ctl .lab{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+.ctl small{display:block;color:var(--ink-soft);font-size:.8rem;line-height:1.3}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.seg{display:flex;gap:6px;margin-top:4px}
+.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:560px;width:100%}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.crunch td:nth-child(2){color:var(--blood);font-weight:700}
+tr.here td{font-weight:700;background:var(--paper-2)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR101 Game Production I · Week 12 · Worked example</p>
+  <h1>The crunch ledger</h1>
+  <p class="lede">Crunch pulls ahead at the deadline and falls behind afterwards. The two running totals cross, so where you stop counting decides whether crunch looks like it worked.</p>
+</header>
+
+<section class="panel">
+  <p class="verdict" id="verdict" aria-live="polite"></p>
+  <div class="layout">
+    <div>
+      <div class="readout">
+        <div class="stat" style="--c:var(--ochre)"><b id="rLeadD">—</b><span id="rLeadDLab">lead at deadline</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rLeadW">—</b><span id="rLeadWLab">lead at horizon</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rCross">—</b><span>crossover week</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rRet">—</b><span>hours returned per extra hour</span></div>
+      </div>
+      <figure>
+        <figcaption>Output each week<small>Hours × efficiency. Crunch schedule beside a 40-hour team with efficiency 1.</small></figcaption>
+        <canvas id="cTop" role="img" aria-label="Paired bars of weekly output, crunch schedule versus 40-hour baseline"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--steel)"></i>Crunch schedule</span>
+          <span><i style="background:var(--grid);border:1px solid var(--ink-soft)"></i>40-hour baseline</span>
+          <span><i style="background:transparent;border:2px solid var(--blood)"></i>Crunch-schedule week below 40</span>
+          <span>Number above bar = efficiency</span>
+        </div>
+      </figure>
+      <figure>
+        <figcaption>Total output so far<small>Drag the deadline line, or focus it and use the arrow keys.</small></figcaption>
+        <div class="plotwrap" id="plotwrap">
+          <canvas id="cCum" role="img" aria-label="Cumulative output lines, crunch versus baseline, with deadline and horizon markers"></canvas>
+          <div id="dHandle" role="slider" tabindex="0" aria-label="Deadline week on chart" aria-valuemin="1"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:var(--ochre);height:3px"></i>Cumulative crunch</span>
+          <span><i style="background:var(--ink-soft);height:3px"></i>Cumulative baseline</span>
+          <span><i id="lgAhead" style="background:var(--moss);opacity:.45"></i>Ahead (solid)</span>
+          <span><i id="lgBehind" style="background:repeating-linear-gradient(135deg,var(--blood) 0 2px,transparent 2px 5px)"></i>Behind (hatched)</span>
+        </div>
+      </figure>
+    </div>
+
+    <div class="controls" aria-label="Model controls">
+      <div class="ctl"><label for="H">Crunch hours per week <output id="oH"></output></label><input id="H" type="range" min="40" max="80" step="1" value="60"></div>
+      <div class="ctl"><label for="C">Crunch length (weeks) <output id="oC"></output></label><input id="C" type="range" min="0" max="12" step="1" value="4"></div>
+      <div class="ctl"><label for="f">Fatigue rate <output id="of"></output></label><input id="f" type="range" min="0" max="0.015" step="0.001" value="0.005"><small>Efficiency lost next week per hour over 40.</small></div>
+      <div class="ctl"><label for="g">Recovery rate <output id="og"></output></label><input id="g" type="range" min="0.02" max="0.30" step="0.01" value="0.10"><small>Efficiency regained per normal week.</small></div>
+      <div class="ctl"><label for="em">Efficiency floor <output id="oem"></output></label><input id="em" type="range" min="0.1" max="0.8" step="0.05" value="0.3"></div>
+      <div class="ctl"><span class="lab" id="wLab">Horizon <output id="oW"></output></span>
+        <div class="seg" role="group" aria-labelledby="wLab">
+          <button class="chip" data-w="8" aria-pressed="false">8</button>
+          <button class="chip" data-w="12" aria-pressed="true">12</button>
+          <button class="chip" data-w="16" aria-pressed="false">16</button>
+          <button class="chip" data-w="24" aria-pressed="false">24</button>
+        </div></div>
+      <div class="ctl"><label for="D">Deadline week <output id="oD"></output></label><input id="D" type="range" min="1" max="12" step="1" value="4"><small>Follows crunch length until you move it.</small></div>
+      <div><button class="chip" id="reset">Reset</button></div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Week-by-week table</summary>
+    <div class="table-wrap">
+      <table aria-label="Weekly crunch ledger">
+        <thead><tr><th>Week</th><th>Hours</th><th>Efficiency</th><th>Output</th><th>Cumulative crunch</th><th>Cumulative baseline</th><th>Lead</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<footer>Model: hours above 40 lower next week's efficiency by the fatigue rate per extra hour, down to the floor. Normal weeks recover it by the recovery rate, up to 1. Output = hours × efficiency. The shape follows the overtime studies cited in the lecture (Robinson; the IGDA quality-of-life surveys). The default rates are teaching values, not measurements.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DEF={H:60,C:4,f:0.005,g:0.10,em:0.3,W:12};
+let S={...DEF,D:4,dFollows:true};
+
+function r1(x){const v=Math.round(x*10)/10;return Object.is(v,-0)?0:v;}
+function num(x){const v=r1(x);return (v<0?'−':'')+Math.abs(v).toString();}
+function signed(x){const v=r1(x);return v>0?'+'+v:v<0?'−'+Math.abs(v):'0';}
+function effFmt(e){let s=(Math.round(e*100)/100).toFixed(2);return s.replace(/0$/,'');}
+
+function model(){
+  const rows=[];let e=1,cum=0;
+  for(let w=1;w<=S.W;w++){
+    const h=w<=S.C?S.H:40,out=h*e;cum+=out;
+    rows.push({w,h,e,out,cum,base:40*w,lead:cum-40*w});
+    let n=h>40?Math.max(S.em,e-S.f*(h-40)):Math.min(1,e+S.g);
+    e=Math.round(n*1e6)/1e6;
+  }
+  // crossover: first week after the lead has been positive where lead <= 0
+  let cross=null,wasPos=false;
+  for(const r of rows){const L=r1(r.lead);if(L>0)wasPos=true;else if(wasPos&&L<=0){cross=r.w;break;}}
+  return {rows,cross};
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function niceMax(v){const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(m=>m*mag).find(x=>x>=v)||v;}
+const pad={l:44,r:14,t:22,b:30};
+
+function yAxis(g,w,h,yMax,fmt){
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+(h-pad.t-pad.b)*(1-i/4);
+    g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(fmt(yMax*i/4),pad.l-6,y);
+  }
+}
+function xLabels(g,w,h,W,xOf){
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.font='12px '+css('--sans');
+  const step=W>16?4:W>8?2:1;
+  for(let k=1;k<=W;k++)if(k===1||k%step===0)g.fillText(k,xOf(k),h-pad.b+6);
+  g.textAlign='right';g.fillText('week',w-pad.r,h-12);
+}
+
+function drawTop(M){
+  const c=setupCanvas($('cTop')),g=c.g,w=c.w,h=c.h,W=S.W;
+  const yMax=niceMax(Math.max(80,...M.rows.map(r=>r.out))*1.08);
+  g.clearRect(0,0,w,h);yAxis(g,w,h,yMax,v=>Math.round(v));
+  const pw=(w-pad.l-pad.r)/W,yOf=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax),xOf=k=>pad.l+pw*(k-.5);
+  const bw=Math.max(2,Math.min(18,pw*0.36));
+  // reference line at 40
+  g.strokeStyle=css('--ink');g.globalAlpha=.55;g.setLineDash([5,4]);g.beginPath();g.moveTo(pad.l,yOf(40));g.lineTo(w-pad.r,yOf(40));g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--ink');g.textAlign='right';g.textBaseline='top';g.font='600 11px '+css('--sans');
+  g.fillText('dashed line at 40 = a rested normal week',w-pad.r,2);
+  M.rows.forEach(r=>{
+    const x=xOf(r.w);
+    g.fillStyle=css('--grid');g.fillRect(x+1,yOf(40),bw,yOf(0)-yOf(40));
+    g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.strokeRect(x+1.5,yOf(40)+.5,bw-1,yOf(0)-yOf(40)-1);
+    g.fillStyle=css('--steel');g.fillRect(x-bw-1,yOf(r.out),bw,yOf(0)-yOf(r.out));
+    if(r1(r.out)<40){g.strokeStyle=css('--blood');g.lineWidth=2;g.strokeRect(x-bw-1-1,yOf(r.out)-1,bw+2,yOf(0)-yOf(r.out)+1);}
+    if(pw>=16){const narrow=pw<40;g.fillStyle=css('--ink');g.font=(narrow?'9px ':'11px ')+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText(effFmt(r.e).replace(/^0/,narrow?'':'0'),narrow?x:x-bw/2-1,yOf(Math.max(r.out,40))-3);}
+  });
+  xLabels(g,w,h,W,xOf);
+  c.xOf=xOf;return c;
+}
+
+let cumGeom=null;
+function drawCum(M){
+  const c=setupCanvas($('cCum')),g=c.g,w=c.w,h=c.h,W=S.W;
+  const yMax=niceMax(Math.max(40*W,...M.rows.map(r=>r.cum))*1.04);
+  g.clearRect(0,0,w,h);yAxis(g,w,h,yMax,v=>Math.round(v));
+  const xOf=k=>pad.l+(w-pad.l-pad.r)*k/W,yOf=v=>pad.t+(h-pad.t-pad.b)*(1-v/yMax);
+  const pts=[{w:0,cum:0,base:0}].concat(M.rows);
+  // shade segment by segment, splitting at crossings
+  const ahead=css('--moss'),behind=css('--blood');
+  const hatch=(()=>{const p=document.createElement('canvas');p.width=p.height=8;const q=p.getContext('2d');q.strokeStyle=behind;q.lineWidth=1.5;q.beginPath();q.moveTo(0,8);q.lineTo(8,0);q.moveTo(-2,2);q.lineTo(2,-2);q.moveTo(6,10);q.lineTo(10,6);q.stroke();return g.createPattern(p,'repeat');})();
+  for(let i=0;i<pts.length-1;i++){
+    const a=pts[i],b=pts[i+1],la=a.cum-a.base,lb=b.cum-b.base;
+    const segs=[];
+    if(la*lb<0){const t=la/(la-lb);const mid={x:a.w+t,y:a.base+40*t};segs.push([a,mid,la>0],[mid,b,lb>0]);}
+    else segs.push([a,b,(la+lb)>0]);
+    segs.forEach(([p,q,pos])=>{
+      const px=p.x!==undefined?p.x:p.w,qx=q.x!==undefined?q.x:q.w;
+      const pc=p.y!==undefined?p.y:p.cum,qc=q.y!==undefined?q.y:q.cum;
+      const pb=p.y!==undefined?p.y:p.base,qb=q.y!==undefined?q.y:q.base;
+      if(Math.abs(pc-pb)<1e-9&&Math.abs(qc-qb)<1e-9)return;
+      g.beginPath();g.moveTo(xOf(px),yOf(pc));g.lineTo(xOf(qx),yOf(qc));g.lineTo(xOf(qx),yOf(qb));g.lineTo(xOf(px),yOf(pb));g.closePath();
+      if(pos){g.fillStyle=ahead;g.globalAlpha=.35;g.fill();g.globalAlpha=1;}
+      else{g.fillStyle=hatch;g.fill();}
+    });
+  }
+  function line(key,color,width,dash){g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash||[]);g.beginPath();pts.forEach((p,i)=>{const x=xOf(p.w),y=yOf(p[key]);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();g.setLineDash([]);}
+  line('base',css('--ink-soft'),2,[6,4]);
+  line('cum',css('--ochre'),3);
+  xLabels(g,w,h,W,k=>xOf(k));
+  // markers
+  function marker(k,label,strong){
+    const x=xOf(k),r=M.rows[k-1];
+    g.strokeStyle=css('--ink');g.lineWidth=strong?2:1.5;g.setLineDash(strong?[]:[3,3]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ochre');g.beginPath();g.arc(x,yOf(r.cum),5,0,Math.PI*2);g.fill();
+    const txt=label+' '+signed(r.lead);
+    g.font='700 12px '+css('--sans');const tw=g.measureText(txt).width+10;
+    let bx=x-tw/2;bx=Math.max(pad.l,Math.min(w-pad.r-tw,bx));
+    const by=strong?pad.t-16:pad.t+6;
+    g.fillStyle=css('--paper');g.fillRect(bx,by+(strong?0:14),tw,17);
+    g.strokeStyle=css('--ink');g.lineWidth=1;g.strokeRect(bx+.5,by+(strong?0:14)+.5,tw-1,16);
+    g.fillStyle=css('--ink');g.textAlign='center';g.textBaseline='middle';g.fillText(txt,bx+tw/2,by+(strong?0:14)+8.5);
+  }
+  if(S.D!==S.W)marker(S.W,'Wk '+S.W+':',false);
+  marker(S.D,'D = '+S.D+':',true);
+  // ahead / behind text labels in the chart
+  cumGeom={xOf,W,w};
+  const hd=$('dHandle');hd.style.left=xOf(S.D)+'px';
+  hd.setAttribute('aria-valuemax',S.W);hd.setAttribute('aria-valuenow',S.D);
+  hd.setAttribute('aria-valuetext','Week '+S.D+', lead '+signed(M.rows[S.D-1].lead));
+}
+
+function readouts(M){
+  const R=M.rows,d=R[S.D-1],z=R[S.W-1];
+  $('oH').textContent=S.H+' h';$('oC').textContent=S.C;$('of').textContent=S.f.toFixed(3);$('og').textContent=S.g.toFixed(2);$('oem').textContent=S.em.toFixed(2);
+  $('oW').textContent=S.W+' weeks';$('oD').textContent='week '+S.D;
+  $('rLeadD').textContent=signed(d.lead);$('rLeadDLab').textContent='lead at deadline (week '+S.D+')';
+  $('rLeadW').textContent=signed(z.lead);$('rLeadWLab').textContent='lead at week '+S.W;
+  $('rCross').textContent=M.cross?'week '+M.cross:'none';
+  const extraIn=Math.min(S.C,S.W)*(S.H-40);
+  $('rRet').textContent=(extraIn>0)?(Math.round(z.lead/extraIn*100)/100).toString().replace('-','−'):'—';
+  const lead=(x)=>{const v=r1(x);return v>0?'leads by <b>'+num(v)+'</b>':v<0?'trails by <b>'+num(-v)+'</b>':'is <b>level</b>';};
+  let s=`At the deadline (week ${S.D}) crunch ${lead(d.lead)} fresh hours. By week ${S.W} it ${lead(z.lead)}.`;
+  if(extraIn>0)s+=` Each extra hour returned <b>${$('rRet').textContent}</b> hours.`;
+  if(M.cross)s+=` Crunch falls behind in week ${M.cross}.`;
+  else if(S.C===0||S.H===40)s+=' No crunch, so the two schedules match.';
+  else if(r1(z.lead)>0)s+=' No crossover within the horizon.';
+  $('verdict').innerHTML=s;
+  $('tbody').innerHTML=R.map(r=>`<tr class="${r.h>40?'crunch':''} ${r.w===S.D?'here':''}"><td>${r.w}${r.w===S.D?' (D)':''}</td><td>${r.h}</td><td>${effFmt(r.e)}</td><td>${num(r.out)}</td><td>${num(r.cum)}</td><td>${r.base}</td><td>${signed(r.lead)}</td></tr>`).join('');
+}
+
+function update(){
+  const D=$('D');D.max=S.W;if(S.D>S.W)S.D=S.W;D.value=S.D;
+  const M=model();readouts(M);drawTop(M);drawCum(M);
+  window.__crunch={model:M,state:{...S}};
+}
+function setD(v,manual){S.D=Math.max(1,Math.min(S.W,Math.round(v)));if(manual)S.dFollows=false;update();}
+
+['H','C','f','g','em'].forEach(k=>$(k).addEventListener('input',e=>{
+  S[k]=+e.target.value;
+  if(k==='C'&&S.dFollows)S.D=Math.max(1,Math.min(S.C,S.W));
+  update();
+}));
+$('D').addEventListener('input',e=>setD(+e.target.value,true));
+document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-w]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  S.W=+b.dataset.w;if(S.dFollows)S.D=Math.max(1,Math.min(S.C,S.W));update();
+}));
+$('reset').addEventListener('click',()=>{
+  S={...DEF,D:4,dFollows:true};
+  ['H','C','f','g','em'].forEach(k=>$(k).value=S[k]);
+  document.querySelectorAll('[data-w]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.w==='12'));
+  update();
+});
+// dragging the deadline on the chart
+const cv=$('plotwrap');let drag=false;
+function fromX(clientX){if(!cumGeom)return;const r=$('cCum').getBoundingClientRect();const x=clientX-r.left;
+  const k=(x-pad.l)/((cumGeom.w-pad.l-pad.r)/S.W);setD(k,true);}
+cv.addEventListener('pointerdown',e=>{drag=true;cv.setPointerCapture(e.pointerId);fromX(e.clientX);});
+cv.addEventListener('pointermove',e=>{if(drag)fromX(e.clientX);});
+cv.addEventListener('pointerup',()=>{drag=false;});
+$('dHandle').addEventListener('keydown',e=>{
+  const m={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1}[e.key];
+  if(m){setD(S.D+m,true);e.preventDefault();}
+  else if(e.key==='Home'){setD(1,true);e.preventDefault();}
+  else if(e.key==='End'){setD(S.W,true);e.preventDefault();}
+});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

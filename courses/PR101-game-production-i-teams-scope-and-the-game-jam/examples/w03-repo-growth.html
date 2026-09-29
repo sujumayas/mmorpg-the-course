@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Repo growth with and without LFS · PR101 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px}
+.lfs-toggle{display:flex;gap:6px;margin:10px 0 12px;flex-wrap:wrap}
+.bar{display:flex;height:56px;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;background:var(--paper)}
+.seg{height:100%;transition:width .6s ease;min-width:0}
+.seg.code{background:var(--moss)}
+.seg.cur{background:var(--steel)}
+.seg.old{background:var(--blood);background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgba(255,255,255,.28) 6px 9px)}
+.seg.ptr{background:var(--ochre)}
+.scale{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ink-soft);margin-top:4px;font-variant-numeric:tabular-nums}
+.segs{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:4px;font-size:.9rem;font-variant-numeric:tabular-nums}
+.segs li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--grid);padding:3px 0}
+.segs li:last-child{border-bottom:0;font-weight:700}
+.segs i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.ratio{font-family:var(--serif);margin:10px 0 0;font-size:1rem}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.group-label{font-weight:600;font-size:.92rem;display:block;margin-top:6px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+@media (max-width:520px){table{font-size:.76rem}th,td{padding:5px 3px}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR101 Game Production I · Week 3 · Worked example</p>
+  <h1>Git keeps every save of every binary, and every clone downloads them all</h1>
+  <p class="lede">Without LFS, a new teammate&rsquo;s first clone grows with every save of every art and audio file. With LFS the clone only fetches the current files. The server still stores every version, so the storage bill does not go away.</p>
+</header>
+
+<section class="panel" aria-label="Repository growth model">
+  <div class="charts">
+    <figure>
+      <figcaption>What a new clone downloads today<small id="barSub">Bar scaled to the plain Git clone at this point in the project</small></figcaption>
+      <div class="lfs-toggle" role="group" aria-label="Storage mode">
+        <button class="chip" id="bGit" aria-pressed="true">Plain Git</button>
+        <button class="chip" id="bLfs" aria-pressed="false">Git LFS</button>
+      </div>
+      <div class="bar" role="img" id="bar" aria-label="Stacked bar of clone contents">
+        <div class="seg code" id="sCode"></div><div class="seg cur" id="sCur"></div><div class="seg old" id="sOld"></div><div class="seg ptr" id="sPtr"></div>
+      </div>
+      <div class="scale"><span>0</span><span id="scaleMax"></span></div>
+      <ul class="segs" aria-live="polite">
+        <li><span><i style="background:var(--moss)"></i>Code history</span><span id="lCode"></span></li>
+        <li><span><i style="background:var(--steel)"></i>Current binaries, A &times; S</span><span id="lCur"></span></li>
+        <li><span><i id="oldSw" style="background:var(--blood)"></i><span id="lOldName">Old binary versions</span></span><span id="lOld"></span></li>
+        <li><span>Total clone</span><span id="lTot"></span></li>
+      </ul>
+      <p class="ratio" id="ratio"></p>
+    </figure>
+    <figure>
+      <figcaption>Size over the project<small id="chartSub">Megabytes, weeks 0 to 30</small></figcaption>
+      <canvas id="cGrow" role="img" aria-label="Clone and server size over the project"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--blood)"></i>Plain Git clone</span>
+        <span><i style="border-color:var(--steel)"></i>LFS clone</span>
+        <span><i style="border-color:var(--ochre);border-top-style:dashed"></i>LFS server storage</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rGit"></b><span id="rGitT"></span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rLfs"></b><span id="rLfsT"></span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rSrv"></b><span>LFS server storage</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rV"></b><span>versions of each asset, v</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="A">Binary assets A <output id="oA"></output></label>
+      <input id="A" type="range" min="10" max="2000" step="10" value="200">
+      <label for="S">Average asset size S (MB) <output id="oS"></output></label>
+      <input id="S" type="range" min="0.1" max="50" step="0.1" value="4">
+      <label for="sv">Saves per asset per week <output id="oSv"></output></label>
+      <input id="sv" type="range" min="0" max="5" step="0.5" value="1">
+      <label for="wk"><span id="wkName">Weeks</span> <output id="oWk"></output></label>
+      <input id="wk" type="range" min="0" max="30" step="1" value="14">
+    </div>
+    <div>
+      <label for="code">Code history (MB) <output id="oCode"></output></label>
+      <input id="code" type="range" min="0" max="500" step="10" value="0">
+      <label for="sp">Download speed (Mbps) <output id="oSp"></output></label>
+      <input id="sp" type="range" min="0" max="1" step="1" value="0">
+      <span class="group-label" id="presetL">Presets</span>
+      <div class="presets" role="group" aria-labelledby="presetL">
+        <button class="chip" id="pSem">Semester project (200, 4 MB, 1/week)</button>
+        <button class="chip" id="pJam">Jam weekend (60, 1.5 MB, 6 saves total, 10 Mbps)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tCap">At the current settings</caption>
+      <thead><tr><th id="thW">Week</th><th>v</th><th>Git MB</th><th>min</th><th>LFS MB</th><th><abbr title="LFS pointer files, MB">+ptr</abbr></th><th>min</th><th>Server MB</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from PR101 week 3. Decimal megabytes (1 MB = 1,000,000 bytes). An LFS pointer file is about 132 bytes; the exact size depends on the file&rsquo;s size digits. Real repositories compress some formats, so treat these as upper bounds for already-compressed files such as PNG, OGG and WAV exports.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const SP=[5,10,15,20,25,30,40,50,75,100,150,200,300,500,750,1000];
+$('sp').max=SP.length-1;
+let A=200,S=4,sv=1,wk=14,code=0,mbps=50,lfs=false,jam=false;
+const PTR=132/1e6;
+const vAt=w=>1+sv*w;
+const git=w=>code+A*S*vAt(w);
+const lfsC=w=>code+A*S+A*vAt(w)*PTR;
+const srv=w=>A*S*vAt(w);
+const mins=mb=>mb*8/mbps/60;
+function mb(x){if(x>=100)return Math.round(x).toLocaleString('en-US');if(x>=10)return x.toFixed(1).replace(/\.0$/,'');return x.toFixed(2).replace(/\.?0+$/,'')||'0';}
+const mn=x=>x.toFixed(1);
+const vFmt=v=>Number.isInteger(v)?String(v):v.toFixed(1);
+
+function setup(cv){const d=window.devicePixelRatio||1,r=cv.getBoundingClientRect();cv.width=Math.max(1,r.width*d);cv.height=Math.max(1,r.height*d);const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);return{g,w:r.width,h:r.height};}
+function niceMax(x){if(x<=0)return 1;const m=Math.pow(10,Math.floor(Math.log10(x)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*m).find(k=>k>=x*1.02);}
+const fmtAxis=v=>v===0?'0':v>=10000?(v/1000).toLocaleString('en-US',{maximumFractionDigits:1})+'k':v>=1?Math.round(v).toLocaleString('en-US'):v.toFixed(2);
+
+function drawChart(){
+  const {g,w,h}=setup($('cGrow'));g.clearRect(0,0,w,h);
+  const xMax=30,pad={l:50,r:16,t:14,b:34};
+  const yMax=niceMax(Math.max(git(xMax),srv(xMax),lfsC(xMax)));
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/xMax,Y=y=>pad.t+(h-pad.t-pad.b)*(1-y/yMax);
+  g.font='12px '+css('--sans');
+  for(let i=0;i<=4;i++){const y=yMax*i/4;g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(pad.l,Y(y));g.lineTo(w-pad.r,Y(y));g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(fmtAxis(y),pad.l-6,Y(y));}
+  g.textAlign='center';g.textBaseline='top';[0,5,10,15,20,25,30].forEach(x=>g.fillText(x,X(x),h-pad.b+6));
+  g.textAlign='right';g.fillText(jam?'saves so far':'week',w-pad.r,h-14);
+  g.strokeStyle=css('--ink');g.globalAlpha=.3;g.setLineDash([4,4]);g.beginPath();g.moveTo(X(wk),pad.t);g.lineTo(X(wk),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  const line=(f,col,dash,lw)=>{g.strokeStyle=col;g.lineWidth=lw;g.setLineDash(dash);g.beginPath();for(let x=0;x<=xMax;x+=0.25){x?g.lineTo(X(x),Y(f(x))):g.moveTo(X(x),Y(f(x)));}g.stroke();g.setLineDash([]);};
+  line(git,css('--blood'),[],2.75);line(srv,css('--ochre'),[7,5],2.5);line(lfsC,css('--steel'),[],2.75);
+  // labels at current week; avoid collisions
+  const pts=[[git(wk),css('--blood'),'Git '+mb(git(wk))],[lfsC(wk),css('--steel'),'LFS '+mb(lfsC(wk))],[srv(wk),css('--ochre'),'server '+mb(srv(wk))]];
+  pts.forEach(p=>{g.fillStyle=p[1];g.beginPath();g.arc(X(wk),Y(p[0]),5.5,0,7);g.fill();g.strokeStyle=css('--paper-2');g.lineWidth=2;g.stroke();});
+  const lab=pts.map(p=>({y:Y(p[0]),c:p[1],t:p[2]})).sort((a,b)=>a.y-b.y);
+  for(let i=1;i<lab.length;i++)if(lab[i].y-lab[i-1].y<15)lab[i].y=lab[i-1].y+15;
+  const over=lab[lab.length-1].y-(h-pad.b-4);if(over>0)lab.forEach(l=>l.y-=over);
+  g.font='700 12px '+css('--sans');g.textBaseline='middle';const right=X(wk)<w-130;g.textAlign=right?'left':'right';
+  lab.forEach(l=>{const x=X(wk)+(right?10:-10),t=l.t+' MB',tw=g.measureText(t).width;g.fillStyle=css('--paper-2');g.fillRect(right?x-3:x-tw-3,l.y-8,tw+6,16);g.fillStyle=l.c;g.fillText(t,x,l.y);});
+}
+
+function update(){
+  const v=vAt(wk),G=git(wk),L=lfsC(wk),Sv=srv(wk),cur=A*S,old=A*S*(v-1),ptr=A*v*PTR;
+  $('oA').textContent=A.toLocaleString('en-US');$('oS').textContent=S.toFixed(1);$('oSv').textContent=vFmt(sv);$('oWk').textContent=wk;$('oCode').textContent=code;$('oSp').textContent=mbps.toLocaleString('en-US');
+  $('wkName').textContent=jam?'Saves so far':'Weeks';
+  // bar, scaled to plain Git clone
+  const scale=Math.max(G,1e-9),pc=x=>(100*x/scale)+'%';
+  $('sCode').style.width=pc(code);$('sCur').style.width=pc(cur);
+  $('sOld').style.width=lfs?'0%':pc(old);
+  $('sPtr').style.width=lfs?`max(2px, ${pc(ptr)})`:'0%';
+  $('scaleMax').textContent=mb(G)+' MB';
+  $('lCode').textContent=mb(code)+' MB';$('lCur').textContent=mb(cur)+' MB';
+  $('lOldName').textContent=lfs?'Old versions: LFS pointers only':'Old binary versions, A × S × (v − 1)';
+  $('oldSw').style.background=lfs?'var(--ochre)':'var(--blood)';
+  $('lOld').textContent=lfs?mb(ptr)+' MB':mb(old)+' MB';
+  const T=lfs?L:G;$('lTot').textContent=`${lfs?mb(code+cur)+' + '+ptr.toFixed(2):mb(T)} MB, ${mn(mins(T))} min at ${mbps} Mbps`;
+  $('bar').setAttribute('aria-label',`Clone of ${mb(T)} megabytes: code ${mb(code)}, current binaries ${mb(cur)}, ${lfs?'pointers '+mb(ptr):'old versions '+mb(old)}`);
+  $('ratio').innerHTML=`Plain Git downloads <b>${(G/L).toFixed(1)}&times;</b> more than LFS here.`;
+  $('bGit').setAttribute('aria-pressed',!lfs);$('bLfs').setAttribute('aria-pressed',lfs);
+  $('rGit').textContent=mb(G)+' MB';$('rGitT').textContent=`plain Git clone, ${mn(mins(G))} min`;
+  $('rLfs').textContent=mb(code+cur)+' MB';$('rLfsT').textContent=`LFS clone + ${ptr.toFixed(2)} MB pointers, ${mn(mins(L))} min`;
+  $('rSrv').textContent=mb(Sv)+' MB';$('rV').textContent=vFmt(v);
+  $('chartSub').textContent=jam?'Megabytes, by saves so far (0 to 30)':'Megabytes, weeks 0 to 30';
+  const when=jam?`after ${wk} save${wk===1?'':'s'}`:`at week ${wk}`;
+  $('insight').innerHTML=`${when[0].toUpperCase()+when.slice(1)}, each asset has ${vFmt(v)} version${v===1?'':'s'}. A new clone without LFS takes <b>${mn(mins(G))} min</b> at ${mbps} Mbps; with LFS, <b>${mn(mins(L))} min</b>. Server storage (LFS) still holds ${mb(Sv)} MB, the same binary history plain Git would carry.`;
+  $('thW').textContent=jam?'Saves':'Week';
+  $('tCap').textContent=`A ${A.toLocaleString('en-US')}, S ${S.toFixed(1)} MB, `+(jam?'':`${vFmt(sv)} save${sv===1?'':'s'}/week, `)+`code ${code} MB, ${mbps} Mbps`;
+  const ws=[0,2,4,8,14];if(!ws.includes(wk)){ws.push(wk);ws.sort((a,b)=>a-b);}
+  $('tbody').innerHTML=ws.map(x=>{const g=git(x),l=lfsC(x);return `<tr class="${x===wk?'here':''}"><td>${x}</td><td>${vFmt(vAt(x))}</td><td>${mb(g)}</td><td>${mn(mins(g))}</td><td>${mb(code+A*S)}</td><td>${(A*vAt(x)*PTR).toFixed(2)}</td><td>${mn(mins(l))}</td><td>${mb(srv(x))}</td></tr>`;}).join('');
+  drawChart();
+}
+function bind(id,fn){$(id).addEventListener('input',e=>{fn(+e.target.value);update();});}
+bind('A',x=>A=x);bind('S',x=>S=x);bind('sv',x=>{sv=x;jam=false;});bind('wk',x=>wk=x);bind('code',x=>code=x);bind('sp',x=>mbps=SP[x]);
+$('bGit').addEventListener('click',()=>{lfs=false;update();});
+$('bLfs').addEventListener('click',()=>{lfs=true;update();});
+function preset(a,s,svv,w,sp,j){A=a;S=s;sv=svv;wk=w;mbps=sp;jam=j;code=0;$('A').value=A;$('S').value=S;$('sv').value=sv;$('wk').value=wk;$('code').value=0;$('sp').value=SP.indexOf(sp);update();}
+$('pSem').addEventListener('click',()=>preset(200,4,1,14,50,false));
+$('pJam').addEventListener('click',()=>preset(60,1.5,1,6,10,true));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(drawChart,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawChart);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawChart);
+$('sp').value=SP.indexOf(mbps);
+update();
+})();
+</script>
+</body>
+</html>

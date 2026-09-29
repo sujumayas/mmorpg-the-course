@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Post-mortem Pareto — PR101 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1160px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:14px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.big{font-family:var(--serif);font-size:1.3rem;line-height:1.3;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.sub{font-size:.9rem;color:var(--ink-soft);margin:0 0 6px;font-variant-numeric:tabular-nums}
+.sub b{color:var(--ink)}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.chip{font:600 .86rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,#chart:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+#chart{border-radius:6px}
+#chart svg{display:block;width:100%;height:auto;overflow:visible}
+#chart .bar{cursor:pointer}
+.ctl label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:4px 0 0}
+.hbars{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.hb{display:grid;grid-template-columns:minmax(0,1fr) 34px;gap:6px;align-items:center;font-size:.84rem}
+.hb .track{position:relative;min-height:24px}
+.hb .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--steel);opacity:.28}
+.hb .fill.people{background:var(--steel);opacity:.35}.hb .fill.design{background:var(--ochre);opacity:.4}.hb .fill.technology{background:var(--moss);opacity:.4}
+.hb .name{position:relative;padding:2px 6px;line-height:1.25}
+.hb .tag{display:inline-block;font-size:.72rem;font-weight:700;border-radius:4px;padding:0 5px;margin-left:4px;color:var(--paper)}
+.tag.people{background:var(--steel)}.tag.design{background:var(--ochre)}.tag.technology{background:var(--moss)}
+.hb b{text-align:right;font-variant-numeric:tabular-nums}
+.cap{font-family:var(--serif);font-size:1.05rem;margin:6px 0 2px}
+.note{font-size:.84rem;color:var(--ink-soft);margin:12px 0 0;border-top:1px solid var(--grid);padding-top:8px}
+.empty{font-size:.9rem;color:var(--ink-soft);margin:8px 0}
+.team{margin-top:12px}
+.team table{min-width:0}
+.team td{padding:3px 4px;border:none}
+.team input{font:inherit;font-size:.9rem;padding:5px 7px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);width:100%}
+.team input[type=number]{width:80px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:nth-child(2),td:nth-child(2),th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+tr.here td:first-child{box-shadow:inset 4px 0 0 var(--ochre)}
+@media (max-width:480px){.table-wrap table th,.table-wrap table td{padding:5px 4px}.table-wrap table{font-size:.82rem}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR101 Game Production I · Week 14 · Worked example</p>
+  <h1>What the top bar is hiding</h1>
+  <p class="lede">"Technical" tops the chart of 927 problems from 200 post-mortems because it is a wide bucket of many small causes. Open it, then open "Team". The single biggest causes live in the third bar.</p>
+</header>
+
+<section class="panel">
+  <div class="views">
+    <figure>
+      <figcaption>Pareto chart<small>Bars sorted by count (ties alphabetical). Line: cumulative share, right axis.</small></figcaption>
+      <div class="seg" role="group" aria-label="Data set">
+        <button class="chip" data-ds="types" aria-pressed="true">200 post-mortems, by type</button>
+        <button class="chip" data-ds="team" aria-pressed="false">Your team</button>
+      </div>
+      <p class="big" id="top20" aria-live="polite"></p>
+      <p class="sub" id="kline"></p>
+      <div id="chart" tabindex="0" role="listbox" aria-label="Categories, sorted by count. Arrow keys move, Enter selects."></div>
+      <div class="ctl" style="margin-top:6px"><label for="T">Threshold T <output id="oT"></output></label><input id="T" type="range" min="50" max="95" step="5" value="80"></div>
+      <div class="team" id="teamBox" hidden>
+        <table aria-label="Your team's categories"><thead><tr><th style="text-align:left">Category</th><th style="text-align:left">Count</th></tr></thead><tbody id="teamRows"></tbody></table>
+        <div class="seg" style="margin-top:8px">
+          <button class="chip" id="addRow">Add row</button>
+          <button class="chip" id="prefill">Example team</button>
+          <button class="chip" id="clearTeam">Clear</button>
+        </div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption>Inside a bucket<small>Select a bar on the left: click it, or focus the chart and use arrow keys plus Enter.</small></figcaption>
+      <div class="seg" role="group" aria-label="Right view">
+        <button class="chip" data-rv="inside" aria-pressed="true">Inside selected type</button>
+        <button class="chip" data-rv="top10" aria-pressed="false">Top 10 root causes</button>
+      </div>
+      <div id="right" aria-live="polite"></div>
+      <p class="note">Sub-type counts come from separate tables and do not add up to type totals.</p>
+    </figure>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption class="sr">Readout table</caption>
+      <thead><tr><th>Rank</th><th>Category</th><th>Count</th><th>Share</th><th>Cumulative</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Data: Politowski, Petrillo, Ullmann, Guéhéneuc, "Game industry problems: an extensive analysis of the gray literature" (Information and Software Technology, 2021). Types from Figure 3b, sub-types from appendix Tables 7 and 8, top 10 root causes from Table 3. The people/design/technology tags are this course's reading. Formulas: s<sub>i</sub> = n<sub>i</sub>/N, C<sub>k</sub> = sum of the k largest over N, k<sub>T</sub> = smallest k with C<sub>k</sub> ≥ T.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const TYPES=[['technical',116],['game design',112],['team',84],['tools',74],['planning',73],['marketing',61],['communication',53],['testing',48],['cutting features',45],['bugs',34],['scope',34],['crunch time',31],['delays',29],['feature creep',27],['monetization',26],['documentation',22],['budget',21],['prototyping',19],['multiple projects',16],['security',2]];
+const SUB={
+ 'technical':[['platform and technology constraints',24],['optimization and performance',17],['game engine and libraries',13],['network and multiplayer',9],['re-work and wasted work',8],['build and load time',8],['animation and 3D',7],['source control and file management',6],['porting issues',6],['networking complexity',6],['programming language and algorithms',5],['production pipeline',5],['physics and collision',5],['novelty and change',5],['performance issues',4],['patch strategies and infrastructure',4],['UI and localization',4],['coding/architecture issues',4]],
+ 'game design':[['unclear game design vision',28],['lack of fun',27],['game design complexity',23],['balancing issues',19],['lack of polish',13],['game too short/simple',10],['release/censorship issues',8]],
+ 'team':[['insufficient workforce',49],['environment problems',48],['unexpected team disruption',11],['outsourcing issues',5],['inexperienced staff',5],['overstaffing',2]]
+};
+const TOP10=[['insufficient workforce',49,'people'],['environment problems',48,'people'],['wrong marketing strategy',35,'people'],['underestimation',34,'people'],['unclear game design vision',28,'design'],['lack of fun',27,'design'],['platform and technology constraints',24,'technology'],['game design complexity',23,'design'],['inadequate or missing tools',22,'technology'],['misaligned teams',22,'people']];
+const EXAMPLE=[['scope',12],['communication',9],['tools',6],['bugs',5],['planning',4],['audio',2],['documentation',2]];
+
+let ds='types',rv='inside',T=80,selected='technical',active=0;
+let team=Array.from({length:5},()=>['','']);
+let prevVals=null,anim=null;
+
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const SUBS='₀₁₂₃₄₅₆₇₈₉';const subDigits=n=>String(n).split('').map(d=>SUBS[+d]).join('');
+const pct=x=>(x*100).toFixed(1)+'%';
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function data(){
+  const raw=ds==='types'?TYPES:team.filter(r=>r[0].trim()!==''&&+r[1]>0).map(r=>[r[0].trim(),Math.round(+r[1])]);
+  const rows=raw.map(([name,n])=>({name,n})).sort((a,b)=>b.n-a.n||a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  const N=rows.reduce((s,r)=>s+r.n,0);let cum=0;
+  rows.forEach((r,i)=>{cum+=r.n;r.cum=cum;r.rank=i+1;r.s=r.n/N;r.C=cum/N;});
+  let k=null;for(const r of rows){if(r.cum*100>=T*N){k=r.rank;break;}}
+  const t20=Math.ceil(rows.length/5);
+  return {rows,N,k,t20};
+}
+
+function svgEl(tag,attrs,text){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const a in attrs)e.setAttribute(a,attrs[a]);if(text!==undefined)e.textContent=text;return e;}
+
+function drawChart(D,frac){
+  const box=$('chart');box.innerHTML='';
+  if(!D.rows.length){box.innerHTML='<p class="empty">Enter at least one category with a count above 0.</p>';box.removeAttribute('aria-activedescendant');return;}
+  const W=Math.max(300,box.clientWidth||600),narrow=W<520;
+  const m={l:34,r:40,t:30,b:narrow?96:112},H=(narrow?250:280)+m.b;
+  const pw=W-m.l-m.r,ph=H-m.t-m.b,n=D.rows.length,slot=pw/n,bw=Math.max(4,slot*0.72);
+  const maxN=Math.max(...D.rows.map(r=>r.n));
+  const niceMax=(()=>{const mag=Math.pow(10,Math.floor(Math.log10(maxN)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=maxN);})();
+  const vals=D.rows.map((r,i)=>{const pv=prevVals&&prevVals[i]!==undefined?prevVals[i]:{n:0,C:0};return {n:pv.n+(r.n-pv.n)*frac,C:pv.C+(r.C-pv.C)*frac};});
+  const y=v=>m.t+ph*(1-v/niceMax),yc=c=>m.t+ph*(1-c);
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,width:W,height:H,'aria-hidden':'false'});
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid'),steel=css('--steel'),ochre=css('--ochre'),font=css('--sans');
+  const g0=svgEl('g',{'font-family':font,'font-size':11,fill:soft});svg.appendChild(g0);
+  for(let i=0;i<=4;i++){const yy=m.t+ph*(1-i/4);
+    g0.appendChild(svgEl('line',{x1:m.l,x2:W-m.r,y1:yy,y2:yy,stroke:grid}));
+    g0.appendChild(svgEl('text',{x:m.l-5,y:yy+4,'text-anchor':'end'},Math.round(niceMax*i/4)));
+    g0.appendChild(svgEl('text',{x:W-m.r+5,y:yy+4,'text-anchor':'start'},(i*25)+'%'));}
+  // threshold
+  g0.appendChild(svgEl('line',{x1:m.l,x2:W-m.r,y1:yc(T/100),y2:yc(T/100),stroke:ink,'stroke-dasharray':'6 4','stroke-width':1.2}));
+  // bars
+  D.rows.forEach((r,i)=>{
+    const x=m.l+slot*i+(slot-bw)/2,v=vals[i].n,isSel=r.name===selected,isAct=i===active;
+    const g=svgEl('g',{class:'bar',id:'bar-'+i,role:'option','aria-selected':isSel,'aria-label':`${cap(r.name)}, ${r.n}, rank ${r.rank}, cumulative ${pct(r.C)}`});
+    g.appendChild(svgEl('rect',{x:m.l+slot*i,y:m.t,width:slot,height:ph,fill:'transparent'}));
+    g.appendChild(svgEl('rect',{x,y:y(v),width:bw,height:Math.max(0,y(0)-y(v)),fill:isSel?ochre:steel,rx:1.5}));
+    if(isAct&&document.activeElement===box)g.appendChild(svgEl('rect',{x:x-2.5,y:y(v)-2.5,width:bw+5,height:Math.max(0,y(0)-y(v))+5,fill:'none',stroke:css('--focus'),'stroke-width':2}));
+    if(!narrow)g.appendChild(svgEl('text',{x:x+bw/2,y:y(v)-4,'text-anchor':'middle','font-family':font,'font-size':narrow?8.5:10.5,fill:ink,'font-weight':600},r.n));
+    const lx=m.l+slot*i+slot/2,ly=H-m.b+8;
+    let name=cap(r.name);if(narrow){if(name.length>14)name=name.slice(0,13)+'…';name+=' '+r.n;}
+    g.appendChild(svgEl('text',{x:lx,y:ly,transform:`rotate(${narrow?-90:-60} ${lx} ${ly})`,'text-anchor':'end','dominant-baseline':'middle','font-family':font,'font-size':narrow?9.5:11,fill:isSel?ink:soft,'font-weight':isSel?700:400},name));
+    g.addEventListener('click',()=>{active=i;select(r.name);});
+    svg.appendChild(g);
+  });
+  // cumulative line
+  const pts=vals.map((v,i)=>[m.l+slot*i+slot/2,yc(v.C)]);
+  svg.appendChild(svgEl('polyline',{points:pts.map(p=>p.join(',')).join(' '),fill:'none',stroke:ink,'stroke-width':2,'pointer-events':'none'}));
+  pts.forEach(p=>svg.appendChild(svgEl('circle',{cx:p[0],cy:p[1],r:narrow?2.5:3.2,fill:css('--paper'),stroke:ink,'stroke-width':1.6,'pointer-events':'none'})));
+  // k marker
+  const gl=svgEl('g',{'font-family':font,'font-size':12,'font-weight':700,fill:ink,'pointer-events':'none'});
+  gl.appendChild(svgEl('text',{x:W-m.r-4,y:yc(T/100)+14,'text-anchor':'end'},'T = '+T+'%'));
+  if(D.k){
+    const xk=m.l+slot*D.k;
+    gl.appendChild(svgEl('line',{x1:xk,x2:xk,y1:m.t-8,y2:m.t+ph,stroke:css('--blood'),'stroke-width':2}));
+    const lab=`k${subDigits(T)} = ${D.k} of ${n} ${ds==='types'?'types':'categories'}`;
+    const anchor=xk>W*0.62?'end':'start';
+    gl.appendChild(svgEl('text',{x:xk+(anchor==='end'?-5:5),y:m.t-12,'text-anchor':anchor,fill:css('--blood')},lab));
+  }
+  svg.appendChild(gl);
+  box.appendChild(svg);
+  box.setAttribute('aria-activedescendant','bar-'+Math.min(active,n-1));
+}
+
+let lastD=null;
+function render(animate){
+  const D=data();lastD=D;
+  if(active>=D.rows.length)active=Math.max(0,D.rows.length-1);
+  $('oT').textContent=T+'%';
+  if(D.rows.length){
+    const top=D.rows[D.t20-1];
+    $('top20').innerHTML=`Top 20% of categories cover <b>${pct(top.C)}</b>`;
+    $('kline').innerHTML=`N = <b>${D.N}</b> across ${D.rows.length} ${ds==='types'?'types':'categories'}. Top 20% = ceil(0.2 × ${D.rows.length}) = ${D.t20}. k${subDigits(T)} = <b>${D.k}</b>: the ${D.k} largest reach ${pct(D.rows[D.k-1].C)}. Top bar: ${esc(cap(D.rows[0].name))} ${D.rows[0].n} (${pct(D.rows[0].s)}).`;
+  }else{$('top20').textContent='Top 20% of categories cover —';$('kline').textContent='N = 0';}
+  $('tbody').innerHTML=D.rows.map(r=>`<tr class="${r.rank===D.k?'here':''}"><td>${r.rank}</td><td>${esc(cap(r.name))}</td><td>${r.n}</td><td>${pct(r.s)}</td><td>${pct(r.C)}</td></tr>`).join('');
+  if(anim)cancelAnimationFrame(anim);
+  const target=D.rows.map(r=>({n:r.n,C:r.C}));
+  if(!animate||reduce.matches||!prevVals){drawChart(D,1);prevVals=target;}
+  else{
+    const t0=performance.now();
+    const step=now=>{const f=Math.min(1,(now-t0)/200);drawChart(D,1-Math.pow(1-f,3));if(f<1)anim=requestAnimationFrame(step);else{prevVals=target;anim=null;}};
+    anim=requestAnimationFrame(step);
+  }
+  renderRight();
+  window.__pareto=D;
+}
+
+function hbars(list,max,tagged){
+  return '<div class="hbars">'+list.map(([name,n,tag])=>`<div class="hb"><div class="track"><div class="fill ${tag||''}" style="width:${(n/max*100).toFixed(1)}%"></div><div class="name">${esc(cap(name))}${tag?`<span class="tag ${tag}">${tag}</span>`:''}</div></div><b>${n}</b></div>`).join('')+'</div>';
+}
+function renderRight(){
+  const R=$('right');
+  if(rv==='top10'){
+    R.innerHTML=`<p class="cap">Top 10 root causes across all types</p><p class="sub">Tags: this course's reading, not the paper's.</p>`+hbars(TOP10,49,true);
+    return;
+  }
+  const subs=ds==='types'?SUB[selected]:null;
+  if(!selected||!(lastD&&lastD.rows.some(r=>r.name===selected))){R.innerHTML='<p class="empty">Select a bar to look inside it.</p>';return;}
+  if(!subs){R.innerHTML=`<p class="cap">${esc(cap(selected))}</p><p class="empty">Sub-types not shown in this example. Try Technical, Game design or Team.</p>`;return;}
+  const s=[...subs].sort((a,b)=>b[1]-a[1]);
+  const other=selected==='team'?'technical':'team',o=SUB[other];
+  R.innerHTML=`<p class="cap" id="subCap">${cap(selected)}: ${s.length} root causes, largest ${s[0][1]}</p><p class="sub">Compare ${cap(other)}: ${o.length} root causes, largest <b>${Math.max(...o.map(x=>x[1]))}</b>.</p>`+hbars(s,49,false);
+}
+
+function select(name){selected=name;render(false);}
+
+// keyboard on chart
+$('chart').addEventListener('keydown',e=>{
+  const n=lastD?lastD.rows.length:0;if(!n)return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){active=Math.min(n-1,active+1);e.preventDefault();drawChart(lastD,1);}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){active=Math.max(0,active-1);e.preventDefault();drawChart(lastD,1);}
+  else if(e.key==='Home'){active=0;e.preventDefault();drawChart(lastD,1);}
+  else if(e.key==='End'){active=n-1;e.preventDefault();drawChart(lastD,1);}
+  else if(e.key==='Enter'||e.key===' '){e.preventDefault();select(lastD.rows[active].name);}
+});
+$('chart').addEventListener('focus',()=>lastD&&drawChart(lastD,1));
+$('chart').addEventListener('blur',()=>lastD&&drawChart(lastD,1));
+
+document.querySelectorAll('[data-ds]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-ds]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  ds=b.dataset.ds;$('teamBox').hidden=ds!=='team';
+  active=0;prevVals=null;
+  if(ds==="types")selected="technical";
+  else{const d=data();selected=d.rows.length?d.rows[0].name:null;}
+  render(false);
+}));
+document.querySelectorAll('[data-rv]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-rv]').forEach(x=>x.setAttribute('aria-pressed',x===b));rv=b.dataset.rv;renderRight();
+}));
+$('T').addEventListener('input',e=>{T=+e.target.value;render(false);});
+
+function drawTeamRows(){
+  $('teamRows').innerHTML=team.map((r,i)=>`<tr><td><input type="text" aria-label="Category ${i+1} name" data-i="${i}" data-f="0" value="${esc(r[0])}" maxlength="40"></td><td><input type="number" aria-label="Category ${i+1} count" data-i="${i}" data-f="1" min="0" step="1" value="${esc(String(r[1]))}"></td></tr>`).join('');
+  $('addRow').disabled=team.length>=20;
+}
+$('teamRows').addEventListener('input',e=>{
+  const t=e.target;if(!t.dataset.i)return;team[+t.dataset.i][+t.dataset.f]=t.value;
+  if(selected===null||!data().rows.some(r=>r.name===selected)){const d=data();selected=d.rows.length?d.rows[0].name:null;}
+  render(true);
+});
+$('addRow').addEventListener('click',()=>{if(team.length<20){team.push(['','']);drawTeamRows();}});
+$('prefill').addEventListener('click',()=>{team=EXAMPLE.map(r=>[r[0],String(r[1])]);drawTeamRows();selected='scope';active=0;render(true);});
+$('clearTeam').addEventListener('click',()=>{team=Array.from({length:5},()=>['','']);drawTeamRows();selected=null;render(true);});
+drawTeamRows();
+
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>lastD&&drawChart(lastD,1),60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>lastD&&drawChart(lastD,1));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>lastD&&drawChart(lastD,1));
+render(false);
+})();
+</script>
+</body>
+</html>
