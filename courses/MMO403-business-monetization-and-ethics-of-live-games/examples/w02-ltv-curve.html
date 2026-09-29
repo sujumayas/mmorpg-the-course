@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The LTV curve — MMO403 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:280px;border-radius:6px;cursor:crosshair;touch-action:pan-y}
+canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:4px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend>span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:22px;height:12px;flex:none}
+.cursor{margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--paper-2);font-variant-numeric:tabular-nums;font-size:.95rem}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 20px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.controls>div{min-width:0}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0}
+.sub{font-size:.8rem;color:var(--ink-soft);margin:0}
+.row{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:14px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.presets>span{font-size:.85rem;font-weight:600;margin-right:2px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.check{font-weight:600;font-size:.92rem;display:inline-flex;align-items:center;gap:8px;cursor:pointer;justify-content:flex-start}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.typed{margin-top:12px;padding:10px 12px;border:1.5px dashed var(--grid);border-radius:10px}
+.warn{color:var(--blood);font-weight:600}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+@media (max-width:760px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;margin-bottom:6px}
+th,td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.82rem;color:var(--ink-soft);font-weight:600}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO403 Business, Monetization and Ethics of Live Games · Week 2 · Worked example</p>
+  <h1>LTV is the area under the retention curve</h1>
+  <p class="lede">The left curve loses half the cohort on day 1 and looks like a leak. The right curve adds up that area, times net revenue per active day, and keeps climbing for months. Move the cursor on either chart: the shaded area on the left is the height on the right.</p>
+</header>
+
+<section class="panel" aria-label="LTV curve">
+  <div class="charts">
+    <figure>
+      <figcaption>Retention R(d)<small>Share of the install cohort still active on day d</small></figcaption>
+      <canvas id="cRet" tabindex="0" role="img" aria-label="Retention curve as stacked area of stayers and tourists. Use left and right arrow keys to move the day cursor."></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><svg viewBox="0 0 22 12"><rect width="22" height="12" rx="2" fill="var(--moss)"/></svg><span>Stayers w × qs<sup>d</sup></span></span>
+        <span><svg viewBox="0 0 22 12"><defs><pattern id="h" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="var(--paper-2)"/><line x1="0" y1="0" x2="0" y2="5" stroke="var(--steel)" stroke-width="3"/></pattern></defs><rect width="22" height="12" rx="2" fill="url(#h)" stroke="var(--steel)"/></svg><span>Tourists (1 − w) × qt<sup>d</sup></span></span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Cumulative LTV per install<small>Net revenue from day 0 through the cursor day</small></figcaption>
+      <canvas id="cLtv" tabindex="0" role="img" aria-label="Cumulative lifetime value curve with CAC and lifetime lines. Use left and right arrow keys to move the day cursor."></canvas>
+      <div class="legend" aria-hidden="true">
+        <span><svg viewBox="0 0 22 12"><line x1="0" y1="6" x2="22" y2="6" stroke="var(--ochre)" stroke-width="3"/></svg>LTV so far</span>
+        <span><svg viewBox="0 0 22 12"><line x1="0" y1="6" x2="22" y2="6" stroke="var(--blood)" stroke-width="2" stroke-dasharray="5 3"/></svg>CAC</span>
+        <span><svg viewBox="0 0 22 12"><line x1="0" y1="6" x2="22" y2="6" stroke="var(--ink-soft)" stroke-width="2" stroke-dasharray="1.5 3"/></svg>Lifetime LTV</span>
+      </div>
+    </figure>
+  </div>
+  <p class="hint">Hover or drag on a chart, or focus it and use the arrow keys (Shift for 10 days, Home and End).</p>
+  <div class="cursor" id="cursorOut" aria-live="polite"></div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rR1">—</b><span>still active on day 1</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rStay">—</b><span id="rStayL">of active days come from stayers</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rLife">—</b><span>lifetime LTV per install</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rPay">—</b><span id="rPayL">payback day</span></div>
+  </div>
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="w">Stayer share w <output id="ow"></output></label>
+      <input id="w" type="range" min="0.05" max="0.60" step="0.01" value="0.25">
+      <label for="qs">Stayer daily survival qs <output id="oqs"></output></label>
+      <input id="qs" type="range" min="0.90" max="0.995" step="0.001" value="0.98">
+      <label for="qt">Tourist daily survival qt <output id="oqt"></output></label>
+      <input id="qt" type="range" min="0.10" max="0.80" step="0.01" value="0.40">
+    </div>
+    <div>
+      <label for="a">Gross ARPDAU a <output id="oa"></output></label>
+      <input id="a" type="range" min="0.02" max="1" step="0.01" value="0.20">
+      <p class="sub">Average revenue per daily active user, before the fee.</p>
+      <label for="f" style="margin-top:6px">Platform fee f <output id="of"></output></label>
+      <input id="f" type="range" min="0" max="0.30" step="0.01" value="0.30">
+      <div class="presets" role="group" aria-label="Fee presets">
+        <button class="chip" data-fee="0.30">30%</button><button class="chip" data-fee="0.15">15%</button><button class="chip" data-fee="0">0%</button>
+      </div>
+    </div>
+    <div>
+      <label for="cac">Cost to acquire an install (CAC) <output id="ocac"></output></label>
+      <input id="cac" type="range" min="0" max="5" step="0.05" value="1.50">
+      <div class="presets" role="group" aria-label="Chart horizon" style="margin-top:8px">
+        <span>Horizon</span>
+        <button class="chip" data-h="180" aria-pressed="true">180 days</button><button class="chip" data-h="365" aria-pressed="false">365 days</button>
+      </div>
+      <div class="presets" role="group" aria-label="Scenarios from the lecture" style="margin-top:10px">
+        <button class="chip" data-sc="default">Lecture default</button>
+        <button class="chip" data-sc="qs">qs = 0.97</button>
+        <button class="chip" data-sc="qt">qt = 0.60</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="typed">
+    <label class="check" for="byType"><input type="checkbox" id="byType"> ARPDAU by type (stayers spend more per day than tourists)</label>
+    <div id="typedWrap" hidden style="margin-top:8px;max-width:420px">
+      <label for="t">Tourist ARPDAU t <output id="ot"></output></label>
+      <input id="t" type="range" min="0" max="1" step="0.01" value="0.05">
+      <p class="sub" id="sOut"></p>
+    </div>
+  </div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <table>
+        <caption>Key numbers</caption>
+        <tbody id="keyT"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Retention and cumulative LTV by day</caption>
+        <thead><tr><th>Day d</th><th>R(d)</th><th>LTV through day d</th><th>Share of lifetime</th></tr></thead>
+        <tbody id="dayT"></tbody>
+      </table>
+    </div>
+  </div>
+  <p class="sr" id="announce" aria-live="polite"></p>
+</section>
+
+<footer>Model from the lecture: R(d) = w × qs<sup>d</sup> + (1 − w) × qt<sup>d</sup>; LTV(T) = a × (1 − f) × [R(0) + … + R(T − 1)]; payback is the first day D with LTV(D + 1) ≥ CAC. Parameter values are the lecture's invented round numbers, not any studio's data. The 30% and 15% fee presets are the standard and small-business App Store commission rates cited in the lecture.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DEF={w:0.25,qs:0.98,qt:0.40,a:0.20,f:0.30,cac:1.50,t:0.05};
+let P=Object.assign({},DEF),H=180,byType=false,cur=70,userMoved=false;
+const MAXD=60000;
+
+// ---- model ----
+let M={};
+function compute(){
+  const {w,qs,qt,a,f,cac,t}=P;
+  const R=d=>w*Math.pow(qs,d)+(1-w)*Math.pow(qt,d);
+  const L=w/(1-qs)+(1-w)/(1-qt), stayDays=w/(1-qs);
+  let s=null,net;
+  if(byType){s=(a*L-t*(1-w)/(1-qt))*(1-qs)/w;net=d=>(1-f)*(s*w*Math.pow(qs,d)+t*(1-w)*Math.pow(qt,d));}
+  else net=d=>a*(1-f)*R(d);
+  const life=byType?(1-f)*(s*w/(1-qs)+t*(1-w)/(1-qt)):a*(1-f)*L;
+  // cum[T] = LTV(T) = sum of net(d) for d < T
+  const cum=[0];let pay=null;
+  const need=Math.max(H+2,400);
+  for(let d=0;d<MAXD;d++){
+    cum.push(cum[d]+net(d));
+    if(pay===null&&cum[d+1]>=cac-1e-9)pay=d;
+    if(d>=need&&(pay!==null||life<cac-1e-9||cum[d+1]>=life-1e-9))break;
+  }
+  const ltv=T=>{if(T<cum.length)return cum[T];let v=cum[cum.length-1];for(let d=cum.length-1;d<T;d++)v+=net(d);return v;};
+  M={R,L,stayDays,s,net,life,cum,ltv,pay};
+}
+
+// ---- formatting ----
+const trim=(v,dp)=>{let s=v.toFixed(dp);if(s.includes('.'))s=s.replace(/0+$/,'').replace(/\.$/,'');return s;};
+function usd(v,dp=3){ // 3 decimals, or 4 when the 4th decimal is an exact 5 (e.g. 2.0125)
+  const k=v*10000,r=Math.round(k);
+  if(Math.abs(k-r)<1e-6&&Math.abs(r)%10===5)return (v<0?'−$':'$')+Math.abs(v).toFixed(4);
+  return (v<0?'−$':'$')+Math.abs(v).toFixed(dp);}
+const pct=(v,dp=1)=>(v*100).toFixed(dp)+'%';
+const Rfmt=v=>trim(v,4);
+
+// ---- canvas helpers ----
+function setupCanvas(cv){const dpr=window.devicePixelRatio||1,b=cv.getBoundingClientRect();cv.width=Math.max(1,b.width*dpr);cv.height=Math.max(1,b.height*dpr);const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:b.width,h:b.height,dpr};}
+function nice(v){if(v<=0)return 1;const mag=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=v*1.001)||v;}
+const pad={l:46,r:14,t:14,b:30};
+function frame(o,yMax,yFmt,step){
+  step=step||yMax/4;
+  const g=o.g,X=x=>pad.l+(o.w-pad.l-pad.r)*x/H,Y=v=>pad.t+(o.h-pad.t-pad.b)*(1-v/yMax);
+  g.clearRect(0,0,o.w,o.h);g.font='12px '+css('--sans');g.lineWidth=1;
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';
+  for(let i=0;i<=Math.round(yMax/step);i++){const v=step*i,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(o.w-pad.r,y);g.stroke();g.fillText(yFmt(v),pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';
+  const st=H>200?60:30;for(let d=0;d<=H;d+=st)g.fillText(d,X(d),o.h-pad.b+6);
+  g.textAlign='right';g.fillText('day',o.w-pad.r,o.h-pad.b+6+(H%st===0?14:0));
+  return {X,Y};
+}
+let hatch=null,hatchKey='';
+function getHatch(g){
+  const key=css('--steel')+css('--paper-2');if(hatch&&hatchKey===key)return hatch;
+  const c=document.createElement('canvas'),dpr=window.devicePixelRatio||1,n=Math.round(8*dpr);c.width=n;c.height=n;
+  const h=c.getContext('2d');h.fillStyle=css('--steel');h.globalAlpha=.22;h.fillRect(0,0,n,n);h.globalAlpha=1;
+  h.strokeStyle=css('--steel');h.lineWidth=1.6*dpr;h.beginPath();
+  for(let k=-n;k<=n;k+=n){h.moveTo(k,n);h.lineTo(k+n,0);}h.stroke();
+  hatch=g.createPattern(c,'repeat');if(hatch.setTransform)hatch.setTransform(new DOMMatrix().scale(1/dpr));hatchKey=key;return hatch;
+}
+
+// ---- drawing ----
+function drawRet(){
+  const o=setupCanvas($('cRet')),g=o.g,{X,Y}=frame(o,1,v=>trim(v,2));
+  const {w,qs,qt}=P;
+  const stay=d=>w*Math.pow(qs,d),tour=d=>(1-w)*Math.pow(qt,d);
+  // stepped areas: bar for day d covers [d, d+1)
+  function region(fromD,toD,lo,hi,fill,alpha){
+    g.globalAlpha=alpha;g.fillStyle=fill;g.beginPath();
+    g.moveTo(X(fromD),Y(lo(fromD)));
+    for(let d=fromD;d<toD;d++){g.lineTo(X(d),Y(hi(d)));g.lineTo(X(d+1),Y(hi(d)));}
+    for(let d=toD-1;d>=fromD;d--){g.lineTo(X(d+1),Y(lo(d)));g.lineTo(X(d),Y(lo(d)));}
+    g.closePath();g.fill();g.globalAlpha=1;
+  }
+  const zero=()=>0,top=d=>stay(d)+tour(d);
+  const c1=Math.min(cur+1,H);
+  // faded full curve, then the part left of the cursor at full strength
+  region(0,H,zero,stay,css('--moss'),.28);region(0,H,stay,top,getHatch(g),.35);
+  region(0,c1,zero,stay,css('--moss'),.95);region(0,c1,stay,top,getHatch(g),1);
+  // outline
+  g.strokeStyle=css('--ink');g.lineWidth=1.4;g.beginPath();
+  for(let d=0;d<H;d++){d?g.lineTo(X(d),Y(top(d))):g.moveTo(X(0),Y(top(0)));g.lineTo(X(d+1),Y(top(d)));}g.stroke();
+  cursorLine(g,o,X(c1));
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--ink');g.textAlign=X(c1)>o.w*0.6?'right':'left';g.textBaseline='top';
+  const area=sumR(c1);
+  g.fillText(`area ${area.toFixed(2)} active days`,X(c1)+(g.textAlign==='right'?-8:8),pad.t+4);
+}
+function sumR(T){let s=0;for(let d=0;d<T;d++)s+=M.R(d);return s;}
+function cursorLine(g,o,x){g.strokeStyle=css('--ink');g.globalAlpha=.6;g.setLineDash([4,4]);g.lineWidth=1.2;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,o.h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;}
+function drawLtv(){
+  const o=setupCanvas($('cLtv')),g=o.g;
+  const top=Math.max(M.life,P.cac,0.01)*1.08,step=[0.01,0.02,0.05,0.1,0.2,0.25,0.5,1,2].find(x=>top/x<=5)||1,yMax=Math.ceil(top/step-1e-9)*step;
+  const {X,Y}=frame(o,yMax,v=>'$'+v.toFixed(step<0.1?2:(step<1?2:0)).replace(/\.00$/,''),step);
+  // CAC and lifetime lines
+  g.lineWidth=2;g.setLineDash([7,5]);g.strokeStyle=css('--blood');g.beginPath();g.moveTo(pad.l,Y(P.cac));g.lineTo(o.w-pad.r,Y(P.cac));g.stroke();
+  g.setLineDash([1.5,4]);g.strokeStyle=css('--ink-soft');g.beginPath();g.moveTo(pad.l,Y(M.life));g.lineTo(o.w-pad.r,Y(M.life));g.stroke();g.setLineDash([]);
+  g.font='600 11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';
+  const cy=Y(P.cac),ly=Y(M.life),close=Math.abs(cy-ly)<14;
+  g.fillStyle=css('--blood');g.fillText('CAC '+usd(P.cac,2),pad.l+4,close&&cy>ly?cy+14:cy-3);
+  g.fillStyle=css('--ink-soft');g.textAlign='right';g.fillText('lifetime '+usd(M.life),o.w-pad.r-2,close&&ly>=cy?ly+14:ly-3);
+  // curve: LTV(T) at x = T
+  g.strokeStyle=css('--ochre');g.lineWidth=2.8;g.beginPath();
+  for(let T=0;T<=H;T++){const x=X(T),y=Y(M.ltv(T));T?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();
+  // payback marker
+  g.font='600 12px '+css('--sans');g.textBaseline='top';
+  if(M.pay!==null&&M.pay+1<=H){const x=X(M.pay+1);g.strokeStyle=css('--blood');g.lineWidth=1.8;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,o.h-pad.b);g.stroke();
+    g.fillStyle=css('--blood');g.textAlign=x>o.w*0.7?'right':'left';g.fillText('payback day '+M.pay,x+(g.textAlign==='right'?-6:6),Y(0)-34);}
+  else{g.fillStyle=css('--blood');g.textAlign='right';g.fillText(M.pay===null?'no payback':'payback day '+M.pay+' (off chart)',o.w-pad.r-4,Y(0)-34);}
+  // cursor
+  const c1=Math.min(cur+1,H),x=X(c1),v=M.ltv(c1);cursorLine(g,o,x);
+  g.fillStyle=css('--ochre');g.beginPath();g.arc(x,Y(v),6,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.fillStyle=css('--ink');g.textAlign=x>o.w*0.6?'right':'left';g.textBaseline='bottom';
+  g.fillText(usd(v),x+(g.textAlign==='right'?-9:9),Y(v)-6);
+}
+
+// ---- text ----
+function cursorText(){
+  const d=cur,v=M.ltv(d+1),area=sumR(d+1);
+  const pctLife=M.life>0?v/M.life:0;
+  $('cursorOut').innerHTML=`<b>Day ${d}</b>: R(${d}) = ${Rfmt(M.R(d))} · area to day ${d} = ${area.toFixed(2)} active days · LTV through day ${d} = <b>${usd(v)}</b> (${pct(pctLife)} of lifetime)`+
+    (P.cac>0?` · ${v>=P.cac-1e-9?'paid back':'still '+usd(P.cac-v)+' short of CAC'}`:'');
+}
+function readouts(){
+  const {w,qs,qt,a,f,cac,t}=P;
+  $('rR1').textContent=Rfmt(M.R(1));
+  $('rStay').textContent=pct(M.stayDays/M.L);
+  $('rStayL').textContent=`of ${trim(M.L,2)} expected active days come from stayers`;
+  $('rLife').textContent=usd(M.life);
+  $('rPay').textContent=M.pay===null?'never':'day '+M.pay;
+  $('rPayL').textContent=`payback at CAC ${usd(cac,2)}`;
+  const ins=$('insight');
+  const r1=M.R(1);
+  let s=`Day 1 keeps ${pct(r1,1)} of installs, yet ${pct(M.stayDays/M.L,1)} of all active days come from the ${pct(w,0)} who stay. `;
+  if(M.pay!==null)s+=`The LTV curve crosses the ${usd(cac,2)} CAC on <b>day ${M.pay}</b> and tops out at ${usd(M.life)}, so LTV / CAC = ${cac>0?(M.life/cac).toFixed(2):'∞'}. Day-30 LTV (${usd(M.ltv(31))}) is only ${pct(M.ltv(31)/M.life,0)} of lifetime.`;
+  else s+=`Lifetime LTV is ${usd(M.life)}, below the ${usd(cac,2)} CAC: <b>this install never pays back</b>, however long you wait.`;
+  ins.innerHTML=s;
+  // key numbers table
+  const net=a*(1-f);
+  const rows=[
+    ['R(1)',Rfmt(M.R(1))],['R(7)',Rfmt(M.R(7))],['R(30)',Rfmt(M.R(30))],
+    ['Expected active days L',trim(M.L,4)],['Stayer share of L',pct(M.stayDays/M.L)],
+    ['Net ARPDAU a × (1 − f)','$'+trim(net,4)],
+  ];
+  if(byType)rows.push(['Stayer ARPDAU s (gross)','$'+M.s.toFixed(3)],['Tourist ARPDAU t (gross)','$'+t.toFixed(2)]);
+  rows.push(['LTV day 0 only',usd(M.ltv(1))],['LTV days 0-7',usd(M.ltv(8))],['LTV days 0-30',usd(M.ltv(31))],['LTV days 0-90',usd(M.ltv(91))],['LTV days 0-180',usd(M.ltv(181))],
+    ['Lifetime LTV',usd(M.life)],['LTV / CAC',cac>0?(M.life/cac).toFixed(2):'—'],['Payback day',M.pay===null?'no payback':String(M.pay)]);
+  $('keyT').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+  const days=[0,1,7,30,60,90,180];if(H===365)days.push(365);
+  $('dayT').innerHTML=days.map(d=>`<tr class="${d===cur?'here':''}"><td>${d}</td><td>${M.R(d).toFixed(3)}</td><td>${usd(M.ltv(d+1))}</td><td>${pct(M.ltv(d+1)/M.life,0)}</td></tr>`).join('')+
+    `<tr><td>∞</td><td>0</td><td>${usd(M.life)}</td><td>100%</td></tr>`;
+  // typed panel
+  if(byType){const neg=M.s<0;$('sOut').innerHTML=neg?`<span class="warn">t is too high: stayers would need a negative ARPDAU (s = ${M.s.toFixed(3)}). Lower t.</span>`:`Stayer ARPDAU s = <b>$${M.s.toFixed(3)}</b>, set so that the average active day still earns a = $${a.toFixed(2)}. Lifetime LTV is unchanged; the money arrives later.`;}
+}
+function outputs(){
+  $('ow').textContent=P.w.toFixed(2);$('oqs').textContent=P.qs.toFixed(3);$('oqt').textContent=P.qt.toFixed(2);
+  $('oa').textContent='$'+P.a.toFixed(2);$('of').textContent=Math.round(P.f*100)+'%';$('ocac').textContent='$'+P.cac.toFixed(2);$('ot').textContent='$'+P.t.toFixed(2);
+  document.querySelectorAll('[data-fee]').forEach(b=>b.setAttribute('aria-pressed',Math.abs(+b.dataset.fee-P.f)<1e-9));
+  const sc={default:DEF,qs:Object.assign({},DEF,{qs:0.97}),qt:Object.assign({},DEF,{qt:0.60})};
+  document.querySelectorAll('[data-sc]').forEach(b=>{const s=sc[b.dataset.sc];b.setAttribute('aria-pressed',['w','qs','qt','a','f'].every(k=>Math.abs(s[k]-P[k])<1e-9));});
+}
+function draw(){drawRet();drawLtv();cursorText();}
+function update(){
+  compute();
+  if(!userMoved)cur=Math.min(H-1,M.pay!==null?M.pay:30);
+  cur=Math.min(cur,H-1);
+  outputs();readouts();draw();
+}
+
+// ---- events ----
+['w','qs','qt','a','f','cac','t'].forEach(k=>$(k).addEventListener('input',e=>{P[k]=+e.target.value;update();}));
+document.querySelectorAll('[data-fee]').forEach(b=>b.addEventListener('click',()=>{P.f=+b.dataset.fee;$('f').value=P.f;update();}));
+document.querySelectorAll('[data-h]').forEach(b=>b.addEventListener('click',()=>{H=+b.dataset.h;document.querySelectorAll('[data-h]').forEach(x=>x.setAttribute('aria-pressed',x===b));update();}));
+document.querySelectorAll('[data-sc]').forEach(b=>b.addEventListener('click',()=>{
+  const s=b.dataset.sc;P=Object.assign({},DEF,{cac:P.cac,t:P.t});if(s==='qs')P.qs=0.97;if(s==='qt')P.qt=0.60;
+  ['w','qs','qt','a','f'].forEach(k=>$(k).value=P[k]);userMoved=false;update();}));
+$('byType').addEventListener('change',e=>{byType=e.target.checked;$('typedWrap').hidden=!byType;update();});
+function setCur(d,announce){cur=Math.max(0,Math.min(H-1,Math.round(d)));userMoved=true;readouts();draw();
+  if(announce)$('announce').textContent=`Day ${cur}. Retention ${Rfmt(M.R(cur))}. LTV so far ${usd(M.ltv(cur+1))}.`;}
+['cRet','cLtv'].forEach(id=>{
+  const cv=$(id);
+  const fromEvent=e=>{const b=cv.getBoundingClientRect(),x=e.clientX-b.left;return (x-pad.l)/(b.width-pad.l-pad.r)*H-1;};
+  cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||e.buttons)setCur(fromEvent(e));});
+  cv.addEventListener('pointerdown',e=>setCur(fromEvent(e)));
+  cv.addEventListener('keydown',e=>{
+    const step=e.shiftKey?10:1;let d=null;
+    if(e.key==='ArrowRight'||e.key==='ArrowUp')d=cur+step;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')d=cur-step;
+    else if(e.key==='Home')d=0;else if(e.key==='End')d=H-1;else if(e.key==='PageUp')d=cur+30;else if(e.key==='PageDown')d=cur-30;
+    if(d!==null){e.preventDefault();setCur(d,true);}
+  });
+});
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{hatch=null;draw();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+update();
+})();
+</script>
+</body>
+</html>

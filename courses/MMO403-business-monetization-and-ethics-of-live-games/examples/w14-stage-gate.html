@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stage-gate funding · MMO403 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1.15fr;gap:14px}
+@media (max-width:860px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:400px}
+@media (max-width:860px){canvas{height:300px}}
+.grid100{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:320px;margin:0 auto}
+.sq{aspect-ratio:1;border-radius:3px;position:relative;border:2px solid var(--c)}
+.sq.funded{background:var(--c)}
+.sq.killed{background:repeating-linear-gradient(135deg,var(--c) 0 2px,transparent 2px 6px)}
+.sq.hit::after{content:"";position:absolute;inset:32%;border-radius:50%;background:var(--paper)}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:.84rem;margin-top:10px}
+.legend div{display:flex;align-items:center;gap:6px}
+.legend .sq{width:16px;flex:none}
+.legend b{font-variant-numeric:tabular-nums}
+.money{margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:4px 6px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper)}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--ink-soft);margin-top:6px}
+.key svg{vertical-align:middle;margin-right:4px}
+.readout{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:980px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.warn{margin-top:8px;padding:8px 12px;border-left:4px solid var(--blood);background:var(--paper-2);font-size:.92rem}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 20px;margin-top:16px}
+@media (max-width:860px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+.gtitle{font-weight:700;font-size:.92rem;margin:14px 0 4px}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+label small{font-weight:400;color:var(--ink-soft)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.check{display:flex;align-items:center;gap:8px;justify-content:flex-start;font-weight:600}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO403 Business, Monetization and Ethics of Live Games · Week 14 · Worked example</p>
+  <h1>The option to stop turns a losing bet into a winning one</h1>
+  <p class="lede">Same game, same 25% odds. Funded all the way, it is worth −$5.00M. Funded in two stages with a vertical slice in between, it is worth +$3.70M, and the funder kills 65 of every 100 projects to get there.</p>
+</header>
+
+<section class="panel" aria-label="Stage-gate model">
+  <div class="charts">
+    <figure>
+      <figcaption>100 projects<small>One square per imagined project, after the stage-1 signal. Solid squares went on to stage 2, hatched ones were killed. A dot marks a hit.</small></figcaption>
+      <div class="grid100" id="grid" role="img" aria-label="Grid of 100 projects coloured by outcome"></div>
+      <div class="legend" id="legend" aria-live="polite"></div>
+      <div class="money">
+        <table aria-label="Money per branch for 100 projects">
+          <caption>Money for these 100 projects, $M</caption>
+          <tbody id="money"></tbody>
+        </table>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Expected value against the false-go rate<small>Gated plan at the current sensitivity s, against funding everything up front. $ millions per project.</small></figcaption>
+      <canvas id="cEv" role="img" aria-label="Expected value of the gated plan as the false-go rate rises, with the all-in value as a flat line"></canvas>
+      <div class="key">
+        <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="currentColor" stroke-width="3" style="color:var(--steel)"/></svg>Gated plan, EV_gate</span>
+        <span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="currentColor" stroke-width="2.5" stroke-dasharray="7 5" style="color:var(--blood)"/></svg>All in, EV_all</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rAll">—</b><span>EV_all, $M</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rGate">—</b><span id="rGateL">EV_gate, $M</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rVal">—</b><span>value of the gate, $M</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rKill">—</b><span>kill rate after stage 1</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rPost">—</b><span>P(hit | go)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rStar">—</b><span>break-even false-go rate f*</span></div>
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+  <div class="warn" id="warn" hidden></div>
+
+  <p class="gtitle">Stage-1 design</p>
+  <div class="presets" role="group" aria-label="Stage-1 presets" id="presets">
+    <button class="chip" data-c1="1" data-s="0.7" data-f="0.35" aria-pressed="false">Prototype (C1 1, s 0.70, f 0.35)</button>
+    <button class="chip" data-c1="2" data-s="0.8" data-f="0.2" aria-pressed="true">Vertical slice (C1 2, s 0.80, f 0.20)</button>
+    <button class="chip" data-c1="4" data-s="0.9" data-f="0.1" aria-pressed="false">Soft launch (C1 4, s 0.90, f 0.10)</button>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="p"><span>p <small>chance of a hit</small></span><output id="op"></output></label>
+      <input id="p" type="range" min="0.05" max="0.6" step="0.01" value="0.25">
+      <label for="V"><span>V <small>value of a hit, $M</small></span><output id="oV"></output></label>
+      <input id="V" type="range" min="10" max="200" step="5" value="60">
+    </div>
+    <div>
+      <label for="C1"><span>C1 <small>stage-1 cost, $M</small></span><output id="oC1"></output></label>
+      <input id="C1" type="range" min="0.5" max="10" step="0.5" value="2">
+      <label for="C2"><span>C2 <small>stage-2 cost, $M</small></span><output id="oC2"></output></label>
+      <input id="C2" type="range" min="5" max="60" step="1" value="18">
+    </div>
+    <div>
+      <label for="s"><span>s <small>P(go | hit)</small></span><output id="os"></output></label>
+      <input id="s" type="range" min="0.5" max="1" step="0.05" value="0.8">
+      <label for="f"><span>f <small>P(go | miss), false go</small></span><output id="of"></output></label>
+      <input id="f" type="range" min="0" max="1" step="0.05" value="0.2">
+    </div>
+  </div>
+  <label class="check" for="always" style="margin-top:12px"><input id="always" type="checkbox"> Always continue: fund stage 2 whatever the signal says</label>
+</section>
+
+<footer>Model from the lecture. EV_all = pV − C1 − C2. EV_gate = −C1 + max(0, p·s·(V − C2) − (1 − p)·f·C2). Kill rate = 1 − (p·s + (1 − p)·f). P(hit | go) = p·s / (p·s + (1 − p)·f). f* = (p·s·(V − C2) − C1) / ((1 − p)·C2), clamped to [0, 1]. The pitch and its numbers are invented for teaching. Grid counts are rounded to whole projects.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const S={p:.25,V:60,C1:2,C2:18,s:.8,f:.2,always:false};
+const r2=x=>Math.round(x*100)/100;
+const ev=x=>{const v=Math.abs(x)<5e-10?0:x;let t=Math.abs(v).toFixed(3);if(t.endsWith('0'))t=Math.abs(v).toFixed(2);return (v>0?'+':v<0?'−':'')+t;};
+const pc=x=>(+(x*100).toFixed(2)).toString()+'%';
+
+function model(f=S.f,s=S.s){
+  const {p,V,C1,C2}=S;
+  const all=p*V-C1-C2,cont=p*s*(V-C2)-(1-p)*f*C2,gate=-C1+Math.max(0,cont);
+  const den=p*s+(1-p)*f;
+  const kill=1-den,post=den>0?p*s/den:null;
+  let fs=(p*s*(V-C2)-C1)/((1-p)*C2);fs=Math.min(1,Math.max(0,fs));
+  return {all,cont,gate,kill,post,fs,rawFs:(p*s*(V-C2)-C1)/((1-p)*C2)};
+}
+function counts(m){
+  const {p,s,f}=S;let raw;
+  if(S.always)raw=[100*p,100*(1-p),0,0];
+  else if(m.cont<=0)raw=[0,0,100*p,100*(1-p)];
+  else raw=[100*p*s,100*(1-p)*f,100*p*(1-s),100*(1-p)*(1-f)];
+  const c=raw.map(x=>Math.round(x+1e-9)),diff=100-c.reduce((a,b)=>a+b,0);
+  if(diff){let i=raw.indexOf(Math.max(...raw));c[i]+=diff;}
+  return c; // hitFunded, missFunded, hitKilled, missKilled
+}
+const KINDS=[{n:'Hit, funded',c:'--moss',cls:'funded hit'},{n:'Miss, funded',c:'--blood',cls:'funded'},{n:'Hit, killed',c:'--ochre',cls:'killed hit'},{n:'Miss, killed',c:'--ink-soft',cls:'killed'}];
+
+function drawGrid(m){
+  const c=counts(m);let html='';
+  c.forEach((k,i)=>{for(let j=0;j<k;j++)html+=`<div class="sq ${KINDS[i].cls}" style="--c:var(${KINDS[i].c})"></div>`;});
+  $('grid').innerHTML=html;
+  $('grid').setAttribute('aria-label',KINDS.map((k,i)=>`${c[i]} ${k.n.toLowerCase()}`).join(', '));
+  $('legend').innerHTML=KINDS.map((k,i)=>`<div><span class="sq ${k.cls}" style="--c:var(${k.c})"></span>${k.n} <b>${c[i]}</b></div>`).join('');
+  const {C1,C2,V}=S,s1=100*C1,s2h=c[0]*C2,s2m=c[1]*C2,val=c[0]*V,net=val-s1-s2h-s2m;
+  const f=x=>(+x.toFixed(2)).toLocaleString('en-US');
+  $('money').innerHTML=`<tr><td>Stage-1 spend, 100 × C1</td><td>−${f(s1)}</td></tr><tr><td>Stage-2 spend on hits, ${c[0]} × C2</td><td>−${f(s2h)}</td></tr><tr><td>Stage-2 spend on misses, ${c[1]} × C2</td><td>−${f(s2m)}</td></tr><tr><td>Value returned, ${c[0]} × V</td><td>+${f(val)}</td></tr><tr class="here"><td>Net for 100 projects</td><td>${net<0?'−':'+'}${f(Math.abs(net))}</td></tr>`;
+}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function niceStep(span){const raw=span/5,mag=Math.pow(10,Math.floor(Math.log10(raw)));return [1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);}
+function drawEv(m){
+  const {g,w,h}=setupCanvas($('cEv')),pad={l:46,r:14,t:14,b:36};
+  const pts=[];for(let i=0;i<=200;i++){const f=i/200;pts.push([f,model(f).gate]);}
+  const vals=pts.map(p=>p[1]).concat([m.all,0,-S.C1]);
+  let lo=Math.min(...vals),hi=Math.max(...vals);const st=niceStep(Math.max(1,hi-lo));lo=Math.floor((lo-st*.4)/st)*st;hi=Math.ceil((hi+st*.2)/st)*st;if(hi===lo)hi+=st;
+  const X=f=>pad.l+(w-pad.l-pad.r)*f,Y=v=>pad.t+(h-pad.t-pad.b)*(hi-v)/(hi-lo);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let v=lo;v<=hi+1e-9;v+=st){const y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText((v>0?'+':v<0?'−':'')+Math.abs(+v.toFixed(2)),pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';for(let i=0;i<=5;i++){g.fillText((i/5).toFixed(1),X(i/5),h-pad.b+6);}
+  g.textAlign='right';g.fillText('false-go rate f',w-pad.r,h-15);
+  // zero line
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,Y(0));g.lineTo(w-pad.r,Y(0));g.stroke();
+  // all-in
+  g.strokeStyle=css('--blood');g.lineWidth=2.5;g.setLineDash([7,5]);g.beginPath();g.moveTo(pad.l,Y(m.all));g.lineTo(w-pad.r,Y(m.all));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--blood');g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline=m.all>lo+st*.6?'bottom':'top';g.fillText('all in '+ev(m.all),w-pad.r-2,Y(m.all)+(g.textBaseline==='bottom'?-4:4));
+  // gate curve
+  g.strokeStyle=css('--steel');g.lineWidth=S.always?2:3.5;g.globalAlpha=S.always?.45:1;g.beginPath();pts.forEach(([f,v],i)=>i?g.lineTo(X(f),Y(v)):g.moveTo(X(f),Y(v)));g.stroke();g.globalAlpha=1;
+  g.fillStyle=css('--steel');g.textAlign='left';g.textBaseline='bottom';g.fillText('gated, s = '+S.s.toFixed(2),X(0)+6,Y(pts[0][1])-6);
+  // f* label
+  if(m.rawFs>0&&m.rawFs<1){const x=X(m.rawFs);g.strokeStyle=css('--ink-soft');g.setLineDash([3,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,Y(0));g.stroke();g.setLineDash([]);
+    g.fillStyle=css('--ink');g.beginPath();g.arc(x,Y(0),4,0,7);g.fill();g.font='600 12px '+css('--sans');g.textAlign=x>w-110?'right':'left';g.textBaseline='bottom';g.fillText('f* = '+m.fs.toFixed(3),x+(g.textAlign==='left'?6:-6),Y(0)-6);}
+  // current point
+  const cy=S.always?m.all:m.gate;
+  g.fillStyle=css(S.always?'--blood':'--steel');g.strokeStyle=css('--paper-2');g.lineWidth=2;g.beginPath();g.arc(X(S.f),Y(cy),7,0,7);g.fill();g.stroke();
+}
+
+function render(){
+  const m=model(),plan=S.always?m.all:m.gate;
+  drawGrid(m);drawEv(m);
+  $('rAll').textContent=ev(m.all);$('rGate').textContent=ev(plan);$('rGateL').textContent=S.always?'EV, always continue, $M':'EV_gate, $M';
+  $('rVal').textContent=ev(plan-m.all);
+  $('rKill').textContent=S.always?'0%':(m.cont<=0?'100% (rational stop)':pc(m.kill));
+  $('rPost').textContent=m.post===null?'n/a':m.post.toFixed(3);
+  $('rStar').textContent=m.fs.toFixed(3);
+  let s;
+  if(S.always)s=`Always continuing ignores the signal, so the plan is worth the all-in value, <b>${ev(m.all)}</b>, whatever s and f are. The gate is only worth something if the funder is willing to stop.`;
+  else if(m.cont<=0)s=`Continuing after a "go" is worth ${ev(m.cont)} here, so a rational funder stops after stage 1 every time and loses only C1. EV_gate is <b>${ev(m.gate)}</b>.`;
+  else s=`The gate turns ${ev(m.all)} into <b>${ev(m.gate)}</b>, a gain of ${ev(m.gate-m.all)}. It kills ${pc(m.kill)} of projects after stage 1, and a "go" raises the chance of a hit from ${S.p.toFixed(2)} to ${m.post.toFixed(3)}. `+(m.gate>0?`The plan stays positive while f is below ${m.fs.toFixed(3)}.`:`At this false-go rate the gated plan still loses money. Tighten f below ${m.fs.toFixed(3)} to break even.`);
+  $('insight').innerHTML=s;
+  const noInfo=!S.always&&Math.abs(S.s-S.f)<1e-9;
+  $('warn').hidden=!(noInfo||(!S.always&&m.cont<=0));
+  $('warn').textContent=noInfo?'This signal carries no information; a rational funder stops before stage 2.':'Continuing after a "go" costs more than it returns, so a rational funder stops before stage 2.';
+  $('op').textContent=S.p.toFixed(2);$('oV').textContent=S.V;$('oC1').textContent=S.C1.toFixed(1);$('oC2').textContent=S.C2;$('os').textContent=S.s.toFixed(2);$('of').textContent=S.f.toFixed(2);
+  document.querySelectorAll('#presets .chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.c1===S.C1&&+b.dataset.s===S.s&&+b.dataset.f===S.f));
+}
+
+['p','V','C1','C2','s','f'].forEach(k=>$(k).addEventListener('input',e=>{S[k]=r2(+e.target.value);render();}));
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{S.C1=+b.dataset.c1;S.s=+b.dataset.s;S.f=+b.dataset.f;$('C1').value=S.C1;$('s').value=S.s;$('f').value=S.f;render();}));
+$('always').addEventListener('change',e=>{S.always=e.target.checked;render();});
+window.addEventListener('resize',()=>drawEv(model()));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Token revenue map · MMO403 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:0 0 8px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.plot{position:relative;width:100%;min-width:0}
+.plot svg{display:block;width:100%;height:auto;overflow:visible;position:relative}
+.plot canvas{position:absolute;display:block}
+#chMap{touch-action:none;cursor:crosshair}
+.plot text{font-family:var(--sans);font-size:12px;fill:var(--ink-soft)}
+.plot text.lab{fill:var(--ink);font-weight:600;paint-order:stroke;stroke:var(--paper-2);stroke-width:4px;stroke-linejoin:round}
+.plot text.onmap{paint-order:stroke;stroke:var(--paper);stroke-width:4px;stroke-linejoin:round;fill:var(--ink);font-weight:600}
+.gl{stroke:var(--grid);stroke-width:1}
+.ax{stroke:var(--ink-soft);stroke-width:1.2}
+.zero{stroke:var(--ink);stroke-width:1.5}
+.be{stroke:var(--ink);stroke-width:3;fill:none}
+.ct{stroke:var(--ink);stroke-width:1.2;stroke-dasharray:5 4;fill:none;opacity:.75}
+.dot{fill:var(--ink);stroke:var(--paper);stroke-width:3;cursor:grab}
+.dot:focus{outline:none}
+.dot:focus-visible{stroke:var(--focus);stroke-width:4}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.scale{margin-top:8px;font-size:.82rem}
+.scale .grad{height:12px;border-radius:4px}
+.scale .nums{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;color:var(--ink-soft);margin-top:2px}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:620px){.controls{grid-template-columns:1fr}}
+.ctl{margin-bottom:12px}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip,.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:8px 0 0}
+.legend i{display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:6px;border-radius:3px}
+.table-wrap{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-weight:600;font-size:1.02rem;padding-bottom:6px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.tables{grid-template-columns:1fr}}
+.note{font-family:var(--serif);font-size:.96rem;margin:10px 0 0}
+.muted{color:var(--ink-soft)}
+code{font-size:.92em}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO403 Business, Monetization and Ethics of Live Games · Week 11 · Worked example</p>
+  <h1>A token above the subscription price can only lose money in the store</h1>
+  <p class="lede">Each token month earns at least the token price minus the subscription it replaced. The token loses money only when its dollars come out of other store spending, or when a fee pushes the net token price below the subscription.</p>
+</header>
+
+<section class="panel" aria-label="Charts">
+  <div class="charts">
+    <figure>
+      <figcaption>Monthly net revenue, without and with the token<small>Displaced store spending hangs below zero</small></figcaption>
+      <div class="plot" id="chBars" role="img"></div>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:var(--steel)"></i>Cash subscribers</span>
+        <span><i style="background:var(--steel);opacity:.55"></i>Would have paid cash (k × T)</span>
+        <span><i style="background:var(--ochre)"></i>Token sales</span>
+        <span><i style="background:repeating-linear-gradient(45deg,var(--blood) 0 3px,transparent 3px 6px);border:1.5px solid var(--blood)"></i>Displaced store spending</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Gain from the token across every <code>(k, σ)</code><small>Drag the dot, or focus it and use the arrow keys (left and right for k, up and down for σ)</small></figcaption>
+      <div class="plot" id="chMap"><canvas id="heat" aria-hidden="true"></canvas></div>
+      <div class="scale" aria-hidden="false">
+        <div class="grad" id="grad"></div>
+        <div class="nums"><span id="sMin">−$1.5M</span><span>$0 (break-even)</span><span id="sMax">+$2.0M</span></div>
+      </div>
+    </figure>
+  </div>
+  <div class="readout">
+    <div class="stat" id="stDr" style="--c:var(--moss)"><b id="rDr">+$650,000</b><span>change in monthly revenue ΔR</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rBeS">0.625</b><span>break-even σ at this k</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rPrem">1.33</b><span>token premium c_net / s_net</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rKeep">50,000</b><span>players kept who would have left</span></div>
+  </div>
+  <p class="insight" id="insight" aria-live="polite"></p>
+</section>
+
+<section class="panel" aria-label="Controls">
+  <div class="controls">
+    <div>
+      <h2>Prices</h2>
+      <div class="ctl"><label for="sIn"><span>Subscription <code>s</code> (30 days)</span><output id="oS">$15.00</output></label><input id="sIn" type="range" min="5" max="30" step="0.5" value="15"></div>
+      <div class="ctl"><label for="cIn"><span>Token <code>c</code> (30 days)</span><output id="oCc">$20.00</output></label><input id="cIn" type="range" min="5" max="40" step="0.5" value="20"></div>
+      <span class="lbl">Presets</span>
+      <div class="presets" role="group" aria-label="Price presets">
+        <button class="chip" type="button" data-s="15" data-c="20" aria-pressed="true">WoW-like</button>
+        <button class="chip" type="button" data-s="14.99" data-c="21.41" aria-pressed="false">OSRS-like per 30 days</button>
+        <button class="chip" type="button" data-s="15" data-c="12" aria-pressed="false">Token below subscription</button>
+      </div>
+      <p class="note" id="presetNote"></p>
+    </div>
+    <div>
+      <h2>Who uses the token</h2>
+      <div class="ctl"><label for="kIn"><span><code>k</code>, would have paid cash anyway</span><output id="oK">0.50</output></label><input id="kIn" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+      <div class="ctl"><label for="gIn"><span><code>σ</code>, token dollars taken from the store</span><output id="oG">0.30</output></label><input id="gIn" type="range" min="0" max="1" step="0.01" value="0.3"></div>
+      <div class="ctl"><label for="tIn"><span>Token months per month <code>T</code></span><output id="oT">100,000</output></label><input id="tIn" type="range" min="0" max="500000" step="5000" value="100000"></div>
+      <div class="ctl"><label for="nIn"><span>Cash subscribers <code>N</code></span><output id="oN">1,000,000</output></label><input id="nIn" type="range" min="0" max="5000000" step="50000" value="1000000"></div>
+    </div>
+    <div>
+      <h2>Fees</h2>
+      <div class="ctl"><label for="fcIn"><span>Platform fee on tokens <code>f_c</code></span><output id="oFc">0%</output></label><input id="fcIn" type="range" min="0" max="35" step="1" value="0"></div>
+      <div class="ctl"><label for="fsIn"><span>Channel cost on subscriptions <code>f_s</code></span><output id="oFs">0%</output></label><input id="fsIn" type="range" min="0" max="35" step="1" value="0"></div>
+      <p class="note muted">A fee on tokens and not on subscriptions lowers the token premium. At a 30% fee a $20 token nets $14, below a $15 subscription.</p>
+      <button class="chip" type="button" id="reset">Reset to the lecture's numbers</button>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-label="Numbers">
+  <div class="tables">
+    <div class="table-wrap"><table><caption>Prices and break-even</caption><tbody id="t1"></tbody></table></div>
+    <div class="table-wrap"><table><caption>One month of revenue</caption><tbody id="t2"></tbody></table></div>
+  </div>
+</section>
+
+<footer>Model: <code>ΔR = T × (c_net × (1 − σ) − k × s_net)</code>, with <code>c_net = c(1 − f_c)</code> and <code>s_net = s(1 − f_s)</code>. Break-even <code>σ* = 1 − k × s_net / c_net</code>. The bars use net prices, so without fees they match <code>N × s + k × T × s</code> and <code>N × s + T × c</code>. Contours on the map mark ΔR = 0 and ±25% of the largest gain or loss on the map. <code>T</code>, <code>N</code>, <code>k</code> and <code>σ</code> are invented teaching values, not company figures. Prices: WoW US$15 subscription and US$20 token (Americas); Old School RuneScape US$14.99 membership and US$9.99 bond for 14 days, so US$21.41 per 30 days (September 2026, per the lecture).</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const DEF={s:15,c:20,T:100000,N:1000000,k:0.5,g:0.3,fc:0,fs:0};
+const S=Object.assign({},DEF);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtN=x=>Math.round(x).toLocaleString('en-US');
+const usdS=x=>(x<0?'−':x>0?'+':'')+'$'+fmtN(Math.abs(x));
+const usd2=x=>'$'+x.toFixed(2);
+const short=x=>{const a=Math.abs(x),sg=x<0?'−':x>0?'+':'';if(a>=1e6)return sg+'$'+(+(a/1e6).toFixed(2))+'M';if(a>=1e3)return sg+'$'+Math.round(a/1e3)+'k';return sg+'$'+Math.round(a);};
+
+function calc(){
+  const cn=S.c*(1-S.fc),sn=S.s*(1-S.fs),T=S.T,k=S.k,g=S.g;
+  const dR=T*(cn*(1-g)-k*sn);
+  const without=S.N*sn+k*T*sn, withTok=S.N*sn+T*cn-g*T*cn;
+  return {cn,sn,dR,without,withTok,beS:1-k*sn/cn,beK:cn*(1-g)/sn,kept:T*(1-k),prem:cn/sn,
+    M:Math.max(T*cn,T*sn),maxG:T*cn,maxL:-T*sn};
+}
+const f=(o,k,g)=>S.T*(o.cn*(1-g)-k*o.sn);
+
+// colours
+function hex(c){c=c.replace('#','');if(c.length===3)c=c.split('').map(x=>x+x).join('');return [0,2,4].map(i=>parseInt(c.substr(i,2),16));}
+function mix(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t));}
+function colorFor(v,M,P){ // diverging
+  if(!M)return P.mid;const t=Math.max(-1,Math.min(1,v/M));
+  return t>=0?mix(P.mid,P.pos,Math.pow(t,.8)):mix(P.mid,P.neg,Math.pow(-t,.8));
+}
+function palette(){const mid=hex(css('--paper'));return {mid,pos:hex(css('--moss')),neg:hex(css('--blood'))};}
+
+// ---------- bars ----------
+function drawBars(o){
+  const el=$('chBars'),W=Math.max(260,Math.round(el.clientWidth)),H=Math.round(Math.min(W,520)*0.9);
+  const pl=58,pr=58,pt=58,pb=54,iw=W-pl-pr,ih=H-pt-pb;
+  const top=Math.max(o.without,S.N*o.sn+S.T*o.cn,1),bot=-S.g*S.T*o.cn;
+  const lo=Math.min(0,bot)*1.15,hi=top*1.08;
+  const Y=v=>pt+ih*(hi-v)/(hi-lo);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true" focusable="false"><defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" style="fill:var(--blood);opacity:.28"/><line x1="0" y1="0" x2="0" y2="7" style="stroke:var(--blood);stroke-width:3.5"/></pattern></defs>`;
+  // ticks
+  const span=hi-lo,raw=span/5,m=Math.pow(10,Math.floor(Math.log10(raw))),step=[1,2,2.5,5,10].map(x=>x*m).find(x=>x>=raw);
+  for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step){s+=`<line class="gl" x1="${pl}" y1="${Y(v)}" x2="${pl+iw}" y2="${Y(v)}"/><text x="${pl-6}" y="${Y(v)+4}" text-anchor="end">${short(v).replace('+','')}</text>`;}
+  const bw=Math.min(110,iw*0.28),x1=pl+iw*0.25-bw/2,x2=pl+iw*0.75-bw/2;
+  const rect=(x,a,b,style,extra)=>`<rect x="${x}" y="${Y(Math.max(a,b))}" width="${bw}" height="${Math.max(0,Math.abs(Y(a)-Y(b)))}" style="${style}" ${extra||''}/>`;
+  const cash=S.N*o.sn,kk=S.k*S.T*o.sn,tok=S.T*o.cn,disp=S.g*S.T*o.cn;
+  s+=rect(x1,0,cash,'fill:var(--steel)');
+  s+=rect(x1,cash,cash+kk,'fill:var(--steel);opacity:.55');
+  s+=rect(x2,0,cash,'fill:var(--steel)');
+  s+=rect(x2,cash,cash+tok,'fill:var(--ochre)');
+  if(disp>0) s+=rect(x2,-disp,0,'fill:url(#hatch);stroke:var(--blood);stroke-width:1.5');
+  s+=`<line class="zero" x1="${pl}" y1="${Y(0)}" x2="${pl+iw}" y2="${Y(0)}"/>`;
+  // totals on top
+  s+=`<text class="lab" x="${x1+bw/2}" y="${Y(o.without)-8}" text-anchor="middle">${short(o.without).replace('+','')}</text>`;
+  s+=`<text class="lab" x="${x2+bw/2}" y="${Y(cash+tok)-8}" text-anchor="middle">${short(cash+tok).replace('+','')}</text>`;
+  if(disp>0) s+=`<text class="lab" x="${x2+bw+6}" y="${(Y(0)+Y(-disp))/2+4}" text-anchor="start" style="fill:var(--blood)">−${short(disp).replace('+','')}</text>`;
+  s+=`<text x="${x1+bw/2}" y="${H-28}" text-anchor="middle" class="lab">Without token</text>`;
+  s+=`<text x="${x2+bw/2}" y="${H-28}" text-anchor="middle" class="lab">With token</text>`;
+  s+=`<text x="${x2+bw/2}" y="${H-12}" text-anchor="middle">net ${short(o.withTok).replace('+','')}</text>`;
+  // delta label between bars
+  const pct=o.without?o.dR/o.without:0;
+  const mx=(x1+bw+x2)/2;
+  s+=`<text class="lab" x="${mx}" y="16" text-anchor="middle" style="fill:${o.dR>=0?'var(--moss)':'var(--blood)'}">ΔR ${short(o.dR)}</text>`;
+  s+=`<text class="lab" x="${mx}" y="31" text-anchor="middle" style="fill:${o.dR>=0?'var(--moss)':'var(--blood)'}">${(pct>=0?'+':'−')+Math.abs(pct*100).toFixed(1)}%</text>`;
+  s+='</svg>';
+  el.innerHTML=s;
+  el.setAttribute('aria-label',`Stacked bars. Without the token ${usdS(o.without).replace('+','')} a month. With the token ${usdS(cash+tok).replace('+','')} in sales minus ${usdS(disp).replace('+','')} of displaced store spending. Change ${usdS(o.dR)}.`);
+}
+
+// ---------- map ----------
+function clipLine(o,v){ // points where ΔR = v within the unit square: σ = 1 − (k sn + v/T)/cn
+  if(!S.T||!o.cn)return null;
+  const sig=k=>1-(k*o.sn+v/S.T)/o.cn; // decreasing in k
+  // find k range where 0<=sig<=1
+  const kAt=g=>(o.cn*(1-g)-v/S.T)/o.sn; // k where sig = g
+  let ka=Math.max(0,kAt(1)),kb=Math.min(1,kAt(0));
+  if(!(kb>ka))return null;
+  return [[ka,sig(ka)],[kb,sig(kb)]];
+}
+function drawMap(o){
+  const el=$('chMap'),W=Math.max(260,Math.round(el.clientWidth)),H=W;
+  const pl=48,pr=12,pt=10,pb=44,iw=W-pl-pr,ih=H-pt-pb;
+  const X=k=>pl+iw*k,Y=g=>pt+ih*(1-g);
+  // heat
+  const cv=$('heat'),n=60,P=palette();
+  cv.width=n;cv.height=n;cv.style.left=pl+'px';cv.style.top=pt+'px';cv.style.width=iw+'px';cv.style.height=ih+'px';
+  cv.style.imageRendering='pixelated';
+  const ctx=cv.getContext('2d'),img=ctx.createImageData(n,n),M=o.M;
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){
+    const k=(i+.5)/n,g=1-(j+.5)/n,c=colorFor(f(o,k,g),M,P),q=4*(j*n+i);
+    img.data[q]=c[0];img.data[q+1]=c[1];img.data[q+2]=c[2];img.data[q+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
+  for(let i=0;i<=10;i+=2){const v=i/10;s+=`<text x="${X(v)}" y="${Y(0)+16}" text-anchor="middle">${v.toFixed(1)}</text><text x="${pl-6}" y="${Y(v)+4}" text-anchor="end">${v.toFixed(1)}</text>`;}
+  s+=`<text x="${X(1)}" y="${H-6}" text-anchor="end">k, share who would have paid cash anyway</text>`;
+  s+=`<text transform="translate(12 ${pt+ih/2}) rotate(-90)" text-anchor="middle">σ, share of token dollars from the store</text>`;
+  s+=`<rect x="${pl}" y="${pt}" width="${iw}" height="${ih}" style="fill:none;stroke:var(--ink-soft);stroke-width:1.2"/>`;
+  // contours at ±25%
+  [0.25,-0.25].forEach(t=>{const L=clipLine(o,t*M);if(!L)return;
+    s+=`<line class="ct" x1="${X(L[0][0])}" y1="${Y(L[0][1])}" x2="${X(L[1][0])}" y2="${Y(L[1][1])}"/>`;
+    const mxk=(L[0][0]+L[1][0])/2,mxg=(L[0][1]+L[1][1])/2;
+    s+=`<text class="onmap" x="${X(mxk)+4}" y="${Y(mxg)-6}" style="font-weight:400;font-size:11px">${short(t*M)}</text>`;});
+  const B=clipLine(o,0);
+  if(B){
+    s+=`<line class="be" x1="${X(B[0][0])}" y1="${Y(B[0][1])}" x2="${X(B[1][0])}" y2="${Y(B[1][1])}"/>`;
+    // label near the start of the line
+    const t=0.3,lk=B[0][0]+(B[1][0]-B[0][0])*t,lg=B[0][1]+(B[1][1]-B[0][1])*t;
+    const ang=Math.atan2(Y(B[1][1])-Y(B[0][1]),X(B[1][0])-X(B[0][0]))*180/Math.PI;
+    s+=`<text class="onmap" transform="translate(${X(lk)} ${Y(lg)-8}) rotate(${ang})" text-anchor="middle">break-even ($0)</text>`;
+  }
+  s+=`<text class="onmap" x="${X(0.04)}" y="${Y(0.04)-6}" style="fill:var(--moss)">gains</text>`;
+  if(f(o,1,1)<0) s+=`<text class="onmap" x="${X(0.96)}" y="${Y(0.96)+16}" text-anchor="end" style="fill:var(--blood)">loses</text>`;
+  s+=`<circle id="dot" class="dot" cx="${X(S.k)}" cy="${Y(S.g)}" r="9" tabindex="0" role="slider" aria-label="Current k and sigma" aria-valuemin="0" aria-valuemax="1" aria-valuenow="${S.k}" aria-valuetext="k ${S.k.toFixed(2)}, sigma ${S.g.toFixed(2)}, change in revenue ${usdS(o.dR)}"/>`;
+  s+='</svg>';
+  const had=document.activeElement&&document.activeElement.id==='dot';
+  el.querySelectorAll('svg').forEach(x=>x.remove());
+  el.insertAdjacentHTML('beforeend',s);
+  const d=$('dot');
+  d.addEventListener('keydown',e=>{
+    const st=e.shiftKey?0.1:0.01;let dk=0,dg=0;
+    if(e.key==='ArrowRight')dk=st;else if(e.key==='ArrowLeft')dk=-st;else if(e.key==='ArrowUp')dg=st;else if(e.key==='ArrowDown')dg=-st;else return;
+    e.preventDefault();setKG(S.k+dk,S.g+dg);
+  });
+  if(had)d.focus();
+  // scale legend
+  $('grad').style.background=`linear-gradient(90deg,rgb(${P.neg}),rgb(${P.mid}) 50%,rgb(${P.pos}))`;
+  $('sMin').textContent=short(-M);$('sMax').textContent=short(M);
+  el.setAttribute('aria-label',`Map of the change in revenue over k and sigma. Green gains, red loses. The break-even line runs ${B?`from k ${B[0][0].toFixed(2)}, sigma ${B[0][1].toFixed(2)} to k ${B[1][0].toFixed(2)}, sigma ${B[1][1].toFixed(2)}`:'outside the square'}.`);
+  el.setAttribute('role','group');
+  el._g={pl,pt,iw,ih,W};
+}
+
+// ---------- readouts ----------
+function readouts(o){
+  $('oS').textContent=usd2(S.s);$('oCc').textContent=usd2(S.c);$('oK').textContent=S.k.toFixed(2);$('oG').textContent=S.g.toFixed(2);
+  $('oT').textContent=fmtN(S.T);$('oN').textContent=fmtN(S.N);$('oFc').textContent=Math.round(S.fc*100)+'%';$('oFs').textContent=Math.round(S.fs*100)+'%';
+  [['sIn',usd2(S.s)],['cIn',usd2(S.c)],['kIn',S.k.toFixed(2)],['gIn',S.g.toFixed(2)],['tIn',fmtN(S.T)],['nIn',fmtN(S.N)],['fcIn',$('oFc').textContent],['fsIn',$('oFs').textContent]].forEach(([i,t])=>$(i).setAttribute('aria-valuetext',t));
+  document.querySelectorAll('[data-s]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===S.s&&+b.dataset.c===S.c)));
+  $('rDr').textContent=usdS(o.dR);$('stDr').style.setProperty('--c',o.dR>=0?'var(--moss)':'var(--blood)');
+  $('rBeS').textContent=o.beS<0?'none':o.beS.toFixed(3);
+  $('rPrem').textContent=o.prem.toFixed(2);$('rKeep').textContent=fmtN(o.kept);
+
+  let t;
+  if(!S.T) t='With no token sales there is nothing to gain or lose. Raise T.';
+  else{
+    t=`<b>ΔR = ${usdS(o.dR)} a month</b> (${usd2(o.cn)} × ${(1-S.g).toFixed(2)} − ${S.k.toFixed(2)} × ${usd2(o.sn)} = ${(()=>{const v=o.cn*(1-S.g)-S.k*o.sn;return (v<0?'−$':'$')+Math.abs(v).toFixed(2);})()} per token month). `;
+    if(o.cn>=o.sn) t+=`The net token price is at or above the net subscription, so with no displaced store spending (σ = 0) the token gains at every k. At k = ${S.k.toFixed(2)} it stays ahead while σ is below ${o.beS.toFixed(3)}.`;
+    else t+=`The net token price is below the net subscription, so the token can lose money even at σ = 0: every cash subscriber who switches costs ${usd2(o.sn-o.cn)} a month. `+(o.beS>0?`At k = ${S.k.toFixed(2)} it breaks even only while σ is below ${o.beS.toFixed(3)}.`:`At k = ${S.k.toFixed(2)} it loses at every σ.`);
+  }
+  $('insight').innerHTML=t;
+
+  $('t1').innerHTML=[
+    ['Net token price c_net',usd2(o.cn)],['Net subscription s_net',usd2(o.sn)],['Token premium c_net / s_net',o.prem.toFixed(3)],
+    ['ΔR',usdS(o.dR)],
+    ['Break-even σ at this k',o.beS<0?'none (loses at σ = 0)':o.beS.toFixed(3)],
+    ['Break-even k at this σ',o.beK>1?'any k':o.beK.toFixed(3)],
+    ['Players kept T × (1 − k)',fmtN(o.kept)]
+  ].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+  const cash=S.N*o.sn,kk=S.k*S.T*o.sn,tok=S.T*o.cn,disp=S.g*S.T*o.cn;
+  $('t2').innerHTML=[
+    ['Cash subscribers N × s_net','$'+fmtN(cash)],['Would-have-paid cash k × T × s_net','$'+fmtN(kk)],['Without the token','$'+fmtN(o.without)],
+    ['Token sales T × c_net','$'+fmtN(tok)],['Displaced store spending σ × T × c_net','−$'+fmtN(disp)],['With the token','$'+fmtN(o.withTok)],
+    ['ΔR as share of revenue without',o.without?((o.dR/o.without>=0?'+':'−')+Math.abs(o.dR/o.without*100).toFixed(1)+'%'):'none']
+  ].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+  const notes={'15|20':'World of Warcraft prices: US$15 one-month subscription, US$20 token (Americas). Premium 1.33.','14.99|21.41':'Old School RuneScape: US$14.99 a month, bond US$9.99 for 14 days, so US$21.41 per 30 days. Premium 1.43.','15|12':'An invented case: the token costs less than the subscription, so every switcher costs money.'};
+  $('presetNote').textContent=notes[S.s+'|'+S.c]||'';
+}
+
+function update(){const o=calc();readouts(o);drawBars(o);drawMap(o);}
+function r2(x){return Math.round(x*100)/100;}
+function setKG(k,g){S.k=r2(Math.min(1,Math.max(0,k)));S.g=r2(Math.min(1,Math.max(0,g)));$('kIn').value=S.k;$('gIn').value=S.g;update();}
+
+const bind=(id,fn)=>$(id).addEventListener('input',e=>{fn(+e.target.value);update();});
+bind('sIn',v=>S.s=v);bind('cIn',v=>S.c=v);bind('kIn',v=>S.k=r2(v));bind('gIn',v=>S.g=r2(v));
+bind('tIn',v=>S.T=v);bind('nIn',v=>S.N=v);bind('fcIn',v=>S.fc=v/100);bind('fsIn',v=>S.fs=v/100);
+document.querySelectorAll('[data-s]').forEach(b=>b.addEventListener('click',()=>{S.s=+b.dataset.s;S.c=+b.dataset.c;$('sIn').value=S.s;$('cIn').value=S.c;update();}));
+$('reset').addEventListener('click',()=>{Object.assign(S,DEF);$('sIn').value=15;$('cIn').value=20;$('kIn').value=.5;$('gIn').value=.3;$('tIn').value=100000;$('nIn').value=1000000;$('fcIn').value=0;$('fsIn').value=0;update();});
+
+// drag on the map
+(function(){const el=$('chMap');let drag=false;
+  const move=e=>{const g=el._g;if(!g)return;const r=el.getBoundingClientRect(),sc=g.W/r.width;
+    const px=(e.clientX-r.left)*sc,py=(e.clientY-r.top)*sc;setKG((px-g.pl)/g.iw,1-(py-g.pt)/g.ih);};
+  el.addEventListener('pointerdown',e=>{drag=true;el.setPointerCapture(e.pointerId);move(e);});
+  el.addEventListener('pointermove',e=>{if(drag)move(e);});
+  el.addEventListener('pointerup',()=>{drag=false;});el.addEventListener('pointercancel',()=>{drag=false;});
+})();
+let rt=null;const redraw=()=>{clearTimeout(rt);rt=setTimeout(update,60);};
+if(window.ResizeObserver)new ResizeObserver(redraw).observe(document.querySelector('.charts'));
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

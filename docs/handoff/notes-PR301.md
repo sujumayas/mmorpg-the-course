@@ -1,1 +1,2 @@
 w01-05: Warcraft Wiki 'fast respawn' page undated (labelled current retail, undated). Team 'Saltmarsh' (focus factor 0.46 at w04); w06-14 authors told to reuse. w05 interactive spec examples/w05-spawn-supply.html.
+w11-14: facts verified (WoW guild cap 4.0.1, FFXIV party sizes, GW2 2012 betas, EVE Singularity, Trinity boot.ini 11 Dec 2007, New World trading 2 Nov 2021). Specs w12 burn-down projection, w13 beta turnout. OPEN: w03 has 7 people, w08 says six; w07 uses points, w04 hours: unify (Saltmarsh 7, estimated hours).

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Store take and the revenue waterfall · MMO403 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:860px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--ink-soft);margin-top:6px}
+.key svg{vertical-align:middle;margin-right:4px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+/* waterfall */
+.wf{display:grid;gap:6px;margin-top:4px}
+.wrow{display:grid;grid-template-columns:minmax(8.5rem,38%) 1fr;gap:10px;align-items:center}
+.wlab{font-size:.84rem;line-height:1.25}
+.wlab b{display:block;font-weight:600}
+.wlab span{font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.track{position:relative;height:22px;border-left:1px solid var(--ink-soft)}
+.bar{position:absolute;top:2px;bottom:2px;border-radius:3px;min-width:2px}
+.bar.neg{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.28) 0 4px,transparent 4px 8px)}
+.wrow.total .wlab b{font-weight:700}
+/* controls */
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:16px}
+@media (max-width:980px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:620px){.controls{grid-template-columns:1fr}}
+.group{min-width:0}
+.gtitle{font-weight:700;font-size:.92rem;margin:0 0 4px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 .95rem var(--sans);width:8.5rem;padding:5px 8px;border:1.5px solid var(--ink-soft);border-radius:var(--radius-sm);background:var(--paper);color:var(--ink)}
+.inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem;margin-top:6px}
+.check{display:flex;align-items:center;gap:8px;justify-content:flex-start;font-weight:600}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.dim{opacity:.5}
+.tables{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+@media (max-width:860px){.tables{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO403 Business, Monetization and Ethics of Live Games · Week 12 · Worked example</p>
+  <h1>"Steam takes 30%" is three different numbers</h1>
+  <p class="lede">A tiered store fee has a rate on the next dollar and an average over every dollar, and the average never falls to the top-tier rate. On the right, follow US$11 million of player spending down to the studio. The store is often not the biggest cut.</p>
+</header>
+
+<section class="panel" aria-label="Store take model">
+  <div class="charts">
+    <figure>
+      <figcaption>Average store take against revenue<small>Log scale, US$100,000 to US$500 million. Filled dot is the average rate at your revenue, ring is the marginal rate on the next dollar.</small></figcaption>
+      <canvas id="cRate" role="img" aria-label="Average take rate of five store fee schedules plotted against revenue on a log scale"></canvas>
+      <div class="key" id="key"></div>
+    </figure>
+    <figure>
+      <figcaption>Where the player's money goes<small id="wfSub">Each bar shows its amount and its share of consumer spend.</small></figcaption>
+      <div class="wf" id="wf" aria-live="polite"></div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div class="group">
+      <p class="gtitle">Revenue and channel</p>
+      <label for="gRange">Net revenue G <output id="oG">US$9.60M</output></label>
+      <input id="gRange" type="range" min="0" max="1000" step="1" aria-describedby="gHelp">
+      <div class="inline"><label for="gNum" style="margin:0">Exact, US$ millions</label><input id="gNum" type="number" min="0.1" max="500" step="0.1" value="9.6"></div>
+      <p id="gHelp" class="key" style="margin:4px 0 0">Net of tax and refunds. This is the base for the store's brackets.</p>
+      <div class="presets" role="group" aria-label="Revenue presets">
+        <button class="chip" data-g="1">1M</button><button class="chip" data-g="3">3M</button><button class="chip" data-g="5">5M</button><button class="chip" data-g="9.6">9.6M</button><button class="chip" data-g="30">30M</button><button class="chip" data-g="100">100M</button>
+      </div>
+      <p class="gtitle" style="margin-top:12px">Channel for the waterfall</p>
+      <div class="presets" role="group" aria-label="Channel" id="chan">
+        <button class="chip" data-c="steam" aria-pressed="true">Steam</button>
+        <button class="chip" data-c="epic" aria-pressed="false">Epic</button>
+        <button class="chip" data-c="google" aria-pressed="false">Google Play</button>
+        <button class="chip" data-c="apple" aria-pressed="false">Apple</button>
+        <button class="chip" data-c="direct" aria-pressed="false">Direct store</button>
+      </div>
+      <label class="check" for="appleElig"><input id="appleElig" type="checkbox" checked> Apple: eligible last year (earned under US$1M)</label>
+    </div>
+    <div class="group">
+      <p class="gtitle">Player side</p>
+      <label for="basket">Basket size (direct store) <output id="oBasket">US$19.99</output></label>
+      <input id="basket" type="range" min="0.99" max="99.99" step="1" value="19.99">
+      <div class="presets" role="group" aria-label="Basket presets">
+        <button class="chip" data-b="0.99">US$0.99</button><button class="chip" data-b="4.99">US$4.99</button><button class="chip" data-b="19.99">US$19.99</button><button class="chip" data-b="99.99">US$99.99</button>
+      </div>
+      <label for="tax">Tax rate <output id="oTax">10%</output></label>
+      <input id="tax" type="range" min="0" max="27" step="1" value="10">
+      <label for="ref">Refunds and chargebacks <output id="oRef">4%</output></label>
+      <input id="ref" type="range" min="0" max="15" step="0.5" value="4">
+    </div>
+    <div class="group">
+      <p class="gtitle">Publishing deal</p>
+      <label class="check" for="pubOn"><input id="pubOn" type="checkbox" checked> A publisher funded the game</label>
+      <div id="pubBox">
+        <label for="split">Split to the studio <output id="oSplit">50%</output></label>
+        <input id="split" type="range" min="0" max="100" step="5" value="50">
+        <label for="recoup">Recoupable advance and marketing <output id="oRecoup">US$3.00M</output></label>
+        <input id="recoup" type="range" min="0" max="10" step="0.1" value="3">
+        <p class="gtitle" style="margin-top:8px">Recoup from</p>
+        <div class="presets" role="group" aria-label="Recoupment base" id="base">
+          <button class="chip" data-base="studio" aria-pressed="true">The studio's share</button>
+          <button class="chip" data-base="all" aria-pressed="false">All receipts, before the split</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tables">
+    <div class="table-wrap">
+      <table aria-label="Readout for the selected channel">
+        <caption>Readout, selected channel</caption>
+        <tbody id="readout"></tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table aria-label="Every schedule at the selected revenue">
+        <caption id="cmpCap">Every schedule at this revenue</caption>
+        <thead><tr><th>Schedule</th><th>Take</th><th>Average</th><th>Marginal</th></tr></thead>
+        <tbody id="cmp"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Schedules as in the lecture. Steam: 30% to US$10M, 25% to US$50M, 20% above (Valve, from 1 October 2018). Epic Games Store: 0% on the first US$1M per product per year, 12% after (from June 2025; the threshold resets each 1 January). Google Play 15% tier, remaining markets: 15% on the first US$1M of annual earnings, 30% above (help page, September 2026). Apple Small Business Program: 15% up to US$1M for a developer under US$1M last year, 30% otherwise (page, September 2026). Direct store: a card processor at 2.9% plus US$0.30 per purchase (Stripe US standard pricing). Tax, refund and deal terms are invented for teaching.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const M=v=>'US$'+(v/1e6).toFixed(2)+'M';
+const D=v=>'US$'+Math.round(v).toLocaleString('en-US');
+const P1=x=>(x*100).toFixed(1)+'%';
+const PM=x=>(Math.round(x*1000)/10).toString()+'%';
+
+const S={G:9.6e6,chan:'steam',elig:true,basket:19.99,tax:.10,ref:.04,pub:true,split:.5,recoup:3e6,base:'studio'};
+const GMIN=1e5,GMAX=5e8,LMIN=Math.log10(GMIN),LSPAN=Math.log10(GMAX)-LMIN;
+
+function bracketTake(g,br){let t=0;for(let i=0;i<br.length;i++){const [a,r]=br[i],b=i+1<br.length?br[i+1][0]:Infinity;if(g>a)t+=r*(Math.min(g,b)-a);}return t;}
+function bracketMarg(g,br){let r=br[0][1];for(const [a,x] of br)if(g>=a)r=x;return r;}
+function schedules(){
+  const apple=S.elig?[[0,.15],[1e6,.30]]:[[0,.30]];
+  const dRate=.029+.30/S.basket;
+  return [
+    {id:'steam',name:'Steam',short:'Steam',color:'--steel',dash:[],take:g=>bracketTake(g,[[0,.30],[10e6,.25],[50e6,.20]]),marg:g=>bracketMarg(g,[[0,.30],[10e6,.25],[50e6,.20]])},
+    {id:'epic',name:'Epic',short:'Epic',color:'--moss',dash:[9,5],take:g=>bracketTake(g,[[0,0],[1e6,.12]]),marg:g=>bracketMarg(g,[[0,0],[1e6,.12]])},
+    {id:'google',name:'Google Play',short:'Google',color:'--ochre',dash:[2,4],take:g=>bracketTake(g,[[0,.15],[1e6,.30]]),marg:g=>bracketMarg(g,[[0,.15],[1e6,.30]])},
+    {id:'apple',name:S.elig?'Apple (eligible)':'Apple (not eligible)',short:'Apple',color:'--blood',dash:[12,4,2,4],take:g=>bracketTake(g,apple),marg:g=>bracketMarg(g,apple)},
+    {id:'direct',name:'Direct store (card fees)',short:'Direct',color:'--ink-soft',dash:[4,3],take:g=>g*dRate,marg:()=>dRate}
+  ];
+}
+
+function waterfall(){
+  const sch=schedules().find(s=>s.id===S.chan);
+  const G=S.G,pre=G/(1-S.ref),refunds=pre-G,tax=pre*S.tax,spend=pre+tax;
+  const isDirect=S.chan==='direct';
+  const store=isDirect?0:sch.take(G),fees=isDirect?sch.take(G):0;
+  const payout=G-store-fees;
+  let pubShare=0,rec=0,studio=payout;
+  if(S.pub){
+    if(S.base==='studio'){const half=payout*S.split;pubShare=payout-half;rec=Math.min(S.recoup,half);studio=half-rec;}
+    else{rec=Math.min(S.recoup,payout);const rem=payout-rec;pubShare=rem*(1-S.split);studio=rem*S.split;}
+  }
+  return {sch,G,pre,refunds,tax,spend,store,fees,payout,pubShare,rec,studio,avg:isDirect?fees/G:store/G,marg:sch.marg(G)};
+}
+
+/* ---------- rate chart ---------- */
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function drawRate(){
+  const {g,w,h}=setupCanvas($('cRate'));
+  const pad={l:42,r:w<420?58:74,t:12,b:34},YM=.35;
+  const X=v=>pad.l+(w-pad.l-pad.r)*(Math.log10(v)-LMIN)/LSPAN,Y=r=>pad.t+(h-pad.t-pad.b)*(1-r/YM);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=7;i++){const r=i*.05,y=Y(r);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(r*100)+'%',pad.l-6,y);}
+  const ticks=[[1e5,'100k'],[1e6,'1M'],[1e7,'10M'],[1e8,'100M'],[5e8,'500M']];
+  g.textAlign='center';g.textBaseline='top';
+  for(const [v,t] of ticks){const x=X(v);if(v===5e8&&w<560){g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();continue;}g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.fillStyle=css('--ink-soft');g.fillText(t,x,h-pad.b+6);}
+  g.textAlign='right';g.fillText('revenue G (US$)',w-pad.r,h-15);
+  const list=schedules(),labels=[];
+  for(const s of list){
+    const sel=s.id===S.chan;
+    g.strokeStyle=css(s.color);g.lineWidth=sel?4:2.2;g.setLineDash(s.dash);g.beginPath();
+    for(let i=0;i<=240;i++){const v=Math.pow(10,LMIN+LSPAN*i/240),r=Math.min(s.take(v)/v,YM);const px=X(v),py=Y(r);i?g.lineTo(px,py):g.moveTo(px,py);}
+    g.stroke();g.setLineDash([]);
+    labels.push({s,y:Y(s.take(GMAX)/GMAX),sel});
+  }
+  // direct labels at right edge, nudged apart
+  labels.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<labels.length;i++)if(labels[i].y-labels[i-1].y<14)labels[i].y=labels[i-1].y+14;
+  g.textAlign='left';g.textBaseline='middle';
+  for(const L of labels){g.fillStyle=css(L.s.color);g.font=(L.sel?'700 ':'600 ')+'12px '+css('--sans');g.fillText(L.s.short||L.s.name,w-pad.r+6,L.y);}
+  // marker
+  const x=X(S.G);
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  for(const s of list){
+    const a=s.take(S.G)/S.G,m=s.marg(S.G),c=css(s.color);
+    if(Math.abs(Y(a)-Y(m))>2){g.strokeStyle=c;g.lineWidth=1.5;g.setLineDash([3,3]);g.beginPath();g.moveTo(x,Y(a));g.lineTo(x+10,Y(m));g.stroke();g.setLineDash([]);}
+    g.lineWidth=2;g.strokeStyle=c;g.fillStyle=css('--paper-2');g.beginPath();g.arc(x+10,Y(Math.min(m,YM)),5,0,7);g.fill();g.stroke();
+    g.fillStyle=c;g.strokeStyle=css('--paper');g.beginPath();g.arc(x,Y(Math.min(a,YM)),s.id===S.chan?7:5,0,7);g.fill();g.stroke();
+  }
+}
+function buildKey(){
+  $('key').innerHTML=schedules().map(s=>`<span><svg width="26" height="8" aria-hidden="true"><line x1="0" y1="4" x2="26" y2="4" stroke="${css(s.color)}" stroke-width="2.5" stroke-dasharray="${s.dash.join(' ')}"/></svg>${s.name}</span>`).join('');
+}
+
+/* ---------- waterfall ---------- */
+function drawWaterfall(W){
+  const sp=W.spend,rows=[];
+  const add=(name,amt,from,to,color,neg,total)=>rows.push({name,amt,from,to,color,neg,total});
+  let left=sp;
+  add('Consumer spend',sp,0,sp,'--ink',false,true);
+  add('Tax',W.tax,left-W.tax,left,'--ink-soft',true);left-=W.tax;
+  add('Refunds and chargebacks',W.refunds,left-W.refunds,left,'--ink-soft',true);left-=W.refunds;
+  if(S.chan!=='direct'){add('Store share ('+W.sch.short+')',W.store,left-W.store,left,'--blood',true);left-=W.store;}
+  else{add('Payment fees (card processor)',W.fees,left-W.fees,left,'--blood',true);left-=W.fees;}
+  if(S.pub){
+    if(S.base==='studio'){add('Publisher share',W.pubShare,left-W.pubShare,left,'--ochre',true);left-=W.pubShare;add('Recoupment',W.rec,left-W.rec,left,'--ochre',true);left-=W.rec;}
+    else{add('Recoupment',W.rec,left-W.rec,left,'--ochre',true);left-=W.rec;add('Publisher share',W.pubShare,left-W.pubShare,left,'--ochre',true);left-=W.pubShare;}
+  }
+  add('Reaches the studio',W.studio,0,W.studio,'--moss',false,true);
+  $('wf').innerHTML=rows.map(r=>`<div class="wrow${r.total?' total':''}"><div class="wlab"><b>${r.name}</b><span>${r.neg?'−':''}${M(r.amt)} · ${P1(r.amt/sp)}</span></div><div class="track" aria-hidden="true"><div class="bar${r.neg?' neg':''}" style="left:${(r.from/sp*100).toFixed(3)}%;width:${(r.amt/sp*100).toFixed(3)}%;background-color:var(${r.color})"></div></div></div>`).join('');
+  return rows;
+}
+
+/* ---------- tables and text ---------- */
+function render(){
+  const W=waterfall();
+  const rows=drawWaterfall(W);
+  drawRate();buildKey();
+  const storeLabel=S.chan==='direct'?'Payment fees':'Store take';
+  const tr=(k,v,cls)=>`<tr${cls?` class="${cls}"`:''}><td>${k}</td><td>${v}</td></tr>`;
+  $('readout').innerHTML=[
+    tr('Consumer spend',D(W.spend)),tr('Tax',D(W.tax)),tr('Refunds and chargebacks',D(W.refunds)),tr('Net revenue G',D(W.G)),
+    tr('Store take ('+W.sch.short+')',S.chan==='direct'?'—':D(W.store)),
+    tr(S.chan==='direct'?'Average card fee rate':'Average store rate',P1(W.avg)),
+    tr(S.chan==='direct'?'Marginal card fee rate':'Marginal store rate',PM(W.marg)),
+    tr('Payment fees',S.chan==='direct'?D(W.fees):'—'),
+    tr('Publisher share',S.pub?D(W.pubShare):'—'),tr('Recoupment',S.pub?D(W.rec):'—'),
+    tr('Studio receipts',D(W.studio),'here'),tr('Studio receipts, share of consumer spend',P1(W.studio/W.spend),'here')
+  ].join('');
+  $('cmpCap').textContent='Every schedule at G = '+M(S.G);
+  $('cmp').innerHTML=schedules().map(s=>{const t=s.take(S.G);return `<tr class="${s.id===S.chan?'here':''}"><td>${s.name}</td><td>${M(t)}</td><td>${P1(t/S.G)}</td><td>${PM(s.marg(S.G))}</td></tr>`;}).join('');
+  // insight
+  const ded=rows.filter(r=>r.neg).sort((a,b)=>b.amt-a.amt),top=ded[0],storeRow=rows.find(r=>/Store share|Payment fees/.test(r.name));
+  let s=S.chan==='direct'?`At G = ${M(S.G)}, card fees take <b>${P1(W.avg)}</b> of every dollar, on average and at the margin. `:`At G = ${M(S.G)}, ${W.sch.name} keeps <b>${P1(W.avg)}</b> on average and <b>${PM(W.marg)}</b> of the next dollar. `;
+  if(S.chan==='steam'&&S.G>10e6)s+=`The average stays above the ${PM(W.marg)} marginal rate because the first US$10M still paid 30%. `;
+  if(S.chan==='direct')s+=`The fixed 30 cents is ${P1(.30/S.basket)} of a ${'US$'+S.basket.toFixed(2)} basket, so small purchases pay the most. `;
+  if(top&&storeRow&&top!==storeRow)s+=`The largest single deduction is <b>${lc(top.name)} (${M(top.amt)})</b>, bigger than the ${lc(storeRow.name)} (${M(storeRow.amt)}). `;
+  else if(storeRow)s+=`Here the ${lc(storeRow.name)} is the largest deduction. `;
+  s+=`Of ${M(W.spend)} spent by players, <b>${M(W.studio)}</b> (${P1(W.studio/W.spend)}) reaches the studio.`;
+  $('insight').innerHTML=s;
+  $('wfSub').textContent=`${W.sch.name}${S.pub?', with a publisher':''}. Each bar shows its amount and its share of consumer spend.`;
+  // outputs
+  $('oG').textContent=M(S.G);$('oBasket').textContent='US$'+S.basket.toFixed(2);$('oTax').textContent=Math.round(S.tax*100)+'%';
+  $('oRef').textContent=(S.ref*100).toFixed(1).replace(/\.0$/,'')+'%';$('oSplit').textContent=Math.round(S.split*100)+'%';$('oRecoup').textContent=M(S.recoup);
+  $('pubBox').classList.toggle('dim',!S.pub);
+  document.querySelectorAll('#pubBox input,#pubBox button').forEach(e=>e.disabled=!S.pub);
+}
+
+/* ---------- controls ---------- */
+const lc=t=>(t.charAt(0).toLowerCase()+t.slice(1)).replace(' (card processor)','');
+const round3=v=>{const m=Math.pow(10,Math.floor(Math.log10(v))-2);return Math.round(v/m)*m;};
+const posOf=G=>Math.round((Math.log10(G)-LMIN)/LSPAN*1000);
+function setG(G,fromNum){S.G=Math.min(GMAX,Math.max(GMIN,G));$('gRange').value=posOf(S.G);if(!fromNum)$('gNum').value=+(S.G/1e6).toFixed(3);render();}
+$('gRange').addEventListener('input',e=>setG(round3(Math.pow(10,LMIN+LSPAN*e.target.value/1000))));
+$('gNum').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(v>0)setG(v*1e6,true);});
+document.querySelectorAll('[data-g]').forEach(b=>b.addEventListener('click',()=>setG(+b.dataset.g*1e6)));
+document.querySelectorAll('#chan .chip').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#chan .chip').forEach(x=>x.setAttribute('aria-pressed',x===b));S.chan=b.dataset.c;render();}));
+document.querySelectorAll('#base .chip').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#base .chip').forEach(x=>x.setAttribute('aria-pressed',x===b));S.base=b.dataset.base;render();}));
+$('appleElig').addEventListener('change',e=>{S.elig=e.target.checked;render();});
+$('basket').addEventListener('input',e=>{S.basket=Math.round(+e.target.value*100)/100;render();});
+document.querySelectorAll('[data-b]').forEach(b=>b.addEventListener('click',()=>{S.basket=+b.dataset.b;$('basket').value=S.basket;render();}));
+$('tax').addEventListener('input',e=>{S.tax=+e.target.value/100;render();});
+$('ref').addEventListener('input',e=>{S.ref=+e.target.value/100;render();});
+$('pubOn').addEventListener('change',e=>{S.pub=e.target.checked;render();});
+$('split').addEventListener('input',e=>{S.split=+e.target.value/100;render();});
+$('recoup').addEventListener('input',e=>{S.recoup=Math.round(+e.target.value*10)*1e5;render();});
+window.addEventListener('resize',drawRate);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawRate);
+$('gRange').value=posOf(S.G);
+render();
+})();
+</script>
+</body>
+</html>

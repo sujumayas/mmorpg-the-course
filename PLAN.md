@@ -116,16 +116,16 @@ flowchart LR
 | MMO307 | finished | 14/14 | 14 (3) | 14 | 4 |
 | MMO308 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO309 | finished | 14/14 | 14 (2) | 11 | 4 |
-| PR301 | stub | 14/14 | 0 (0) | 13 | 0 |
+| PR301 | stub | 14/14 | 0 (0) | 14 | 0 |
 | MMO401 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO402 | finished | 14/14 | 14 (1) | 13 | 4 |
-| MMO403 | stub | 14/14 | 14 (2) | 14 | 4 |
+| MMO403 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO404 | finished | 14/14 | 14 (1) | 14 | 3 |
-| PR401 | stub | 13/14 | 0 (0) | 12 | 0 |
+| PR401 | stub | 14/14 | 0 (0) | 14 | 0 |
 | MMO405 | finished | 14/14 | 14 (1) | 14 | 4 |
 | MMO406 | stub | 14/14 | 14 (0) | 14 | 3 |
 | MMO407 | finished | 14/14 | 14 (1) | 14 | 3 |
-| PR402 | stub | 14/14 | 0 (0) | 14 | 0 |
+| PR402 | stub | 14/14 | 3 (0) | 14 | 11 |
 
 ## Course details
 
@@ -1399,7 +1399,7 @@ Advanced economy design and management: monetary policy, market microstructure, 
 
 **Signature worked examples**
 
-- EVE PLEX market: how a subscription token links real and virtual money (verify mechanics)
+- EVE PLEX market: how a subscription token links real and virtual money (verified: CCP and Blizzard posts, checked 29 Sep 2026)
 - Transaction-tax tuning: order-book simulation shows volume vs sink trade-off
 
 **Core readings**
@@ -1468,7 +1468,7 @@ Business models for persistent worlds and the line between monetization and mani
 4. Cosmetics vs power
 5. Battle passes
 6. Loot boxes and probability disclosure
-7. Regulation: Belgium, Netherlands, China, others (verify current status)
+7. Regulation: Belgium, Netherlands, China, others (status verified 29 Sep 2026 from primary sources)
 8. Dark patterns
 9. Whales and spending distributions
 10. Pricing experiments
