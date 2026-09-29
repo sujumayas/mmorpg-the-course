@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soak planner · PR201 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin:0 0 6px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.view{background:var(--paper-2);border-radius:10px;padding:12px 14px;min-width:0}
+@media (max-width:820px){.views{grid-template-columns:1fr}.v-show{order:-1}}
+.big{font-size:clamp(1.02rem,2.4vw,1.25rem);font-weight:700;font-variant-numeric:tabular-nums;margin:0 0 10px;line-height:1.35}
+.big .num{color:var(--steel)}
+.sub{font-size:.9rem;margin:8px 0 0;font-variant-numeric:tabular-nums}
+/* evidence bar */
+.ebar{position:relative;height:40px;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);margin:28px 0 4px}
+.efill{position:absolute;left:0;top:0;bottom:0;background:var(--steel);border-radius:6px 0 0 6px;transition:width .15s ease}
+.ecrash{position:absolute;top:4px;bottom:4px;width:3px;background:var(--blood)}
+.need{position:absolute;top:-24px;bottom:-4px;border-left:3px solid var(--ochre);transition:left .15s ease}
+.need b{position:absolute;top:0;font-size:.76rem;white-space:nowrap;color:var(--ink);background:var(--paper-2);padding:0 4px;line-height:1.4}
+.need.r b{right:3px}.need.l b{left:3px}
+.axis{position:relative;height:18px;font-size:.74rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;margin:0 8px}
+.axis span{position:absolute;transform:translateX(-50%)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin-top:8px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+/* grid */
+.sgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;max-width:360px;margin:4px auto 0}
+.sq{aspect-ratio:1;border-radius:3px;background:var(--moss);transition:background-color .15s ease}
+.sq.x{background:var(--blood)}
+/* controls */
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 22px;margin-top:16px}
+@media (max-width:620px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output,.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+.stepper{display:flex;align-items:center;gap:8px;margin-top:4px}
+.stepper button{width:40px;height:36px;padding:0;border-radius:8px;font-size:1.1rem}
+.stepper output{min-width:2ch;text-align:center;font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums}
+.stepper small{color:var(--ink-soft);font-size:.82rem}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+button{font:600 .92rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+.view .table-wrap table{min-width:0;font-size:.86rem}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;width:100%;min-width:340px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+caption{text-align:left;font-family:var(--serif);font-weight:600;padding-bottom:4px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR201 Studio Project I · Week 13 · Worked example</p>
+  <h1>One clean hour proves almost nothing</h1>
+  <p class="lede">Your server ran an hour without crashing. At the worst crash rate that hour still allows, nearly every two-hour showcase fails. Drag the soak hours until the grid turns green.</p>
+</header>
+
+<section class="panel" aria-label="Soak test planner">
+  <div class="views">
+    <div class="view v-ev">
+      <h2>Evidence: your soak test</h2>
+      <p class="big" id="evHead" aria-live="polite"></p>
+      <div class="ebar" id="ebar" role="img">
+        <div class="efill" id="efill"></div>
+        <div id="ecrashes"></div>
+        <div class="need" id="need"><b id="needL"></b></div>
+      </div>
+      <div class="axis" id="axis" aria-hidden="true"></div>
+      <p class="sub" id="evSub"></p>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>Soak hours logged</span>
+        <span><i style="background:var(--ochre)"></i>Hours needed</span>
+        <span><i style="background:var(--blood)"></i>Crash</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption id="eCap"></caption>
+          <thead><tr><th>Soak hours T</th><th>95% bound on λ</th><th>Worst-case P(no crash)</th></tr></thead>
+          <tbody id="ebody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="view v-show">
+      <h2>Showcase: 100 runs at the worst-case rate</h2>
+      <p class="big" id="shHead" aria-live="polite"></p>
+      <div class="sgrid" id="sgrid" role="img"></div>
+      <div class="legend">
+        <span><i style="background:var(--moss)"></i>No crash</span>
+        <span><i style="background:var(--blood)"></i>Server crashed</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div><label for="T">Soak hours T <output id="oT"></output></label><input id="T" type="range" min="1" max="200" step="1" value="1"></div>
+    <div>
+      <span class="lbl" id="kLbl">Crashes seen k</span>
+      <div class="stepper" role="group" aria-labelledby="kLbl">
+        <button id="kDn" aria-label="Fewer crashes">−</button>
+        <output id="oK" aria-live="polite">0</output>
+        <button id="kUp" aria-label="More crashes">+</button>
+        <small id="kF"></small>
+      </div>
+    </div>
+    <div><label for="S">Showcase server-hours S <output id="oS"></output></label><input id="S" type="range" min="0.5" max="6" step="0.5" value="2"></div>
+    <div><label for="R">Reliability target R <output id="oR"></output></label><input id="R" type="range" min="0.5" max="0.99" step="0.01" value="0.9"></div>
+  </div>
+  <div class="btns">
+    <button id="jump">Jump to needed</button>
+    <button id="reseed">New sample</button>
+    <button id="reset">Reset</button>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption id="tCap"></caption>
+      <thead><tr><th>Target R</th><th>λ_max per h</th><th>k = 0</th><th>k = 1</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from PR201 week 13, section 3: λ_upper = factor(k) / T, P(no crash) = e^(−λ_upper × S), λ_max = −ln(R) / S, T_needed = factor(k) / λ_max. Factors are the 95% Poisson upper bounds for k = 0 to 3 (2.996, 4.744, 6.296, 7.754), computed by bisection as in the guide's script and lab 13's soak_target.py. The grid uses a seeded mulberry32 generator (seed 13 at start). The NIST/SEMATECH e-Handbook of Statistical Methods, section 8.3.1.1, prints the same factors rounded to 3.00, 4.74, 6.30 and 7.75.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const f1=n=>n.toFixed(1),f2=n=>n.toFixed(2);
+const pct=p=>(p*100).toFixed(p>0&&p<0.01?2:1)+'%';
+// 95% Poisson upper bound for k observed events, by bisection
+function upper(k){
+  const cdf=mu=>{let s=0,t=Math.exp(-mu);for(let i=0;i<=k;i++){s+=t;t*=mu/(i+1);}return s;};
+  let lo=0,hi=50;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(cdf(m)>0.05)lo=m;else hi=m;}return lo;
+}
+const FACTOR=[0,1,2,3].map(upper);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const DEF={T:1,k:0,S:2,R:0.9,seed:13};
+const st={...DEF};
+let draws=[];
+function reseed(){const g=mulberry32(st.seed);draws=Array.from({length:100},()=>g());}
+const grid=$('sgrid');
+for(let i=0;i<100;i++){const d=document.createElement('div');d.className='sq';grid.appendChild(d);}
+
+function tNeeded(k,S,R){return FACTOR[k]/(-Math.log(R)/S);}
+
+function update(){
+  const {T,k,S,R}=st;
+  const fac=FACTOR[k],lamUp=fac/T,P=Math.exp(-lamUp*S),lamMax=-Math.log(R)/S,need=fac/lamMax;
+  $('oT').textContent=T+' h';$('oK').textContent=k;$('oS').textContent=f1(S)+' h';$('oR').textContent=f2(R);
+  $('kF').textContent='factor '+fac.toFixed(3);
+  $('kDn').disabled=k===0;$('kUp').disabled=k===3;
+  $('evHead').innerHTML=`Soak: ${T} h, ${k} crash${k===1?'':'es'}. 95% bound on crash rate: <span class="num">${lamUp.toFixed(3)}</span> per hour.`;
+  const have=T/need;
+  $('evSub').innerHTML=`Hours needed for your target: <b>${f1(need)}</b>. You have <b>${pct(have)}</b> of it.`+(need>200?' That is past the 200 h slider.':'');
+  // bar
+  const scale=Math.max(200,Math.ceil(need/50)*50);
+  $('efill').style.width=(T/scale*100)+'%';
+  const nl=$('need');nl.style.left=(Math.min(need,scale)/scale*100)+'%';
+  nl.className='need '+(need/scale>0.5?'r':'l');
+  $('needL').textContent='needed '+f1(need)+' h';
+  let cr='';for(let i=1;i<=k;i++){cr+=`<div class="ecrash" style="left:calc(${(T*i/(k+1))/scale*100}% - 1px)"></div>`;}
+  $('ecrashes').innerHTML=cr;
+  let ax='';const stp=scale/4;for(let t=0;t<=scale;t+=stp)ax+=`<span style="left:${t/scale*100}%">${Math.round(t)}</span>`;
+  $('axis').innerHTML=ax;
+  $('ebar').setAttribute('aria-label',`${T} soak hours logged against ${f1(need)} needed`);
+  // grid
+  let clean=0;
+  grid.childNodes.forEach((d,i)=>{const x=draws[i]>P;d.classList.toggle('x',x);if(!x)clean++;});
+  $('shHead').innerHTML=`Worst-case P(no crash) = <span class="num">${pct(P)}</span> (model) · ${clean} of 100 in this sample`;
+  grid.setAttribute('aria-label',`${clean} of 100 simulated ${f1(S)}-hour showcases finish without a crash`);
+  // insight
+  let s;
+  if(T>=need)s=`${T} soak hours meet the target. At the worst rate your evidence allows, a ${f1(S)}-hour showcase runs crash-free ${pct(P)} of the time, at or above R = ${f2(R)}.`;
+  else s=`Your soak allows a crash rate as high as ${lamUp.toFixed(3)} per hour, so the showcase could be crash-free as rarely as ${pct(P)} of the time. You need ${f1(need-T)} more hours`+(k===0?`. One crash would raise the total to ${f1(tNeeded(1,S,R))} h.`:`, ${f1(need-tNeeded(0,S,R))} of them because of the ${k===1?'crash':k+' crashes'}.`);
+  $('insight').textContent=s;
+  // table
+  $('tCap').textContent=`Soak hours needed for a ${f1(S)}-hour showcase, by crashes seen`;
+  $('eCap').textContent=`What clean hours show, ${k} crash${k===1?'':'es'}, ${f1(S)}-hour showcase`;
+  const ts=[...new Set([1,10,30,57,T])].sort((a,b)=>a-b);
+  $('ebody').innerHTML=ts.map(t=>{const l=fac/t;return `<tr class="${t===T?'here':''}"><td>${t}</td><td>${l.toFixed(3)} per h</td><td>${pct(Math.exp(-l*S))}</td></tr>`;}).join('');
+  const rows=[0.8,0.9,0.95];let near=rows.reduce((a,b)=>Math.abs(b-R)<Math.abs(a-R)?b:a);
+  $('tbody').innerHTML=rows.map(r=>{const lm=-Math.log(r)/S;return `<tr class="${r===near?'here':''}"><td>${f2(r)}</td><td>${lm.toFixed(4)}</td><td>${f1(FACTOR[0]/lm)}</td><td>${f1(FACTOR[1]/lm)}</td></tr>`;}).join('');
+}
+function setT(v){st.T=Math.max(1,Math.min(200,v));$('T').value=st.T;}
+$('T').addEventListener('input',e=>{st.T=+e.target.value;update();});
+$('S').addEventListener('input',e=>{st.S=+e.target.value;update();});
+$('R').addEventListener('input',e=>{st.R=+e.target.value;update();});
+$('kDn').addEventListener('click',()=>{if(st.k>0){st.k--;update();}});
+$('kUp').addEventListener('click',()=>{if(st.k<3){st.k++;update();}});
+$('jump').addEventListener('click',()=>{setT(Math.ceil(tNeeded(st.k,st.S,st.R)-1e-9));update();});
+$('reseed').addEventListener('click',()=>{st.seed++;reseed();update();});
+$('reset').addEventListener('click',()=>{Object.assign(st,DEF);$('T').value=DEF.T;$('S').value=DEF.S;$('R').value=DEF.R;reseed();update();});
+reseed();update();
+})();
+</script>
+</body>
+</html>

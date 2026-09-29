@@ -208,3 +208,11 @@ Every running agent stopped with the weekly limit (HTTP 429). The limit resets o
 - The lab 06 checker now prints NOT READY unless the planned mobs fit the tick rule or the chosen option is modelled.
 - All 14 checkers fail on the starter and pass on a solution. The reviewer verified 14 real-game facts against wiki source, NWDB and archive.org.
 - Still unverified: the Warcraft Wiki "Respawn" page has no patch date. The guide says so.
+
+## PR201 complete (29 Sep 2026)
+
+- The team is Hollowmarch, 6 people.
+- The w09 baseline is now 217 h: week 2's 311 minus 94 h of dated cuts from weeks 5, 6 and 8. Week 5 has a term check at 255. Scope grows 15 h per sprint, and the week 9 cut is 52 h.
+- Weeks 8 and 12 plan in estimate-hours against f × U. Week 12's polish budget is 9.5 h, and hit feedback is cut.
+- M2 asks only for a save format and an atomic file save. The database criteria move to M3, after DB201.
+- Labs 03, 05, 08, 09 and 12, their checkers, both examples and exam questions 10 and 11 were rerun. check_course and check_examples pass. No new game facts.

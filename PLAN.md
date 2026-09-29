@@ -106,7 +106,7 @@ flowchart LR
 | CS203 | finished | 14/14 | 14 (2) | 14 | 3 |
 | GD203 | finished | 14/14 | 14 (3) | 15 | 4 |
 | DB201 | finished | 14/14 | 14 (1) | 14 | 3 |
-| PR201 | stub | 14/14 | 5 (0) | 14 | 9 |
+| PR201 | finished | 14/14 | 5 (0) | 14 | 9 |
 | MMO301 | finished | 14/14 | 14 (2) | 13 | 4 |
 | MMO302 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO303 | finished | 14/14 | 15 (3) | 14 | 4 |

@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Velocity forecast · PR201 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft);display:block}
+.stat b span{font-size:inherit;display:inline}
+.stat b .short{color:var(--blood)}.stat b .spare{color:var(--moss)}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+/* bar chart: label | track | value */
+.row{display:grid;grid-template-columns:120px minmax(0,1fr) 180px;gap:4px 12px;align-items:center;margin:6px 0}
+.row .lab{font-weight:600;font-size:.9rem}
+.row .val{font-variant-numeric:tabular-nums;font-size:.9rem}
+.row .val b{font-weight:700}
+.short{color:var(--blood);font-weight:700}
+.spare{color:var(--moss);font-weight:700}
+.ok{color:var(--moss);font-weight:700}
+.bad{color:var(--blood);font-weight:700}
+.track{position:relative;height:26px}
+.seg{position:absolute;top:3px;bottom:3px}
+.seg.base{background:var(--steel);border-radius:4px 0 0 4px}
+.seg.gap{background:repeating-linear-gradient(135deg,var(--blood) 0 3px,transparent 3px 7px);border:1.5px solid var(--blood);border-left:none}
+.seg.sp{background:var(--moss);opacity:.85}
+.seg.now{background:var(--ochre)}
+.seg.trig{background:repeating-linear-gradient(135deg,var(--ochre) 0 3px,transparent 3px 7px);border:1.5px solid var(--ochre)}
+.vline{position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px solid var(--ink)}
+.vline.ghost{border-left:1.5px dashed var(--ink-soft)}
+.axis{position:relative;height:20px;font-size:.75rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.remlab{position:absolute;top:-2px;transform:translateX(-50%);font-size:.75rem;font-weight:700;white-space:nowrap;background:var(--paper-2);padding:0 4px}
+.sep{border-top:1px solid var(--grid);margin:12px 0 4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:10px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:16px;height:12px;vertical-align:middle;margin-right:6px;border-radius:2px}
+@media (max-width:640px){
+  .row{grid-template-columns:minmax(0,1fr) auto;}
+  .row .lab{grid-column:1;grid-row:1}
+  .row .val{grid-column:2;grid-row:1;text-align:right}
+  .row .track{grid-column:1 / -1;grid-row:2}
+  .axisrow .lab,.axisrow .val{display:none}
+  .axisrow .axis{grid-column:1 / -1}
+  .remlab{display:none}
+  .row:first-child{margin-top:6px!important}
+}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 20px;margin-top:16px}
+@media (max-width:820px){.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.controls{grid-template-columns:minmax(0,1fr)}}
+.ctl label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+.ctl label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+input:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.group{font-family:var(--serif);font-size:.95rem;grid-column:1 / -1;margin:8px 0 -4px;border-bottom:1px solid var(--grid)}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;margin-top:12px}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:320px}
+th,td{padding:5px 12px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+caption{text-align:left;font-family:var(--serif);padding-bottom:6px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR201 Studio Project I · Week 5 · Worked example</p>
+  <h1>Raw capacity hides the gap</h1>
+  <p class="lede" id="lede">The same alpha list looks early when you count useful hours and late when you count the estimate-hours your team actually finishes. The low end of the range decides how many cuts you agree on now.</p>
+</header>
+
+<section class="panel">
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="nF">—</b><span>focus f = E_done / U1</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="nR">—</b><span>estimate ratio r = A_done / E_done</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="nNaive">—</b><span>naive capacity view</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="nMid">—</b><span>measured mid view</span></div>
+  </div>
+
+  <figure>
+    <figcaption>Hours available for the milestone list<small>Estimate-hours each view expects the future sprints to finish. The black line is <span id="capRem">remaining</span>.</small></figcaption>
+    <div id="bars"></div>
+    <div class="sep"></div>
+    <div id="cutsRow"></div>
+    <div class="row axisrow"><span class="lab"></span><div class="axis" id="axis"></div><span class="val"></span></div>
+    <div class="legend">
+      <span><i style="background:var(--steel)"></i>available</span>
+      <span><i style="background:repeating-linear-gradient(135deg,var(--blood) 0 3px,transparent 3px 7px);border:1.5px solid var(--blood)"></i>short of remaining</span>
+      <span><i style="background:var(--moss)"></i>spare</span>
+      <span><i style="background:var(--ochre)"></i>cuts now</span>
+      <span><i style="background:repeating-linear-gradient(135deg,var(--ochre) 0 3px,transparent 3px 7px);border:1.5px solid var(--ochre)"></i>trigger cuts</span>
+      <span><i style="border-left:1.5px dashed var(--ink-soft);width:2px;border-radius:0"></i>mid and low bar ends</span>
+    </div>
+  </figure>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <p class="group">Sprint 1 measurement</p>
+    <div class="ctl"><label for="U1">Useful capacity U1 <output id="oU1"></output></label><input id="U1" type="range" min="20" max="150" step="1" value="75"></div>
+    <div class="ctl"><label for="E">Estimates finished E_done <output id="oE"></output></label><input id="E" type="range" min="0" max="75" step="1" value="43"></div>
+    <div class="ctl"><label for="A">Actual hours on them A_done <output id="oA"></output></label><input id="A" type="range" min="0" max="200" step="1" value="55"></div>
+    <p class="group">Road to the milestone</p>
+    <div class="ctl"><label for="n">Future sprints <output id="on"></output></label><input id="n" type="range" min="1" max="5" step="1" value="2"></div>
+    <div class="ctl"><label for="Us">Useful capacity per future sprint <output id="oUs"></output></label><input id="Us" type="range" min="20" max="150" step="1" value="81"></div>
+    <div class="ctl"><label for="rem">Remaining on the list <output id="orem"></output></label><input id="rem" type="range" min="0" max="300" step="1" value="120"></div>
+    <div class="ctl"><label for="fp">Planned focus f_plan <output id="ofp"></output></label><input id="fp" type="range" min="0.3" max="1" step="0.01" value="0.7"></div>
+    <div class="ctl"><label for="b">Range width β <output id="ob"></output></label><input id="b" type="range" min="0" max="0.5" step="0.01" value="0.2"></div>
+    <p class="group">Cuts</p>
+    <div class="ctl"><label for="cn">Cuts now <output id="ocn"></output></label><input id="cn" type="range" min="0" max="100" step="1" value="33"></div>
+    <div class="ctl"><label for="ct">Trigger cuts <output id="oct"></output></label><input id="ct" type="range" min="0" max="100" step="1" value="12"></div>
+    <div class="ctl"><button class="chip" id="reset" type="button">Reset to Hollowmarch</button></div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>The five views</caption>
+      <thead><tr><th scope="col">View</th><th scope="col">Hours available</th><th scope="col">Gap to remaining</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from PR201 week 5, section 2: f = E_done / U1, r = A_done / E_done, mid = f × Σ U_s, low and high = mid × (1 ∓ β), gap = remaining − view. The plan passes when cuts now ≥ mid gap and cuts now + trigger cuts ≥ low gap, as in lab 05's forecast.py. The <i>Hollowmarch</i> data is invented for teaching, and β = 0.2 is a placeholder.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const f1=n=>(Math.abs(n)<0.05?0:n).toFixed(1);
+const DEF={U1:75,E:43,A:55,n:2,Us:81,rem:120,fp:0.7,b:0.2,cn:33,ct:12};
+let P=Object.assign({},DEF);
+
+function model(){
+  const f=P.E/P.U1, r=P.E>0?P.A/P.E:NaN, future=P.n*P.Us, mid=f*future;
+  const views=[
+    ['Naive capacity',future],
+    ['Planned focus',P.fp*future],
+    ['Measured low',mid*(1-P.b)],
+    ['Measured mid',mid],
+    ['Measured high',mid*(1+P.b)]
+  ].map(([name,v])=>({name,v,gap:P.rem-v}));
+  const gMid=P.rem-mid, gLow=P.rem-mid*(1-P.b);
+  return {f,r,future,mid,views,gMid,gLow,midOk:P.cn>=gMid,lowOk:P.cn+P.ct>=gLow};
+}
+function gapText(g){return g>0?`<span class="short">${f1(g)} h short</span>`:`<span class="spare">${f1(-g)} h spare</span>`;}
+function nice(v){const s=[50,100,150,200,250,300,400,500];return s.find(x=>x>=v)||Math.ceil(v/100)*100;}
+
+function render(){
+  const M=model();
+  const xMax=nice(Math.max(M.future,...M.views.map(v=>v.v),P.rem)*1.04);
+  const pc=v=>Math.max(0,Math.min(100,v/xMax*100));
+  // readouts
+  $('nF').textContent=M.f.toFixed(3);
+  $('nR').textContent=isNaN(M.r)?'—':M.r.toFixed(2);
+  const nv=M.views[0], mv=M.views[3];
+  $('nNaive').innerHTML=gapText(nv.gap);
+  $('nMid').innerHTML=gapText(mv.gap);
+  $('capRem').textContent='remaining = '+P.rem+' h';
+  // bars
+  $('bars').innerHTML=M.views.map((w,i)=>{
+    const base=Math.min(w.v,P.rem);
+    let segs=`<div class="seg base" style="left:0;width:${pc(base)}%"></div>`;
+    if(w.v<P.rem) segs+=`<div class="seg gap" style="left:${pc(w.v)}%;width:${pc(P.rem)-pc(w.v)}%"></div>`;
+    else if(w.v>P.rem) segs+=`<div class="seg sp" style="left:${pc(P.rem)}%;width:${pc(w.v)-pc(P.rem)}%"></div>`;
+    const top=i===0?`<span class="remlab" style="left:${pc(P.rem)}%;top:-18px">${P.rem} h</span>`:'';
+    return `<div class="row" ${i===0?'style="margin-top:22px"':''}><span class="lab">${w.name}</span><div class="track" aria-hidden="true">${segs}<div class="vline" style="left:${pc(P.rem)}%"></div>${top}</div><span class="val"><b>${f1(w.v)}</b> · ${gapText(w.gap)}</span></div>`;
+  }).join('');
+  // cuts strip: from remaining leftwards
+  const now=Math.min(P.cn,P.rem), trig=Math.min(P.ct,P.rem-now);
+  const lowV=M.views[2].v, midV=M.mid;
+  $('cutsRow').innerHTML=`<div class="row"><span class="lab">Cuts</span><div class="track" aria-hidden="true">
+    <div class="seg now" style="left:${pc(P.rem-now)}%;width:${pc(P.rem)-pc(P.rem-now)}%"></div>
+    <div class="seg trig" style="left:${pc(P.rem-now-trig)}%;width:${pc(P.rem-now)-pc(P.rem-now-trig)}%"></div>
+    <div class="vline" style="left:${pc(P.rem)}%"></div>
+    <div class="vline ghost" style="left:${pc(midV)}%"></div><div class="vline ghost" style="left:${pc(lowV)}%"></div>
+  </div><span class="val">now <b>${P.cn}</b> · trigger <b>${P.ct}</b></span></div>`;
+  // axis
+  let ax='';const step=xMax<=100?20:xMax<=200?50:100;
+  for(let v=0;v<=xMax;v+=step){ax+=`<span style="left:${pc(v)}%">${v}</span>`;}
+  $('axis').innerHTML=ax;
+  // insight
+  const swing=nv.v-mv.v;
+  const midMsg=M.gMid<=0?`The mid view already fits, so no cuts are needed for it.`
+    :`Cuts now, <b>${P.cn} h</b>, ${M.midOk?'<span class="ok">cover</span>':'<span class="bad">do not cover</span>'} the mid gap of ${f1(M.gMid)} h.`;
+  const lowMsg=M.gLow<=0?`The low view fits too.`
+    :`Now plus trigger, <b>${P.cn+P.ct} h</b>, against the low gap of ${f1(M.gLow)} h: <b>${M.lowOk?'<span class="ok">covered</span>':'<span class="bad">not covered</span>'}</b>${M.lowOk?` (${f1(P.cn+P.ct-M.gLow)} h to spare).`:`, ${f1(M.gLow-P.cn-P.ct)} h short.`}`;
+  $('insight').innerHTML=`Naive capacity says ${gapText(nv.gap)}. Measured focus says ${gapText(mv.gap)}. That is a <b>${f1(swing)} h</b> swing from one division. ${midMsg} ${lowMsg} Plan status: <b>${M.midOk&&M.lowOk?'<span class="ok">PASS</span>':'<span class="bad">NOT READY</span>'}</b>.`;
+  // table
+  $('tbody').innerHTML=M.views.map(w=>`<tr><td>${w.name}</td><td>${f1(w.v)}</td><td>${w.gap>0?f1(w.gap)+' short':f1(-w.gap)+' spare'}</td></tr>`).join('');
+  // outputs
+  $('oU1').textContent=P.U1+' h';$('oE').textContent=P.E+' h';$('oA').textContent=P.A+' h';
+  $('on').textContent=P.n;$('oUs').textContent=P.Us+' h';$('orem').textContent=P.rem+' h';
+  $('ofp').textContent=P.fp.toFixed(2);$('ob').textContent='±'+Math.round(P.b*100)+'%';
+  $('ocn').textContent=P.cn+' h';$('oct').textContent=P.ct+' h';
+}
+const ids=['U1','E','A','n','Us','rem','fp','b','cn','ct'];
+function sync(){const e=$('E');e.max=P.U1;if(P.E>P.U1)P.E=P.U1;ids.forEach(id=>$(id).value=P[id]);}
+ids.forEach(id=>$(id).addEventListener('input',ev=>{P[id]=+ev.target.value;sync();render();}));
+$('reset').addEventListener('click',()=>{P=Object.assign({},DEF);sync();render();});
+sync();render();
+})();
+</script>
+</body>
+</html>

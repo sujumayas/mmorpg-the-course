@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Burn-up forecast · PR201 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:1.08rem;margin:0 0 8px}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px}
+.readout{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 14px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}.readout .stat:last-child{grid-column:1 / -1}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft);display:block}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#chart{display:block;width:100%}
+#chart text{font-family:var(--sans);fill:var(--ink)}
+#chart .soft{fill:var(--ink-soft)}
+#chart .gridl{stroke:var(--grid);stroke-width:1}
+#chart .axis{stroke:var(--ink-soft);stroke-width:1}
+#chart .scope{stroke:var(--blood);fill:none;stroke-width:3}
+#chart .scopep{stroke:var(--blood);fill:none;stroke-width:2.5;stroke-dasharray:10 6}
+#chart .done{stroke:var(--steel);fill:none;stroke-width:3}
+#chart .donep{stroke:var(--steel);fill:none;stroke-width:2.5;stroke-dasharray:3 4}
+#chart .plan{stroke:var(--steel);fill:none;stroke-width:3.5;stroke-dasharray:3 4}
+#chart .fan{fill:var(--steel);opacity:.18}
+#chart .beta{stroke:var(--ink);stroke-width:2}
+#chart .bracket{stroke:var(--ochre);stroke-width:3;fill:none}
+#chart .bracket2{stroke:var(--ochre);stroke-width:2;fill:none;stroke-dasharray:2 3}
+#chart .meet{fill:var(--paper);stroke:var(--ink);stroke-width:2.5}
+#chart .naive{stroke:var(--ochre);fill:none;stroke-width:2.5;stroke-dasharray:1 5;stroke-linecap:round}
+#chart .ghost{fill:var(--ochre);opacity:.45}
+#chart .ghostnow{fill:var(--ochre)}
+#chart .lbl-bg{fill:var(--paper-2)}
+#chart .scopetxt{fill:var(--blood);font-weight:700}
+#chart .donetxt{fill:var(--steel);font-weight:700}
+#chart .cuttxt{fill:var(--ochre);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend svg{vertical-align:middle;margin-right:5px}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.insight b{font-family:var(--sans)}
+.replay{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+button{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+button.primary{background:var(--steel);color:var(--paper)}
+button[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:disabled{opacity:.45;cursor:default}
+input:focus-visible,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.replaynote{font-family:var(--serif);font-size:.98rem;margin:8px 0 0;min-height:1.5em}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;font-size:.82rem;color:var(--ink-soft)}
+tr.here td{font-weight:700;background:var(--paper)}
+tr.here td:first-child{box-shadow:inset 4px 0 0 var(--ochre)}
+td.cut{color:var(--blood)}
+#naive td:first-child{white-space:nowrap}
+td.never{color:var(--blood);font-weight:700}
+.side h2{margin-top:4px}
+.side .sub{font-size:.82rem;color:var(--ink-soft);margin:0 0 6px}
+.side section+section{margin-top:18px}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 22px}
+@media (max-width:900px){.controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media (max-width:560px){.controls{grid-template-columns:minmax(0,1fr)}}
+.ctl label,.ctl legend{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px;width:100%}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+.radios{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-size:.92rem}
+.radios label{font-weight:400;display:inline-flex;gap:6px;align-items:center;width:auto}
+input[type=radio]{accent-color:var(--steel);width:18px;height:18px;margin:0}
+.row-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hist td,.hist th{padding:4px 6px}
+.hist input{width:5.2em;font:inherit;font-variant-numeric:tabular-nums;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);text-align:right}
+.hist input[aria-invalid="true"]{border-color:var(--blood)}
+.hist .na{color:var(--ink-soft)}
+.err{color:var(--blood);font-size:.86rem;min-height:1.2em;margin:4px 0 0}
+.formula{font-size:.86rem;color:var(--ink-soft);margin:8px 0 0}
+.formula code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84rem;color:var(--ink)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR201 Studio Project I · Week 9 · Worked example</p>
+  <h1>Always two sprints from done</h1>
+  <p class="lede">After every sprint the done line alone says the finish is a few sprints away, and every sprint that finish moves later. In the Hollowmarch history the scope line climbs 15 hours a sprint while the done line climbs 42. Freeze the scope and the forecast moves more than any realistic change in velocity would move it.</p>
+</header>
+
+<section class="panel" aria-label="Forecast">
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rV">—</b><span>velocity min / mean / max (h per sprint)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rG">—</b><span id="rGl">scope growth g (h per sprint)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rRem">—</b><span>remaining (h)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rMeet">—</b><span id="rMeetL">lines meet at sprint</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rCut">—</b><span id="rCutL">cut needed by beta (h)</span></div>
+  </div>
+
+  <div class="layout">
+    <figure>
+      <figcaption>Release burn-up<small>Estimated hours by sprint. Solid lines are history; dashed lines and the shaded fan are projections.</small></figcaption>
+      <svg id="chart" role="img" aria-labelledby="chartDesc"></svg>
+      <p class="sr" id="chartDesc">Burn-up chart. See the text summary below the chart.</p>
+      <div class="legend" aria-hidden="true">
+        <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--blood)" stroke-width="3"/></svg>scope, history</span>
+        <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--blood)" stroke-width="2.5" stroke-dasharray="10 6"/></svg>scope, projected at g</span>
+        <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="var(--steel)" stroke-width="3"/></svg>done, history</span>
+        <span><svg width="26" height="10"><rect x="1" y="1" width="24" height="8" fill="var(--steel)" opacity=".25"/><line x1="1" y1="5" x2="25" y2="5" stroke="var(--steel)" stroke-width="2.5" stroke-dasharray="3 4"/></svg>done, v_min to v_max (dotted: v_mean)</span>
+        <span><svg width="26" height="10"><line x1="3" y1="1" x2="3" y2="9" stroke="var(--ochre)" stroke-width="3"/><line x1="3" y1="1" x2="9" y2="1" stroke="var(--ochre)" stroke-width="3"/><line x1="3" y1="9" x2="9" y2="9" stroke="var(--ochre)" stroke-width="3"/></svg>cut needed at beta</span>
+      </div>
+      <div class="insight" id="summary" aria-live="polite"></div>
+      <div class="replay">
+        <button id="bReplay" class="primary" type="button">Replay history</button>
+        <button id="bPrev" type="button" disabled>Previous sprint</button>
+        <button id="bNext" type="button" disabled>Next sprint</button>
+        <button id="bExit" type="button" disabled>Back to forecast</button>
+      </div>
+      <p class="replaynote" id="replayNote" aria-live="polite">Replay steps through each review and shows the finish the team would have forecast from the done line alone.</p>
+    </figure>
+
+    <div class="side">
+      <section>
+        <h2>Four scenarios for the sprints left</h2>
+        <p class="sub" id="scenSub">Recomputed live. The highlighted row matches your settings.</p>
+        <div class="table-wrap">
+          <table aria-describedby="scenSub">
+            <thead><tr><th scope="col">Scenario</th><th scope="col">v</th><th scope="col">g</th><th scope="col">Capacity</th><th scope="col">Cut</th><th scope="col">Finish</th></tr></thead>
+            <tbody id="scen"></tbody>
+          </table>
+        </div>
+        <p class="formula"><code>capacity = N × (v − g)</code>, <code>cut = remaining − capacity</code> (at least 0), <code>finish = current + remaining / (v − g)</code>.</p>
+      </section>
+      <section>
+        <h2>What the done line alone said</h2>
+        <p class="sub">Forecast at each review, ignoring scope growth: <code>s + (scope − done) / mean velocity so far</code>.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Review</th><th scope="col">Done</th><th scope="col">Scope</th><th scope="col">Mean v</th><th scope="col">Forecast finish</th></tr></thead>
+            <tbody id="naive"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-label="Settings">
+  <div class="controls">
+    <div class="ctl">
+      <label for="sN">Sprints left before beta, N <output id="oN" for="sN">2</output></label>
+      <input id="sN" type="range" min="1" max="5" step="1" value="2">
+      <label for="sG" style="margin-top:14px">Scope growth g <output id="oG" for="sG">15</output></label>
+      <input id="sG" type="range" min="0" max="30" step="1" value="15">
+      <div class="row-btns">
+        <button id="bMeasured" type="button" aria-pressed="true">Measured g</button>
+        <button id="bFreeze" type="button" aria-pressed="false">Feature freeze, g = 0</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <fieldset>
+        <legend>Planning velocity</legend>
+        <div class="radios">
+          <label><input type="radio" name="plan" value="min">v_min</label>
+          <label><input type="radio" name="plan" value="mean" checked>v_mean</label>
+          <label><input type="radio" name="plan" value="max">v_max</label>
+        </div>
+      </fieldset>
+      <p class="formula">The planning velocity sets the meeting point, the summary and the highlighted row. The fan always shows the whole range.</p>
+    </div>
+    <div class="ctl">
+      <h2 id="histH" style="font-family:var(--sans);font-size:.9rem;margin:0">Board history (estimated hours)</h2>
+      <div class="table-wrap">
+        <table class="hist" aria-labelledby="histH">
+          <thead><tr><th scope="col">End of</th><th scope="col">Velocity</th><th scope="col">Scope</th></tr></thead>
+          <tbody id="hist"></tbody>
+        </table>
+      </div>
+      <div class="row-btns">
+        <button id="bAdd" type="button">Add sprint</button>
+        <button id="bDel" type="button">Remove last</button>
+        <button id="bReset" type="button">Reset to Hollowmarch</button>
+      </div>
+      <p class="err" id="err" role="status"></p>
+    </div>
+  </div>
+</section>
+
+<footer>The <i>Hollowmarch</i> board history is invented for teaching and matches the week 9 guide and the lab 09 starter (<code>burnup_forecast.py</code>). A plan at v_mean has about even odds of fitting; a plan at v_min has better odds. Finish values are sprint numbers counted from the week 3 plan (sprint 0).</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const DEF={scope0:217,rows:[[43,236],[46,252],[37,262]]};
+let H=clone(DEF), N=2, gMode='measured', gOver=15, plan='mean', step=null, timer=null;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+function clone(d){return {scope0:d.scope0,rows:d.rows.map(r=>r.slice())};}
+function f1(x){const r=Math.round(x*10)/10;return (Object.is(r,-0)?0:r).toFixed(1).replace(/\.0$/,'');}
+function fin(x){return x===null?'never':(Math.round(x*10)/10).toFixed(1);}
+
+function model(){
+  const s=H.rows.length, vel=H.rows.map(r=>r[0]);
+  const done=vel.reduce((a,b)=>a+b,0), scopeL=H.rows[s-1][1];
+  const v={min:Math.min(...vel),mean:done/s,max:Math.max(...vel)};
+  const gMeas=(scopeL-H.scope0)/s;
+  const gGrow=gMode==='override'?gOver:gMeas;
+  const g=gMode==='freeze'?0:gGrow;
+  const rem=scopeL-done;
+  const cut=(vv,gg)=>Math.max(0,rem-N*(vv-gg));
+  const meet=(vv,gg)=>rem<=0?s:(vv>gg?s+rem/(vv-gg):null);
+  // done-line-only forecasts
+  const naive=[];let d=0;
+  H.rows.forEach((r,i)=>{d+=r[0];const vm=d/(i+1);naive.push({s:i+1,done:d,scope:r[1],vm,f:vm>0?(i+1)+(r[1]-d)/vm:null});});
+  return {s,vel,done,scopeL,v,gMeas,gGrow,g,rem,cut,meet,naive};
+}
+
+/* ---------- history table ---------- */
+function buildHist(){
+  let h=`<tr><th scope="row">Plan (sprint 0)</th><td class="na">—</td><td><input type="number" inputmode="numeric" min="0" max="2000" step="1" data-r="0" data-c="1" value="${H.scope0}" aria-label="Scope at sprint 0, the plan"></td></tr>`;
+  H.rows.forEach((r,i)=>{
+    h+=`<tr><th scope="row">Sprint ${i+1}</th><td><input type="number" inputmode="numeric" min="0" max="500" step="1" data-r="${i+1}" data-c="0" value="${r[0]}" aria-label="Velocity in sprint ${i+1}"></td><td><input type="number" inputmode="numeric" min="0" max="2000" step="1" data-r="${i+1}" data-c="1" value="${r[1]}" aria-label="Scope at end of sprint ${i+1}"></td></tr>`;
+  });
+  $('hist').innerHTML=h;
+  $('bAdd').disabled=H.rows.length>=6;$('bDel').disabled=H.rows.length<=1;
+  $('hist').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',onHist));
+}
+function onHist(e){
+  const inp=e.target,val=inp.value.trim(),x=Number(val);
+  const ok=val!==''&&isFinite(x)&&x>=0&&x<=2000&&!(+inp.dataset.c===0&&x<=0);
+  inp.setAttribute('aria-invalid',ok?'false':'true');
+  if(!ok){$('err').textContent=+inp.dataset.c===0?'Velocity must be a positive number of hours.':'Scope must be a number from 0 to 2,000.';return;}
+  const r=+inp.dataset.r,c=+inp.dataset.c;
+  if(r===0)H.scope0=x;else H.rows[r-1][c]=x;
+  const m=model();
+  $('err').textContent=m.done>m.scopeL?'Done so far is larger than the last scope. Check the scope column.':'';
+  stopReplay();update();
+}
+
+/* ---------- chart ---------- */
+function niceMax(v){const c=[400,500,600,800,1000,1200,1600,2000,2500,3000];return c.find(x=>x>=v)||Math.ceil(v/500)*500;}
+function draw(m){
+  const svg=$('chart');
+  const W=Math.max(280,svg.parentNode.clientWidth-24);
+  const small=W<520;
+  const Hh=Math.round(Math.min(440,Math.max(300,W*0.62)));
+  const pad={l:small?40:48,r:small?14:22,t:small?30:28,b:38};
+  const beta=m.s+N;
+  const xMax=Math.max(10,Math.ceil(beta)+1);
+  const scopeAtBeta=m.scopeL+m.g*N;
+  const histMax=Math.max(H.scope0,...H.rows.map(r=>r[1]));
+  const yMax=niceMax(Math.max(histMax,scopeAtBeta)*1.04);
+  const X=x=>pad.l+(W-pad.l-pad.r)*x/xMax, Y=y=>Hh-pad.b-(Hh-pad.t-pad.b)*y/yMax;
+  const fs=small?11:12.5;
+  let o='';
+  o+=`<defs><clipPath id="clip"><rect x="${pad.l}" y="${pad.t-2}" width="${W-pad.l-pad.r}" height="${Hh-pad.t-pad.b+2}"/></clipPath></defs>`;
+  const yStep=yMax<=500?100:yMax<=1200?200:500;
+  for(let y=0;y<=yMax+1e-9;y+=yStep){o+=`<line class="gridl" x1="${pad.l}" x2="${W-pad.r}" y1="${Y(y)}" y2="${Y(y)}"/><text class="soft" x="${pad.l-6}" y="${Y(y)+4}" text-anchor="end" font-size="${fs}">${y}</text>`;}
+  for(let x=0;x<=xMax;x++){o+=`<line class="gridl" x1="${X(x)}" x2="${X(x)}" y1="${pad.t}" y2="${Hh-pad.b}" opacity=".6"/><text class="soft" x="${X(x)}" y="${Hh-pad.b+15}" text-anchor="middle" font-size="${fs}">${x}</text>`;}
+  o+=`<text class="soft" x="${(pad.l+W-pad.r)/2}" y="${Hh-4}" text-anchor="middle" font-size="${fs}">sprint (0 = week 3 plan)</text>`;
+  o+=`<line class="axis" x1="${pad.l}" x2="${W-pad.r}" y1="${Y(0)}" y2="${Y(0)}"/><line class="axis" x1="${pad.l}" x2="${pad.l}" y1="${pad.t}" y2="${Y(0)}"/>`;
+  o+=`<text class="soft" x="${pad.l}" y="${pad.t-12}" font-size="${fs}">hours</text>`;
+
+  const last=step===null?m.s:step;
+  const scopePts=[[0,H.scope0]].concat(H.rows.slice(0,last).map((r,i)=>[i+1,r[1]]));
+  let d=0;const donePts=[[0,0]].concat(H.rows.slice(0,last).map((r,i)=>{d+=r[0];return [i+1,d];}));
+  const P=pts=>pts.map(p=>`${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(' ');
+  const betaX=X(beta);
+  o+=`<g clip-path="url(#clip)">`;
+  // beta line
+  o+=`<line class="beta" x1="${betaX}" x2="${betaX}" y1="${pad.t}" y2="${Y(0)}"/>`;
+  if(step===null){
+    const doneNow=m.done, s=m.s;
+    const xe=xMax;
+    // fan
+    o+=`<polygon class="fan" points="${P([[s,doneNow],[xe,doneNow+m.v.max*(xe-s)],[xe,doneNow+m.v.min*(xe-s)]])}"/>`;
+    o+=`<polyline class="donep" points="${P([[s,doneNow],[xe,doneNow+m.v.mean*(xe-s)]])}"/>`;
+    if(plan!=='mean')o+=`<polyline class="plan" points="${P([[s,doneNow],[xe,doneNow+m.v[plan]*(xe-s)]])}"/>`;
+    o+=`<polyline class="scopep" points="${P([[s,m.scopeL],[xe,m.scopeL+m.g*(xe-s)]])}"/>`;
+  } else {
+    // replay: the done-line-only view at this step
+    const nv=m.naive[step-1];
+    const fx=nv.f===null?xMax:Math.min(nv.f,xMax);
+    o+=`<polyline class="naive" points="${P([[step,nv.scope],[xMax,nv.scope]])}"/>`;
+    o+=`<polyline class="donep" points="${P([[step,nv.done],[fx,nv.done+nv.vm*(fx-step)]])}"/>`;
+  }
+  o+=`<polyline class="scope" points="${P(scopePts)}"/><polyline class="done" points="${P(donePts)}"/>`;
+  scopePts.forEach(p=>{o+=`<rect x="${X(p[0])-4}" y="${Y(p[1])-4}" width="8" height="8" fill="var(--blood)"/>`;});
+  donePts.forEach(p=>{o+=`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="4.5" fill="var(--steel)"/>`;});
+  o+=`</g>`;
+  // beta label
+  o+=`<text x="${betaX}" y="${pad.t-12}" text-anchor="middle" font-size="${fs}" font-weight="700">beta, sprint ${f1(beta)}</text>`;
+
+  if(step===null){
+    const s=m.s, vP=m.v[plan];
+    // bracket at beta
+    const top=Y(Math.min(scopeAtBeta,yMax)), dMax=m.done+m.v.max*N, dMin=m.done+m.v.min*N;
+    const cLo=m.cut(m.v.max,m.g), cHi=m.cut(m.v.min,m.g);
+    const bx=betaX+(small?7:9);
+    if(cHi>0){
+      const yA=Y(Math.min(dMax,scopeAtBeta)), yB=Y(Math.min(dMin,scopeAtBeta));
+      o+=`<path class="bracket" d="M${bx-6},${top} H${bx} V${yA} H${bx-6}"/>`;
+      if(yB>yA+1)o+=`<path class="bracket2" d="M${bx},${yA} V${yB} H${bx-6}"/>`;
+      const txt=cLo===cHi?`cut needed: ${f1(cHi)} hours`:`cut needed: ${f1(cLo)} to ${f1(cHi)} hours`;
+      const ty=(top+yB)/2, one=bx+8+txt.length*fs*0.52<W-pad.r;
+      const t2=cLo===cHi?`${f1(cHi)} hours`:`${f1(cLo)} to ${f1(cHi)} hours`;
+      const lines=one?[txt]:['cut needed:',t2];
+      lines.forEach((ln,i)=>{o+=`<text class="cuttxt" x="${bx+6}" y="${ty+4+(i-(lines.length-1)/2)*(fs+3)}" font-size="${fs}" paint-order="stroke" stroke="var(--paper-2)" stroke-width="4">${ln}</text>`;});
+    } else {
+      o+=`<text class="cuttxt" x="${betaX-8}" y="${top-8}" text-anchor="end" font-size="${fs}" paint-order="stroke" stroke="var(--paper-2)" stroke-width="4">no cut needed</text>`;
+    }
+    // meeting marker
+    const mt=m.meet(vP,m.g);
+    if(mt!==null&&mt<=xMax){
+      const my=m.done+vP*(mt-s);
+      if(my<=yMax){o+=`<circle class="meet" cx="${X(mt)}" cy="${Y(my)}" r="7"/>`;
+      const lab=`meet: sprint ${fin(mt)}`, lx=X(mt), anchor=lx>W-pad.r-70?'end':'middle';
+      o+=`<text x="${anchor==='end'?lx+6:lx}" y="${Y(my)-14}" text-anchor="${anchor}" font-size="${fs}" font-weight="700" paint-order="stroke" stroke="var(--paper-2)" stroke-width="4">${lab}</text>`;}
+    } else {
+      const lab=mt===null?'lines never meet':`meet: sprint ${fin(mt)} →`;
+      o+=`<text x="${W-pad.r-4}" y="${pad.t+14}" text-anchor="end" font-size="${fs}" font-weight="700" paint-order="stroke" stroke="var(--paper-2)" stroke-width="4">${lab}</text>`;
+    }
+    // line labels
+    o+=`<text class="scopetxt" x="${X(0)+6}" y="${Y(H.scope0)-(small?20:12)}" font-size="${fs}">scope</text>`;
+    o+=`<text class="donetxt" x="${X(1)+6}" y="${Y(H.rows[0][0])+18}" font-size="${fs}">done</text>`;
+  } else {
+    // replay markers: forecasts so far, older ones faded
+    m.naive.slice(0,step).forEach((nv,i)=>{
+      if(nv.f===null)return;
+      const fx=X(Math.min(nv.f,xMax)), cur=i===step-1, fy=cur?Y(nv.scope):Y(0)-2;
+      if(cur){
+        o+=`<circle cx="${fx}" cy="${fy}" r="7" class="meet"/>`;
+        o+=`<text x="${fx}" y="${fy-14}" text-anchor="middle" font-size="${fs}" font-weight="700" paint-order="stroke" stroke="var(--paper-2)" stroke-width="4">forecast: sprint ${fin(nv.f)}</text>`;
+      }
+      o+=`<path class="${cur?'ghostnow':'ghost'}" d="M${fx},${Y(0)-2} l-6,-10 h12 z"/>`;
+    });
+    o+=`<text class="scopetxt" x="${X(0)+6}" y="${Y(H.scope0)-(small?20:12)}" font-size="${fs}">scope</text>`;
+    o+=`<text class="cuttxt" x="${X(step)+8}" y="${Y(m.naive[step-1].scope)+18}" font-size="${fs}">if scope stopped here</text>`;
+  }
+  svg.setAttribute('viewBox',`0 0 ${W} ${Hh}`);
+  svg.setAttribute('width',W);svg.setAttribute('height',Hh);
+  svg.innerHTML=o;
+}
+
+/* ---------- readouts and tables ---------- */
+function update(){
+  const m=model();
+  $('oN').textContent=N;
+  $('oG').textContent=gMode==='freeze'?'0 (frozen)':gMode==='measured'?f1(m.gMeas)+' (measured)':f1(gOver);
+  if(gMode==='measured')$('sG').value=Math.round(m.gMeas);
+  $('bMeasured').setAttribute('aria-pressed',gMode==='measured');
+  $('bFreeze').setAttribute('aria-pressed',gMode==='freeze');
+  $('rV').textContent=`${f1(m.v.min)} / ${f1(m.v.mean)} / ${f1(m.v.max)}`;
+  $('rG').textContent=f1(m.g);
+  $('rGl').textContent=gMode==='freeze'?'scope growth g, frozen (measured '+f1(m.gMeas)+')':'scope growth g (h per sprint)';
+  $('rRem').textContent=f1(m.rem);
+  const vP=m.v[plan], mt=m.meet(vP,m.g), c=m.cut(vP,m.g), beta=m.s+N;
+  $('rMeet').textContent=fin(mt);
+  $('rMeetL').textContent=`lines meet at sprint, at v_${plan}`;
+  $('rCut').textContent=f1(c);
+  $('rCutL').textContent=`cut needed by beta (h), at v_${plan}`;
+  let t=`At ${f1(vP)} hours per sprint with scope `+(m.g===0?'frozen':`growing ${f1(m.g)} per sprint`)+', ';
+  t+=mt===null?`the lines never meet, because scope grows at least as fast as you finish. `:`you finish in sprint ${fin(mt)}. `;
+  t+=`Beta is sprint ${f1(beta)}. `+(c>0?`Cut ${f1(c)} hours.`:'No cut needed.');
+  if(m.g>0&&gMode!=='freeze'){const cf=m.cut(vP,0);t+=` A feature freeze would make that ${f1(cf)}`+(c-cf>0?`, worth ${f1(c-cf)} hours.`:'.');}
+  $('summary').textContent=t;
+  // scenario table
+  const sc=[['Good sprints, freeze','max',0,'freeze'],['Typical sprints, freeze','mean',0,'freeze'],['Typical sprints, no freeze','mean',m.gGrow,'grow'],['Bad sprints, no freeze','min',m.gGrow,'grow']];
+  const cur=gMode==='freeze'?'freeze':'grow';
+  let found=false,rows='';
+  const row=(name,key,gg,hl)=>{const v=m.v[key],cap=N*(v-gg),mt=m.meet(v,gg);return `<tr class="${hl?'here':''}"><td>${name}</td><td>${f1(v)}</td><td>${f1(gg)}</td><td>${f1(cap)}</td><td class="cut">${f1(m.cut(v,gg))}</td><td class="${mt===null?'never':''}">${fin(mt)}</td></tr>`;};
+  sc.forEach(([name,key,gg,kind])=>{const hl=kind===cur&&key===plan;if(hl)found=true;rows+=row(name,key,gg,hl);});
+  if(!found)rows+=row(`Your settings (v_${plan}${cur==='freeze'?', freeze':''})`,plan,m.g,true);
+  $('scen').innerHTML=rows;
+  $('scenSub').textContent=`N = ${N} sprints left, beta at sprint ${f1(beta)}. Recomputed live. The highlighted row matches your settings.`;
+  // naive table
+  $('naive').innerHTML=m.naive.map(nv=>`<tr class="${step===nv.s?'here':''}"><td>Sprint ${nv.s}</td><td>${f1(nv.done)}</td><td>${f1(nv.scope)}</td><td>${f1(nv.vm)}</td><td>${fin(nv.f)}</td></tr>`).join('');
+  draw(m);
+  replayUI(m);
+}
+
+/* ---------- replay ---------- */
+function replayUI(m){
+  const on=step!==null;
+  $('bPrev').disabled=!on||step<=1;$('bNext').disabled=!on||step>=m.s;$('bExit').disabled=!on;
+  if(!on)return;
+  const nv=m.naive[step-1], prev=step>1?m.naive[step-2]:null;
+  let t=`After sprint ${step}: done ${f1(nv.done)}, scope ${f1(nv.scope)}, mean velocity ${f1(nv.vm)}. The done line alone says finish at sprint ${fin(nv.f)}`;
+  if(nv.f!==null)t+=`, ${f1(nv.f-step)} sprints away`;
+  t+='.';
+  if(prev&&prev.f!==null&&nv.f!==null)t+=nv.f>prev.f+1e-9?` Last review said ${fin(prev.f)}. The finish moved later.`:` Last review said ${fin(prev.f)}.`;
+  if(step===m.s){const mt=m.meet(m.v.mean,m.gMeas);t+=mt===null?' With the measured scope growth the lines never meet.':` With the measured scope growth, the real meeting point is sprint ${fin(mt)}.`;}
+  $('replayNote').textContent=t;
+}
+function stopTimer(){if(timer){clearInterval(timer);timer=null;}}
+function stopReplay(){stopTimer();if(step!==null){step=null;$('replayNote').textContent='Replay steps through each review and shows the finish the team would have forecast from the done line alone.';}}
+function go(s){step=s;update();}
+$('bReplay').addEventListener('click',()=>{
+  stopTimer();go(1);
+  if(!reduce.matches){timer=setInterval(()=>{const s=H.rows.length;if(step===null||step>=s){stopTimer();return;}go(step+1);},1800);}
+});
+$('bPrev').addEventListener('click',()=>{stopTimer();if(step>1)go(step-1);});
+$('bNext').addEventListener('click',()=>{stopTimer();if(step<H.rows.length)go(step+1);});
+$('bExit').addEventListener('click',()=>{stopReplay();update();$('bReplay').focus();});
+
+/* ---------- controls ---------- */
+$('sN').addEventListener('input',e=>{N=+e.target.value;stopReplay();update();});
+$('sG').addEventListener('input',e=>{gOver=+e.target.value;gMode='override';stopReplay();update();});
+$('bMeasured').addEventListener('click',()=>{gMode='measured';stopReplay();update();});
+$('bFreeze').addEventListener('click',()=>{gMode=gMode==='freeze'?(gOver!==null&&$('sG').dataset.touched?'override':'measured'):'freeze';stopReplay();update();});
+$('sG').addEventListener('change',e=>{e.target.dataset.touched='1';});
+document.querySelectorAll('input[name=plan]').forEach(r=>r.addEventListener('change',e=>{plan=e.target.value;stopReplay();update();}));
+$('bAdd').addEventListener('click',()=>{if(H.rows.length>=6)return;const m=model();H.rows.push([Math.round(m.v.mean),Math.round(m.scopeL+m.gMeas)]);stopReplay();buildHist();update();});
+$('bDel').addEventListener('click',()=>{if(H.rows.length<=1)return;H.rows.pop();stopReplay();buildHist();update();});
+$('bReset').addEventListener('click',()=>{H=clone(DEF);N=2;gMode='measured';plan='mean';$('sN').value=2;delete $('sG').dataset.touched;document.querySelector('input[name=plan][value=mean]').checked=true;$('err').textContent='';stopReplay();buildHist();update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,80);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+buildHist();update();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+})();
+</script>
+</body>
+</html>
