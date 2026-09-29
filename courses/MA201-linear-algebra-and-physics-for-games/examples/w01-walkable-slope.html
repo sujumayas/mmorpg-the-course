@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Walkable slope — MA201 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:62ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.verdicts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 14px}
+.verdicts.four{grid-template-columns:repeat(4,1fr)}
+@media (max-width:560px){.verdicts.four{grid-template-columns:repeat(2,1fr)}}
+.v{border:1.5px solid var(--ink);border-radius:10px;padding:8px 10px;background:var(--paper-2)}
+.v span{display:block;font-size:.82rem;color:var(--ink-soft)}
+.v b{display:block;font-size:1.35rem;line-height:1.15}
+.v[data-k="floor"]{border-color:var(--moss)} .v[data-k="floor"] b{color:var(--moss)}
+.v[data-k="wall"]{border-color:var(--ink-soft);border-style:dashed}
+.v[data-k="ceiling"]{border-color:var(--blood);border-width:3px} .v[data-k="ceiling"] b{color:var(--blood)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px}
+@media (max-width:560px){#c3d{height:250px}}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;margin:6px 0 4px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,currentColor 0 5px,transparent 5px 9px)!important}
+.readout{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;font-family:var(--mono);font-size:.9rem}
+@media (max-width:760px){.readout{grid-template-columns:1fr 1fr}}
+@media (max-width:430px){.readout{grid-template-columns:1fr}}
+.readout div{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px;overflow-wrap:anywhere}
+.readout span{display:block;font-family:var(--sans);font-size:.8rem;color:var(--ink-soft)}
+.warn{margin:10px 0 0;font-weight:700;color:var(--blood)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+.glabel{font-weight:600;font-size:.92rem;display:block;margin-top:10px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+code{font-family:var(--mono);font-size:.92em}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA201 Linear Algebra and Physics for Games · Week 1 · Worked example</p>
+  <h1>Same ramp, three engines</h1>
+  <p class="lede">Move the slope, then swap two corners. A 1 : 1 ramp is exactly 45°, and Unreal Engine 5's default rule calls it a wall.</p>
+</header>
+
+<section class="panel" aria-label="Walkable slope explorer">
+  <div class="verdicts" id="verdicts" aria-live="polite">
+    <div class="v" id="vUE5"><span>UE5 default, n̂·û ≥ 0.71</span><b>—</b></div>
+    <div class="v" id="vUE3"><span>UE3 Pawn, n̂·û ≥ 0.70</span><b>—</b></div>
+    <div class="v" id="vGD"><span>Godot 4.7, ≤ 45.573°</span><b>—</b></div>
+    <div class="v" id="vCU" hidden><span id="vCUl">Custom</span><b>—</b></div>
+  </div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>Ramp<small>Triangle a, b, c with edges e1, e2 and unit normal n̂. Y is up.</small></figcaption>
+      <canvas id="c3d" role="img" aria-label="Oblique 3D drawing of the ramp triangle and its normal"></canvas>
+      <div class="legend">
+        <span style="color:var(--blood)"><i style="background:var(--blood)"></i>e1 = b − a</span>
+        <span style="color:var(--ochre)"><i style="background:var(--ochre)"></i>e2 = c − a</span>
+        <span style="color:var(--moss)"><i style="background:var(--moss)"></i>n̂</span>
+        <span style="color:var(--ink-soft)"><i class="dash" style="background:var(--ink-soft)"></i>û (up)</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Up-dot curve<small>n̂ · û = cos(slope angle). Shaded bands use the selected engine.</small></figcaption>
+      <canvas id="cCurve" role="img" aria-label="Cosine of slope angle with engine threshold lines"></canvas>
+      <div class="legend">
+        <span style="color:var(--steel)"><i style="background:var(--steel)"></i>UE5 0.71</span>
+        <span style="color:var(--ochre)"><i style="background:var(--ochre)"></i>UE3 0.70</span>
+        <span style="color:var(--moss)"><i class="dash" style="background:var(--moss)"></i>Godot 4.7, 45° + 0.01 rad</span>
+      </div>
+    </figure>
+  </div>
+
+  <p class="warn" id="degen" hidden>Degenerate triangle: no normal.</p>
+
+  <div class="readout" aria-live="polite">
+    <div style="--c:var(--blood)"><span>e1 = b − a</span><output id="rE1"></output></div>
+    <div style="--c:var(--ochre)"><span>e2 = c − a</span><output id="rE2"></output></div>
+    <div style="--c:var(--moss)"><span id="rNl">n = e1 × e2</span><output id="rN"></output></div>
+    <div><span>|n|</span><output id="rLen"></output></div>
+    <div><span>Triangle area |n| / 2</span><output id="rArea"></output></div>
+    <div style="--c:var(--moss)"><span>n̂</span><output id="rNh"></output></div>
+    <div style="--c:var(--steel)"><span>n̂ · û</span><output id="rDot"></output></div>
+    <div style="--c:var(--steel)"><span>Slope angle</span><output id="rAng"></output></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="rise">Rise <output id="oRise"></output></label>
+      <input id="rise" type="range" min="0" max="6" step="0.01" value="1">
+      <label for="run" style="margin-top:8px">Run <output id="oRun"></output></label>
+      <input id="run" type="range" min="0" max="6" step="0.01" value="1">
+      <span class="glabel" id="prL">Rise : run presets</span>
+      <div class="presets" role="group" aria-labelledby="prL" id="presets">
+        <button class="chip" data-r="1" data-u="4">1 : 4</button>
+        <button class="chip" data-r="1" data-u="2">1 : 2</button>
+        <button class="chip" data-r="3" data-u="4">3 : 4</button>
+        <button class="chip" data-r="1" data-u="1">1 : 1</button>
+        <button class="chip" data-r="1.01" data-u="1">1.01 : 1</button>
+        <button class="chip" data-r="6" data-u="5">6 : 5</button>
+        <button class="chip" data-r="1" data-u="0">vertical</button>
+      </div>
+    </div>
+    <div>
+      <span class="glabel" style="margin-top:0">Winding and view</span>
+      <div class="presets">
+        <button class="chip" id="swap" aria-pressed="false">Swap b and c</button>
+        <button class="chip" id="zoom" aria-pressed="true">Zoom 44° to 46°</button>
+      </div>
+      <span class="glabel" id="engL">Engine for band shading</span>
+      <div class="presets" role="group" aria-labelledby="engL" id="engines">
+        <button class="chip" data-e="ue5" aria-pressed="true">UE5</button>
+        <button class="chip" data-e="ue3" aria-pressed="false">UE3</button>
+        <button class="chip" data-e="gd" aria-pressed="false">Godot 4.7</button>
+        <button class="chip" data-e="cu" aria-pressed="false">Custom</button>
+      </div>
+      <div id="customWrap" hidden style="margin-top:8px">
+        <label for="cang">Custom max angle <output id="oCang"></output></label>
+        <input id="cang" type="range" min="0" max="90" step="0.1" value="40">
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>Thresholds: Unreal Engine 5.3 <code>CharacterMovementComponent</code> sets <code>WalkableFloorZ</code> to 0.71; Unreal Engine 3 <code>Pawn</code> sets 0.7; Godot 4.7 <code>CharacterBody3D</code> uses <code>floor_max_angle</code> 45° plus a 0.01 rad tolerance. Sources are listed in the week 1 lecture. The triangle is <code>a = (0, 0, 0)</code>, <code>b = (0, 0, 1)</code>, <code>c = (run, rise, 0)</code>.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const M='−';
+const num=(v,d)=>{let s=v.toFixed(d);if(/^-0\.?0*$/.test(s))s=s.slice(1);return s.replace('-',M);};
+const vec=(v,d)=>'('+v.map(x=>num(x,d)).join(', ')+')';
+const sub=(p,q)=>[p[0]-q[0],p[1]-q[1],p[2]-q[2]];
+const add=(p,q)=>[p[0]+q[0],p[1]+q[1],p[2]+q[2]];
+const mul=(p,s)=>[p[0]*s,p[1]*s,p[2]*s];
+const dot=(p,q)=>p[0]*q[0]+p[1]*q[1]+p[2]*q[2];
+const cross=(p,q)=>[p[1]*q[2]-p[2]*q[1],p[2]*q[0]-p[0]*q[2],p[0]*q[1]-p[1]*q[0]];
+const len=p=>Math.hypot(p[0],p[1],p[2]);
+const GD_RAD=Math.PI/4+0.01, GD_COS=Math.cos(GD_RAD);
+const ENG={ue5:{name:'UE5',z:0.71},ue3:{name:'UE3',z:0.70},gd:{name:'Godot 4.7',z:GD_COS}};
+let rise=1,run=1,swap=false,zoom=true,eng='ue5',cang=40;
+
+function state(){
+  const a=[0,0,0],b=[0,0,1],c=[run,rise,0];
+  const e1=sub(b,a),e2=sub(c,a);
+  const n=swap?cross(e2,e1):cross(e1,e2);
+  const L=len(n),ok=L>1e-12;
+  const nh=ok?mul(n,1/L):[0,0,0];
+  const d=ok?nh[1]:NaN;
+  const ang=ok?Math.acos(Math.max(-1,Math.min(1,d)))*180/Math.PI:NaN;
+  return {a,b,c,e1,e2,n,L,ok,nh,d,ang};
+}
+function ueV(d,z){return d>=z?'floor':'wall';}
+function gdV(d){const t=Math.acos(Math.max(-1,Math.min(1,d)));if(t<=GD_RAD+1e-12)return 'floor';if(Math.PI-t<=GD_RAD+1e-12)return 'ceiling';return 'wall';}
+function cuV(d){const r=cang*Math.PI/180,t=Math.acos(Math.max(-1,Math.min(1,d)));if(t<=r+1e-12)return 'floor';if(Math.PI-t<=r+1e-12)return 'ceiling';return 'wall';}
+function threshold(){return eng==='cu'?Math.cos(cang*Math.PI/180):ENG[eng].z;}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function hatch(g,color){
+  const p=document.createElement('canvas');p.width=p.height=8;const h=p.getContext('2d');
+  h.strokeStyle=color;h.lineWidth=1.2;h.beginPath();h.moveTo(0,8);h.lineTo(8,0);h.moveTo(-2,2);h.lineTo(2,-2);h.moveTo(6,10);h.lineTo(10,6);h.stroke();
+  return g.createPattern(p,'repeat');
+}
+
+// fixed oblique orthographic camera
+const V=(()=>{const v=[-0.45,0.55,1],l=len(v);return mul(v,1/l);})();
+const R=(()=>{const r=cross([0,1,0],V),l=len(r);return mul(r,1/l);})();
+const U=cross(V,R);
+
+function draw3d(s){
+  const {g,w,h}=setupCanvas($('c3d'));g.clearRect(0,0,w,h);
+  const xMax=Math.max(3,Math.ceil(run+0.5));
+  const pts=[[-1,0,-1],[xMax,0,-1],[-1,0,2],[xMax,0,2],[0,Math.max(1.3,rise+0.3),0],s.c,add(s.b,s.e2)];
+  const cen=mul(add(add(s.a,s.b),s.c),1/3);
+  if(s.ok){pts.push(add(cen,s.nh));}
+  pts.push(add(cen,[0,1,0]));
+  const P2=p=>[dot(p,R),-dot(p,U)];
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;pts.forEach(p=>{const q=P2(p);x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1]);});
+  const pad=26,sc=Math.min((w-2*pad)/(x1-x0),(h-2*pad)/(y1-y0));
+  const ox=(w-sc*(x1-x0))/2-sc*x0,oy=(h-sc*(y1-y0))/2-sc*y0;
+  const P=p=>{const q=P2(p);return [ox+sc*q[0],oy+sc*q[1]];};
+  const ink=css('--ink'),soft=css('--ink-soft'),grid=css('--grid');
+  g.lineWidth=1;g.strokeStyle=grid;
+  g.globalAlpha=1;
+  for(let x=-1;x<=xMax;x++){const p=P([x,0,-1]),q=P([x,0,2]);g.strokeStyle=x===0?soft:grid;g.beginPath();g.moveTo(...p);g.lineTo(...q);g.stroke();}
+  for(let z=-1;z<=2;z++){const p=P([-1,0,z]),q=P([xMax,0,z]);g.strokeStyle=z===0?soft:grid;g.beginPath();g.moveTo(...p);g.lineTo(...q);g.stroke();}
+  g.font='12px '+css('--sans');g.fillStyle=soft;
+  const lx=P([xMax,0,0]);g.textAlign='left';g.textBaseline='middle';g.fillText('x',lx[0]+4,lx[1]);
+  const lz=P([0,0,2]);g.fillText('z',lz[0]+4,lz[1]+6);
+  // parallelogram a, b, b+e2, c
+  const par=[s.a,s.b,add(s.b,s.e2),s.c].map(P);
+  g.fillStyle=css('--steel');g.globalAlpha=.15;g.beginPath();par.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p));g.closePath();g.fill();g.globalAlpha=1;
+  g.setLineDash([3,4]);g.strokeStyle=soft;g.stroke();g.setLineDash([]);
+  // triangle
+  const tri=[s.a,s.b,s.c].map(P);
+  const front=s.ok&&dot(s.n,V)>0;
+  g.beginPath();tri.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p));g.closePath();
+  if(s.ok){
+    if(front){g.fillStyle=css('--steel');g.globalAlpha=.45;g.fill();g.globalAlpha=1;}
+    else{g.fillStyle=hatch(g,soft);g.fill();}
+  }
+  g.strokeStyle=ink;g.lineWidth=1.5;g.stroke();
+  function arrow(p,q,color,dash,wid){
+    const A=P(p),B=P(q);g.strokeStyle=color;g.fillStyle=color;g.lineWidth=wid||2.5;g.setLineDash(dash||[]);
+    g.beginPath();g.moveTo(...A);g.lineTo(...B);g.stroke();g.setLineDash([]);
+    const ang=Math.atan2(B[1]-A[1],B[0]-A[0]),L=Math.hypot(B[0]-A[0],B[1]-A[1]);if(L<3)return;
+    const k=Math.min(10,L*.4);
+    g.beginPath();g.moveTo(...B);g.lineTo(B[0]-k*Math.cos(ang-.4),B[1]-k*Math.sin(ang-.4));g.lineTo(B[0]-k*Math.cos(ang+.4),B[1]-k*Math.sin(ang+.4));g.closePath();g.fill();
+  }
+  arrow(s.a,s.b,css('--blood'));
+  arrow(s.a,s.c,css('--ochre'));
+  arrow(cen,add(cen,[0,1,0]),soft,[5,4],1.8);
+  if(s.ok)arrow(cen,add(cen,s.nh),css('--moss'),null,3);
+  // labels
+  g.font='600 13px '+css('--sans');g.fillStyle=ink;g.textBaseline='middle';
+  const lab=(p,t,dx,dy)=>{const q=P(p);g.textAlign='center';g.fillText(t,q[0]+dx,q[1]+dy);};
+  lab(s.a,'a',-10,10);lab(s.b,'b',-4,14);lab(s.c,'c',10,-8);
+  if(s.ok){const q=P(add(cen,s.nh));g.fillStyle=css('--moss');g.fillText('n̂',q[0]+12,q[1]-4);}
+  g.font='12px '+css('--sans');g.fillStyle=soft;g.textAlign='left';g.textBaseline='top';
+  g.fillText(s.ok?(front?'front face (solid)':'back face (hatched)'):'no normal',8,6);
+}
+
+function drawCurve(s){
+  const {g,w,h}=setupCanvas($('cCurve'));g.clearRect(0,0,w,h);
+  const pad={l:52,r:14,t:12,b:34};
+  const xa=zoom?44:0,xb=zoom?46:180,ya=zoom?0.69:-1,yb=zoom?0.72:1;
+  const X=x=>pad.l+(w-pad.l-pad.r)*(x-xa)/(xb-xa),Y=y=>pad.t+(h-pad.t-pad.b)*(1-(y-ya)/(yb-ya));
+  const T=threshold();
+  g.save();g.beginPath();g.rect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b);g.clip();
+  // bands
+  g.globalAlpha=.18;g.fillStyle=css('--moss');g.fillRect(pad.l,Y(yb),w-pad.l-pad.r,Y(T)-Y(yb));
+  g.fillStyle=css('--blood');g.fillRect(pad.l,Y(-T),w-pad.l-pad.r,Y(ya)-Y(-T));g.globalAlpha=1;
+  // grid
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  const yt=zoom?[0.69,0.70,0.71,0.72]:[-1,-0.5,0,0.5,1],xt=zoom?[44,44.5,45,45.5,46]:[0,45,90,135,180];
+  yt.forEach(y=>{g.beginPath();g.moveTo(pad.l,Y(y));g.lineTo(w-pad.r,Y(y));g.stroke();});
+  xt.forEach(x=>{g.beginPath();g.moveTo(X(x),pad.t);g.lineTo(X(x),h-pad.b);g.stroke();});
+  // cosine
+  g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();
+  for(let i=0;i<=300;i++){const x=xa+(xb-xa)*i/300,y=Math.cos(x*Math.PI/180);i?g.lineTo(X(x),Y(y)):g.moveTo(X(x),Y(y));}
+  g.stroke();
+  // thresholds
+  const line=(y,color,dash,wid)=>{g.strokeStyle=color;g.lineWidth=wid;g.setLineDash(dash);g.beginPath();g.moveTo(pad.l,Y(y));g.lineTo(w-pad.r,Y(y));g.stroke();g.setLineDash([]);};
+  line(0.71,css('--steel'),[],2);line(0.70,css('--ochre'),[],2.5);line(GD_COS,css('--moss'),[6,5],2);
+  if(eng==='cu')line(T,css('--focus'),[2,3],2);
+  g.restore();
+  // labels on lines
+  g.font='600 11px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';
+  const lbl=(y,t,color)=>{if(y<ya||y>yb)return;g.fillStyle=color;g.fillText(t,w-pad.r-4,Y(y)-2);};
+  lbl(0.71,'UE5 0.71',css('--steel'));
+  g.textBaseline='top';g.textAlign='left';if(zoom){g.fillStyle=css('--ochre');g.fillText('UE3 0.70 and Godot 0.7000 (overlap)',pad.l+4,Y(0.70)+3);}else lbl(0.70,'UE3 / Godot ≈ 0.70',css('--ochre'));
+  // axes text
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');
+  g.textAlign='right';g.textBaseline='middle';yt.forEach(y=>g.fillText(num(y,zoom?2:1),pad.l-6,Y(y)));
+  g.textAlign='center';g.textBaseline='top';xt.forEach(x=>g.fillText((zoom?x.toFixed(1):x)+'°',X(x),h-pad.b+6));
+  if(!zoom){g.textAlign='left';g.textBaseline='top';g.fillStyle=css('--moss');g.fillText('floor',pad.l+6,Y(1)+2);g.fillStyle=css('--blood');g.textBaseline='bottom';g.fillText('ceiling',X(150),Y(-1)-2);}
+  // marker
+  if(s.ok){
+    let mx=s.ang,my=s.d,off=mx<xa||mx>xb||my<ya||my>yb;
+    const px=X(Math.min(xb,Math.max(xa,mx))),py=Y(Math.min(yb,Math.max(ya,my)));
+    g.fillStyle=css('--moss');g.strokeStyle=css('--paper');g.lineWidth=2;
+    g.beginPath();g.arc(px,py,off?5:7,0,Math.PI*2);g.fill();g.stroke();
+    if(off){g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign=px>w/2?'right':'left';g.textBaseline='middle';
+      g.fillText('marker outside zoom ('+num(mx,2)+'°)',px+(px>w/2?-10:10),Math.min(h-pad.b-10,Math.max(pad.t+10,py)));}
+  }
+}
+
+function update(){
+  const s=state();
+  $('oRise').textContent=rise.toFixed(2);$('oRun').textContent=run.toFixed(2);
+  $('rE1').textContent=vec(s.e1,3);$('rE2').textContent=vec(s.e2,3);
+  $('rNl').textContent=swap?'n = e2 × e1 (swapped)':'n = e1 × e2';
+  $('rN').textContent=vec(s.n,3);$('rLen').textContent=num(s.L,3);$('rArea').textContent=num(s.L/2,3);
+  $('degen').hidden=s.ok;
+  const vs=[['vUE5',s.ok?ueV(s.d,0.71):'—'],['vUE3',s.ok?ueV(s.d,0.70):'—'],['vGD',s.ok?gdV(s.d):'—'],['vCU',s.ok?cuV(s.d):'—']];
+  vs.forEach(([id,k])=>{const el=$(id);el.dataset.k=k;el.querySelector('b').textContent=k;});
+  $('vCU').hidden=eng!=='cu';$('verdicts').classList.toggle('four',eng==='cu');
+  $('vCUl').textContent='Custom, ≤ '+cang.toFixed(1)+'°';
+  if(s.ok){
+    $('rNh').textContent=vec(s.nh,3);$('rDot').textContent=num(s.d,4);$('rAng').textContent=num(s.ang,2)+'°';
+    let t;
+    const ue5=vs[0][1],ue3=vs[1][1],gd=vs[2][1];
+    if(ue5!==ue3||ue3!==gd) t=`The engines disagree. At n̂ · û = ${num(s.d,4)} (${num(s.ang,2)}°) UE5 says <b>${ue5}</b>, UE3 says <b>${ue3}</b>, Godot says <b>${gd}</b>. UE5's 0.71 is 44.765°. UE3's 0.70 and Godot's 45° + 0.01 rad both land at 45.573°.`;
+    else t=`All three engines agree: <b>${gd}</b>. Every ramp between 44.765° and 45.573° splits them. This one is at ${num(s.ang,2)}°.`;
+    if(swap) t+=' Swapping b and c reversed the cross product, so the normal points into the ground. Unreal only asks "is it a floor?"; Godot calls a downward normal a ceiling.';
+    $('insight').innerHTML=t;
+  } else {
+    ['rNh','rDot','rAng'].forEach(id=>$(id).textContent='—');
+    $('insight').textContent='With rise and run both 0, c sits on a, e2 is the zero vector, and e1 × e2 = (0, 0, 0). There is no plane and no normal to test.';
+  }
+  document.querySelectorAll('#presets .chip').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.r===rise&&+b.dataset.u===run)));
+  draw3d(s);drawCurve(s);
+}
+
+$('rise').addEventListener('input',e=>{rise=+e.target.value;update();});
+$('run').addEventListener('input',e=>{run=+e.target.value;update();});
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{rise=+b.dataset.r;run=+b.dataset.u;$('rise').value=rise;$('run').value=run;update();}));
+$('swap').addEventListener('click',()=>{swap=!swap;$('swap').setAttribute('aria-pressed',String(swap));update();});
+$('zoom').addEventListener('click',()=>{zoom=!zoom;$('zoom').setAttribute('aria-pressed',String(zoom));update();});
+document.querySelectorAll('#engines .chip').forEach(b=>b.addEventListener('click',()=>{
+  eng=b.dataset.e;document.querySelectorAll('#engines .chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  $('customWrap').hidden=eng!=='cu';update();}));
+$('cang').addEventListener('input',e=>{cang=+e.target.value;$('oCang').textContent=cang.toFixed(1)+'°';update();});
+$('oCang').textContent=cang.toFixed(1)+'°';
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

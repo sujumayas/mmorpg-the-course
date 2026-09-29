@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Terminal velocity from drag · MA201 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:12px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px;touch-action:none;cursor:ew-resize}
+#cD2{cursor:default;height:300px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 14px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}.stat b{font-size:1.02rem}}
+.stat{border-left:4px solid var(--c,var(--ink-soft));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-family:var(--mono);font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.25}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.cursor{font-family:var(--mono);font-size:.92rem;margin:8px 0 0;padding:8px 10px;border-radius:8px;background:var(--paper-2)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend,.lbl{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
+.radio,.check{display:flex;gap:8px;align-items:center;justify-content:flex-start;font-weight:500;cursor:pointer;margin:3px 0}
+.radio input,.check input{width:18px;height:18px;margin:0;accent-color:var(--steel);flex:none}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 8px}
+select,.btn,.chip{font:600 .92rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;max-width:100%}
+select{width:100%}
+.chip{border-color:var(--steel);font-size:.85rem;padding:6px 10px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tab:focus-visible,.btn:focus-visible,.chip:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:24px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid}
+.warn{margin:10px 0 0;padding:8px 12px;border-radius:8px;background:color-mix(in srgb,var(--blood) 14%,transparent);color:var(--blood);font-weight:700}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA201 Linear Algebra and Physics for Games · Week 8 · Worked example</p>
+  <h1>Drag makes its own speed limit</h1>
+  <p class="lede">Multiply the velocity by d every tick and add gravity g. Nothing clamps the speed, yet it flattens onto a line at g·d/(1 − d). The distance curve turns into a straight line at the same moment.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Fall</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Damping formulas</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="readout">
+    <div class="stat" style="--c:var(--blood)"><b id="rTerm">—</b><span>terminal speed, g·d/(1 − d)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rTermS">—</b><span>terminal speed × R</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="r90">—</b><span>time to 90% of terminal</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rGD">—</b><span>g and d per tick, at R</span></div>
+  </div>
+  <div class="charts">
+    <figure>
+      <figcaption>Speed (blocks/s, downward)<small>One dot per tick. Drag across either chart to move the time cursor.</small></figcaption>
+      <canvas id="cV" role="img" aria-label="Falling speed against time"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Distance fallen (blocks)<small>Straightens into a line of slope equal to the terminal speed.</small></figcaption>
+      <canvas id="cY" role="img" aria-label="Distance fallen against time"></canvas>
+    </figure>
+  </div>
+  <div class="legend">
+    <span><i style="border-color:var(--steel)"></i>per-tick simulation</span>
+    <span><i style="border-color:var(--blood);border-top-style:dashed"></i>terminal speed</span>
+    <span><i style="border-color:var(--ochre);border-top-style:dotted"></i>90% time</span>
+    <span id="lgCont" hidden><i style="border-color:var(--moss);border-top-style:dashed"></i><span>continuous v*(1 − e<sup>−ct</sup>)</span></span>
+    <span id="lgGhost" hidden><i style="border-color:var(--ink-soft);opacity:.6"></i>ghost: <span id="ghostTxt"></span></span>
+  </div>
+  <label for="cur" style="margin-top:10px">Time cursor <output id="oCur"></output></label>
+  <input id="cur" type="range" min="0" max="12" step="0.05" value="1">
+  <p class="cursor" id="curTxt" aria-live="off">—</p>
+
+  <div class="controls">
+    <div>
+      <p class="lbl">Presets (20 Hz values)</p>
+      <div class="row" role="group" aria-label="Presets">
+        <button class="chip" type="button" data-p="player" aria-pressed="true">Minecraft player</button>
+        <button class="chip" type="button" data-p="item" aria-pressed="false">Item</button>
+        <button class="chip" type="button" data-p="snow" aria-pressed="false">Snowball, 1.21.2+</button>
+        <button class="chip" type="button" data-p="slow" aria-pressed="false">Slow Falling</button>
+        <button class="chip" type="button" data-p="custom" aria-pressed="false">Custom</button>
+      </div>
+      <label for="order" style="margin-top:12px">Order of operations each tick</label>
+      <select id="order" style="margin-top:4px">
+        <option value="1">Position, acceleration, drag (players)</option>
+        <option value="2">Acceleration, position, drag (items)</option>
+        <option value="3">Acceleration, drag, position (thrown, 1.21.2+)</option>
+      </select>
+    </div>
+    <div>
+      <label for="g">Gravity g (blocks/tick²) <output id="oG"></output></label>
+      <input id="g" type="range" min="0.005" max="0.2" step="0.005" value="0.08">
+      <label for="d">Drag factor d <output id="oD"></output></label>
+      <input id="d" type="range" min="0.9" max="1" step="0.001" value="0.98">
+      <label class="check"><input type="checkbox" id="cont"> Overlay the continuous curve</label>
+      <div class="row" style="margin-top:6px"><button class="btn" type="button" id="clearGhost" disabled>Clear ghost</button></div>
+    </div>
+    <div>
+      <fieldset>
+        <legend>Tick rate R</legend>
+        <div class="row" role="group" aria-label="Tick rate">
+          <button class="chip" type="button" data-r="20" aria-pressed="true">20</button>
+          <button class="chip" type="button" data-r="30" aria-pressed="false">30</button>
+          <button class="chip" type="button" data-r="60" aria-pressed="false">60</button>
+          <button class="chip" type="button" data-r="144" aria-pressed="false">144</button>
+        </div>
+      </fieldset>
+      <fieldset style="margin-top:10px">
+        <legend>When changing rate</legend>
+        <label class="radio"><input type="radio" name="rmode" value="keep" checked> Keep per-tick numbers</label>
+        <label class="radio"><input type="radio" name="rmode" value="convert"> <span>Convert per-second (g·(20/R)², d<sup>20/R</sup>)</span></label>
+      </fieldset>
+    </div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <figure>
+    <figcaption>Velocity under damping, starting at v = 10<small>Three per-step rules for the same damping rate c. The exact rule multiplies by e<sup>−c·h</sup> each step.</small></figcaption>
+    <canvas id="cD2" role="img" aria-label="Velocity against time for three damping rules"></canvas>
+    <div class="legend">
+      <span><i style="border-color:var(--moss)"></i>exact v·e<sup>−c·h</sup></span>
+      <span><i style="border-color:var(--steel);border-top-style:dashed"></i>Padé v/(1 + c·h)</span>
+      <span><i style="border-color:var(--blood);border-top-style:dotted"></i>linear v·(1 − c·h)</span>
+    </div>
+  </figure>
+  <div class="readout">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rCH">—</b><span>c·h</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rFe">—</b><span>exact factor</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rFp">—</b><span>Padé factor</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rFl">—</b><span>linear factor</span></div>
+  </div>
+  <p class="warn" id="warn2" hidden></p>
+  <div class="controls">
+    <div>
+      <label for="c">Damping rate c (per second) <output id="oC">20</output></label>
+      <input id="c" type="range" min="0" max="200" step="1" value="20">
+    </div>
+    <fieldset>
+      <legend>Step rate R (h = 1/R)</legend>
+      <div class="row" role="group" aria-label="Step rate for damping">
+        <button class="chip" type="button" data-r2="20" aria-pressed="false">20</button>
+        <button class="chip" type="button" data-r2="30" aria-pressed="false">30</button>
+        <button class="chip" type="button" data-r2="60" aria-pressed="true">60</button>
+        <button class="chip" type="button" data-r2="144" aria-pressed="false">144</button>
+      </div>
+    </fieldset>
+    <p class="hint" style="margin:0">The y-axis is clamped to ±30. Points beyond it are drawn as triangles at the edge.</p>
+  </div>
+  <div class="insight" id="insight2"></div>
+</section>
+<p class="sr" aria-live="polite" id="live"></p>
+
+<footer>Per-tick rules and preset values from the Minecraft Wiki, "Entity", Motion section (Java Edition, as of September 2026), as cited in the lecture. Speeds are per tick times R. The Padé factor 1/(1 + c·h) is the one Box2D 3.1 uses for linear damping. No game art: lines, dots and labels only.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+let C={};
+function palette(){const s=getComputedStyle(document.documentElement);['--paper','--paper-2','--grid','--ink','--ink-soft','--steel','--blood','--ochre','--moss','--sans','--mono'].forEach(k=>C[k]=s.getPropertyValue(k).trim());}
+palette();
+const minus=s=>s.replace(/-/g,'−');
+const f=(x,n)=>{let s=x.toFixed(n);if(/^-0\.?0*$/.test(s))s=s.slice(1);return minus(s);};
+const trim=(x,n)=>f(x,n).replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');
+
+const PRESETS={player:{g:.08,d:.98,o:1,name:'Minecraft player'},item:{g:.04,d:.98,o:2,name:'Item'},snow:{g:.03,d:.99,o:3,name:'Snowball, 1.21.2+'},slow:{g:.01,d:.98,o:1,name:'Slow Falling'}};
+const S={g:.08,d:.98,order:1,R:20,preset:'player',cont:false,cur:1};
+let ghost=null,sim=null,lastTerm='';
+const TMAX=12;
+
+function simulate(st){
+  const N=Math.round(TMAX*st.R),sp=new Float64Array(N+1),di=new Float64Array(N+1);
+  let y=0,v=0;
+  for(let i=1;i<=N;i++){
+    if(st.order===1){y+=v;v-=st.g;v*=st.d;}
+    else if(st.order===2){v-=st.g;y+=v;v*=st.d;}
+    else{v-=st.g;v*=st.d;y+=v;}
+    sp[i]=-v*st.R;di[i]=-y;
+  }
+  const noTerm=st.d>=1,term=noTerm?Infinity:st.g*st.d/(1-st.d);
+  let i90=-1;if(!noTerm)for(let i=0;i<=N;i++)if(sp[i]>=0.9*term*st.R){i90=i;break;}
+  return {N,sp,di,term,termS:term*st.R,i90,R:st.R,g:st.g,d:st.d,order:st.order};
+}
+function label(st){return (st.preset!=='custom'?PRESETS[st.preset].name+', ':'')+'g '+trim(st.g,5)+', d '+trim(st.d,5)+', R '+st.R;}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function nice(v){if(!(v>0))return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*p).find(k=>k>=v);}
+const pad={l:50,r:14,t:14,b:34};
+function axes(g,w,h,xMax,yMin,yMax,yFmt,xLab){
+  g.clearRect(0,0,w,h);g.strokeStyle=C['--grid'];g.lineWidth=1;g.fillStyle=C['--ink-soft'];g.font='12px '+C['--sans'];
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  for(let i=0;i<=4;i++){const v=yMin+(yMax-yMin)*i/4,y=pad.t+ph*(1-i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(pad.l+pw,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(yFmt(v),pad.l-6,y);}
+  const nx=xMax>=10?6:5;for(let i=0;i<=nx;i++){const x=pad.l+pw*i/nx;g.textAlign='center';g.textBaseline='top';g.fillText(trim(xMax*i/nx,2),x,h-pad.b+6);}
+  g.textAlign='right';g.fillText(xLab,pad.l+pw,h-14);
+  return {X:t=>pad.l+pw*t/xMax,Y:v=>pad.t+ph*(1-(v-yMin)/(yMax-yMin)),pw,ph};
+}
+function series(g,A,arr,R,col,width,dots,alpha){
+  g.globalAlpha=alpha||1;g.strokeStyle=col;g.lineWidth=width;g.beginPath();
+  for(let i=0;i<arr.length;i++){const x=A.X(i/R),y=A.Y(arr[i]);i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();
+  if(dots&&A.pw/(arr.length)>=3.5){g.fillStyle=col;for(let i=0;i<arr.length;i++){g.beginPath();g.arc(A.X(i/R),A.Y(arr[i]),2.2,0,Math.PI*2);g.fill();}}
+  g.globalAlpha=1;
+}
+function cursorLine(g,A,h,t){g.strokeStyle=C['--ink'];g.lineWidth=1.5;g.globalAlpha=.6;g.beginPath();g.moveTo(A.X(t),pad.t);g.lineTo(A.X(t),h-pad.b);g.stroke();g.globalAlpha=1;}
+function dot(g,x,y,col){g.fillStyle=col;g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.fill();g.strokeStyle=C['--paper'];g.lineWidth=2;g.stroke();}
+
+function drawFall(){
+  const s=sim,tick=curTick(),tc=tick/s.R;
+  // speed chart
+  let vmax=Math.max(s.sp[s.N],isFinite(s.termS)?s.termS*1.08:0);if(ghost)vmax=Math.max(vmax,ghost.sp[ghost.N],isFinite(ghost.termS)?ghost.termS*1.08:0);
+  let c=setupCanvas($('cV'));const yM=nice(vmax);
+  let A=axes(c.g,c.w,c.h,TMAX,0,yM,v=>trim(v,1),'t (s)');
+  if(ghost)series(c.g,A,ghost.sp,ghost.R,C['--ink-soft'],1.5,false,.55);
+  if(S.cont&&isFinite(s.termS)){const cc=-Math.log(s.d)*s.R;const n=200,arr=[];for(let i=0;i<=n;i++)arr.push(s.termS*(1-Math.exp(-cc*TMAX*i/n)));c.g.setLineDash([6,4]);series(c.g,A,arr,n/TMAX,C['--moss'],2);c.g.setLineDash([]);}
+  series(c.g,A,s.sp,s.R,C['--steel'],1.2,true);
+  if(isFinite(s.termS)){const y=A.Y(s.termS);c.g.strokeStyle=C['--blood'];c.g.lineWidth=2;c.g.setLineDash([7,5]);c.g.beginPath();c.g.moveTo(pad.l,y);c.g.lineTo(pad.l+A.pw,y);c.g.stroke();c.g.setLineDash([]);
+    c.g.fillStyle=C['--blood'];c.g.font='600 12px '+C['--sans'];c.g.textAlign='right';c.g.textBaseline='bottom';c.g.fillText('terminal '+f(s.termS,1)+' blocks/s',pad.l+A.pw-2,y-4);}
+  else{c.g.fillStyle=C['--blood'];c.g.font='600 13px '+C['--sans'];c.g.textAlign='left';c.g.textBaseline='top';c.g.fillText('no terminal velocity (d = 1)',pad.l+8,pad.t+4);}
+  if(s.i90>=0&&s.i90/s.R<=TMAX){const x=A.X(s.i90/s.R);c.g.strokeStyle=C['--ochre'];c.g.lineWidth=2;c.g.setLineDash([2,4]);c.g.beginPath();c.g.moveTo(x,pad.t);c.g.lineTo(x,c.h-pad.b);c.g.stroke();c.g.setLineDash([]);
+    c.g.fillStyle=C['--ochre'];c.g.font='600 12px '+C['--sans'];c.g.textAlign=x>pad.l+A.pw*0.7?'right':'left';c.g.textBaseline='bottom';c.g.fillText('90% at '+(s.i90/s.R).toFixed(2)+' s',x+(c.g.textAlign==='left'?5:-5),c.h-pad.b-4);}
+  cursorLine(c.g,A,c.h,tc);dot(c.g,A.X(tc),A.Y(s.sp[tick]),C['--steel']);
+  // distance chart
+  let dmax=s.di[s.N];if(ghost)dmax=Math.max(dmax,ghost.di[ghost.N]);
+  c=setupCanvas($('cY'));const dM=nice(dmax);
+  A=axes(c.g,c.w,c.h,TMAX,0,dM,v=>v>=1000?trim(v/1000,1)+'k':trim(v,0),'t (s)');
+  if(ghost)series(c.g,A,ghost.di,ghost.R,C['--ink-soft'],1.5,false,.55);
+  if(S.cont&&isFinite(s.termS)){const cc=-Math.log(s.d)*s.R;const n=200,arr=[];for(let i=0;i<=n;i++){const t=TMAX*i/n;arr.push(s.termS*(t-(1-Math.exp(-cc*t))/cc));}c.g.setLineDash([6,4]);series(c.g,A,arr,n/TMAX,C['--moss'],2);c.g.setLineDash([]);}
+  series(c.g,A,s.di,s.R,C['--steel'],1.2,true);
+  if(s.i90>=0&&s.i90/s.R<=TMAX){const x=A.X(s.i90/s.R);c.g.strokeStyle=C['--ochre'];c.g.lineWidth=2;c.g.setLineDash([2,4]);c.g.beginPath();c.g.moveTo(x,pad.t);c.g.lineTo(x,c.h-pad.b);c.g.stroke();c.g.setLineDash([]);}
+  cursorLine(c.g,A,c.h,tc);dot(c.g,A.X(tc),A.Y(s.di[tick]),C['--steel']);
+}
+function curTick(){return Math.max(0,Math.min(sim.N,Math.round(S.cur*sim.R)));}
+function readFall(){
+  const s=sim,tick=curTick();
+  const noT=!isFinite(s.term);
+  $('rTerm').textContent=noT?'none':f(s.term,2)+' /tick';
+  $('rTermS').textContent=noT?'none':f(s.termS,1)+' /s';
+  $('r90').textContent=s.i90>=0?(s.i90/s.R).toFixed(2)+' s (tick '+s.i90+')':'—';
+  $('rGD').textContent=trim(s.g,5)+', '+trim(s.d,5);
+  $('oG').textContent=trim(S.g,5);$('oD').textContent=trim(S.d,5);
+  $('oCur').textContent=(tick/s.R).toFixed(2)+' s';
+  const share=noT?'':' · '+Math.round(100*s.sp[tick]/s.termS)+'% of terminal';
+  $('curTxt').textContent=`t = ${(tick/s.R).toFixed(2)} s · tick ${tick} · speed ${f(s.sp[tick],2)} blocks/s · fallen ${f(s.di[tick],2)} blocks${share}`;
+  $('lgCont').hidden=!S.cont;$('lgGhost').hidden=!ghost;$('ghostTxt').textContent=ghost?ghost.label:'';$('clearGhost').disabled=!ghost;
+  const tt=noT?'no terminal velocity':'Terminal speed '+f(s.termS,1)+' blocks per second';
+  if(tt!==lastTerm){lastTerm=tt;$('live').textContent=tt;}
+  let ins;
+  if(noT)ins=`With d = 1 there is no drag, so each tick adds the same g and the speed line never bends. The distance curve is a parabola. Any d below 1 brings the ceiling back.`;
+  else ins=`Terminal speed is g·d/(1 − d) = ${trim(s.g,5)} × ${trim(s.d,5)} / ${trim(1-s.d,5)} = ${f(s.term,3)} blocks per tick, times ${s.R} ticks per second = <b>${f(s.termS,1)} blocks/s</b>. No line of code clamps it. Near the ceiling the drag removes (1 − d) × v each tick, which equals what gravity adds. It takes ${s.i90>=0?(s.i90/s.R).toFixed(2)+' s':'more than 12 s'} to reach 90%. From then on the distance grows by about the same amount every second, which is why the right-hand curve straightens.`;
+  if(S.R!==20)ins+=` At ${S.R} Hz with ${document.querySelector('input[name=rmode]:checked').value==='keep'?'the same per-tick numbers, everything runs '+trim(S.R/20,2)+'× faster than at 20 Hz: the terminal speed scales with R and the time to reach it shrinks.':'converted numbers, the curve matches the 20 Hz fall closely. That is the conversion to use when changing tick rate.'}`;
+  $('insight').innerHTML=ins;
+}
+function updateFall(){sim=simulate(S);$('cur').step=String(1/S.R);readFall();drawFall();}
+function snapshotGhost(){if(!ghost){ghost=simulate(S);ghost.label=label(S);}}
+function syncSliders(){$('g').value=S.g;$('d').value=S.d;$('order').value=S.order;
+  document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.p===S.preset)));
+  document.querySelectorAll('[data-r]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.r===S.R)));}
+const rmode=()=>document.querySelector('input[name=rmode]:checked').value;
+
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.p;if(k===S.preset)return;snapshotGhost();S.preset=k;
+  if(k!=='custom'){const P=PRESETS[k];S.order=P.o;
+    if(rmode()==='convert'){S.g=P.g*Math.pow(20/S.R,2);S.d=Math.pow(P.d,20/S.R);}else{S.g=P.g;S.d=P.d;}}
+  syncSliders();updateFall();}));
+$('g').addEventListener('input',e=>{snapshotGhost();S.g=+e.target.value;S.preset='custom';syncSliders();updateFall();});
+$('d').addEventListener('input',e=>{snapshotGhost();S.d=+e.target.value;S.preset='custom';syncSliders();updateFall();});
+$('order').addEventListener('change',e=>{snapshotGhost();S.order=+e.target.value;S.preset='custom';syncSliders();updateFall();});
+document.querySelectorAll('[data-r]').forEach(b=>b.addEventListener('click',()=>{
+  const R=+b.dataset.r;if(R===S.R)return;snapshotGhost();
+  if(rmode()==='convert'){const k=S.R/R;S.g=S.g*k*k;S.d=Math.pow(S.d,k);}
+  S.R=R;syncSliders();updateFall();}));
+document.querySelectorAll('input[name=rmode]').forEach(r=>r.addEventListener('change',readFall));
+$('cont').addEventListener('change',e=>{S.cont=e.target.checked;readFall();drawFall();});
+$('clearGhost').addEventListener('click',()=>{ghost=null;readFall();drawFall();});
+$('cur').addEventListener('input',e=>{S.cur=+e.target.value;readFall();drawFall();});
+['cV','cY'].forEach(id=>{const c=$(id);let down=false;
+  const set=e=>{const r=c.getBoundingClientRect(),pw=r.width-pad.l-pad.r;S.cur=Math.max(0,Math.min(TMAX,(e.clientX-r.left-pad.l)/pw*TMAX));S.cur=Math.round(S.cur*sim.R)/sim.R;$('cur').value=S.cur;readFall();drawFall();};
+  c.addEventListener('pointerdown',e=>{down=true;c.setPointerCapture(e.pointerId);set(e);});
+  c.addEventListener('pointermove',e=>{if(down)set(e);});
+  c.addEventListener('pointerup',()=>down=false);c.addEventListener('pointercancel',()=>down=false);});
+
+// tab 2
+const D={c:20,R:60};
+function drawDamp(){
+  const h=1/D.R,ch=D.c*h,fe=Math.exp(-ch),fp=1/(1+ch),fl=1-ch;
+  $('oC').textContent=D.c;$('rCH').textContent=f(ch,4);$('rFe').textContent=f(fe,4);$('rFp').textContent=f(fp,4);$('rFl').textContent=f(fl,4);
+  const w2=$('warn2');
+  if(ch>2){w2.hidden=false;w2.textContent='c·h = '+f(ch,3)+' > 2: the linear form is unstable. Each step multiplies the speed by '+f(fl,3)+', so it flips sign and grows.';}
+  else if(ch>1){w2.hidden=false;w2.textContent='c·h = '+f(ch,3)+' > 1: the linear form reverses velocity. Damping alone makes the object move backwards.';}
+  else w2.hidden=true;
+  const n=D.R,rules=[[fe,C['--moss'],[]],[fp,C['--steel'],[7,4]],[fl,C['--blood'],[2,3]]];
+  const c=setupCanvas($('cD2'));const A=axes(c.g,c.w,c.h,1,-30,30,v=>trim(v,0),'t (s)');
+  c.g.strokeStyle=C['--ink-soft'];c.g.lineWidth=1;c.g.beginPath();c.g.moveTo(pad.l,A.Y(0));c.g.lineTo(pad.l+A.pw,A.Y(0));c.g.stroke();
+  rules.forEach(([k,col,dash])=>{
+    const pts=[];let v=10;for(let i=0;i<=n;i++){pts.push(v);v*=k;}
+    c.g.strokeStyle=col;c.g.lineWidth=2;c.g.setLineDash(dash);c.g.beginPath();
+    pts.forEach((v,i)=>{const x=A.X(i/n),y=A.Y(Math.max(-30,Math.min(30,v)));i?c.g.lineTo(x,y):c.g.moveTo(x,y);});c.g.stroke();c.g.setLineDash([]);
+    c.g.fillStyle=col;const r=n>60?1.8:2.8;
+    pts.forEach((v,i)=>{const x=A.X(i/n);if(v>30||v<-30){const y=A.Y(v>0?30:-30),s=v>0?1:-1;c.g.beginPath();c.g.moveTo(x,y-s*6);c.g.lineTo(x-4,y+s*1);c.g.lineTo(x+4,y+s*1);c.g.closePath();c.g.fill();}
+      else{c.g.beginPath();c.g.arc(x,A.Y(v),r,0,Math.PI*2);c.g.fill();}});
+  });
+  let t;
+  if(ch>2)t=`The linear rule multiplies by ${f(fl,4)} each step. Its size is above 1, so the velocity grows and flips sign every step until it leaves the chart. The exact and Padé rules still decay. Padé's factor 1/(1 + c·h) stays between 0 and 1 for any c and h, which is why Box2D uses it.`;
+  else if(ch>1)t=`The linear factor ${f(fl,4)} is negative, so every step reverses the velocity. Damping should only ever slow an object. The exact factor ${f(fe,4)} and the Padé factor ${f(fp,4)} stay positive.`;
+  else t=`At c·h = ${f(ch,4)} all three rules slow the object. The exact factor is ${f(fe,4)}, Padé gives ${f(fp,4)} and linear gives ${f(fl,4)}. Push c up, or lower R, until c·h passes 1.`;
+  $('insight2').innerHTML=t;
+}
+$('c').addEventListener('input',e=>{D.c=+e.target.value;drawDamp();});
+document.querySelectorAll('[data-r2]').forEach(b=>b.addEventListener('click',()=>{D.R=+b.dataset.r2;document.querySelectorAll('[data-r2]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));drawDamp();}));
+
+// tabs
+const tabs=[$('t1'),$('t2')];
+function sel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',String(on));x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});if(focus)t.focus();redraw();}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t,true));t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2],true);}});});
+function redraw(){if(!$('p1').hidden)drawFall();else drawDamp();}
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{palette();redraw();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{palette();redraw();});
+updateFall();drawDamp();
+})();
+</script>
+</body>
+</html>

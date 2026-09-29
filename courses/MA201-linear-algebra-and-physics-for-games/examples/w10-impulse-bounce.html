@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Impulse and restitution — MA201 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.tabs{display:flex;gap:6px;margin:18px 0 14px;flex-wrap:wrap}
+.tab{font:600 .95rem var(--sans);padding:9px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+@media (max-width:860px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#track{height:170px}#track.two{height:300px}
+@media (min-width:861px){#track{height:250px}#track.two{height:320px}}
+@media (max-width:420px){.stat b{font-size:1rem}}#bars{height:210px}#drop{height:300px}
+.readout{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;margin:10px 0 2px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px;min-width:0}
+.stat b{display:block;font-size:1.12rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.stat.wide{grid-column:1/-1}
+.caption{font-family:var(--serif);font-size:1.02rem;margin:12px 0 0;padding:10px 14px;border-radius:10px;background:var(--paper-2)}
+.status{font-weight:700;margin:8px 0 0;font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 22px;margin-top:16px}
+@media (max-width:860px){.controls{grid-template-columns:1fr}}
+.group-title{font-weight:600;font-size:.92rem;margin:0 0 6px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+label.check{justify-content:flex-start;align-items:center;margin:6px 0}
+label.check input{width:20px;height:20px;accent-color:var(--steel)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input:disabled{opacity:.4}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{font:700 .9rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-size:.84rem;color:var(--blood);font-weight:600;min-height:1.2em;margin:0}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:4px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:440px;width:100%}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA201 Linear Algebra and Physics for Games · Week 10 · Worked example</p>
+  <h1>One impulse, two ledgers</h1>
+  <p class="lede">Restitution <i>e</i> decides how much kinetic energy survives a collision. Nothing you set here changes total momentum, unless one body is a wall.</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Collision</button>
+  <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Drop test</button>
+</div>
+
+<section class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+  <div class="views">
+    <figure>
+      <figcaption>Track<small>4 m, 1D. Block width grows with the cube root of mass. Faint arrows are the velocities before contact.</small></figcaption>
+      <canvas id="track" role="img" aria-label="Two blocks on a track colliding"></canvas>
+      <p class="status" id="status"></p>
+      <p class="caption" id="caption">Same formula for every bounce. Drag e: the energy bar moves, the momentum bar never does.</p>
+    </figure>
+    <figure>
+      <figcaption>Conservation<small>Before and after the impulse</small></figcaption>
+      <canvas id="bars" role="img" aria-label="Momentum and kinetic energy before and after"></canvas>
+      <div class="readout">
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rVn">—</b><span>v<sub>n</sub> = v<sub>B</sub> − v<sub>A</sub></span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rJ">—</b><span>impulse j (N·s)</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rVa">—</b><span>v<sub>A</sub>′ (m/s)</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rVb">—</b><span>v<sub>B</sub>′ (m/s)</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rMu">—</b><span>reduced mass μ (kg)</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rE">—</b><span>restitution e</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rKe">—</b><span>kinetic energy before → after</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rLost">—</b><span>kinetic energy lost</span></div>
+        <div class="stat wide" style="--c:var(--moss)"><b id="rMom">—</b><span>momentum conserved</span></div>
+      </div>
+    </figure>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="controls">
+    <div>
+      <label for="e">Restitution e <output id="oE">0.95</output></label>
+      <input id="e" type="range" min="0" max="1.2" step="0.01" value="0.95">
+      <p class="note" id="eNote"></p>
+      <label for="va">Velocity of A <output id="oVa">2.0 m/s</output></label>
+      <input id="va" type="range" min="-3" max="3" step="0.1" value="2">
+      <label for="vb">Velocity of B <output id="oVb">0.0 m/s</output></label>
+      <input id="vb" type="range" min="-3" max="3" step="0.1" value="0">
+    </div>
+    <div>
+      <label for="ma">Mass of A <output id="oMa">0.17 kg</output></label>
+      <input id="ma" type="range" min="0" max="1000" step="1">
+      <label for="mb">Mass of B <output id="oMb">0.17 kg</output></label>
+      <input id="mb" type="range" min="0" max="1000" step="1">
+      <label class="check"><input type="checkbox" id="wall"> B is a wall (inverse mass 0)</label>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn" id="play">Pause</button>
+        <button class="btn ghost" id="replay">Replay</button>
+      </div>
+    </div>
+    <div>
+      <p class="group-title" id="preT">Presets from the lecture's table</p>
+      <div class="chips" role="group" aria-labelledby="preT" id="presets">
+        <button class="chip" data-p="pool95" aria-pressed="true">Pool 0.95</button>
+        <button class="chip" data-p="pool1" aria-pressed="false">Pool 1.0</button>
+        <button class="chip" data-p="rail" aria-pressed="false">Rail 0.75</button>
+        <button class="chip" data-p="heavy" aria-pressed="false">Heavy hits light</button>
+        <button class="chip" data-p="light" aria-pressed="false">Light hits heavy</button>
+        <button class="chip" data-p="stick" aria-pressed="false">Stick (e = 0)</button>
+      </div>
+      <p class="hint">Mass sliders are logarithmic, 0.05 to 20 kg. Positive velocity points right; n = +x.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+  <figure>
+    <figcaption>Ball dropped on a static floor<small>Height against time. The three curves agree until each threshold cuts its tail off.</small></figcaption>
+    <canvas id="drop" role="img" aria-label="Bounce height against time for three restitution thresholds"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--steel)"></i>Threshold none (0.0001 m/s)</span>
+      <span><i style="background:var(--ochre)"></i>1 m/s (Box2D v2.4.1 default)</span>
+      <span><i style="background:var(--blood)"></i>2 m/s (Unity 6 default)</span>
+    </div>
+  </figure>
+  <div class="table-wrap">
+    <table aria-label="Bounces per threshold">
+      <thead><tr><th>Threshold</th><th>Bounces</th><th>Last bounce height</th><th>Time to rest</th></tr></thead>
+      <tbody id="dropBody"></tbody>
+    </table>
+  </div>
+  <p class="caption" id="dropNote"></p>
+  <div class="controls" style="grid-template-columns:1fr 1fr">
+    <div>
+      <label for="h">Drop height <output id="oH">1.0 m</output></label>
+      <input id="h" type="range" min="0.5" max="5" step="0.1" value="1">
+    </div>
+    <div>
+      <label for="de">Restitution e <output id="oDe">0.80</output></label>
+      <input id="de" type="range" min="0.1" max="0.99" step="0.01" value="0.8">
+    </div>
+  </div>
+</section>
+
+<footer>Model: v<sub>n</sub> = v<sub>B</sub> − v<sub>A</sub> with n = +x. If v<sub>n</sub> &lt; 0, j = −(1 + e) v<sub>n</sub> / (1/m<sub>A</sub> + 1/m<sub>B</sub>), v<sub>A</sub>′ = v<sub>A</sub> − j/m<sub>A</sub>, v<sub>B</sub>′ = v<sub>B</sub> + j/m<sub>B</sub>; energy lost = ½ μ (1 − e²) v<sub>n</sub>². Drop test with g = 9.81 m/s²: the engine bounces only while the impact speed is at least the threshold. Thresholds from Box2D v2.4.1 source (b2_fixture.h) and Unity 6 Physics settings (bounceThreshold).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const M='−';
+const sg=(x,d)=>{if(Math.abs(x)<0.5*Math.pow(10,-d))x=0;const s=x.toFixed(d);return s.startsWith('-')?M+s.slice(1):s;};
+const G=9.81;
+
+// state
+const S={e:0.95,ma:0.17,mb:0.17,va:2,vb:0,wall:false};
+const PRE={
+  pool95:{e:0.95,ma:0.17,mb:0.17,va:2,vb:0,wall:false},
+  pool1:{e:1,ma:0.17,mb:0.17,va:2,vb:0,wall:false},
+  rail:{e:0.75,ma:0.17,mb:0.17,va:2,vb:0,wall:true},
+  heavy:{e:1,ma:10,mb:1,va:2,vb:0,wall:false},
+  light:{e:1,ma:1,mb:10,va:2,vb:0,wall:false},
+  stick:{e:0,ma:1,mb:1,va:2,vb:0,wall:false}
+};
+const LMIN=Math.log10(0.05),LMAX=Math.log10(20);
+const m2s=m=>Math.round((Math.log10(m)-LMIN)/(LMAX-LMIN)*1000);
+const s2m=s=>{const m=Math.pow(10,LMIN+(LMAX-LMIN)*s/1000);return +m.toPrecision(2);};
+const fmtM=m=>(m<1?m.toFixed(2):m<10?m.toFixed(1):m.toFixed(0))+' kg';
+
+function solve(){
+  const {e,ma,mb,wall}=S,va=S.va,vb=wall?0:S.vb;
+  const imb=wall?0:1/mb,vn=vb-va,mu=1/(1/ma+imb);
+  const hit=vn<0;
+  const j=hit?-(1+e)*vn/(1/ma+imb):0;
+  const va2=va-j/ma,vb2=wall?0:vb+j/mb;
+  const pB=ma*va+(wall?0:mb*vb),pA=ma*va2+(wall?0:mb*vb2);
+  const keB=0.5*ma*va*va+(wall?0:0.5*mb*vb*vb),keA=0.5*ma*va2*va2+(wall?0:0.5*mb*vb2*vb2);
+  const lost=hit?0.5*mu*(1-e*e)*vn*vn:0;
+  return {e,ma,mb,wall,va,vb,vn,mu,hit,j,va2,vb2,pB,pA,keB,keA,lost};
+}
+const width=m=>Math.min(0.4,Math.max(0.08,0.1*Math.cbrt(m/0.17)));
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+
+// timeline
+let R=null,T0=performance.now(),playing=true,pausedAt=0,raf=null;
+function timeline(r){
+  const wa=width(r.ma),wb=r.wall?0:width(r.mb);
+  const xa0=0.8,xb0=r.wall?3.0:2.4;
+  const gap=r.wall?(xb0-(xa0+wa/2)):((xb0-wb/2)-(xa0+wa/2));
+  let tc=r.hit?gap/(-r.vn):Infinity;
+  const span=r.hit?tc+1.5:2.5;
+  return {wa,wb,xa0,xb0,tc,span,rate:Math.max(1,span/6)};
+}
+function posAt(r,L,t){
+  if(t<L.tc)return {xa:L.xa0+r.va*t,xb:L.xb0+(r.wall?0:r.vb*t),after:false};
+  const xa=L.xa0+r.va*L.tc,xb=L.xb0+(r.wall?0:r.vb*L.tc),d=t-L.tc;
+  return {xa:xa+r.va2*d,xb:xb+r.vb2*d,after:true};
+}
+
+function arrow(g,x1,y,x2,col,alpha,label,lw){
+  g.globalAlpha=alpha;g.strokeStyle=col;g.fillStyle=col;g.lineWidth=lw||2.5;
+  g.beginPath();g.moveTo(x1,y);g.lineTo(x2,y);g.stroke();
+  if(Math.abs(x2-x1)>3){const dir=Math.sign(x2-x1);g.beginPath();g.moveTo(x2,y);g.lineTo(x2-dir*8,y-5);g.lineTo(x2-dir*8,y+5);g.closePath();g.fill();}
+  else{g.beginPath();g.arc(x1,y,3,0,7);g.fill();}
+  if(label){g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText(label,(x1+x2)/2,y-6);}
+  g.globalAlpha=1;
+}
+
+function drawRow(g,w,y0,rowH,r,L,p,title,ghost){
+  const pad=14,X=x=>pad+x/4*(w-2*pad),pxm=(w-2*pad)/4,ay=y0+16;
+  const base=y0+rowH-22;
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1.5;g.beginPath();g.moveTo(X(0),base);g.lineTo(X(4),base);g.stroke();
+  g.fillStyle=css('--ink-soft');g.font='10px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+  for(let m=0;m<=4;m++){g.beginPath();g.moveTo(X(m),base);g.lineTo(X(m),base+4);g.stroke();g.fillText(m+' m',X(m),base+5);}
+  if(title){g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillStyle=css('--ink-soft');g.fillText(title,4,y0);}
+  const bh=m=>Math.min(56,Math.max(22,width(m)*pxm*1.2));
+  const arrowScale=pxm*0.22;
+  // wall
+  if(r.wall){const x=X(L.xb0);g.fillStyle=css('--ink-soft');g.globalAlpha=.25;g.fillRect(x,base-64,Math.min(26,w-x-2),64);g.globalAlpha=1;
+    g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.save();g.beginPath();g.rect(x,base-64,Math.min(26,w-x-2),64);g.clip();
+    for(let k=-64;k<40;k+=8){g.beginPath();g.moveTo(x+k,base);g.lineTo(x+k+64,base-64);g.stroke();}g.restore();
+    g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(x,base-64);g.lineTo(x,base);g.stroke();
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';g.fillText('wall',x+2,base-66);}
+  const maxH=Math.max(bh(r.ma),r.wall?0:bh(r.mb));
+  const blocks=[['A',r.ma,p.xa,L.wa,'--steel',p.after?r.va2:r.va,r.va]];
+  if(!r.wall)blocks.push(['B',r.mb,p.xb,L.wb,'--ochre',p.after?r.vb2:r.vb,r.vb]);
+  blocks.forEach(([k,m,x,wd,col,v,v0])=>{
+    const h=bh(m),left=X(x-wd/2),right=X(x+wd/2);
+    g.fillStyle=css(col);g.fillRect(left,base-h,right-left,h);
+    g.fillStyle=css('--paper');g.font='700 12px '+css('--sans');g.textAlign='center';g.textBaseline='middle';
+    if(right-left>12)g.fillText(k,(left+right)/2,base-h/2);
+    else{g.fillStyle=css('--ink');g.fillText(k,(left+right)/2,base-h-8);}
+    const cx=(left+right)/2,idx=k==='A'?0:1,top=base-maxH-22-idx*34;
+    g.strokeStyle=css(col);g.globalAlpha=.35;g.lineWidth=1;g.setLineDash([2,3]);g.beginPath();g.moveTo(cx,base-h-2);g.lineTo(cx,top+4);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+    if(p.after&&ghost)arrow(g,cx,top+9,cx+v0*arrowScale,css(col),.3,'',2);
+    arrow(g,cx,top,cx+v*arrowScale,css(col),1,k+' '+sg(v,v===0?1:(Math.abs(v)<0.1&&v!==0?3:2))+' m/s');
+  });
+}
+
+function drawTrack(){
+  const c=setup($('track')),g=c.g,r=R;g.clearRect(0,0,c.w,c.h);
+  const L=timeline(r);
+  if(reduce.matches!==$('track').classList.contains('two')){$('track').classList.toggle('two',reduce.matches);return drawTrack();}
+  if(reduce.matches){
+    const tAfter=r.hit?L.tc+0.6:1.2;
+    drawRow(g,c.w,4,c.h/2-2,r,L,posAt(r,L,0),'Before',false);
+    drawRow(g,c.w,c.h/2+2,c.h/2-2,r,L,posAt(r,L,tAfter),r.hit?'After contact (0.6 s later)':'1.2 s later',true);
+    return;}
+  const now=playing?performance.now():pausedAt;
+  const t=((now-T0)/1000/L.rate)%L.span;
+  drawRow(g,c.w,4,c.h-4,r,L,posAt(r,L,t),'',true);
+}
+
+function drawBars(){
+  const c=setup($('bars')),g=c.g,r=R,w=c.w,h=c.h;g.clearRect(0,0,w,h);
+  const groups=[
+    {t:'Momentum (kg·m/s)',vals:[r.pB,r.pA],col:'--moss',fmt:v=>sg(v,3)},
+    {t:'Kinetic energy (J)',vals:[r.keB,r.keA],col:'--ochre',fmt:v=>sg(v,3)}];
+  const gw=w/2;
+  groups.forEach((G_,gi)=>{
+    const x0=gi*gw+10,x1=(gi+1)*gw-10,top=50,bot=h-22;
+    const mx=Math.max(1e-9,...G_.vals.map(Math.abs))*1.12;
+    const hasNeg=G_.vals.some(v=>v<0);
+    const zeroY=hasNeg?(top+bot)/2:bot;const span=hasNeg?(bot-top)/2:(bot-top);
+    g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='top';g.fillText(G_.t,(x0+x1)/2,2);
+    g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.beginPath();g.moveTo(x0,zeroY);g.lineTo(x1,zeroY);g.stroke();
+    const bw=Math.min(54,(x1-x0)/3.2);
+    ['before','after'].forEach((lab,i)=>{
+      const v=G_.vals[i],cx=x0+(x1-x0)*(i?0.72:0.28),hh=v/mx*span;
+      g.fillStyle=css(G_.col);g.globalAlpha=i?1:.55;g.fillRect(cx-bw/2,zeroY-Math.max(hh,0),bw,Math.abs(hh));g.globalAlpha=1;
+      if(gi===1&&i===1&&G_.vals[0]>G_.vals[1]){const hb=G_.vals[0]/mx*span;g.strokeStyle=css('--blood');g.setLineDash([4,3]);g.lineWidth=1.5;
+        g.strokeRect(cx-bw/2,zeroY-hb,bw,hb-hh);g.setLineDash([]);}
+      g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='center';
+      g.textBaseline=v>=0?'bottom':'top';g.fillText(G_.fmt(v),cx,v>=0?zeroY-hh-3-(gi===1&&i===1&&G_.vals[0]>G_.vals[1]?(G_.vals[0]-v)/mx*span:0):zeroY-hh+3);
+      g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textBaseline='top';g.fillText(lab,cx,h-15);
+    });
+    if(gi===1&&r.keB>0){const pc=r.lost/r.keB*100;g.fillStyle=pc>=0?css('--blood'):css('--moss');g.font='700 12px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+      g.fillText((pc>=0?M:'+')+Math.abs(pc).toFixed(1)+'%',x0+(x1-x0)*0.72,18);}
+  });
+}
+
+function readouts(){
+  const r=R;
+  $('rVn').textContent=sg(r.vn,3)+' m/s';
+  $('rJ').textContent=r.hit?sg(r.j,3):'0 (none)';
+  $('rVa').textContent=sg(r.va2,3);$('rVb').textContent=r.wall?'wall':sg(r.vb2,3);
+  $('rMu').textContent=sg(r.mu,3);
+  const pc=r.keB>0?r.lost/r.keB*100:0;
+  $('rLost').textContent=(r.hit?(r.lost>=0?`${sg(r.lost,3)} J (${pc.toFixed(1)}%)`:`${M}${Math.abs(r.lost).toFixed(3)} J (gained ${Math.abs(pc).toFixed(1)}%)`):'0 J');
+  $('rKe').textContent=`${sg(r.keB,3)} → ${sg(r.keA,3)} J`;$('rE').textContent=r.e.toFixed(2);
+  $('rMom').textContent=r.wall?`no, the wall absorbed Δp = ${sg(r.pB-r.pA,3)} kg·m/s (${sg(r.pB,3)} → ${sg(r.pA,3)})`:`yes (${sg(r.pB,3)} → ${sg(r.pA,3)} kg·m/s)`;
+  $('status').textContent=r.hit?`Contact: j = ${sg(r.j,3)} N·s, A leaves at ${sg(r.va2,3)} m/s`+(r.wall?'.':`, B at ${sg(r.vb2,3)} m/s.`):'No collision: already separating (v_n ≥ 0), so no impulse.';
+  $('eNote').textContent=r.e>1?'e > 1 adds energy: the bodies leave faster than they met.':'';
+  $('oE').textContent=r.e.toFixed(2);$('oVa').textContent=sg(r.va,1)+' m/s';$('oVb').textContent=sg(r.wall?0:r.vb,1)+' m/s';
+  $('oMa').textContent=fmtM(r.ma);$('oMb').textContent=r.wall?'∞ (wall)':fmtM(r.mb);
+  $('vb').disabled=r.wall;$('mb').disabled=r.wall;
+}
+let liveT=null;
+function announce(){clearTimeout(liveT);liveT=setTimeout(()=>{const r=R;
+  $('live').textContent=r.hit?`j ${sg(r.j,3)}, A leaves at ${+r.va2.toFixed(3)} m/s`+(r.wall?'':`, B at ${+r.vb2.toFixed(3)} m/s`)+`, ${ (r.keB>0?r.lost/r.keB*100:0).toFixed(1)}% energy lost`:'No collision: already separating';},400);}
+
+function frame(){drawTrack();if(playing&&!reduce.matches&&!$('p1').hidden)raf=requestAnimationFrame(frame);else raf=null;}
+function kick(){if(!raf&&playing&&!reduce.matches&&!$('p1').hidden)raf=requestAnimationFrame(frame);else drawTrack();}
+function update(restart){R=solve();readouts();drawBars();announce();if(restart){T0=performance.now();pausedAt=T0;}kick();}
+
+function syncInputs(){$('e').value=S.e;$('ma').value=m2s(S.ma);$('mb').value=m2s(S.mb);$('va').value=S.va;$('vb').value=S.vb;$('wall').checked=S.wall;}
+function clearPreset(){document.querySelectorAll('#presets .chip').forEach(x=>x.setAttribute('aria-pressed','false'));}
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#presets .chip').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+  Object.assign(S,PRE[b.dataset.p]);syncInputs();update(true);}));
+$('e').addEventListener('input',e=>{S.e=+e.target.value;clearPreset();update(false);});
+$('va').addEventListener('input',e=>{S.va=+e.target.value;clearPreset();update(true);});
+$('vb').addEventListener('input',e=>{S.vb=+e.target.value;clearPreset();update(true);});
+$('ma').addEventListener('input',e=>{S.ma=s2m(+e.target.value);clearPreset();update(true);});
+$('mb').addEventListener('input',e=>{S.mb=s2m(+e.target.value);clearPreset();update(true);});
+$('wall').addEventListener('change',e=>{S.wall=e.target.checked;clearPreset();update(true);});
+$('play').addEventListener('click',()=>{if(playing){playing=false;pausedAt=performance.now();$('play').textContent='Play';}
+  else{T0+=performance.now()-pausedAt;playing=true;$('play').textContent='Pause';}kick();});
+$('replay').addEventListener('click',()=>{T0=performance.now();pausedAt=T0;kick();});
+function motionPref(){const r=reduce.matches;$('play').disabled=r;$('replay').disabled=r;if(r)$('play').textContent='Play';else $('play').textContent=playing?'Pause':'Play';}
+
+// drop test
+function drop(h,e,thr){let v=Math.sqrt(2*G*h),t=v/G;const hs=[],imp=[{t,v}];
+  while(v*e>0&&v>=thr){v*=e;hs.push(v*v/(2*G));imp.push({t:t+2*v/G,v});t+=2*v/G;if(hs.length>100000)break;}
+  return {n:hs.length,hs,t,t0:Math.sqrt(2*h/G),v0:Math.sqrt(2*G*h)};}
+const THR=[['none (0.0001 m/s)',0.0001,'--steel',5,.45],['1 m/s (Box2D)',1,'--ochre',3,1],['2 m/s (Unity)',2,'--blood',1.6,1]];
+function drawDrop(){
+  const h=+$('h').value,e=+$('de').value;$('oH').textContent=h.toFixed(1)+' m';$('oDe').textContent=e.toFixed(2);
+  const c=setup($('drop')),g=c.g,w=c.w,H=c.h,pad={l:44,r:12,t:12,b:30},Tm=5;
+  const X=t=>pad.l+t/Tm*(w-pad.l-pad.r),Y=y=>pad.t+(1-y/h)*(H-pad.t-pad.b);
+  g.clearRect(0,0,w,H);g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=h*i/4;g.beginPath();g.moveTo(pad.l,Y(y));g.lineTo(w-pad.r,Y(y));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(y.toFixed(2),pad.l-5,Y(y));}
+  for(let t=0;t<=5;t++){g.textAlign='center';g.textBaseline='top';g.fillText(t+' s',X(t),H-pad.b+6);}
+  g.save();g.beginPath();g.rect(pad.l,0,w-pad.l-pad.r,H);g.clip();
+  const res=THR.map(([name,thr,col,lw,al])=>{const d=drop(h,e,thr);
+    g.strokeStyle=css(col);g.lineWidth=lw;g.globalAlpha=al;g.beginPath();
+    // fall
+    const N=40;for(let i=0;i<=N;i++){const t=d.t0*i/N,y=h-0.5*G*t*t;i?g.lineTo(X(t),Y(y)):g.moveTo(X(t),Y(y));}
+    let t=d.t0,v=d.v0;
+    for(let k=0;k<d.n&&t<Tm;k++){v*=e;const dur=2*v/G,n=Math.max(4,Math.ceil(dur/Tm*(w)/3));
+      for(let i=1;i<=n;i++){const tau=dur*i/n;g.lineTo(X(t+tau),Y(v*tau-0.5*G*tau*tau));}t+=dur;}
+    g.lineTo(X(Tm),Y(0));g.stroke();g.globalAlpha=1;
+    if(d.n){const lh=d.hs[d.n-1];g.setLineDash([5,4]);g.lineWidth=1.2;g.strokeStyle=css(col);g.beginPath();g.moveTo(pad.l,Y(lh));g.lineTo(w-pad.r,Y(lh));g.stroke();g.setLineDash([]);}
+    if(d.t<=Tm){g.fillStyle=css(col);g.beginPath();g.arc(X(d.t),Y(0),4,0,7);g.fill();}
+    return {name,d};});
+  g.restore();
+  $('dropBody').innerHTML=res.map(({name,d})=>`<tr><td>${name}</td><td>${d.n}</td><td>${d.n?d.hs[d.n-1].toFixed(3)+' m':'—'}</td><td>${d.t.toFixed(2)} s${d.t>Tm?' (off plot)':''}</td></tr>`).join('');
+  const t0=Math.sqrt(2*h/G),lim=t0*(1+e)/(1-e);
+  $('dropNote').textContent=`Exact limit t₀(1 + e)/(1 − e) = ${lim.toFixed(2)} s after infinitely many bounces. A 1 m/s threshold stops after ${res[1].d.n} bounces with a ${(res[1].d.n?res[1].d.hs[res[1].d.n-1]*100:0).toFixed(1)} cm hop; 2 m/s stops after ${res[2].d.n} with a ${(res[2].d.n?res[2].d.hs[res[2].d.n-1]*100:0).toFixed(1)} cm hop, big enough to see.`;
+}
+$('h').addEventListener('input',drawDrop);$('de').addEventListener('input',drawDrop);
+
+// tabs
+const tabs=[$('t1'),$('t2')];
+function sel(t,focus){tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).hidden=!on;});
+  if(focus)t.focus();if(t.id==='t2')drawDrop();else{drawBars();kick();}}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>sel(t,true));t.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();sel(tabs[(i+1)%2],true);}
+  else if(e.key==='Home'){e.preventDefault();sel(tabs[0],true);}else if(e.key==='End'){e.preventDefault();sel(tabs[1],true);}});});
+
+const redraw=()=>{if($('p1').hidden)drawDrop();else{drawBars();drawTrack();}};
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+reduce.addEventListener('change',()=>{motionPref();kick();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+syncInputs();motionPref();update(true);
+// expose for tests
+window.__w10={solve,drop,S};
+})();
+</script>
+</body>
+</html>

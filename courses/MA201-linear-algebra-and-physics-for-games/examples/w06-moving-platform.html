@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jumping off a moving platform · MA201 Week 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+figure{margin:0 0 12px;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px}
+figcaption small{font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:240px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:4px 0 10px;color:var(--ink-soft)}
+.legend i{display:inline-block;width:24px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid}
+.legend i.box{width:14px;height:10px;border:0}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:8px 14px;margin:6px 0 0}
+@media (max-width:860px){.readout{grid-template-columns:repeat(2,1fr)}.readout .stat:first-child{grid-column:span 2}}
+.stat{border-left:4px solid var(--c,var(--ink-soft));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-family:var(--mono);font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.stat.warn{background:color-mix(in srgb,var(--blood) 14%,transparent);border-left-color:var(--blood);border-radius:0 6px 6px 0}
+.stat.warn b{color:var(--blood)}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 22px;margin-top:16px}
+@media (max-width:860px){.controls{grid-template-columns:1fr}}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend,.lbl{font-weight:600;font-size:.92rem;padding:0;margin-bottom:6px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
+.radio,.check{display:flex;gap:8px;align-items:center;justify-content:flex-start;font-weight:500;cursor:pointer;margin:4px 0}
+.radio input,.check input{width:18px;height:18px;accent-color:var(--steel);margin:0}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 8px}
+select,.btn,.chip{font:600 .92rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;max-width:100%}
+select{width:100%;margin-bottom:10px}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.chip{border-color:var(--steel);font-size:.85rem;padding:6px 10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn:focus-visible,.chip:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.small{font-size:.84rem;color:var(--ink-soft);margin:4px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA201 Linear Algebra and Physics for Games · Week 6 · Worked example</p>
+  <h1>Jumping off a moving platform</h1>
+  <p class="lede">The same jump in two frames. In the world the arc slants. Seen from the platform it goes straight up and lands where it left, as long as the platform's velocity is added to the jump and the platform is not accelerating.</p>
+</header>
+
+<section class="panel" aria-label="Moving platform jump">
+  <figure>
+    <figcaption>World frame<small>The camera is fixed. y points up.</small></figcaption>
+    <canvas id="cW" role="img" aria-label="The jump drawn in world coordinates"></canvas>
+  </figure>
+  <figure>
+    <figcaption>Platform frame<small>The camera rides the platform, so the platform stays put and the world scrolls.</small></figcaption>
+    <canvas id="cR" role="img" aria-label="The jump drawn relative to the platform"></canvas>
+  </figure>
+  <div class="legend">
+    <span><i style="border-color:var(--ochre)"></i>player path in the world</span>
+    <span><i style="border-color:var(--ochre);border-top-style:dashed"></i>player path relative to the platform</span>
+    <span><i style="border-color:var(--steel);border-top-style:dotted"></i>platform path</span>
+    <span><i class="box" style="background:var(--steel)"></i>platform (100 px wide)</span>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rV">—</b><span>launch velocity, world (px/s)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rWA">—</b><span>world apex above take-off (px)</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rRA">—</b><span>apex above platform (px)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rAir">—</b><span>air time until landing</span></div>
+    <div class="stat" id="stOff" style="--c:var(--moss)"><b id="rOff">—</b><span>landing offset from take-off spot (px)</span></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="motion" style="display:block">Platform motion</label>
+      <select id="motion">
+        <option value="slide">Constant slide</option>
+        <option value="elev">Elevator</option>
+        <option value="cart">Accelerating cart</option>
+        <option value="back">Back and forth</option>
+      </select>
+      <div data-for="slide"><label for="sS">Slide speed <output id="oS"></output></label><input id="sS" type="range" min="0" max="400" step="5" value="150"></div>
+      <div data-for="elev" hidden><label for="sE"><span>Elevator speed v<sub>e</sub></span> <output id="oE"></output></label><input id="sE" type="range" min="-200" max="200" step="5" value="100"></div>
+      <div data-for="cart" hidden><label for="sVc"><span>Cart speed v<sub>c</sub> at t = 0</span> <output id="oVc"></output></label><input id="sVc" type="range" min="-200" max="300" step="5" value="100">
+        <label for="sAc"><span>Cart acceleration a<sub>c</sub></span> <output id="oAc"></output></label><input id="sAc" type="range" min="-400" max="400" step="10" value="200"></div>
+      <div data-for="back" hidden><label for="sT0">Phase t₀ <output id="oT0"></output></label><input id="sT0" type="range" min="0" max="4" step="0.05" value="1"><p class="small">x = 200·sin(π/2·(t + t₀)). At t₀ = 1 the jump starts at the turnaround.</p></div>
+    </div>
+    <fieldset>
+      <legend>On leaving the platform</legend>
+      <label class="radio"><input type="radio" name="mode" value="add" checked> Add velocity</label>
+      <label class="radio"><input type="radio" name="mode" value="up"> Add upward velocity only</label>
+      <label class="radio"><input type="radio" name="mode" value="none"> Do nothing</label>
+      <label class="check" style="margin-top:10px"><input type="checkbox" id="caps"> Celeste caps (x to ±250, upward y to 130)</label>
+    </fieldset>
+    <div>
+      <label for="sTime">Time <output id="oTime"></output></label>
+      <input id="sTime" type="range" min="0" max="1" step="0.001" value="0">
+      <div class="row"><button class="btn primary" id="play" type="button">Pause</button>
+        <label for="speed" style="align-items:center">Speed</label>
+        <select id="speed" style="width:auto;margin:0"><option value="1">1×</option><option value="0.5" selected>0.5×</option><option value="0.25">0.25×</option></select></div>
+      <p class="lbl" style="margin:14px 0 6px">Lecture cases</p>
+      <div class="row" role="group" aria-label="Lecture cases">
+        <button class="chip" type="button" data-set="slide,add">Slide, add</button>
+        <button class="chip" type="button" data-set="slide,none">Slide, do nothing</button>
+        <button class="chip" type="button" data-set="cart,add">Cart, add</button>
+        <button class="chip" type="button" data-set="back,add">Turnaround, add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model: exact kinematics with g = 980 px/s² (Godot's default 2D gravity) and a jump of 400 px/s relative to the platform (Godot's CharacterBody2D template). Leave modes follow Godot's <code>platform_on_leave</code> options. The caps follow <code>LiftXCap</code> and <code>LiftYCap</code> in Celeste's published <code>Player.cs</code>. Landing time is found by stepping 0.001 s on the exact formulas, then refining the crossing by bisection.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const G=980,JUMP=400,HALF=50;
+const S={motion:'slide',mode:'add',caps:false,s:150,ve:100,vc:100,ac:200,t0:1};
+let T=0,playing=!reduce,last=null,sim=null;
+
+const minus=s=>s.replace(/-/g,'−');
+const f=(x,n)=>{let s=x.toFixed(n);if(/^-0\.?0*$/.test(s))s=s.slice(1);return minus(s);};
+const sgn=(x,n)=>{const s=f(x,n);return (x>0&&s!=='0.0'&&!/^0\.0+$/.test(s)?'+':'')+s;};
+
+// platform position and velocity at time t
+function plat(t){
+  const m=S.motion;
+  if(m==='slide')return {p:[S.s*t,0],v:[S.s,0]};
+  if(m==='elev')return {p:[0,S.ve*t],v:[0,S.ve]};
+  if(m==='cart')return {p:[S.vc*t+.5*S.ac*t*t,0],v:[S.vc+S.ac*t,0]};
+  const w=Math.PI/2;return {p:[200*Math.sin(w*(t+S.t0)),0],v:[200*w*Math.cos(w*(t+S.t0)),0]};
+}
+function simulate(){
+  const P0=plat(0);let vp=P0.v.slice();
+  if(S.caps){vp[0]=Math.max(-250,Math.min(250,vp[0]));if(vp[1]>0)vp[1]=Math.min(130,vp[1]);}
+  let v;
+  if(S.mode==='add')v=[vp[0],JUMP+vp[1]];
+  else if(S.mode==='up')v=[vp[0],JUMP+Math.max(vp[1],0)];
+  else v=[0,JUMP];
+  const r0=P0.p;
+  const pos=t=>[r0[0]+v[0]*t,r0[1]+v[1]*t-.5*G*t*t];
+  const rel=t=>{const r=pos(t),p=plat(t).p;return [r[0]-p[0],r[1]-p[1]];};
+  // landing: first t>0 where relative y returns to 0 while moving down
+  let t=0,prev=0,land=null;
+  for(let i=1;i<20000;i++){
+    const tt=i*0.001,y=rel(tt)[1];
+    if(y<=0&&y<prev){let lo=tt-0.001,hi=tt;for(let k=0;k<60;k++){const mid=(lo+hi)/2;rel(mid)[1]>0?lo=mid:hi=mid;}land=(lo+hi)/2;break;}
+    prev=y;
+  }
+  if(land===null)land=20;
+  let wA=0,rA=0;const n=4000;
+  for(let i=0;i<=n;i++){const tt=land*i/n;wA=Math.max(wA,pos(tt)[1]-r0[1]);rA=Math.max(rA,rel(tt)[1]);}
+  if(v[1]>0){const ta=Math.min(land,v[1]/G);wA=Math.max(wA,pos(ta)[1]-r0[1]);}
+  const off=rel(land)[0]-rel(0)[0];
+  return {v,r0,pos,rel,land,wA,rA,off};
+}
+
+function setupCanvas(c,h){
+  c.style.height=h+'px';
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(h*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h};
+}
+// bounds of what each panel draws
+function bounds(pts){let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;pts.forEach(p=>{x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]);});return {x0,x1,y0,y1};}
+
+function draw(){
+  const s=sim,N=240,wPts=[],pPts=[],rPts=[];
+  for(let i=0;i<=N;i++){const t=s.land*i/N;wPts.push(s.pos(t));pPts.push(plat(t).p);rPts.push(s.rel(t));}
+  const bw=bounds(wPts.concat(pPts).concat(pPts.map(p=>[p[0]-HALF,p[1]-14])).concat(pPts.map(p=>[p[0]+HALF,p[1]])));
+  const br=bounds(rPts.concat([[-HALF-10,-14],[HALF+10,30]]));
+  const cw=$('cW').getBoundingClientRect().width;
+  const pad=28;
+  const spanX=Math.max(bw.x1-bw.x0,br.x1-br.x0)+2*pad+20;
+  const scale=Math.min(1,cw/spanX);
+  const hW=Math.min(420,Math.max(150,(bw.y1-bw.y0+30)*scale+2*pad+20));
+  const hR=Math.min(420,Math.max(150,(br.y1-br.y0+30)*scale+2*pad+20));
+  const tp=plat(T).p,pw=s.pos(T),pr=s.rel(T);
+  panel($('cW'),hW,bw,scale,g=>g,{
+    path:wPts,dash:[],plat:pPts,platNow:tp,player:pw,takeoff:s.r0,landing:[s.pos(s.land),plat(s.land).p],frame:'world'
+  });
+  panel($('cR'),hR,br,scale,g=>g,{
+    path:rPts,dash:[9,6],plat:null,platNow:[0,0],player:pr,takeoff:[0,0],landing:[s.rel(s.land),[0,0]],frame:'rel',scroll:[-tp[0],-tp[1]]
+  });
+}
+function panel(c,h,b,scale,_,o){
+  const {g,w}=setupCanvas(c,h);g.clearRect(0,0,w,h);
+  const cxW=(b.x0+b.x1)/2,cyW=(b.y0+b.y1)/2;
+  const X=x=>w/2+(x-cxW)*scale,Y=y=>h/2-(y-cyW)*scale;
+  // reference grid that moves with the world: 100 px squares
+  const off=o.scroll||[0,0];
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.globalAlpha=.8;
+  const step=100;
+  const wx0=cxW-(w/2)/scale,wx1=cxW+(w/2)/scale,wy0=cyW-(h/2)/scale,wy1=cyW+(h/2)/scale;
+  for(let gx=Math.floor((wx0-off[0])/step)*step;gx<=wx1-off[0];gx+=step){const px=X(gx+off[0]);g.beginPath();g.moveTo(px,0);g.lineTo(px,h);g.stroke();}
+  for(let gy=Math.floor((wy0-off[1])/step)*step;gy<=wy1-off[1];gy+=step){const py=Y(gy+off[1]);g.beginPath();g.moveTo(0,py);g.lineTo(w,py);g.stroke();}
+  g.globalAlpha=1;
+  // scale bar
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='alphabetic';
+  g.fillText(o.frame==='world'?'grid squares are 100 px of world':'grid squares are 100 px of world, scrolling past',8,h-8);
+  // platform path
+  if(o.plat){g.strokeStyle=css('--steel');g.lineWidth=1.5;g.setLineDash([2,4]);g.beginPath();o.plat.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.stroke();g.setLineDash([]);}
+  // take-off spot mark
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.setLineDash([3,3]);g.beginPath();g.moveTo(X(o.takeoff[0]),Y(o.takeoff[1])+10);g.lineTo(X(o.takeoff[0]),Y(o.takeoff[1])-Math.min(h*0.8,200));g.stroke();g.setLineDash([]);
+  // player path
+  g.strokeStyle=css('--ochre');g.lineWidth=3;g.setLineDash(o.dash);g.beginPath();o.path.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.stroke();g.setLineDash([]);
+  // platform now
+  const pn=o.platNow;g.fillStyle=css('--steel');g.fillRect(X(pn[0]-HALF),Y(pn[1]),HALF*2*scale,Math.max(6,12*scale));
+  // landing marker in the relative frame: offset bracket
+  if(o.frame==='rel'){
+    const lx=o.landing[0][0];const y=Y(0)+Math.max(6,12*scale)+12;
+    g.strokeStyle=Math.abs(sim.off)>HALF?css('--blood'):css('--moss');g.lineWidth=2;
+    g.beginPath();g.moveTo(X(0),y-5);g.lineTo(X(0),y+5);g.moveTo(X(0),y);g.lineTo(X(lx),y);g.moveTo(X(lx),y-5);g.lineTo(X(lx),y+5);g.stroke();
+    g.fillStyle=g.strokeStyle;g.font='600 12px '+css('--mono');g.textAlign=lx>=0?'left':'right';g.textBaseline='middle';
+    const tx=Math.abs(lx)*scale<6?X(0)+8:X(lx)+(lx>=0?6:-6);g.textAlign=Math.abs(lx)*scale<6||lx>=0?'left':'right';
+    const lbl='lands '+sgn(sim.off,1)+' px',tw=g.measureText(lbl).width;
+    let lx0=g.textAlign==='left'?tx:tx-tw;lx0=Math.max(4,Math.min(w-4-tw,lx0));
+    if(lx0<X(Math.max(0,lx))&&lx0+tw>X(Math.min(0,lx))){g.textAlign='left';g.textBaseline='top';g.fillText(lbl,Math.max(4,Math.min(w-4-tw,X(lx)-tw/2)),y+8);}
+    else{g.textAlign='left';g.fillText(lbl,lx0,y);}
+  }
+  // player now: a small box standing on its feet
+  const pp=o.player,pw=16*Math.max(scale,.7),ph=24*Math.max(scale,.7);
+  g.fillStyle=css('--ochre');g.fillRect(X(pp[0])-pw/2,Y(pp[1])-ph,pw,ph);
+  g.strokeStyle=css('--paper');g.lineWidth=1.5;g.strokeRect(X(pp[0])-pw/2,Y(pp[1])-ph,pw,ph);
+}
+
+function readouts(){
+  const s=sim;
+  $('rV').textContent='('+f(s.v[0],1)+', '+f(s.v[1],1)+')';
+  $('rWA').textContent=f(s.wA,1);$('rRA').textContent=f(s.rA,1);
+  $('rAir').textContent=f(s.land,1)+' s ('+s.land.toFixed(3)+')';
+  $('rOff').textContent=sgn(s.off,1);
+  $('stOff').classList.toggle('warn',Math.abs(s.off)>HALF);
+  $('oS').textContent=S.s+' px/s';$('oE').textContent=f(S.ve,0)+' px/s';$('oVc').textContent=f(S.vc,0)+' px/s';$('oAc').textContent=f(S.ac,0)+' px/s²';$('oT0').textContent=S.t0.toFixed(2)+' s';
+  const modeTxt={add:'adds the platform velocity',up:'adds only the upward part of the platform velocity',none:'ignores the platform velocity'}[S.mode];
+  let t;
+  const lands=Math.abs(s.off)<=HALF?'still on the 100 px platform':'off the edge of the 100 px platform';
+  if(S.motion==='cart'&&S.ac!==0)
+    t=`The jump ${modeTxt}, yet in the platform frame it curls ${s.off<0?'backwards':'forwards'} and lands ${f(Math.abs(s.off),1)} px ${s.off<0?'behind':'ahead of'} the take-off spot, ${lands}. Adding velocity copies the platform's speed at t = 0, not its acceleration. The cart keeps speeding up by ${f(S.ac,0)} px/s² while the player flies, so the gap is ½·a<sub>c</sub>·t² = ${f(Math.abs(s.off),1)} px.`;
+  else if(S.motion==='back')
+    t=`At t<sub>0</sub> = ${S.t0.toFixed(2)} the platform moves at ${f(plat(0).v[0],1)} px/s when you jump, and the jump ${modeTxt}. The platform keeps swinging while you fly, so you land ${f(Math.abs(s.off),1)} px ${s.off<0?'behind':'ahead of'} where you took off, ${lands}. Inheriting velocity only works while the platform's velocity stays constant.`;
+  else if(Math.abs(s.off)<0.05&&S.motion==='slide')
+    t=`The jump ${modeTxt}, so in the platform frame the player goes straight up and lands on the same spot (offset ${sgn(s.off,1)} px). A platform sliding at constant speed is ground that happens to move. Try “Do nothing”.`;
+  else if(S.motion==='slide')
+    t=`The jump ${modeTxt}. The platform slides ${f(Math.abs(s.off),1)} px during the ${s.land.toFixed(3)} s of air time, so the player lands ${f(Math.abs(s.off),1)} px ${s.off<0?'behind':'ahead of'} the take-off spot, ${lands}.`;
+  else
+    t=`The elevator moves at ${f(S.ve,0)} px/s and the jump ${modeTxt}. Relative to the floor the player launches at ${f(s.v[1]-S.ve,1)} px/s, rises ${f(s.rA,1)} px and lands after ${s.land.toFixed(3)} s. In the world the apex is ${f(s.wA,1)} px above take-off. Height above the floor is what the player feels.`;
+  $('insight').innerHTML=t;
+}
+function scrub(){const el=$('sTime');el.max=sim.land;el.value=T;$('oTime').textContent=T.toFixed(3)+' s';}
+function recompute(){sim=simulate();if(T>sim.land||reduce&&!playing)T=reduce&&!playing?sim.land:Math.min(T,sim.land);readouts();scrub();draw();}
+function showMotion(){document.querySelectorAll('[data-for]').forEach(d=>d.hidden=d.dataset.for!==S.motion);}
+
+let hold=0;
+function frame(ts){
+  if(!playing){last=null;return;}
+  if(last!==null){const dt=(ts-last)/1000*+$('speed').value;
+    if(hold>0){hold-=dt;if(hold<=0)T=0;}else{T+=dt;if(T>=sim.land){T=sim.land;hold=0.35;}}}
+  last=ts;scrub();draw();requestAnimationFrame(frame);
+}
+function setPlaying(p){playing=p;$('play').textContent=p?'Pause':'Play';$('play').setAttribute('aria-pressed',p);if(p){if(T>=sim.land)T=0;requestAnimationFrame(frame);}}
+
+const bind=(id,key)=>$(id).addEventListener('input',e=>{S[key]=+e.target.value;recompute();});
+bind('sS','s');bind('sE','ve');bind('sVc','vc');bind('sAc','ac');bind('sT0','t0');
+$('motion').addEventListener('change',e=>{S.motion=e.target.value;showMotion();recompute();});
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',e=>{S.mode=e.target.value;recompute();}));
+$('caps').addEventListener('change',e=>{S.caps=e.target.checked;recompute();});
+$('sTime').addEventListener('input',e=>{T=+e.target.value;setPlaying(false);scrub();draw();});
+$('play').addEventListener('click',()=>setPlaying(!playing));
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const [m,mode]=b.dataset.set.split(',');S.motion=m;S.mode=mode;$('motion').value=m;
+  document.querySelector(`input[name=mode][value=${mode}]`).checked=true;
+  Object.assign(S,{s:150,ve:100,vc:100,ac:200,t0:1});['sS','sE','sVc','sAc','sT0'].forEach((id,i)=>$(id).value=[150,100,100,200,1][i]);
+  showMotion();recompute();}));
+window.addEventListener('resize',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+sim=simulate();if(reduce)T=sim.land;
+readouts();scrub();draw();setPlaying(playing);
+})();
+</script>
+</body>
+</html>

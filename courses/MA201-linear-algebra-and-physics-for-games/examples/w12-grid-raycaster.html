@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grid raycaster — MA201 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.caption{font-family:var(--serif);font-size:1.02rem;margin:0 0 14px;padding:10px 14px;border-radius:10px;background:var(--paper-2)}
+.views{display:grid;grid-template-columns:1fr 1.15fr;gap:14px}
+@media (max-width:860px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#map{aspect-ratio:1/1;border-radius:6px;cursor:pointer;max-width:520px;margin:0 auto}
+#strip{height:220px;border-radius:6px}
+#hplot{height:150px;margin-top:8px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+.trace{font:500 .88rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--paper);border-radius:8px;padding:8px 10px;margin:8px 0 0;white-space:pre;overflow-x:auto;font-variant-numeric:tabular-nums}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px;margin:12px 0 0}
+@media (max-width:560px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 8px;min-width:0}
+.stat b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:480px;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.hl td{background:var(--paper);font-weight:700}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 22px;margin-top:16px}
+@media (max-width:860px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+label.check{justify-content:flex-start;align-items:center;margin:4px 0 8px}
+label.check input{width:20px;height:20px;accent-color:var(--steel)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+select{font:600 .95rem var(--sans);padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.btn{font:700 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btnrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);max-width:80ch}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA201 Linear Algebra and Physics for Games · Week 12 · Worked example</p>
+  <h1>Distance is not depth</h1>
+  <p class="lede">The wall in front of the player is straight and square to the view. Drawn with the true ray length, its middle bulges. Drawn with depth along the view direction, it is flat. The rays and their hits are the same either way.</p>
+</header>
+
+<section class="panel" aria-label="Grid raycaster">
+  <p class="caption">Same rays, same hits. Tick the box: only the number used for height changes.</p>
+  <div class="views">
+    <figure>
+      <figcaption id="mapCap">Map<small>8 × 8, y grows downward. Shaded cells: those the highlighted ray entered.</small></figcaption>
+      <canvas id="map" tabindex="0" role="img" aria-label="Top-down grid map with the player, view cone and rays" aria-describedby="mapHint"></canvas>
+      <p class="hint" id="mapHint">Focus the map: ← → turn 5°, W/S or ↑ ↓ move 0.1 cells. Shift + arrows move the cell cursor, Enter toggles wall or floor. Click a cell to toggle it.</p>
+      <div class="trace" id="trace" aria-label="Trace of the highlighted ray"></div>
+    </figure>
+    <figure>
+      <figcaption>View<small>One bar per ray, height = 240 / distance, strip 120 units tall (clipped). Darker bars hit a horizontal grid line.</small></figcaption>
+      <label class="check" style="background:var(--paper);padding:6px 10px;border-radius:8px;border:1.5px solid var(--steel)"><input type="checkbox" id="perp"> Perpendicular distance (fisheye fix)</label>
+      <canvas id="strip" role="img" aria-label="First-person strip of wall bars"></canvas>
+      <canvas id="hplot" role="img" aria-label="Bar height against column"></canvas>
+      <div class="readout">
+        <div class="stat" style="--c:var(--blood)"><b id="rT">—</b><span>highlighted t (along ray)</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rTp">—</b><span>t_perp (depth)</span></div>
+        <div class="stat" style="--c:var(--ink-soft)"><b id="rAng">—</b><span>ray angle / offset</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rHt">—</b><span>height from t</span></div>
+        <div class="stat" style="--c:var(--steel)"><b id="rHp">—</b><span>height from t_perp</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rCells">—</b><span>cells entered: highlighted / all rays</span></div>
+      </div>
+    </figure>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+
+  <div class="table-wrap" id="tblWrap">
+    <table aria-label="Per-ray distances and heights">
+      <thead><tr><th>Ray angle</th><th>t (along ray)</th><th>t_perp</th><th>Height from t</th><th>Height from t_perp</th><th>Hit cell</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="nrays">Ray count N</label>
+      <select id="nrays" style="width:100%;margin:4px 0 10px">
+        <option value="7" selected>7 (table)</option><option value="8">8</option><option value="16">16</option><option value="32">32</option>
+        <option value="64">64</option><option value="160">160</option><option value="320">320</option>
+      </select>
+      <label for="fov">Field of view <output id="oFov">60°</output></label>
+      <input id="fov" type="range" min="30" max="120" step="1" value="60">
+    </div>
+    <div>
+      <label for="hl">Highlighted ray <output id="oHl">+20°</output></label>
+      <input id="hl" type="range" min="0" max="6" step="1" value="5">
+      <p class="hint" id="pose"></p>
+      <div class="btnrow">
+        <button class="btn" id="turnL">Turn left 5°</button>
+        <button class="btn" id="turnR">Turn right 5°</button>
+        <button class="btn" id="fwd">Forward</button>
+        <button class="btn" id="back">Back</button>
+      </div>
+    </div>
+    <div>
+      <div class="btnrow" style="margin-top:0">
+        <button class="btn" id="mapBtn">Load 16 × 16 map</button>
+        <button class="btn" id="reset">Reset scene</button>
+      </div>
+      <label class="check" style="margin-top:12px"><input type="checkbox" id="samp"> Compare with sampling (corner example)</label>
+      <p class="hint" id="sampNote"></p>
+    </div>
+  </div>
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Grid walk after Amanatides and Woo, "A Fast Voxel Traversal Algorithm for Ray Tracing" (Eurographics 1987): t_delta = |1/d|, t_max = ((c + (d &gt; 0)) − o) / d, step the smaller, ties go to y. Ray i of N at view + fov × (i/(N − 1) − 0.5). t_perp = t × cos(a − view). Cells outside the map count as wall. Wolfenstein 3D (id Software, 1992; source released 1995) is named for context only; everything here is flat colored bars and grid squares.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const M='−';
+const sg=(x,d)=>{if(Math.abs(x)<0.5*Math.pow(10,-d))x=0;const s=x.toFixed(d);return s.startsWith('-')?M+s.slice(1):s;};
+const sgn=(x,d)=>{const s=sg(x,d);return (s.startsWith(M)||+x.toFixed(d)===0)?s:'+'+s;};
+const H=240;
+
+const LECTURE=["########","#.....##","#.....##","#.....##","#.....##","#.....##","#.....##","########"];
+const MAZE=[
+"################",
+"#......#.......#",
+"#.####.#.#####.#",
+"#.#....#.....#.#",
+"#.#.######.#.#.#",
+"#.#......#.#...#",
+"#.####.#.#.###.#",
+"#......#...#...#",
+"###.####.###.#.#",
+"#...#....#...#.#",
+"#.#.#.####.###.#",
+"#.#...#......#.#",
+"#.#####.####.#.#",
+"#.....#....#...#",
+"#.###...##.....#",
+"################"];
+const st={map:null,n:8,px:2.5,py:4.5,view:0,fov:60,N:7,hl:5,perp:false,big:false,cur:[3,3],samp:false};
+function loadMap(big){st.big=big;const src=big?MAZE:LECTURE;st.n=src.length;st.map=src.map(r=>r.split('').map(c=>c==='#'));
+  if(big){st.px=1.5;st.py=1.5;}else{st.px=2.5;st.py=4.5;}st.view=0;st.cur=[Math.floor(st.px),Math.floor(st.py)];}
+const isWall=(cx,cy)=>cx<0||cy<0||cx>=st.n||cy>=st.n||st.map[cy][cx];
+
+function gridWalk(ox,oy,deg){
+  const a=deg*Math.PI/180,dx=Math.cos(a),dy=Math.sin(a);
+  let cx=Math.floor(ox),cy=Math.floor(oy);
+  const sx=dx>0?1:-1,sy=dy>0?1:-1;
+  const tdx=dx?Math.abs(1/dx):Infinity,tdy=dy?Math.abs(1/dy):Infinity;
+  let tmx=dx?((cx+(dx>0?1:0))-ox)/dx:Infinity,tmy=dy?((cy+(dy>0?1:0))-oy)/dy:Infinity;
+  const steps=[];let t=0,side='x';
+  for(let k=0;k<4096;k++){
+    if(tmx<tmy){t=tmx;cx+=sx;tmx+=tdx;side='x';}else{t=tmy;cy+=sy;tmy+=tdy;side='y';}
+    steps.push({t,cx,cy});
+    if(isWall(cx,cy))break;}
+  return {t,cx,cy,side,steps,dx,dy};}
+function rayAngle(i){return st.N===1?st.view:st.view+st.fov*(i/(st.N-1)-0.5);}
+function castAll(){const rays=[];for(let i=0;i<st.N;i++){const a=rayAngle(i),w=gridWalk(st.px,st.py,a);w.a=a;w.tp=w.t*Math.cos((a-st.view)*Math.PI/180);rays.push(w);}return rays;}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+
+let rays=[],cellPx=1;
+function drawMap(){
+  const c=setup($('map')),g=c.g,w=c.w;g.clearRect(0,0,w,w);
+  if(st.samp)return drawSampling(g,w);
+  const n=st.n;cellPx=w/n;const P=(x,y)=>[x*cellPx,y*cellPx];
+  g.fillStyle=css('--paper');g.fillRect(0,0,w,w);
+  const hr=rays[st.hl];
+  // visited shading
+  g.fillStyle=css('--ochre');g.globalAlpha=.28;
+  hr.steps.forEach(s=>{if(s.cx>=0&&s.cy>=0&&s.cx<n&&s.cy<n)g.fillRect(s.cx*cellPx,s.cy*cellPx,cellPx,cellPx);});g.globalAlpha=1;
+  // walls
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    if(st.map[y][x]){g.fillStyle=css('--ink-soft');g.globalAlpha=.55;g.fillRect(x*cellPx,y*cellPx,cellPx,cellPx);g.globalAlpha=1;}
+  }
+  // hit wall of highlighted ray
+  g.strokeStyle=css('--blood');g.lineWidth=2;g.strokeRect(hr.cx*cellPx+1,hr.cy*cellPx+1,cellPx-2,cellPx-2);
+  g.strokeStyle=css('--ink-soft');g.globalAlpha=.35;g.lineWidth=1;g.beginPath();
+  for(let k=0;k<=n;k++){g.moveTo(k*cellPx,0);g.lineTo(k*cellPx,w);g.moveTo(0,k*cellPx);g.lineTo(w,k*cellPx);}g.stroke();g.globalAlpha=1;
+  if(n<=8){g.fillStyle=css('--ink-soft');g.font='10px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+    for(let k=0;k<n;k++){g.fillText(k,k*cellPx+3,2);if(k)g.fillText(k,3,k*cellPx+2);}}
+  // view cone
+  const p=P(st.px,st.py),R=Math.max(w,1)*1.5;
+  const a0=(st.view-st.fov/2)*Math.PI/180,a1=(st.view+st.fov/2)*Math.PI/180;
+  g.fillStyle=css('--steel');g.globalAlpha=.1;g.beginPath();g.moveTo(p[0],p[1]);g.arc(p[0],p[1],R,a0,a1);g.closePath();g.fill();g.globalAlpha=1;
+  // rays
+  g.strokeStyle=css('--ochre');g.lineWidth=st.N>64?.6:1.2;g.globalAlpha=st.N>64?.5:.9;g.beginPath();
+  rays.forEach((r,i)=>{if(i===st.hl)return;const q=P(st.px+r.dx*r.t,st.py+r.dy*r.t);g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);});g.stroke();g.globalAlpha=1;
+  const q=P(st.px+hr.dx*hr.t,st.py+hr.dy*hr.t);g.strokeStyle=css('--blood');g.lineWidth=2.5;g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);g.stroke();
+  g.fillStyle=css('--blood');g.beginPath();g.arc(q[0],q[1],4,0,7);g.fill();
+  // step markers on highlighted ray
+  if(n<=8)hr.steps.forEach(s=>{const m=P(st.px+hr.dx*s.t,st.py+hr.dy*s.t);g.fillStyle=css('--paper');g.strokeStyle=css('--blood');g.lineWidth=1.5;g.beginPath();g.arc(m[0],m[1],3,0,7);g.fill();g.stroke();});
+  // player
+  g.fillStyle=css('--steel');g.beginPath();g.arc(p[0],p[1],Math.max(5,cellPx*.12),0,7);g.fill();
+  const va=st.view*Math.PI/180;g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]+Math.cos(va)*cellPx*.5,p[1]+Math.sin(va)*cellPx*.5);g.stroke();
+  // cell cursor
+  if(document.activeElement===$('map')){g.strokeStyle=css('--focus');g.lineWidth=2.5;g.setLineDash([4,3]);g.strokeRect(st.cur[0]*cellPx+2,st.cur[1]*cellPx+2,cellPx-4,cellPx-4);g.setLineDash([]);}
+}
+
+// corner example
+function ddaCells(ax,ay,bx,by){const dx=bx-ax,dy=by-ay;let cx=Math.floor(ax),cy=Math.floor(ay);const ex=Math.floor(bx),ey=Math.floor(by);
+  const sx=dx>0?1:-1,sy=dy>0?1:-1,tdx=dx?Math.abs(1/dx):Infinity,tdy=dy?Math.abs(1/dy):Infinity;
+  let tmx=dx?((cx+(dx>0?1:0))-ax)/dx:Infinity,tmy=dy?((cy+(dy>0?1:0))-ay)/dy:Infinity;const cells=[[cx,cy]];
+  while(!(cx===ex&&cy===ey)&&cells.length<100){if(tmx<tmy){cx+=sx;tmx+=tdx;}else{cy+=sy;tmy+=tdy;}cells.push([cx,cy]);}return cells;}
+function samples(ax,ay,bx,by){const n=Math.max(1,Math.ceil(4*Math.max(Math.abs(bx-ax),Math.abs(by-ay))));const out=[];
+  for(let i=0;i<=n;i++)out.push([ax+(bx-ax)*i/n,ay+(by-ay)*i/n]);return out;}
+const CA=[0.5,0.5],CB=[4.2,3.0];
+function sampInfo(){const walk=ddaCells(...CA,...CB),sm=samples(...CA,...CB);const sc=[];sm.forEach(p=>{const k=Math.floor(p[0])+','+Math.floor(p[1]);if(!sc.includes(k))sc.push(k);});
+  const missed=walk.filter(c=>!sc.includes(c[0]+','+c[1]));return {walk,sm,sc,missed};}
+function drawSampling(g,w){
+  const cols=6,rows=5,cp=w/cols,off=(w-rows*cp)/2,P=(x,y)=>[x*cp,off+y*cp];
+  g.fillStyle=css('--paper');g.fillRect(0,off,w,rows*cp);
+  const I=sampInfo();
+  I.walk.forEach(([x,y])=>{const a=P(x,y);g.fillStyle=css('--steel');g.globalAlpha=.22;g.fillRect(a[0],a[1],cp,cp);g.globalAlpha=1;});
+  I.missed.forEach(([x,y])=>{const a=P(x,y);g.strokeStyle=css('--blood');g.lineWidth=3;g.strokeRect(a[0]+2,a[1]+2,cp-4,cp-4);
+    g.fillStyle=css('--blood');g.font='700 12px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText('missed',a[0]+cp/2,a[1]+cp-5);});
+  g.strokeStyle=css('--ink-soft');g.globalAlpha=.5;g.lineWidth=1;g.beginPath();
+  for(let k=0;k<=cols;k++){const a=P(k,0);g.moveTo(a[0],off);g.lineTo(a[0],off+rows*cp);}
+  for(let k=0;k<=rows;k++){const a=P(0,k);g.moveTo(0,a[1]);g.lineTo(w,a[1]);}g.stroke();g.globalAlpha=1;
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+  for(let x=0;x<cols;x++)for(let y=0;y<rows;y++){const a=P(x,y);g.fillText(`(${x}, ${y})`,a[0]+3,a[1]+2);}
+  const a=P(...CA),b=P(...CB);g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();
+  I.sm.forEach(p=>{const q=P(p[0],p[1]);g.fillStyle=css('--ochre');g.beginPath();g.arc(q[0],q[1],4,0,7);g.fill();});
+}
+
+function drawStrip(){
+  const c=setup($('strip')),g=c.g,w=c.w,h=c.h;g.clearRect(0,0,w,h);
+  g.fillStyle=css('--paper');g.fillRect(0,0,w,h);
+  g.fillStyle=css('--ink-soft');g.globalAlpha=.08;g.fillRect(0,h/2,w,h/2);g.globalAlpha=1;
+  const bw=w/st.N;
+  rays.forEach((r,i)=>{const d=st.perp?r.tp:r.t,ht=H/d,px=Math.min(h,ht/120*h);
+    const x0=Math.floor(i*bw),x1=Math.floor((i+1)*bw)-(st.N<=16?2:0);
+    g.fillStyle=css('--steel');g.fillRect(x0,h/2-px/2,Math.max(1,x1-x0),px);
+    if(r.side==='y'){g.fillStyle=css('--ink');g.globalAlpha=.3;g.fillRect(x0,h/2-px/2,Math.max(1,x1-x0),px);g.globalAlpha=1;}
+    if(i===st.hl){g.strokeStyle=css('--blood');g.lineWidth=2;g.strokeRect(x0+1,h/2-px/2+1,Math.max(1,x1-x0)-2,px-2);}
+    if(st.N<=16){g.fillStyle=css('--paper');g.font='600 11px '+css('--sans');g.textAlign='center';g.textBaseline='middle';if(bw>30)g.fillText(ht.toFixed(1),(x0+x1)/2,h/2);}
+  });
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.globalAlpha=.6;g.beginPath();g.moveTo(0,h/2);g.lineTo(w,h/2);g.stroke();g.globalAlpha=1;
+}
+function drawHplot(){
+  const c=setup($('hplot')),g=c.g,w=c.w,h=c.h;g.clearRect(0,0,w,h);
+  const pad={l:40,r:10,t:20,b:22};
+  const hs=rays.map(r=>H/(st.perp?r.tp:r.t)),ht=rays.map(r=>H/r.t),hp=rays.map(r=>H/r.tp);
+  const all=ht.concat(hp);let lo=Math.min(...all),hi=Math.max(...all);if(hi-lo<1){lo-=5;hi+=5;}const padv=(hi-lo)*.12;lo=Math.max(0,lo-padv);hi+=padv;
+  const X=i=>pad.l+(st.N===1?0.5:i/(st.N-1))*(w-pad.l-pad.r),Y=v=>pad.t+(1-(v-lo)/(hi-lo))*(h-pad.t-pad.b);
+  g.font='10px '+css('--sans');g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;
+  for(let k=0;k<=3;k++){const v=lo+(hi-lo)*k/3;g.beginPath();g.moveTo(pad.l,Y(v));g.lineTo(w-pad.r,Y(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(v.toFixed(0),pad.l-4,Y(v));}
+  g.textAlign='center';g.textBaseline='top';g.fillText('column (ray index) →',(pad.l+w-pad.r)/2,h-pad.b+6);
+  const line=(arr,col,wd,dash)=>{g.strokeStyle=css(col);g.lineWidth=wd;g.setLineDash(dash||[]);g.beginPath();arr.forEach((v,i)=>i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v)));g.stroke();g.setLineDash([]);
+    if(st.N<=32){g.fillStyle=css(col);arr.forEach((v,i)=>{g.beginPath();g.arc(X(i),Y(v),2.5,0,7);g.fill();});}};
+  line(st.perp?ht:hp,st.perp?'--blood':'--steel',1.2,[4,3]);
+  line(hs,st.perp?'--steel':'--blood',2.5);
+  g.fillStyle=css('--ink');g.font='600 11px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+  g.fillText(st.perp?'height from t_perp (solid), from t (dashed)':'height from t (solid), from t_perp (dashed)',pad.l+4,1);
+}
+
+function fmtA(a){const r=Math.round(a*100)/100;return sgn(r,Number.isInteger(r)?0:2)+'°';}
+function renderText(){
+  const hr=rays[st.hl];
+  $('trace').textContent=`ray at ${fmtA(hr.a)} from (${sg(st.px,2)}, ${sg(st.py,2)}):\n`+hr.steps.map(s=>`  t = ${hr.steps.length>0?s.t.toFixed(3):''}  enter cell (${s.cx}, ${s.cy})`).join('\n')+(hr.steps.length>12?'':'');
+  $('rT').textContent=hr.t.toFixed(3);$('rTp').textContent=hr.tp.toFixed(3);
+  $('rAng').textContent=`${fmtA(hr.a)} / ${fmtA(hr.a-st.view)}`;
+  $('rHt').textContent=(H/hr.t).toFixed(1);$('rHp').textContent=(H/hr.tp).toFixed(1);
+  const total=rays.reduce((s,r)=>s+r.steps.length,0);
+  $('rCells').textContent=`${hr.steps.length} / ${total.toLocaleString('en-US')}`;
+  $('oHl').textContent=fmtA(hr.a-st.view)+' offset';$('oFov').textContent=st.fov+'°';
+  $('pose').textContent=`Player (${sg(st.px,2)}, ${sg(st.py,2)}), view ${fmtA(st.view)}.`;
+  // table
+  $('tblWrap').hidden=st.N>16;
+  if(st.N<=16)$('tbody').innerHTML=rays.map((r,i)=>`<tr class="${i===st.hl?'hl':''}"><td>${fmtA(r.a)}</td><td>${r.t.toFixed(3)}</td><td>${r.tp.toFixed(3)}</td><td>${(H/r.t).toFixed(1)}</td><td>${(H/r.tp).toFixed(1)}</td><td>(${r.cx}, ${r.cy})</td></tr>`).join('');
+  // insight
+  const hs=rays.map(r=>H/r.t),hmin=Math.min(...hs),hmax=Math.max(...hs);
+  const sameDepth=rays.every(r=>Math.abs(r.tp-rays[0].tp)<1e-6);
+  let ins;
+  if(!st.perp)ins=`Using ray length t, bar heights run from ${hmin.toFixed(1)} to ${hmax.toFixed(1)}`+(sameDepth?`, a ${((hmax/hmin-1)*100).toFixed(0)}% bulge on a wall that is flat and square to you. Every ray hits at depth ${rays[0].tp.toFixed(3)}; tick the box to draw that instead.`:'. Tick the box to draw depth instead and see which variation is real.');
+  else ins=sameDepth?`Using depth t_perp, every bar is ${(H/rays[0].tp).toFixed(1)}: the wall is flat, as it is in the world. The rays on the map did not move.`:`Using depth t_perp, straight walls draw as straight lines on screen. The rays on the map did not move; only the number used for height changed.`;
+  ins+=` This frame the ${st.N} rays entered ${total.toLocaleString('en-US')} cells. Add walls and rays stop sooner, so the count drops.`;
+  $('insight').textContent=ins;
+  clearTimeout(renderText.t);renderText.t=setTimeout(()=>{$('live').textContent=`Ray ${fmtA(hr.a)}: t ${hr.t.toFixed(3)}, t_perp ${hr.tp.toFixed(3)}, height from t ${(H/hr.t).toFixed(1)}, from t_perp ${(H/hr.tp).toFixed(1)}.`;},400);
+  if(st.samp){const I=sampInfo();$('sampNote').textContent=`Segment (0.5, 0.5) to (4.2, 3.0). Grid walk: ${I.walk.map(c=>`(${c[0]}, ${c[1]})`).join(', ')}. Quarter-cell samples (${I.sm.length} dots) miss ${I.missed.map(c=>`(${c[0]}, ${c[1]})`).join(' and ')}.`;}
+  else $('sampNote').textContent='';
+  $('mapCap').innerHTML=st.samp?'Corner example<small>6 × 5 blank grid. Shaded: cells the grid walk enters. Dots: quarter-cell samples. Red: cells the samples miss.</small>':`Map<small>${st.n} × ${st.n}, y grows downward. Shaded cells: those the highlighted ray entered.</small>`;
+  $('trace').hidden=st.samp;$('mapHint').hidden=st.samp;
+}
+function update(){rays=castAll();drawMap();drawStrip();drawHplot();renderText();}
+
+// controls
+function setN(N){const off=rays.length?rays[st.hl].a-st.view:20;st.N=N;const hl=$('hl');hl.max=N-1;
+  let best=0,bd=Infinity;for(let i=0;i<N;i++){const d=Math.abs(rayAngle(i)-st.view-off);if(d<bd){bd=d;best=i;}}st.hl=best;hl.value=best;update();}
+$('nrays').addEventListener('change',e=>setN(+e.target.value));
+$('fov').addEventListener('input',e=>{st.fov=+e.target.value;update();});
+$('hl').addEventListener('input',e=>{st.hl=+e.target.value;update();});
+$('perp').addEventListener('change',e=>{st.perp=e.target.checked;update();});
+$('samp').addEventListener('change',e=>{st.samp=e.target.checked;update();});
+function turn(d){st.view=Math.round((st.view+d)*1000)/1000;if(st.view>180)st.view-=360;if(st.view<=-180)st.view+=360;update();}
+function move(dir){const a=st.view*Math.PI/180,nx=st.px+Math.cos(a)*0.1*dir,ny=st.py+Math.sin(a)*0.1*dir;
+  if(!isWall(Math.floor(nx),Math.floor(ny))){st.px=Math.round(nx*1e6)/1e6;st.py=Math.round(ny*1e6)/1e6;}update();}
+$('turnL').addEventListener('click',()=>turn(-5));$('turnR').addEventListener('click',()=>turn(5));
+$('fwd').addEventListener('click',()=>move(1));$('back').addEventListener('click',()=>move(-1));
+function toggle(cx,cy){if(cx<=0||cy<=0||cx>=st.n-1||cy>=st.n-1)return;if(cx===Math.floor(st.px)&&cy===Math.floor(st.py))return;st.map[cy][cx]=!st.map[cy][cx];update();}
+$('map').addEventListener('click',e=>{if(st.samp)return;const r=$('map').getBoundingClientRect();toggle(Math.floor((e.clientX-r.left)/cellPx),Math.floor((e.clientY-r.top)/cellPx));});
+$('map').addEventListener('keydown',e=>{if(st.samp)return;
+  if(e.shiftKey&&e.key.startsWith('Arrow')){e.preventDefault();const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
+    st.cur=[Math.min(st.n-1,Math.max(0,st.cur[0]+d[0])),Math.min(st.n-1,Math.max(0,st.cur[1]+d[1]))];drawMap();return;}
+  if(e.key==='ArrowLeft'){e.preventDefault();turn(-5);}else if(e.key==='ArrowRight'){e.preventDefault();turn(5);}
+  else if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();move(1);}else if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){e.preventDefault();move(-1);}
+  else if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle(st.cur[0],st.cur[1]);}});
+$('map').addEventListener('focus',drawMap);$('map').addEventListener('blur',drawMap);
+$('mapBtn').addEventListener('click',()=>{loadMap(!st.big);$('mapBtn').textContent=st.big?'Load lecture 8 × 8 map':'Load 16 × 16 map';update();});
+$('reset').addEventListener('click',()=>{loadMap(false);$('mapBtn').textContent='Load 16 × 16 map';st.fov=60;$('fov').value=60;$('nrays').value='7';st.perp=false;$('perp').checked=false;st.N=7;$('hl').max=6;st.hl=5;$('hl').value=5;update();});
+
+const redraw=()=>{drawMap();drawStrip();drawHplot();};
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+loadMap(false);update();
+window.__w12={st,gridWalk};
+})();
+</script>
+</body>
+</html>

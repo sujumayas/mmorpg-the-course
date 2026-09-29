@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Slerp takes the long way · MA201 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:320px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:22px;height:0;vertical-align:middle;margin-right:6px;border-top:3px solid}
+.banner{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin:14px 0 4px}
+.big{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.tag{font:700 .82rem var(--sans);letter-spacing:.06em;padding:3px 9px;border-radius:6px}
+.tag.long{background:var(--blood);color:var(--paper)}
+.tag.short{background:var(--moss);color:var(--paper)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px 16px;margin:10px 0 0;font-family:var(--mono);font-size:.9rem}
+.readout div{border-left:4px solid var(--c,var(--ink-soft));padding:2px 0 2px 10px;min-width:0;overflow-wrap:anywhere}
+.readout span{display:block;font-family:var(--sans);font-size:.8rem;color:var(--ink-soft)}
+.readout b{font-weight:600;font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 8px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.check{display:inline-flex;gap:8px;align-items:center;justify-content:flex-start;font-weight:600;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--moss)}
+select,.btn,.chip{font:600 .92rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.chip{border-color:var(--steel);font-size:.85rem;padding:6px 10px}
+.btn:focus-visible,.chip:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA201 Linear Algebra and Physics for Games · Week 5 · Worked example</p>
+  <h1>Slerp takes the long way</h1>
+  <p class="lede">The turret aims at 170° and wants to reach −170°. The barrels are 20° apart. Without a sign check, slerp swings the barrel 340° through the back of the room, because the two quaternions sit on opposite sides of the circle.</p>
+</header>
+
+<section class="panel" aria-label="Slerp between two turret yaws">
+  <div class="charts">
+    <figure>
+      <figcaption>Turret, seen from above<small>What the player sees. Faint barrels at A and B, solid barrel at the current yaw.</small></figcaption>
+      <canvas id="cTur" role="img" aria-label="Top-down turret with start, end and current barrel"></canvas>
+      <div class="legend"><span><i id="lgPath" style="border-color:var(--blood);border-top-style:dashed"></i><span id="lgPathTxt">barrel path</span></span><span><i style="border-color:var(--ink-soft)"></i>A and B</span></div>
+    </figure>
+    <figure>
+      <figcaption>Quaternion circle (w, y)<small>What slerp sees. For turns about the up axis only w and y are nonzero.</small></figcaption>
+      <canvas id="cQ" role="img" aria-label="Unit circle with quaternions a, b and minus b, and the arc slerp travels"></canvas>
+      <div class="legend"><span><i style="border-color:var(--blood);border-top-style:dashed"></i>long arc</span><span><i style="border-color:var(--moss)"></i>short arc</span></div>
+    </figure>
+  </div>
+
+  <div class="banner" aria-live="polite">
+    <span>Barrel turns <span class="big" id="rTrav">—</span></span>
+    <span>shortest turn <span class="big" id="rPhi">—</span></span>
+    <span class="tag" id="rTag">—</span>
+  </div>
+
+  <div class="readout">
+    <div style="--c:var(--ink-soft)"><span>a (w, x, y, z)</span><b id="rA">—</b></div>
+    <div style="--c:var(--ink-soft)"><span>b, after any flip (w, x, y, z)</span><b id="rB">—</b></div>
+    <div style="--c:var(--steel)"><span>a · b</span><b id="rDot">—</b></div>
+    <div style="--c:var(--steel)"><span>4D angle Ω</span><b id="rOm">—</b></div>
+    <div style="--c:var(--blood)"><span>3D turn traveled 2Ω</span><b id="rTrav2">—</b></div>
+    <div style="--c:var(--moss)"><span>shortest turn φ = 2·acos(|a·b|)</span><b id="rPhi2">—</b></div>
+    <div style="--c:var(--ochre)"><span>current t and yaw</span><b id="rYaw">—</b></div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="sA">Start yaw A <output id="oA">170°</output></label>
+      <input id="sA" type="range" min="-180" max="180" step="1" value="170">
+      <label for="sB">End yaw B <output id="oB">−170°</output></label>
+      <input id="sB" type="range" min="-540" max="540" step="1" value="-170">
+      <label for="sT">t <output id="oT">0.00</output></label>
+      <input id="sT" type="range" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div>
+      <div class="row">
+        <label class="check" for="cCheck"><input id="cCheck" type="checkbox"> Sign check (flip b when a · b &lt; 0)</label>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <label for="method" style="align-items:center">Method</label>
+        <select id="method"><option value="slerp">slerp</option><option value="nlerp">nlerp</option></select>
+        <button class="btn primary" id="play" type="button">Pause</button>
+      </div>
+      <p class="lbl" style="margin:14px 0 6px">Try</p>
+      <div class="row" role="group" aria-label="Example yaw pairs">
+        <button class="chip" type="button" data-a="170" data-b="-170">170° → −170°</button>
+        <button class="chip" type="button" data-a="0" data-b="120">0° → 120°</button>
+        <button class="chip" type="button" data-a="45" data-b="405">45° → 405°</button>
+        <button class="chip" type="button" data-a="-90" data-b="90">−90° → 90°</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model: a = (cos(A/2), 0, sin(A/2), 0), b likewise, slerp q(t) = (sin((1−t)Ω)·a + sin(tΩ)·b) / sin Ω, falling back to lerp and normalize when sin Ω &lt; 10⁻⁶. The sign check matches the one in Godot's <code>Quaternion::slerp</code> and the glTF 2.0 interpolation note, both cited in the lecture. Yaw 0 points up the page and positive yaw turns counter-clockwise.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const D=Math.PI/180;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let A=170,B=-170,check=false,method='slerp',t=reduce?0.5:0,playing=!reduce,last=null;
+
+const minus=s=>s.replace(/-/g,'−');
+const f=(x,n)=>{let s=x.toFixed(n);if(/^-0\.?0*$/.test(s))s=s.slice(1);return minus(s);};
+const deg=(x,n)=>f(x,n)+'°';
+const qs=q=>'('+f(q[0],4)+', 0, '+f(q[1],4)+', 0)';
+
+function quat(y){return [Math.cos(y*D/2),Math.sin(y*D/2)];}
+function setup(){
+  const a=quat(A);let b=quat(B);let d=a[0]*b[0]+a[1]*b[1];
+  const flipped=check&&d<0;
+  if(flipped){b=[-b[0],-b[1]];d=-d;}
+  const Om=Math.acos(Math.max(-1,Math.min(1,d)));
+  return {a,b,d,Om,flipped,bRaw:quat(B)};
+}
+function interp(S,tt){
+  const {a,b,Om}=S;let q;
+  if(method==='slerp'&&Math.sin(Om)>=1e-6){
+    const s=Math.sin(Om),k0=Math.sin((1-tt)*Om)/s,k1=Math.sin(tt*Om)/s;
+    q=[k0*a[0]+k1*b[0],k0*a[1]+k1*b[1]];
+  }else{
+    q=[(1-tt)*a[0]+tt*b[0],(1-tt)*a[1]+tt*b[1]];
+    const n=Math.hypot(q[0],q[1]);
+    q=n>1e-12?[q[0]/n,q[1]/n]:[a[0],a[1]];
+  }
+  return q;
+}
+function wrapYaw(y){let w=((y+180)%360+360)%360-180;if(w<=-180+1e-9)w=180;return w;}
+function yawOf(q){return 2*Math.atan2(q[1],q[0])/D;}
+// continuous (unwrapped) yaw along the path, for drawing the swept arc
+function path(S,t1,n){
+  const pts=[];let prev=null,off=0;
+  for(let i=0;i<=n;i++){
+    const tt=t1*i/n;let y=yawOf(interp(S,tt));
+    if(prev!==null){while(y+off-prev>180)off-=360;while(y+off-prev<-180)off+=360;}
+    y+=off;pts.push(y);prev=y;
+  }
+  return pts;
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function dot(g,x,y,r,fill,stroke){g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fillStyle=fill;g.fill();if(stroke){g.strokeStyle=stroke;g.lineWidth=2;g.stroke();}}
+
+function drawTurret(S,long){
+  const {g,w,h}=setupCanvas($('cTur'));g.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,R=Math.min(w/2-40,h/2-26),L=R*0.78;
+  const dir=y=>[-Math.sin(y*D),-Math.cos(y*D)];
+  // room
+  g.strokeStyle=css('--grid');g.lineWidth=1.5;g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.stroke();
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--sans');g.textAlign='center';g.textBaseline='middle';
+  g.fillText('0°',cx,cy-R-12);g.fillText('180°',cx,cy+R+12);
+  g.textAlign='right';g.fillText('90°',cx-R-5,cy);g.textAlign='left';g.fillText('−90°',cx+R+5,cy);g.textAlign='center';
+  // swept path over the whole animation, faint, then the part done so far
+  const col=long?css('--blood'):css('--moss'),dash=long?[8,6]:[];
+  const full=path(S,1,240),done=path(S,t,Math.max(2,Math.round(240*t)));
+  const arc=(ys,rad,alpha,width)=>{g.globalAlpha=alpha;g.strokeStyle=col;g.lineWidth=width;g.setLineDash(dash);g.beginPath();ys.forEach((y,i)=>{const v=dir(y);i?g.lineTo(cx+v[0]*rad,cy+v[1]*rad):g.moveTo(cx+v[0]*rad,cy+v[1]*rad);});g.stroke();g.setLineDash([]);g.globalAlpha=1;};
+  arc(full,L+10,.25,3);
+  // fading trail: older points lighter
+  const n=done.length;for(let i=1;i<n;i++){const a0=dir(done[i-1]),a1=dir(done[i]);g.globalAlpha=.2+.8*(i/n);g.strokeStyle=col;g.lineWidth=4;g.setLineDash(dash);g.beginPath();g.moveTo(cx+a0[0]*(L+10),cy+a0[1]*(L+10));g.lineTo(cx+a1[0]*(L+10),cy+a1[1]*(L+10));g.stroke();}
+  g.setLineDash([]);g.globalAlpha=1;
+  // arrowhead at the end of the full path to show direction
+  if(full.length>2){const y1=full[full.length-1],y0=full[full.length-4],v=dir(y1),s=Math.sign(y1-y0)||1;const tng=[-Math.cos(y1*D)*s,Math.sin(y1*D)*s];const px=cx+v[0]*(L+10),py=cy+v[1]*(L+10);
+    g.globalAlpha=.5;g.fillStyle=col;g.beginPath();g.moveTo(px+tng[0]*9,py+tng[1]*9);g.lineTo(px-tng[0]*4+v[0]*6,py-tng[1]*4+v[1]*6);g.lineTo(px-tng[0]*4-v[0]*6,py-tng[1]*4-v[1]*6);g.closePath();g.fill();g.globalAlpha=1;}
+  // ghost barrels
+  const barrel=(y,color,width,alpha,label)=>{const v=dir(y);g.globalAlpha=alpha;g.strokeStyle=color;g.lineWidth=width;g.lineCap='round';g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+v[0]*L,cy+v[1]*L);g.stroke();g.globalAlpha=1;g.lineCap='butt';
+    if(label){g.fillStyle=color;g.font='600 13px '+css('--sans');g.fillText(label,cx+v[0]*(L-18)+v[1]*12,cy+v[1]*(L-18)-v[0]*12);}};
+  barrel(A,css('--ink-soft'),7,.35,'A');barrel(B,css('--ink-soft'),7,.35,'B');
+  const cur=yawOf(interp(S,t));
+  barrel(cur,css('--ink'),9,1,'');
+  dot(g,cx,cy,R*0.2,css('--paper-2'),css('--ink'));
+}
+
+function drawQ(S,long){
+  const {g,w,h}=setupCanvas($('cQ'));g.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,R=Math.min(w,h)/2-34;
+  const P=q=>[cx+q[0]*R,cy-q[1]*R];
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(cx-R-14,cy);g.lineTo(cx+R+14,cy);g.moveTo(cx,cy-R-14);g.lineTo(cx,cy+R+14);g.stroke();
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1.5;g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.stroke();
+  g.fillStyle=css('--ink-soft');g.font='12px '+css('--mono');g.textAlign='left';g.textBaseline='middle';
+  g.textAlign='left';g.fillText('↑ y   → w',8,14);
+  g.textAlign='center';g.fillText('1',cx+R+10,cy+12);g.fillText('−1',cx-R-12,cy+12);
+  // the arc slerp travels
+  const col=long?css('--blood'):css('--moss');
+  g.strokeStyle=col;g.lineWidth=6;g.setLineDash(long?[10,7]:[]);g.beginPath();
+  for(let i=0;i<=160;i++){const p=P(interp(S,i/160));i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]);}
+  g.stroke();g.setLineDash([]);
+  // nlerp: show the straight chord being normalized
+  if(method==='nlerp'){const a=S.a,b=S.b,m=[(1-t)*a[0]+t*b[0],(1-t)*a[1]+t*b[1]];const pa=P(a),pb=P(b),pm=P(m);
+    g.strokeStyle=css('--ink-soft');g.lineWidth=1.2;g.setLineDash([3,4]);g.beginPath();g.moveTo(pa[0],pa[1]);g.lineTo(pb[0],pb[1]);g.moveTo(cx,cy);const pq=P(interp(S,t));g.lineTo(pq[0],pq[1]);g.stroke();g.setLineDash([]);dot(g,pm[0],pm[1],3.5,css('--ink-soft'));}
+  // points
+  const lab=(q,txt,color,r)=>{const p=P(q);dot(g,p[0],p[1],r,color,css('--paper'));const n=Math.hypot(q[0],q[1])||1;g.fillStyle=color;g.font='600 13px '+css('--sans');g.textAlign='center';g.fillText(txt,p[0]+q[0]/n*20,p[1]-q[1]/n*20);};
+  const bR=S.bRaw;
+  lab(bR,'b',css('--ink-soft'),6);lab([-bR[0],-bR[1]],'−b',css('--ink-soft'),6);
+  lab(S.a,'a',css('--ink'),7);
+  const q=interp(S,t);const p=P(q);dot(g,p[0],p[1],8,col,css('--paper'));
+}
+
+function update(){
+  const S=setup();
+  const trav=2*S.Om/D,phi=2*Math.acos(Math.min(1,Math.abs(S.d)))/D;
+  const long=trav>180+1e-9;
+  const q=interp(S,t),yaw=wrapYaw(yawOf(q));
+  $('oA').textContent=deg(A,0);$('oB').textContent=deg(B,0);$('oT').textContent=t.toFixed(2);
+  $('rA').textContent=qs(S.a);$('rB').textContent=qs(S.b);
+  $('rDot').textContent=S.flipped?f(-S.d,4)+', flipped to '+f(S.d,4):f(S.d,4);$('rOm').textContent=deg(S.Om/D,2);
+  $('rTrav').textContent=deg(trav,1);$('rTrav2').textContent=deg(trav,2);
+  $('rPhi').textContent=deg(phi,1);$('rPhi2').textContent=deg(phi,2);
+  $('rYaw').textContent='t = '+t.toFixed(2)+', yaw = '+deg(yaw,2);
+  const tag=$('rTag');tag.textContent=long?'LONG WAY':'SHORT WAY';tag.className='tag '+(long?'long':'short');
+  $('lgPath').style.borderColor=long?css('--blood'):css('--moss');$('lgPath').style.borderTopStyle=long?'dashed':'solid';
+  $('lgPathTxt').textContent=long?'barrel path (long way)':'barrel path (short way)';
+  let s;
+  const degenerate=Math.sin(S.Om)<1e-6&&S.d<0;
+  if(degenerate) s=`a and b are exact opposites (a · b = ${f(S.d,4)}). They are the same orientation, so the shortest turn is 0°. Slerp's formula would divide by sin Ω = 0, so the code falls back to lerp and normalize, which lands on ±a and the barrel does not move. Turn the sign check on and b becomes a.`;
+  else if(long) s=`a · b = ${f(S.d,4)} is negative, so b sits on the far side of the circle from a. Slerp follows the ${deg(S.Om/D,1)} arc in 4D, which is a ${deg(trav,1)} turn in 3D. The barrel only needed ${deg(phi,1)}. Turn on the sign check: slerp then aims at −b, the same orientation on a's side of the circle.`;
+  else if(S.flipped) s=`The sign check flipped b because a · b was negative. Now slerp travels ${deg(S.Om/D,1)} in 4D, a ${deg(trav,1)} turn in 3D, which is the shortest turn. b and −b describe the same barrel direction, so nothing about the target changed.`;
+  else s=`a · b = ${f(S.d,4)} is not negative, so slerp already takes the short arc: ${deg(trav,1)} of barrel turn. ${method==='nlerp'?'Nlerp follows the same arc at uneven speed: it moves slower near the ends and faster in the middle, so at t = 0.25 it is short of the slerp angle.':'Switch to nlerp to see the same arc traveled at uneven speed.'}`;
+  $('insight').innerHTML=s;
+  drawTurret(S,long);drawQ(S,long);
+}
+
+function frame(ts){
+  if(!playing){last=null;return;}
+  if(last!==null){t+=(ts-last)/2000;if(t>1)t-=1;$('sT').value=t;}
+  last=ts;update();requestAnimationFrame(frame);
+}
+function setPlaying(p){playing=p;$('play').textContent=p?'Pause':'Play';$('play').setAttribute('aria-pressed',p);if(p)requestAnimationFrame(frame);}
+
+$('sA').addEventListener('input',e=>{A=+e.target.value;update();});
+$('sB').addEventListener('input',e=>{B=+e.target.value;update();});
+$('sT').addEventListener('input',e=>{t=+e.target.value;setPlaying(false);update();});
+$('cCheck').addEventListener('change',e=>{check=e.target.checked;update();});
+$('method').addEventListener('change',e=>{method=e.target.value;update();});
+$('play').addEventListener('click',()=>setPlaying(!playing));
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{A=+b.dataset.a;B=+b.dataset.b;$('sA').value=A;$('sB').value=B;update();}));
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+$('sT').value=t;
+setPlaying(playing);update();
+})();
+</script>
+</body>
+</html>

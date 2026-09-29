@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Orbit integrators · MA201 Week 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.drift{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 14px;margin:0 0 14px}
+.drift div{border-left:4px solid var(--c);padding:2px 0 2px 10px;min-width:0}
+.drift b{display:block;font-family:var(--mono);font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.drift span{font-size:.8rem;color:var(--ink-soft)}
+@media (max-width:560px){.drift b{font-size:1rem}.drift span{font-size:.74rem}}
+.orbits{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:760px){.orbits{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px 10px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.02rem;font-weight:600;margin:0 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px}
+figcaption::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--c)}
+.orbit canvas{display:block;width:100%;aspect-ratio:1/1;height:auto;max-height:360px;margin:0 auto}
+@media (max-width:760px){.orbit canvas{max-width:340px}}
+dl{display:grid;grid-template-columns:repeat(3,auto);gap:2px 10px;margin:8px 0 0;font-family:var(--mono);font-size:.84rem;justify-content:start}
+dl div{white-space:nowrap}
+dt{display:inline;color:var(--ink-soft)}
+dd{display:inline;margin:0 0 0 4px;font-variant-numeric:tabular-nums;font-weight:600}
+.status{min-height:1.4em;margin:4px 0 0;font-size:.84rem;font-family:var(--mono);color:var(--ink-soft)}
+.status.bad{color:var(--blood);font-weight:700}
+.energy{margin-top:12px}
+.energy canvas{display:block;width:100%;height:300px}
+.series{display:flex;flex-wrap:wrap;gap:6px 18px;margin:6px 0 0;font-size:.88rem}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+.check{display:flex;gap:8px;align-items:center;justify-content:flex-start;font-weight:500;cursor:pointer;margin:4px 0}
+.check input{width:18px;height:18px;margin:0;accent-color:var(--steel)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:2px 0 8px}
+.btn{font:600 .92rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.small{font-size:.84rem;padding:6px 10px;border-color:var(--steel)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:6px 0 0}
+kbd{font-family:var(--mono);font-size:.8rem;border:1px solid var(--ink-soft);border-radius:4px;padding:0 4px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA201 Linear Algebra and Physics for Games · Week 7 · Worked example</p>
+  <h1>Explicit Euler spirals out</h1>
+  <p class="lede">Same planet, same gravity, same step size. The only difference is the order of two lines of code. Explicit Euler moves along the old velocity, which is tangent to the orbit, so every step lands a little outside it and the energy climbs. Semi-implicit Euler's errors alternate and cancel, so its orbit stays closed.</p>
+</header>
+
+<section class="panel" aria-label="Three integrators on a circular orbit">
+  <div class="drift" aria-hidden="true">
+    <div style="--c:var(--blood)"><b id="dE0">—</b><span>Explicit Euler, energy change</span></div>
+    <div style="--c:var(--steel)"><b id="dE1">—</b><span>Semi-implicit, energy change</span></div>
+    <div style="--c:var(--moss)"><b id="dE2">—</b><span>Velocity Verlet, energy change</span></div>
+  </div>
+
+  <div class="orbits">
+    <figure class="orbit" style="--c:var(--blood)">
+      <figcaption style="color:var(--blood)">Explicit Euler</figcaption>
+      <canvas id="c0" role="img" aria-label="Explicit Euler orbit"></canvas>
+      <dl id="r0"></dl><p class="status" id="s0"></p>
+    </figure>
+    <figure class="orbit" style="--c:var(--steel)">
+      <figcaption style="color:var(--steel)">Semi-implicit Euler</figcaption>
+      <canvas id="c1" role="img" aria-label="Semi-implicit Euler orbit"></canvas>
+      <dl id="r1"></dl><p class="status" id="s1"></p>
+    </figure>
+    <figure class="orbit" style="--c:var(--moss)">
+      <figcaption style="color:var(--moss)">Velocity Verlet</figcaption>
+      <canvas id="c2" role="img" aria-label="Velocity Verlet orbit"></canvas>
+      <dl id="r2"></dl><p class="status" id="s2"></p>
+    </figure>
+  </div>
+
+  <figure class="energy">
+    <figcaption style="--c:var(--ochre)">Energy E = ½|v|² − 1/|x| over time<span style="font:400 .82rem var(--sans);color:var(--ink-soft);margin-left:auto" id="eNote"></span></figcaption>
+    <canvas id="cE" role="img" aria-label="Energy against time for the three methods"></canvas>
+    <div class="series" role="group" aria-label="Series shown in the energy chart">
+      <label class="check"><input type="checkbox" data-series="0" checked style="accent-color:var(--blood)"> Explicit Euler</label>
+      <label class="check"><input type="checkbox" data-series="1" checked style="accent-color:var(--steel)"> Semi-implicit Euler</label>
+      <label class="check"><input type="checkbox" data-series="2" checked style="accent-color:var(--moss)"> Velocity Verlet</label>
+    </div>
+  </figure>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="spo">Steps per orbit <output id="oSpo">60</output></label>
+      <input id="spo" type="range" min="10" max="400" step="1" value="60">
+      <p class="lbl" style="margin:0">dt <output id="oDt" style="font-family:var(--mono)">—</output></p>
+      <div class="row" style="margin-top:8px"><button class="btn small" id="dt01" type="button">dt = 0.1 exactly</button></div>
+    </div>
+    <div>
+      <label for="v0">Initial speed v₀ <output id="oV0">1.00</output></label>
+      <input id="v0" type="range" min="0.6" max="1.3" step="0.01" value="1">
+      <p class="hint">1.00 is a circle. Other values give ellipses. The exact orbit escapes at v₀ ≥ √2 ≈ 1.414.</p>
+      <label for="spf" style="margin-top:8px">Steps per frame <output id="oSpf">4</output></label>
+      <input id="spf" type="range" min="1" max="20" step="1" value="4">
+    </div>
+    <div>
+      <div class="row">
+        <button class="btn primary" id="play" type="button" aria-pressed="true">Pause</button>
+        <button class="btn" id="step" type="button">Step once</button>
+        <button class="btn" id="reset" type="button">Reset</button>
+      </div>
+      <div class="row" style="margin-top:8px" role="group" aria-label="Run to the lecture's checkpoints">
+        <span class="lbl" style="font-weight:600">Run to</span>
+        <button class="btn small" type="button" data-run="1">n = 1</button>
+        <button class="btn small" type="button" data-run="100">n = 100</button>
+        <button class="btn small" type="button" data-run="1000">n = 1,000</button>
+      </div>
+      <label class="check" style="margin-top:10px"><input type="checkbox" id="oneStep"> Show one step (zooms in on the next step)</label>
+      <label class="check"><input type="checkbox" id="zoom"> Auto-zoom to the largest radius so far</label>
+      <label class="check"><input type="checkbox" id="announce"> Announce explicit Euler's energy (screen readers)</label>
+      <p class="hint"><kbd>Space</kbd> play or pause · <kbd>.</kbd> step once</p>
+    </div>
+  </div>
+  <p class="sr" aria-live="polite" id="live"></p>
+</section>
+
+<footer>Model: GM = 1, a(x) = −x / |x|³, start x = (1, 0), v = (0, v₀), float64 arithmetic. Explicit Euler updates x with the old v, then v. Semi-implicit Euler updates v first, then x with the new v (the order Box2D 3.1 uses). Velocity Verlet moves x with v·dt + ½·a·dt², then averages the old and new acceleration for v. A body closer than 0.05 to the center stops and is marked as crashed. The dashed curve is the exact orbit for this v₀.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NAMES=['Explicit Euler','Semi-implicit Euler','Velocity Verlet'];
+const TRAIL=2000;
+let C={};
+function palette(){const s=getComputedStyle(document.documentElement);['--paper','--paper-2','--grid','--ink','--ink-soft','--steel','--blood','--ochre','--moss','--sans','--mono'].forEach(k=>C[k]=s.getPropertyValue(k).trim());C.m=[C['--blood'],C['--steel'],C['--moss']];}
+palette();
+
+const minus=s=>s.replace(/-/g,'−');
+const f=(x,n)=>{let s=x.toFixed(n);if(/^-0\.?0*$/.test(s))s=s.slice(1);return minus(s);};
+const sg=(x,n)=>{const s=f(x,n);return (x>0&&/[1-9]/.test(s)?'+':'')+s;};
+
+let spo=60,dtExact=false,v0=1,spf=4,playing=false,oneStep=false,zoom=false,announce=false,lastAnn=0;
+let dt=2*Math.PI/spo,E0=.5*v0*v0-1;
+let bodies=[];
+const show=[true,true,true];
+
+function acc(x,y){const r2=x*x+y*y,r3=r2*Math.sqrt(r2);return [-x/r3,-y/r3];}
+function energy(b){return .5*(b.vx*b.vx+b.vy*b.vy)-1/Math.hypot(b.x,b.y);}
+function newBody(){return {x:1,y:0,vx:0,vy:v0,n:0,t:0,rmin:1,rmax:1,crashed:false,
+  trail:new Float64Array(TRAIL*2),tn:0,th:0,hT:[0],hE:[.5*v0*v0-1],stride:1};}
+function reset(){
+  dt=dtExact?0.1:2*Math.PI/spo;E0=.5*v0*v0-1;
+  bodies=[0,1,2].map(newBody);bodies.forEach(pushTrail);
+}
+function pushTrail(b){const i=(b.th%TRAIL)*2;b.trail[i]=b.x;b.trail[i+1]=b.y;b.th++;b.tn=Math.min(TRAIL,b.tn+1);}
+// one step of method m, exactly as in the lecture
+function step(m,b){
+  if(b.crashed)return;
+  const x=b.x,y=b.y,vx=b.vx,vy=b.vy,a=acc(x,y);
+  if(m===0){b.x=x+vx*dt;b.y=y+vy*dt;b.vx=vx+a[0]*dt;b.vy=vy+a[1]*dt;}
+  else if(m===1){b.vx=vx+a[0]*dt;b.vy=vy+a[1]*dt;b.x=x+b.vx*dt;b.y=y+b.vy*dt;}
+  else{b.x=x+vx*dt+.5*a[0]*dt*dt;b.y=y+vy*dt+.5*a[1]*dt*dt;const a2=acc(b.x,b.y);b.vx=vx+.5*(a[0]+a2[0])*dt;b.vy=vy+.5*(a[1]+a2[1])*dt;}
+  b.n++;b.t=b.n*dt;
+  const r=Math.hypot(b.x,b.y);b.rmin=Math.min(b.rmin,r);b.rmax=Math.max(b.rmax,r);
+  if(r<0.05)b.crashed=true;
+  pushTrail(b);
+  if(b.n%b.stride===0){b.hT.push(b.t);b.hE.push(energy(b));
+    if(b.hT.length>120000){b.hT=b.hT.filter((_,i)=>i%2===0);b.hE=b.hE.filter((_,i)=>i%2===0);b.stride*=2;}}
+}
+function stepAll(){bodies.forEach((b,m)=>step(m,b));}
+// the next step, without committing it: position, the velocity used to move, landing point
+function preview(m,b){
+  const a=acc(b.x,b.y);let u;
+  if(m===0)u=[b.vx,b.vy];
+  else if(m===1)u=[b.vx+a[0]*dt,b.vy+a[1]*dt];
+  else u=[b.vx+.5*a[0]*dt,b.vy+.5*a[1]*dt];
+  const L=[b.x+u[0]*dt,b.y+u[1]*dt];
+  const c={x:b.x,y:b.y,vx:b.vx,vy:b.vy,n:0,rmin:9,rmax:0,trail:new Float64Array(2),th:0,tn:0,hT:[],hE:[],stride:1e9,crashed:false};
+  step(m,c);
+  return {u,L,E1:energy(c),r1:Math.hypot(c.x,c.y)};
+}
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function exactOrbit(g,X,Y,S){
+  // Kepler orbit through (1,0) with velocity (0,v0): an apsis at (1,0), center (1 - a, 0)
+  const E=E0;g.strokeStyle=C['--ink-soft'];g.lineWidth=1.3;g.setLineDash([5,5]);g.globalAlpha=.8;g.beginPath();
+  if(E<0){const a=-1/(2*E),e=Math.abs(v0*v0-1),bb=a*Math.sqrt(1-e*e),cx=1-a;
+    g.ellipse(X(cx),Y(0),a*S,bb*S,0,0,Math.PI*2);}
+  g.stroke();g.setLineDash([]);g.globalAlpha=1;
+}
+function rExact(th){return v0*v0/(1+(v0*v0-1)*Math.cos(th));}
+function arrow(g,x0,y0,x1,y1,col,w){
+  g.strokeStyle=col;g.fillStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();
+  const ang=Math.atan2(y1-y0,x1-x0),hl=Math.min(12,Math.hypot(x1-x0,y1-y0)*.4);
+  g.beginPath();g.moveTo(x1,y1);g.lineTo(x1-hl*Math.cos(ang-.4),y1-hl*Math.sin(ang-.4));g.lineTo(x1-hl*Math.cos(ang+.4),y1-hl*Math.sin(ang+.4));g.closePath();g.fill();
+}
+function drawOrbit(m){
+  const b=bodies[m],{g,w,h}=setupCanvas($('c'+m));g.clearRect(0,0,w,h);
+  const col=C.m[m];
+  let cx=0,cy=0,half=4;
+  let pv=null;
+  if(oneStep&&!b.crashed){pv=preview(m,b);const sp=Math.hypot(pv.u[0],pv.u[1])*dt;half=Math.max(sp*1.6,0.02);cx=b.x+pv.u[0]*dt*.5;cy=b.y+pv.u[1]*dt*.5;}
+  else if(zoom){half=Math.max(1.3,b.rmax*1.1);}
+  const S=(Math.min(w,h)/2-6)/half,X=x=>w/2+(x-cx)*S,Y=y=>h/2-(y-cy)*S;
+  // axes grid at unit spacing
+  g.strokeStyle=C['--grid'];g.lineWidth=1;
+  const gs=half>6?2:half>0.6?1:half>0.06?0.1:0.01;
+  for(let v=Math.ceil((cx-half)/gs)*gs;v<=cx+half;v+=gs){g.beginPath();g.moveTo(X(v),0);g.lineTo(X(v),h);g.stroke();}
+  for(let v=Math.ceil((cy-half)/gs)*gs;v<=cy+half;v+=gs){g.beginPath();g.moveTo(0,Y(v));g.lineTo(w,Y(v));g.stroke();}
+  exactOrbit(g,X,Y,S);
+  // attractor
+  g.fillStyle=C['--ink'];g.beginPath();g.arc(X(0),Y(0),Math.max(3,Math.min(9,0.05*S)),0,Math.PI*2);g.fill();
+  // trail, older part lighter
+  const n=b.tn;if(n>1){const start=b.th-n,chunks=5;
+    for(let c=0;c<chunks;c++){const i0=start+Math.floor(n*c/chunks),i1=start+Math.floor(n*(c+1)/chunks);
+      g.globalAlpha=.25+.75*(c+1)/chunks;g.strokeStyle=col;g.lineWidth=oneStep?2:1.6;g.beginPath();
+      for(let i=i0;i<=Math.min(i1,b.th-1);i++){const k=(i%TRAIL)*2;const px=X(b.trail[k]),py=Y(b.trail[k+1]);i===i0?g.moveTo(px,py):g.lineTo(px,py);}
+      g.stroke();}
+    g.globalAlpha=1;}
+  // body, or an edge marker if it has left the view
+  const bx=X(b.x),by=Y(b.y);
+  if(bx<0||bx>w||by<0||by>h){const dx=bx-w/2,dy=by-h/2,k=Math.min((w/2-14)/Math.abs(dx||1e-9),(h/2-14)/Math.abs(dy||1e-9));
+    const ex=w/2+dx*k,ey=h/2+dy*k;arrow(g,ex-dx/Math.hypot(dx,dy)*16,ey-dy/Math.hypot(dx,dy)*16,ex,ey,col,2.5);
+    g.fillStyle=col;g.font='600 12px '+C['--mono'];g.textAlign=ex>w/2?'right':'left';g.textBaseline=ey>h/2?'bottom':'top';g.fillText('r = '+f(Math.hypot(b.x,b.y),2),ex+(ex>w/2?-18:18),ey+(ey>h/2?-6:6));}
+  else{g.fillStyle=col;g.beginPath();g.arc(bx,by,oneStep?6:5,0,Math.PI*2);g.fill();g.strokeStyle=C['--paper'];g.lineWidth=1.5;g.stroke();}
+  if(b.crashed){g.fillStyle=C['--blood'];g.font='700 14px '+C['--sans'];g.textAlign='center';g.textBaseline='middle';g.fillText('crashed into the center',w/2,24);}
+  if(pv){
+    arrow(g,X(b.x),Y(b.y),X(pv.L[0]),Y(pv.L[1]),col,3);
+    g.strokeStyle=col;g.lineWidth=2.5;g.fillStyle=C['--paper-2'];g.beginPath();g.arc(X(pv.L[0]),Y(pv.L[1]),7,0,Math.PI*2);g.fill();g.stroke();
+    // radial gap between the landing point and the exact orbit
+    const th=Math.atan2(pv.L[1],pv.L[0]),re=rExact(th),rl=Math.hypot(pv.L[0],pv.L[1]),gap=rl-re;
+    const ex=re*Math.cos(th),ey=re*Math.sin(th);
+    g.strokeStyle=C['--ochre'];g.lineWidth=3;g.beginPath();g.moveTo(X(ex),Y(ey));g.lineTo(X(pv.L[0]),Y(pv.L[1]));g.stroke();
+    g.fillStyle=C['--ochre'];g.beginPath();g.arc(X(ex),Y(ey),3,0,Math.PI*2);g.fill();
+    g.font='700 12px '+C['--mono'];g.textAlign='left';g.textBaseline='middle';
+    const gl=(Math.abs(gap)<5e-6?'on the orbit':(gap>0?'outside by ':'inside by ')+Math.abs(gap).toFixed(5));
+    g.fillText(gl,Math.min(w-g.measureText(gl).width-6,X(pv.L[0])+14),Y(pv.L[1]));
+    g.font='12px '+C['--sans'];g.fillStyle=C['--ink-soft'];g.textAlign='left';g.textBaseline='top';
+    g.fillText(m===0?'moves along the OLD velocity':m===1?'moves along the NEW velocity':'moves along v + ½·a·dt',8,8);
+    g.fillText('dashed: exact orbit · ochre: gap to it',8,24);
+  }
+  if(!pv){g.font='11px '+C['--sans'];g.fillStyle=C['--ink-soft'];g.textAlign='left';g.textBaseline='bottom';g.fillText('view ±'+f(half,half<10?1:0),6,h-4);}
+}
+function readouts(){
+  bodies.forEach((b,m)=>{
+    const r=Math.hypot(b.x,b.y),E=energy(b);
+    $('r'+m).innerHTML=`<div><dt>n</dt><dd>${b.n.toLocaleString('en-US')}</dd></div><div><dt>t</dt><dd>${b.t.toFixed(2)}</dd></div><div><dt>r</dt><dd>${r.toFixed(4)}</dd></div>`+
+      `<div><dt>E</dt><dd>${f(E,5)}</dd></div><div><dt>min r</dt><dd>${b.rmin.toFixed(4)}</dd></div><div><dt>max r</dt><dd>${b.rmax.toFixed(4)}</dd></div>`;
+    let st='';
+    if(b.crashed)st='crashed into the center';
+    else if(oneStep){const pv=preview(m,b);st=`next step: r ${r.toFixed(5)} → ${pv.r1.toFixed(5)}, E ${f(E,5)} → ${f(pv.E1,5)}`;}
+    const s=$('s'+m);s.textContent=st;s.className='status'+(b.crashed?' bad':'');
+    $('dE'+m).textContent=sg(E-E0,5);
+  });
+  const e=energy(bodies[0]),si=bodies[1],sE=energy(si);
+  let t;
+  const n=bodies[0].n;
+  if(n===0)t=`All three start on the same orbit with E = ${f(E0,5)}. Press Play or Step once.`;
+  else if(bodies[0].crashed)t=`Explicit Euler crashed into the center after ${n.toLocaleString('en-US')} steps. With a slow start (v₀ &lt; 1) the orbit is an ellipse that dips close to the center, where the acceleration is huge and a fixed step overshoots.`;
+  else t=`After ${n.toLocaleString('en-US')} steps explicit Euler's energy has gone from ${f(E0,5)} to ${f(e,5)}, a change of ${sg(e-E0,5)}, and it only goes one way. Its radius has reached ${Math.hypot(bodies[0].x,bodies[0].y).toFixed(4)}. Semi-implicit Euler swings between r = ${si.rmin.toFixed(4)} and ${si.rmax.toFixed(4)} but its energy stays within ${f(Math.abs(sE-E0),5)} of the start. The orbit panels make explicit Euler look slightly off; the energy chart shows it is broken.`;
+  if(oneStep&&n>=0)t=`Zoomed on the next step. Explicit Euler moves along the velocity it had at the start of the step, which is tangent to the orbit, so the landing point is outside the curve. Semi-implicit Euler first bends the velocity toward the center, so it lands inside. Over a full orbit the inside and outside errors cancel for semi-implicit Euler; explicit Euler's never do. Press Step once to walk it.`;
+  $('insight').innerHTML=t;
+  $('eNote').textContent='dashed line: exact E = '+f(E0,2);
+}
+// energy chart
+function drawEnergy(){
+  const {g,w,h}=setupCanvas($('cE'));g.clearRect(0,0,w,h);
+  const narrow=w<520,pad={l:narrow?40:50,r:narrow?80:118,t:14,b:34};
+  const yMax=0.1,yMin=Math.min(-0.6,Math.floor((E0-0.1)*10)/10);
+  const tNow=Math.max(...bodies.map(b=>b.t));
+  const tMax=niceMax(Math.max(20,tNow*1.02));
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const X=t=>pad.l+pw*t/tMax,Y=E=>pad.t+ph*(yMax-Math.max(yMin,Math.min(yMax,E)))/(yMax-yMin);
+  g.font='12px '+C['--sans'];g.fillStyle=C['--ink-soft'];g.strokeStyle=C['--grid'];g.lineWidth=1;
+  for(let E=yMin;E<=yMax+1e-9;E+=0.1){const y=Y(E);g.beginPath();g.moveTo(pad.l,y);g.lineTo(pad.l+pw,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(f(E,1),pad.l-6,y);}
+  const nT=narrow?4:5,tStep=tMax/nT;for(let i=0;i<=nT;i++){const x=X(i*tStep);g.textAlign='center';g.textBaseline='top';g.fillText(fmtT(i*tStep),x,h-pad.b+6);}
+  g.textAlign='right';g.fillText('t',pad.l+pw,h-14);
+  g.textAlign='left';g.textBaseline='top';g.fillText('E',pad.l+4,pad.t);
+  // reference
+  g.strokeStyle=C['--ink-soft'];g.setLineDash([6,5]);g.beginPath();g.moveTo(pad.l,Y(E0));g.lineTo(pad.l+pw,Y(E0));g.stroke();g.setLineDash([]);
+  const labels=[];
+  bodies.forEach((b,m)=>{
+    if(!show[m])return;
+    const col=C.m[m];g.strokeStyle=col;g.lineWidth=m===0?2.6:2;
+    g.setLineDash(m===1?[7,4]:m===2?[2,3]:[]);
+    // min/max per pixel column
+    g.beginPath();let col0=-1,mn=0,mx=0,first=true;
+    const flush=()=>{if(col0<0)return;const x=pad.l+col0;if(first){g.moveTo(x,Y(mn));first=false;}else g.lineTo(x,Y(mn));if(mx!==mn)g.lineTo(x,Y(mx));};
+    for(let i=0;i<b.hT.length;i++){const c=Math.floor(X(b.hT[i])-pad.l),E=b.hE[i];
+      if(c!==col0){flush();col0=c;mn=mx=E;}else{mn=Math.min(mn,E);mx=Math.max(mx,E);}}
+    flush();g.stroke();g.setLineDash([]);
+    // escaped marker: first time above the top of the chart
+    const k=b.hE.findIndex(E=>E>yMax);
+    if(k>=0){const x=X(b.hT[k]);g.fillStyle=col;g.beginPath();g.moveTo(x,pad.t+2);g.lineTo(x-6,pad.t+12);g.lineTo(x+6,pad.t+12);g.closePath();g.fill();g.font='600 11px '+C['--sans'];g.textAlign='left';g.textBaseline='top';g.fillText('escaped',x+8,pad.t+2);}
+    const Ee=b.hE[b.hE.length-1];labels.push({m,y:Y(Ee),x:X(b.hT[b.hT.length-1]),E:Ee});
+  });
+  // direct labels at line ends, pushed apart vertically
+  labels.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<labels.length;i++)if(labels[i].y-labels[i-1].y<30)labels[i].y=labels[i-1].y+30;
+  const over=labels.length?labels[labels.length-1].y-(pad.t+ph):0;if(over>0)labels.forEach(l=>l.y-=over);
+  labels.forEach(l=>{const col=C.m[l.m];const lx=Math.min(l.x+10,pad.l+pw+8);
+    if(Math.abs(l.y-Y(l.E))>3){g.strokeStyle=col;g.globalAlpha=.6;g.lineWidth=1;g.beginPath();g.moveTo(l.x+2,Y(l.E));g.lineTo(lx-2,l.y);g.stroke();g.globalAlpha=1;}
+    g.fillStyle=col;g.font='600 12px '+C['--sans'];g.textAlign='left';g.textBaseline='bottom';
+    g.fillText(narrow?['Explicit','Semi-impl.','Verlet'][l.m]:NAMES[l.m],lx,l.y);
+    g.font='12px '+C['--mono'];g.textBaseline='top';g.fillText(f(l.E,4),lx,l.y);});
+}
+function niceMax(v){const p=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.5,2,2.5,3,4,5,6,8,10].map(k=>k*p).find(k=>k>=v);}
+function fmtT(t){return t>=1000?Math.round(t).toLocaleString('en-US'):t>=10?String(Math.round(t)):t.toFixed(1);}
+
+function drawAll(){[0,1,2].forEach(drawOrbit);drawEnergy();readouts();}
+function frame(){
+  if(!playing)return;
+  for(let i=0;i<spf;i++)stepAll();
+  drawAll();
+  if(announce){const now=performance.now();if(now-lastAnn>1000){lastAnn=now;$('live').textContent='Explicit Euler energy now E = '+f(energy(bodies[0]),4);}}
+  if(bodies.every(b=>b.crashed)||bodies[0].n>2e6){setPlaying(false);return;}
+  requestAnimationFrame(frame);
+}
+function setPlaying(p){
+  playing=p;$('play').textContent=p?'Pause':'Play';$('play').setAttribute('aria-pressed',String(p));
+  if(p){if(oneStep){oneStep=false;$('oneStep').checked=false;}requestAnimationFrame(frame);}
+}
+function dtLabel(){
+  $('oDt').textContent=dtExact?'0.1000 (≈ 62.8 steps per orbit)':(2*Math.PI/spo).toFixed(4);
+  $('oSpo').textContent=dtExact?'≈ 62.8':String(spo);
+}
+function runTo(n){setPlaying(false);reset();for(let i=0;i<n;i++)stepAll();drawAll();}
+
+$('spo').addEventListener('input',e=>{spo=+e.target.value;dtExact=false;dtLabel();reset();drawAll();});
+$('dt01').addEventListener('click',()=>{dtExact=true;spo=63;$('spo').value=63;dtLabel();reset();drawAll();});
+$('v0').addEventListener('input',e=>{v0=+e.target.value;$('oV0').textContent=v0.toFixed(2);reset();drawAll();});
+$('spf').addEventListener('input',e=>{spf=+e.target.value;$('oSpf').textContent=spf;});
+$('play').addEventListener('click',()=>setPlaying(!playing));
+$('step').addEventListener('click',()=>{setPlaying(false);stepAll();drawAll();});
+$('reset').addEventListener('click',()=>{reset();drawAll();});
+document.querySelectorAll('[data-run]').forEach(b=>b.addEventListener('click',()=>runTo(+b.dataset.run)));
+$('oneStep').addEventListener('change',e=>{oneStep=e.target.checked;if(oneStep)setPlaying(false);drawAll();});
+$('zoom').addEventListener('change',e=>{zoom=e.target.checked;drawAll();});
+$('announce').addEventListener('change',e=>{announce=e.target.checked;if(!announce)$('live').textContent='';});
+document.querySelectorAll('[data-series]').forEach(c=>c.addEventListener('change',()=>{show[+c.dataset.series]=c.checked;drawEnergy();}));
+document.addEventListener('keydown',e=>{
+  if(e.altKey||e.ctrlKey||e.metaKey)return;
+  const tg=e.target,tag=tg.tagName,type=(tg.type||'').toLowerCase();
+  const nativeSpace=tag==='BUTTON'||tag==='SELECT'||tag==='TEXTAREA'||(tag==='INPUT'&&type!=='range');
+  if(e.key===' '&&!nativeSpace){e.preventDefault();setPlaying(!playing);}
+  else if(e.key==='.'){e.preventDefault();setPlaying(false);stepAll();drawAll();}
+});
+window.addEventListener('resize',drawAll);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{palette();drawAll();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{palette();drawAll();});
+
+dtLabel();reset();
+if(reduce){for(let i=0;i<300;i++)stepAll();drawAll();setPlaying(false);}
+else{drawAll();setPlaying(true);}
+})();
+</script>
+</body>
+</html>

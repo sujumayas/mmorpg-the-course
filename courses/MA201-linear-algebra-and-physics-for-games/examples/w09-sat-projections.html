@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Separating axis test — MA201 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.views{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+@media (max-width:860px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+#world{display:block;width:100%;aspect-ratio:3/2;touch-action:none;cursor:grab;border-radius:6px}
+.strip{margin:0 0 8px}
+.strip-head{display:flex;justify-content:space-between;gap:8px;font-size:.85rem;font-variant-numeric:tabular-nums}
+.strip-head b{font-weight:700}
+.strip canvas{display:block;width:100%;height:44px}
+.ok{color:var(--moss)}.bad{color:var(--blood)}
+.result{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 4px}
+.verdict{font:600 1.08rem var(--serif);padding:8px 12px;border-radius:10px;border-left:5px solid var(--c,var(--ink));background:var(--paper-2);flex:1 1 320px;font-variant-numeric:tabular-nums}
+.badge{font:600 .9rem var(--sans);padding:6px 10px;border-radius:999px;border:1.5px solid var(--ink-soft)}
+.warn{font:700 .9rem var(--sans);padding:6px 10px;border-radius:999px;background:var(--blood);color:var(--paper)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:600px;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th:last-child,td:last-child{text-align:left}
+tr.sep td{background:color-mix(in srgb,var(--blood) 14%,transparent);font-weight:700}
+tr.mtv td{background:color-mix(in srgb,var(--moss) 16%,transparent);font-weight:700}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.group-title{font-weight:600;font-size:.92rem;margin:0 0 6px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+label.check{justify-content:flex-start;align-items:center;font-weight:600;margin:6px 0}
+label.check input{width:20px;height:20px;accent-color:var(--steel)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip.a{border-color:var(--steel)}.chip.b{border-color:var(--ochre)}
+.chip.b[aria-pressed="true"]{background:var(--ochre)}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.btn{font:700 .9rem var(--sans);padding:8px 14px;border-radius:8px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.hint{font-size:.84rem;color:var(--ink-soft);margin:6px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif);max-width:80ch}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA201 Linear Algebra and Physics for Games · Week 9 · Worked example</p>
+  <h1>One gap on one axis says no</h1>
+  <p class="lede">The boxes look like they touch, and their axis-aligned boxes overlap. The diagonal strip shows a gap. Two convex shapes collide only when every candidate axis shows overlapping shadows.</p>
+</header>
+
+<section class="panel" aria-label="Separating axis explorer">
+  <div class="views">
+    <figure>
+      <figcaption>Shapes<small>Drag a box to move it, drag a round handle to rotate. World x from −6 to 6, y from −4 to 4, y up.</small></figcaption>
+      <canvas id="world" tabindex="0" role="img" aria-label="Two rotated boxes A and B with their projection axes"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>Box A</span>
+        <span><i style="background:var(--ochre)"></i>Box B</span>
+        <span><i style="background:var(--blood)"></i>gap</span>
+        <span><i style="background:var(--moss)"></i>shared shadow / MTV</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Projection strips<small>Each candidate axis, with A's shadow on top and B's below, on one shared scale</small></figcaption>
+      <div id="strips"></div>
+    </figure>
+  </div>
+
+  <div class="result">
+    <div class="verdict" id="verdict" aria-live="polite">—</div>
+    <span class="badge" id="aabbBadge"></span>
+    <span class="warn" id="aabbWarn" hidden>&#9888; AABB false hit</span>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Overlap on each candidate axis">
+      <thead><tr><th>Axis n</th><th>|d · n|</th><th>r<sub>A</sub></th><th>r<sub>B</sub></th><th>r<sub>A</sub> + r<sub>B</sub></th><th>Overlap</th><th>Status</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div>
+      <p class="group-title" id="selTitle">Selected box</p>
+      <div class="chips" role="group" aria-labelledby="selTitle">
+        <button class="chip a" id="selA" aria-pressed="true">Box A</button>
+        <button class="chip b" id="selB" aria-pressed="false">Box B</button>
+      </div>
+      <p class="hint">Focus a box button: arrows move 0.1 (Shift 0.01), Q and E rotate 5° (Shift 1°).</p>
+      <label for="ang" style="margin-top:8px">Angle <output id="oAng">0°</output></label>
+      <input id="ang" type="range" min="-90" max="90" step="1" value="0">
+      <label for="hw">Half-width <output id="oHw">2.00</output></label>
+      <input id="hw" type="range" min="0.25" max="3" step="0.05" value="2">
+      <label for="hh">Half-height <output id="oHh">1.00</output></label>
+      <input id="hh" type="range" min="0.25" max="3" step="0.05" value="1">
+      <p class="hint" id="posOut"></p>
+    </div>
+    <div>
+      <p class="group-title" id="preTitle">Presets</p>
+      <div class="chips" role="group" aria-labelledby="preTitle" id="presets">
+        <button class="chip" data-p="case1" aria-pressed="true">Case 1</button>
+        <button class="chip" data-p="case2" aria-pressed="false">Case 2</button>
+        <button class="chip" data-p="activity" aria-pressed="false">Activity</button>
+        <button class="chip" data-p="plus" aria-pressed="false">Plus sign</button>
+        <button class="chip" data-p="custom" aria-pressed="false">Custom</button>
+      </div>
+      <label class="check"><input type="checkbox" id="tAabb" checked> Show AABB of B</label>
+      <label class="check"><input type="checkbox" id="tMtv" checked> Show MTV</label>
+      <label class="check"><input type="checkbox" id="tAxes"> Draw axes on canvas</label>
+      <button class="btn" id="resolve" style="margin-top:6px">Resolve: move B by the MTV</button>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model: box with center c, half-extents (hw, hh), angle θ; u = (cos θ, sin θ), v = (−sin θ, cos θ); r(n) = hw·|u·n| + hh·|v·n|; overlap on n = r<sub>A</sub>(n) + r<sub>B</sub>(n) − |d·n| with d = c<sub>B</sub> − c<sub>A</sub>. The table tests all four axes; an early-exit implementation stops at the row marked "separating axis". Method after Gottschalk, Lin and Manocha, "OBBTree" (SIGGRAPH 1996) and Ericson, <i>Real-Time Collision Detection</i> (2005).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const M='−';
+const z=x=>Math.abs(x)<5e-5?0:x;
+const f4=x=>{const s=z(x).toFixed(4);return s.startsWith('-')?M+s.slice(1):s;};
+const s4=x=>{x=z(x);return (x>0?'+':x<0?M:'')+Math.abs(x).toFixed(4);};
+const vec=n=>`(${f4(n[0])}, ${f4(n[1])})`;
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1];
+
+const PRESETS={
+  case1:{A:[0,0,2,1,0],B:[3.0,1.5,1,1,45]},
+  case2:{A:[0,0,2,1,0],B:[2.8,1.4,1,1,45]},
+  activity:{A:[0,0,3,1,0],B:[3.5,1.8,1,0.5,30]},
+  plus:{A:[0,0,3,0.4,0],B:[0,0,0.4,3,0]}
+};
+const boxes={A:null,B:null};
+let sel='A',anim=null;
+function load(p){const q=PRESETS[p];
+  boxes.A={cx:q.A[0],cy:q.A[1],hw:q.A[2],hh:q.A[3],deg:q.A[4]};
+  boxes.B={cx:q.B[0],cy:q.B[1],hw:q.B[2],hh:q.B[3],deg:q.B[4]};}
+function axesOf(b){const t=b.deg*Math.PI/180;return {u:[Math.cos(t),Math.sin(t)],v:[-Math.sin(t),Math.cos(t)]};}
+function rad(b,n){const a=axesOf(b);return b.hw*Math.abs(dot(a.u,n))+b.hh*Math.abs(dot(a.v,n));}
+
+function sat(){
+  const A=boxes.A,B=boxes.B,aa=axesOf(A),ab=axesOf(B);
+  const d=[B.cx-A.cx,B.cy-A.cy];
+  const list=[['A','u',aa.u],['A','v',aa.v],['B','u',ab.u],['B','v',ab.v]];
+  const rows=list.map(([o,k,n])=>{const dn=dot(d,n),rA=rad(A,n),rB=rad(B,n);let ov=rA+rB-Math.abs(dn);if(Math.abs(ov)<1e-9)ov=0;
+    return {o,k,n,dn,ad:Math.abs(dn),rA,rB,sum:rA+rB,ov,
+      ia:[dot([A.cx,A.cy],n)-rA,dot([A.cx,A.cy],n)+rA],ib:[dot([B.cx,B.cy],n)-rB,dot([B.cx,B.cy],n)+rB]};});
+  const sepIdx=rows.findIndex(r=>r.ov<=0);
+  let mtvIdx=-1,normal=null,depth=0;
+  if(sepIdx<0){mtvIdx=0;rows.forEach((r,i)=>{if(r.ov<rows[mtvIdx].ov)mtvIdx=i;});
+    const r=rows[mtvIdx];const s=r.dn<0?-1:1;normal=[r.n[0]*s,r.n[1]*s];depth=r.ov;}
+  // AABB test
+  const ex=b=>[rad(b,[1,0]),rad(b,[0,1])];
+  const ea=ex(A),eb=ex(B);
+  const aabbHit=Math.abs(d[0])<ea[0]+eb[0]&&Math.abs(d[1])<ea[1]+eb[1];
+  return {rows,sepIdx,mtvIdx,normal,depth,aabbHit,eb};
+}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+
+let view={w:1,h:1};
+const W2P=(x,y)=>[(x+6)/12*view.w,(4-y)/8*view.h];
+const P2W=(px,py)=>[px/view.w*12-6,4-py/view.h*8];
+
+function corners(b){const a=axesOf(b);const out=[];
+  for(const [sx,sy] of [[1,1],[-1,1],[-1,-1],[1,-1]])out.push([b.cx+a.u[0]*b.hw*sx+a.v[0]*b.hh*sy,b.cy+a.u[1]*b.hw*sx+a.v[1]*b.hh*sy]);return out;}
+function handles(b){const a=axesOf(b),L=b.hw+0.45;return [[b.cx+a.u[0]*L,b.cy+a.u[1]*L],[b.cx-a.u[0]*L,b.cy-a.u[1]*L]];}
+
+function drawWorld(S){
+  const c=setup($('world'));const g=c.g;view={w:c.w,h:c.h};
+  g.clearRect(0,0,c.w,c.h);
+  g.fillStyle=css('--paper');g.fillRect(0,0,c.w,c.h);
+  g.strokeStyle=css('--grid');g.lineWidth=1;
+  for(let x=-6;x<=6;x++){const p=W2P(x,0);g.beginPath();g.moveTo(p[0],0);g.lineTo(p[0],c.h);g.stroke();}
+  for(let y=-4;y<=4;y++){const p=W2P(0,y);g.beginPath();g.moveTo(0,p[1]);g.lineTo(c.w,p[1]);g.stroke();}
+  g.strokeStyle=css('--ink-soft');g.globalAlpha=.6;const o=W2P(0,0);
+  g.beginPath();g.moveTo(0,o[1]);g.lineTo(c.w,o[1]);g.moveTo(o[0],0);g.lineTo(o[0],c.h);g.stroke();g.globalAlpha=1;
+  g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+  g.fillText('x',c.w-12,o[1]+3);g.fillText('y',o[0]+4,2);
+  // axes on canvas
+  if($('tAxes').checked){
+    S.rows.forEach((r,i)=>{const n=r.n,sc=12;
+      const p1=W2P(-n[0]*sc,-n[1]*sc),p2=W2P(n[0]*sc,n[1]*sc);
+      g.strokeStyle=css('--ink-soft');g.globalAlpha=.35;g.lineWidth=1;g.setLineDash([2,4]);
+      g.beginPath();g.moveTo(p1[0],p1[1]);g.lineTo(p2[0],p2[1]);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+      const perp=[-n[1],n[0]];
+      [[r.ia,'--steel',0.09],[r.ib,'--ochre',-0.09]].forEach(([iv,col,off])=>{
+        const a=W2P(n[0]*iv[0]+perp[0]*off,n[1]*iv[0]+perp[1]*off),b=W2P(n[0]*iv[1]+perp[0]*off,n[1]*iv[1]+perp[1]*off);
+        g.strokeStyle=css(col);g.globalAlpha=.75;g.lineWidth=4;g.lineCap='butt';g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();g.globalAlpha=1;});
+      if(r.ov<=0){const lo=Math.min(r.ia[1],r.ib[1]),hi=Math.max(r.ia[0],r.ib[0]);
+        const a=W2P(n[0]*lo,n[1]*lo),b=W2P(n[0]*hi,n[1]*hi);g.strokeStyle=css('--blood');g.lineWidth=6;
+        g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();}
+    });
+  }
+  // AABB of B
+  if($('tAabb').checked){const B=boxes.B,e=S.eb;const p=W2P(B.cx-e[0],B.cy+e[1]);
+    g.strokeStyle=css('--ochre');g.lineWidth=1.5;g.setLineDash([6,4]);g.strokeRect(p[0],p[1],2*e[0]/12*c.w,2*e[1]/8*c.h);g.setLineDash([]);}
+  // boxes
+  [['A','--steel'],['B','--ochre']].forEach(([k,col])=>{
+    const b=boxes[k],cs=corners(b).map(q=>W2P(q[0],q[1]));
+    g.beginPath();cs.forEach((q,i)=>i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.closePath();
+    g.fillStyle=css(col);g.globalAlpha=.3;g.fill();g.globalAlpha=1;
+    g.strokeStyle=css(col);g.lineWidth=sel===k?3:2;g.stroke();
+    const cc=W2P(b.cx,b.cy);g.fillStyle=css(col);g.beginPath();g.arc(cc[0],cc[1],3.5,0,7);g.fill();
+    g.font='600 13px '+css('--sans');g.fillStyle=css('--ink');g.textAlign='center';g.textBaseline='bottom';g.fillText(k,cc[0],cc[1]-5);
+    handles(b).forEach(h=>{const hp=W2P(h[0],h[1]);g.beginPath();g.arc(hp[0],hp[1],sel===k?6:5,0,7);
+      g.fillStyle=css('--paper');g.fill();g.strokeStyle=css(col);g.lineWidth=2;g.stroke();});
+  });
+  // MTV arrow
+  if($('tMtv').checked&&S.normal){const B=boxes.B,a=W2P(B.cx,B.cy),L=Math.max(S.depth,0.02);
+    const b=W2P(B.cx+S.normal[0]*L,B.cy+S.normal[1]*L);
+    g.strokeStyle=css('--moss');g.fillStyle=css('--moss');g.lineWidth=3;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();
+    const ang=Math.atan2(b[1]-a[1],b[0]-a[0]);g.beginPath();g.moveTo(b[0],b[1]);
+    g.lineTo(b[0]-10*Math.cos(ang-0.45),b[1]-10*Math.sin(ang-0.45));g.lineTo(b[0]-10*Math.cos(ang+0.45),b[1]-10*Math.sin(ang+0.45));g.closePath();g.fill();}
+}
+
+function drawStrips(S){
+  let lo=Infinity,hi=-Infinity;S.rows.forEach(r=>{lo=Math.min(lo,r.ia[0],r.ib[0]);hi=Math.max(hi,r.ia[1],r.ib[1]);});
+  const padU=(hi-lo)*0.06+0.2;lo-=padU;hi+=padU;
+  const names={A:'A',B:'B'};
+  S.rows.forEach((r,i)=>{
+    const head=$('sh'+i);const sep=i===S.sepIdx,gap=r.ov<=0;
+    head.innerHTML=`<span><b>${names[r.o]}'s ${r.k}</b> n = ${vec(r.n)}</span><span class="${gap?'bad':'ok'}">${gap?'&#10007; gap '+f4(-r.ov):'&#10003; overlap '+f4(r.ov)}${sep?' · stop here':''}</span>`;
+    const c=setup($('sc'+i)),g=c.g,X=v=>8+(v-lo)/(hi-lo)*(c.w-16);
+    g.clearRect(0,0,c.w,c.h);
+    g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.beginPath();g.moveTo(4,c.h-10);g.lineTo(c.w-4,c.h-10);g.stroke();
+    g.fillStyle=css('--ink-soft');g.font='10px '+css('--sans');g.textAlign='center';g.textBaseline='top';
+    for(let t=Math.ceil(lo);t<=Math.floor(hi);t++){const x=X(t);g.beginPath();g.moveTo(x,c.h-13);g.lineTo(x,c.h-7);g.stroke();
+      if(t%2===0&&c.w>200)g.fillText(t,x,c.h-10+1);}
+    // shared or gap
+    const sLo=Math.max(r.ia[0],r.ib[0]),sHi=Math.min(r.ia[1],r.ib[1]);
+    if(sHi>sLo){g.fillStyle=css('--moss');g.globalAlpha=.3;g.fillRect(X(sLo),2,X(sHi)-X(sLo),c.h-14);g.globalAlpha=1;}
+    else{const gw=Math.max(4,X(sLo)-X(sHi)),gx=(X(sLo)+X(sHi))/2-gw/2;g.fillStyle=css('--blood');g.globalAlpha=.55;g.fillRect(gx,0,gw,c.h-12);g.globalAlpha=1;}
+    g.fillStyle=css('--steel');g.fillRect(X(r.ia[0]),6,X(r.ia[1])-X(r.ia[0]),9);
+    g.fillStyle=css('--ochre');g.fillRect(X(r.ib[0]),18,X(r.ib[1])-X(r.ib[0]),9);
+  });
+}
+
+function renderText(S){
+  $('tbody').innerHTML=S.rows.map((r,i)=>{
+    let st='overlap',cls='';
+    if(i===S.sepIdx){st='&#10007; separating axis (early exit stops here)';cls='sep';}
+    else if(r.ov<=0){st='&#10007; gap';}
+    else if(i===S.mtvIdx){st='&#10003; MTV (smallest overlap)';cls='mtv';}
+    return `<tr class="${cls}"><td>${vec(r.n)}</td><td>${f4(r.ad)}</td><td>${f4(r.rA)}</td><td>${f4(r.rB)}</td><td>${f4(r.sum)}</td><td>${s4(r.ov)}</td><td>${st}</td></tr>`;}).join('');
+  let v,col;
+  if(S.sepIdx>=0){const r=S.rows[S.sepIdx];v=`No collision: separated on axis ${vec(r.n)} by ${f4(-r.ov)}`+(r.ov===0?' (touching)':'');col='--steel';}
+  else{v=`Collision: normal ${vec(S.normal)}, depth ${f4(S.depth)}`;col='--blood';}
+  const ve=$('verdict');ve.style.setProperty('--c',`var(${col})`);
+  const icon=S.sepIdx>=0?'✔ ':'✖ ';
+  if(ve.dataset.text!==v){ve.textContent=icon+v;ve.dataset.text=v;}
+  const sat=S.sepIdx<0;
+  $('aabbBadge').hidden=!$('tAabb').checked;
+  $('aabbBadge').textContent='AABB test: '+(S.aabbHit?'hit':'no hit');
+  $('aabbWarn').hidden=!($('tAabb').checked&&S.aabbHit&&!sat);
+  $('resolve').disabled=!S.normal||!!anim;
+  let ins;
+  if(S.sepIdx>=0){const r=S.rows[S.sepIdx],name=`${r.o}'s ${r.k}`;
+    ins=`Axis ${name} ${vec(r.n)} shows a gap of ${f4(-r.ov)}: the shadows are ${f4(r.ad)} apart but only ${f4(r.sum)} long together. That one axis proves the boxes miss`+(S.aabbHit?`, even though their axis-aligned boxes overlap.`:'.')+(S.sepIdx<3?` An early-exit test stops after ${S.sepIdx+1} of 4 axes.`:'');}
+  else{const r=S.rows[S.mtvIdx];ins=`All four axes overlap, so the boxes collide. The smallest overlap is ${f4(r.ov)} on ${r.o}'s ${r.k} axis, and it points from A toward B (d · n &gt; 0). Pushing B ${f4(S.depth)} along ${vec(S.normal)} separates them with the least movement.`;}
+  $('insight').innerHTML=ins;
+  const b=boxes[sel];
+  $('ang').value=b.deg;$('hw').value=b.hw;$('hh').value=b.hh;
+  $('oAng').textContent=fmtDeg(b.deg);$('oHw').textContent=b.hw.toFixed(2);$('oHh').textContent=b.hh.toFixed(2);
+  $('posOut').textContent=`Box ${sel}: center (${f4(b.cx)}, ${f4(b.cy)}), angle ${fmtDeg(b.deg)}, half-extents (${b.hw.toFixed(2)}, ${b.hh.toFixed(2)})`;
+}
+const fmtDeg=d=>{const r=Math.round(d*100)/100;return (r<0?M:'')+Math.abs(r)+'°';};
+
+function build(){const s=$('strips');s.innerHTML='';
+  for(let i=0;i<4;i++){const d=document.createElement('div');d.className='strip';
+    d.innerHTML=`<div class="strip-head" id="sh${i}"></div><canvas id="sc${i}" role="img" aria-label="Projection strip ${i+1}"></canvas>`;s.appendChild(d);}}
+let last=null;
+function update(){last=sat();drawWorld(last);drawStrips(last);renderText(last);}
+
+function custom(){document.querySelectorAll('#presets .chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.p==='custom'?'true':'false'));}
+function normDeg(d){while(d>90)d-=180;while(d<=-90)d+=180;return Math.round(d*1000)/1000;}
+function clampPos(b){b.cx=Math.min(6,Math.max(-6,b.cx));b.cy=Math.min(4,Math.max(-4,b.cy));}
+function select(k){sel=k;$('selA').setAttribute('aria-pressed',k==='A');$('selB').setAttribute('aria-pressed',k==='B');update();}
+
+// events
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{
+  if(b.dataset.p==='custom'){custom();return;}
+  document.querySelectorAll('#presets .chip').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+  load(b.dataset.p);update();}));
+$('selA').addEventListener('click',()=>select('A'));$('selB').addEventListener('click',()=>select('B'));
+[['ang','deg'],['hw','hw'],['hh','hh']].forEach(([id,k])=>$(id).addEventListener('input',e=>{boxes[sel][k]=+e.target.value;custom();update();}));
+['tAabb','tMtv','tAxes'].forEach(id=>$(id).addEventListener('change',update));
+function keyMove(e,k){const b=boxes[k];const st=e.shiftKey?0.01:0.1,rs=e.shiftKey?1:5;let used=true;
+  if(e.key==='ArrowLeft')b.cx-=st;else if(e.key==='ArrowRight')b.cx+=st;else if(e.key==='ArrowUp')b.cy+=st;else if(e.key==='ArrowDown')b.cy-=st;
+  else if(e.key==='q'||e.key==='Q')b.deg=normDeg(b.deg+rs);else if(e.key==='e'||e.key==='E')b.deg=normDeg(b.deg-rs);else used=false;
+  if(used){e.preventDefault();b.cx=Math.round(b.cx*10000)/10000;b.cy=Math.round(b.cy*10000)/10000;clampPos(b);if(sel!==k)sel=k;
+    $('selA').setAttribute('aria-pressed',sel==='A');$('selB').setAttribute('aria-pressed',sel==='B');custom();update();}}
+$('selA').addEventListener('focus',()=>select('A'));$('selB').addEventListener('focus',()=>select('B'));
+$('selA').addEventListener('keydown',e=>keyMove(e,'A'));$('selB').addEventListener('keydown',e=>keyMove(e,'B'));
+$('world').addEventListener('keydown',e=>{if(e.key==='a'||e.key==='A'){select('A');return;}if(e.key==='b'||e.key==='B'){select('B');return;}keyMove(e,sel);});
+
+// pointer
+let drag=null;
+function hit(p){
+  const order=sel==='A'?['A','B']:['B','A'];
+  for(const k of order){for(const h of handles(boxes[k]))if(Math.hypot(p[0]-h[0],p[1]-h[1])<0.3)return {k,mode:'rot'};}
+  for(const k of order){const b=boxes[k],a=axesOf(b),dx=[p[0]-b.cx,p[1]-b.cy];
+    if(Math.abs(dot(dx,a.u))<=b.hw&&Math.abs(dot(dx,a.v))<=b.hh)return {k,mode:'move',off:dx};}
+  return null;}
+function wp(e){const r=$('world').getBoundingClientRect();return P2W(e.clientX-r.left,e.clientY-r.top);}
+$('world').addEventListener('pointerdown',e=>{const p=wp(e),h=hit(p);if(!h)return;drag=h;sel=h.k;
+  $('selA').setAttribute('aria-pressed',sel==='A');$('selB').setAttribute('aria-pressed',sel==='B');
+  $('world').setPointerCapture(e.pointerId);$('world').style.cursor='grabbing';update();});
+$('world').addEventListener('pointermove',e=>{if(!drag)return;const p=wp(e),b=boxes[drag.k];
+  if(drag.mode==='move'){b.cx=Math.round((p[0]-drag.off[0])*100)/100;b.cy=Math.round((p[1]-drag.off[1])*100)/100;clampPos(b);}
+  else{b.deg=normDeg(Math.round(Math.atan2(p[1]-b.cy,p[0]-b.cx)*180/Math.PI));}
+  custom();update();});
+const endDrag=()=>{drag=null;$('world').style.cursor='grab';};
+$('world').addEventListener('pointerup',endDrag);$('world').addEventListener('pointercancel',endDrag);
+
+$('resolve').addEventListener('click',()=>{if(!last||!last.normal||anim)return;
+  const B=boxes.B,from=[B.cx,B.cy],to=[B.cx+last.normal[0]*last.depth,B.cy+last.normal[1]*last.depth];
+  custom();
+  if(reduce.matches){B.cx=to[0];B.cy=to[1];update();return;}
+  const t0=performance.now();anim=true;
+  (function step(t){const k=Math.min(1,(t-t0)/300),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    B.cx=from[0]+(to[0]-from[0])*e;B.cy=from[1]+(to[1]-from[1])*e;
+    if(k>=1){B.cx=to[0];B.cy=to[1];anim=null;}update();if(anim)requestAnimationFrame(step);})(t0);});
+
+// init
+build();load('case1');
+$('tAxes').checked=window.innerWidth>=860;
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FOV and frustum — MA201 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1fr 1.15fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cTop{height:340px}#cScr{height:230px}
+@media (max-width:760px){#cTop{height:300px}#cScr{height:190px}}
+.cap{font-family:var(--serif);font-size:1.15rem;margin:8px 0 2px}
+.cap b{font-variant-numeric:tabular-nums;color:var(--ochre)}
+.readout{display:grid;grid-template-columns:repeat(5,auto);gap:8px 14px;margin-top:8px;font-family:var(--mono);font-size:.92rem;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,auto)}}
+@media (max-width:430px){.readout{grid-template-columns:1fr 1fr}}
+.readout div{border-left:4px solid var(--c,var(--ink));padding:1px 0 1px 8px}
+.readout span{display:block;font-family:var(--sans);font-size:.78rem;color:var(--ink-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:6px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+.glabel{font-weight:600;font-size:.92rem;display:block;margin-top:10px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+fieldset{border:none;margin:0;padding:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.radio{display:flex;gap:8px;justify-content:flex-start;font-weight:400;margin:3px 0;cursor:pointer}
+.radio input{accent-color:var(--steel);width:18px;height:18px;margin-top:3px;flex:none}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row input[type=range]{flex:1;min-width:160px}
+input[type=number],select{font:inherit;font-variant-numeric:tabular-nums;padding:4px 6px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink)}
+input[type=number]{width:5em}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+footer code{font-family:var(--mono)}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MA201 Linear Algebra and Physics for Games · Week 4 · Worked example</p>
+  <h1>One FOV number, three meanings</h1>
+  <p class="lede">Change the aspect ratio from 16:9 to 21:9. With a vertical FOV the wedge opens and the target pillar keeps its height. With a horizontal FOV the wedge stays put and the target grows.</p>
+</header>
+
+<section class="panel" aria-label="Field of view explorer">
+  <div class="charts">
+    <figure>
+      <figcaption>Top-down view<small>Camera at the bottom, looking up the page. Shaded wedge = horizontal field of view θ_h.</small></figcaption>
+      <canvas id="cTop" role="img" aria-label="Top-down view of the camera frustum over a field of pillars"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>in view (filled)</span>
+        <span><i style="border:2px solid var(--ink-soft)"></i>out of view (outlined)</span>
+        <span><i style="background:var(--ochre)"></i>target pillar, 20 m ahead</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Screen view<small>What the camera draws. Pillars are 1.8 m tall, 0.6 m wide, camera eye at 1.6 m. The inset magnifies the centre; its dashed line marks the vertical-75 target height.</small></figcaption>
+      <canvas id="cScr" role="img" aria-label="Projected screen view of the pillars"></canvas>
+      <p class="cap" aria-live="polite">Target height: <b id="capT">—</b></p>
+      <div class="readout" aria-live="polite">
+        <div style="--c:var(--steel)"><span>θ_v</span><output id="rTv"></output></div>
+        <div style="--c:var(--steel)"><span>θ_h</span><output id="rTh"></output></div>
+        <div><span>f = 1 / tan(θ_v / 2)</span><output id="rF"></output></div>
+        <div style="--c:var(--ochre)"><span>target px at 1080p</span><output id="rPx"></output></div>
+        <div style="--c:var(--moss)"><span>pillars visible</span><output id="rN"></output></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <fieldset>
+        <legend>What the FOV number means</legend>
+        <label class="radio"><input type="radio" name="conv" value="v" checked> Vertical (Hor+)</label>
+        <label class="radio"><input type="radio" name="conv" value="h"> Horizontal</label>
+        <label class="radio"><input type="radio" name="conv" value="h43"> Horizontal at 4:3 (Source)</label>
+      </fieldset>
+      <label for="fov" style="margin-top:10px">FOV number <output id="oFov"></output></label>
+      <div class="row">
+        <input id="fov" type="range" min="30" max="130" step="1" value="75" aria-describedby="oFov">
+        <input id="fovN" type="number" min="30" max="130" step="1" value="75" aria-label="FOV number, degrees">
+      </div>
+    </div>
+    <div>
+      <label for="asp">Aspect ratio <output id="oA"></output></label>
+      <div class="row">
+        <select id="asp" aria-label="Aspect ratio preset">
+          <option value="4/3">4:3</option><option value="16/10">16:10</option><option value="16/9" selected>16:9</option><option value="21/9">21:9</option><option value="9/16">9:16</option><option value="custom" disabled>custom</option>
+        </select>
+        <input id="aS" type="range" min="0.5" max="2.6" step="0.01" value="1.78" aria-label="Aspect ratio a, width over height">
+      </div>
+      <span class="glabel" id="prL">Presets</span>
+      <div class="presets" role="group" aria-labelledby="prL" id="presets">
+        <button class="chip" data-c="v" data-n="75">Godot default (vertical 75)</button>
+        <button class="chip" data-c="v" data-n="70">Minecraft default (vertical 70)</button>
+        <button class="chip" data-c="h43" data-n="75">Half-Life 2 default (4:3 horizontal 75)</button>
+        <button class="chip" data-c="h43" data-n="90">Source 90</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>Conversions from the week 4 lecture. Vertical: <code>θ_v = N</code>. Horizontal: <code>θ_v = 2·atan(tan(N/2) / a)</code>. Horizontal at 4:3: <code>θ_v = 2·atan(tan(N/2) / (4/3))</code>. Then <code>f = 1/tan(θ_v/2)</code> and <code>θ_h = 2·atan(a·tan(θ_v/2))</code>. Target height on a 1080-pixel screen is <code>1.8 / 20 · f · 540</code>. Engine defaults are cited in the lecture's sources.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const D=Math.PI/180;
+let conv='v',N=75,a=16/9;
+// pillars: [x, depth]; the camera looks along -z, so depth d means z = -d
+const P=[[0,20,true]];
+[-24,-14,-7,7,14,24].forEach(x=>[10,20,35].forEach(d=>P.push([x,d,false])));
+P.push([-10,60,false],[10,60,false]);
+const EYE=1.6,PH=1.8,PW=0.6;
+
+function model(){
+  const n=N*D;
+  const tv=conv==='v'?n:2*Math.atan(Math.tan(n/2)/(conv==='h'?a:4/3));
+  const f=1/Math.tan(tv/2),th=2*Math.atan(a*Math.tan(tv/2));
+  return {tv,th,f,px:PH/20*f*540};
+}
+function visible(p,m){return Math.abs(p[0])-PW/2<p[1]*Math.tan(m.th/2);}
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+function drawTop(m){
+  const {g,w,h}=setupCanvas($('cTop'));g.clearRect(0,0,w,h);
+  const pad=14,dMax=64,xMax=30;
+  const s=Math.min((h-2*pad)/dMax,(w-2*pad)/(2*xMax));
+  const cx=w/2,cy=h-pad;
+  const X=x=>cx+x*s,Y=d=>cy-d*s;
+  // range rings
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textAlign='left';g.textBaseline='middle';
+  [10,20,35,60].forEach(d=>{g.beginPath();g.moveTo(X(-xMax),Y(d));g.lineTo(X(xMax),Y(d));g.stroke();g.fillText(d+' m',X(-xMax)+2,Y(d)-7);});
+  // wedge
+  const half=m.th/2,R=2000;
+  g.save();g.beginPath();g.rect(0,0,w,h);g.clip();
+  g.beginPath();g.moveTo(cx,cy);g.lineTo(X(R*Math.sin(-half)),Y(R*Math.cos(half)));g.lineTo(X(R*Math.sin(half)),Y(R*Math.cos(half)));g.closePath();
+  g.fillStyle=css('--steel');g.globalAlpha=.16;g.fill();g.globalAlpha=1;g.strokeStyle=css('--steel');g.lineWidth=2;g.stroke();
+  g.restore();
+  // pillars far to near
+  const r=Math.max(4,PW/2*s);
+  P.forEach(p=>{
+    const vis=visible(p,m),col=p[2]?css('--ochre'):(vis?css('--steel'):css('--ink-soft'));
+    g.beginPath();g.arc(X(p[0]),Y(p[1]),p[2]?r+1.5:r,0,Math.PI*2);
+    if(vis){g.fillStyle=col;g.fill();g.strokeStyle=css('--paper');g.lineWidth=1.2;g.stroke();}
+    else{g.strokeStyle=col;g.lineWidth=2;g.stroke();}
+  });
+  // camera
+  g.fillStyle=css('--ink');g.beginPath();g.moveTo(cx,cy-9);g.lineTo(cx-7,cy+2);g.lineTo(cx+7,cy+2);g.closePath();g.fill();
+  g.fillStyle=css('--steel');g.font='600 12px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';
+  const lab='θ_h = '+(m.th/D).toFixed(2)+'°';g.fillText(lab,cx+12,cy+2);
+}
+function drawScreen(m){
+  const {g,w,h}=setupCanvas($('cScr'));g.clearRect(0,0,w,h);
+  let H=h-4,W=H*a;if(W>w-4){W=w-4;H=W/a;}
+  const x0=(w-W)/2,y0=(h-H)/2;
+  // letterbox
+  g.fillStyle=css('--ink');g.globalAlpha=.12;g.fillRect(0,0,w,h);g.globalAlpha=1;
+  g.fillStyle=css('--paper');g.fillRect(x0,y0,W,H);
+  g.save();g.beginPath();g.rect(x0,y0,W,H);g.clip();
+  const mx=xn=>x0+(xn+1)/2*W,my=yn=>y0+(1-yn)/2*H;
+  // ground below the horizon
+  g.fillStyle=css('--paper-2');g.fillRect(x0,my(0),W,H);
+  g.strokeStyle=css('--grid');g.lineWidth=1;g.beginPath();g.moveTo(x0,my(0));g.lineTo(x0+W,my(0));g.stroke();
+  const f=m.f;
+  [...P].sort((p,q)=>q[1]-p[1]).forEach(p=>{
+    const d=p[1];
+    const xl=mx((f/a)*(p[0]-PW/2)/d),xr=mx((f/a)*(p[0]+PW/2)/d);
+    const yb=my(f*(-EYE)/d),yt=my(f*(PH-EYE)/d);
+    g.fillStyle=p[2]?css('--ochre'):css('--steel');g.fillRect(xl,yt,Math.max(1,xr-xl),yb-yt);
+    g.strokeStyle=css('--paper');g.lineWidth=1;g.strokeRect(xl,yt,Math.max(1,xr-xl),yb-yt);
+  });
+  // centre crosshair
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1;g.beginPath();g.moveTo(mx(0)-6,my(0));g.lineTo(mx(0)+6,my(0));g.moveTo(mx(0),my(0)-6);g.lineTo(mx(0),my(0)+6);g.stroke();
+  g.restore();
+  g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(x0,y0,W,H);
+  // 4x inset around the target pillar, so its growth is easy to see
+  let iw=Math.max(92,Math.min(W*.34,150)),ix=x0+6;const ih=Math.min(H*.6,120),iy=y0+6;
+  if(x0-10>=72){iw=Math.min(iw,x0-10);ix=x0-iw-6;}
+  const Z=Math.max(1,Math.round(0.3*ih/((1/Math.tan(37.5*D))*PH/20*H/2)));
+  const cyN=f*(PH/2-EYE)/20; // NDC y of the target's middle
+  const zx=xn=>ix+iw/2+xn*W/2*Z,zy=yn=>iy+ih/2-(yn-cyN)*H/2*Z;
+  g.save();g.beginPath();g.rect(ix,iy,iw,ih);g.clip();
+  g.fillStyle=css('--paper');g.fillRect(ix,iy,iw,ih);
+  g.fillStyle=css('--paper-2');g.fillRect(ix,zy(0),iw,ih);
+  [...P].sort((p,q)=>q[1]-p[1]).forEach(p=>{const d=p[1];
+    const xl=zx((f/a)*(p[0]-PW/2)/d),xr=zx((f/a)*(p[0]+PW/2)/d),yb=zy(f*(-EYE)/d),yt=zy(f*(PH-EYE)/d);
+    g.fillStyle=p[2]?css('--ochre'):css('--steel');g.fillRect(xl,yt,Math.max(1,xr-xl),yb-yt);});
+  // reference: target height at vertical 75 (f = 1/tan 37.5 deg)
+  const fr=1/Math.tan(37.5*D),rb=zy(f*(-EYE)/20),rt=rb-(fr*PH/20)*H/2*Z;
+  g.strokeStyle=css('--ink');g.setLineDash([4,3]);g.lineWidth=1.2;g.beginPath();g.moveTo(ix+iw/2-18,rt);g.lineTo(ix+iw/2+18,rt);g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink-soft');g.font='10px '+css('--sans');g.textAlign='left';g.textBaseline='top';g.fillText(Z+'× centre',ix+4,iy+3);
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('- - 63.3 px',ix+iw-4,iy+ih-3);
+  g.restore();
+  g.strokeStyle=css('--ink');g.lineWidth=1;g.strokeRect(ix,iy,iw,ih);
+}
+const two=v=>v.toFixed(2);
+function ratio(v){const [p,q]=v.split('/').map(Number);return p/q;}
+function aspectLabel(){const o=[...$('asp').options].find(o=>o.value!=='custom'&&Math.abs(ratio(o.value)-a)<1e-9);return o?o.textContent:null;}
+function update(){
+  const m=model(),vis=P.filter(p=>visible(p,m)).length;
+  $('rTv').textContent=two(m.tv/D)+'°';$('rTh').textContent=two(m.th/D)+'°';$('rF').textContent=two(m.f);
+  $('rPx').textContent=two(m.px)+' px';$('rN').textContent=vis+' of '+P.length;
+  $('capT').textContent=m.px.toFixed(1)+' px';
+  $('oFov').textContent=N+'°';
+  const al=aspectLabel();$('oA').textContent=(al?al+', ':'')+'a = '+a.toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
+  $('asp').value=al?[...$('asp').options].find(o=>o.textContent===al).value:'custom';
+  document.querySelectorAll('#presets .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.c===conv&&+b.dataset.n===N)));
+  let t;
+  if(conv==='h')t=`Horizontal: the number fixes θ_h at ${two(m.th/D)}°, so a wider screen cannot show more at the sides. It shows less at the top and bottom instead: θ_v drops to ${two(m.tv/D)}°, f rises to ${two(m.f)}, and the target pillar is drawn ${m.px.toFixed(1)} px tall. Change the aspect and watch it zoom.`;
+  else if(conv==='h43')t=`Source converts the number once, as if the screen were 4:3, to θ_v = ${two(m.tv/D)}°. After that it behaves like a vertical FOV. The target stays ${m.px.toFixed(1)} px on any screen shape, and θ_h is ${two(m.th/D)}° at this aspect.`;
+  else t=`Vertical (Hor+): the number fixes θ_v at ${two(m.tv/D)}°, so f = ${two(m.f)} and the target pillar is ${m.px.toFixed(1)} px on every screen shape. A wider screen only opens the wedge, here to ${two(m.th/D)}°, and ${vis} pillars fit.`;
+  $('insight').textContent=t;
+  drawTop(m);drawScreen(m);
+}
+function setN(v){N=Math.max(30,Math.min(130,Math.round(v)));$('fov').value=N;$('fovN').value=N;}
+document.querySelectorAll('input[name=conv]').forEach(r=>r.addEventListener('change',()=>{conv=document.querySelector('input[name=conv]:checked').value;update();}));
+$('fov').addEventListener('input',e=>{setN(+e.target.value);update();});
+$('fovN').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(isFinite(v))setN(v);else $('fovN').value=N;update();});
+$('fovN').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isFinite(v)&&v>=30&&v<=130){N=Math.round(v);$('fov').value=N;update();}});
+$('asp').addEventListener('change',e=>{if(e.target.value==='custom')return;const [p,q]=e.target.value.split('/').map(Number);a=p/q;$('aS').value=a.toFixed(2);update();});
+$('aS').addEventListener('input',e=>{a=+e.target.value;update();});
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{
+  conv=b.dataset.c;document.querySelector(`input[name=conv][value="${conv}"]`).checked=true;setN(+b.dataset.n);update();}));
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>
