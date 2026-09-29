@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Finding versus deciding — PR401 Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+figure{margin:0 0 14px;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink-soft);font-size:12px}
+svg .lab{fill:var(--ink);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.controls{grid-template-columns:1fr}}
+.box{border:1px solid var(--grid);border-radius:10px;padding:12px}
+.box h2{font:600 .95rem var(--sans);margin:0 0 8px}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 4px}
+input[type=number]{font:600 .95rem var(--sans);width:4.5em;padding:5px 6px;border-radius:6px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}
+.chip{font:600 .86rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:520px}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+h3{font:600 .95rem var(--sans);margin:18px 0 0}
+.note{font-size:.86rem;color:var(--ink-soft);margin:6px 0 0}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR401 Capstone I · Week 5 · Worked example</p>
+  <h1>Five testers find problems. They do not decide rates.</h1>
+  <p class="lede">The green curve says a handful of testers sees most problems. The blue band says how many it takes before a measured rate clears the kill threshold. Grouping players inflates the second number, and trades testers for observer hours.</p>
+</header>
+
+<section class="panel" aria-label="Test size model">
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <figure>
+    <figcaption>Two questions, one axis<small>x: testers n. Green: chance of seeing a problem that affects a share &lambda; of players. Blue: Wilson 95% interval for rate p at effective size n / DE. Red dashed: threshold t.</small></figcaption>
+    <svg id="top" role="img" aria-label="Discovery curve and decision band against tester count"></svg>
+    <div class="legend" aria-hidden="true">
+      <span><i style="background:var(--moss)"></i>P(seen), left axis</span>
+      <span><i style="background:var(--steel);height:10px;opacity:.5"></i>95% interval for p, right axis</span>
+      <span><i style="background:var(--blood)"></i>threshold t</span>
+    </div>
+  </figure>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rN0">—</b><span>n&#8320;, independent testers</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rDE">—</b><span>design effect DE</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rN">—</b><span>testers n = &lceil;n&#8320; &times; DE&rceil;</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rBand">—</b><span>n where the band clears t</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rG">—</b><span id="rGs">groups, testers recruited</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rH">—</b><span>observer hours</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rLeft">—</b><span id="rLefts">budget left (h)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rDisc">—</b><span id="rDiscs">testers to see it at 85%</span></div>
+  </div>
+
+  <figure style="margin-top:14px">
+    <figcaption>Group size trade-off<small>Bars: observer hours &lceil;n / k&rceil; &times; s &times; o (left axis). Dots: testers recruited &lceil;n / k&rceil; &times; k (right axis). Dashed: <span id="availCap"></span></small></figcaption>
+    <svg id="bottom" role="img" aria-label="Observer hours and testers recruited by group size"></svg>
+  </figure>
+
+  <div class="controls">
+    <div class="box">
+      <h2>The rate question</h2>
+      <label for="p">Planning rate p <output id="op"></output></label><input id="p" type="range" min="0.05" max="0.95" step="0.01" value="0.65">
+      <label for="t">Threshold t <output id="ot"></output></label><input id="t" type="range" min="0.05" max="0.95" step="0.01" value="0.5">
+      <label for="lam">Problem share &lambda; <output id="olam"></output></label><input id="lam" type="range" min="0.01" max="0.6" step="0.01" value="0.31">
+    </div>
+    <div class="box">
+      <h2>Groups and sessions</h2>
+      <label for="k">Group size k <output id="ok"></output></label><input id="k" type="range" min="1" max="10" step="1" value="8">
+      <label for="rho">Correlation &rho; <output id="orho"></output></label><input id="rho" type="range" min="0" max="1" step="0.05" value="0.2">
+      <label for="s">Session hours s <output id="os"></output></label><input id="s" type="range" min="0.5" max="4" step="0.5" value="2">
+      <span style="font-weight:600;font-size:.9rem">Observers o</span>
+      <div class="row" role="group" aria-label="Observers per session">
+        <button class="chip" data-o="1" aria-pressed="true">1 observer</button>
+        <button class="chip" data-o="2" aria-pressed="false">2 observers</button>
+      </div>
+    </div>
+    <div class="box">
+      <h2>Budget</h2>
+      <label for="B">Prototype budget B (h) <output id="oB"></output></label><input id="B" type="range" min="20" max="80" step="0.5" value="45.5">
+      <label for="other">Other work committed (h) <output id="oother"></output></label><input id="other" type="range" min="0" max="60" step="0.5" value="15">
+      <p class="note">Default 15 h is the small R2 bot test.</p>
+      <h2 style="margin-top:12px">Prototype 1 result</h2>
+      <div class="row"><label for="x" style="display:inline">met</label><input id="x" type="number" min="0" max="200" value="5"><label for="nObs" style="display:inline">of</label><input id="nObs" type="number" min="1" max="200" value="8"></div>
+      <p class="note" id="wilsonObs" aria-live="polite"></p>
+    </div>
+  </div>
+  <div class="row"><button class="chip" id="reset">Reset to the guide</button></div>
+
+  <h3>Sizing by group size (current p, t, &rho;, s)</h3>
+  <div class="table-wrap">
+    <table aria-label="Sizing by group size">
+      <thead><tr><th>Group size k</th><th>DE</th><th>Testers n</th><th>Recruited</th><th>Groups</th><th>Observer h (o = 1)</th><th>Observer h (o = 2)</th></tr></thead>
+      <tbody id="kbody"></tbody>
+    </table>
+  </div>
+  <h3>Discovery at the current &lambda;</h3>
+  <div class="table-wrap">
+    <table aria-label="Chance of seeing a problem by tester count">
+      <thead id="dhead"></thead><tbody id="dbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Discovery model: Nielsen and Landauer (1993), "A mathematical model of the finding of usability problems", and Nielsen (2000), "Why you only need to test with 5 users". Wilson interval and sample size: MA102 week 13. Design effect: PR201 week 11. <i>Emberfall</i> and its numbers are invented for teaching. Same formulas as the lab 05 checker (<code>check_sizing.py</code>).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg',Z=1.96,Z2=Z*Z;
+const DEF={p:0.65,t:0.5,lam:0.31,k:8,rho:0.2,s:2,o:1,B:45.5,other:15,x:5,nObs:8};
+let S=Object.assign({},DEF);
+const f1=n=>{const r=Math.round(n*10)/10;return Math.abs(r-Math.round(r))<1e-9?String(Math.round(r)):r.toFixed(1);};
+const pct1=v=>(v*100).toFixed(1)+'%';
+function el(tag,a,parent,text){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+
+// Model, same as labs/lab05-starter/check_sizing.py
+const n0=()=>Math.abs(S.p-S.t)<1e-9?Infinity:Z2*S.p*(1-S.p)/Math.pow(S.p-S.t,2);
+const DEk=k=>1+(k-1)*S.rho;
+function sizing(k){const N0=n0(),de=DEk(k);if(!isFinite(N0))return {de,n:Infinity,groups:Infinity,rec:Infinity,h1:Infinity};
+  const n=Math.ceil(N0*de-1e-9),groups=Math.ceil(n/k);return {de,n,groups,rec:groups*k,h1:groups*S.s,h:groups*S.s*S.o};}
+function wilson(p,m){const c=(p+Z2/(2*m))/(1+Z2/m),hw=Z*Math.sqrt(p*(1-p)/m+Z2/(4*m*m))/(1+Z2/m);return [c-hw,c+hw];}
+const seen=n=>1-Math.pow(1-S.lam,n);
+const discN=()=>Math.ceil(Math.log(0.15)/Math.log(1-S.lam)-1e-9);
+const discCont=()=>Math.log(0.15)/Math.log(1-S.lam);
+function bandN(){if(Math.abs(S.p-S.t)<1e-9)return Infinity;const de=DEk(S.k);
+  for(let n=1;n<=5000;n++){const [lo,hi]=wilson(S.p,n/de);if(S.p>S.t?lo>S.t:hi<S.t)return n;}return Infinity;}
+
+function drawTop(){
+  const svg=$('top'),W=svg.parentNode.clientWidth-24,H=Math.max(250,Math.min(340,W*0.45));
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML='';
+  const pad={l:44,r:44,t:22,b:36},xM=120;
+  const X=n=>pad.l+(W-pad.l-pad.r)*(n-1)/(xM-1),Y=v=>pad.t+(H-pad.t-pad.b)*(1-v);
+  for(let i=0;i<=4;i++){const y=Y(i/4);el('line',{x1:pad.l,x2:W-pad.r,y1:y,y2:y,stroke:'var(--grid)'},svg);
+    el('text',{x:pad.l-6,y:y+4,'text-anchor':'end'},svg,(i*25)+'%');el('text',{x:W-pad.r+6,y:y+4},svg,(i*0.25).toFixed(2));}
+  [1,20,40,60,80,100,120].forEach(n=>el('text',{x:X(n),y:H-pad.b+16,'text-anchor':'middle'},svg,n));
+  el('text',{x:W-pad.r,y:H-4,'text-anchor':'end'},svg,'testers n');
+  el('text',{x:pad.l,y:pad.t-8},svg,'P(seen)');el('text',{x:W-pad.r,y:pad.t-8,'text-anchor':'end'},svg,'rate');
+  const de=DEk(S.k);
+  // band
+  let up='',dn='';for(let n=1;n<=xM;n+=0.5){const [lo,hi]=wilson(S.p,n/de);up+=`${X(n)},${Y(Math.min(1,hi))} `;dn=`${X(n)},${Y(Math.max(0,lo))} `+dn;}
+  el('polygon',{points:up+dn,fill:'var(--steel)','fill-opacity':.22},svg);
+  el('line',{x1:X(1),x2:X(xM),y1:Y(S.p),y2:Y(S.p),stroke:'var(--steel)','stroke-width':2},svg);
+  el('line',{x1:X(1),x2:X(xM),y1:Y(S.t),y2:Y(S.t),stroke:'var(--blood)','stroke-width':2,'stroke-dasharray':'7 5'},svg);
+  el('text',{x:W-pad.r-4,y:Y(S.t)+(S.p>S.t?15:-6),'text-anchor':'end',style:'fill:var(--blood);font-weight:600'},svg,'t = '+S.t.toFixed(2));
+  el('text',{x:W-pad.r-4,y:Y(S.p)+(S.p>S.t?-6:15),'text-anchor':'end',style:'fill:var(--steel);font-weight:600'},svg,'p = '+S.p.toFixed(2));
+  // discovery curve
+  let d='';for(let n=1;n<=xM;n+=0.5)d+=(d?'L':'M')+X(n)+','+Y(seen(n));
+  el('path',{d,fill:'none',stroke:'var(--moss)','stroke-width':2.5},svg);
+  // markers
+  const dn85=discN(),bn=bandN();
+  const vline=(n,col,txt,top)=>{
+    if(!isFinite(n)||n>xM){el('text',{x:W-pad.r-4,y:top?pad.t+28:H-pad.b-8,'text-anchor':'end',class:'lab',style:`fill:${col}`},svg,txt+' (off chart)');return;}
+    const x=X(n);el('line',{x1:x,x2:x,y1:pad.t,y2:H-pad.b,stroke:col,'stroke-width':1.5,'stroke-dasharray':'3 3'},svg);
+    const right=x<W*0.6;el('text',{x:right?x+5:x-5,y:top?pad.t+28:H-pad.b-8,'text-anchor':right?'start':'end',class:'lab',style:`fill:${col}`},svg,txt);
+  };
+  vline(dn85,'var(--moss)',`85% seen at n = ${dn85}`,false);
+  vline(bn,'var(--steel)',isFinite(bn)?`band clears t at n = ${bn}`:'no finite n',true);
+  svg.setAttribute('aria-label',`Discovery reaches 85% at ${dn85} testers. The 95% interval for p clears the threshold at ${isFinite(bn)?bn:'no finite number of'} testers.`);
+}
+
+function drawBottom(){
+  const svg=$('bottom'),W=svg.parentNode.clientWidth-24,H=Math.max(230,Math.min(300,W*0.4));
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML='';
+  const ks=[2,4,6,8,10];if(!ks.includes(S.k)){ks.push(S.k);ks.sort((a,b)=>a-b);}
+  const rows=ks.map(k=>Object.assign({k},sizing(k)));
+  const pad={l:44,r:46,t:22,b:36};
+  if(!isFinite(n0())){el('text',{x:W/2,y:H/2,'text-anchor':'middle',class:'lab'},svg,'p = t: no finite n');return;}
+  const avail=S.B-S.other;
+  const hM=Math.max(avail,...rows.map(r=>r.h))*1.12,rM=Math.max(...rows.map(r=>r.rec))*1.12;
+  const niceTop=v=>{const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.6,2,2.4,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v);};
+  const hTop=niceTop(hM),rTop=niceTop(rM);
+  const Yh=v=>pad.t+(H-pad.t-pad.b)*(1-v/hTop),Yr=v=>pad.t+(H-pad.t-pad.b)*(1-v/rTop);
+  for(let i=0;i<=4;i++){const y=Yh(hTop*i/4);el('line',{x1:pad.l,x2:W-pad.r,y1:y,y2:y,stroke:'var(--grid)'},svg);
+    el('text',{x:pad.l-6,y:y+4,'text-anchor':'end'},svg,f1(hTop*i/4));el('text',{x:W-pad.r+6,y:y+4},svg,f1(rTop*i/4));}
+  el('text',{x:pad.l,y:pad.t-8},svg,'observer h');el('text',{x:W-pad.r,y:pad.t-8,'text-anchor':'end'},svg,'recruited');
+  const slot=(W-pad.l-pad.r)/rows.length,bw=Math.min(56,slot*0.55);
+  rows.forEach((r,i)=>{
+    const cx=pad.l+slot*(i+0.5),here=r.k===S.k;
+    el('rect',{x:cx-bw/2,y:Yh(r.h),width:bw,height:Yh(0)-Yh(r.h),fill:'var(--ochre)','fill-opacity':here?.95:.4,stroke:here?'var(--ink)':'none','stroke-width':2},svg);
+    const tall=Yh(0)-Yh(r.h)>22;
+    el('text',{x:cx,y:tall?Yh(0)-7:Yh(r.h)-5,'text-anchor':'middle',style:`fill:${tall&&here?'var(--paper)':'var(--ink)'};font-weight:700`},svg,f1(r.h));
+    el('circle',{cx,cy:Yr(r.rec),r:5,fill:'var(--steel)',stroke:'var(--paper)','stroke-width':1.5},svg);
+    el('text',{x:cx+8,y:Yr(r.rec)-6,style:'font-size:11px'},svg,r.rec);
+    el('text',{x:cx,y:H-pad.b+16,'text-anchor':'middle',class:here?'lab':''},svg,'k = '+r.k);
+  });
+  if(avail>0){const y=Yh(avail);el('line',{x1:pad.l,x2:W-pad.r,y1:y,y2:y,stroke:'var(--blood)','stroke-width':2,'stroke-dasharray':'7 5'},svg);
+    if(W>=560)el('text',{x:W-pad.r-4,y:y-5,'text-anchor':'end',style:'fill:var(--blood);font-weight:600'},svg,`${f1(avail)} h left`);}
+  $('availCap').textContent=avail>0?`${f1(avail)} h left for this test.`:'no hours left for this test.';
+  svg.setAttribute('aria-label','Observer hours by group size: '+rows.map(r=>`k ${r.k}, ${f1(r.h)} hours, ${r.rec} recruited`).join('; '));
+}
+
+function update(){
+  ['p','t','rho'].forEach(k=>{$('o'+k).textContent=S[k].toFixed(2);$(k).value=S[k];});
+  $('olam').textContent=S.lam.toFixed(2);$('lam').value=S.lam;
+  $('ok').textContent=S.k;$('k').value=S.k;$('os').textContent=f1(S.s);$('s').value=S.s;
+  $('oB').textContent=f1(S.B);$('B').value=S.B;$('oother').textContent=f1(S.other);$('other').value=S.other;
+  $('x').value=S.x;$('nObs').value=S.nObs;
+  document.querySelectorAll('[data-o]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.o===S.o));
+  const N0=n0(),z=sizing(S.k),bn=bandN(),dn=discN(),avail=S.B-S.other;
+  $('rN0').textContent=isFinite(N0)?N0.toFixed(1):'no finite n';
+  $('rDE').textContent=z.de.toFixed(2).replace(/0$/,'');
+  $('rN').textContent=isFinite(z.n)?z.n:'—';
+  $('rBand').textContent=isFinite(bn)?bn:'—';
+  $('rG').textContent=isFinite(z.n)?`${z.groups} × ${S.k}`:'—';$('rGs').textContent=isFinite(z.n)?`groups, ${z.rec} testers recruited`:'groups';
+  $('rH').textContent=isFinite(z.n)?f1(z.h):'—';
+  const left=avail-(isFinite(z.n)?z.h:0);
+  $('rLeft').textContent=isFinite(z.n)?f1(left):'—';$('rLefts').textContent=`budget left (h), of ${f1(avail)} after other work`;
+  $('rLeft').style.color=left<0?'var(--blood)':'';
+  $('rDisc').textContent=dn;$('rDiscs').textContent=`testers to see a λ = ${S.lam.toFixed(2)} problem at 85% (${discCont().toFixed(1)} continuous)`;
+  // observed result
+  const x=Math.max(0,Math.min(S.x,S.nObs)),[lo,hi]=wilson(x/S.nObs,S.nObs);
+  const straddle=lo<=S.t&&hi>=S.t;
+  $('wilsonObs').textContent=`Wilson 95%: ${lo.toFixed(3)} to ${hi.toFixed(3)}. ${straddle?'It straddles t = '+S.t.toFixed(2)+', so the claim is unclear.':(lo>S.t?'Entirely above t.':'Entirely below t.')}`;
+  // insight
+  const s5=seen(5);
+  $('insight').innerHTML=`Prototype 1: ${x} of ${S.nObs} testers met the criterion. The 95% interval runs from <b>${pct1(lo)} to ${pct1(hi)}</b>${straddle?`, on both sides of the ${Math.round(S.t*100)}% threshold`:''}. Those ${S.nObs} testers had a ${pct1(seen(S.nObs))} chance of seeing any problem that hits ${Math.round(S.lam*100)}% of players (${pct1(s5)} with 5). `+
+    (isFinite(z.n)?`Deciding the rate needs <b>${z.n} testers</b> in ${z.groups} groups of ${S.k}: ${f1(z.h)} observer hours against ${f1(avail)} available${left<0?`, <b>${f1(-left)} h over</b>`:''}.`:`With p = t, no finite test decides the claim.`);
+  // tables
+  $('kbody').innerHTML=[1,2,4,6,8,10].concat([1,2,4,6,8,10].includes(S.k)?[]:[S.k]).sort((a,b)=>a-b).map(k=>{const r=sizing(k);
+    return `<tr class="${k===S.k?'here':''}"><td>${k}</td><td>${r.de.toFixed(2).replace(/0$/,'')}</td><td>${isFinite(r.n)?r.n:'—'}</td><td>${isFinite(r.n)?r.rec:'—'}</td><td>${isFinite(r.n)?r.groups:'—'}</td><td>${isFinite(r.n)?f1(r.h1):'—'}</td><td>${isFinite(r.n)?f1(r.h1*2):'—'}</td></tr>`;}).join('');
+  const ns=[1,2,3,4,5,6,8,10,15,20];
+  $('dhead').innerHTML='<tr><th>Testers n</th>'+ns.map(n=>`<th>${n}</th>`).join('')+'</tr>';
+  $('dbody').innerHTML='<tr><td>P(seen)</td>'+ns.map(n=>`<td style="${n===dn?'font-weight:700':''}">${pct1(seen(n))}</td>`).join('')+'</tr>';
+  drawTop();drawBottom();
+}
+
+['p','t','lam','rho','s','B','other'].forEach(id=>$(id).addEventListener('input',e=>{S[id]=+e.target.value;update();}));
+$('k').addEventListener('input',e=>{S.k=+e.target.value;update();});
+['x','nObs'].forEach(id=>$(id).addEventListener('input',e=>{const v=Math.round(+e.target.value);if(!isFinite(v)||e.target.value==='')return;S[id]=Math.max(id==='nObs'?1:0,Math.min(200,v));update();}));
+document.querySelectorAll('[data-o]').forEach(b=>b.addEventListener('click',()=>{S.o=+b.dataset.o;update();}));
+$('reset').addEventListener('click',()=>{S=Object.assign({},DEF);update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

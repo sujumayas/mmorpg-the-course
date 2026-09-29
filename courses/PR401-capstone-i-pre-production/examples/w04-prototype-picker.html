@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prototype picker — PR401 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.charts{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink-soft);font-size:12px}
+svg .lab{fill:var(--ink);font-weight:700}
+svg .risk{cursor:pointer}
+svg .risk:focus{outline:none}
+svg .risk:focus-visible .ring{stroke:var(--focus);stroke-width:3}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:5px;border:2px solid var(--ink-soft)}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1.4fr;gap:18px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.box{border:1px solid var(--grid);border-radius:10px;padding:12px}
+.box h2{font:600 .95rem var(--sans);margin:0 0 8px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.sl2{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+@media (max-width:420px){.sl2{grid-template-columns:1fr}}
+select{font:600 .95rem var(--sans);padding:7px 10px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);width:100%;margin-bottom:10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible,tr:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.note{font-size:.86rem;color:var(--ink-soft);margin:6px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem;min-width:600px;width:100%}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tbody tr{cursor:pointer}
+tr.sel td{background:var(--paper-2);font-weight:700}
+.tag{display:inline-block;min-width:3.2em;text-align:center;border-radius:6px;padding:0 6px;font-weight:700;font-size:.82rem}
+.tag.P1{background:var(--steel);color:var(--paper)}
+.tag.P2{background:var(--ochre);color:var(--paper)}
+.tag.none{border:1.5px solid var(--ink-soft);color:var(--ink-soft)}
+tfoot td{font-weight:700;border-bottom:none}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR401 Capstone I · Week 4 · Worked example</p>
+  <h1>Pick prototypes by exposure removed per hour</h1>
+  <p class="lede">The siege (R3) carries the third-largest exposure on <i>Emberfall</i>&rsquo;s list, and it sits below the dashed line. Its prototype costs more hours than it is expected to save. The picker fills each 45.5-hour week from the top ratio down.</p>
+</header>
+
+<section class="panel" aria-label="Prototype picker">
+  <div class="charts">
+    <figure>
+      <figcaption>Risk map<small>x: prototype cost c (h). y: exposure removed V = q &times; p &times; L (h). Circle area is exposure E = p &times; L. Tab to the map, then use arrow keys.</small></figcaption>
+      <svg id="scatter" role="group" aria-label="Risks plotted by prototype cost and exposure removed"></svg>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:var(--steel);border-color:var(--steel)"></i>Prototype 1</span>
+        <span><i style="background:var(--ochre);border-color:var(--ochre)"></i>Prototype 2</span>
+        <span><i></i>Not prototyped</span>
+        <span><i style="border-radius:0;height:0;width:18px;border:0;border-top:2px dashed var(--blood);vertical-align:3px"></i>ratio 1, saves as much as it costs</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Exposure burn-down<small>Expected hours of rework left, stacked by risk</small></figcaption>
+      <svg id="burn" role="img" aria-label="Stacked bars of remaining exposure now, after prototype 1 and after prototype 2"></svg>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rP1">—</b><span id="rP1s">prototype 1</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rP2">—</b><span id="rP2s">prototype 2</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rNow">—</b><span>exposure now (h)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rLeft">—</b><span>left after P2 (h)</span></div>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div class="box">
+      <h2>Budget and rule</h2>
+      <label for="budget">Budget per prototype week B (h) <output id="oB">45.5</output></label>
+      <input id="budget" type="range" min="20" max="80" step="0.5" value="45.5">
+      <div class="row">
+        <button class="chip" id="spare" aria-pressed="true">Spare hours rule: on</button>
+        <button class="chip" id="reset">Reset to the guide</button>
+      </div>
+      <p class="note" id="ruleNote"></p>
+    </div>
+    <div class="box">
+      <h2>Edit a risk</h2>
+      <label for="pick" style="display:block">Selected risk</label>
+      <select id="pick"></select>
+      <div class="sl2">
+        <div><label for="sp">p, chance the claim is false <output id="op"></output></label><input id="sp" type="range" min="0" max="1" step="0.05"></div>
+        <div><label for="sL">L, hours if false late <output id="oL"></output></label><input id="sL" type="range" min="0" max="300" step="5"></div>
+        <div><label for="sc">c, prototype hours <output id="oc"></output></label><input id="sc" type="range" min="1" max="80" step="1"></div>
+        <div><label for="sq">q, share removed <output id="oq"></output></label><input id="sq" type="range" min="0" max="1" step="0.05"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Risk table with picker result">
+      <thead><tr><th>Risk</th><th>p</th><th>L (h)</th><th>E (h)</th><th>c (h)</th><th>q</th><th>V (h)</th><th>ratio</th><th>Assigned</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <p id="tfoot" style="font-weight:700;margin:10px 0 0"></p>
+</section>
+
+<footer>Model: risk exposure E = p &times; L and risk reduction leverage, after Boehm (1991), "Software risk management: principles and practices", IEEE Software 8(1). <i>Emberfall</i> and all its estimates are invented for teaching. Same picker as the lab 04 checker (<code>check_risks.py</code>).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const f1=n=>{const r=Math.round(n*10)/10;return (Math.abs(r-Math.round(r))<1e-9?Math.round(r):r.toFixed(1)).toString();};
+const f2=n=>n.toFixed(2);
+const DEF=[
+  {id:'R1',claim:'Players repeat the craft and trade loop 3.9 times per pass',p:0.5,L:200,c:24,q:0.6},
+  {id:'R6',claim:'The team authors one play hour in 20 team hours',p:0.5,L:60,c:10,q:0.8},
+  {id:'R2',claim:"Town storage holds 60 players' writes",p:0.3,L:150,c:30,q:0.8},
+  {id:'R4',claim:'The art style reads at play distance',p:0.2,L:40,c:12,q:0.9},
+  {id:'R3',claim:'A 10 against 10 siege is fun',p:0.4,L:80,c:40,q:0.7},
+  {id:'R5',claim:'The market UI is learnable without a tutorial',p:0.3,L:30,c:16,q:0.8}];
+let risks,B,spare,sel;
+function reset(){risks=DEF.map(r=>Object.assign({},r));B=45.5;spare=true;sel=0;}
+reset();
+
+function derive(){risks.forEach(r=>{r.E=r.p*r.L;r.V=r.q*r.E;r.ratio=r.V/r.c;});}
+// Same algorithm as labs/lab04-starter/check_risks.py pick()
+function pick(){
+  let queue=risks.filter(r=>r.ratio>=1-1e-9).sort((a,b)=>b.ratio-a.ratio);
+  const out={},used={P1:0,P2:0},blocked={};
+  for(const proto of ['P1','P2']){
+    let u=0,rest=[],stopped=false;
+    for(const r of queue){
+      if(!stopped&&u+r.c<=B+1e-9){out[r.id]=proto;u+=r.c;}
+      else{rest.push(r);if(!blocked[proto]&&!stopped)blocked[proto]={r,left:B-u};if(!spare)stopped=true;}
+    }
+    used[proto]=u;queue=rest;
+  }
+  return {out,used,blocked};
+}
+
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function niceMax(v,base){const steps=[20,40,60,80,100,120,160,200,240,280,320,400];return steps.find(s=>s>=Math.max(v,base))||Math.ceil(v/100)*100;}
+function colorOf(a){return a==='P1'?'var(--steel)':a==='P2'?'var(--ochre)':'none';}
+
+function drawScatter(res){
+  const svg=$('scatter'),W=svg.parentNode.clientWidth-24,H=Math.max(260,Math.min(360,W*0.72));
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);
+  const focusedId=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.id:null;
+  svg.innerHTML='';
+  const pad={l:40,r:14,t:14,b:36};
+  const xM=niceMax(Math.max(...risks.map(r=>r.c))+4,60),yM=niceMax(Math.max(...risks.map(r=>r.V))*1.08,120);
+  const X=v=>pad.l+(W-pad.l-pad.r)*v/xM,Y=v=>pad.t+(H-pad.t-pad.b)*(1-v/yM);
+  // shaded below break-even
+  const lim=Math.min(xM,yM);
+  el('polygon',{points:`${X(0)},${Y(0)} ${X(xM)},${Y(0)} ${X(xM)},${Y(Math.min(xM,yM))} ${X(lim)},${Y(lim)}`,fill:'var(--blood)','fill-opacity':.08},svg);
+  for(let i=0;i<=4;i++){
+    const y=Y(yM*i/4),x=X(xM*i/4);
+    el('line',{x1:pad.l,x2:W-pad.r,y1:y,y2:y,stroke:'var(--grid)'},svg);
+    el('text',{x:pad.l-6,y:y+4,'text-anchor':'end'},svg,Math.round(yM*i/4));
+    el('text',{x:x,y:H-pad.b+16,'text-anchor':'middle'},svg,Math.round(xM*i/4));
+  }
+  el('text',{x:W-pad.r,y:H-4,'text-anchor':'end'},svg,'prototype cost c (h)');
+  el('text',{x:pad.l+4,y:pad.t+10},svg,'V (h)');
+  el('line',{x1:X(0),y1:Y(0),x2:X(lim),y2:Y(lim),stroke:'var(--blood)','stroke-width':2,'stroke-dasharray':'7 5'},svg);
+  const ang=Math.atan2(Y(0)-Y(lim),X(lim)-X(0))*180/Math.PI,wide=W>=420;
+  el('text',{x:X(lim)-4,y:Y(lim)+14,'text-anchor':'end',transform:`rotate(${-ang} ${X(lim)} ${Y(lim)})`,style:'fill:var(--blood);font-weight:600'},svg,wide?'saves as much as it costs':'ratio 1');
+  // circles, largest first so small ones stay clickable
+  const order=risks.map((r,i)=>i).sort((a,b)=>risks[b].E-risks[a].E);
+  const g=el('g',{},svg),boxes=[];
+  const hit=(a)=>boxes.some(b=>a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.h&&b.y<a.y+a.h);
+  order.forEach(i=>{
+    const r=risks[i],a=res.out[r.id]||'none',rad=Math.max(4,2.3*Math.sqrt(r.E));
+    const cx=X(r.c),cy=Y(r.V);
+    const grp=el('g',{class:'risk',tabindex:i===sel?0:-1,role:'button','data-id':r.id,'data-i':i,
+      'aria-label':`${r.id}: cost ${f1(r.c)} hours, removes ${f1(r.V)} hours, ratio ${f2(r.ratio)}, ${a==='none'?'not prototyped':'prototype '+a.slice(1)}${i===sel?', selected':''}`},g);
+    el('circle',{cx,cy,r:rad,fill:colorOf(a),'fill-opacity':a==='none'?0:.85,stroke:a==='none'?'var(--ink-soft)':colorOf(a),'stroke-width':2},grp);
+    el('circle',{class:'ring',cx,cy,r:rad+4,fill:'none',stroke:i===sel?'var(--ink)':'none','stroke-width':i===sel?2:0,'stroke-dasharray':i===sel?'3 3':''},grp);
+    const lw=20,lh=13,cands=[[cx+rad+3,cy-rad*0.5-lh+4],[cx-rad-3-lw,cy-rad*0.5-lh+4],[cx-lw/2,cy-rad-3-lh],[cx-lw/2,cy+rad+3]];
+    let bx=cands.find(c=>c[0]+lw<=W&&c[0]>=0&&!hit({x:c[0],y:c[1],w:lw,h:lh}))||cands[0];
+    boxes.push({x:bx[0],y:bx[1],w:lw,h:lh});
+    el('text',{class:'lab',x:bx[0],y:bx[1]+lh-3},grp,r.id);
+    grp.addEventListener('click',()=>{select(i);grp.focus&&focusRisk(i);});
+    grp.addEventListener('keydown',e=>{
+      if(['ArrowRight','ArrowDown','ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();const d=(e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1;select((sel+d+risks.length)%risks.length);focusRisk(sel);}
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();$('sp').focus();}
+    });
+  });
+  if(focusedId){const n=svg.querySelector(`[data-id="${focusedId}"]`);if(n)n.focus();}
+}
+function focusRisk(i){const n=$('scatter').querySelector(`[data-i="${i}"]`);if(n)n.focus();}
+
+function drawBurn(res){
+  const svg=$('burn'),W=svg.parentNode.clientWidth-24,H=Math.max(260,Math.min(360,W*0.9));
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);svg.innerHTML='';
+  const pad={l:40,r:10,t:26,b:36};
+  const stages=[{name:'now',rem:r=>r.E},{name:'after P1',rem:r=>res.out[r.id]==='P1'?r.E-r.V:r.E},{name:'after P2',rem:r=>res.out[r.id]?r.E-r.V:r.E}];
+  const totals=stages.map(s=>risks.reduce((t,r)=>t+s.rem(r),0));
+  const yM=niceMax(totals[0]*1.05,100);
+  const Y=v=>pad.t+(H-pad.t-pad.b)*(1-v/yM);
+  for(let i=0;i<=4;i++){const y=Y(yM*i/4);el('line',{x1:pad.l,x2:W-pad.r,y1:y,y2:y,stroke:'var(--grid)'},svg);el('text',{x:pad.l-6,y:y+4,'text-anchor':'end'},svg,Math.round(yM*i/4));}
+  const slot=(W-pad.l-pad.r)/3,bw=Math.min(78,slot*0.62);
+  // stack order: by ratio desc so prototyped risks sit at the bottom
+  const order=risks.slice().sort((a,b)=>b.ratio-a.ratio);
+  stages.forEach((s,si)=>{
+    const x=pad.l+slot*si+(slot-bw)/2;let acc=0;
+    order.forEach((r,ri)=>{
+      const v=s.rem(r);if(v<=1e-9)return;
+      const a=res.out[r.id]||'none',y0=Y(acc),y1=Y(acc+v);
+      el('rect',{x,y:y1,width:bw,height:Math.max(0,y0-y1),fill:a==='none'?'var(--ink-soft)':colorOf(a),'fill-opacity':a==='none'?(ri%2?.22:.34):(ri%2?.7:.9),stroke:'var(--paper-2)','stroke-width':1},svg);
+      if(y0-y1>=15)el('text',{x:x+bw/2,y:(y0+y1)/2+4,'text-anchor':'middle',style:`fill:${a==='none'?'var(--ink)':'var(--paper)'};font-size:11px;font-weight:700`},svg,r.id);
+      acc+=v;
+    });
+    el('text',{x:x+bw/2,y:Y(totals[si])-7,'text-anchor':'middle',class:'lab',style:'font-size:14px'},svg,f1(totals[si]));
+    el('text',{x:x+bw/2,y:H-pad.b+16,'text-anchor':'middle'},svg,s.name);
+  });
+  $('burn').setAttribute('aria-label',`Remaining exposure: now ${f1(totals[0])} hours, after prototype 1 ${f1(totals[1])}, after prototype 2 ${f1(totals[2])}`);
+  return totals;
+}
+
+function update(){
+  derive();
+  const res=pick(),totals=drawBurn(res);drawScatter(res);
+  const list=p=>risks.filter(r=>res.out[r.id]===p).sort((a,b)=>b.ratio-a.ratio).map(r=>r.id);
+  const p1=list('P1'),p2=list('P2');
+  $('rP1').textContent=p1.length?p1.join(', '):'none';$('rP1s').textContent=`prototype 1, ${f1(res.used.P1)} of ${f1(B)} h`;
+  $('rP2').textContent=p2.length?p2.join(', '):'none';$('rP2s').textContent=`prototype 2, ${f1(res.used.P2)} of ${f1(B)} h`;
+  $('rNow').textContent=f1(totals[0]);$('rLeft').textContent=f1(totals[2]);
+  // table
+  $('tbody').innerHTML=risks.map((r,i)=>{const a=res.out[r.id]||'none';return `<tr data-i="${i}" class="${i===sel?'sel':''}" title="${r.claim}"><td>${r.id}</td><td>${f2(r.p)}</td><td>${f1(r.L)}</td><td>${f1(r.E)}</td><td>${f1(r.c)}</td><td>${f2(r.q)}</td><td>${f1(r.V)}</td><td>${f2(r.ratio)}</td><td><span class="tag ${a}">${a}</span></td></tr>`;}).join('');
+  $('tbody').querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>select(+tr.dataset.i)));
+  $('tfoot').textContent=`Exposure burn-down: now ${f1(totals[0])} h, after P1 ${f1(totals[1])} h, after P2 ${f1(totals[2])} h. P1 uses ${f1(res.used.P1)} of ${f1(B)} h, P2 uses ${f1(res.used.P2)} of ${f1(B)} h.`;
+  // insight
+  const below=risks.filter(r=>r.ratio<1-1e-9).sort((a,b)=>b.E-a.E);
+  const waiting=risks.filter(r=>r.ratio>=1-1e-9&&!res.out[r.id]);
+  let s='';
+  if(res.blocked.P1){const b=res.blocked.P1;s+=`${b.r.id} is next in line for prototype 1 but needs ${f1(b.r.c)} h with ${f1(b.left)} h left, so ${spare?'the team spends the spare hours running the tests well and moves it on':'the picker skips it and tries the next one'}. `;}
+  if(waiting.length)s+=`<b>${waiting.map(r=>r.id).join(', ')}</b> clear the ratio test but fit in neither week. `;
+  if(below.length){const t=below[0];s+=`${t.id} has the largest exposure below the line (${f1(t.E)} h): its prototype costs ${f1(t.c)} h to remove ${f1(t.V)} h, a ratio of ${f2(t.ratio)}. `;}
+  s+=`The ${f1(totals[2])} h still exposed after P2 is a forecast. Week 6 re-rates the risks with the real results, and what remains becomes the risk reserve in the greenlight fit and the week 11 plan.`;
+  $('insight').innerHTML=s;
+  // controls
+  $('oB').textContent=f1(B);$('budget').value=B;
+  $('spare').setAttribute('aria-pressed',spare);$('spare').textContent='Spare hours rule: '+(spare?'on':'off');
+  $('ruleNote').textContent=spare?'On: a risk that does not fit the hours left is not started. It and every risk after it wait for the next week.':'Off: the picker skips a risk that does not fit and tries the next one on the list.';
+  const r=risks[sel];
+  $('pick').value=sel;
+  $('sp').value=r.p;$('op').textContent=f2(r.p);$('sL').value=r.L;$('oL').textContent=f1(r.L);
+  $('sc').value=r.c;$('oc').textContent=f1(r.c);$('sq').value=r.q;$('oq').textContent=f2(r.q);
+}
+function select(i){sel=i;update();}
+
+$('pick').innerHTML=DEF.map((r,i)=>`<option value="${i}">${r.id}: ${r.claim}</option>`).join('');
+$('pick').addEventListener('change',e=>select(+e.target.value));
+[['sp','p'],['sL','L'],['sc','c'],['sq','q']].forEach(([id,k])=>$(id).addEventListener('input',e=>{risks[sel][k]=+e.target.value;update();}));
+$('budget').addEventListener('input',e=>{B=+e.target.value;update();});
+$('spare').addEventListener('click',()=>{spare=!spare;update();});
+$('reset').addEventListener('click',()=>{reset();update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+window.__picker={get risks(){return risks;},setB(v){B=v;update();},setSpare(v){spare=v;update();},set(i,k,v){risks[i][k]=v;update();},pick:()=>{derive();return pick();},reset(){reset();update();}};
+update();
+})();
+</script>
+</body>
+</html>

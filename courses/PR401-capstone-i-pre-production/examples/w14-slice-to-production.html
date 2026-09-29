@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Slice to production — PR401 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.headline{font-family:var(--serif);font-size:clamp(1.15rem,2.6vw,1.6rem);font-weight:600;margin:0 0 14px;line-height:1.3}
+.headline .sep{color:var(--ink-soft);font-weight:400;margin:0 .35em}
+.bad{color:var(--blood)}.good{color:var(--moss)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--ink-soft);font-size:12px}
+svg .lab{fill:var(--ink);font-weight:700}
+svg .an{transition:cx 150ms,cy 150ms,d 150ms,transform 150ms,x 150ms,y 150ms,width 150ms,height 150ms}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:480px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 18px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 .95rem var(--sans);width:6em;padding:5px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.nums{display:flex;gap:16px;flex-wrap:wrap}
+.nums label{flex-direction:column;gap:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 0}
+.chip{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:420px}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}td:nth-child(2){white-space:nowrap}
+tr.over td{color:var(--blood)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*,svg .an{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">PR401 Capstone I · Week 14 · Worked example</p>
+  <h1>From one slice unit to a production plan</h1>
+  <p class="lede">The slice town took 10 hours. The week 11 plan priced a town at 6.5. Each production town looks nearly affordable on its own. Add them up and three towns fit the art plan only if the artist gets faster at a rate of about 0.86 or better.</p>
+</header>
+
+<section class="panel" aria-label="Learning curve model">
+  <p class="headline" id="headline" aria-live="polite"></p>
+  <div class="charts">
+    <figure>
+      <figcaption>Cost per unit<small>u&#8345; = u&#8321; &times; n<sup>log&#8322; LR</sup>. Unit 1 is the slice, measured.</small></figcaption>
+      <svg id="left" role="img" aria-label=""></svg>
+    </figure>
+    <figure>
+      <figcaption>Cumulative production hours<small>Units 2 to N + 1 against the room left in the art plan, C &minus; O</small></figcaption>
+      <svg id="right" role="img" aria-label=""></svg>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rT">—</b><span>production total T (h)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rH">—</b><span>room C &minus; O (h)</span></div>
+    <div class="stat" id="sLoad"><b id="rL">—</b><span>art load (O + T) / C</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rNeed">—</b><span>LR needed to fit</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rOld">—</b><span id="rOlds">week 11 plan for these units (h)</span></div>
+  </div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div><label for="u1">Measured first unit u&#8321; (h) <output id="ou1"></output></label><input id="u1" type="range" min="2" max="60" step="0.5"></div>
+    <div><label for="N">Production units N <output id="oN"></output></label><input id="N" type="range" min="1" max="12" step="1"></div>
+    <div><label for="LR">Learning rate LR <output id="oLR"></output></label><input id="LR" type="range" min="0.7" max="1" step="0.01"></div>
+    <div><label for="e">Old planned cost per unit e (h) <output id="oe"></output></label><input id="e" type="range" min="1" max="60" step="0.5"></div>
+    <div class="nums">
+      <label for="O">Other art demand O (h)<input id="O" type="number" min="0" max="500" step="0.1"></label>
+      <label for="C">Art capacity C (h)<input id="C" type="number" min="1" max="1000" step="1"></label>
+    </div>
+    <div class="row" style="margin-top:0">
+      <button class="chip" id="flat">Flat (LR 1.0)</button>
+      <button class="chip" id="wright">Wright (LR 0.8)</button>
+      <button class="chip" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Cost per unit and running total">
+      <thead><tr><th>Unit n</th><th>What it is</th><th>u&#8345; (h)</th><th>Running production total (h)</th><th>Art load if stopped here</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model: Wright&rsquo;s law, from T. P. Wright (1936), "Factors affecting the cost of airplanes", as used in PR401 week 14, section 3. <i>Emberfall</i> hours are a constructed teaching example. The production total matches the lab 14 script (<code>reconcile.py</code>).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const DEF={u1:10,N:3,LR:0.90,e:6.5,O:48.1,C:72};
+let S={...DEF};
+const f1=v=>v.toFixed(1),f2=v=>v.toFixed(2);
+const WORDS=['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve'];
+const u=(n,lr)=>S.u1*Math.pow(n,Math.log2(lr));
+const total=lr=>{let t=0;for(let n=2;n<=S.N+1;n++)t+=u(n,lr);return t;};
+function lrNeeded(){const H=S.C-S.O;if(total(1)<=H+1e-12)return 1;if(total(0.5)>H)return null;
+  let lo=0.5,hi=1;while(hi-lo>0.0001){const mid=(lo+hi)/2;if(total(mid)<=H)lo=mid;else hi=mid;}return lo;}
+
+// keyed element cache so geometry can transition
+function scene(svg){const map=new Map();let used=new Set();
+  return {begin(){used=new Set();},
+    get(key,tag,attrs){let e=map.get(key);if(!e){e=document.createElementNS(NS,tag);map.set(key,e);svg.appendChild(e);}used.add(key);for(const k in attrs||{})e.setAttribute(k,attrs[k]);return e;},
+    end(){for(const [k,e] of map)if(!used.has(k)){e.remove();map.delete(k);}}};}
+const L=scene($('left')),R=scene($('right'));
+function css(e,o){for(const k in o)e.style[k]=o[k];return e;}
+function text(sc,key,x,y,str,attrs){const t=sc.get(key,'text',Object.assign({x:0,y:0},attrs||{}));t.textContent=str;t.classList.add('an');css(t,{transform:`translate(${x}px,${y}px)`});return t;}
+function path(sc,key,d,attrs){const p=sc.get(key,'path',attrs);p.classList.add('an');p.style.d=`path("${d}")`;p.setAttribute('d',d);return p;}
+function size(svg,ratio){const W=svg.parentNode.clientWidth-24,H=Math.max(240,Math.min(320,W*ratio));svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('height',H);return [W,H];}
+const niceTop=v=>{const m=Math.pow(10,Math.floor(Math.log10(v)));return [1,1.2,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*m).find(x=>x>=v-1e-9);};
+
+function drawLeft(){
+  const svg=$('left'),[W,H]=size(svg,0.62),sc=L;sc.begin();
+  const pad={l:40,r:16,t:16,b:34},n1=S.N+1,yTop=niceTop(Math.max(S.u1,S.e)*1.1);
+  const X=n=>pad.l+(W-pad.l-pad.r)*(n1===1?0.5:(n-1)/(n1-1)),Y=v=>pad.t+(H-pad.t-pad.b)*(1-v/yTop);
+  for(let i=0;i<=4;i++){const v=yTop*i/4;sc.get('g'+i,'line',{x1:pad.l,x2:W-pad.r,y1:Y(v),y2:Y(v),stroke:'var(--grid)'});text(sc,'gt'+i,pad.l-6,Y(v)+4,f1(v),{'text-anchor':'end'});}
+  const step=n1<=7?1:2;
+  for(let n=1;n<=13;n++){if(n<=n1&&((n-1)%step===0||n===n1))text(sc,'xt'+n,X(n),H-pad.b+16,n,{'text-anchor':'middle'});}
+  text(sc,'xl',W-pad.r,H-2,'unit n',{'text-anchor':'end'});
+  // estimate line
+  path(sc,'est',`M${pad.l},${Y(S.e)}L${W-pad.r},${Y(S.e)}`,{stroke:'var(--ink-soft)','stroke-width':2,'stroke-dasharray':'7 5',fill:'none'});
+  text(sc,'estl',W-pad.r-4,Y(S.e)+(Y(S.e)>H-pad.b-24?-6:15),`week 11 plan, ${f1(S.e)} h`,{'text-anchor':'end',class:'lab',style:'fill:var(--ink-soft)'});
+  let d='';for(let n=1;n<=n1;n++)d+=(n===1?'M':'L')+X(n)+','+Y(u(n,S.LR));
+  if(n1===1)d+=`L${X(1)},${Y(u(1,S.LR))}`;
+  path(sc,'curve',d,{stroke:'var(--steel)','stroke-width':2.5,fill:'none'});
+  for(let n=1;n<=n1;n++){const c=sc.get('p'+n,'circle',{});c.classList.add('an');
+    css(c,{cx:X(n)+'px',cy:Y(u(n,S.LR))+'px',r:(n===1?6:5)+'px'});
+    c.setAttribute('fill',n===1?'var(--paper-2)':'var(--steel)');c.setAttribute('stroke','var(--steel)');c.setAttribute('stroke-width',2.5);
+    if(n1<=6||n===1)text(sc,'pl'+n,X(n),Y(u(n,S.LR))-11,f1(u(n,S.LR)),{'text-anchor':'middle',class:'lab'});}
+  text(sc,'slice',X(1)-4,Y(S.u1)+34,'slice, measured',{style:'fill:var(--steel);font-weight:600'});
+  sc.end();
+  svg.setAttribute('aria-label',`Cost per unit: slice ${f1(S.u1)} hours, then ${Array.from({length:S.N},(_,i)=>f1(u(i+2,S.LR))).join(', ')}; week 11 plan ${f1(S.e)} per unit.`);
+}
+
+function drawRight(){
+  const svg=$('right'),[W,H]=size(svg,0.62),sc=R;sc.begin();
+  const pad={l:40,r:16,t:16,b:34},Hroom=S.C-S.O,T=total(S.LR);
+  const yTop=niceTop(Math.max(T,Hroom,1)*1.15),X=k=>pad.l+(W-pad.l-pad.r)*k/S.N,Y=v=>pad.t+(H-pad.t-pad.b)*(1-Math.max(0,v)/yTop);
+  const rect=sc.get('danger','rect',{fill:'var(--blood)','fill-opacity':.14});rect.classList.add('an');
+  const yH=Math.max(pad.t,Math.min(H-pad.b,Y(Hroom)));
+  css(rect,{x:pad.l+'px',y:pad.t+'px',width:(W-pad.l-pad.r)+'px',height:Math.max(0,yH-pad.t)+'px'});
+  for(let i=0;i<=4;i++){const v=yTop*i/4;sc.get('g'+i,'line',{x1:pad.l,x2:W-pad.r,y1:Y(v),y2:Y(v),stroke:'var(--grid)'});text(sc,'gt'+i,pad.l-6,Y(v)+4,f1(v),{'text-anchor':'end'});}
+  const step=S.N<=6?1:2;
+  for(let k=0;k<=12;k++)if(k<=S.N&&(k%step===0||k===S.N))text(sc,'xt'+k,X(k),H-pad.b+16,k,{'text-anchor':'middle'});
+  text(sc,'xl',W-pad.r,H-2,'production units built',{'text-anchor':'end'});
+  path(sc,'room',`M${pad.l},${yH}L${W-pad.r},${yH}`,{stroke:'var(--blood)','stroke-width':2,fill:'none'});
+  text(sc,'rooml',pad.l+6,yH+15,`room in the art plan, ${f1(Hroom)} h`,{style:'fill:var(--blood);font-weight:600'});
+  // step line
+  let cum=0,d=`M${X(0)},${Y(0)}`;
+  for(let k=1;k<=S.N;k++){d+=`L${X(k-1)},${Y(cum)}`;cum+=u(k+1,S.LR);d+=`L${X(k-1)},${Y(cum)}L${X(k)},${Y(cum)}`;}
+  path(sc,'cum',d,{stroke:'var(--steel)','stroke-width':2.5,fill:'none'});
+  const over=T>Hroom+1e-9,load=(S.O+T)/S.C;
+  const dot=sc.get('end','circle',{fill:over?'var(--blood)':'var(--moss)',stroke:'var(--paper)','stroke-width':2});dot.classList.add('an');
+  css(dot,{cx:X(S.N)+'px',cy:Y(T)+'px',r:'6px'});
+  const above=Y(T)-12>pad.t+4;
+  text(sc,'endl',X(S.N)-8,above?Y(T)-10:Y(T)+20,`${f1(T)} h · load ${f2(load)}`,{'text-anchor':'end',class:'lab',style:`fill:${over?'var(--blood)':'var(--moss)'}`});
+  sc.end();
+  svg.setAttribute('aria-label',`Cumulative production hours ${f1(T)} against ${f1(Hroom)} hours of room; art load ${f2(load)}.`);
+}
+
+function update(){
+  $('u1').value=S.u1;$('ou1').textContent=f1(S.u1);$('N').value=S.N;$('oN').textContent=S.N;
+  $('LR').value=S.LR;$('oLR').textContent=`${f2(S.LR)} (log₂ ${Math.log2(S.LR).toFixed(3).replace('-','−')})`;
+  $('e').value=S.e;$('oe').textContent=f1(S.e);
+  if(document.activeElement!==$('O'))$('O').value=S.O;if(document.activeElement!==$('C'))$('C').value=S.C;
+  const T=total(S.LR),Hroom=S.C-S.O,load=(S.O+T)/S.C,need=lrNeeded(),over=T>Hroom+1e-9;
+  const nm=WORDS[S.N]||String(S.N),unit=S.N===1?'town':'towns';
+  $('headline').innerHTML=`${nm} ${unit} at LR ${f2(S.LR)}: <span class="${over?'bad':'good'}">${f1(T)} h against ${f1(Hroom)} h of room</span><span class="sep">·</span><span class="${load>1+1e-9?'bad':'good'}">Art load ${f2(load)}</span>`;
+  $('rT').textContent=f1(T);$('rH').textContent=f1(Hroom);$('rL').textContent=f2(load);
+  $('sLoad').style.setProperty('--c',load>1+1e-9?'var(--blood)':'var(--moss)');$('rL').style.color=load>1+1e-9?'var(--blood)':'';
+  $('rNeed').textContent=need===null?'no LR ≥ 0.5 fits':need>=1?'1.00 (fits flat)':need.toFixed(3);
+  $('rOld').textContent=f1(S.e*S.N);$('rOlds').textContent=`week 11 plan for ${S.N} ${unit} (h)`;
+  let s=`The slice unit took ${f1(S.u1)} h, ${f1(S.u1/S.e)} times the week 11 figure of ${f1(S.e)}. `;
+  s+=`At LR ${f2(S.LR)} the ${S.N} production ${unit} cost ${f1(T)} h against ${f1(S.e*S.N)} h in the old plan. `;
+  if(need===null)s+=`No learning rate down to 0.5 makes them fit. Cut units.`;
+  else if(need>=1)s+=`They fit even with no learning at all (flat total ${f1(total(1))} h).`;
+  else s+=`They fit only if LR is ${need.toFixed(3)} or better. One slice unit gives no slope, so plan cautiously and put the hope in a trigger.`;
+  $('insight').innerHTML=s;
+  let cum=0,rows=`<tr><td>1</td><td>slice, measured</td><td>${f1(S.u1)}</td><td>—</td><td>—</td></tr>`;
+  for(let n=2;n<=S.N+1;n++){cum+=u(n,S.LR);const l=(S.O+cum)/S.C;rows+=`<tr class="${l>1+1e-9?'over':''}"><td>${n}</td><td>production ${n-1}</td><td>${f1(u(n,S.LR))}</td><td>${f1(cum)}</td><td>${f2(l)}</td></tr>`;}
+  $('tbody').innerHTML=rows;
+  drawLeft();drawRight();
+}
+['u1','e'].forEach(k=>$(k).addEventListener('input',ev=>{S[k]=+ev.target.value;update();}));
+$('N').addEventListener('input',ev=>{S.N=+ev.target.value;update();});
+$('LR').addEventListener('input',ev=>{S.LR=+ev.target.value;update();});
+['O','C'].forEach(k=>$(k).addEventListener('input',ev=>{const v=parseFloat(ev.target.value);if(!isFinite(v))return;S[k]=k==='C'?Math.max(1,v):Math.max(0,v);update();}));
+$('flat').addEventListener('click',()=>{S.LR=1;update();});
+$('wright').addEventListener('click',()=>{S.LR=0.8;update();});
+$('reset').addEventListener('click',()=>{S={...DEF};update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

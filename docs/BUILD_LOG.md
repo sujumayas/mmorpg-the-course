@@ -166,3 +166,25 @@ Every running agent stopped with the weekly limit (HTTP 429). The limit resets o
 - The launch-week budget now costs a second shard ($18.00). Totals are $743.50 naive and $448.30 fixed, against a $450 limit.
 - Fixed the WoW Classic date (26 Aug) and the Halo source wording. The reviewer found 18 other claims correct.
 - Still open: the peer-assessment brief uses a separate six-person example team, which is allowed. Confirm the New World Wikipedia article title.
+
+## PR401 complete (29 Sep 2026)
+
+- The review fixed every must-fix item in docs/handoff/notes-PR401.md.
+  - Pillars: two to four everywhere.
+  - Team: Emberfall, 7 students.
+  - w10 final design: four towns of about 22, which hold 0.985 of evenings. The six-town draft stays as the starting point.
+  - The w09 tutorial quest chain is now the slice's quest chain.
+  - The w14 checklist and the m13 brief check the w10 safety minimums.
+  - Folders: `preproduction/weekNN/`, `docs/`, `prototypes/`.
+  - Risk buffer: 104 is the w04 forecast, and w06 re-rates it to 54.
+  - w03 now produces an art direction page.
+  - The week 2 price factor is now φ.
+  - The w10 cell is now 0.77.
+  - The w01 check-yourself answer is corrected to about 70%.
+- The six examples pass check_examples. The Steam counts and prices match the store on 29 Sep 2026.
+- Still unverified:
+  - Whether Mortal Online 2 is sold outside Steam (hedged).
+  - The Project: Gorgon Steam announcement date.
+  - Stacking's 2011 release.
+  - The Singularity mass-test rewards, the WoW Classic stress-test dates, EverQuest mercenaries (2008), the HZD GDC 2017 session and the Polygon report of the Yoshida GDC 2014 talk.
+- Verified earlier: the TiDi blog date (curriculum.yaml check).

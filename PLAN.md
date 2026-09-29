@@ -121,7 +121,7 @@ flowchart LR
 | MMO402 | finished | 14/14 | 14 (1) | 13 | 4 |
 | MMO403 | finished | 14/14 | 14 (2) | 14 | 4 |
 | MMO404 | finished | 14/14 | 14 (1) | 14 | 3 |
-| PR401 | stub | 14/14 | 6 (0) | 14 | 15 |
+| PR401 | finished | 14/14 | 6 (0) | 14 | 15 |
 | MMO405 | finished | 14/14 | 14 (1) | 14 | 4 |
 | MMO406 | finished | 14/14 | 14 (0) | 14 | 3 |
 | MMO407 | finished | 14/14 | 14 (1) | 14 | 3 |
