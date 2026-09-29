@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quest chain shapes — GD202 Week 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.presets .lbl{font-weight:600;font-size:.92rem;margin-right:4px}
+.chip,.btn{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,.node:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.node:focus{outline:none}.node:focus-visible circle{stroke:var(--focus);stroke-width:4}
+.charts{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:899px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.84rem}
+.statrow{display:flex;flex-wrap:wrap;gap:6px 16px;font-variant-numeric:tabular-nums;font-size:.92rem;margin:4px 0 8px}
+.statrow b{font-size:1.15rem}
+.gwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#graph{display:block;width:100%;height:auto}
+#graph text{font-family:var(--sans)}
+.node{cursor:pointer}
+.edge{cursor:pointer}
+.msg{min-height:1.5em;font-size:.88rem;font-weight:600;margin:6px 0 0}
+.msg.err{color:var(--blood)}
+canvas{display:block;width:100%;height:320px}
+.edit{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 20px;margin-top:16px}
+@media (max-width:900px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label.sl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0}
+input[type=number]{font:600 .95rem var(--sans);width:6em;padding:4px 6px;border-radius:6px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);margin-top:4px}
+.note{font-size:.84rem;color:var(--ink-soft);margin:4px 0 0}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%;min-width:440px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD202 Narrative and Quest Design · Week 8 · Worked example</p>
+  <h1>Where you put the arrows matters more than how many</h1>
+  <p class="lede">Nine quests, five shapes. Every prerequisite arrow can fix story order (up) and can add a trip back to the hub (right). Waves and strands cost the same 3 trips, yet waves fix three times as many pairs.</p>
+</header>
+
+<section class="panel" aria-label="Quest chain model">
+  <div class="presets" role="group" aria-label="Preset shapes"><span class="lbl" aria-hidden="true">Shape</span></div>
+
+  <div class="charts">
+    <figure>
+      <figcaption>The zone graph<small>Each column is one trip from the hub. Click a quest, then another, to add or remove an arrow. Click an arrow to remove it.</small></figcaption>
+      <div class="statrow" aria-live="polite" id="stats"></div>
+      <div class="gwrap"><svg id="graph" role="group" aria-label="Zone graph of quests and prerequisites"></svg></div>
+      <p class="note" id="scrollHint" hidden>Scroll the graph sideways to see every trip.</p>
+      <p class="msg" id="msg" role="status"></p>
+      <div class="edit">
+        <button class="btn" id="add" type="button">Add quest</button>
+        <button class="btn" id="del" type="button" disabled>Remove selected quest</button>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>The trade<small>Trips T against order control C. Up is more story order, right is more walking. Second line on each dot is zone time.</small></figcaption>
+      <canvas id="cScatter" role="img" aria-label="Scatter of trips versus order control for the five presets and the current zone"></canvas>
+    </figure>
+  </div>
+
+  <p class="insight" id="insight"></p>
+
+  <div class="controls">
+    <div>
+      <label class="sl" for="task"><span>Work per quest t<sub>task</sub></span> <output id="oTask">3 min</output></label>
+      <input id="task" type="range" min="1" max="10" step="1" value="3">
+    </div>
+    <div>
+      <label class="sl" for="travel"><span>Round trip t<sub>travel</sub></span> <output id="oTravel">4 min</output></label>
+      <input id="travel" type="range" min="1" max="15" step="1" value="4">
+    </div>
+    <div>
+      <label class="sl" for="cap"><span>Quest log cap m</span></label>
+      <input id="cap" type="number" min="1" max="16" step="1" placeholder="no cap" aria-describedby="capNote">
+      <p class="note" id="capNote">Blank means no cap. With a cap the player takes at most m unlocked quests per trip, lowest ids first.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption class="sr">The five preset shapes at the current settings</caption>
+      <thead><tr><th>Shape</th><th>T (trips)</th><th>W (width)</th><th>Fixed pairs</th><th>C</th><th>Zone time</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the week 8 lecture: a batching player takes every unlocked quest, does them in one trip and returns to the hub. T is the number of layers, C is the share of quest pairs where one is an ancestor of the other, zone time = n × t<sub>task</sub> + T × t<sub>travel</sub>. Quest names are placeholders.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS='http://www.w3.org/2000/svg';
+
+// ---------- presets: arrays of [name, [prereq names]] in id order ----------
+function mkPreset(key){
+  if(key==='Linear')return Array.from({length:9},(_,i)=>['q'+(i+1),i?['q'+i]:[]]);
+  if(key==='Braided')return [['intro',[]],['b1',['intro']],['b2',['intro']],['b3',['intro']],['turn',['b1','b2','b3']],['d1',['turn']],['d2',['turn']],['d3',['turn']],['finale',['d1','d2','d3']]];
+  if(key==='Waves')return [['w1',[]],['w2',[]],['w3',[]],['v1',['w1','w2','w3']],['v2',['w1','w2','w3']],['v3',['w1','w2','w3']],['u1',['v1','v2','v3']],['u2',['v1','v2','v3']],['u3',['v1','v2','v3']]];
+  if(key==='Strands'){const o=[];for(const s of 'abc')for(let i=1;i<=3;i++)o.push([s+i,i>1?[s+(i-1)]:[]]);return o;}
+  if(key==='Flat')return Array.from({length:9},(_,i)=>['f'+(i+1),[]]);
+}
+const KEYS=['Linear','Braided','Waves','Strands','Flat'];
+function toZone(list){ // zone: array of {id, name, pre:Set(ids)}
+  const idOf={};list.forEach(([nm],i)=>idOf[nm]=i);
+  return list.map(([nm,pre],i)=>({id:i,name:nm,pre:new Set(pre.map(x=>idOf[x]))}));
+}
+
+// ---------- model ----------
+function layers(z){
+  const done=new Set(),out=[];
+  while(done.size<z.length){
+    const L=z.filter(q=>!done.has(q.id)&&[...q.pre].every(p=>done.has(p))).map(q=>q.id).sort((a,b)=>a-b);
+    if(!L.length)return null;out.push(L);L.forEach(x=>done.add(x));
+  }return out;
+}
+function ancestors(z,id){const by=new Map(z.map(q=>[q.id,q]));const seen=new Set(),st=[...by.get(id).pre];while(st.length){const x=st.pop();if(!seen.has(x)){seen.add(x);st.push(...by.get(x).pre);}}return seen;}
+function trips(z,m){ // batching simulation with log cap m
+  const done=new Set();let t=0;
+  while(done.size<z.length){
+    let U=z.filter(q=>!done.has(q.id)&&[...q.pre].every(p=>done.has(p))).map(q=>q.id).sort((a,b)=>a-b);
+    if(!U.length)return Infinity;if(m)U=U.slice(0,m);U.forEach(x=>done.add(x));t++;
+  }return t;
+}
+function measure(z,tt,tv,m){
+  const n=z.length,L=layers(z),anc=new Map(z.map(q=>[q.id,ancestors(z,q.id)]));
+  let fixed=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const a=z[i].id,b=z[j].id;if(anc.get(b).has(a)||anc.get(a).has(b))fixed++;}
+  const all=n*(n-1)/2,C=n<2?1:fixed/all;
+  const Tl=L.length,Wl=Math.max(...L.map(x=>x.length));
+  const T=m?trips(z,m):Tl,W=m?Math.min(m,Wl):Wl;
+  return {n,L,T,Tl,W,fixed,all,C,time:n*tt+T*tv};
+}
+
+// ---------- state ----------
+let zone=toZone(mkPreset('Linear')),active='Linear',sel=null,tt=3,tv=4,cap=0,trail=[],nextNum=1;
+const fmtC=c=>c.toFixed(3);
+
+// ---------- graph ----------
+let COLW=84;const ROWH=54,R=17,PADX=34,PADT=42,PADB=14;
+function drawGraph(M){
+  const svg=$('graph');svg.innerHTML='';
+  const L=M.L,cols=L.length,rows=Math.max(...L.map(x=>x.length));COLW=Math.max(56,Math.min(84,Math.floor(540/cols)));
+  const W=Math.max(cols*COLW+PADX*2-(COLW-2*R)-8,360),H=PADT+rows*ROWH+PADB;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.style.minWidth=Math.min(W,cols*50+30)+'px';svg.style.maxWidth=(W*1.1)+'px';
+  const offX=(W-(cols-1)*COLW)/2,pos=new Map();
+  L.forEach((ids,c)=>{const y0=PADT+(rows-ids.length)*ROWH/2+ROWH/2;ids.forEach((id,r)=>pos.set(id,[offX+c*COLW,y0+r*ROWH]));});
+  const g=(tag,attrs,parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;};
+  // column bands
+  L.forEach((ids,c)=>{const x=offX+c*COLW;
+    const bn=ids.length===1&&cols>1;
+    g('rect',{x:x-COLW/2+4,y:PADT-4,width:COLW-8,height:rows*ROWH+4,rx:8,fill:bn?css('--ochre'):css('--grid'),'fill-opacity':bn?.16:.35});
+    const lbl=(y,txt,col,wt)=>{const t=g('text',{x,y,'text-anchor':'middle','font-size':10,fill:col,'font-weight':wt});t.textContent=txt;};
+    if(bn){lbl(10,'shared',css('--ochre'),700);lbl(21,'beat',css('--ochre'),700);}
+    lbl(32,'trip '+(c+1),css('--ink-soft'),400);
+  });
+  // arrow marker
+  const defs=g('defs',{});const mk=g('marker',{id:'ah',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);g('path',{d:'M0,0 L10,5 L0,10 z',fill:css('--ink-soft')},mk);
+  // edges
+  zone.forEach(q=>q.pre.forEach(p=>{const [x1,y1]=pos.get(p),[x2,y2]=pos.get(q.id);
+    const sx=x1+R,sy=y1,ex=x2-R-2,ey=y2,mx=(sx+ex)/2;
+    const d=`M${sx},${sy} C${mx},${sy} ${mx},${ey} ${ex},${ey}`;
+    const hit=g('path',{d,stroke:'transparent','stroke-width':12,fill:'none',class:'edge'});
+    const e=g('path',{d,stroke:css('--ink-soft'),'stroke-width':1.6,fill:'none','marker-end':'url(#ah)','pointer-events':'none'});
+    const nm=zone.find(z=>z.id===p).name;
+    hit.addEventListener('click',()=>{q.pre.delete(p);changed(`Removed ${nm} → ${q.name}.`);});
+    hit.appendChild(document.createElementNS(NS,'title')).textContent=`${nm} → ${q.name} (click to remove)`;
+  }));
+  // nodes in id order for tab order
+  [...zone].sort((a,b)=>a.id-b.id).forEach(q=>{const [x,y]=pos.get(q.id);
+    const isSel=sel===q.id;
+    const n=g('g',{class:'node',tabindex:0,role:'button','aria-pressed':isSel,'aria-label':`Quest ${q.name}, trip ${M.L.findIndex(l=>l.includes(q.id))+1}, needs ${q.pre.size?[...q.pre].map(p=>zone.find(z=>z.id===p).name).join(', '):'nothing'}${isSel?', selected':''}`});
+    g('circle',{cx:x,cy:y,r:R,fill:isSel?css('--steel'):css('--paper'),stroke:isSel?css('--focus'):css('--steel'),'stroke-width':isSel?3:2},n);
+    const fs=q.name.length>4?10:12;
+    const t=g('text',{x,y:y+fs*0.36,'text-anchor':'middle','font-size':fs,'font-weight':700,fill:isSel?css('--paper'):css('--ink'),'pointer-events':'none'},n);t.textContent=q.name;
+    const act=()=>nodeClick(q.id);
+    n.addEventListener('click',act);n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
+  });
+}
+function nodeClick(id){
+  if(sel===null){sel=id;say(`Selected ${nm(id)}. Choose a target quest to add or remove an arrow, or remove this quest.`);render(true);return;}
+  if(sel===id){sel=null;say('');render(true);return;}
+  const src=sel,tgt=zone.find(q=>q.id===id);sel=null;
+  if(tgt.pre.has(src)){tgt.pre.delete(src);changed(`Removed ${nm(src)} → ${nm(id)}.`,id);return;}
+  if(ancestors(zone,src).has(id)){say('That arrow would make a loop: neither quest could unlock.',true);render(true,id);return;}
+  tgt.pre.add(src);changed(`Added ${nm(src)} → ${nm(id)}.`,id);
+}
+const nm=id=>zone.find(q=>q.id===id).name;
+function say(t,err){$('msg').textContent=t;$('msg').className='msg'+(err?' err':'');}
+function changed(t,focusId){active=null;say(t);render(false,focusId);}
+
+// ---------- scatter ----------
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function drawScatter(M,P){
+  const {g,w,h}=setup($('cScatter'));g.clearRect(0,0,w,h);
+  const pad={l:58,r:16,t:16,b:38};
+  const X=t=>pad.l+(w-pad.l-pad.r)*(t-0.5)/15.5,Y=c=>pad.t+(h-pad.t-pad.b)*(1-c);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Y(i/4);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText((i/4).toFixed(2),pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';for(const t of [1,3,5,7,9,11,13,15])g.fillText(t,X(t),Y(0)+6);
+  g.textAlign='right';g.fillText('T (trips)',w-pad.r,h-14);
+  g.save();g.translate(4,pad.t+(h-pad.t-pad.b)/2);g.textAlign='center';g.textBaseline='top';g.rotate(-Math.PI/2);g.fillText('C (order)',0,0);g.restore();
+  // trail
+  trail.slice(0,-1).forEach((pt,i,arr)=>{g.globalAlpha=.12+.1*i;g.fillStyle=css('--blood');g.beginPath();g.arc(X(pt[0]),Y(pt[1]),5,0,Math.PI*2);g.fill();});
+  if(trail.length>1){g.globalAlpha=.25;g.strokeStyle=css('--blood');g.lineWidth=1.5;g.beginPath();trail.forEach((pt,i)=>{i?g.lineTo(X(pt[0]),Y(pt[1])):g.moveTo(X(pt[0]),Y(pt[1]));});g.stroke();}
+  g.globalAlpha=1;
+  // presets
+  P.forEach(p=>{const x=X(p.M.T),y=Y(p.M.C);
+    g.fillStyle=css('--steel');g.beginPath();g.arc(x,y,5.5,0,Math.PI*2);g.fill();
+    const right=x<w-110;g.textAlign=right?'left':'right';const dx=right?10:-10;
+    g.fillStyle=css('--ink');g.font='700 12px '+css('--sans');g.textBaseline='bottom';
+    let ly=y;if(p.M.C>=0.99)ly=y+14;if(p.M.C<=0.01)ly=y-4;
+    g.fillText(p.key,x+dx,ly);g.fillStyle=css('--ink-soft');g.font='11px '+css('--sans');g.textBaseline='top';g.fillText(`${p.M.time} min`,x+dx,ly);
+  });
+  // current
+  const cx=X(Math.min(16,M.T)),cy=Y(M.C);
+  g.strokeStyle=css('--blood');g.lineWidth=3;g.beginPath();g.arc(cx,cy,11,0,Math.PI*2);g.stroke();
+  g.fillStyle=css('--blood');g.beginPath();g.arc(cx,cy,3,0,Math.PI*2);g.fill();
+}
+
+// ---------- render ----------
+function render(keepTrail,focusId){
+  const M=measure(zone,tt,tv,cap);
+  const P=KEYS.map(k=>({key:k,M:measure(toZone(mkPreset(k)),tt,tv,cap)}));
+  if(!keepTrail){const last=trail[trail.length-1];if(!last||last[0]!==M.T||last[1]!==M.C){trail.push([M.T,M.C]);if(trail.length>6)trail.shift();}}
+  document.querySelectorAll('.presets .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===active));
+  const capAdd=cap?M.T-M.Tl:0;
+  $('stats').innerHTML=`<span>T <b>${M.T}</b></span><span>W <b>${M.W}</b></span><span>fixed <b>${M.fixed}/${M.all}</b></span><span>C <b>${fmtC(M.C)}</b></span><span>zone time <b>${M.time} min</b></span>`+(capAdd>0?`<span style="color:var(--blood);font-weight:700">log cap adds ${capAdd} trip${capAdd>1?'s':''}</span>`:'');
+  drawGraph(M);drawScatter(M,P);
+  {const gw=document.querySelector('.gwrap');$('scrollHint').hidden=gw.scrollWidth<=gw.clientWidth+1;}
+  $('del').disabled=sel===null||zone.length<=1;$('add').disabled=zone.length>=16;
+  $('oTask').textContent=tt+' min';$('oTravel').textContent=tv+' min';
+  $('task').setAttribute('aria-valuetext',tt+' minutes per quest');$('travel').setAttribute('aria-valuetext',tv+' minutes per round trip');
+  $('tbody').innerHTML=P.map(p=>`<tr class="${p.key===active?'here':''}"><td>${p.key}</td><td>${p.M.T}</td><td>${p.M.W}</td><td>${p.M.fixed}/${p.M.all}</td><td>${fmtC(p.M.C)}</td><td>${p.M.time} min</td></tr>`).join('')+
+    (active?'':`<tr class="here"><td>Your zone</td><td>${M.T}</td><td>${M.W}</td><td>${M.fixed}/${M.all}</td><td>${fmtC(M.C)}</td><td>${M.time} min</td></tr>`);
+  // insight
+  const bn=M.L.filter(l=>l.length===1).length;
+  let s=`${active?`The ${active.toLowerCase()} shape`:'Your zone'}: ${M.n} quests in <b>${M.T} trip${M.T>1?'s':''}</b>, with ${M.fixed} of ${M.all} pairs in a fixed order (C = ${fmtC(M.C)}), ${M.time} minutes in all. `;
+  if(trail.length>1&&!keepTrail){const [t0,c0]=trail[trail.length-2];const dT=M.T-t0,dC=M.C-c0;
+    if(dT===0&&Math.abs(dC)>1e-9)s+=`That edit moved the dot straight ${dC>0?'up':'down'}: ${dC>0?'more':'less'} story order for no change in trips. `;
+    else if(dT!==0)s+=`That edit moved the dot ${dT>0?'right':'left'} by ${Math.abs(dT)} trip${Math.abs(dT)>1?'s':''} and ${dC>=0?'up':'down'} by ${Math.abs(dC).toFixed(3)}. `;}
+  s+=bn&&M.L.length>1?`${bn} layer${bn>1?'s are':' is a'} shared beat${bn>1?'s':''} that every player meets at the same point.`:'No layer is a shared beat, so no single quest is guaranteed to land at the same moment for everyone.';
+  $('insight').innerHTML=s;
+  if(focusId!==undefined){const nodes=[...$('graph').querySelectorAll('.node')];const idx=[...zone].sort((a,b)=>a.id-b.id).findIndex(q=>q.id===focusId);if(nodes[idx])nodes[idx].focus();}
+}
+function loadPreset(k){zone=toZone(mkPreset(k));active=k;sel=null;nextNum=1;say('');render(false);}
+KEYS.forEach(k=>{const b=document.createElement('button');b.className='chip';b.type='button';b.dataset.k=k;b.textContent=k;b.addEventListener('click',()=>loadPreset(k));document.querySelector('.presets').appendChild(b);});
+$('add').addEventListener('click',()=>{if(zone.length>=16)return;const id=Math.max(...zone.map(q=>q.id))+1;let name;do{name='n'+(nextNum++);}while(zone.some(q=>q.name===name));zone.push({id,name,pre:new Set()});changed(`Added quest ${name} with no prerequisites.`);});
+$('del').addEventListener('click',()=>{if(sel===null)return;const gone=nm(sel),id=sel;zone=zone.filter(q=>q.id!==id);zone.forEach(q=>q.pre.delete(id));sel=null;changed(`Removed quest ${gone} and its arrows.`);});
+$('task').addEventListener('input',e=>{tt=+e.target.value;render(true);});
+$('travel').addEventListener('input',e=>{tv=+e.target.value;render(true);});
+$('cap').addEventListener('input',e=>{const v=Math.round(+e.target.value);cap=e.target.value===''||!(v>=1)?0:Math.min(16,v);render(false);});
+window.addEventListener('resize',()=>render(true));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render(true));
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>render(true));
+render(false);
+})();
+</script>
+</body>
+</html>

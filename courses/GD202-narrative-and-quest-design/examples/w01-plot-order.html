@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plot order and inversions, GD202 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:16px 0 12px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip,.btn{font:600 .88rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;align-items:start}
+@media (max-width:699px){.views{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+.panel h2{font-family:var(--serif);font-size:1.15rem;font-weight:600;margin:0 0 2px}
+.panel .sub{font-size:.84rem;color:var(--ink-soft);margin:0 0 10px}
+/* View A board */
+.board{position:relative;display:grid;grid-template-columns:1fr;grid-template-rows:auto auto 130px auto auto;background:var(--paper-2);border-radius:10px;padding:10px}
+.rowlabel{font-size:.82rem;font-weight:700;color:var(--ink-soft);margin:0 0 6px}
+.rowlabel.bottom{margin:6px 0 0;grid-row:5}
+.row{display:flex;gap:6px}
+.row.story{grid-row:4}
+.card{flex:1 1 0;min-width:0;min-height:64px;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);font:600 .74rem/1.2 var(--sans);padding:6px 3px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;overflow-wrap:normal;word-break:normal}
+.card b{font-size:1.05rem;font-variant-numeric:tabular-nums}
+.card.plotc{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.card.plotc.dragging{cursor:grabbing;box-shadow:0 4px 12px rgba(0,0,0,.25);border-color:var(--focus)}
+.card.plotc:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.card.empty{border-style:dashed;background:transparent;color:var(--ink-soft)}
+.card.dim{opacity:.35}
+.card.cross{border-color:var(--blood)}
+svg.links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.ln{stroke:var(--ink-soft);stroke-width:2;fill:none}
+.ln.x{stroke:var(--blood);stroke-width:2.4;stroke-dasharray:7 4}
+.dot{fill:var(--blood);stroke:var(--paper-2);stroke-width:1.2}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;margin:8px 0 0}
+.legend svg{vertical-align:middle;margin-right:6px}
+/* mobile: transpose the board so labels stay readable */
+@media (max-width:699px){
+  .board{grid-template-columns:1fr 64px 1fr;grid-template-rows:auto auto}
+  .rowlabel{grid-row:1;margin:0 0 6px}
+  .rowlabel.top{grid-column:1}
+  .rowlabel.bottom{grid-column:3;grid-row:1;margin:0 0 6px}
+  .row{flex-direction:column;gap:5px}
+  .row.plot{grid-column:1;grid-row:2}
+  .row.story{grid-column:3;grid-row:2}
+  .band{display:none}
+  .card{flex-direction:row;justify-content:flex-start;min-height:40px;padding:6px 8px;gap:8px;text-align:left;font-size:.84rem}
+  .card b{font-size:1rem;min-width:1ch}
+}
+/* View B */
+.big{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 12px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px}
+.stat b{display:block;font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.fig{background:var(--paper-2);border-radius:10px;padding:10px 12px;margin-top:10px}
+.fig h3{font-family:var(--serif);font-size:1rem;font-weight:600;margin:0}
+.fig p.cap{font-size:.82rem;color:var(--ink-soft);margin:0 0 4px}
+.fig svg{display:block;width:100%;height:auto;overflow:visible}
+.fig text{fill:var(--ink-soft);font:12.5px var(--sans)}
+.fig text.v{fill:var(--ink);font-weight:700}
+.axis{stroke:var(--grid);stroke-width:1}
+.bar{fill:var(--steel)}
+.bar.hist{fill:var(--ochre)}
+.track{fill:var(--paper);stroke:var(--ink-soft);stroke-width:1}
+.fillS{fill:var(--blood);opacity:.85}
+.mark{stroke:var(--ink);stroke-width:2.5}
+.tick{stroke:var(--ink-soft);stroke-width:1.5}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.meta{font-size:.84rem;color:var(--ink-soft);margin:8px 0 0}
+details{margin-top:14px;background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:10px 14px}
+summary{cursor:pointer;font-weight:600}
+.renames{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+@media (max-width:699px){.renames{grid-template-columns:repeat(2,1fr)}}
+.renames label{display:flex;flex-direction:column;font-size:.8rem;color:var(--ink-soft);gap:2px}
+.renames input{font:.95rem var(--sans);padding:6px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);min-width:0}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:0}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:20px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD202 Narrative and Quest Design · Week 1 · Worked example</p>
+  <h1>One story, many plots</h1>
+  <p class="lede">The bottom row is the story, fixed in the order it happened. The top row is the plot, the order the player meets it. Every crossing line is one inversion: a moment where the player sees an effect before its cause.</p>
+</header>
+
+<div class="toolbar">
+  <div class="presets" role="group" aria-label="Preset tellings">
+    <button class="chip" data-order="1 2 3 4 5 6 7 8" aria-pressed="false">Chronological</button>
+    <button class="chip" data-order="6 1 2 3 4 5 7 8" aria-pressed="false">In medias res</button>
+    <button class="chip" data-order="5 6 7 2 3 4 1 8" aria-pressed="true">Mystery</button>
+    <button class="chip" data-order="8 7 6 5 4 3 2 1" aria-pressed="false">Reversed</button>
+  </div>
+  <button class="btn primary" id="simBtn">Simulate a Her Story player</button>
+  <button class="btn" id="manyBtn">Show 200 random players</button>
+</div>
+
+<div class="views">
+  <section class="panel" aria-labelledby="hA">
+    <h2 id="hA">Two timelines</h2>
+    <p class="sub">Drag a top card, or focus it with Tab and move it with the arrow keys.</p>
+    <div class="board" id="board">
+      <div class="rowlabel top">Plot (the order the player meets it)</div>
+      <div class="row plot" id="plotRow" role="list" aria-label="Plot order"></div>
+      <div class="band" aria-hidden="true"></div>
+      <div class="row story" id="storyRow" aria-label="Story order" role="list"></div>
+      <div class="rowlabel bottom">Story (the order it happened)</div>
+      <svg class="links" id="links" aria-hidden="true"></svg>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" class="ln"/></svg>in story order</span>
+      <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" class="ln x"/></svg>crosses another line</span>
+      <span><svg width="10" height="10"><circle cx="5" cy="5" r="4" class="dot"/></svg>one inversion</span>
+    </div>
+    <p class="meta" id="orderText"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="hB">
+    <h2 id="hB">The numbers</h2>
+    <p class="sub">Scramble <i>S</i> = <i>I</i> / <i>I</i><sub>max</sub>. 0 is chronological, 1 is fully reversed.</p>
+    <div class="big">
+      <div class="stat" style="--c:var(--blood)"><b id="rI">0</b><span>I, inversions</span></div>
+      <div class="stat" style="--c:var(--ink-soft)"><b id="rMax">28</b><span>I<sub>max</sub> = n(n&minus;1)/2</span></div>
+      <div class="stat" style="--c:var(--steel)"><b id="rS">0.00</b><span>S, scramble</span></div>
+    </div>
+    <div class="fig">
+      <h3>Scramble on a 0 to 1 scale</h3>
+      <svg id="sBar" viewBox="0 0 400 74" role="img" aria-label="Scramble bar"></svg>
+    </div>
+    <div class="fig">
+      <h3>Open questions at each step</h3>
+      <p class="cap">Events already shown whose cause (any earlier story event) is still unseen.</p>
+      <svg id="oqBars" viewBox="0 0 400 130" role="img" aria-label="Open questions per plot position"></svg>
+      <p class="meta" id="oqText"></p>
+    </div>
+    <div class="fig">
+      <h3>200 random players</h3>
+      <p class="cap">Random players average about 0.50. <span id="histMeta"></span></p>
+      <svg id="hist" viewBox="0 0 400 130" role="img" aria-label="Histogram of scramble for 200 random orders"></svg>
+    </div>
+  </section>
+</div>
+
+<div class="insight" id="insight" aria-live="polite"></div>
+<p class="sr" id="live" aria-live="assertive"></p>
+
+<div class="table-wrap">
+  <table aria-label="The four preset tellings">
+    <thead><tr><th>Telling</th><th>Plot order</th><th>I</th><th>S</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<details>
+  <summary>Use your own backstory (rename the 8 events)</summary>
+  <p class="meta">Number your events in the order they happened. The labels update both rows at once.</p>
+  <div class="renames" id="renames"></div>
+</details>
+
+<footer>Invented lighthouse backstory from the week 1 lecture. Her Story (Sam Barlow, 2015) is named for its design, a player who orders fixed clips by searching; this page draws no material from it. Random orders use a seeded Fisher-Yates shuffle, so a seed always gives the same player.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const N=8, IMAX=N*(N-1)/2;
+const DEFAULT_LABELS=['Apprentice arrives','Lamp argument','Oil sold','Lamp goes dark','Ship wrecks','Keeper dead','New keeper','Lamp relit'];
+let labels=DEFAULT_LABELS.slice();
+const PRESETS=[...document.querySelectorAll('.chip[data-order]')].map(b=>({name:b.textContent,order:b.dataset.order.split(' ').map(Number),el:b}));
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+
+let plot=[5,6,7,2,3,4,1,8];   // events in plot order; during a simulation, only the revealed prefix
+let simTimer=null, simSeed=0, manySeed=100, sample=null;
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffle(seed){const r=mulberry32(seed),a=[1,2,3,4,5,6,7,8];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function inversions(p){let c=0;for(let i=0;i<p.length;i++)for(let j=i+1;j<p.length;j++)if(p[i]>p[j])c++;return c;}
+function openQuestions(p){ // for each prefix length
+  const out=[];
+  for(let k=1;k<=p.length;k++){
+    const shown=new Set(p.slice(0,k));let missing=1;while(shown.has(missing))missing++;
+    let c=0;shown.forEach(e=>{if(e>missing)c++;});out.push(c);
+  }
+  return out;
+}
+const s2=x=>x.toFixed(2);
+function vw(id){const w=$(id).parentNode.clientWidth-24;return Math.max(260,Math.round(w||400));}
+
+// ----- build cards (persistent elements so pointer capture survives reorders)
+const plotCards={}, storyCards={};
+function makeCards(){
+  $('plotRow').innerHTML='';$('storyRow').innerHTML='';
+  for(let e=1;e<=N;e++){
+    const b=document.createElement('button');
+    b.className='card plotc';b.dataset.e=e;b.setAttribute('role','listitem');
+    b.innerHTML=`<b>${e}</b><span></span>`;
+    $('plotRow').appendChild(b);plotCards[e]=b;
+    const s=document.createElement('div');
+    s.className='card';s.setAttribute('role','listitem');s.innerHTML=`<b>${e}</b><span></span>`;
+    $('storyRow').appendChild(s);storyCards[e]=s;
+    attachDrag(b);
+  }
+  for(let i=0;i<N;i++){ // empty slots for simulation
+    const d=document.createElement('div');d.className='card empty';d.dataset.slot=i;d.innerHTML='<b>?</b><span>not found yet</span>';d.hidden=true;$('plotRow').appendChild(d);
+  }
+}
+function setLabels(){
+  for(let e=1;e<=N;e++){
+    plotCards[e].querySelector('span').textContent=labels[e-1];
+    storyCards[e].querySelector('span').textContent=labels[e-1];
+  }
+}
+
+// ----- render
+function render(){
+  const I=inversions(plot),S=I/IMAX,full=plot.length===N;
+  // card order and visibility
+  const pos={};plot.forEach((e,i)=>pos[e]=i);
+  const crossing=new Set();
+  for(let i=0;i<plot.length;i++)for(let j=i+1;j<plot.length;j++)if(plot[i]>plot[j]){crossing.add(plot[i]);crossing.add(plot[j]);}
+  for(let e=1;e<=N;e++){
+    const c=plotCards[e],shown=e in pos;
+    c.hidden=!shown;c.style.order=shown?pos[e]:99;
+    c.setAttribute('aria-label',shown?`Plot position ${pos[e]+1}: event ${e}, ${labels[e-1]}`:'');
+    c.classList.toggle('cross',crossing.has(e));
+    storyCards[e].classList.toggle('dim',!shown);
+    storyCards[e].classList.toggle('cross',crossing.has(e));
+  }
+  document.querySelectorAll('.card.empty').forEach(d=>{const i=+d.dataset.slot;d.hidden=i<plot.length;d.style.order=i;});
+  drawLinks();
+  $('rI').textContent=I;$('rMax').textContent=IMAX;$('rS').textContent=s2(S);
+  $('orderText').textContent=full?`Plot order: ${plot.join(' ')}`:`Revealed so far (seed ${simSeed}): ${plot.join(' ')||'nothing'} · ${plot.length} of 8 cards`;
+  drawSBar(S);
+  drawOQ();
+  drawHist(S);
+  const match=PRESETS.find(p=>p.order.join()===plot.join());
+  PRESETS.forEach(p=>p.el.setAttribute('aria-pressed',String(p===match)));
+  // insight
+  const oq=openQuestions(plot),peak=oq.length?Math.max(...oq):0;
+  let msg;
+  if(!full) msg=`A simulated player has found ${plot.length} of 8 events. Among those, ${I} pair${I===1?' is':'s are'} out of story order, so the plot owes ${I} explanation${I===1?'':'s'} so far.`;
+  else if(I===0) msg=`No line crosses: I = 0 and S = 0.00. The player meets every cause before its effect, so the telling holds no open questions at any step.`;
+  else msg=`${I} crossing${I===1?'':'s'}, so I = ${I} and S = ${I}/${IMAX} = ${s2(S)}. At its worst point the player holds ${peak} open question${peak===1?'':'s'} at once. The story never changed; only the order did.`;
+  $('insight').textContent=msg;
+  renderTable();
+}
+function center(el,board,side){
+  const r=el.getBoundingClientRect(),b=board.getBoundingClientRect();
+  const x=r.left-b.left,y=r.top-b.top;
+  if(side==='bottom')return[x+r.width/2,y+r.height];
+  if(side==='top')return[x+r.width/2,y];
+  if(side==='right')return[x+r.width,y+r.height/2];
+  return[x,y+r.height/2];
+}
+function drawLinks(){
+  const board=$('board'),svg=$('links');
+  const vertical=matchMedia('(max-width:699px)').matches;
+  const segs=[];
+  plot.forEach((e,i)=>{
+    const a=center(plotCards[e],board,vertical?'right':'bottom'),b=center(storyCards[e],board,vertical?'left':'top');
+    segs.push({e,i,a,b});
+  });
+  let lines='',dots='';
+  const crossed=new Set();
+  for(let i=0;i<segs.length;i++)for(let j=i+1;j<segs.length;j++){
+    if(segs[i].e>segs[j].e){
+      crossed.add(i);crossed.add(j);
+      const p=intersect(segs[i].a,segs[i].b,segs[j].a,segs[j].b);
+      if(p)dots+=`<circle class="dot" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.6"/>`;
+    }
+  }
+  segs.forEach((s,k)=>{lines+=`<line class="ln${crossed.has(k)?' x':''}" x1="${s.a[0].toFixed(1)}" y1="${s.a[1].toFixed(1)}" x2="${s.b[0].toFixed(1)}" y2="${s.b[1].toFixed(1)}"/>`;});
+  svg.innerHTML=lines+dots;
+}
+function intersect(p1,p2,p3,p4){
+  const d=(p1[0]-p2[0])*(p3[1]-p4[1])-(p1[1]-p2[1])*(p3[0]-p4[0]);
+  if(Math.abs(d)<1e-9)return null;
+  const t=((p1[0]-p3[0])*(p3[1]-p4[1])-(p1[1]-p3[1])*(p3[0]-p4[0]))/d;
+  return[p1[0]+t*(p2[0]-p1[0]),p1[1]+t*(p2[1]-p1[1])];
+}
+function drawSBar(S){
+  const VW=vw('sBar'),L=14,R=VW-14,W=R-L,y=10,h=16;$('sBar').setAttribute('viewBox',`0 0 ${VW} 74`);
+  let s=`<rect class="track" x="${L}" y="${y}" width="${W}" height="${h}" rx="4"/>`;
+  s+=`<rect class="fillS" x="${L}" y="${y}" width="${(W*S).toFixed(1)}" height="${h}" rx="4"/>`;
+  PRESETS.forEach((p,k)=>{
+    const v=inversions(p.order)/IMAX,x=L+W*v,up=(k===0||k===3);
+    s+=`<line class="tick" x1="${x}" y1="${y+h}" x2="${x}" y2="${y+h+6}"/>`;
+    const anchor=v<0.05?'start':v>0.95?'end':'middle';
+    s+=`<text x="${x}" y="${y+h+(up?20:36)}" text-anchor="${anchor}">${p.name} ${s2(v)}</text>`;
+  });
+  const x=L+W*S;
+  s+=`<line class="mark" x1="${x}" y1="${y-6}" x2="${x}" y2="${y+h+4}"/>`;
+  $('sBar').innerHTML=s;
+  $('sBar').setAttribute('aria-label',`Scramble ${s2(S)} on a scale from 0 to 1`);
+}
+function drawOQ(){
+  const VW=vw('oqBars');$('oqBars').setAttribute('viewBox',`0 0 ${VW} 130`);const oq=openQuestions(plot),L=26,R=VW-8,top=8,bot=100,maxV=7,bw=(R-L)/N;
+  let s='';
+  for(let v=0;v<=maxV;v+=7){const y=bot-(bot-top)*v/maxV;s+=`<line class="axis" x1="${L}" y1="${y}" x2="${R}" y2="${y}"/><text x="${L-6}" y="${y+4}" text-anchor="end">${v}</text>`;}
+  for(let p=0;p<N;p++){
+    const x=L+p*bw+bw*0.18,w=bw*0.64;
+    if(p<oq.length){
+      const v=oq[p],h=(bot-top)*v/maxV;
+      s+=`<rect class="bar" x="${x.toFixed(1)}" y="${(bot-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2"/>`;
+      s+=`<text class="v" x="${(x+w/2).toFixed(1)}" y="${(bot-h-4).toFixed(1)}" text-anchor="middle">${v}</text>`;
+    }else{
+      s+=`<text x="${(x+w/2).toFixed(1)}" y="${bot-4}" text-anchor="middle">–</text>`;
+    }
+    s+=`<text x="${(x+w/2).toFixed(1)}" y="${bot+16}" text-anchor="middle">${p+1}</text>`;
+  }
+  s+=`<text x="${R}" y="${bot+30}" text-anchor="end">plot position</text>`;
+  $('oqBars').innerHTML=s;
+  $('oqText').textContent=oq.length?`Open questions by position: ${oq.join(', ')}${oq.length<N?' (rest not revealed)':''}.`:'No cards revealed yet.';
+  $('oqBars').setAttribute('aria-label',$('oqText').textContent);
+}
+function computeSample(seed){
+  const vals=[];for(let k=0;k<200;k++)vals.push(inversions(shuffle(seed*1000+k))/IMAX);
+  return{seed,vals,mean:vals.reduce((a,b)=>a+b,0)/vals.length};
+}
+function drawHist(S){
+  if(!sample){$('hist').innerHTML='';return;}
+  const bins=new Array(10).fill(0);sample.vals.forEach(v=>bins[Math.min(9,Math.floor(v*10))]++);
+  const VW=vw('hist');$('hist').setAttribute('viewBox',`0 0 ${VW} 130`);const L=30,R=VW-10,top=8,bot=100,maxV=Math.max(...bins),yMax=Math.ceil(maxV/10)*10||10,bw=(R-L)/10;
+  let s='';
+  [0,yMax/2,yMax].forEach(v=>{const y=bot-(bot-top)*v/yMax;s+=`<line class="axis" x1="${L}" y1="${y}" x2="${R}" y2="${y}"/><text x="${L-6}" y="${y+4}" text-anchor="end">${v}</text>`;});
+  bins.forEach((c,i)=>{const h=(bot-top)*c/yMax;s+=`<rect class="bar hist" x="${(L+i*bw+1).toFixed(1)}" y="${(bot-h).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${h.toFixed(1)}"/>`;});
+  [0,0.5,1].forEach(v=>{s+=`<text x="${L+(R-L)*v}" y="${bot+16}" text-anchor="${v===0?'start':v===1?'end':'middle'}">${v.toFixed(1)}</text>`;});
+  const xm=L+(R-L)*sample.mean;s+=`<line class="tick" stroke-dasharray="3 3" x1="${xm}" y1="${top}" x2="${xm}" y2="${bot}"/>`;
+  const x=L+(R-L)*S;s+=`<line class="mark" x1="${x}" y1="${top-4}" x2="${x}" y2="${bot+4}"/><text class="v" x="${Math.min(R,Math.max(L,x))}" y="${bot+30}" text-anchor="${S<0.15?'start':S>0.85?'end':'middle'}">this plot ${s2(S)}</text>`;
+  $('hist').innerHTML=s;
+  $('histMeta').textContent=`Seed ${sample.seed}: sample mean ${sample.mean.toFixed(2)}. Dashed line is the mean, solid line is your current plot.`;
+  $('hist').setAttribute('aria-label',`Histogram of 200 random scramble values, mean ${sample.mean.toFixed(2)}; bins of 0.1 hold ${bins.join(', ')}`);
+}
+function renderTable(){
+  const cur=plot.join();
+  const rows=PRESETS.map(p=>{const I=inversions(p.order);return`<tr class="${p.order.join()===cur?'here':''}"><td>${p.name}</td><td>${p.order.join(' ')}</td><td>${I}</td><td>${s2(I/IMAX)}</td></tr>`;});
+  if(plot.length===N&&!PRESETS.some(p=>p.order.join()===cur)){const I=inversions(plot);rows.push(`<tr class="here"><td>Your order</td><td>${plot.join(' ')}</td><td>${I}</td><td>${s2(I/IMAX)}</td></tr>`);}
+  $('tbody').innerHTML=rows.join('');
+}
+
+// ----- interaction
+function stopSim(){if(simTimer){clearTimeout(simTimer);simTimer=null;}}
+function announce(e){$('live').textContent=`${labels[e-1]} moved to position ${plot.indexOf(e)+1}. Inversions ${inversions(plot)}.`;}
+function move(e,to){
+  const from=plot.indexOf(e);if(from<0||to===from||to<0||to>=plot.length)return false;
+  plot.splice(from,1);plot.splice(to,0,e);render();return true;
+}
+function attachDrag(el){
+  let dragging=false,moved=false;
+  el.addEventListener('pointerdown',ev=>{
+    if(plot.length!==N)return;
+    dragging=true;moved=false;el.setPointerCapture(ev.pointerId);el.classList.add('dragging');ev.preventDefault();
+  });
+  el.addEventListener('pointermove',ev=>{
+    if(!dragging)return;
+    const vertical=matchMedia('(max-width:699px)').matches,e=+el.dataset.e;
+    let best=0,bd=Infinity;
+    plot.forEach((pe,i)=>{const r=plotCards[pe].getBoundingClientRect();const c=vertical?r.top+r.height/2:r.left+r.width/2;const d=Math.abs((vertical?ev.clientY:ev.clientX)-c);if(d<bd){bd=d;best=i;}});
+    if(move(e,best)){moved=true;}
+  });
+  const end=()=>{if(!dragging)return;dragging=false;el.classList.remove('dragging');if(moved)announce(+el.dataset.e);el.focus({preventScroll:true});};
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+  el.addEventListener('keydown',ev=>{
+    if(plot.length!==N)return;
+    const e=+el.dataset.e,i=plot.indexOf(e);let to=null;
+    if(ev.key==='ArrowLeft'||ev.key==='ArrowUp')to=i-1;
+    else if(ev.key==='ArrowRight'||ev.key==='ArrowDown')to=i+1;
+    else if(ev.key==='Home')to=0;else if(ev.key==='End')to=N-1;
+    if(to===null)return;
+    ev.preventDefault();
+    if(move(e,to)){announce(e);el.focus();}
+  });
+}
+PRESETS.forEach(p=>p.el.addEventListener('click',()=>{stopSim();plot=p.order.slice();render();$('live').textContent=`${p.name}: inversions ${inversions(plot)}, scramble ${s2(inversions(plot)/IMAX)}.`;}));
+$('simBtn').addEventListener('click',()=>{
+  stopSim();simSeed++;
+  const order=shuffle(simSeed);plot=[];
+  if(reduced.matches){plot=order;render();$('live').textContent=`Simulated player, seed ${simSeed}: order ${order.join(' ')}, inversions ${inversions(plot)}.`;return;}
+  render();
+  const step=()=>{plot.push(order[plot.length]);render();if(plot.length<N)simTimer=setTimeout(step,400);else{simTimer=null;$('live').textContent=`Simulated player, seed ${simSeed}: order ${order.join(' ')}, inversions ${inversions(plot)}.`;}};
+  simTimer=setTimeout(step,400);
+});
+$('manyBtn').addEventListener('click',()=>{manySeed++;sample=computeSample(manySeed);render();});
+// renames
+(function(){
+  const wrap=$('renames');
+  DEFAULT_LABELS.forEach((l,i)=>{
+    const lab=document.createElement('label');lab.innerHTML=`Event ${i+1}<input type="text" maxlength="24" value="${l}">`;
+    const inp=lab.querySelector('input');inp.addEventListener('input',()=>{labels[i]=inp.value.trim()||`Event ${i+1}`;setLabels();render();});
+    wrap.appendChild(lab);
+  });
+})();
+
+makeCards();setLabels();sample=computeSample(manySeed);render();
+window.addEventListener('resize',()=>{drawLinks();drawSBar(inversions(plot)/IMAX);drawOQ();drawHist(inversions(plot)/IMAX);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawLinks);
+if(window.ResizeObserver)new ResizeObserver(drawLinks).observe($('board'));
+})();
+</script>
+</body>
+</html>

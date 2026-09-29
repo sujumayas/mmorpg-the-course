@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Branch explosion calculator, GD202 Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 12px}
+.chip,.btn{font:600 .86rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:38px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.views{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;align-items:stretch}
+@media (max-width:699px){.views{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0;display:flex;flex-direction:column}
+.panel h2{font-family:var(--serif);font-size:1.15rem;font-weight:600;margin:0 0 2px}
+.panel .sub{font-size:.84rem;color:var(--ink-soft);margin:0 0 10px}
+.fig{background:var(--paper-2);border-radius:10px;padding:8px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.fig svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--ink-soft);font:12px var(--sans)}
+svg text.v{fill:var(--ink);font-weight:700}
+svg text.halo{paint-order:stroke;stroke:var(--paper-2);stroke-width:4px;stroke-linejoin:round}
+svg text.wl{fill:var(--ink);font-weight:700;font-size:12.5px}
+.edge{stroke:var(--ink-soft);stroke-width:1;fill:none;opacity:.55}
+.opt{fill:var(--paper);stroke:var(--steel);stroke-width:1.3}
+.start{fill:var(--ink)}
+.bneck{fill:var(--ochre);stroke:var(--ink);stroke-width:1.2}
+.end{fill:var(--paper);stroke:var(--blood);stroke-width:1.5}
+.flag{fill:var(--blood)}
+.flagpole{stroke:var(--blood);stroke-width:1.2}
+.wedge{fill:var(--steel);opacity:.22;stroke:var(--steel);stroke-width:1}
+.funnel{fill:var(--ochre);opacity:.18}
+.dimmable{transition:opacity .2s}
+.dim .dimmable{opacity:.22}
+.hl{stroke:var(--ochre);stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hlnode{fill:var(--ochre);stroke:var(--ink);stroke-width:1.2}
+.axis{stroke:var(--grid);stroke-width:1}
+.axis.major{stroke:var(--ink-soft);stroke-opacity:.35}
+.gap{fill:var(--blood);opacity:.12}
+.sPaths{stroke:var(--blood);stroke-width:2.6;fill:none}
+.sNodes{stroke:var(--steel);stroke-width:2.6;fill:none}
+.sTree{stroke:var(--ink-soft);stroke-width:2;fill:none;stroke-dasharray:6 4}
+.mPaths{fill:var(--blood)}
+.mNodes{fill:var(--steel)}
+.cursor{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:3 3;opacity:.7}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:8px 0 0}
+.legend svg{vertical-align:middle;margin-right:5px}
+.meta{font-size:.84rem;color:var(--ink-soft);margin:8px 0 0}
+.meta b{color:var(--ink)}
+.cursorbox{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:14px 0 0;background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:12px 14px}
+@media (max-width:980px){.strip{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:520px){.strip{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 22px;margin-top:14px;background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px}
+@media (max-width:900px){.controls{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.controls{grid-template-columns:1fr}}
+.controls label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+.controls output{font-variant-numeric:tabular-nums;font-weight:700}
+.ends{display:flex;justify-content:space-between;font-size:.76rem;color:var(--ink-soft);margin-top:-4px}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+input[type=number]{font:600 .95rem var(--sans);width:100%;padding:5px 8px;border:1.5px solid var(--ink-soft);border-radius:6px;background:var(--paper);color:var(--ink);margin-top:4px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:520px}
+.tcap{font-family:var(--serif);font-weight:600;font-size:1rem;margin:16px 0 0}
+.tcap+.table-wrap{margin-top:6px}
+th,td{padding:5px 12px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:20px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD202 Narrative and Quest Design · Week 3 · Worked example</p>
+  <h1>The branch explosion</h1>
+  <p class="lede">A pure tree with three options per choice, five choices deep, needs 364 scenes so that one player can read 6. Fold the branches back together and the player still has 243 different routes, while the writing drops from exponential to linear. Drag &ldquo;fold every k&rdquo; down and watch the two lines in the cost chart split apart.</p>
+</header>
+
+<div class="presets" role="group" aria-label="Presets">
+  <button class="chip" data-b="3" data-d="5" data-k="5" data-w="300" aria-pressed="true">Time cave (b=3, d=5, k=5)</button>
+  <button class="chip" data-b="3" data-d="5" data-k="1" data-w="300" aria-pressed="false">Branch and bottleneck (b=3, d=5, k=1)</button>
+  <button class="chip" data-b="2" data-d="1" data-k="1" data-w="20000" aria-pressed="false">Sorting hat (b=2, d=1, 20,000 words per node)</button>
+  <button class="chip" data-b="3" data-d="4" data-k="1" data-w="300" aria-pressed="false">Budget quest (b=3, d=4, k=1)</button>
+</div>
+
+<div class="views">
+  <section class="panel" aria-labelledby="hA">
+    <h2 id="hA">The structure</h2>
+    <p class="sub" id="structSub">Every node you would have to write, left to right from the first scene.</p>
+    <div class="fig"><svg id="tree" role="img" aria-label=""></svg></div>
+    <div class="legend" aria-hidden="true">
+      <span><svg width="12" height="12"><circle cx="6" cy="6" r="5" class="start"/></svg>start</span>
+      <span><svg width="12" height="12"><circle cx="6" cy="6" r="4.5" class="opt"/></svg>option scene</span>
+      <span><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" class="bneck"/></svg>bottleneck (branches rejoin)</span>
+      <span><svg width="16" height="14"><circle cx="5" cy="9" r="4" class="end"/><line class="flagpole" x1="9" y1="9" x2="9" y2="1"/><path class="flag" d="M9 1 L15 3 L9 5Z"/></svg>ending</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px">
+      <button class="btn" id="hlBtn">Highlight one playthrough</button>
+      <button class="chip" id="clearBtn" hidden>Clear</button>
+    </div>
+    <p class="meta" id="hlText" aria-live="polite"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="hB">
+    <h2 id="hB">Cost versus choice</h2>
+    <p class="sub">Log scale: each gridline is ten times the one below. Computed for the current b and k at every depth.</p>
+    <div class="fig"><svg id="chart" role="img" aria-label=""></svg></div>
+    <div class="legend" aria-hidden="true">
+      <span><svg width="26" height="10"><line x1="0" y1="5" x2="26" y2="5" class="sPaths"/><circle cx="13" cy="5" r="3.5" class="mPaths"/></svg>Paths a player can take</span>
+      <span><svg width="26" height="10"><line x1="0" y1="5" x2="26" y2="5" class="sNodes"/><rect x="10" y="2" width="6" height="6" class="mNodes"/></svg>Nodes to write</span>
+      <span><svg width="26" height="10"><line x1="0" y1="5" x2="26" y2="5" class="sTree"/></svg>Nodes to write (pure tree)</span>
+      <span><svg width="14" height="10"><rect width="14" height="10" class="gap"/></svg>choice without extra content</span>
+    </div>
+    <div class="cursorbox" id="cursorBox"></div>
+  </section>
+</div>
+
+<div class="strip" aria-live="polite">
+  <div class="stat" style="--c:var(--steel)"><b id="rNodes">0</b><span>nodes to write</span></div>
+  <div class="stat" style="--c:var(--blood)"><b id="rEnds">0</b><span>endings</span></div>
+  <div class="stat" style="--c:var(--blood)"><b id="rPaths">0</b><span>paths</span></div>
+  <div class="stat" style="--c:var(--ochre)"><b id="rSeen">0</b><span>nodes one player sees</span></div>
+  <div class="stat" style="--c:var(--ochre)"><b id="rShare">0</b><span>share seen</span></div>
+  <div class="stat" style="--c:var(--steel)"><b id="rWords">0</b><span>words to write</span></div>
+  <div class="stat" style="--c:var(--moss)"><b id="rRead">0</b><span>one player reads</span></div>
+</div>
+
+<div class="insight" id="insight"></div>
+
+<div class="controls">
+  <div><label for="b">Options per choice b <output id="ob"></output></label><input id="b" type="range" min="2" max="5" step="1" value="3"></div>
+  <div><label for="d">Depth d (choices per path) <output id="od"></output></label><input id="d" type="range" min="1" max="10" step="1" value="5"></div>
+  <div><label for="k">Fold every k choices <output id="ok"></output></label><input id="k" type="range" min="1" max="5" step="1" value="5"><div class="ends"><span>1: bottleneck every choice</span><span>no fold</span></div></div>
+  <div><label for="wpn">Words per node <output id="ow"></output></label><input id="wpn" type="range" min="50" max="2000" step="50" value="300">
+    <label for="wpnNum" class="sr">Words per node, exact</label><input id="wpnNum" type="number" min="50" max="50000" step="50" value="300"></div>
+</div>
+
+<h3 class="tcap" id="tCap">Same b and d, every fold interval</h3>
+<div class="table-wrap">
+  <table aria-labelledby="tCap">
+    <thead><tr><th>Fold every k</th><th>Nodes</th><th>Endings</th><th>Paths</th><th>Nodes seen</th><th>Share seen</th><th>Words to write</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<footer>Model and test values from the GD202 week 3 lecture. Nodes are abstract shapes. The Cave of Time (Packard, 1979) and other works are named in the lecture only; nothing from them is reproduced. When a structure has more than 400 nodes, deep levels are drawn as shaded wedges labelled with their node count so the page stays responsive; the numbers are always exact.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+let hlSeed=0, hlPath=null, noFold=true;
+
+function segments(d,k){const s=[];let left=d;while(left>0){s.push(Math.min(k,left));left-=s[s.length-1];}return s;}
+function structure(b,d,k){
+  const segs=segments(d,k);
+  const grow=s=>{let t=0,p=1;for(let i=1;i<=s;i++){p*=b;t+=p;}return t;};
+  const last=segs[segs.length-1];
+  let nodes=1,seen=1;
+  for(let i=0;i<segs.length-1;i++){nodes+=grow(segs[i])+1;seen+=segs[i]+1;}
+  nodes+=grow(last);seen+=last;
+  return {segs,nodes,endings:Math.pow(b,last),paths:Math.pow(b,d),seen,share:seen/nodes};
+}
+// Share: 2 decimals below 2% so small shares stay readable (1.65%, 0.01%); 1 decimal above.
+function shareFmt(x){const p=x*100;return (p<2?p.toFixed(2):p.toFixed(1))+'%';}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const P=()=>({b:+$('b').value,d:+$('d').value,k:+$('k').value,w:+$('wpnNum').value});
+function vw(svg){return Math.max(260,Math.round(svg.parentNode.clientWidth-16));}
+
+// ---------- View A: structure
+function drawTree(p){
+  const svg=$('tree'),W=vw(svg),narrow=W<460,H=narrow?300:360,padL=12,padR=18,T=26,B=H-26;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const st=structure(p.b,p.d,p.k),exact=st.nodes<=400,segs=st.segs;
+  const cols=1+p.d+(segs.length-1);
+  const cx=c=>cols>1?padL+(W-padL-padR)*c/(cols-1):W/2;
+  const midY=(T+B)/2;
+  const yOf=(i,count)=>T+(B-T)*(i+0.5)/count;
+  let edges='',nodes='',shapes='',wedges='',labels='';
+  const rFor=count=>Math.max(0.9,Math.min(6,(B-T)/count*0.36));
+  // start node
+  nodes+=`<circle class="start" cx="${cx(0)}" cy="${midY}" r="7"/>`;
+  let col=0,rootY=midY;
+  // highlight path setup
+  const hl=[];let hlPts=[[cx(0),midY]];
+  segs.forEach((s,si)=>{
+    const isLast=si===segs.length-1;
+    const drawn=exact?s:Math.min(s,2);
+    let prevCount=1;
+    // path index through this segment
+    let pIdx=0;
+    for(let j=1;j<=s;j++){
+      const count=Math.pow(p.b,j),c=col+j,x=cx(c),px=cx(c-1);
+      if(hlPath){pIdx=pIdx*p.b+hlPath[hl.length];hl.push(0);hlPts.push([x,yOf(pIdx,count)]);}
+      if(j<=drawn){
+        const r=rFor(count),leaf=isLast&&j===s;
+        for(let i=0;i<count;i++){
+          const y=yOf(i,count),py=j===1?rootY:yOf(Math.floor(i/p.b),prevCount);
+          edges+=`M${px.toFixed(1)} ${py.toFixed(1)}L${x.toFixed(1)} ${y.toFixed(1)}`;
+          if(leaf){
+            shapes+=`<circle class="end" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${Math.max(1.2,r).toFixed(1)}"/>`;
+            if((B-T)/count>=14)shapes+=`<line class="flagpole" x1="${(x+r).toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x+r).toFixed(1)}" y2="${(y-r-7).toFixed(1)}"/><path class="flag" d="M${(x+r).toFixed(1)} ${(y-r-7).toFixed(1)} l6 2 l-6 2Z"/>`;
+          }else shapes+=`<circle class="opt" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}"/>`;
+        }
+      }
+      prevCount=count;
+    }
+    if(!exact&&s>2){
+      // wedge from level-2 column to the segment's last column
+      const x2=cx(col+2),xe=cx(col+s),c2=Math.pow(p.b,2),y2a=yOf(0,c2),y2b=yOf(c2-1,c2);
+      let hidden=0;for(let j=3;j<=s;j++)hidden+=Math.pow(p.b,j);
+      wedges+=`<path class="wedge" d="M${x2.toFixed(1)} ${y2a.toFixed(1)}L${xe.toFixed(1)} ${T}L${xe.toFixed(1)} ${B}L${x2.toFixed(1)} ${y2b.toFixed(1)}Z"/>`;
+      const lx=Math.min(W-40,Math.max(40,(x2+xe)/2));
+      let ly=B-6;if(hlPath){const pys=hlPts.slice(-(s-2)).map(q=>q[1]),py=pys.reduce((u,v)=>u+v,0)/pys.length;ly=[T+16,midY+4,B-6].sort((u,v)=>Math.abs(v-py)-Math.abs(u-py))[0];}
+      labels+=`<text class="wl halo" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle">+ ${fmt(hidden)} nodes</text>`;
+      if(isLast)labels+=`<text class="halo" x="${lx.toFixed(1)}" y="${(T-4).toFixed(1)}" text-anchor="middle">${fmt(st.endings)} endings</text>`;
+    }
+    col+=s;
+    if(!isLast){
+      col+=1;const bx=cx(col),lastCount=Math.pow(p.b,s),lx=cx(col-1);
+      if(exact||s<=2){
+        for(let i=0;i<lastCount;i++)edges+=`M${lx.toFixed(1)} ${yOf(i,lastCount).toFixed(1)}L${bx.toFixed(1)} ${midY}`;
+      }else{
+        wedges+=`<path class="funnel" d="M${lx.toFixed(1)} ${T}L${bx.toFixed(1)} ${midY}L${lx.toFixed(1)} ${B}Z"/>`;
+      }
+      shapes+=`<rect class="bneck" x="${(bx-6).toFixed(1)}" y="${(midY-6).toFixed(1)}" width="12" height="12"/>`;
+      if(hlPath)hlPts.push([bx,midY]);
+      rootY=midY;
+    }
+  });
+  let hlSvg='';
+  if(hlPath){
+    hlSvg=`<path class="hl" d="M${hlPts.map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join('L')}"/>`;
+    hlPts.forEach((q,i)=>{const lastPt=i===hlPts.length-1;hlSvg+=lastPt?`<circle class="hlnode" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="6"/>`:`<circle class="hlnode" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="4.5"/>`;});
+  }
+  // depth labels along the bottom: choice numbers under option columns
+  let axis='';let c=0,choice=0;
+  segs.forEach((s,si)=>{for(let j=1;j<=s;j++){c++;choice++;const every=p.d>6&&narrow?2:1;if(choice%every===0||choice===1)axis+=`<text x="${cx(c).toFixed(1)}" y="${H-6}" text-anchor="middle">${choice}</text>`;}if(si<segs.length-1)c++;});
+  axis+=`<text x="${padL}" y="12">numbers below count choices</text>`;
+  svg.innerHTML=`<g class="${hlPath?'dim':''}"><g class="dimmable">${wedges}<path class="edge" d="${edges}"/>${shapes}${nodes}</g></g>${hlSvg}${labels}${axis}`;
+  svg.setAttribute('aria-label',`${fmt(st.nodes)} nodes, ${fmt(st.endings)} endings; one playthrough visits ${st.seen}.${exact?'':' Deep levels drawn as shaded wedges.'}`);
+  $('structSub').textContent=exact?`All ${fmt(st.nodes)} nodes drawn, left to right from the first scene.`:`${fmt(st.nodes)} nodes: too many to draw, so levels past the second in each segment are shaded wedges.`;
+}
+
+// ---------- View B: log chart
+function drawChart(p){
+  const svg=$('chart'),W=vw(svg),H=W<460?300:340,L=46,R=W-14,T=12,B=H-34;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const xs=[1,2,3,4,5,6,7,8,9,10];
+  const rows=xs.map(x=>({x,nodes:structure(p.b,x,Math.min(p.k,x)).nodes,tree:structure(p.b,x,x).nodes,paths:Math.pow(p.b,x)}));
+  const maxV=Math.max(...rows.map(r=>Math.max(r.tree,r.paths)));
+  const topExp=Math.max(6,Math.ceil(Math.log10(maxV)));
+  const X=x=>L+(R-L)*(x-1)/9,Y=v=>B-(B-T)*Math.log10(Math.max(1,v))/topExp;
+  let g='';
+  for(let e=0;e<=topExp;e++){const y=Y(Math.pow(10,e));g+=`<line class="axis major" x1="${L}" y1="${y.toFixed(1)}" x2="${R}" y2="${y.toFixed(1)}"/><text x="${L-6}" y="${(y+4).toFixed(1)}" text-anchor="end">${e<=3?fmt(Math.pow(10,e)):'10'+sup(e)}</text>`;}
+  xs.forEach(x=>{g+=`<text x="${X(x).toFixed(1)}" y="${B+16}" text-anchor="middle">${x}</text>`;});
+  g+=`<text x="${R}" y="${H-2}" text-anchor="end">depth d</text>`;
+  // gap shading between paths and nodes (where paths exceed nodes)
+  const top=rows.map(r=>[X(r.x),Y(Math.max(r.paths,r.nodes))]),bot=rows.map(r=>[X(r.x),Y(r.nodes)]);
+  g+=`<path class="gap" d="M${top.map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join('L')}L${bot.reverse().map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join('L')}Z"/>`;
+  const line=(key)=>'M'+rows.map(r=>X(r.x).toFixed(1)+' '+Y(r[key]).toFixed(1)).join('L');
+  g+=`<path class="sTree" d="${line('tree')}"/>`;
+  g+=`<path class="sPaths" d="${line('paths')}"/>`;
+  g+=`<path class="sNodes" d="${line('nodes')}"/>`;
+  rows.forEach(r=>{g+=`<circle class="mPaths" cx="${X(r.x).toFixed(1)}" cy="${Y(r.paths).toFixed(1)}" r="3.2"/><rect class="mNodes" x="${(X(r.x)-3).toFixed(1)}" y="${(Y(r.nodes)-3).toFixed(1)}" width="6" height="6"/>`;});
+  // cursor
+  const cx=X(p.d);g+=`<line class="cursor" x1="${cx.toFixed(1)}" y1="${T}" x2="${cx.toFixed(1)}" y2="${B}"/>`;
+  const cur=rows[p.d-1];
+  // end labels
+  const lastR=rows[9];
+  svg.innerHTML=g;
+  svg.setAttribute('aria-label',`Log chart of depth 1 to 10 for b = ${p.b}, fold every ${p.k}. At depth ${p.d}: paths ${fmt(cur.paths)}, nodes to write ${fmt(cur.nodes)}, pure tree ${fmt(cur.tree)}. At depth 10: paths ${fmt(lastR.paths)}, nodes ${fmt(lastR.nodes)}.`);
+  $('cursorBox').innerHTML=`<div class="stat" style="--c:var(--blood)"><b>${fmt(cur.paths)}</b><span>paths at d = ${p.d}</span></div><div class="stat" style="--c:var(--steel)"><b>${fmt(cur.nodes)}</b><span>nodes to write</span></div><div class="stat" style="--c:var(--ink-soft)"><b>${fmt(cur.tree)}</b><span>pure tree</span></div>`;
+}
+function sup(e){return String(e).split('').map(ch=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[+ch]).join('');}
+
+// ---------- readouts, table, insight
+function update(){
+  const dEl=$('d'),kEl=$('k'),d=+dEl.value;
+  kEl.max=d;kEl.value=noFold?d:Math.min(d,+kEl.value);noFold=+kEl.value===d;
+  const p=P(),st=structure(p.b,p.d,p.k);
+  $('ob').textContent=p.b;$('od').textContent=p.d;$('ok').textContent=p.k===p.d?`${p.k} (no fold)`:p.k;$('ow').textContent=fmt(p.w);
+  $('rNodes').textContent=fmt(st.nodes);$('rEnds').textContent=fmt(st.endings);$('rPaths').textContent=fmt(st.paths);
+  $('rSeen').textContent=st.seen;$('rShare').textContent=shareFmt(st.share);
+  $('rWords').textContent=fmt(st.nodes*p.w);$('rRead').textContent=fmt(st.seen*p.w);
+  drawTree(p);drawChart(p);
+  // table over k
+  let rows='';for(let k=p.d;k>=1;k--){const s=structure(p.b,p.d,k);rows+=`<tr class="${k===p.k?'here':''}"><td>${k}${k===p.d?' (pure tree)':k===1&&p.d>1?' (branch and bottleneck)':''}</td><td>${fmt(s.nodes)}</td><td>${fmt(s.endings)}</td><td>${fmt(s.paths)}</td><td>${s.seen}</td><td>${shareFmt(s.share)}</td><td>${fmt(s.nodes*p.w)}</td></tr>`;}
+  $('tbody').innerHTML=rows;$('tCap').textContent=`b = ${p.b}, d = ${p.d}, ${fmt(p.w)} words per node, every fold interval`;
+  // presets
+  document.querySelectorAll('.presets .chip').forEach(c=>c.setAttribute('aria-pressed',String(+c.dataset.b===p.b&&+c.dataset.d===p.d&&+c.dataset.k===p.k&&+c.dataset.w===p.w)));
+  const tree=structure(p.b,p.d,p.d);
+  let s;
+  if(p.k===p.d&&p.d>1)s=`Pure tree: ${fmt(st.nodes)} nodes (${fmt(st.nodes*p.w)} words) so that one player reads ${st.seen} of them, ${shareFmt(st.share)}. Every one of the ${fmt(st.paths)} paths has its own ending. Drag &ldquo;fold every k&rdquo; down: the paths stay at ${fmt(st.paths)} while the nodes fall.`;
+  else if(p.d===1)s=`One choice, ${p.b} endings. With ${fmt(p.w)} words per node, the writers produce ${fmt(st.nodes*p.w)} words and one player reads ${fmt(st.seen*p.w)}. A single early choice into large exclusive content is the most expensive acknowledgement there is.`;
+  else s=`Folding every ${p.k} choice${p.k===1?'':'s'} keeps all ${fmt(st.paths)} paths but cuts the nodes from ${fmt(tree.nodes)} to ${fmt(st.nodes)}, a ${(tree.nodes/st.nodes).toFixed(1)}-fold cut. One player now sees ${shareFmt(st.share)} of what was written, up from ${shareFmt(tree.share)}. The price: only ${fmt(st.endings)} ending${st.endings===1?'':'s'} instead of ${fmt(tree.endings)}.`;
+  $('insight').innerHTML=s;
+  if(hlPath&&hlPath.length!==p.d){hlPath=null;$('hlText').textContent='';$('clearBtn').hidden=true;drawTree(p);}
+}
+function highlight(){
+  const p=P();hlSeed++;const r=mulberry32(hlSeed*7919);hlPath=[];for(let i=0;i<p.d;i++)hlPath.push(Math.floor(r()*p.b));
+  const st=structure(p.b,p.d,p.k);
+  $('hlText').innerHTML=`Seed ${hlSeed}: options ${hlPath.map(x=>x+1).join(', ')}. This player visits <b>${st.seen}</b> of <b>${fmt(st.nodes)}</b> nodes (${shareFmt(st.share)}) and reads ${fmt(st.seen*p.w)} of ${fmt(st.nodes*p.w)} words.`;
+  $('clearBtn').hidden=false;drawTree(p);
+}
+function syncWords(fromRange){
+  if(fromRange)$('wpnNum').value=$('wpn').value;
+  else{let v=Math.max(50,Math.min(50000,+$('wpnNum').value||300));$('wpn').value=Math.min(2000,v);}
+}
+$('b').addEventListener('input',()=>{hlPath=null;$('hlText').textContent='';$('clearBtn').hidden=true;update();});
+$('d').addEventListener('input',update);
+$('k').addEventListener('input',()=>{noFold=+$('k').value===+$('d').value;update();});
+$('wpn').addEventListener('input',()=>{syncWords(true);update();});
+$('wpnNum').addEventListener('input',()=>{syncWords(false);update();});
+$('hlBtn').addEventListener('click',highlight);
+$('clearBtn').addEventListener('click',()=>{hlPath=null;$('hlText').textContent='';$('clearBtn').hidden=true;$('hlBtn').focus();update();});
+document.querySelectorAll('.presets .chip').forEach(c=>c.addEventListener('click',()=>{
+  $('b').value=c.dataset.b;$('d').value=c.dataset.d;const kEl=$('k');kEl.max=c.dataset.d;kEl.value=c.dataset.k;noFold=+c.dataset.k===+c.dataset.d;
+  $('wpnNum').value=c.dataset.w;syncWords(false);hlPath=null;$('hlText').textContent='';$('clearBtn').hidden=true;update();
+}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

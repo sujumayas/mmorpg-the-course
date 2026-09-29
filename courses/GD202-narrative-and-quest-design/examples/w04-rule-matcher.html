@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dialogue rule matcher, GD202 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+/* six categorical rule colours built from the shared palette plus two extras; R0 is neutral grey */
+--r0:#9aa3b2;--r1:var(--steel);--r2:var(--moss);--r3:var(--blood);--r4:var(--ochre);--r5:#7a4f9a;--r6:#2f8a8a;--silent:#ffffff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--r0:#6b7385;--r5:#b58ad6;--r6:#5cc2c2;--silent:#0f1522}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff;--r0:#6b7385;--r5:#b58ad6;--r6:#5cc2c2;--silent:#0f1522}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:16px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.06rem;margin:0}
+.views{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
+@media (min-width:900px){.views{grid-template-columns:1.1fr 1fr}}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px;min-width:0}
+.panel h2{font-family:var(--serif);font-size:1.15rem;font-weight:600;margin:0 0 2px}
+.panel .sub{font-size:.84rem;color:var(--ink-soft);margin:0 0 10px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* switches */
+.flags{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:10px}
+.sw{display:flex;align-items:center;gap:8px;font:600 .95rem var(--sans);cursor:pointer;min-height:36px}
+.sw input{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:999px;background:var(--paper-2);border:1.5px solid var(--ink-soft);position:relative;cursor:pointer;margin:0;flex:none}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:var(--ink-soft);transition:left .15s}
+.sw input:checked{background:var(--steel);border-color:var(--steel)}
+.sw input:checked::after{left:20px;background:var(--paper)}
+.sw code{font-size:.92rem}
+.statebox{font:600 .9rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--paper-2);border-radius:8px;padding:6px 10px;margin:0 0 12px;overflow-wrap:anywhere}
+.bubble{position:relative;background:var(--paper-2);border:1.5px solid var(--ink);border-radius:14px;padding:10px 14px;margin:0 0 16px;font-family:var(--serif);font-size:1.05rem;min-height:3.2em}
+.bubble::after{content:"";position:absolute;left:28px;bottom:-10px;width:16px;height:16px;background:var(--paper-2);border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:rotate(45deg)}
+.bubble .who{display:block;font:700 .78rem var(--sans);color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
+.bubble .grey{color:var(--ink-soft);font-size:.95rem;display:block}
+.bubble.silent{border-color:var(--blood);border-style:dashed}
+.rules-wrap{overflow-x:auto}
+table.rules{border-collapse:collapse;width:100%;font-size:.88rem;min-width:360px}
+.rules th,.rules td{padding:6px 6px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:middle}
+.rules th{font-size:.78rem;color:var(--ink-soft);font-weight:700}
+.rules td.num{text-align:center;font-variant-numeric:tabular-nums;font-weight:700}
+.rules input[type=checkbox]{width:18px;height:18px;accent-color:var(--steel)}
+.rid{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.sw-c{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--rc)}
+.chip{display:inline-block;font:600 .76rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid var(--ink-soft);border-radius:999px;padding:1px 7px;margin:1px 2px 1px 0;white-space:nowrap}
+.chip.none{border-style:dashed;color:var(--ink-soft)}
+.chip.ok{background:var(--paper-2)}
+.chip.no{text-decoration:line-through;opacity:.6}
+.status{font-size:.82rem}
+tr.win td{background:color-mix(in srgb,var(--rc) 26%,var(--paper));font-weight:600}
+tr.tie td{background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--rc) 30%,var(--paper)) 0 6px,var(--paper) 6px 12px)}
+tr.off td{opacity:.45}
+.tiebadge{font:700 .74rem var(--sans);background:var(--ink);color:var(--paper);border-radius:4px;padding:1px 6px;white-space:nowrap}
+.line{font-family:var(--serif);font-size:.84rem;color:var(--ink-soft)}
+/* grid */
+table.grid{border-collapse:separate;border-spacing:6px;width:100%;table-layout:fixed}
+.grid th{font:700 .74rem var(--sans);color:var(--ink-soft);text-align:center;padding:0}
+.grid th.rowh{text-align:right;width:3.2em}
+.grid td{padding:0}
+.cell{width:100%;min-height:74px;border-radius:10px;border:1.5px solid var(--ink-soft);background:var(--bg);color:var(--ink);cursor:pointer;padding:6px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:600 .8rem var(--sans)}
+.cell .st{font:700 .78rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.05em;background:var(--paper);border-radius:4px;padding:0 4px}
+.cell .w{background:var(--paper);border-radius:4px;padding:0 5px;font-weight:700;text-align:center;line-height:1.25}
+.mstatus{display:none;font-size:.8rem;margin-top:2px}
+@media (max-width:600px){.rules th.stcol,.rules td.status{display:none}.mstatus{display:block}table.rules{min-width:0}.cell{font-size:.74rem;padding:5px 2px}.cell .st{font-size:.72rem}table.grid{border-spacing:4px}}
+.cell.here{border:4px solid var(--ink);box-shadow:0 0 0 2px var(--paper)}
+.cell.silent{background:var(--silent);border:2.5px solid var(--blood)}
+.cell.silent .w{color:var(--blood)}
+.g4 .cell{min-height:62px}
+.counters{margin:10px 0 0;font-weight:600;font-size:.95rem;font-variant-numeric:tabular-nums}
+.counters span{white-space:nowrap}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+@media (max-width:560px){.tools{grid-template-columns:1fr}}
+.tools .box{background:var(--paper-2);border-radius:10px;padding:10px 12px}
+.tools label.t{display:block;font-weight:600;font-size:.9rem;margin-bottom:4px}
+select{font:600 .92rem var(--sans);padding:7px 8px;border-radius:8px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);width:100%}
+.btn{font:600 .9rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:38px}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.8rem;margin:8px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+footer{margin-top:20px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD202 Narrative and Quest Design · Week 4 · Worked example</p>
+  <h1>Six rules, every state</h1>
+  <p class="lede">A barkeep reads three flags and picks the most specific line that fits. Five rules and a fallback cover all eight states. The two hatched ties sit where several flags are true at once, the late-game states players care about most. Switch off R0 and a player walks in to silence.</p>
+</header>
+
+<div class="views">
+  <section class="panel" aria-labelledby="hA">
+    <h2 id="hA">Right now</h2>
+    <p class="sub">Toggle the flags. The winning rule is the matching rule with the most conditions.</p>
+    <div class="flags" id="flags"></div>
+    <p class="statebox" id="stateText"></p>
+    <div class="bubble" id="bubble"></div>
+    <div class="rules-wrap">
+      <table class="rules" aria-label="Rules for the barkeep">
+        <thead><tr><th>On</th><th>Rule</th><th>Conditions and line</th><th>Score</th><th class="stcol">Status</th></tr></thead>
+        <tbody id="rules"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="hB">
+    <h2 id="hB">Every state</h2>
+    <p class="sub">Each cell is one combination of flags and the rule that wins it. Click a cell to load that state on the left.</p>
+    <div id="gridWrap"></div>
+    <p class="counters" id="counters" aria-live="polite"></p>
+    <div class="legend" id="legend" aria-hidden="true"></div>
+  </section>
+</div>
+
+<div class="tools">
+  <div class="box">
+    <label class="t" for="tieMode">When rules tie</label>
+    <select id="tieMode">
+      <option value="show">Show ties</option>
+      <option value="random">Random (Valve style)</option>
+      <option value="priority">Priority: later rule wins</option>
+    </select>
+  </div>
+  <div class="box" style="display:flex;flex-direction:column;gap:8px">
+    <button class="btn" id="r6Btn" aria-pressed="false">Add R6 (met + thief)</button>
+    <label class="sw"><input type="checkbox" role="switch" id="fourth"> Add fourth flag: <code>paid_debt</code></label>
+  </div>
+</div>
+
+<div class="insight" id="insight"></div>
+<p class="sr" id="live" aria-live="polite"></p>
+
+<footer>Rules, lines and test values from the GD202 week 4 lecture (an invented barkeep). Scoring: a rule matches only if every condition holds; score = number of conditions. The random tie-break follows the approach Elan Ruskin described for Valve's dialogue system (GDC 2012) in outline only.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const BASE_FLAGS=['met','wolves_dead','thief'];
+const SHORT={met:'M',wolves_dead:'W',thief:'T',paid_debt:'P'};
+const NICE={met:'met',wolves_dead:'wolves',thief:'thief',paid_debt:'paid_debt'};
+const RULES=[
+  {id:'R0',conds:[],line:'Welcome, traveller. Sit anywhere.',on:true},
+  {id:'R1',conds:['met'],line:'Back again? Same table as before.',on:true},
+  {id:'R2',conds:['wolves_dead'],line:"You're the one who cleared the wolves!",on:true},
+  {id:'R3',conds:['thief'],line:'Keep your hands where I can see them.',on:true},
+  {id:'R4',conds:['met','wolves_dead'],line:"Back again, wolf-slayer. First drink's on me.",on:true},
+  {id:'R5',conds:['wolves_dead','thief'],line:"Hero or not, I'm watching my till.",on:true},
+];
+const R6={id:'R6',conds:['met','thief'],line:"You've got a nerve, coming back here.",on:true};
+let rules=RULES.slice(), fourth=false, mode='show', phase=0, timer=null;
+let state={met:true,wolves_dead:true,thief:false,paid_debt:false};
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+const flags=()=>fourth?BASE_FLAGS.concat('paid_debt'):BASE_FLAGS;
+const color=id=>`var(--r${id.slice(1)})`;
+
+function evaluate(st){
+  const active=rules.filter(r=>r.on);
+  const m=active.filter(r=>r.conds.every(c=>st[c]));
+  if(!m.length)return{matches:[],top:[],score:null};
+  const best=Math.max(...m.map(r=>r.conds.length));
+  let top=m.filter(r=>r.conds.length===best);
+  return{matches:m,top,score:best};
+}
+function resolved(ev){ // what the player hears under the current tie mode
+  if(!ev.top.length)return null;
+  if(ev.top.length===1)return ev.top[0];
+  if(mode==='priority')return ev.top[ev.top.length-1];
+  if(mode==='random')return ev.top[phase%ev.top.length];
+  return null;
+}
+function allStates(){
+  const f=flags(),out=[];
+  for(let i=0;i<(1<<f.length);i++){const st={paid_debt:false};f.forEach((k,j)=>st[k]=!!(i>>(f.length-1-j)&1));out.push(st);}
+  return out;
+}
+const tf=b=>b?'T':'F';
+const letters=st=>flags().map(k=>st[k]?SHORT[k]:'-').join(' ');
+const sameState=(a,b)=>flags().every(k=>!!a[k]===!!b[k]);
+
+function renderFlags(){
+  $('flags').innerHTML='';
+  flags().forEach(k=>{
+    const l=document.createElement('label');l.className='sw';
+    l.innerHTML=`<input type="checkbox" role="switch" ${state[k]?'checked':''}> <code>${k}</code>`;
+    const inp=l.querySelector('input');
+    inp.addEventListener('change',()=>{state[k]=inp.checked;render();announce();});
+    $('flags').appendChild(l);
+  });
+}
+function renderLeft(){
+  const ev=evaluate(state),win=resolved(ev);
+  $('stateText').textContent='state = ('+flags().map(k=>`${NICE[k]}: ${tf(state[k])}`).join(', ')+')';
+  const b=$('bubble');b.classList.toggle('silent',!ev.top.length);
+  if(!ev.top.length)b.innerHTML=`<span class="who">Barkeep</span>… (no rule matches: silent)`;
+  else if(ev.top.length>1&&mode==='show')b.innerHTML=`<span class="who">Tie between ${ev.top.map(r=>r.id).join(' and ')}</span>`+ev.top.map(r=>`<span class="grey">${r.id}: &ldquo;${r.line}&rdquo;</span>`).join('');
+  else{
+    const note=ev.top.length>1?(mode==='priority'?` (tie resolved by priority)`:` (random pick among ${ev.top.map(r=>r.id).join(', ')})`):'';
+    b.innerHTML=`<span class="who">Barkeep · ${win.id}${note}</span>&ldquo;${win.line}&rdquo;`;
+  }
+  const tb=$('rules');tb.innerHTML='';
+  rules.forEach(r=>{
+    const tr=document.createElement('tr');tr.style.setProperty('--rc',color(r.id));
+    const match=r.on&&r.conds.every(c=>state[c]);
+    const isTop=ev.top.includes(r);
+    const tie=ev.top.length>1&&mode==='show';
+    if(!r.on)tr.className='off';
+    else if(isTop&&tie)tr.className='tie';
+    else if(win===r)tr.className='win';
+    const chips=r.conds.length?r.conds.map(c=>`<span class="chip ${state[c]?'ok':'no'}">${c}</span>`).join(''):'<span class="chip none">none (fallback)</span>';
+    let status=!r.on?'disabled':match?'matches':'does not match';
+    if(isTop&&tie)status+=` <span class="tiebadge">TIE: ${ev.top.length} rules</span>`;
+    else if(win===r)status+=' · <b>wins</b>';
+    tr.innerHTML=`<td><input type="checkbox" ${r.on?'checked':''} aria-label="Enable ${r.id}"></td><td><span class="rid"><i class="sw-c" style="--rc:${color(r.id)}"></i>${r.id}</span></td><td>${chips}<div class="line">&ldquo;${r.line}&rdquo;</div><div class="mstatus">${status}</div></td><td class="num">${r.conds.length}</td><td class="status">${status}</td>`;
+    tr.querySelector('input').addEventListener('change',e=>{r.on=e.target.checked;render();announce();});
+    tb.appendChild(tr);
+  });
+}
+function renderGrid(){
+  const f=flags(),states=allStates();
+  const rowFlags=fourth?['met','paid_debt']:['met'],colFlags=['wolves_dead','thief'];
+  const combos=n=>{const o=[];for(let i=0;i<(1<<n);i++)o.push([...Array(n)].map((_,j)=>!!(i>>(n-1-j)&1)));return o;};
+  const rows=combos(rowFlags.length),cols=combos(2);
+  let h=`<table class="grid ${fourth?'g4':''}" aria-label="All ${states.length} states"><thead><tr><th></th>${cols.map(c=>`<th scope="col">${colFlags.map((k,j)=>`${SHORT[k]}:${tf(c[j])}`).join(' ')}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(rv=>{
+    h+=`<tr><th scope="row" class="rowh">${rowFlags.map((k,j)=>`${SHORT[k]}:${tf(rv[j])}`).join('<br>')}</th>`;
+    cols.forEach(cv=>{
+      const st={paid_debt:false};rowFlags.forEach((k,j)=>st[k]=rv[j]);colFlags.forEach((k,j)=>st[k]=cv[j]);
+      const ev=evaluate(st),win=resolved(ev),here=sameState(st,state);
+      const desc=flags().map(k=>`${NICE[k]} ${st[k]?'true':'false'}`).join(', ');
+      let bg,label,aria;
+      if(!ev.top.length){bg='';label='silent';aria=`${desc}: silent, no rule matches`;}
+      else if(ev.top.length>1&&(mode==='show'||(mode==='random'&&reduced.matches))){
+        const cs=ev.top.map(r=>`color-mix(in srgb,${color(r.id)} 55%,var(--paper))`);
+        const stops=cs.map((c,i)=>`${c} ${i*8}px ${(i+1)*8}px`).join(',');
+        bg=`repeating-linear-gradient(45deg,${stops})`;
+        label=`tie ${ev.top.map(r=>r.id).join(', ')}`;aria=`${desc}: tie between ${ev.top.map(r=>r.id).join(' and ')}`;
+      }else{
+        bg=`color-mix(in srgb,${color(win.id)} 55%,var(--paper))`;
+        const extra=ev.top.length>1?(mode==='priority'?' (priority)':' (random)'):'';
+        label=win.id+extra;aria=`${desc}: ${win.id}${ev.top.length>1?(mode==='priority'?', tie between '+ev.top.map(r=>r.id).join(' and ')+' resolved by priority':', random pick among '+ev.top.map(r=>r.id).join(' and ')):''}`;
+      }
+      const idx=states.findIndex(s=>sameState(s,st));
+      h+=`<td><button class="cell${!ev.top.length?' silent':''}${here?' here':''}" style="--bg:${bg||'var(--silent)'}" data-i="${idx}" aria-label="${aria}" aria-pressed="${here}"><span class="st">${letters(st)}</span><span class="w">${label}</span></button></td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  $('gridWrap').innerHTML=h;
+  $('gridWrap').querySelectorAll('.cell').forEach(c=>c.addEventListener('click',()=>{
+    const st=states[+c.dataset.i];flags().forEach(k=>state[k]=st[k]);renderFlags();render();announce();
+    const again=$('gridWrap').querySelector(`.cell[data-i="${c.dataset.i}"]`);if(again)again.focus();
+  }));
+  // counters, computed from the model
+  let covered=0,ties=0;const soleWins={},tieWins={};
+  states.forEach(st=>{
+    const ev=evaluate(st);if(!ev.top.length)return;covered++;
+    if(ev.top.length>1){ties++;if(mode==='priority'){const w=resolved(ev);soleWins[w.id]=1;}else ev.top.forEach(r=>tieWins[r.id]=1);}
+    else soleWins[ev.top[0].id]=1;
+  });
+  const dead=[];rules.filter(r=>r.on).forEach(r=>{if(!soleWins[r.id])dead.push(tieWins[r.id]?`${r.id} (only ties)`:r.id);});
+  const tieText=mode==='show'?`${ties}`:mode==='priority'?`0 (resolved by priority)`:`${ties} (resolved at random)`;
+  $('counters').innerHTML=`<span>States: ${states.length}</span> · <span>Covered: ${covered}</span> · <span>Ties: ${tieText}</span> · <span>Dead rules: ${dead.length?dead.join(', '):'none'}</span>`;
+  $('legend').innerHTML=rules.filter(r=>r.on).map(r=>`<span><i class="sw-c" style="--rc:${color(r.id)}"></i>${r.id}</span>`).join('')+`<span><i class="sw-c" style="--rc:var(--silent);border:2px solid var(--blood)"></i>silent</span><span><i class="sw-c" style="--rc:repeating-linear-gradient(45deg,var(--r4) 0 3px,var(--r5) 3px 6px)"></i>tie (hatched)</span>`;
+  return {states:states.length,covered,ties};
+}
+function render(){
+  renderLeft();const c=renderGrid();
+  const silent=c.states-c.covered;
+  let s;
+  if(silent>0)s=`${silent} state${silent===1?' is':'s are'} silent: nothing matches, so a player in ${silent===1?'that state':'those states'} hears nothing. The fallback R0 exists to prevent exactly this.`;
+  else if(mode==='priority')s=`Every tie resolves to the higher-numbered rule. That is a design decision hidden in rule order: check that the later rule really is the line you want.`;
+  else if(c.ties>0)s=`${c.covered} of ${c.states} states covered by ${rules.filter(r=>r.on).length} rules. The ${c.ties} tie${c.ties===1?'':'s'} sit in states where two or more flags are true, where many rules match at once.${fourth?' The fourth flag doubled the states but no rule reads it, so every winner and tie simply appears twice.':''}`;
+  else s=`${c.covered} of ${c.states} states covered with no ties.`;
+  $('insight').textContent=s;
+}
+function announce(){
+  const ev=evaluate(state),w=resolved(ev);
+  $('live').textContent=!ev.top.length?'Silent: no rule matches.':ev.top.length>1&&mode==='show'?`Tie between ${ev.top.map(r=>r.id).join(' and ')}.`:`${w.id} wins.`;
+}
+function setTimer(){
+  if(timer){clearInterval(timer);timer=null;}
+  if(mode==='random'&&!reduced.matches)timer=setInterval(()=>{phase++;render();},1000);
+}
+$('tieMode').addEventListener('change',e=>{mode=e.target.value;phase=Math.floor(Math.random()*6);setTimer();render();announce();});
+$('r6Btn').addEventListener('click',()=>{
+  const has=rules.includes(R6);
+  if(has)rules=rules.filter(r=>r!==R6);else{R6.on=true;rules=rules.concat(R6);}
+  $('r6Btn').setAttribute('aria-pressed',String(!has));$('r6Btn').textContent=has?'Add R6 (met + thief)':'Remove R6 (met + thief)';
+  render();announce();
+});
+$('fourth').addEventListener('change',e=>{fourth=e.target.checked;if(!fourth)state.paid_debt=false;renderFlags();render();});
+reduced.addEventListener('change',()=>{setTimer();render();});
+renderFlags();render();
+})();
+</script>
+</body>
+</html>

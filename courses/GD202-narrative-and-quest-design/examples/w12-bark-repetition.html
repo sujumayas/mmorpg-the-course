@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bark repetition — GD202 Week 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px;margin-bottom:16px}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.84rem}
+canvas{display:block;width:100%}
+#cLine{height:280px}
+.strip{display:grid;gap:10px;margin:14px 0 4px}
+.srow{display:grid;grid-template-columns:8.5rem repeat(3,1fr);gap:10px;align-items:start}
+@media (max-width:700px){.srow{grid-template-columns:1fr 1fr}.srow .who,.srow .stat:nth-child(2){grid-column:1/-1}}
+.who{font-weight:700;font-size:.95rem;padding-top:6px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:16px 22px;margin-top:16px;align-items:start}
+@media (max-width:860px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-weight:600;font-size:.92rem;padding:0;margin-bottom:4px}
+.radios{display:flex;flex-wrap:wrap;gap:6px}
+.radios label{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;font-weight:600;padding:5px 10px;border:1.5px solid var(--steel);border-radius:8px;cursor:pointer}
+.radios input{accent-color:var(--steel);margin:0}
+.radios label:has(input:checked){background:var(--steel);color:var(--paper)}
+.radios label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+label.sl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.seed{display:flex;align-items:center;gap:6px;font-weight:600;font-size:.92rem}
+.seed input{width:5.5rem;font:inherit;font-variant-numeric:tabular-nums;padding:5px 8px;border:1.5px solid var(--steel);border-radius:8px;background:var(--paper);color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.86rem;margin:8px 0 0}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td.here,th.here{font-weight:700;background:var(--paper-2)}
+tr.here td{font-weight:700;background:var(--paper-2)}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.controls.c2{grid-template-columns:1fr 1fr}
+@media (max-width:560px){.controls.c2{grid-template-columns:1fr}}
+.atk{font-variant-numeric:tabular-nums;font-weight:600;margin:6px 0 0;font-size:.95rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD202 Narrative and Quest Design · Week 12 · Worked example</p>
+  <h1>The rule picks the repeats, not the line count</h1>
+  <p class="lede">A guard has five idle barks and says one 40 times. Pick each bark by dice and the player hears the same line twice in a row about 8 times. Deal them from a shuffle bag and repeats can only happen at the seams between bags. To promise that the first five plays are all different nine times in ten, dice need 97 lines.</p>
+</header>
+
+<section class="panel" aria-labelledby="tlCap">
+  <figure>
+    <figcaption id="tlCap"><span id="tlTitle">Same five lines. Different rule.</span><small>What the player hears. One block per play, numbered by variant. A red ring and "!" mark a line played twice in a row. Faint dividers mark where a new bag starts.</small></figcaption>
+    <canvas id="cTl" role="img" aria-label="Timeline of plays"></canvas>
+  </figure>
+
+  <div class="strip" id="strip" aria-live="polite"></div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Rule <span style="font-weight:400;color:var(--ink-soft)">(bottom row when comparing)</span></legend>
+      <div class="radios" id="rules">
+        <label><input type="radio" name="rule" value="random">Random</label>
+        <label><input type="radio" name="rule" value="bag" checked>Shuffle bag</label>
+        <label><input type="radio" name="rule" value="norepeat">No-repeat bag</label>
+        <label><input type="radio" name="rule" value="cycle">Cycle</label>
+        <label><input type="radio" name="rule" value="stopping">Stopping</label>
+      </div>
+      <div class="btns">
+        <button class="chip" id="compare" aria-pressed="true">Compare with Random</button>
+        <button class="chip" id="play" aria-pressed="false">Play at 4 per second</button>
+        <button class="chip" id="reset">Reset</button>
+      </div>
+    </fieldset>
+    <div>
+      <label class="sl" for="n">Variants n <output id="oN">5</output></label>
+      <input id="n" type="range" min="2" max="20" step="1" value="5">
+      <label class="sl" for="K">Plays K <output id="oK">40</output></label>
+      <input id="K" type="range" min="10" max="200" step="1" value="40">
+    </div>
+    <div>
+      <div class="seed"><label for="seed">Seed</label><input id="seed" type="number" min="1" max="999999" step="1" value="1"><button class="chip" id="reroll">Reroll</button></div>
+      <p style="font-size:.86rem;color:var(--ink-soft);margin:8px 0 0">The same seed always gives the same timeline. Reroll moves to the next seed.</p>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Back-to-back repeats in <span id="tbK">40</span> plays with <span id="tbN">5</span> variants</caption>
+      <thead><tr><th>Rule</th><th>Expected</th><th>This seed</th><th>Formula</th></tr></thead>
+      <tbody id="b2b"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="lnCap">
+  <figure>
+    <figcaption id="lnCap">How soon the first repeat comes<small>Chance of hearing at least one line twice within the first k plays. The bag line past k = n comes from 20,000 seeded runs.</small></figcaption>
+    <canvas id="cLine" role="img" aria-label="Chance of at least one repeat versus plays"></canvas>
+    <p class="atk" id="atk"></p>
+    <div class="legend">
+      <span><i style="border-color:var(--blood)"></i>Random (dice)</span>
+      <span><i style="border-color:var(--steel);border-top-style:dashed"></i>Shuffle bag</span>
+    </div>
+  </figure>
+  <div class="controls c2">
+    <div>
+      <label class="sl" for="kT">Target first k plays <output id="okT">5</output></label>
+      <input id="kT" type="range" min="2" max="10" step="1" value="5">
+    </div>
+    <div>
+      <label class="sl" for="T">Target chance T of no repeat <output id="oT">90%</output></label>
+      <input id="T" type="range" min="0.5" max="0.99" step="0.01" value="0.9">
+    </div>
+  </div>
+  <div class="insight" id="need" aria-live="polite"></div>
+  <div class="table-wrap">
+    <table>
+      <caption>P(at least one repeat in the first k plays), n = <span id="tbN2">5</span></caption>
+      <thead id="pHead"></thead>
+      <tbody id="pBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from GD202 week 12, section 2. Rules match ink's shuffle sequence (a bag that reshuffles per loop) and dice from <code>RANDOM</code>; Yarn Spinner's default line-group strategy behaves like a bag for equal lines. Lines are shown as numbers only. No game text or art.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const NAMES={random:'Random',bag:'Shuffle bag',norepeat:'No-repeat bag',cycle:'Cycle',stopping:'Stopping'};
+const WORDS=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
+const DEF={rule:'bag',compare:true,n:5,K:40,kT:5,T:0.9,seed:1};
+let S=Object.assign({},DEF),shown=null,timer=null;
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffle(arr,r){for(let i=arr.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function sequence(rule,n,K,seed){
+  const r=mulberry32(seed),out=[];
+  if(rule==='random'){for(let i=0;i<K;i++)out.push(1+Math.floor(r()*n));}
+  else if(rule==='cycle'){for(let i=0;i<K;i++)out.push(1+i%n);}
+  else if(rule==='stopping'){for(let i=0;i<K;i++)out.push(Math.min(i+1,n));}
+  else{
+    while(out.length<K){
+      const b=shuffle(Array.from({length:n},(_,i)=>i+1),r);
+      if(rule==='norepeat'&&out.length&&b[0]===out[out.length-1]){
+        const j=1+Math.floor(r()*(n-1));[b[0],b[j]]=[b[j],b[0]];
+      }
+      out.push(...b);
+    }
+    out.length=K;
+  }
+  return out;
+}
+function stats(seq,n){
+  let R=0,first=null;const seen=new Set();
+  seq.forEach((v,i)=>{if(i&&v===seq[i-1])R++;if(first===null&&seen.has(v))first=i+1;seen.add(v);});
+  return {R,first,d:seen.size};
+}
+function expectedB2B(rule,n,K){
+  if(rule==='random')return (K-1)/n;
+  if(rule==='bag')return Math.floor((K-1)/n)/n;
+  if(rule==='stopping')return Math.max(0,K-n);
+  return 0;
+}
+const f1=x=>x.toFixed(1);
+const f3=x=>x.toFixed(3);
+function pNoRepeat(n,k){let p=1;for(let i=0;i<k;i++)p*=(n-i)/n;return p;}
+function linesNeeded(k,T){let n=k;while(pNoRepeat(n,k)<T-1e-12)n++;return n;}
+const bagCache={};
+function bagCurve(n){
+  if(bagCache[n])return bagCache[n];
+  const kMax=40,cnt=new Array(kMax+2).fill(0),r=mulberry32(12345+n),SIMS=20000;
+  for(let s=0;s<SIMS;s++){
+    const seen=new Set();let prev=[],i=0,first=kMax+1;
+    outer:while(i<kMax){
+      const b=shuffle(Array.from({length:n},(_,j)=>j+1),r);
+      for(const v of b){i++;if(seen.has(v)){first=i;break outer;}seen.add(v);if(i>=kMax)break;}
+    }
+    cnt[first]++;
+  }
+  const cum=[0];let acc=0;for(let k=1;k<=kMax;k++){acc+=cnt[k];cum[k]=acc/SIMS;}
+  return bagCache[n]=cum;
+}
+function bagP(n,k){return k<=n?0:bagCurve(n)[Math.min(k,40)];}
+
+function isDark(){return getComputedStyle(document.body).backgroundColor.match(/\d+/g).slice(0,3).reduce((a,b)=>a+ +b,0)<300;}
+function hueColor(v,n,dark){
+  const h=((v-1)*137.508+200)%360;
+  return dark?`hsl(${h} 38% 36%)`:`hsl(${h} 60% 80%)`;
+}
+function setup(c,h){
+  const dpr=window.devicePixelRatio||1,w=c.getBoundingClientRect().width;
+  if(h)c.style.height=h+'px';
+  const H=c.getBoundingClientRect().height;
+  c.width=Math.max(1,w*dpr);c.height=Math.max(1,H*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w,h:H};
+}
+function rrect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+
+function rows(){return S.compare?['random',S.rule]:[S.rule];}
+function seqs(){return rows().map(r=>({rule:r,seq:sequence(r,S.n,S.K,S.seed)}));}
+
+function drawTimeline(data){
+  const c=$('cTl'),W=c.getBoundingClientRect().width,K=S.K,n=S.n,upto=shown===null?K:shown;
+  const big=K<=60;
+  let per,pitch;
+  if(big){per=W/K>=22?K:Math.max(1,Math.floor(W/22));}
+  else{per=W/K>=5?K:Math.max(1,Math.floor(W/7));}
+  per=Math.ceil(K/Math.ceil(K/per));pitch=Math.min(40,W/per);
+  const bw=Math.max(2,pitch-(pitch>10?3:1.5)),bh=big?Math.min(30,Math.max(20,bw)):14,top=big?16:10,lineH=top+bh+8,labelH=24;
+  const lines=Math.ceil(K/per),rowH=labelH+lines*lineH+6;
+  const {g,w,h}=setup(c,data.length*rowH);
+  g.clearRect(0,0,w,h);
+  const dark=isDark(),ink=css('--ink'),soft=css('--ink-soft'),blood=css('--blood'),grid=css('--grid');
+  data.forEach((row,ri)=>{
+    const y0=ri*rowH,st=stats(row.seq.slice(0,upto),n);
+    g.fillStyle=ink;g.font='600 14px '+css('--sans');g.textAlign='left';g.textBaseline='top';
+    g.fillText(NAMES[row.rule],0,y0+4);
+    const lw=g.measureText(NAMES[row.rule]).width;
+    g.fillStyle=soft;g.font='13px '+css('--sans');g.fillText(`  ${st.R} back-to-back`,lw,y0+5);
+    const isBag=row.rule==='bag'||row.rule==='norepeat';
+    row.seq.forEach((v,i)=>{
+      const li=Math.floor(i/per),col=i%per,x=col*pitch,y=y0+labelH+li*lineH+top;
+      if(isBag&&i>0&&i%n===0){
+        g.strokeStyle=soft;g.globalAlpha=.5;g.lineWidth=1.5;g.setLineDash([3,3]);
+        const dx=col===0?0.75:x-(pitch-bw)/2;
+        g.beginPath();g.moveTo(dx,y-top+2);g.lineTo(dx,y+bh+4);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+      }
+      const X=col===0?Math.max(2,(pitch-bw)/2):x+(pitch-bw)/2;
+      if(i>=upto){g.strokeStyle=grid;g.lineWidth=1;rrect(g,X,y,bw,bh,Math.min(5,bw/3));g.stroke();return;}
+      g.fillStyle=hueColor(v,n,dark);rrect(g,X,y,bw,bh,Math.min(5,bw/3));g.fill();
+      const rep=i>0&&v===row.seq[i-1];
+      if(rep){
+        g.strokeStyle=blood;g.lineWidth=big?3:2;rrect(g,X-1,y-1,bw+2,bh+2,Math.min(6,bw/3));g.stroke();
+        if(pitch>=9){g.fillStyle=blood;g.font='800 '+(big?13:10)+'px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';g.fillText('!',X+bw/2,y-2);}
+      }
+      if(big){g.fillStyle=ink;g.font='700 '+(bw<24?11:13)+'px '+css('--sans');g.textAlign='center';g.textBaseline='middle';g.fillText(String(v),X+bw/2,y+bh/2+1);}
+    });
+  });
+  c.setAttribute('aria-label',data.map(r=>NAMES[r.rule]+': '+r.seq.slice(0,upto).join(' ')).join('. '));
+}
+
+function strip(data){
+  const upto=shown===null?S.K:shown;
+  $('strip').innerHTML=data.map(row=>{
+    const s=stats(row.seq.slice(0,upto),S.n),E=expectedB2B(row.rule,S.n,upto);
+    return `<div class="srow"><div class="who">${NAMES[row.rule]}</div>
+      <div class="stat" style="--c:var(--blood)"><b>${s.R} <span style="font-size:.9rem">measured</span>, ${f1(E)} <span style="font-size:.9rem">expected</span></b><span>back-to-back repeats</span></div>
+      <div class="stat" style="--c:var(--ochre)"><b>${s.first===null?'none in '+upto:'play '+s.first}</b><span>first repeat of any line</span></div>
+      <div class="stat" style="--c:var(--moss)"><b>${s.d} of ${S.n}</b><span>distinct lines heard</span></div></div>`;
+  }).join('');
+}
+
+function b2bTable(){
+  $('tbK').textContent=S.K;$('tbN').textContent=S.n;
+  const F={random:'(K − 1)/n',bag:'floor((K − 1)/n)/n',norepeat:'0',cycle:'0',stopping:'max(0, K − n)'};
+  $('b2b').innerHTML=Object.keys(NAMES).map(r=>{
+    const s=stats(sequence(r,S.n,S.K,S.seed),S.n),on=rows().includes(r);
+    return `<tr class="${on?'here':''}"><td>${NAMES[r]}</td><td>${f1(expectedB2B(r,S.n,S.K))}</td><td>${s.R}</td><td>${F[r]}</td></tr>`;
+  }).join('');
+}
+
+const pad={l:44,r:14,t:24,b:44};
+function drawLine(){
+  const n=S.n,k0=S.kT,xMax=Math.min(40,Math.max(2*n,k0)),{g,w,h}=setup($('cLine'));
+  const X=k=>pad.l+(w-pad.l-pad.r)*(k-1)/(xMax-1),Y=p=>pad.t+(h-pad.t-pad.b)*(1-p);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Y(i/4);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText((i/4).toFixed(2),pad.l-6,y);}
+  const step=Math.max(1,Math.ceil((xMax-1)/Math.max(4,Math.floor((w-pad.l)/42))));
+  g.textAlign='center';g.textBaseline='top';
+  for(let k=1;k<=xMax;k+=step)g.fillText(k,X(k),h-pad.b+6);
+  g.textAlign='right';g.fillText('plays k',w-pad.r,h-16);
+  // n marker
+  g.strokeStyle=css('--steel');g.globalAlpha=.35;g.beginPath();g.moveTo(X(n),pad.t);g.lineTo(X(n),h-pad.b);g.stroke();g.globalAlpha=1;
+  function line(f,color,dash){
+    g.strokeStyle=color;g.lineWidth=2.5;g.setLineDash(dash||[]);g.beginPath();
+    for(let k=1;k<=xMax;k++){const x=X(k),y=Y(f(k));k===1?g.moveTo(x,y):g.lineTo(x,y);}
+    g.stroke();g.setLineDash([]);
+    if(xMax<=24){g.fillStyle=color;for(let k=1;k<=xMax;k++){g.beginPath();g.arc(X(k),Y(f(k)),2.6,0,7);g.fill();}}
+  }
+  line(k=>bagP(n,k),css('--steel'),[7,5]);
+  line(k=>1-pNoRepeat(n,k),css('--blood'));
+  // target marker
+  const pr=1-pNoRepeat(n,k0),pb=bagP(n,k0),x=X(k0);
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  [[pr,css('--blood')],[pb,css('--steel')]].forEach(([p,c])=>{g.fillStyle=c;g.beginPath();g.arc(x,Y(p),6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();});
+  g.fillStyle=css('--ink');g.font='600 12px '+css('--sans');g.textAlign='center';g.textBaseline='top';g.fillText('k = '+k0,Math.min(Math.max(x,pad.l+20),w-pad.r-20),2);
+  $('atk').innerHTML=`At k = ${k0} (marker): random <span style="color:var(--blood)">${f3(pr)}</span>, shuffle bag <span style="color:var(--steel)">${f3(pb)}</span>`;
+  g.textBaseline='top';
+  g.textAlign='center';g.fillStyle=css('--steel');g.font='12px '+css('--sans');
+  g.textBaseline='top';if(Math.abs(X(n)-x)>40)g.fillText('k = n',X(n),3);
+}
+function needText(){
+  const N=linesNeeded(S.kT,S.T),pct=Math.round(S.T*100);
+  $('need').innerHTML=`Random needs <b>${N} lines</b> for a ${pct}% chance of no repeat in the first ${S.kT} plays; a bag needs <b>${S.kT}</b>. `+
+   `With the current n = ${S.n}, dice give that no-repeat chance as ${f3(pNoRepeat(S.n,S.kT))}`+(S.n>=S.kT?`, the bag gives 1.000.`:`, and even a bag can't cover ${S.kT} plays with only ${S.n} lines.`);
+}
+function pTable(){
+  $('tbN2').textContent=S.n;
+  const ks=[2,3,4,5,6,7,8,9,10];
+  $('pHead').innerHTML='<tr><th>Rule</th>'+ks.map(k=>`<th class="${k===S.kT?'here':''}">k = ${k}</th>`).join('')+'</tr>';
+  $('pBody').innerHTML=`<tr><td>Random</td>${ks.map(k=>`<td class="${k===S.kT?'here':''}">${f3(1-pNoRepeat(S.n,k))}</td>`).join('')}</tr>`+
+    `<tr><td>Shuffle bag</td>${ks.map(k=>`<td class="${k===S.kT?'here':''}">${f3(bagP(S.n,k))}</td>`).join('')}</tr>`;
+}
+function insight(data){
+  const r=stats(sequence('random',S.n,S.K,S.seed),S.n),b=stats(sequence('bag',S.n,S.K,S.seed),S.n);
+  $('insight').innerHTML=`Over ${S.K} plays of ${S.n} lines, dice average <b>${f1(expectedB2B('random',S.n,S.K))}</b> back-to-back repeats and the bag <b>${f1(expectedB2B('bag',S.n,S.K))}</b>. `+
+   `A bag repeat can only sit at a divider, where the new bag happens to open with the line the old one closed on (chance 1/${S.n}). `+
+   `The bag's longest possible wait between two hearings of the same line is 2n − 2 = <b>${2*S.n-2}</b> other lines. The no-repeat bag removes the seam repeats; a cycle never repeats back to back but plays in a fixed order.`;
+}
+function renderTop(){
+  const data=seqs();drawTimeline(data);strip(data);
+  const w=WORDS[S.n]||S.n;
+  $('tlTitle').textContent=S.compare?`Same ${w} lines. Different rule.`:`${NAMES[S.rule]}, ${w} lines, ${S.K} plays`;
+}
+function update(){
+  $('oN').textContent=S.n;$('oK').textContent=S.K;$('okT').textContent=S.kT;$('oT').textContent=Math.round(S.T*100)+'%';
+  renderTop();b2bTable();insight();drawLine();needText();pTable();
+}
+function syncInputs(){
+  $('n').value=S.n;$('K').value=S.K;$('kT').value=S.kT;$('T').value=S.T;$('seed').value=S.seed;
+  document.querySelectorAll('input[name=rule]').forEach(r=>r.checked=r.value===S.rule);
+  $('compare').setAttribute('aria-pressed',S.compare);
+}
+function stop(){if(timer){clearInterval(timer);timer=null;}shown=null;$('play').setAttribute('aria-pressed','false');$('play').textContent='Play at 4 per second';}
+
+document.querySelectorAll('input[name=rule]').forEach(r=>r.addEventListener('change',()=>{
+  S.rule=r.value;if(S.compare&&S.rule==='random'){S.compare=false;$('compare').setAttribute('aria-pressed','false');}
+  stop();update();
+}));
+$('compare').addEventListener('click',()=>{
+  S.compare=!S.compare;if(S.compare&&S.rule==='random')S.rule='bag';syncInputs();stop();update();
+});
+$('n').addEventListener('input',e=>{S.n=+e.target.value;stop();update();});
+$('K').addEventListener('input',e=>{S.K=+e.target.value;stop();update();});
+$('kT').addEventListener('input',e=>{S.kT=+e.target.value;update();});
+$('T').addEventListener('input',e=>{S.T=+e.target.value;update();});
+$('seed').addEventListener('change',e=>{S.seed=Math.max(1,Math.floor(+e.target.value)||1);e.target.value=S.seed;stop();update();});
+$('reroll').addEventListener('click',()=>{S.seed+=1;$('seed').value=S.seed;stop();update();});
+$('reset').addEventListener('click',()=>{S=Object.assign({},DEF);syncInputs();stop();update();});
+$('play').addEventListener('click',()=>{
+  if(timer){stop();renderTop();return;}
+  shown=0;$('play').setAttribute('aria-pressed','true');$('play').textContent='Stop';renderTop();
+  timer=setInterval(()=>{shown++;if(shown>=S.K){stop();}renderTop();},250);
+});
+function motion(){ $('play').hidden=reduce.matches; if(reduce.matches)stop(); }
+reduce.addEventListener('change',()=>{motion();renderTop();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{renderTop();drawLine();},60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{renderTop();drawLine();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{renderTop();drawLine();});
+motion();syncInputs();update();
+window.__bark={sequence,stats,expectedB2B,pNoRepeat,linesNeeded,bagP,S:()=>S};
+})();
+</script>
+</body>
+</html>

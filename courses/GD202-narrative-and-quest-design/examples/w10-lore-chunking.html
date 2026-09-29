@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lore chunking — GD202 Week 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.caption{font-family:var(--serif);font-size:1.25rem;font-weight:600;margin:0 0 12px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.charts{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.figstats{font-size:.9rem;margin:0 0 4px;font-variant-numeric:tabular-nums}
+.figstats b{font-size:1.05rem}
+canvas{display:block;width:100%;height:250px}
+.summary{font-size:.86rem;margin:6px 0 0;color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;margin:6px 0 0}
+.sw{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:6px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:middle;margin-right:6px}
+.readout{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:900px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft);display:block}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+label output,.lbl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-width:44px}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.chip:disabled{opacity:.4;cursor:default}
+.stepper{display:flex;align-items:center;gap:8px;margin:6px 0 12px}
+.stepper output{min-width:9ch;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.check{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;justify-content:flex-start}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.btn{font:700 .9rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.solid{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.helper{margin-top:16px;padding:12px 14px;border:1.5px dashed var(--ink-soft);border-radius:10px}
+.helper h2{font-size:1rem;margin:0 0 8px;font-family:var(--serif);font-weight:600}
+.helper .row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 16px}
+.helper label{flex-direction:column;gap:2px;font-size:.86rem}
+.helper input[type=number]{font:600 1rem var(--sans);width:7.5em;padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+.helper p{margin:0;font-variant-numeric:tabular-nums}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD202 Narrative and Quest Design · Week 10 · Worked example</p>
+  <h1>The wall and the pieces</h1>
+  <p class="lede">Each sentence is another chance for the player to stop reading. Doubling a wall of text barely moves how much gets read. Splitting the same lore into found pieces moves it a lot, as long as players find enough of the pieces.</p>
+</header>
+
+<section class="panel" aria-label="Lore delivery model">
+  <p class="caption" id="caption">Twenty sentences written. How many get read?</p>
+  <div class="charts">
+    <figure>
+      <figcaption>One wall<small>Bar k is the share of players who reach sentence k: s<sup>k</sup></small></figcaption>
+      <p class="figstats">Expected read: <b id="wallRead">—</b> · Finish rate: <b id="wallFinish">—</b></p>
+      <canvas id="cWall" role="img" aria-label="Bar chart of the share of players reaching each sentence"></canvas>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--ochre)"></span>need-to-know sentence</span>
+        <span><span class="sw" style="border-color:var(--ink-soft);border-top-style:dashed"></span>half your players</span>
+      </div>
+      <p class="summary" id="sumWall" aria-live="polite"></p>
+    </figure>
+    <figure>
+      <figcaption>Split into pieces<small>Expected sentences read, k × f × E(L / k), by number of pieces</small></figcaption>
+      <p class="figstats">Plan with <b id="kLabel">4</b> pieces: <b id="splitRead">—</b> sentences read</p>
+      <canvas id="cSplit" role="img" aria-label="Line chart of expected sentences read against number of pieces"></canvas>
+      <div class="legend">
+        <span><span class="sw" style="border-color:var(--ink-soft);border-top-style:dashed"></span>the wall, E(L) = <b id="lgWall">3.95</b></span>
+        <span><span class="sw" style="border-color:var(--ochre);border-top-style:dotted"></span>limit f × s × L = <b id="lgLim">9.60</b></span>
+        <span><span class="dot" style="background:var(--moss)"></span>beats the wall</span>
+        <span><span class="dot" style="background:var(--blood);box-shadow:0 0 0 2px var(--paper-2),0 0 0 3.5px var(--blood)"></span>loses to it</span>
+        <span id="lgMixed" hidden><span class="dot" style="background:var(--steel);border-radius:2px"></span>mixed plan</span>
+      </div>
+      <p class="summary" id="sumSplit" aria-live="polite"></p>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rWall">—</b><span>Wall: E(L)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rPlan">—</b><span id="rPlanLbl">Your plan</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rGain">—</b><span>Gain over the wall</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rFstar">—</b><span id="rFstarLbl">Break-even f*</span></div>
+    <div class="stat" style="--c:var(--ochre)" id="mixedStat" hidden><b id="rMixed">—</b><span id="rMixedLbl">Mixed plan</span></div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <div class="controls">
+    <div>
+      <label for="sS"><span>Keep-reading chance s</span> <output id="oS">0.80</output></label>
+      <input id="sS" type="range" min="0.5" max="0.95" step="0.01" value="0.8">
+      <label for="sF"><span>Find chance f</span> <output id="oF">0.60</output></label>
+      <input id="sF" type="range" min="0.1" max="1" step="0.05" value="0.6">
+      <label for="sNeed"><span>Need-to-know sentence position</span> <output id="oNeed">5</output></label>
+      <input id="sNeed" type="range" min="1" max="20" step="1" value="5">
+    </div>
+    <div>
+      <span class="lbl" id="lblL">Total sentences L</span>
+      <div class="seg" role="group" aria-labelledby="lblL">
+        <button class="chip" data-l="6" aria-pressed="false">6</button>
+        <button class="chip" data-l="12" aria-pressed="false">12</button>
+        <button class="chip" data-l="20" aria-pressed="true">20</button>
+        <button class="chip" data-l="30" aria-pressed="false">30</button>
+      </div>
+      <span class="lbl" id="lblK">Pieces k (divisors of L)</span>
+      <div class="stepper" role="group" aria-labelledby="lblK">
+        <button class="chip" id="kDown" aria-label="Fewer pieces">−</button>
+        <output id="oK" aria-live="polite">4 pieces</output>
+        <button class="chip" id="kUp" aria-label="More pieces">+</button>
+      </div>
+      <label class="check" for="mixOn"><input type="checkbox" id="mixOn"> Mixed tiers: forced summary plus one-liners</label>
+      <div class="stepper" id="mWrap" role="group" aria-labelledby="lblM" hidden>
+        <span class="lbl" id="lblM" style="margin-right:4px">Summary m</span>
+        <button class="chip" id="mDown" aria-label="Shorter summary">−</button>
+        <output id="oM">2 sentences</output>
+        <button class="chip" id="mUp" aria-label="Longer summary">+</button>
+      </div>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="helper">
+    <h2>Estimate s from a playtest</h2>
+    <div class="row">
+      <label for="inC">Finish rate c<input id="inC" type="number" min="0.01" max="0.99" step="0.01" value="0.30"></label>
+      <label for="inN">Text length N<input id="inN" type="number" min="1" max="30" step="1" value="6"></label>
+      <p>s = c<sup>1/N</sup> = <b id="estS">0.818</b></p>
+      <button class="btn solid" id="useS">Use this s</button>
+    </div>
+  </div>
+</section>
+
+<footer>Model from GD202 week 10: E(n) = s(1 − s<sup>n</sup>)/(1 − s). With k = 1 the plan is the wall itself, forced on every player (f = 1), as in the lecture's first table row. All values of s and f are teaching assumptions, not measurements from any game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f2=x=>x.toFixed(2);
+const pct0=x=>Math.round(x*100)+'%';
+const pct1=x=>(x*100).toFixed(1)+'%';
+const words={6:'Six',12:'Twelve',20:'Twenty',30:'Thirty'};
+const D={s:0.8,L:20,f:0.6,k:4,need:5,mix:false,m:2};
+let st=Object.assign({},D);
+
+const E=n=>{const s=st.s;return s*(1-Math.pow(s,n))/(1-s);};
+const divisors=L=>{const d=[];for(let i=1;i<=L;i++)if(L%i===0)d.push(i);return d;};
+// k = 1 is the wall itself, forced on every player
+const V=k=>k===1?E(st.L):k*st.f*E(st.L/k);
+const fStar=k=>E(st.L)/(k*E(st.L/k));
+const mixed=()=>E(st.m)+(st.L-st.m)*st.f*st.s;
+
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};
+}
+const pad={l:44,r:14,t:14,b:34};
+
+function drawWall(){
+  const {g,w,h}=setupCanvas($('cWall'));g.clearRect(0,0,w,h);
+  const N=st.L,pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,Y=v=>pad.t+ph*(1-v);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Y(i/4);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(i*25+'%',pad.l-6,y);}
+  const bw=pw/N,gap=Math.min(4,bw*.25);
+  const tickEvery=N<=12?1:5;
+  for(let k=1;k<=N;k++){
+    const v=Math.pow(st.s,k),x=pad.l+(k-1)*bw+gap/2,bwid=bw-gap,need=k===st.need;
+    if(need){g.fillStyle=css('--ochre');g.fillRect(x,Y(v),bwid,Y(0)-Y(v));g.strokeStyle=css('--ink');g.lineWidth=1.5;g.strokeRect(x+.75,Y(v)+.75,bwid-1.5,Y(0)-Y(v)-1.5);}
+    else{g.fillStyle=css('--ink-soft');g.globalAlpha=.45;g.fillRect(x,Y(v),bwid,Y(0)-Y(v));g.globalAlpha=1;}
+    if(k===1||k%tickEvery===0||need){g.fillStyle=need?css('--ink'):css('--ink-soft');g.font=(need?'700 ':'')+'12px '+css('--sans');g.textAlign='center';g.textBaseline='top';g.fillText(k,x+bwid/2,h-pad.b+6);}
+    if(need){const lbl=pct0(v);g.font='700 12px '+css('--sans');g.fillStyle=css('--ink');g.textAlign='center';g.textBaseline='bottom';
+      let lx=Math.min(Math.max(x+bwid/2,pad.l+14),w-pad.r-14);g.fillText(lbl,lx,Y(v)-4);}
+  }
+  g.strokeStyle=css('--ink-soft');g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,Y(.5));g.lineTo(w-pad.r,Y(.5));g.stroke();g.setLineDash([]);
+  g.fillStyle=css('--ink-soft');g.font='600 12px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';g.fillText('half your players',w-pad.r,Y(.5)-3);
+  g.font='12px '+css('--sans');g.textAlign='right';g.textBaseline='top';g.fillText('sentence',w-pad.r,h-14);
+}
+
+function drawSplit(){
+  const {g,w,h}=setupCanvas($('cSplit'));g.clearRect(0,0,w,h);
+  const L=st.L,ds=divisors(L),pw=w-pad.l-pad.r-8,ph=h-pad.t-pad.b;
+  const X=k=>pad.l+8+pw*Math.log(k)/Math.log(L),Y=v=>pad.t+ph*(1-v/L);
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=L*i/4,y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(+v.toFixed(1),pad.l-6,y);}
+  ds.forEach(k=>{g.fillStyle=k===st.k?css('--ink'):css('--ink-soft');g.font=(k===st.k?'700 ':'')+'12px '+css('--sans');g.textAlign='center';g.textBaseline='top';g.fillText(k,X(k),h-pad.b+6);});
+  g.font='12px '+css('--sans');g.fillStyle=css('--ink-soft');g.textAlign='right';g.fillText('pieces k (log scale)',w-pad.r,h-14);
+  const wall=E(L),lim=st.f*st.s*L;
+  g.lineWidth=1.5;g.strokeStyle=css('--ink-soft');g.setLineDash([6,4]);g.beginPath();g.moveTo(pad.l,Y(wall));g.lineTo(w-pad.r,Y(wall));g.stroke();
+  g.strokeStyle=css('--ochre');g.lineWidth=2;g.setLineDash([2,4]);g.beginPath();g.moveTo(pad.l,Y(lim));g.lineTo(w-pad.r,Y(lim));g.stroke();g.setLineDash([]);
+  // solid line
+  g.strokeStyle=css('--steel');g.lineWidth=2.5;g.beginPath();ds.forEach((k,i)=>{const x=X(k),y=Y(V(k));i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+  ds.forEach(k=>{
+    const v=V(k),x=X(k),y=Y(v),sel=k===st.k,above=v>wall+1e-9,below=v<wall-1e-9;
+    const r=sel?7:5;
+    if(sel){g.fillStyle=css('--paper');g.beginPath();g.arc(x,y,r+4,0,7);g.fill();g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.arc(x,y,r+4,0,7);g.stroke();}
+    g.fillStyle=above?css('--moss'):below?css('--blood'):css('--ink-soft');g.beginPath();g.arc(x,y,r,0,7);g.fill();
+    if(below&&!sel){g.strokeStyle=css('--blood');g.lineWidth=1.5;g.beginPath();g.arc(x,y,r+3.5,0,7);g.stroke();}
+  });
+  // selected value label
+  const v=V(st.k),x=X(st.k),y=Y(v),lbl=f2(v);g.font='700 13px '+css('--sans');const tw=g.measureText(lbl).width;
+  let lx=x-12-tw,ly2=y-16;if(lx<pad.l+2)lx=x+14;if(ly2<pad.t+8)ly2=y+20;
+  g.fillStyle=css('--paper-2');g.fillRect(lx-3,ly2-9,tw+6,18);g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='middle';g.fillText(lbl,lx,ly2);
+  if(st.mix){
+    const km=L-st.m,mv=mixed(),mx=X(km),my=Y(mv);
+    g.fillStyle=css('--steel');g.fillRect(mx-6,my-6,12,12);g.strokeStyle=css('--paper');g.lineWidth=1.5;g.strokeRect(mx-6,my-6,12,12);
+    g.font='700 12px '+css('--sans');const t='mixed '+f2(mv),tw2=g.measureText(t).width;let tx=mx-10-tw2;
+    g.fillStyle=css('--paper-2');g.fillRect(tx-3,my-20,tw2+6,16);g.fillStyle=css('--steel');g.textAlign='left';g.textBaseline='middle';g.fillText(t,tx,my-12);
+  }
+}
+
+function update(){
+  const L=st.L,wall=E(L),plan=V(st.k),fs=fStar(st.k),need=Math.pow(st.s,st.need);
+  $('oS').textContent=(Math.round(st.s*100)===st.s*100)?f2(st.s):st.s.toFixed(3);
+  $('oF').textContent=f2(st.f);$('oNeed').textContent=st.need;
+  $('oK').textContent=st.k+(st.k===1?' piece (the wall)':' pieces');$('kLabel').textContent=st.k;
+  $('oM').textContent=st.m+' sentence'+(st.m>1?'s':'');
+  $('caption').textContent=words[L]+' sentences written. How many get read?';
+  $('wallRead').textContent=f2(wall)+' of '+L+' sentences ('+pct0(wall/L)+')';
+  $('wallFinish').textContent=pct1(Math.pow(st.s,L));
+  $('splitRead').textContent=f2(plan);
+  $('rWall').textContent=f2(wall);$('lgWall').textContent=f2(wall);$('lgLim').textContent=f2(st.f*st.s*L);
+  $('rPlan').textContent=f2(plan);
+  $('rPlanLbl').textContent=st.k===1?'Your plan: the wall, forced':`Your plan: ${st.k} × ${f2(st.f)} × E(${L/st.k})`;
+  $('rGain').textContent='×'+f2(plan/wall);
+  $('rFstar').textContent=fs>1+1e-9?'never':f2(fs);
+  $('rFstarLbl').textContent='Break-even f* for k = '+st.k;
+  $('mixedStat').hidden=!st.mix;$('lgMixed').hidden=!st.mix;$('mWrap').hidden=!st.mix;
+  if(st.mix){$('rMixed').textContent=f2(mixed());$('rMixedLbl').textContent=`Mixed: E(${st.m}) + ${L-st.m} × ${f2(st.f)} × ${f2(st.s)}`;}
+  $('sumWall').textContent=`Sentence 1 reaches ${pct0(st.s)} of players and sentence ${L} reaches ${pct1(Math.pow(st.s,L))}. The need-to-know sentence ${st.need} reaches ${pct0(need)} of players. No wall at this s gets more than ${f2(st.s/(1-st.s))} sentences read.`;
+  const ds=divisors(L),winners=ds.filter(k=>V(k)>wall+1e-9);
+  $('sumSplit').textContent=`Values by pieces: `+ds.map(k=>`${k}: ${f2(V(k))}`).join(', ')+`. ${winners.length} of ${ds.length-1} split plans beat the wall of ${f2(wall)}.`;
+  const E2=E(2*L>60?60:2*L);
+  let s=`Doubling the wall from ${L} to ${Math.min(2*L,60)} sentences adds only ${f2(E2-wall)} sentences read. `;
+  if(st.k===1) s+=`Step up the pieces to see what splitting does.`;
+  else if(plan>wall+1e-9) s+=`Splitting into ${st.k} pieces reads <b>${f2(plan)}</b>, ${f2(plan/wall)} times the wall, and it keeps winning until the find chance drops below <b>${f2(fs)}</b>.`;
+  else s+=`At f = ${f2(st.f)} the ${st.k} pieces read only <b>${f2(plan)}</b>, below the wall's ${f2(wall)}. This plan needs f of at least <b>${fs>1?'more than 1, so never':f2(fs)}</b>. Hidden pieces lose to one forced text.`;
+  if(st.mix) s+=` The mixed plan reads <b>${f2(mixed())}</b> and puts the need-to-know tier where most players see it.`;
+  $('insight').innerHTML=s;
+  $('kDown').disabled=ds.indexOf(st.k)===0;$('kUp').disabled=ds.indexOf(st.k)===ds.length-1;
+  $('mDown').disabled=st.m<=1;$('mUp').disabled=st.m>=3;
+  document.querySelectorAll('.seg .chip').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.l===L)));
+  drawWall();drawSplit();
+}
+
+$('sS').addEventListener('input',e=>{st.s=+e.target.value;update();});
+$('sF').addEventListener('input',e=>{st.f=+e.target.value;update();});
+$('sNeed').addEventListener('input',e=>{st.need=+e.target.value;update();});
+document.querySelectorAll('.seg .chip').forEach(b=>b.addEventListener('click',()=>{
+  st.L=+b.dataset.l;const ds=divisors(st.L);
+  st.k=ds.reduce((a,c)=>Math.abs(c-st.k)<Math.abs(a-st.k)?c:a,ds[0]);
+  st.need=Math.min(st.need,st.L);const sn=$('sNeed');sn.max=st.L;sn.value=st.need;update();
+}));
+function stepK(d){const ds=divisors(st.L),i=ds.indexOf(st.k)+d;if(i>=0&&i<ds.length){st.k=ds[i];update();}}
+$('kDown').addEventListener('click',()=>stepK(-1));$('kUp').addEventListener('click',()=>stepK(1));
+$('mixOn').addEventListener('change',e=>{st.mix=e.target.checked;update();});
+$('mDown').addEventListener('click',()=>{st.m=Math.max(1,st.m-1);update();});
+$('mUp').addEventListener('click',()=>{st.m=Math.min(3,st.m+1);update();});
+function syncInputs(){$('sS').value=st.s;$('sF').value=st.f;const sn=$('sNeed');sn.max=st.L;sn.value=st.need;$('mixOn').checked=st.mix;}
+$('reset').addEventListener('click',()=>{st=Object.assign({},D);syncInputs();update();});
+function est(){let c=+$('inC').value,n=Math.round(+$('inN').value);const ok=c>0&&c<1&&n>=1&&n<=30;
+  $('estS').textContent=ok?Math.pow(c,1/n).toFixed(3):'enter c in 0.01–0.99, N in 1–30';$('useS').disabled=!ok;return ok?Math.pow(c,1/n):null;}
+$('inC').addEventListener('input',est);$('inN').addEventListener('input',est);
+$('useS').addEventListener('click',()=>{const v=est();if(v===null)return;st.s=Math.min(.95,Math.max(.5,+v.toFixed(3)));$('sS').value=st.s;update();});
+
+window.addEventListener('resize',()=>{drawWall();drawSplit();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawWall();drawSplit();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{drawWall();drawSplit();});
+est();update();
+})();
+</script>
+</body>
+</html>

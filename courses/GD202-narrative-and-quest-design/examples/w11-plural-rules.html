@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The plural trap — GD202 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+:root{
+  --c-zero:color-mix(in srgb,var(--ink-soft) 38%,var(--paper));
+  --c-one:color-mix(in srgb,var(--steel) 40%,var(--paper));
+  --c-two:color-mix(in srgb,var(--focus) 34%,var(--paper));
+  --c-few:color-mix(in srgb,var(--ochre) 42%,var(--paper));
+  --c-many:color-mix(in srgb,var(--moss) 34%,var(--paper));
+  --c-other:var(--paper);
+  --hatch:color-mix(in srgb,var(--ink) 16%,transparent);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.caption{font-family:var(--serif);font-size:1.2rem;font-weight:600;margin:0 0 12px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:800px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 10px 10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 4px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+.figstats{font-size:.92rem;margin:2px 0 8px;font-variant-numeric:tabular-nums;min-height:1.4em}
+.figstats b{font-size:1.05rem}
+.figstats .bad{color:var(--blood)}
+table.pg{border-collapse:separate;border-spacing:2px;width:100%;table-layout:fixed;font-variant-numeric:tabular-nums}
+table.pg th{font-size:.7rem;font-weight:600;color:var(--ink-soft);padding:0}
+table.pg thead th{height:16px}
+table.pg th[scope=row]{width:26px;text-align:right;padding-right:3px}
+table.pg td{position:relative;height:40px;padding:1px 0 0;text-align:center;vertical-align:middle;border-radius:4px;border:1px solid var(--grid);line-height:1.05;cursor:pointer}
+table.pg td .n{display:block;font-size:.8rem;font-weight:700}
+table.pg td .c{display:block;font-size:.62rem;color:var(--ink)}
+@media (max-width:420px){td.wrong .pf,.pf-note{display:none}td .tp{width:5px;height:5px;top:1px;right:1px}td.wrong .c{font-size:.75rem!important}table.pg td{height:36px}table.pg td .n{font-size:.72rem}table.pg td .c{font-size:.55rem;letter-spacing:-.02em}}
+.cat-zero{background:var(--c-zero)}
+.cat-one{background:var(--c-one)}
+.cat-two{background:var(--c-two)}
+.cat-few{background:repeating-linear-gradient(45deg,var(--hatch) 0 1.5px,transparent 1.5px 6px),var(--c-few)}
+.cat-many{background:repeating-linear-gradient(-45deg,var(--hatch) 0 1.5px,transparent 1.5px 6px),var(--c-many)}
+.cat-other{background:var(--c-other)}
+td.ok{background:var(--paper)}
+td.ok .c{color:var(--ink-soft)!important}
+td.wrong{background:color-mix(in srgb,var(--blood) 16%,var(--paper));border:2px solid var(--blood)}
+td.wrong .c{color:var(--blood)!important;font-weight:700}
+td.here{outline:3px solid var(--focus);outline-offset:1px;z-index:1}
+td .tp{position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 1.5px var(--paper)}
+.hundred{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.8rem;color:var(--ink-soft)}
+.hundred table.pg{width:auto}
+.hundred table.pg td{width:44px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.82rem;margin:8px 0 0}
+.legend .sw{display:inline-block;width:16px;height:12px;border-radius:3px;border:1px solid var(--grid);vertical-align:middle;margin-right:5px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.langs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:14px}
+@media (max-width:800px){.langs{grid-template-columns:repeat(3,1fr)}}
+.lang{font:600 .9rem var(--sans);padding:8px 8px;border-radius:10px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;text-align:left;min-width:0}
+.lang b{display:block;font-size:1.05rem}
+.lang span{font-size:.8rem;color:var(--ink-soft)}
+.lang[aria-checked="true"]{background:var(--steel);color:var(--paper)}
+.lang[aria-checked="true"] span{color:var(--paper)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+input[type=number],select{font:600 1rem var(--sans);padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink-soft);background:var(--paper);color:var(--ink)}
+input[type=number]{width:9.5em}
+.check{justify-content:flex-start}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.btn{font:700 .9rem var(--sans);padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:10px}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">GD202 Narrative and Quest Design · Week 11 · Worked example</p>
+  <h1>The plural trap</h1>
+  <p class="lede">English needs two forms of a counted noun: one for 1, one for everything else. A string system built on that rule prints the wrong form for about one Russian count in three, and the errors hide in stripes through every decade.</p>
+</header>
+
+<section class="panel" aria-label="Plural categories by language">
+  <p class="caption" id="caption">Two plural forms work in English. Here is what they do in Russian.</p>
+  <div class="views">
+    <figure>
+      <figcaption>What the language needs<small>CLDR 48 plural category for each count 0 to 100</small></figcaption>
+      <p class="figstats" id="needStats"></p>
+      <div id="gridNeed"></div>
+      <div class="legend" id="legend"></div>
+    </figure>
+    <figure>
+      <figcaption>What a two-slot system prints<small>Singular slot for n = 1, one plural-slot form for every other n</small></figcaption>
+      <p class="figstats" id="results" aria-live="polite"></p>
+      <div id="gridSlot"></div>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--paper)"></span>correct form</span>
+        <span><span class="sw" style="background:color-mix(in srgb,var(--blood) 16%,var(--paper));border:2px solid var(--blood)"></span>✕ wrong<span class="pf-note">, shows the form printed</span></span>
+        <span id="lgTester" hidden><span class="sw" style="background:var(--ink);border-radius:50%;width:8px;height:8px"></span>tester's pick</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="langs" role="radiogroup" aria-label="Language" id="langs"></div>
+
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div>
+      <label for="sN"><span>Count n</span> <output id="oN">21</output></label>
+      <input id="sN" type="range" min="0" max="200" step="1" value="21">
+      <div class="row">
+        <label for="inN" style="font-weight:600">Type any n</label>
+        <input id="inN" type="number" min="0" max="10000000" step="1" value="21">
+        <button class="btn" data-n="1000000" id="million">n = 1,000,000</button>
+      </div>
+    </div>
+    <div>
+      <div class="row">
+        <label for="slot">Plural-slot form</label>
+        <select id="slot"></select>
+      </div>
+      <div class="row">
+        <label class="check" for="tester"><input type="checkbox" id="tester"> Tester's picks (1, 2, 5, 10)</label>
+      </div>
+      <p id="testerOut" style="margin:0 0 10px;font-size:.92rem" aria-live="polite" hidden></p>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+  </div>
+</section>
+
+<footer>Rules: Unicode CLDR 48 cardinal plural rules for whole numbers, as listed in GD202 week 11 section 2. Russian and Polish also have an "other" category, used only for fractions, which a counter never shows. No game text or art is used.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('en-US');
+const LANGS=[
+  {id:'en',name:'English',cats:['one','other']},
+  {id:'fr',name:'French',cats:['one','many','other']},
+  {id:'ru',name:'Russian',cats:['one','few','many']},
+  {id:'pl',name:'Polish',cats:['one','few','many']},
+  {id:'ar',name:'Arabic',cats:['zero','one','two','few','many','other']},
+  {id:'ja',name:'Japanese',cats:['other']}
+];
+function category(lang,n){
+  const m10=n%10,m100=n%100;
+  switch(lang){
+    case 'en':return n===1?'one':'other';
+    case 'fr':if(n===0||n===1)return 'one';return n%1000000===0?'many':'other';
+    case 'ru':
+    case 'pl':
+      if(lang==='pl'&&n===1)return 'one';
+      if(lang==='ru'&&m10===1&&m100!==11)return 'one';
+      if(m10>=2&&m10<=4&&!(m100>=12&&m100<=14))return 'few';
+      return 'many';
+    case 'ar':
+      if(n<=2)return ['zero','one','two'][n];
+      if(m100>=3&&m100<=10)return 'few';
+      if(m100>=11&&m100<=99)return 'many';
+      return 'other';
+    default:return 'other';
+  }
+}
+const D={lang:'ru',n:21,slot:'best',tester:false};
+let st=Object.assign({},D);
+const L=()=>LANGS.find(l=>l.id===st.lang);
+const wrongFor=(lang,form)=>{const w=[];for(let n=0;n<=100;n++){if(n!==1&&category(lang,n)!==form)w.push(n);}return w;};
+function bestForm(lang){const cs=LANGS.find(l=>l.id===lang).cats;let b=cs[0],bw=Infinity;cs.forEach(c=>{const w=wrongFor(lang,c).length;if(w<bw){bw=w;b=c;}});return b;}
+const slotForm=()=>st.slot==='best'?bestForm(st.lang):st.slot;
+// printed category under the two-slot system
+const printed=n=>n===1?category(st.lang,1):slotForm();
+const TESTER=[1,2,5,10];
+
+// build tables once
+function buildGrid(host,id){
+  let h=`<table class="pg" id="${id}"><thead><tr><td style="border:0;cursor:default;height:16px"></td>`;
+  for(let c=0;c<10;c++)h+=`<th scope="col" aria-label="ones digit ${c}">${c}</th>`;
+  h+='</tr></thead><tbody>';
+  for(let r=0;r<10;r++){h+=`<tr><th scope="row" aria-label="tens ${r*10}">${r*10}</th>`;for(let c=0;c<10;c++){const n=r*10+c;h+=`<td data-n="${n}"></td>`;}h+='</tr>';}
+  h+='</tbody></table>';
+  h+=`<div class="hundred"><table class="pg"><tbody><tr><th scope="row" style="width:auto;padding-right:6px">100</th><td data-n="100"></td></tr></tbody></table><span>the 101st count</span></div>`;
+  host.innerHTML=h;
+  host.querySelectorAll('td[data-n]').forEach(td=>td.addEventListener('click',()=>{st.n=+td.dataset.n;syncN();update();}));
+}
+buildGrid($('gridNeed'),'tNeed');buildGrid($('gridSlot'),'tSlot');
+
+// language chips (radio group with roving tabindex)
+$('langs').innerHTML=LANGS.map(l=>`<button class="lang" role="radio" data-l="${l.id}" aria-checked="false" tabindex="-1"><b>${l.name}</b><span></span></button>`).join('');
+const chips=[...document.querySelectorAll('.lang')];
+chips.forEach((b,i)=>{
+  b.addEventListener('click',()=>selectLang(b.dataset.l));
+  b.addEventListener('keydown',e=>{const d={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[e.key];if(!d)return;e.preventDefault();const nb=chips[(i+d+chips.length)%chips.length];selectLang(nb.dataset.l);nb.focus();});
+});
+function selectLang(id){st.lang=id;st.slot='best';fillSlot();update();}
+function fillSlot(){$('slot').innerHTML=`<option value="best">best (automatic): ${bestForm(st.lang)}</option>`+L().cats.map(c=>`<option value="${c}">${c}</option>`).join('');$('slot').value=st.slot;}
+
+function update(){
+  const lang=L(),form=slotForm(),wrong=wrongFor(st.lang,form),wset=new Set(wrong);
+  const counts={};for(let n=0;n<=100;n++){const c=category(st.lang,n);counts[c]=(counts[c]||0)+1;}
+  $('caption').textContent=st.lang==='en'?'Two plural forms work in English. Pick another language to see what they do there.':`Two plural forms work in English. Here is what they do in ${lang.name}.`;
+  $('needStats').innerHTML=`${lang.name} needs <b>${Object.keys(counts).length}</b> form${Object.keys(counts).length>1?'s':''} for counts 0 to 100`;
+  $('legend').innerHTML=lang.cats.filter(c=>counts[c]).map(c=>`<span><span class="sw cat-${c}"></span>${c}: ${counts[c]}</span>`).join('');
+  const pctW=(wrong.length/101*100).toFixed(1);
+  $('results').innerHTML=`Wrong: <b class="${wrong.length?'bad':''}">${wrong.length} of 101</b> (${pctW}%) · Best plural-slot form: <b>${bestForm(st.lang)}</b>${st.slot!=='best'?` · using <b>${form}</b>`:''}`;
+  document.querySelectorAll('#gridNeed td[data-n]').forEach(td=>{
+    const n=+td.dataset.n,c=category(st.lang,n);
+    td.className='cat-'+c+(n===st.n?' here':'');
+    td.innerHTML=`<span class="n">${n}</span><span class="c">${c}</span>`+(st.tester&&TESTER.includes(n)?'<span class="tp" aria-hidden="true"></span><span class="sr">, tester pick</span>':'');
+  });
+  document.querySelectorAll('#gridSlot td[data-n]').forEach(td=>{
+    const n=+td.dataset.n,p=printed(n),bad=wset.has(n);
+    td.className=(bad?'wrong':'ok')+(n===st.n?' here':'');
+    td.innerHTML=`<span class="n">${n}</span><span class="c">${bad?'✕<span class="pf"> '+p+'</span>':p}</span><span class="sr">${bad?', wrong, needs '+category(st.lang,n):', correct'}</span>`+(st.tester&&TESTER.includes(n)?'<span class="tp" aria-hidden="true"></span><span class="sr">, tester pick</span>':'');
+  });
+  chips.forEach(b=>{const on=b.dataset.l===st.lang;b.setAttribute('aria-checked',String(on));b.tabIndex=on?0:-1;b.querySelector('span').textContent=`n = ${fmt(st.n)}: ${category(b.dataset.l,st.n)}`;});
+  $('oN').textContent=fmt(st.n);
+  $('lgTester').hidden=!st.tester;$('testerOut').hidden=!st.tester;
+  const hit=TESTER.filter(n=>wset.has(n));
+  $('testerOut').innerHTML=`Tester's picks hit <b>${hit.length}</b> of ${wrong.length} wrong cell${wrong.length===1?'':'s'}${hit.length?' ('+hit.join(', ')+')':''}.`;
+  const need=category(st.lang,st.n),pr=st.n===1?category(st.lang,1):form,ok=need===pr;
+  const stripes=wrong.slice(0,8).join(', ')+(wrong.length>8?', …':'');
+  let s=`At n = ${fmt(st.n)}, ${lang.name} needs the <b>${need}</b> form and a two-slot system prints <b>${pr}</b>: ${ok?'correct':'<b>wrong</b>'}. `;
+  s+=wrong.length?`Over 0 to 100 it gets <b>${wrong.length}</b> counts wrong (${stripes}).`:`Two slots cover every count from 0 to 100 in ${lang.name}.`;
+  if(st.lang==='ru'&&st.slot==='best')s+=` A tester who checks 1, 5 and 10 sees none of them.`;
+  $('insight').innerHTML=s;
+}
+function syncN(){$('sN').value=Math.min(st.n,200);$('inN').value=st.n;}
+$('sN').addEventListener('input',e=>{st.n=+e.target.value;$('inN').value=st.n;update();});
+$('inN').addEventListener('input',e=>{let v=Math.round(+e.target.value);if(!Number.isFinite(v)||e.target.value==='')return;v=Math.min(10000000,Math.max(0,v));st.n=v;$('sN').value=Math.min(v,200);update();});
+$('million').addEventListener('click',()=>{st.n=1000000;syncN();update();});
+$('slot').addEventListener('change',e=>{st.slot=e.target.value;update();});
+$('tester').addEventListener('change',e=>{st.tester=e.target.checked;update();});
+$('reset').addEventListener('click',()=>{st=Object.assign({},D);syncN();$('tester').checked=false;fillSlot();update();});
+fillSlot();update();
+})();
+</script>
+</body>
+</html>
