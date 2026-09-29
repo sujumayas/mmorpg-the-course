@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shape Reader — AR101 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
+header{max-width:64ch;margin-bottom:20px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.views{grid-template-columns:1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+figcaption small{font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.gridline{stroke:var(--grid);stroke-width:1}
+.body{fill:color-mix(in srgb,var(--ink) 15%,transparent);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.cbody{fill:var(--paper);stroke:var(--ink);stroke-width:3;stroke-linejoin:round}
+.eye{fill:var(--ink)}.glint{fill:var(--paper)}
+.foot{fill:var(--ink)}
+.mark{fill:none;stroke:var(--blood);stroke-width:2.5}
+.marktxt{fill:var(--blood);font:700 14px var(--sans)}
+.tick{stroke:var(--ink);stroke-width:1.5}
+.ticktxt{fill:var(--ink-soft);font:12px var(--sans)}
+.gtrack{fill:var(--paper)}
+.gfill{fill:var(--steel)}
+.zone-sharp{fill:var(--blood);opacity:.16}.zone-square{fill:var(--steel);opacity:.18}.zone-round{fill:var(--moss);opacity:.2}
+.zl-sharp{fill:var(--blood)}.zl-square{fill:var(--steel)}.zl-round{fill:var(--moss)}
+.zl{font:700 12px var(--sans)}
+.refdot{fill:var(--paper);stroke:var(--ink-soft);stroke-width:1.5}
+.reftxt{fill:var(--ink-soft);font:13px var(--sans)}
+#svMap .ticktxt{font-size:13px}#svMap .zl{font-size:14px}
+.cur{fill:var(--ink);stroke:var(--paper);stroke-width:2}
+.axis{stroke:var(--ink);stroke-width:1.2}
+.reading{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,5vw,2.6rem);text-align:center;margin:4px 0 0;line-height:1.1}
+.r-Sharp{color:var(--blood)}.r-Square{color:var(--steel)}.r-Round{color:var(--moss)}.r-In{color:var(--ink-soft)}
+.why{text-align:center;font-size:.88rem;color:var(--ink-soft);margin:2px 0 0}
+.gauges{margin-top:6px}
+.gl{display:flex;justify-content:space-between;font-size:.88rem;font-weight:600}
+.gl output{font-variant-numeric:tabular-nums}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px}
+.stat b{display:block;font-size:1.45rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.mapfig{margin-top:14px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+label.row{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px}
+output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+input[type=range]:disabled{opacity:.4}
+.lbl{font-weight:600;font-size:.92rem;display:block;margin-bottom:6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chip,.btn{font:600 .88rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.btn{border-color:var(--ink)}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.92rem;margin-bottom:4px}
+.check input{width:18px;height:18px;accent-color:var(--steel)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+textarea{width:100%;min-height:96px;font:14px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--paper);color:var(--ink);border:1.5px solid var(--ink);border-radius:8px;padding:8px}
+.err{color:var(--blood);font-size:.88rem;margin:4px 0 0;min-height:1.3em}
+.note{font-size:.88rem;color:var(--ink-soft);margin:6px 0 0}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AR101 Visual Foundations for Games · Week 2 · Worked example</p>
+  <h1>Danger reads from points</h1>
+  <p class="lede">A triangle has one number that says "not round" (C = 0.605) and one that says "pointed" (θ = 60°). Press <b>3 : 1 bar</b>. Its C drops below the triangle's, yet the creature looks like a sturdy block. The corners decide the reading, not roundness.</p>
+</header>
+
+<section class="panel" aria-label="Shape and creature">
+  <div class="views">
+    <figure>
+      <figcaption>Shape <small id="shapeName">Triangle</small></figcaption>
+      <svg id="svShape" viewBox="0 0 400 300" role="img" aria-label="Current shape"></svg>
+      <div class="gauges">
+        <div class="gl"><span>Compactness C = 4πA / P²</span><output id="gC"></output></div>
+        <svg id="svC" viewBox="0 0 400 44" aria-hidden="true"></svg>
+        <div class="gl"><span>Sharpest corner θ</span><output id="gT"></output></div>
+        <svg id="svT" viewBox="0 0 400 44" aria-hidden="true"></svg>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>As a creature <small>Same outline, same face</small></figcaption>
+      <svg id="svCreature" viewBox="0 0 400 300" role="img" aria-label="Creature with the current shape as its body"></svg>
+      <p class="reading" id="reading" aria-live="polite"></p>
+      <p class="why" id="why"></p>
+    </figure>
+  </div>
+
+  <div class="readout">
+    <div class="stat" style="--c:var(--steel)"><b id="rC"></b><span>compactness C</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rT"></b><span>sharpest corner θ</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rA"></b><span>area A</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rP"></b><span>perimeter P</span></div>
+  </div>
+
+  <figure class="mapfig">
+    <figcaption>Reading map <small>θ across, C up. Grey dots are fixed references.</small></figcaption>
+    <svg id="svMap" viewBox="0 0 900 290" role="img" aria-label="Map of corner angle against compactness"></svg>
+  </figure>
+
+  <div class="controls">
+    <div>
+      <label class="row" for="sides">Sides n <output id="oSides"></output></label>
+      <input id="sides" type="range" min="3" max="13" step="1" value="3" aria-describedby="sidesNote">
+      <p class="note" id="sidesNote" style="margin-top:-4px">The last step is a circle.</p>
+      <label class="row" for="round">Corner rounding r <output id="oRound"></output></label>
+      <input id="round" type="range" min="0" max="1" step="0.01" value="0">
+      <label class="row" for="stretch">Stretch (width : height) <output id="oStretch"></output></label>
+      <input id="stretch" type="range" min="1" max="4" step="0.1" value="1">
+      <label class="check"><input type="checkbox" id="spikes"> Spikes (star)</label>
+      <label class="row" for="inner">Star inner radius <output id="oInner"></output></label>
+      <input id="inner" type="range" min="0.3" max="0.9" step="0.01" value="0.5" disabled>
+    </div>
+    <div>
+      <span class="lbl" id="presetLbl">Presets</span>
+      <div class="presets" role="group" aria-labelledby="presetLbl" id="presets">
+        <button class="chip" type="button" data-p="tri" aria-pressed="true">Triangle</button>
+        <button class="chip" type="button" data-p="sq">Square</button>
+        <button class="chip" type="button" data-p="circ">Circle</button>
+        <button class="chip" type="button" data-p="bar">3 : 1 bar</button>
+        <button class="chip" type="button" data-p="star">Five-point star</button>
+        <button class="chip" type="button" data-p="rsq">Rounded square r = 0.25 s</button>
+        <button class="chip" type="button" data-p="dome" id="domeBtn">Walker vs spiked shell</button>
+      </div>
+      <label class="lbl" for="poly" style="margin-top:14px">Polygon mode: one <code>x,y</code> point per line, y up</label>
+      <textarea id="poly" spellcheck="false" aria-describedby="polyErr">-0.5,0
+0.5,0
+0,3</textarea>
+      <button class="btn" type="button" id="usePoly" style="margin-top:6px">Use these points</button>
+      <p class="err" id="polyErr" role="alert"></p>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>C = 4πA/P² with A from the shoelace formula and P summed over segments. Rounded corners and arcs are drawn with 64 segments per quarter turn, so C can differ from the exact value in the third decimal. θ is the smallest interior angle among convex corners that are still corners. Rounded ones and arc points do not count. Reading rules from the lecture: θ ≤ 65 sharp, 75 to 105 square, C ≥ 0.85 with θ ≥ 120 round. The creatures are invented stand-ins.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const SEG=64; // segments per quarter turn
+const D=Math.PI/180;
+
+// ---------- geometry: a shape is [{x,y,c}] CCW (y up), c = counts as a corner
+function area(p){let s=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];s+=a.x*b.y-b.x*a.y;}return s/2;}
+function perim(p){let s=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];s+=Math.hypot(b.x-a.x,b.y-a.y);}return s;}
+function ccw(p){return area(p)<0?p.slice().reverse():p;}
+function arc(cx,cy,r,a0,a1,out,flag){ // a0 -> a1 in radians, excluding the start point
+  const n=Math.max(1,Math.ceil(Math.abs(a1-a0)/(Math.PI/2)*SEG));
+  for(let i=1;i<=n;i++){const a=a0+(a1-a0)*i/n;out.push({x:cx+r*Math.cos(a),y:cy+r*Math.sin(a),c:!!flag});}
+}
+function regular(n,inner){ // star when inner is a number
+  const pts=[],k=inner?2*n:n,off=(n%2===0&&!inner)?Math.PI/n:0;
+  for(let i=0;i<k;i++){const a=Math.PI/2+off+2*Math.PI*i/k,r=inner&&i%2?inner:1;pts.push({x:r*Math.cos(a),y:r*Math.sin(a),c:true});}
+  return pts;
+}
+function fillet(v,r){ // v: CCW corners; r: 0..1 of the largest fillet that fits every corner
+  const n=v.length,info=[];let rmax=Infinity;
+  for(let i=0;i<n;i++){
+    const P=v[(i-1+n)%n],V=v[i],N=v[(i+1)%n];
+    const l1=Math.hypot(P.x-V.x,P.y-V.y),l2=Math.hypot(N.x-V.x,N.y-V.y);
+    const u1={x:(P.x-V.x)/l1,y:(P.y-V.y)/l1},u2={x:(N.x-V.x)/l2,y:(N.y-V.y)/l2};
+    const th=Math.acos(Math.max(-1,Math.min(1,u1.x*u2.x+u1.y*u2.y)));
+    info.push({V,u1,u2,th});
+    if(th<Math.PI-1e-9) rmax=Math.min(rmax,Math.min(l1,l2)/2*Math.tan(th/2));
+  }
+  const rho=r*rmax,out=[];
+  info.forEach(({V,u1,u2,th})=>{
+    if(th>=Math.PI-1e-9){out.push({x:V.x,y:V.y,c:false});return;}
+    const d=rho/Math.tan(th/2),bx=u1.x+u2.x,by=u1.y+u2.y,bl=Math.hypot(bx,by),h=rho/Math.sin(th/2);
+    const cx=V.x+bx/bl*h,cy=V.y+by/bl*h;
+    const T1={x:V.x+u1.x*d,y:V.y+u1.y*d},T2={x:V.x+u2.x*d,y:V.y+u2.y*d};
+    let a0=Math.atan2(T1.y-cy,T1.x-cx),a1=Math.atan2(T2.y-cy,T2.x-cx),da=a1-a0;
+    while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;
+    out.push({x:T1.x,y:T1.y,c:false});arc(cx,cy,rho,a0,a0+da,out,false);
+  });
+  // drop duplicates where neighbouring fillets meet
+  const ded=[];out.forEach(p=>{const q=ded[ded.length-1];if(!q||Math.hypot(p.x-q.x,p.y-q.y)>1e-9)ded.push(p);});
+  if(ded.length>1&&Math.hypot(ded[0].x-ded[ded.length-1].x,ded[0].y-ded[ded.length-1].y)<1e-9)ded.pop();
+  return {pts:ded,rho};
+}
+function dome(spiked){
+  const p=[],rr=0.15;
+  p.push({x:-1+rr,y:0,c:false});p.push({x:1-rr,y:0,c:false});
+  arc(1-rr,rr,rr,-Math.PI/2,0,p,false); // bottom-right fillet ends at (1, .15)
+  p.push({x:1,y:0.4,c:false});
+  if(!spiked) arc(0,0.4,1,0,Math.PI,p,false);
+  else{
+    let a=0;
+    for(let k=0;k<6;k++){
+      const c=(15+30*k)*D,b0=c-9*D,b1=c+9*D;
+      arc(0,0.4,1,a,b0,p,false);p[p.length-1].c=true; // spike base (reflex)
+      p.push({x:1.45*Math.cos(c),y:0.4+1.45*Math.sin(c),c:true});
+      p.push({x:Math.cos(b1),y:0.4+Math.sin(b1),c:true});a=b1;
+    }
+    arc(0,0.4,1,a,Math.PI,p,false);
+  }
+  p.pop(); // (-1, .4) is re-added below as a plain point
+  p.push({x:-1,y:0.4,c:false});p.push({x:-1,y:rr,c:false});
+  arc(-1+rr,rr,rr,Math.PI,1.5*Math.PI,p,false);p.pop();
+  return p;
+}
+function measure(p){
+  const A=Math.abs(area(p)),P=perim(p),C=4*Math.PI*A/(P*P);
+  let th=180,at=-1;const n=p.length;
+  for(let i=0;i<n;i++){
+    if(!p[i].c)continue;
+    const a=p[(i-1+n)%n],v=p[i],b=p[(i+1)%n];
+    const cross=(v.x-a.x)*(b.y-v.y)-(v.y-a.y)*(b.x-v.x);
+    if(cross<=1e-12)continue; // reflex or straight
+    const ux=a.x-v.x,uy=a.y-v.y,wx=b.x-v.x,wy=b.y-v.y;
+    const ang=Math.acos(Math.max(-1,Math.min(1,(ux*wx+uy*wy)/Math.hypot(ux,uy)/Math.hypot(wx,wy))))/D;
+    if(ang<th-1e-9){th=ang;at=i;}
+  }
+  return {A,P,C,th,at};
+}
+function readingOf(C,th){
+  if(th<=65)return 'Sharp';
+  if(th>=75&&th<=105)return 'Square';
+  if(C>=0.85&&th>=120)return 'Round';
+  return 'In between';
+}
+
+// ---------- state
+let st={mode:'gen',n:3,r:0,s:1,spikes:false,inner:0.5,domeSpiked:false,poly:null,name:'Triangle'};
+function build(){
+  if(st.mode==='dome')return dome(st.domeSpiked);
+  let v;
+  if(st.mode==='poly')v=st.poly.map(q=>({x:q.x*st.s,y:q.y,c:true}));
+  else if(st.n>12){const pts=[];for(let i=0;i<4*SEG*1;i++){const a=2*Math.PI*i/(4*SEG);pts.push({x:Math.cos(a)*st.s,y:Math.sin(a),c:false});}return pts;}
+  else v=regular(st.n,st.spikes?st.inner:0).map(q=>({x:q.x*st.s,y:q.y,c:true}));
+  v=ccw(v);
+  if(st.r>0){const f=fillet(v,st.r);st.rho=f.rho;return f.pts;}
+  st.rho=0;return v;
+}
+
+// ---------- drawing
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function fit(p,W,H,padT,padB,padX){
+  let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;p.forEach(q=>{x0=Math.min(x0,q.x);x1=Math.max(x1,q.x);y0=Math.min(y0,q.y);y1=Math.max(y1,q.y);});
+  const sc=Math.min((W-2*padX)/(x1-x0),(H-padT-padB)/(y1-y0));
+  const ox=W/2-(x0+x1)/2*sc,oy=padT+(H-padT-padB)/2+(y0+y1)/2*sc;
+  return {X:x=>ox+x*sc,Y:y=>oy-y*sc,sc,x0,x1,y0,y1};
+}
+const pathOf=(p,f)=>'M'+p.map(q=>f.X(q.x).toFixed(2)+','+f.Y(q.y).toFixed(2)).join('L')+'Z';
+function drawShape(p,m){
+  const s=$('svShape');s.innerHTML='';
+  for(let x=0;x<=400;x+=25)el('line',{x1:x,y1:0,x2:x,y2:300,class:'gridline'},s);
+  for(let y=0;y<=300;y+=25)el('line',{x1:0,y1:y,x2:400,y2:y,class:'gridline'},s);
+  const f=fit(p,400,300,24,24,30);
+  el('path',{d:pathOf(p,f),class:'body'},s);
+  if(m.at>=0){
+    const n=p.length,v=p[m.at],a=p[(m.at-1+n)%n],b=p[(m.at+1)%n];
+    const vx=f.X(v.x),vy=f.Y(v.y),r=22;
+    const a1=Math.atan2(f.Y(a.y)-vy,f.X(a.x)-vx),a2=Math.atan2(f.Y(b.y)-vy,f.X(b.x)-vx);
+    let da=a2-a1;while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;
+    el('path',{d:`M${vx+r*Math.cos(a1)},${vy+r*Math.sin(a1)}A${r},${r} 0 0 ${da>0?1:0} ${vx+r*Math.cos(a1+da)},${vy+r*Math.sin(a1+da)}`,class:'mark'},s);
+    const mid=a1+da/2,lx=vx-Math.cos(mid)*18,ly=vy-Math.sin(mid)*18;
+    const t=el('text',{x:Math.max(30,Math.min(370,lx)),y:Math.max(14,Math.min(294,ly)),class:'marktxt','text-anchor':'middle','dominant-baseline':'middle'},s);t.textContent=m.th.toFixed(1)+'°';
+  }
+}
+function widthAt(p,y){ // horizontal extent of the outline at height y
+  let lo=Infinity,hi=-Infinity;const n=p.length;
+  for(let i=0;i<n;i++){const a=p[i],b=p[(i+1)%n];if((a.y-y)*(b.y-y)<=0&&a.y!==b.y){const x=a.x+(y-a.y)/(b.y-a.y)*(b.x-a.x);lo=Math.min(lo,x);hi=Math.max(hi,x);}}
+  return [lo,hi];
+}
+function drawCreature(p){
+  const s=$('svCreature');s.innerHTML='';
+  const f=fit(p,400,300,18,40,40);
+  // feet under the base
+  const [bl,bh]=widthAt(p,f.y0+(f.y1-f.y0)*0.03);const cxb=(bl+bh)/2,bw=bh-bl;
+  const fr=Math.max(10,Math.min(22,f.sc*(f.x1-f.x0)*0.07));
+  [-1,1].forEach(k=>el('ellipse',{cx:f.X(cxb+k*bw*0.27),cy:f.Y(f.y0)+fr*0.55,rx:fr*1.2,ry:fr*0.75,class:'foot'},s));
+  el('path',{d:pathOf(p,f),class:'cbody'},s);
+  // eyes start 35% down from the top; step down only if they would touch the outline
+  const inside=(x,y)=>{let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const a=p[i],b=p[j];if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x)c=!c;}return c;};
+  const clear=(x,y)=>{let d=Infinity;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/(dx*dx+dy*dy||1)));d=Math.min(d,Math.hypot(a.x+t*dx-x,a.y+t*dy-y));}return inside(x,y)?d:-d;};
+  const H=f.y1-f.y0;let best=null;
+  for(let fr2=0.35;fr2<=0.75&&!best;fr2+=0.02){
+    const ey=f.y1-H*fr2,[l,h]=widthAt(p,ey);if(!isFinite(l))continue;
+    const cx=(l+h)/2,w=(h-l)*f.sc,er=Math.max(5,Math.min(14,w*0.09)),gap=Math.max(er*1.4,Math.min(w*0.2,46))/f.sc,need=er*1.5/f.sc;
+    if(clear(cx-gap,ey)>need&&clear(cx+gap,ey)>need)best={cx,ey,er,gap};
+  }
+  if(!best){const ey=f.y1-H*0.35,[l,h]=widthAt(p,ey);best={cx:(l+h)/2,ey,er:6,gap:10/f.sc};}
+  [-1,1].forEach(k=>{const x=f.X(best.cx+k*best.gap),y=f.Y(best.ey),er=best.er;el('circle',{cx:x,cy:y,r:er,class:'eye'},s);el('circle',{cx:x+er*0.3,cy:y-er*0.3,r:er*0.32,class:'glint'},s);});
+}
+function gauge(svg,val,max,ticks,zones,fmt){
+  svg.innerHTML='';
+  const W=Math.max(260,Math.round(svg.clientWidth||400));svg.setAttribute('viewBox',`0 0 ${W} 44`);
+  const X=v=>10+(W-20)*v/max;
+  el('rect',{x:10,y:8,width:W-20,height:14,rx:4,class:'gtrack'},svg);
+  (zones||[]).forEach(z=>el('rect',{x:X(z[0]),y:8,width:X(z[1])-X(z[0]),height:14,class:'zone-'+z[2]},svg));
+  el('rect',{x:10,y:8,width:Math.max(0,X(val)-10),height:14,rx:4,class:'gfill',opacity:zones?0.0:0.85},svg);
+  el('path',{d:`M${X(val)},4 l-6,-4 h12z M${X(val)},4 V26`,class:'tick',fill:'var(--ink)'},svg);
+  let lastX=-99;ticks.forEach(t=>{const skip=X(t[0])-lastX<26&&t[0]!==max;if(!skip)lastX=X(t[0]);el('line',{x1:X(t[0]),y1:22,x2:X(t[0]),y2:28,class:'tick'},svg);if(skip)return;const tx=el('text',{x:X(t[0]),y:40,class:'ticktxt','text-anchor':t[0]===max?'end':(t[0]===0?'start':'middle')},svg);tx.textContent=t[1];});
+}
+const REFS=[['circle',180,1],['square',90,0.785],['triangle',60,0.605],['3:1 bar',90,0.589],['star 0.5',52.5,0.419]];
+function drawMap(m){
+  const s=$('svMap');s.innerHTML='';
+  const W=Math.max(300,Math.round(s.clientWidth||900)),H=W<600?250:290;s.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const L=40,R=W-14,T=12,B=H-50,X=t=>L+(R-L)*t/180,Y=c=>B-(B-T)*c;
+  el('rect',{x:X(0),y:T,width:X(65)-X(0),height:B-T,class:'zone-sharp'},s);
+  el('rect',{x:X(75),y:T,width:X(105)-X(75),height:B-T,class:'zone-square'},s);
+  el('rect',{x:X(120),y:T,width:X(180)-X(120),height:Y(0.85)-T,class:'zone-round'},s);
+  [['Sharp',32.5,'sharp',0.08],['Square',90,'square',0.08],['Round',150,'round',0.9]].forEach(([t,x,c,y])=>{const e=el('text',{x:X(x),y:Y(y),class:'zl zl-'+c,'text-anchor':'middle'},s);e.textContent=t;});
+  for(let c=0;c<=1.0001;c+=0.25){el('line',{x1:L,y1:Y(c),x2:R,y2:Y(c),class:'gridline'},s);const e=el('text',{x:L-6,y:Y(c)+4,class:'ticktxt','text-anchor':'end'},s);e.textContent=c.toFixed(2);}
+  for(let t=0;t<=180;t+=30){if(W<600&&t===150)continue;const e=el('text',{x:X(t),y:B+18,class:'ticktxt','text-anchor':t===180?'end':'middle'},s);e.textContent=t===180?(W<600?'none':'180° = none'):t+'°';}
+  el('line',{x1:L,y1:B,x2:R,y2:B,class:'axis'},s);el('line',{x1:L,y1:T,x2:L,y2:B,class:'axis'},s);
+  const xl=el('text',{x:R,y:B+40,class:'ticktxt','text-anchor':'end'},s);xl.textContent='sharpest corner θ';
+  const yl=el('text',{x:L,y:B+40,class:'ticktxt','text-anchor':'start'},s);yl.textContent='C up';
+  REFS.forEach(([n,t,c])=>{el('circle',{cx:X(t),cy:Y(c),r:6,class:'refdot'},s);const e=el('text',{x:X(t)+(t>=170||t<70?-8:8),y:Y(c)+(n==='3:1 bar'?16:-8),class:'reftxt','text-anchor':t>=170||t<70?'end':'start'},s);e.textContent=n;});
+  el('circle',{cx:X(m.th),cy:Y(Math.min(1,m.C)),r:8,class:'cur'},s);
+}
+
+const f3=x=>x.toFixed(3),thS=m=>m.at<0?'none':m.th.toFixed(1)+'°';
+function syncControls(){
+  $('sides').value=Math.min(13,st.n);$('oSides').textContent=st.n>12?'circle':st.n;
+  $('round').value=st.r;$('stretch').value=st.s;$('spikes').checked=st.spikes;$('inner').value=st.inner;
+  $('oStretch').textContent=st.s.toFixed(1)+' : 1';$('oInner').textContent=st.inner.toFixed(2);
+  $('inner').disabled=!st.spikes||st.n>12;$('spikes').disabled=st.n>12;
+}
+function update(){
+  const p=build(),m=measure(p);
+  syncControls();
+  $('oRound').textContent=st.r.toFixed(2)+(st.r>0&&st.mode!=='dome'&&st.n<=12||st.r>0&&st.mode==='poly'?` (fillet ${(st.rho).toFixed(3)} units)`:'');
+  const rd=readingOf(m.C,m.th);
+  $('gC').textContent=f3(m.C);$('gT').textContent=thS(m);
+  $('rC').textContent=f3(m.C);$('rT').textContent=thS(m);$('rA').textContent=m.A.toFixed(3);$('rP').textContent=m.P.toFixed(3);
+  $('reading').textContent=rd;$('reading').className='reading r-'+rd.split(' ')[0];
+  let why;
+  if(rd==='Sharp')why=`θ ${m.th.toFixed(1)}° is at most 65°`;
+  else if(rd==='Square')why=`θ ${m.th.toFixed(1)}° is between 75° and 105°`;
+  else if(rd==='Round')why=`C ${f3(m.C)} ≥ 0.85 and θ ${m.at<0?'none':m.th.toFixed(1)+'°'} ≥ 120°`;
+  else why=m.th<75?`θ ${m.th.toFixed(1)}° sits in the gap between sharp and square`:(m.th<120?`θ ${m.th.toFixed(1)}° sits between square and round`:`θ ${thS(m)} but C ${f3(m.C)} is under 0.85`);
+  $('why').textContent=why;
+  $('shapeName').textContent=st.name;
+  drawShape(p,m);drawCreature(p);
+  gauge($('svC'),Math.min(1,m.C),1,[[0,'0'],[0.605,'▲ .605'],[0.785,'■ .785'],[1,'● 1']]);
+  gauge($('svT'),m.th,180,[[0,'0°'],[65,'65'],[75,'75'],[105,'105'],[120,'120'],[180,'180']],[[0,65,'sharp'],[75,105,'square'],[120,180,'round']]);
+  drawMap(m);
+  $('svShape').setAttribute('aria-label',`${st.name}. C ${f3(m.C)}, sharpest corner ${thS(m)}.`);
+  $('svCreature').setAttribute('aria-label',`Creature with the ${st.name} as its body. Reads ${rd}.`);
+  $('svMap').setAttribute('aria-label',`Reading map. Current shape at theta ${thS(m)}, C ${f3(m.C)}, in the ${rd} region.`);
+  $('insight').textContent=insight(m,rd);
+  window.__last={C:m.C,th:m.at<0?null:m.th,reading:rd,A:m.A,P:m.P};
+}
+function insight(m,rd){
+  if(st.mode==='dome')return st.domeSpiked?`Same dome, six spikes. The spikes add perimeter and little area, so C falls to ${f3(m.C)}, and each tip is a ${m.th.toFixed(1)}° corner. Press the preset again for the walker.`:`The walker dome has no corners at all, so it reads as round (C ${f3(m.C)}). Press the preset again to add spikes.`;
+  if(rd==='Square'&&m.C<0.605)return `C ${f3(m.C)} is lower than the triangle's 0.605, yet this reads as square. Stretching wastes perimeter without making a point. The 90° corners are what the eye sees.`;
+  if(rd==='Sharp')return `The ${m.th.toFixed(1)}° corner is what reads as danger. Slide corner rounding above 0 and the corner stops being a corner.`;
+  if(rd==='Round')return `No corner is sharper than 120° and C is ${f3(m.C)}. Nothing on this outline points at the player.`;
+  return `A mixed signal. Check this one by eye and decide what you want the player to feel.`;
+}
+
+// ---------- events
+const toGen=()=>{if(st.mode!=='gen'){st.mode='gen';}};
+function unpress(){document.querySelectorAll('#presets .chip').forEach(b=>b.setAttribute('aria-pressed','false'));}
+function genName(){
+  if(st.n>12)return st.s>1?'Ellipse':'Circle';
+  let n=st.spikes?`${st.n}-point star, inner ${st.inner.toFixed(2)}`:({3:'Triangle',4:'Square'}[st.n]||`${st.n}-gon`);
+  if(st.s>1)n+=`, stretch ${st.s.toFixed(1)}`;if(st.r>0)n+=`, rounded ${st.r.toFixed(2)}`;return n;
+}
+function ctl(fn){return e=>{if(st.mode==='dome')st.mode='gen';fn(e);unpress();st.name=st.mode==='poly'?'Your polygon'+(st.s>1?`, stretch ${st.s.toFixed(1)}`:'')+(st.r>0?`, rounded ${st.r.toFixed(2)}`:''):genName();update();};}
+$('sides').addEventListener('input',ctl(e=>{st.mode='gen';st.n=+e.target.value;}));
+$('round').addEventListener('input',ctl(e=>{st.r=+e.target.value;}));
+$('stretch').addEventListener('input',ctl(e=>{st.s=+e.target.value;}));
+$('spikes').addEventListener('change',ctl(e=>{st.mode='gen';st.spikes=e.target.checked;}));
+$('inner').addEventListener('input',ctl(e=>{st.mode='gen';st.inner=+e.target.value;}));
+const PRE={tri:{n:3,name:'Triangle'},sq:{n:4,name:'Square'},circ:{n:13,name:'Circle'},bar:{n:4,s:3,name:'3 : 1 bar'},star:{n:5,spikes:true,inner:0.5,name:'Five-point star'},rsq:{n:4,r:0.5,name:'Rounded square, r = 0.25 s'}};
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.p;
+  if(k==='dome'){st.domeSpiked=st.mode==='dome'?!st.domeSpiked:false;st.mode='dome';st.name=st.domeSpiked?'Spiked shell':'Walker dome';st.r=0;st.s=1;}
+  else{const q=PRE[k];st={...st,mode:'gen',n:q.n,r:q.r||0,s:q.s||1,spikes:!!q.spikes,inner:q.inner||0.5,name:q.name};}
+  unpress();b.setAttribute('aria-pressed','true');update();
+}));
+$('usePoly').addEventListener('click',()=>{
+  const lines=$('poly').value.split(/\n/).map(l=>l.trim()).filter(Boolean),pts=[];
+  for(const l of lines){const m=l.split(/[\s,;]+/).filter(Boolean).map(Number);if(m.length!==2||!m.every(Number.isFinite)){$('polyErr').textContent=`Can't read "${l}". Use x,y with numbers.`;return;}pts.push({x:m[0],y:m[1]});}
+  if(pts.length<3){$('polyErr').textContent='Need at least 3 points.';return;}
+  if(Math.abs(area(pts))<1e-9){$('polyErr').textContent='Those points enclose no area.';return;}
+  $('polyErr').textContent='';st={...st,mode:'poly',poly:pts,r:0,s:1,name:'Your polygon'};unpress();update();
+});
+window.addEventListener('resize',update);
+window.__AR101={set:o=>{st={...st,...o};update();return window.__last;}};
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Texel density · AR101 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+--ok:var(--moss);--warn:var(--blood);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px}
+.views{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:900px){.views{grid-template-columns:1.15fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+canvas{display:block;width:100%;border-radius:6px;image-rendering:pixelated}
+#scene{aspect-ratio:16/6}
+#zoom{aspect-ratio:4/3;max-width:360px;margin:8px auto 0}
+.zoomcap{font-size:.8rem;color:var(--ink-soft);text-align:center;margin:4px 0 0}
+.rows{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:6.5em 1fr;gap:2px 8px;align-items:center;cursor:pointer;border-radius:6px;padding:3px 4px}
+.row.sel{background:var(--paper);outline:1.5px solid var(--ink)}
+.row .nm{font-weight:600;font-size:.88rem}
+.track{position:relative;height:18px}
+.band{position:absolute;top:0;bottom:0;background:var(--ok);opacity:.2;border-radius:3px}
+.tline{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);margin-left:-1px}
+.fill{position:absolute;left:0;top:3px;height:12px;border-radius:0 3px 3px 0}
+.fill.ok{background:var(--ok)}
+.fill.warn{background:repeating-linear-gradient(45deg,var(--warn) 0 5px,color-mix(in srgb,var(--warn) 70%,var(--paper)) 5px 8px)}
+.row .val{grid-column:2;font-size:.82rem;font-variant-numeric:tabular-nums}
+.ok-t{color:var(--ok);font-weight:700}.warn-t{color:var(--warn);font-weight:700}
+.axis{position:relative;height:18px;margin-left:calc(6.5em + 12px);margin-right:4px;font-size:.72rem;color:var(--ink-soft)}
+.axis span{position:absolute;transform:translateX(-50%)}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+@media (min-width:760px){.controls{grid-template-columns:1fr 1fr}}
+fieldset{border:none;margin:0;padding:0;min-width:0}
+legend,.lab{font-weight:600;font-size:.9rem;padding:0;margin-bottom:4px}
+.group{display:flex;flex-wrap:wrap;gap:6px}
+.radio{position:relative;display:inline-flex}
+.radio input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.radio span{font:600 .86rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--ink);min-height:34px;display:inline-flex;align-items:center}
+.radio input:checked+span{background:var(--ink);color:var(--paper)}
+.radio input:checked+span::before{content:"\25CF\00a0"}
+.radio input:focus-visible+span,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.field{display:grid;gap:4px;margin-top:10px}
+.field label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+output,.ro{font-variant-numeric:tabular-nums;font-weight:700}
+select{font:600 .9rem var(--sans);padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.stepper{display:flex;align-items:center;gap:8px}
+.btn{font:600 .9rem var(--sans);padding:6px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-width:38px;min-height:34px}
+.field label.check{justify-content:flex-start}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.9rem}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.86rem;width:100%}
+th,td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.sel td{font-weight:700;background:var(--paper-2)}
+.formula{font-family:var(--serif);font-size:.95rem;margin:6px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (max-width:480px){th,td{padding:4px 3px;font-size:.78rem}.row{grid-template-columns:5.6em 1fr}.axis{margin-left:calc(5.6em + 12px)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AR101 Visual Foundations for Games · Week 13 · Worked example</p>
+  <h1>Texel density: one number for &ldquo;it doesn&rsquo;t fit&rdquo;</h1>
+  <p class="lede">The lantern looks lovely alone. In the scene its checker squares are a quarter the size of the barrel&rsquo;s under it, and the bar chart names the clash: 512 px/m against a target of 128.</p>
+</header>
+
+<section class="panel">
+  <div class="views">
+    <figure>
+      <figcaption>In the scene<small id="sceneNote">Saltmarsh Reach, 16 m wide. One checker square = 8 texels, so small squares mean a sharp texture.</small></figcaption>
+      <canvas id="scene" role="img"></canvas>
+      <div id="zoomWrap">
+        <canvas id="zoom" role="img"></canvas>
+        <p class="zoomcap" id="zoomCap"></p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Density vs the bible<small id="chartNote"></small></figcaption>
+      <div class="rows" id="rows" role="radiogroup" aria-label="Density per asset"></div>
+      <div class="axis" id="axis" aria-hidden="true"></div>
+      <div class="table-wrap">
+        <table aria-label="Density per asset">
+          <thead id="thead"></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </figure>
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div>
+      <fieldset>
+        <legend>Asset</legend>
+        <div class="group" id="assetGroup"></div>
+      </fieldset>
+      <div id="ctl3d">
+        <div class="field"><label for="T">Texture size T <span class="ro" id="oT"></span></label>
+          <select id="T"><option>64</option><option>128</option><option>256</option><option>512</option><option>1024</option><option>2048</option></select></div>
+        <div class="field"><label for="f">UV fraction f <output id="of" for="f"></output></label>
+          <input type="range" id="f" min="0.05" max="1" step="0.05"></div>
+        <div class="field"><span class="lab" id="rLab">Repeats r</span>
+          <div class="stepper" role="group" aria-labelledby="rLab">
+            <button class="btn" id="rDown" aria-label="Fewer repeats">−</button>
+            <output id="or" aria-live="polite">1</output>
+            <button class="btn" id="rUp" aria-label="More repeats">+</button>
+          </div></div>
+        <p class="formula">World width S = <span class="ro" id="oS"></span> m (fixed by the level)</p>
+      </div>
+      <div id="ctl2d" hidden>
+        <div class="field"><label for="k">Hero scale factor k <output id="ok" for="k"></output></label>
+          <input type="range" id="k" min="0.5" max="3" step="0.25" value="1"></div>
+        <p class="formula">Every sprite is drawn at 16 px per tile. Scaling by k gives D = 16 / k.</p>
+      </div>
+    </div>
+    <div>
+      <div class="field" id="targetField"><label for="Dt">Bible target D* <span class="ro" id="oDt"></span></label>
+        <select id="Dt"><option>64</option><option selected>128</option><option>256</option><option>512</option></select></div>
+      <p class="formula" id="target2d" hidden>Bible target D* = <b>16 px per tile</b></p>
+      <div class="field"><label for="tol">Tolerance <output id="otol" for="tol"></output></label>
+        <input type="range" id="tol" min="0" max="0.5" step="0.05" value="0.25"></div>
+      <div class="field"><label class="check"><input type="checkbox" id="mode2d"> 2D mode (pixel art, units per tile)</label></div>
+      <div class="field"><button class="btn" id="reset">Reset to lecture table</button></div>
+      <p class="formula">D = T × f × r / S. Pass when (1 − tol) ≤ D / D* ≤ (1 + tol).</p>
+    </div>
+  </div>
+</section>
+
+<footer>Assets are invented and drawn as plain shapes. Model and table from AR101 week 13. In 2D mode one checker square is 2 art pixels instead of 8 texels, so a 16-pixel tile shows 8 squares across.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function rgbOf(n){const h=css(n);if(h[0]==='#'){const x=h.length===4?h.slice(1).split('').map(c=>c+c).join(''):h.slice(1);return [0,2,4].map(i=>parseInt(x.substr(i,2),16));}const m=h.match(/\d+/g);return m?m.slice(0,3).map(Number):[128,128,128];}
+const mix=(a,b,t)=>a.map((v,i)=>Math.round(v*(1-t)+b[i]*t));
+
+const LECTURE=[
+  {id:'wall',name:'Stone wall',S:4,T:512,f:1,r:1,tok:'--steel'},
+  {id:'barrel',name:'Barrel',S:1,T:256,f:0.5,r:1,tok:'--ochre'},
+  {id:'lantern',name:'Lantern',S:0.25,T:256,f:0.5,r:1,tok:'--blood'},
+  {id:'cliff',name:'Cliff face',S:16,T:1024,f:1,r:1,tok:'--ink-soft'},
+  {id:'tent',name:'Market tent',S:6,T:1024,f:0.75,r:1,tok:'--moss'}
+];
+const TWO=[
+  {id:'grass',name:'Grass block',tok:'--moss'},
+  {id:'crate',name:'Crate',tok:'--ochre'},
+  {id:'hero',name:'Hero sprite',tok:'--steel'}
+];
+let A,sel,Dt,tol,mode2d,k;
+function reset(){A=LECTURE.map(a=>Object.assign({},a));sel='lantern';Dt=128;tol=0.25;mode2d=false;k=1;}
+reset();
+
+const list=()=>mode2d?TWO:A;
+function density(a){
+  if(mode2d)return a.id==='hero'?16/k:16;
+  return a.T*a.f*a.r/a.S;
+}
+const target=()=>mode2d?16:Dt;
+const EPS=1e-9;
+function verdict(D){const r=D/target();return (r>=1-tol-EPS&&r<=1+tol+EPS);}
+const unit=()=>mode2d?'px/tile':'px/m';
+
+// ---------- scene geometry (world units: m, or tiles in 2D) ----------
+const cliffTop=x=>4.4+0.45*Math.sin(x*1.3)+0.25*Math.sin(x*3.1+1);
+const SHAPES3={
+  lantern:{x0:5.875,y0:1.2,hit:(x,y)=>x>=5.875&&x<6.125&&y>=1.2&&y<1.6-Math.max(0,Math.abs(x-6)-0.06)*0},
+  barrel:{x0:5.5,y0:0,hit:(x,y)=>y>=0&&y<1.2&&Math.abs(x-6)<0.5-0.07*Math.pow((y-0.6)/0.6,2)},
+  wall:{x0:0.6,y0:0,hit:(x,y)=>x>=0.6&&x<4.6&&y>=0&&(y<2.0||(y<2.3&&Math.floor((x-0.6)/0.5)%2===0))},
+  tent:{x0:8.6,y0:0,hit:(x,y)=>x>=8.6&&x<14.6&&y>=0&&y<2.0+1.4*(1-Math.abs(x-11.6)/3)},
+  cliff:{x0:0,y0:0,hit:(x,y)=>x>=0&&x<16&&y>=0&&y<cliffTop(x)}
+};
+const ORDER3=['lantern','barrel','wall','tent','cliff'];
+function shapes2(){
+  return {
+    hero:{x0:6,y0:0,hit:(x,y)=>{const u=(x-6)/k,v=y/k;return (u>=0.18&&u<0.82&&v>=0&&v<1.25)||((u-0.5)**2+(v-1.55)**2<0.3**2);}},
+    grass:{x0:1,y0:0,hit:(x,y)=>x>=1&&x<2&&y>=0&&y<1},
+    crate:{x0:3.5,y0:0,hit:(x,y)=>x>=3.5&&x<4.5&&y>=0&&y<1}
+  };
+}
+const ORDER2=['hero','grass','crate'];
+const ZOOMWIN={wall:[2.6,6.6],barrel:[4,8],lantern:[4,8],cliff:[12,16],tent:[7.6,11.6]};
+
+function render(cv,view){ // view: {x0,x1,y0,y1}
+  const dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  const W=Math.max(1,Math.round(r.width*dpr)),H=Math.max(1,Math.round(r.height*dpr));
+  cv.width=W;cv.height=H;
+  const g=cv.getContext('2d'),img=g.createImageData(W,H),d=img.data;
+  const sky=rgbOf('--paper-2'),ground=mix(rgbOf('--ink-soft'),rgbOf('--paper'),0.55),hl=rgbOf('--focus');
+  const shapes=mode2d?shapes2():SHAPES3,order=mode2d?ORDER2:ORDER3;
+  const info=order.map(id=>{
+    const a=list().find(x=>x.id===id),D=density(a),base=rgbOf(a.tok);
+    const q=(mode2d?2:8)/D; // world units per checker square
+    return {id,s:shapes[id],q,c1:mix(base,rgbOf('--paper'),0.2),c2:mix(base,rgbOf('--paper'),0.55)};
+  });
+  const sx=(view.x1-view.x0)/W,sy=(view.y1-view.y0)/H;
+  for(let py=0;py<H;py++){
+    const y=view.y1-(py+0.5)*sy;
+    for(let px=0;px<W;px++){
+      const x=view.x0+(px+0.5)*sx;let c=y<0?ground:sky;
+      for(const it of info){
+        if(it.s.hit(x,y)){
+          const p=(Math.floor((x-it.s.x0)/it.q)+Math.floor((y-it.s.y0)/it.q))&1;
+          c=p?it.c1:it.c2;break;
+        }
+      }
+      const o=(py*W+px)*4;d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255;
+    }
+  }
+  g.putImageData(img,0,0);
+  // outline selected asset (edge pixels of its mask)
+  const s=shapes[sel];g.fillStyle=`rgb(${hl.join(',')})`;
+  const step=Math.max(1,Math.round(dpr));
+  for(let py=0;py<H;py+=1){const y=view.y1-(py+0.5)*sy;
+    for(let px=0;px<W;px+=1){const x=view.x0+(px+0.5)*sx;
+      if(s.hit(x,y)&&(!s.hit(x+sx*2*step,y)||!s.hit(x-sx*2*step,y)||!s.hit(x,y+sy*2*step)||!s.hit(x,y-sy*2*step)))g.fillRect(px,py,1,1);}}
+}
+
+function draw(){
+  const sc=$('scene');
+  if(mode2d){render(sc,{x0:0,x1:10,y0:-0.5,y1:3.25});}
+  else render(sc,{x0:0,x1:16,y0:-0.8,y1:5.2});
+  $('zoomWrap').hidden=mode2d;
+  if(!mode2d){const w=ZOOMWIN[sel];render($('zoom'),{x0:w[0],x1:w[1],y0:-0.3,y1:2.7});
+    $('zoomCap').textContent=`Close-up ×4 around the ${list().find(a=>a.id===sel).name.toLowerCase()}: same densities, bigger view (outline marks the selected asset).`;}
+  const desc=list().map(a=>`${a.name} ${density(a).toFixed(1)} ${unit()}`).join(', ');
+  sc.setAttribute('aria-label',`Scene of checker-textured shapes. Smaller checker squares mean higher density. ${desc}.`);
+  $('zoom').setAttribute('aria-label','Close-up of the selected asset and its neighbours.');
+}
+
+// ---------- chart + table ----------
+function axisRange(){return mode2d?[4,64]:[16,1024];}
+function pos(D){const [lo,hi]=axisRange();return Math.min(1,Math.max(0,(Math.log2(D)-Math.log2(lo))/(Math.log2(hi)-Math.log2(lo))))*100;}
+function chart(){
+  const t=target(),lo=t*(1-tol),hi=t*(1+tol);
+  $('rows').innerHTML=list().map(a=>{
+    const D=density(a),ok=verdict(D),ratio=D/t;
+    return `<div class="row${a.id===sel?' sel':''}" role="radio" aria-checked="${a.id===sel}" tabindex="${a.id===sel?0:-1}" data-id="${a.id}" data-d="${D.toFixed(1)}" data-ratio="${ratio.toFixed(2)}" data-verdict="${ok?'pass':'FAIL'}" aria-label="${a.name}: ${D.toFixed(1)} ${unit()}, ratio ${ratio.toFixed(2)}, ${ok?'pass':'FAIL'}">`+
+      `<span class="nm">${a.name}</span>`+
+      `<div class="track"><div class="band" style="left:${pos(Math.max(lo,1e-6))}%;width:${Math.max(0.6,pos(hi)-pos(Math.max(lo,1e-6)))}%"></div><div class="fill ${ok?'ok':'warn'}" style="width:${pos(D)}%"></div><div class="tline" style="left:${pos(t)}%"></div></div>`+
+      `<span class="val">${D.toFixed(1)} ${unit()} · ratio ${ratio.toFixed(2)} · <span class="${ok?'ok-t':'warn-t'}">${ok?'✓ pass':'✗ FAIL'}</span></span></div>`;
+  }).join('');
+  const [a0,a1]=axisRange(),ticks=[];for(let v=a0;v<=a1;v*=2)ticks.push(v);
+  $('axis').innerHTML=ticks.map(v=>`<span style="left:${pos(v)}%">${v}</span>`).join('');
+  $('chartNote').textContent=`Log₂ axis in ${unit()}. Black line is D* = ${t}; shaded band is ±${Math.round(tol*100)}% (${lo.toFixed(1)} to ${hi.toFixed(1)}). Solid bar passes, striped bar fails.`;
+  if(mode2d){
+    $('thead').innerHTML='<tr><th>Asset</th><th>Size</th><th>k</th><th>D</th><th>D/D*</th><th>Verdict</th></tr>';
+    $('tbody').innerHTML=list().map(a=>{const D=density(a),ok=verdict(D);return `<tr class="${a.id===sel?'sel':''}"><td>${a.name}</td><td>${a.id==='hero'?'1 × 2':'1 × 1'} tiles</td><td>${a.id==='hero'?k:1}</td><td>${D.toFixed(1)}</td><td>${(D/t).toFixed(2)}</td><td class="${ok?'ok-t':'warn-t'}">${ok?'✓ pass':'✗ FAIL'}</td></tr>`;}).join('');
+  }else{
+    $('thead').innerHTML='<tr><th>Asset</th><th>S</th><th>T</th><th>f</th><th>r</th><th>D</th><th>D/D*</th><th>Verdict</th></tr>';
+    $('tbody').innerHTML=list().map(a=>{const D=density(a),ok=verdict(D);return `<tr class="${a.id===sel?'sel':''}"><td>${a.name}</td><td>${a.S}</td><td>${a.T}</td><td>${a.f.toFixed(2)}</td><td>${a.r}</td><td>${D.toFixed(1)}</td><td>${(D/t).toFixed(2)}</td><td class="${ok?'ok-t':'warn-t'}">${ok?'✓ pass':'✗ FAIL'}</td></tr>`;}).join('');
+  }
+  document.querySelectorAll('#rows .row').forEach(r=>{
+    r.addEventListener('click',()=>select(r.dataset.id,true));
+    r.addEventListener('keydown',e=>{
+      const ids=list().map(a=>a.id),i=ids.indexOf(r.dataset.id);
+      if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();select(ids[(i+1)%ids.length],true,true);}
+      if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();select(ids[(i+ids.length-1)%ids.length],true,true);}
+    });
+  });
+}
+function insight(){
+  const a=list().find(x=>x.id===sel),D=density(a),t=target(),r=D/t,ok=verdict(D);
+  let s=`<b>${a.name}: D = ${mode2d?(a.id==='hero'?`16 / ${k}`:'16'):`${a.T} × ${a.f.toFixed(2)} × ${a.r} / ${a.S}`} = ${D.toFixed(1)} ${unit()}</b>, ratio ${r.toFixed(2)}, ${ok?'pass':'FAIL'}. `;
+  if(ok&&Math.abs(r-1)<EPS)s+='Its checker squares match the target exactly, so it sits in the scene without drawing the eye.';
+  else if(ok)s+=`Off target by ${Math.round(Math.abs(r-1)*100)}%, inside the ±${Math.round(tol*100)}% band.`;
+  else if(r>1)s+=`Too sharp: each texel is ${r.toFixed(2)}× smaller on screen than the bible allows for, so it looks pasted in. ${mode2d?'':'Lower T or f.'}`;
+  else s+=`Too blurry: each texel is ${(1/r).toFixed(2)}× larger on screen than the target. ${mode2d?'Set k back to 1 and redraw the sprite bigger instead.':'Raise T, f or the repeats r.'}`;
+  $('insight').innerHTML=s;
+}
+function syncControls(){
+  $('ctl3d').hidden=mode2d;$('ctl2d').hidden=!mode2d;$('targetField').hidden=mode2d;$('target2d').hidden=!mode2d;
+  $('mode2d').checked=mode2d;$('tol').value=tol;$('otol').textContent='±'+Math.round(tol*100)+'%';
+  $('Dt').value=String(Dt);$('oDt').textContent=Dt+' px/m';$('k').value=k;$('ok').textContent=k;
+  $('sceneNote').textContent=mode2d?'A 2D scene, 10 tiles wide. One checker square = 2 art pixels.':'Saltmarsh Reach, 16 m wide. One checker square = 8 texels, so small squares mean a sharp texture.';
+  $('assetGroup').innerHTML=list().map(a=>`<label class="radio"><input type="radio" name="asset" value="${a.id}"${a.id===sel?' checked':''}><span>${a.name}</span></label>`).join('');
+  document.querySelectorAll('input[name=asset]').forEach(r=>r.addEventListener('change',()=>select(r.value,false)));
+  if(!mode2d){const a=A.find(x=>x.id===sel);$('T').value=String(a.T);$('oT').textContent=a.T+' px';$('f').value=a.f;$('of').textContent=a.f.toFixed(2);$('or').textContent=a.r;$('oS').textContent=a.S;
+    $('rDown').disabled=a.r<=1;$('rUp').disabled=a.r>=8;}
+}
+function update(){syncControls();chart();insight();draw();}
+function select(id,fromChart,focus){sel=id;update();if(focus){const r=document.querySelector(`#rows .row[data-id="${id}"]`);r&&r.focus();}}
+const cur=()=>A.find(x=>x.id===sel);
+$('T').addEventListener('change',e=>{cur().T=+e.target.value;update();});
+$('f').addEventListener('input',e=>{cur().f=Math.round(+e.target.value*100)/100;update();});
+$('rDown').addEventListener('click',()=>{cur().r=Math.max(1,cur().r-1);update();$('rDown').disabled||$('rDown').focus();});
+$('rUp').addEventListener('click',()=>{cur().r=Math.min(8,cur().r+1);update();$('rUp').disabled||$('rUp').focus();});
+$('Dt').addEventListener('change',e=>{Dt=+e.target.value;update();});
+$('tol').addEventListener('input',e=>{tol=Math.round(+e.target.value*100)/100;update();});
+$('k').addEventListener('input',e=>{k=+e.target.value;update();});
+$('mode2d').addEventListener('change',e=>{mode2d=e.target.checked;if(mode2d){tol=0;sel='hero';}else{tol=0.25;sel='lantern';}update();});
+$('reset').addEventListener('click',()=>{reset();update();});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+update();
+})();
+</script>
+</body>
+</html>

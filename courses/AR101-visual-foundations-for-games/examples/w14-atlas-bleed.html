@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atlas gutters and bleeding · AR101 Week 14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+header{max-width:66ch;margin-bottom:14px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:14px}
+.views{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:860px){.views{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:10px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.8rem}
+canvas{display:block;width:100%;margin:0 auto;border-radius:4px}
+#atlas{aspect-ratio:1/1;max-width:380px}
+#strip{aspect-ratio:3/2;image-rendering:pixelated;max-width:480px}
+.readout{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 10px;margin:12px 0 2px}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 9px;min-width:0}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.8rem;color:var(--ink-soft)}
+.bleed{margin:10px 0 0;font-size:.92rem}
+.yes{color:var(--blood);font-weight:700}.no{color:var(--moss);font-weight:700}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+@media (min-width:760px){.controls{grid-template-columns:1fr 1fr}}
+fieldset{border:none;margin:0;padding:0;min-width:0}
+legend,.lab{font-weight:600;font-size:.9rem;padding:0;margin-bottom:4px}
+.group{display:flex;flex-wrap:wrap;gap:6px}
+.radio{position:relative;display:inline-flex}
+.radio input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.radio span{font:600 .86rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--ink);min-height:34px;display:inline-flex;align-items:center}
+.radio input:checked+span{background:var(--ink);color:var(--paper)}
+.radio input:checked+span::before{content:"\25CF\00a0"}
+.radio input:focus-visible+span,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.field{display:grid;gap:4px;margin-top:10px}
+.field>label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+output{font-variant-numeric:tabular-nums;font-weight:700}
+select{font:600 .9rem var(--sans);padding:6px 8px;border-radius:6px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.field>label.check{justify-content:flex-start}
+.check{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.9rem}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.note{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.86rem;width:100%}
+th,td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (max-width:480px){th,td{padding:4px 3px;font-size:.78rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">AR101 Visual Foundations for Games · Week 14 · Worked example</p>
+  <h1>Gutters: cheap per sprite, expensive at the power of two</h1>
+  <p class="lede">With no gutter, the stone tiles pick up a green line from their atlas neighbor as soon as the texture shrinks one mip level. One pixel of gutter fixes level 0 and pushes 64 sprites from a 256 atlas to a 512 one, four times the memory.</p>
+</header>
+
+<section class="panel">
+  <div class="views">
+    <figure>
+      <figcaption>The atlas<small>64 invented sprites. Light tint = extruded gutter, checkerboard = empty or transparent. The outlined gray square is the stone tile used on the right; its eight neighbors are solid green and magenta.</small></figcaption>
+      <canvas id="atlas" role="img"></canvas>
+      <div class="readout" aria-live="polite">
+        <div class="stat" style="--c:var(--steel)"><b id="rSide">—</b><span>atlas side</span></div>
+        <div class="stat" style="--c:var(--blood)"><b id="rMem">—</b><span id="rMemLab">memory</span></div>
+        <div class="stat" style="--c:var(--ochre)"><b id="rFill">—</b><span>sprite pixels fill</span></div>
+        <div class="stat" style="--c:var(--moss)"><b id="rSafe">—</b><span>safe to mip level (model)</span></div>
+      </div>
+      <p class="note" id="cellNote"></p>
+    </figure>
+    <figure>
+      <figcaption>In the game<small id="stripCap"></small></figcaption>
+      <canvas id="strip" role="img"></canvas>
+      <p class="bleed" id="bleed" aria-live="polite"></p>
+      <div class="table-wrap">
+        <table aria-label="Measured bleeding per mip level">
+          <thead><tr><th>Mip level</th><th>Texel = px</th><th>Max bleed</th><th>Result</th></tr></thead>
+          <tbody id="lvBody"></tbody>
+        </table>
+      </div>
+    </figure>
+  </div>
+  <div class="insight" id="insight" aria-live="polite"></div>
+
+  <div class="controls">
+    <div>
+      <div class="field"><label for="sprite">Sprite size <output id="oSprite">32 px</output></label>
+        <select id="sprite"><option>24</option><option>28</option><option selected>32</option></select></div>
+      <div class="field"><label for="g">Gutter g per side <output id="oG">0 px</output></label>
+        <input type="range" id="g" min="0" max="8" step="1" value="0"></div>
+      <div class="field"><label class="check"><input type="checkbox" id="align" checked> <span>Align sprites to multiples of 2<sup>L</sup></span></label>
+        <p class="note">On: the stone starts on a multiple of 16, the case the model's derivation assumes. Off: it starts where the packed grid puts it (one cell + g), with no rounding, and the first bleeding level then depends on luck. With these sizes it comes at the model's level or later (g = 1 stays clean at level 1), so treat the aligned case as the guarantee.</p></div>
+    </div>
+    <div>
+      <div class="field"><label for="lv">Mip level shown on the right <output id="oLv">1</output></label>
+        <input type="range" id="lv" min="0" max="4" step="1" value="1"></div>
+      <fieldset class="field"><legend>Filter</legend><div class="group">
+        <label class="radio"><input type="radio" name="filter" value="point"><span>Point</span></label>
+        <label class="radio"><input type="radio" name="filter" value="bilinear" checked><span>Bilinear</span></label></div></fieldset>
+      <fieldset class="field"><legend>Memory format</legend><div class="group">
+        <label class="radio"><input type="radio" name="fmt" value="RGBA8" checked><span>RGBA8</span></label>
+        <label class="radio"><input type="radio" name="fmt" value="BC7"><span>BC7</span></label>
+        <label class="radio"><input type="radio" name="fmt" value="BC1"><span>BC1</span></label></div></fieldset>
+      <div class="field"><label class="check"><input type="checkbox" id="mips"> Store mipmaps</label></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table aria-label="Lecture table, recomputed">
+      <thead><tr><th>Sprite</th><th>g</th><th>Cell</th><th>Atlas</th><th>RGBA8, no mips</th><th>Fill</th><th>Safe mip</th></tr></thead>
+      <tbody id="lecBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from AR101 week 14. Cell = sprite + 2g; atlas side is the smallest power of two s with floor(s / cell)² ≥ 64; memory = s² × bytes per texel, with block formats counted in whole 4×4 blocks per mip level. The right view is a software renderer: 2×2 box-filtered mip chain, then 4×4 samples per level-k texel at offsets 1/8, 3/8, 5/8, 7/8. All sprites are invented shapes.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const N_SPRITES=64;
+const PAL=[[224,80,60],[240,160,48],[232,208,64],[88,176,80],[64,160,200],[88,112,216],[160,96,200],[208,96,152]];
+const STONE=[138,138,132],GREEN=[40,220,60],MAGENTA=[230,40,220];
+let st={sprite:32,g:0,align:true,lv:1,filter:'bilinear',fmt:'RGBA8',mips:false};
+
+const safeL=g=>g>=1?Math.floor(Math.log2(g)):null;
+function layout(sprite,g){
+  const cell=sprite+2*g;
+  let s=1;while(Math.pow(Math.floor(s/cell),2)<N_SPRITES)s*=2;
+  return {cell,pitch:cell,left:g,s,cols:Math.floor(s/cell)};
+}
+function memBytes(s,fmt,mips){
+  let tot=0;
+  for(let w=s;;w=w>>1){
+    if(fmt==='RGBA8')tot+=w*w*4;
+    else{const bl=Math.max(1,Math.ceil(w/4));tot+=bl*bl*(fmt==='BC1'?8:16);}
+    if(!mips||w<=1)break;
+  }
+  return tot;
+}
+const fmtKiB=b=>{const k=b/1024;return (Number.isInteger(k)?k.toLocaleString('en-US'):k.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1}))+' KiB';};
+
+// sprite kinds: special 3x3 block around the stone at (1,1)
+function spriteSpec(i,cols){
+  const c=i%cols,r=Math.floor(i/cols);
+  if(c<=2&&r<=2){
+    if(c===1&&r===1)return {shape:'square',col:STONE,stone:true};
+    if(c===1)return {shape:'square',col:GREEN};
+    if(r===1)return {shape:'square',col:MAGENTA};
+    return {shape:'square',col:GREEN};
+  }
+  return {shape:['circle','square','triangle','diamond'][i%4],col:PAL[i%8]};
+}
+function inside(shape,u,v){ // u,v in 0..1 sprite space
+  if(shape==='square')return true;
+  if(shape==='circle')return (u-0.5)**2+(v-0.5)**2<=0.42**2;
+  if(shape==='diamond')return Math.abs(u-0.5)+Math.abs(v-0.5)<=0.46;
+  if(shape==='triangle')return v>=0.08&&v<=0.92&&Math.abs(u-0.5)<=0.44*(v-0.08)/0.84;
+  return false;
+}
+
+// ---------- pixel atlas + mip chain (premultiplied RGBA and stone-ownership channel) ----------
+let cache=null;
+// The right view renders the stone tile's neighbourhood: the stone sprite with its gutter,
+// and its eight neighbours' cells (solid squares, gutters extruded), 2g apart as in the atlas.
+function stoneStart(){ // aligned: a multiple of 16, so texel edges meet the sprite edge at every level 0-4
+  const packed=st.sprite+3*st.g; // column 1 of the packed grid: one cell + g
+  return {packed,a:48+(st.align?0:packed%16)};
+}
+function build(){
+  const key=[st.sprite,st.g,st.align].join();
+  if(cache&&cache.key===key)return cache;
+  const n=st.sprite,g=st.g,cell=n+2*g,S=128,{a}=stoneStart();
+  const px=new Float32Array(S*S*4),own=new Float32Array(S*S);
+  const idx=v=>Math.max(-1,Math.min(1,Math.floor((v-(a-g))/cell)));
+  for(let y=0;y<S;y++)for(let x=0;x<S;x++){
+    const cx=idx(x),cy=idx(y);let c;
+    if(cx===0&&cy===0){c=STONE;own[y*S+x]=1;}else if(cx===0||cy!==0&&cx!==0)c=GREEN;else c=MAGENTA;
+    const o=(y*S+x)*4;px[o]=c[0]/255;px[o+1]=c[1]/255;px[o+2]=c[2]/255;px[o+3]=1;
+  }
+  const levels=[{w:S,px,own}];
+  for(let w=S>>1;w>=1;w>>=1){
+    const p=levels[levels.length-1],W=p.w,q=new Float32Array(w*w*4),qo=new Float32Array(w*w);
+    for(let y=0;y<w;y++)for(let x=0;x<w;x++){
+      const a0=(2*y*W+2*x),b0=a0+1,c0=a0+W,d0=c0+1;
+      for(let ch=0;ch<4;ch++)q[(y*w+x)*4+ch]=(p.px[a0*4+ch]+p.px[b0*4+ch]+p.px[c0*4+ch]+p.px[d0*4+ch])/4;
+      qo[y*w+x]=(p.own[a0]+p.own[b0]+p.own[c0]+p.own[d0])/4;
+    }
+    levels.push({w,px:q,own:qo});
+  }
+  cache={key,levels,stoneX:a,stoneY:a};return cache;
+}
+function sampleLevel(lvl,x,y,filter,out){ // x,y in level texel units; out=[r,g,b,a,own]
+  const W=lvl.w,cl=v=>Math.min(W-1,Math.max(0,v));
+  if(filter==='point'){
+    const i=cl(Math.floor(y))*W+cl(Math.floor(x));
+    for(let c=0;c<4;c++)out[c]=lvl.px[i*4+c];out[4]=lvl.own[i];return out;
+  }
+  const fx=x-0.5,fy=y-0.5,x0=Math.floor(fx),y0=Math.floor(fy),tx=fx-x0,ty=fy-y0;
+  const pts=[[x0,y0,(1-tx)*(1-ty)],[x0+1,y0,tx*(1-ty)],[x0,y0+1,(1-tx)*ty],[x0+1,y0+1,tx*ty]];
+  out.fill(0);
+  for(const [px,py,w] of pts){if(!w)continue;const i=cl(py)*W+cl(px);for(let c=0;c<4;c++)out[c]+=w*lvl.px[i*4+c];out[4]+=w*lvl.own[i];}
+  return out;
+}
+function renderTile(k){ // returns {N,rgba:Uint8ClampedArray N*N*4, maxBleed}
+  const B=build(),n=st.sprite,lvl=B.levels[Math.min(k,B.levels.length-1)],sc=Math.pow(2,k);
+  const N=Math.ceil(4*n/sc),rgba=new Uint8ClampedArray(N*N*4),o=new Float32Array(5);
+  let maxB=0;
+  for(let j=0;j<N;j++){const v=B.stoneY+(j+0.5)/N*n;
+    for(let i=0;i<N;i++){const u=B.stoneX+(i+0.5)/N*n;
+      sampleLevel(lvl,u/sc,v/sc,st.filter,o);
+      const a=o[3],bg=0.12; // composite premultiplied over a dark void
+      const p=(j*N+i)*4;
+      rgba[p]=Math.round((o[0]+bg*(1-a))*255);rgba[p+1]=Math.round((o[1]+bg*(1-a))*255);rgba[p+2]=Math.round((o[2]+bg*(1-a))*255);rgba[p+3]=255;
+      maxB=Math.max(maxB,1-o[4]);
+    }}
+  return {N,rgba,maxBleed:maxB<1e-6?0:maxB};
+}
+
+// ---------- drawing ----------
+function drawAtlas(){
+  const cv=$('atlas'),dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect(),W=Math.max(1,r.width);
+  cv.width=Math.round(W*dpr);cv.height=Math.round(W*dpr);
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  const Lo=layout(st.sprite,st.g),s=Lo.s,k=W/s,n=st.sprite;
+  // checkerboard: 8 atlas px squares
+  const cs=Math.max(4,8*k);
+  for(let y=0;y*cs<W;y++)for(let x=0;x*cs<W;x++){g.fillStyle=(x+y)%2?'#c9c9c9':'#e9e9e9';g.fillRect(x*cs,y*cs,cs,cs);}
+  let stone=null;
+  for(let i=0;i<N_SPRITES;i++){
+    const sp=spriteSpec(i,Lo.cols),cx=(i%Lo.cols)*Lo.pitch,cy=Math.floor(i/Lo.cols)*Lo.pitch,x0=cx+Lo.left,y0=cy+Lo.left;
+    const cw=Lo.cell;
+    const tint=sp.col.map(v=>Math.round(v+(255-v)*0.55));
+    if(st.g>0){g.fillStyle=`rgb(${tint})`;g.fillRect(cx*k,cy*k,cw*k,cw*k);
+      g.clearRect(x0*k,y0*k,n*k,n*k);
+      // restore checker under sprite area
+      g.save();g.beginPath();g.rect(x0*k,y0*k,n*k,n*k);g.clip();
+      for(let yy=Math.floor(y0*k/cs);yy*cs<(y0+n)*k;yy++)for(let xx=Math.floor(x0*k/cs);xx*cs<(x0+n)*k;xx++){g.fillStyle=(xx+yy)%2?'#c9c9c9':'#e9e9e9';g.fillRect(xx*cs,yy*cs,cs,cs);}
+      g.restore();}
+    g.fillStyle=`rgb(${sp.col})`;g.beginPath();
+    const X=x0*k,Y=y0*k,S=n*k;
+    if(sp.shape==='square')g.rect(X,Y,S,S);
+    else if(sp.shape==='circle')g.arc(X+S/2,Y+S/2,S*0.42,0,Math.PI*2);
+    else if(sp.shape==='diamond'){g.moveTo(X+S/2,Y+S*0.04);g.lineTo(X+S*0.96,Y+S/2);g.lineTo(X+S/2,Y+S*0.96);g.lineTo(X+S*0.04,Y+S/2);g.closePath();}
+    else{g.moveTo(X+S/2,Y+S*0.08);g.lineTo(X+S*0.94,Y+S*0.92);g.lineTo(X+S*0.06,Y+S*0.92);g.closePath();}
+    g.fill();
+    if(sp.stone)stone=[X,Y,S];
+  }
+  g.strokeStyle=css('--focus');g.lineWidth=2.5;g.strokeRect(stone[0]-1.5,stone[1]-1.5,stone[2]+3,stone[2]+3);
+  cv.setAttribute('aria-label',`Atlas ${s} by ${s} pixels with 64 sprites in cells of ${Lo.pitch} pixels, ${Lo.cols} per row. Fill ${Math.round(64*n*n/s/s*100)} percent.`);
+}
+function drawStrip(){
+  const t=renderTile(st.lv),N=t.N;
+  const off=document.createElement('canvas');off.width=3*N;off.height=2*N;
+  const og=off.getContext('2d'),img=og.createImageData(3*N,2*N);
+  for(let ty=0;ty<2;ty++)for(let tx=0;tx<3;tx++)for(let j=0;j<N;j++){
+    const src=j*N*4,dst=((ty*N+j)*3*N+tx*N)*4;img.data.set(t.rgba.subarray(src,src+N*4),dst);}
+  og.putImageData(img,0,0);
+  const cv=$('strip'),dpr=window.devicePixelRatio||1,r=cv.getBoundingClientRect();
+  cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));
+  const g=cv.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(off,0,0,cv.width,cv.height);
+  cv.setAttribute('aria-label',`Six stone tiles at mip level ${st.lv} with ${st.filter} filtering. ${t.maxBleed>0?`Neighbor color bleeds in, up to ${(t.maxBleed*100).toFixed(1)} percent of a sample.`:'No neighbor color bleeds in.'}`);
+  return t;
+}
+function levelTable(){
+  const rows=[];let first=null;
+  for(let k=0;k<=4;k++){
+    const b=renderTile(k).maxBleed;if(b>0&&first===null)first=k;
+    rows.push(`<tr class="${k===st.lv?'here':''}" data-level="${k}" data-bleed="${b>0?'yes':'no'}"><td>${k}</td><td>${Math.pow(2,k)}</td><td>${(b*100).toFixed(1)}%</td><td>${b>0?'<span class="yes">✗ bleeds</span>':'<span class="no">✓ clean</span>'}</td></tr>`);
+  }
+  $('lvBody').innerHTML=rows.join('');return first;
+}
+function lectureTable(){
+  const R=[[32,0],[32,1],[32,2],[32,4],[32,8],[28,2],[24,4]];
+  $('lecBody').innerHTML=R.map(([sp,g])=>{const Lo=layout(sp,g),here=sp===st.sprite&&g===st.g;const L=safeL(g);
+    return `<tr class="${here?'here':''}"><td>${sp}</td><td>${g}</td><td>${Lo.cell}</td><td>${Lo.s}</td><td>${fmtKiB(memBytes(Lo.s,'RGBA8',false))}</td><td>${Math.round(64*sp*sp/Lo.s/Lo.s*100)}%</td><td>${L===null?'none':L}</td></tr>`;}).join('');
+}
+function update(){
+  const Lo=layout(st.sprite,st.g),L=safeL(st.g);
+  $('oSprite').textContent=st.sprite+' px';$('oG').textContent=st.g+' px';$('oLv').textContent=st.lv;
+  $('rSide').textContent=`${Lo.s} × ${Lo.s}`;
+  $('rMem').textContent=fmtKiB(memBytes(Lo.s,st.fmt,st.mips));
+  $('rMemLab').textContent=`memory, ${st.fmt}${st.mips?' with mipmaps':', no mips'}`;
+  $('rFill').textContent=Math.round(64*st.sprite*st.sprite/Lo.s/Lo.s*100)+'%';
+  $('rSafe').textContent=L===null?'none (point only)':String(L);
+  const ss=stoneStart();
+  const h=Lo.s/2,q=Math.floor(h/Lo.cell);
+  $('cellNote').textContent=`Cell = ${st.sprite} + 2 × ${st.g} = ${Lo.cell} px. A ${h} atlas holds floor(${h} / ${Lo.cell})² = ${q*q} cells, short of 64; ${Lo.s} holds ${Lo.cols}² = ${Lo.cols*Lo.cols}. `+(st.align?'Right view: the stone starts on a multiple of 16 px, so its edge meets a texel edge at every level from 0 to 4.':`Right view: the stone starts at its packed position x = ${ss.packed}, ${ss.packed%16===0?'a multiple of 16 anyway':`${ss.packed%16} px past a multiple of 16`}.`);
+  $('stripCap').textContent=`Six stone tiles sampled from the atlas at mip level ${st.lv} (1 texel = ${Math.pow(2,st.lv)} × ${Math.pow(2,st.lv)} source px), ${st.filter} filter, 4 × 4 samples per texel, magnified. Green comes from the neighbor above and below, magenta from left and right.`;
+  drawAtlas();const t=drawStrip();const first=levelTable();lectureTable();
+  $('bleed').innerHTML=t.maxBleed>0?`<span class="yes">✗ Bleeding at level ${st.lv}:</span> up to ${(t.maxBleed*100).toFixed(1)}% neighbor color in the outermost samples (corner samples mix two neighbors).`:`<span class="no">✓ No bleeding at level ${st.lv}.</span> Every sample reads only the stone and its own gutter.`;
+  let s=`<b>Gutter ${st.g}: ${Lo.s} × ${Lo.s} atlas, ${fmtKiB(memBytes(Lo.s,st.fmt,st.mips))}.</b> `;
+  s+=`The model says ${L===null?'only point filtering at full size is safe':`bilinear is safe up to level ${L}`}; the renderer ${first===null?'finds no bleeding at levels 0 to 4':`first bleeds at level ${first}`} with ${st.filter} filtering.`;
+  if(st.g===0&&st.sprite===32)s+=' Try g = 1: level 0 turns clean, and the atlas jumps to 512.';
+  else if(st.g>0&&st.sprite===32)s+=' Now try sprite 28 with g = 2: same protection, back to 256.';
+  $('insight').innerHTML=s;
+}
+$('sprite').addEventListener('change',e=>{st.sprite=+e.target.value;update();});
+$('g').addEventListener('input',e=>{st.g=+e.target.value;update();});
+$('align').addEventListener('change',e=>{st.align=e.target.checked;update();});
+$('lv').addEventListener('input',e=>{st.lv=+e.target.value;update();});
+$('mips').addEventListener('change',e=>{st.mips=e.target.checked;update();});
+document.querySelectorAll('input[name=filter]').forEach(r=>r.addEventListener('change',()=>{st.filter=r.value;update();}));
+document.querySelectorAll('input[name=fmt]').forEach(r=>r.addEventListener('change',()=>{st.fmt=r.value;update();}));
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+update();
+})();
+</script>
+</body>
+</html>
