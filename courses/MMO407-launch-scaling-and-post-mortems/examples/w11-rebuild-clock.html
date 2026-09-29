@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rebuild clock — MMO407 Week 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.caption{font-family:var(--serif);font-size:1.2rem;font-weight:600;margin:0 0 14px;padding:10px 14px;border-left:5px solid var(--steel);background:var(--paper-2);border-radius:0 10px 10px 0}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:270px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 12px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.sentence{font-family:var(--serif);margin:10px 0 0;grid-column:1/-1}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px 24px;margin-top:16px}
+@media (max-width:980px){.controls{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px;margin:0 0 6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 10px}
+.chip{font:600 .86rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{background:var(--paper-2)}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.8rem;color:var(--ink-soft);margin:0 0 6px}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+th,td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper)}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO407 Launch, Scaling and Post-mortems · Week 11 · Worked example</p>
+  <h1>The rebuild slows where the recordings stop</h1>
+  <p class="lede">A fan team rebuilding a closed MMO from scratch moves fast through every behaviour somebody recorded, then crawls through the ones it has to guess. Evidence gathered before the shutdown moves the finish line as much as a bigger team. The server source puts the project on a different line altogether.</p>
+</header>
+
+<section class="panel" aria-label="Emulator rebuild model">
+  <p class="caption" id="caption">&nbsp;</p>
+  <div class="views">
+    <figure>
+      <figcaption>A. The rebuild<small>Share of the game's server behaviours rebuilt, by year</small></figcaption>
+      <canvas id="cA" role="img" aria-label="Completeness curve against years, with the kink at the evidence share"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--steel)"></i>from scratch</span>
+        <span><i style="border-color:var(--moss)"></i>source released</span>
+        <span><i style="border-color:var(--ink-soft);opacity:.35"></i>before your last change</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>B. Years against evidence<small>Total years to finish, for every evidence share q, with the current team</small></figcaption>
+      <canvas id="cB" role="img" aria-label="Total years against evidence share, with a flat line for the source-release case"></canvas>
+      <div class="legend">
+        <span><i style="border-color:var(--blood)"></i>from scratch, T(q)</span>
+        <span><i style="border-color:var(--moss)"></i>source released, T_s</span>
+      </div>
+      <div class="table-wrap">
+        <table aria-label="Key values by evidence share">
+          <thead><tr><th>Evidence q</th><th>Hours H</th><th>Faithful part (years)</th><th>All done (years)</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rV">—</b><span>V, volunteer-hours per week</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rH">—</b><span>H, hours needed</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rT">—</b><span>T, weeks · years to finish</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rTq">—</b><span>t_q, faithful part done (years)</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rTs">—</b><span>T_s with source, weeks · years</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rPt">—</b><span>extra weeks per missing point of q</span></div>
+    <p class="sentence" id="sentence"></p>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <span class="lbl" id="preLbl">Presets</span>
+      <div class="row" role="group" aria-labelledby="preLbl">
+        <button class="chip" type="button" data-pre="s2" aria-pressed="true">Section 2 example</button>
+        <button class="chip" type="button" data-pre="cap" aria-pressed="false">Capture window (q 55% to 85%)</button>
+        <button class="chip" type="button" data-pre="dbl" aria-pressed="false">Double the team</button>
+      </div>
+      <label for="q">Evidence q <output id="oq"></output></label>
+      <input id="q" type="range" min="0" max="100" step="1" value="80">
+      <p class="hint">Share of behaviours somebody recorded or documented before the servers closed.</p>
+    </div>
+    <div class="ctl">
+      <label for="B">Behaviours B <output id="oB"></output></label>
+      <input id="B" type="range" min="200" max="5000" step="100" value="1500">
+      <label for="w">Hours per behaviour with evidence, w <output id="ow"></output></label>
+      <input id="w" type="range" min="10" max="150" step="5" value="60">
+      <label for="g">Guess multiplier g <output id="og"></output></label>
+      <input id="g" type="range" min="1" max="10" step="0.5" value="4">
+    </div>
+    <div class="ctl">
+      <label for="vol">Volunteers <output id="ovol"></output></label>
+      <input id="vol" type="range" min="1" max="100" step="1" value="25">
+      <label for="hpw">Hours per volunteer per week <output id="ohpw"></output></label>
+      <input id="hpw" type="range" min="1" max="20" step="1" value="8">
+      <label for="ws">Hours per behaviour with source, w_s <output id="ows"></output></label>
+      <input id="ws" type="range" min="1" max="20" step="1" value="3">
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+</section>
+
+<footer>Model and default values from the MMO407 week 11 lecture, section 2. The game is invented. H = B &times; w &times; (q + g &times; (1 &minus; q)); T = H / V weeks; t_q = B &times; q &times; w / V; T_s = B &times; w_s / V. A year is 52 weeks. The team rebuilds evidence-backed behaviours first, at V / w behaviours a week, then the guessed ones at V / (g &times; w).</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const r1=n=>{const v=Math.round(n*10)/10;return (Number.isInteger(v)?v.toLocaleString('en-US'):v.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1}));};
+const y1=wk=>(wk/52).toFixed(1);
+const YMAX_A=30;
+const S={q:80,B:1500,w:60,g:4,vol:25,hpw:8,ws:3};
+let ghost=null,committed=null;
+
+function model(qPct){
+  const q=(qPct===undefined?S.q:qPct)/100,V=S.vol*S.hpw,B=S.B,w=S.w,g=S.g;
+  const H=B*w*(q+g*(1-q)),T=H/V,tq=B*q*w/V,Ts=B*S.ws/V;
+  return {q,V,H,T,tq,Ts};
+}
+function C(tw,m){const V=m.V,B=S.B,w=S.w,g=S.g;if(tw<=m.tq)return Math.min(m.q,V*tw/(B*w));return Math.min(1,m.q+V*(tw-m.tq)/(B*g*w));}
+function Cs(tw,m){return Math.min(1,m.V*tw/(S.B*S.ws));}
+function curveA(){const m=model(),pts=[];for(let i=0;i<=600;i++){const y=YMAX_A*i/600;pts.push([y,C(y*52,m)]);}return pts;}
+
+function setup(c){const dpr=window.devicePixelRatio||1,rc=c.getBoundingClientRect();c.width=Math.max(1,rc.width*dpr);c.height=Math.max(1,rc.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,rc.width,rc.height);g.font='12px '+css('--sans');return {g,w:rc.width,h:rc.height};}
+function niceMax(v){const mag=Math.pow(10,Math.floor(Math.log10(v)));for(const m of [1,1.5,2,2.5,3,4,5,6,8,10])if(m*mag>=v)return m*mag;return 10*mag;}
+function poly(g,X,Y,pts,color,wd,alpha){g.strokeStyle=color;g.lineWidth=wd;g.globalAlpha=alpha||1;g.beginPath();pts.forEach(([a,b],i)=>i?g.lineTo(X(a),Y(b)):g.moveTo(X(a),Y(b)));g.stroke();g.globalAlpha=1;}
+const pad={l:46,r:14,t:14,b:30};
+function drawA(pts){
+  const c=setup($('cA')),g=c.g,w=c.w,h=c.h,pt=24,X=t=>pad.l+(w-pad.l-pad.r)*t/YMAX_A,Y=v=>pt+(h-pt-pad.b)*(1-v);
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;g.textAlign='right';g.textBaseline='middle';
+  for(let i=0;i<=4;i++){const y=Y(i/4);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(i*25+'%',pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';for(let t=0;t<=YMAX_A;t+=5)g.fillText(String(t),X(t),h-pad.b+6);
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('years',w-pad.r,h-pad.b-4);
+  const m=model();
+  if(ghost)poly(g,X,Y,ghost,css('--ink-soft'),2.5,.35);
+  const src=[];for(let i=0;i<=600;i++){const y=YMAX_A*i/600;src.push([y,Cs(y*52,m)]);}
+  poly(g,X,Y,src,css('--moss'),3);
+  poly(g,X,Y,pts,css('--steel'),3);
+  g.font='600 12px '+css('--sans');
+  // source label
+  const tsY=m.Ts/52;g.fillStyle=css('--moss');g.textAlign='left';g.textBaseline='top';
+  g.fillText((w<420?'source: ':'source: done at ')+y1(m.Ts)+' y',Math.min(X(Math.min(tsY,YMAX_A))+6,w-150),Y(1)+4);
+  // kink
+  const kink=m.q>0&&m.q<1&&S.g>1;
+  if(kink&&m.tq/52<=YMAX_A){const x=X(m.tq/52),y=Y(m.q);g.fillStyle=css('--steel');g.beginPath();g.arc(x,y,6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.fillStyle=css('--ink');const lab='kink: '+Math.round(m.q*100)+'% at '+y1(m.tq)+' y';const lw=g.measureText(lab).width;let lx=x+9;if(lx+lw>w-pad.r)lx=x-9-lw;g.textBaseline='top';g.textAlign='left';g.fillText(lab,Math.max(pad.l+2,lx),Math.min(y+6,Y(0)-34));}
+  const endY=m.T/52;g.fillStyle=css('--ink');g.textBaseline='bottom';
+  if(endY<=YMAX_A){const x=X(endY);g.fillStyle=css('--steel');g.beginPath();g.arc(x,Y(1),4.5,0,7);g.fill();g.fillStyle=css('--ink');const lab='done at '+y1(m.T)+' y';const lw=g.measureText(lab).width;let lx=x-lw/2;lx=Math.max(pad.l,Math.min(lx,w-pad.r-lw));g.textAlign='left';g.fillText(lab,lx,Y(1)-6);}
+  else{g.textAlign='right';g.fillText('done at '+y1(m.T)+' y, off the chart →',w-pad.r,Y(C(YMAX_A*52,m))-6);}
+}
+function drawB(){
+  const c=setup($('cB')),g=c.g,w=c.w,h=c.h,m=model();
+  const t0=model(0).T/52,yM=niceMax(Math.max(t0,m.Ts/52,1)*1.05);
+  const X=q=>pad.l+(w-pad.l-pad.r)*q/100,Y=v=>pad.t+(h-pad.t-pad.b)*(1-v/yM);
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;g.textAlign='right';g.textBaseline='middle';
+  for(let i=0;i<=4;i++){const v=yM*i/4,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(r1(v),pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';for(let q=0;q<=100;q+=20)g.fillText(q+'%',X(q),h-pad.b+6);
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('evidence q',w-pad.r,h-pad.b-4);
+  g.textAlign='left';g.textBaseline='top';g.fillText('years',pad.l+4,pad.t);
+  const pts=[];for(let q=0;q<=100;q+=1)pts.push([q,model(q).T/52]);
+  poly(g,X,Y,pts,css('--blood'),3);
+  poly(g,X,Y,[[0,m.Ts/52],[100,m.Ts/52]],css('--moss'),3);
+  const x=X(S.q);g.strokeStyle=css('--ink');g.globalAlpha=.45;g.setLineDash([4,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  g.fillStyle=css('--blood');g.beginPath();g.arc(x,Y(m.T/52),6,0,7);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--ink');const lab=y1(m.T)+' y at '+S.q+'%';const lw=g.measureText(lab).width;let lx=x+9;if(lx+lw>w-pad.r)lx=x-9-lw;g.textAlign='left';g.textBaseline='bottom';g.fillText(lab,lx,Y(m.T/52)-6);
+  g.fillStyle=css('--moss');g.textBaseline='bottom';g.textAlign='left';g.fillText('source: '+y1(m.Ts)+' y',pad.l+6,Y(m.Ts/52)-4);
+}
+function readouts(){
+  const m=model();
+  $('oq').textContent=S.q+'%';$('oB').textContent=fmt(S.B);$('ow').textContent=S.w;$('og').textContent=S.g;$('ovol').textContent=S.vol;$('ohpw').textContent=S.hpw;$('ows').textContent=S.ws;
+  $('rV').textContent=fmt(m.V);$('rH').textContent=fmt(m.H);
+  $('rT').textContent=r1(m.T)+' · '+y1(m.T);$('rTq').textContent=y1(m.tq);
+  $('rTs').textContent=r1(m.Ts)+' · '+y1(m.Ts);
+  $('rPt').textContent=r1(S.B*S.w*(S.g-1)/(100*m.V));
+  const tail=m.T-m.tq,qp=S.q,rest=100-qp;let sent,cap;
+  if(S.g===1){sent=`With g = 1, guessing costs nothing extra, so T is ${r1(m.T)} weeks whatever q is.`;cap=`With no penalty for guessing, evidence stops mattering. That is the only case where it does not.`;}
+  else if(qp===100){sent=`Everything was recorded, so there is no slow tail. The rebuild takes ${y1(m.T)} years.`;cap=`Somebody recorded all of this game. The rebuild still takes ${y1(m.T)} years, and the source would take ${y1(m.Ts)}.`;}
+  else if(qp===0){sent=`With no evidence, every behaviour is guessed, and the rebuild takes ${y1(m.T)} years.`;cap=`Nobody recorded this game. Every behaviour is a guess, and the rebuild takes ${y1(m.T)} years.`;}
+  else{const ratio=tail/m.tq;const cmp=Math.abs(ratio-1)<0.015?'as long as':ratio>1?`${ratio.toFixed(1)} times as long as`:`${Math.round(ratio*100)}% of the time taken by`;
+    sent=`The last ${rest}% of the game takes ${y1(tail)} years, ${cmp} the first ${qp}%.`;
+    cap=`Somebody recorded ${qp}% of this game. The other ${rest}% takes ${Math.abs(ratio-1)<0.015?'as long to rebuild':ratio>1?ratio.toFixed(1)+' times as long to rebuild':'less time to rebuild'}.`;}
+  $('sentence').textContent=sent;$('caption').textContent=cap;
+  $('insight').textContent=`Each missing point of evidence adds ${r1(S.B*S.w*(S.g-1)/(100*m.V))} weeks. Raising q from ${qp}% to 100% saves ${y1(m.T-model(100).T)} years. Doubling the team to ${S.vol*2} volunteers would save ${y1(m.T/2)} years, but volunteers can be recruited any time, while q freezes on the last server day. With the source, the whole job is ${r1(m.Ts)} weeks, ${Math.round(m.T/m.Ts)} times faster than this rebuild.`;
+  $('tbody').innerHTML=[40,60,80,90,100].map(q=>{const k=model(q);return `<tr class="${q===S.q?'here':''}"><td>${q}%</td><td>${fmt(k.H)}</td><td>${y1(k.tq)}</td><td>${y1(k.T)}</td></tr>`;}).join('')+`<tr><td>Source released</td><td>${fmt(S.B*S.ws)}</td><td>—</td><td>${y1(m.Ts)}</td></tr>`;
+}
+function update(){readouts();drawA(curveA());drawB();}
+function commit(){committed=curveA();}
+function syncInputs(){for(const k of Object.keys(S))$(k).value=S[k];}
+const pres=[...document.querySelectorAll('[data-pre]')];
+function clearPre(){pres.forEach(b=>b.setAttribute('aria-pressed','false'));}
+for(const k of Object.keys(S)){const el=$(k);
+  el.addEventListener('input',()=>{if(!el._drag){el._drag=true;ghost=committed;}S[k]=+el.value;clearPre();update();});
+  el.addEventListener('change',()=>{el._drag=false;commit();});}
+const DEF={q:80,B:1500,w:60,g:4,vol:25,hpw:8,ws:3};
+pres.forEach(b=>b.addEventListener('click',()=>{
+  const p=b.dataset.pre;
+  if(p==='cap'){Object.assign(S,DEF,{q:55});commit();ghost=committed;S.q=85;}
+  else{ghost=committed;Object.assign(S,DEF);if(p==='dbl')S.vol=50;}
+  syncInputs();pres.forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));update();commit();
+}));
+let raf=0;function redraw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{drawA(curveA());drawB();});}
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+syncInputs();update();commit();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Average versus tail — MMO407 Week 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light dark;--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.caption{font-family:var(--serif);font-size:1.12rem;margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--paper-2);border-left:4px solid var(--blood)}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 8px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:290px}
+.risk{margin:0 0 10px}
+.risk .lab{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.86rem;line-height:1.3}
+.risk .lab b{font-weight:700}
+.risk .nums{font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.risk .nums strong{color:var(--ink)}
+.track{position:relative;height:18px;margin-top:3px}
+.orig{position:absolute;left:0;top:0;height:100%;border:1.5px dashed var(--c);border-radius:3px}
+.now{position:absolute;left:0;top:0;height:100%;background:var(--c);border-radius:3px;transition:width .3s}
+.total{border-top:1.5px solid var(--grid);padding-top:10px;margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.84rem;margin:8px 0 0;color:var(--ink-soft)}
+.legend i{display:inline-block;width:18px;height:10px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.l{height:3px}
+.readout{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.82rem;color:var(--ink-soft);display:block}
+.extra{font-size:.88rem;margin:8px 0 0;font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+@media (min-width:900px){.controls{grid-template-columns:1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;margin:0;padding:10px 12px;min-width:0}
+legend{font-weight:700;font-size:.92rem;padding:0 4px}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.92rem;padding:4px 0;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--steel);flex:none;margin-top:1px}
+.check small{color:var(--ink-soft)}
+.budget{font-weight:700;font-size:.88rem;margin:4px 0 0}
+.budget.over{color:var(--blood)}
+.sl{margin-top:8px}
+.sl label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}
+.sl output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font:600 .85rem var(--sans);padding:8px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.chip:hover{background:var(--paper-2)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+details{margin-top:14px;border:1.5px solid var(--grid);border-radius:10px;padding:8px 12px}
+summary{cursor:pointer;font-weight:700;font-size:.92rem;padding:4px 0}
+.reg{display:grid;grid-template-columns:1fr;gap:6px 18px}
+@media (min-width:700px){.reg{grid-template-columns:1fr 1fr}}
+.reg h3{font-size:.9rem;margin:10px 0 0;grid-column:1/-1}
+.table-wrap{overflow-x:auto;margin-top:16px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+@media (max-width:600px){table{font-size:.8rem}th,td{padding:5px 5px}}
+caption{text-align:left;font-family:var(--serif);font-size:1rem;padding-bottom:6px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.best td{font-weight:700;background:var(--paper-2)}
+tr.best td:first-child{box-shadow:inset 4px 0 0 var(--moss)}
+tr.cur td:first-child::after{content:" (ticked)";font-weight:400;color:var(--ink-soft)}
+.tog{font:600 .85rem var(--sans);padding:6px 10px;border-radius:8px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);cursor:pointer;margin-top:8px;min-height:36px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO407 Launch, Scaling and Post-Mortems · Week 13 · Worked example</p>
+  <h1>Prevention moves the average. Containment moves the tail.</h1>
+  <p class="lede">The left view ranks launch-week risks the ledger way, by probability times impact. The right view shows the chance that the week's loss passes any line you draw. Tick fixes and watch which view moves.</p>
+</header>
+
+<section class="panel" aria-label="Risk register and exceedance curve">
+  <p class="caption" id="caption"></p>
+
+  <div class="views">
+    <figure>
+      <figcaption>The ledger<small>One bar per risk, length p × I in k player-hours. Dashed outline is the bar before fixes.</small></figcaption>
+      <div id="ledger"></div>
+      <div class="legend"><span><i style="background:var(--steel)"></i>prevention fix available (lowers p)</span><span><i style="background:var(--moss)"></i>containment fix available (lowers I)</span></div>
+    </figure>
+    <figure>
+      <figcaption>The tail<small>P(L &gt; x): the chance the week loses more than x k player-hours. Dashed is no fixes, solid is the ticked plan.</small></figcaption>
+      <canvas id="cTail" role="img" aria-label="Exceedance curve"></canvas>
+      <div class="legend"><span><i class="l" style="background:var(--ink-soft)"></i>no fixes</span><span><i class="l" style="background:var(--ink)"></i>ticked plan</span><span><i class="l" style="background:var(--blood)"></i>disaster line D</span></div>
+      <button class="tog" id="numTog" type="button" aria-expanded="false" aria-controls="numWrap">Show numbers</button>
+      <div class="table-wrap" id="numWrap" hidden>
+        <table><caption>Exceedance curve as a table</caption>
+          <thead><tr><th>x (k ph)</th><th>P(L &gt; x), no fixes</th><th>P(L &gt; x), ticked plan</th></tr></thead>
+          <tbody id="numBody"></tbody></table>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rE">—</b><span>expected loss E[L], k ph</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rP">—</b><span id="rPs">P(L &gt; D)</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rW">—</b><span>worst possible week, k ph</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rC">—</b><span id="rCs">cost at B</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rBE">—</b><span id="rBEs">break-even penalties</span></div>
+  </div>
+  <p class="extra" id="extra"></p>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Mitigations (budget: two)</legend>
+      <label class="check"><input type="checkbox" id="m1" checked><span>M1 Launch-week layers <small>prevention, R1 p → 0.20</small></span></label>
+      <label class="check"><input type="checkbox" id="m2" checked><span>M2 Failover authentication provider <small>prevention, R2 p → 0.10</small></span></label>
+      <label class="check"><input type="checkbox" id="m3"><span>M3 Trade kill switch and ledger alarm <small>containment, R3 I → 60</small></span></label>
+      <label class="check"><input type="checkbox" id="m4"><span>M4 Tested restore, five-minute recovery points <small>containment, R4 I → 100</small></span></label>
+      <p class="budget" id="budget"></p>
+      <div class="presets" role="group" aria-label="Plan presets">
+        <button class="chip" type="button" id="pEL">Expected-loss pick</button>
+        <button class="chip" type="button" id="pLow">Lowest cost at B</button>
+        <button class="chip" type="button" id="pNoD">No disaster</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Lines you set before looking at fixes</legend>
+      <div class="sl"><label for="D"><span>Disaster line D (k ph)</span><output id="oD">300</output></label><input id="D" type="range" min="50" max="1500" step="25" value="300"></div>
+      <div class="sl"><label for="B"><span>Disaster penalty B (k ph)</span><output id="oB">100</output></label><input id="B" type="range" min="0" max="2000" step="10" value="100"></div>
+      <label class="check" style="margin-top:8px"><input type="checkbox" id="scen"><span>Demand three times forecast <small>R1 and R2 fire together inside this scenario; their marginal chances stay the same</small></span></label>
+      <div class="sl"><label for="s"><span>Scenario probability s</span><output id="os">0.10</output></label><input id="s" type="range" min="0" max="0.3" step="0.01" value="0.1"></div>
+    </fieldset>
+  </div>
+
+  <details>
+    <summary>Edit register</summary>
+    <div class="reg" id="reg"></div>
+  </details>
+
+  <div class="table-wrap">
+    <table aria-label="Plans with two mitigations">
+      <caption>Every pair of fixes at the current settings. Bold row is cheapest at this B.</caption>
+      <thead><tr><th>Plan</th><th>E[L]</th><th id="thP">P(L &gt; 300)</th><th>Worst week</th><th id="thC">E[L] + 100 × P</th></tr></thead>
+      <tbody id="plans"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>All probabilities and impacts are invented teaching values from the week 13 lecture, section 2. Loss is in thousands of player-hours (k ph). Risks are independent unless the scenario is on. The real-game stories in the lecture (Pokémon GO 2016, New World 2021, Old School RuneScape 2024) are cited there.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const R=[
+  {id:'R1',name:'Login queues over 2 hours',p:.80,I:50,kind:'steel'},
+  {id:'R2',name:'Authentication outage, half a day',p:.40,I:75,kind:'steel'},
+  {id:'R3',name:'Duplication exploit in week 1',p:.05,I:500,kind:'moss'},
+  {id:'R4',name:'Data loss forcing a rollback',p:.02,I:1000,kind:'moss'}
+];
+const M=[{r:0,p:.20},{r:1,p:.10},{r:2,I:60},{r:3,I:100}];
+const MN=['M1','M2','M3','M4'];
+let D=300,B=100,scen=false,s=.1,showNums=false;
+
+function applied(set){
+  return R.map((r,i)=>{const o={p:r.p,I:r.I};M.forEach((m,j)=>{if(set.includes(j)&&m.r===i){if(m.p!==undefined)o.p=m.p;if(m.I!==undefined)o.I=m.I;}});return o;});
+}
+function outcomes(rs){
+  const enumr=(ps,force)=>{const out=[];for(let k=0;k<16;k++){let pr=1,l=0;for(let i=0;i<4;i++){const f=(k>>i)&1;if(force&&i<2&&!f){pr=0;break;}const p=(force&&i<2)?1:ps[i];pr*=f?p:1-p;l+=f?rs[i].I:0;}if(pr>0)out.push({pr,l});}return out;};
+  const ps=rs.map(r=>r.p);
+  if(!scen||s<=0) return enumr(ps,false);
+  const adj=ps.slice();adj[0]=Math.max(0,(ps[0]-s)/(1-s));adj[1]=Math.max(0,(ps[1]-s)/(1-s));
+  const a=enumr(ps,true).map(o=>({pr:o.pr*s,l:o.l})),b=enumr(adj,false).map(o=>({pr:o.pr*(1-s),l:o.l}));
+  return a.concat(b);
+}
+function stats(set){
+  const rs=applied(set),os=outcomes(rs);
+  let E=0,P=0,none=0,both=0,W=0;
+  os.forEach(o=>{E+=o.pr*o.l;if(o.l>D+1e-9)P+=o.pr;if(o.l===0)none+=o.pr;if(o.pr>1e-15)W=Math.max(W,o.l);});
+  // both R1 and R2 fire
+  os.forEach(()=>{});
+  return {rs,os,E,P,W,none,cost:E+B*P};
+}
+function pBoth(rs){
+  const p1=rs[0].p,p2=rs[1].p;
+  if(!scen||s<=0) return p1*p2;
+  return s+(1-s)*Math.max(0,(p1-s)/(1-s))*Math.max(0,(p2-s)/(1-s));
+}
+function exceed(os,x){let p=0;os.forEach(o=>{if(o.l>x+1e-9)p+=o.pr;});return p;}
+const PLANS=[[],[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+const pname=set=>set.length?set.map(j=>MN[j]).join('+'):'none';
+function ticked(){return [0,1,2,3].filter(j=>$('m'+(j+1)).checked);}
+const f1=x=>x.toFixed(1),f3=x=>(Math.abs(x)<5e-4?0:x).toFixed(3),fk=x=>Math.round(x).toLocaleString('en-US');
+const pctx=x=>{const v=x*100;return (Math.abs(v)<.05?'0':v.toFixed(1).replace(/\.0$/,''))+'%';};
+
+function breakEvens(list){
+  // lower envelope of cost(B) = E + B*P over the table plans, from B = 0 upward
+  let cur=list.slice().sort((a,b)=>a.E-b.E||a.P-b.P)[0],b0=0;const out=[];
+  for(let k=0;k<6;k++){
+    let best=null,bb=Infinity;
+    list.forEach(q=>{if(q.P<cur.P-1e-12){const x=(q.E-cur.E)/(cur.P-q.P);if(x>=b0-1e-9&&(x<bb-1e-9||(Math.abs(x-bb)<1e-9&&q.P<best.P))){bb=x;best=q;}}});
+    if(!best)break;out.push({from:cur,to:best,B:Math.max(0,bb)});cur=best;b0=bb;
+  }
+  return out;
+}
+const fB=x=>{const r=Math.round(x*10)/10;return (Number.isInteger(r)?fk(r):r.toFixed(1));};
+
+function drawLedger(base,now){
+  const order=R.map((r,i)=>i).sort((a,b)=>base.rs[b].p*base.rs[b].I-base.rs[a].p*base.rs[a].I);
+  const max=Math.max(...order.map(i=>base.rs[i].p*base.rs[i].I),...order.map(i=>now.rs[i].p*now.rs[i].I),1);
+  let h='';
+  order.forEach(i=>{
+    const o=base.rs[i],n=now.rs[i],eo=o.p*o.I,en=n.p*n.I,changed=Math.abs(eo-en)>1e-9;
+    h+=`<div class="risk" style="--c:var(--${R[i].kind})"><div class="lab"><b>${R[i].id} ${R[i].name}</b><span class="nums">p ${n.p.toFixed(2)} × I ${fk(n.I)} = <strong>${f1(en)}</strong>${changed?` (was ${f1(eo)})`:''}</span></div>
+      <div class="track" aria-hidden="true"><div class="orig" style="width:${eo/max*100}%"></div><div class="now" style="width:${en/max*100}%"></div></div></div>`;
+  });
+  const tmax=Math.max(base.E,now.E,1);
+  h+=`<div class="risk total" style="--c:var(--ink)"><div class="lab"><b>Total E[L]</b><span class="nums">before ${f1(base.E)} → now <strong>${f1(now.E)}</strong></span></div>
+    <div class="track" aria-hidden="true"><div class="orig" style="width:${base.E/tmax*100}%"></div><div class="now" style="width:${now.E/tmax*100}%;background:var(--ochre)"></div></div></div>`;
+  $('ledger').innerHTML=h;
+}
+
+function setupCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+const XM=1700;
+function drawTail(base,now){
+  const {g,w,h}=setupCanvas($('cTail')),pad={l:44,r:12,t:24,b:34};
+  const X=x=>pad.l+(w-pad.l-pad.r)*x/XM,Y=y=>pad.t+(h-pad.t-pad.b)*(1-y);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Y(i/4);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText((i/4).toFixed(2),pad.l-6,y);}
+  const step=w<500?500:250;
+  for(let x=0;x<=XM;x+=step){g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.fillText(fk(x),X(x),h-pad.b+6);}
+  g.textAlign='right';g.fillText('loss x, k ph',w-pad.r,h-14);
+  const curve=(os,color,width,dash)=>{
+    const xs=[...new Set(os.map(o=>o.l))].sort((a,b)=>a-b).filter(x=>x<=XM);
+    g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash);g.beginPath();
+    let prevY=exceed(os,-1);g.moveTo(X(0),Y(prevY));
+    xs.forEach(x=>{if(x<=0)return;g.lineTo(X(x),Y(prevY));prevY=exceed(os,x);g.lineTo(X(x),Y(prevY));});
+    g.lineTo(X(XM),Y(prevY));g.stroke();g.setLineDash([]);
+  };
+  curve(base.os,css('--ink-soft'),2,[6,5]);
+  curve(now.os,css('--ink'),2.5,[]);
+  // disaster line
+  g.strokeStyle=css('--blood');g.lineWidth=2;g.beginPath();g.moveTo(X(D),pad.t-8);g.lineTo(X(D),h-pad.b);g.stroke();
+  const py=Y(now.P);g.fillStyle=css('--blood');g.beginPath();g.arc(X(D),py,5,0,Math.PI*2);g.fill();
+  const lab='P(disaster) = '+pctx(now.P);g.font='600 13px '+css('--sans');
+  const tw=g.measureText(lab).width;let lx=X(D)+8;if(lx+tw>w-pad.r)lx=X(D)-8-tw;
+  const ly=Math.max(pad.t+2,Math.min(py-10,h-pad.b-8));
+  g.fillStyle=css('--paper-2');g.fillRect(lx-3,ly-9,tw+6,18);g.fillStyle=css('--blood');g.textAlign='left';g.textBaseline='middle';g.fillText(lab,lx,ly);
+  g.font='12px '+css('--sans');g.fillText('D',X(D)+4,pad.t-12);
+  // worst week tick
+  g.strokeStyle=css('--ink');g.lineWidth=2;g.beginPath();g.moveTo(X(now.W),Y(0)-7);g.lineTo(X(now.W),Y(0)+7);g.stroke();
+  const wl='worst '+fk(now.W),ww=g.measureText(wl).width,wx=now.W>XM*.8?X(now.W)-ww:X(now.W)-ww/2;
+  let wy=Y(0)-9;if(wx<lx+tw+4&&wx+ww>lx-4&&Math.abs(wy-6-ly)<18)wy=ly-12;
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='bottom';g.fillText(wl,wx,wy);
+  $('cTail').setAttribute('aria-label',`Exceedance curve. With the ticked plan, P(L > ${fk(D)}) = ${f3(now.P)}; with no fixes ${f3(base.P)}. Worst week ${fk(now.W)} k ph.`);
+}
+
+function numTable(base,now){
+  const xs=[...new Set([0,...base.os.map(o=>o.l),...now.os.map(o=>o.l),D,100])].sort((a,b)=>a-b);
+  $('numBody').innerHTML=xs.map(x=>`<tr${x===D?' class="best"':''}><td>${fk(x)}${x===D?' (D)':''}</td><td>${f3(exceed(base.os,x))}</td><td>${f3(exceed(now.os,x))}</td></tr>`).join('');
+}
+
+function update(){
+  const set=ticked(),base=stats([]),now=stats(set);
+  drawLedger(base,now);drawTail(base,now);if(showNums)numTable(base,now);
+  const list=PLANS.map(p=>Object.assign(stats(p),{set:p,name:pname(p)}));
+  let best=list[0];list.forEach(q=>{if(q.cost<best.cost-1e-9)best=q;});
+  const curName=pname(set);
+  $('thP').textContent=`P(L > ${fk(D)})`;$('thC').textContent=`Cost E[L] + ${fk(B)} × P`;
+  $('plans').innerHTML=list.map(q=>`<tr class="${q===best?'best':''} ${q.name===curName?'cur':''}"><td>${q.name}</td><td>${f1(q.E)}</td><td>${f3(q.P)}</td><td>${fk(q.W)}</td><td>${f1(q.cost)}</td></tr>`).join('');
+  // readouts
+  $('rE').textContent=f1(now.E);$('rP').textContent=f3(now.P);$('rPs').textContent=`P(L > ${fk(D)}), ${pctx(now.P)}`;
+  $('rW').textContent=fk(now.W);$('rC').textContent=f1(now.cost);$('rCs').textContent=`cost E[L] + ${fk(B)} × P`;
+  const be=breakEvens(list).slice(0,2);
+  $('rBE').textContent=be.length?be.map(x=>fB(x.B)).join(' · '):'none';
+  $('rBEs').textContent=be.length?be.map(x=>`${x.from.name} → ${x.to.name} at B ${Number.isInteger(Math.round(x.B*10)/10)?"=":"≈"} ${fB(x.B)}`).join('; '):'one plan is cheapest at every B';
+  $('extra').textContent=`P(no risk fires) = ${now.none.toFixed(4)} · P(R1 and R2 both fire) = ${f3(pBoth(now.rs))} · cheapest table plan at B = ${fk(B)}: ${best.name} (${f1(best.cost)})`;
+  const n=set.length;$('budget').textContent=`${n} of 2 ticked`+(n>2?': over budget':'');$('budget').classList.toggle('over',n>2);
+  // caption
+  let c;
+  const same=Math.abs(now.P-base.P)<5e-4, r=now.E/base.E;
+  if(!n) c=`No fixes. Expected loss ${f1(base.E)} k ph, and ${pctx(base.P)} of launch weeks cross the disaster line.`;
+  else if(same&&now.E<base.E-1e-9){c=`The ledger says you ${r>.4&&r<.6?'halved the loss':'cut the loss by '+Math.round((1-r)*100)+'%'}. The tail says the disaster chance did not move: ${pctx(now.P)}.`;if(!(set.includes(2)&&set.includes(3)))c+=' Try M3 and M4.';}
+  else if(now.P<5e-4) c=`No combination of risks can cross D = ${fk(D)} now. Worst week ${fk(now.W)} k ph, with expected loss ${f1(now.E)}.`;
+  else c=`The tail moved: P(disaster) fell from ${pctx(base.P)} to ${pctx(now.P)}. Expected loss is ${f1(now.E)} k ph.`;
+  $('caption').textContent=c;
+  $('oD').textContent=fk(D);$('oB').textContent=fk(B);$('os').textContent=s.toFixed(2);$('s').disabled=!scen;
+}
+
+// register editor
+$('reg').innerHTML=R.map((r,i)=>`<h3>${r.id} ${r.name}</h3>
+  <div class="sl"><label for="p${i}"><span>${r.id} probability p</span><output id="op${i}">${r.p.toFixed(2)}</output></label><input id="p${i}" type="range" min="0" max="1" step="0.01" value="${r.p}"></div>
+  <div class="sl"><label for="I${i}"><span>${r.id} impact I (k ph)</span><output id="oI${i}">${fk(r.I)}</output></label><input id="I${i}" type="range" min="0" max="1500" step="5" value="${r.I}"></div>`).join('');
+R.forEach((r,i)=>{
+  $('p'+i).addEventListener('input',e=>{r.p=+e.target.value;$('op'+i).textContent=r.p.toFixed(2);update();});
+  $('I'+i).addEventListener('input',e=>{r.I=+e.target.value;$('oI'+i).textContent=fk(r.I);update();});
+});
+[1,2,3,4].forEach(k=>$('m'+k).addEventListener('change',update));
+$('D').addEventListener('input',e=>{D=+e.target.value;update();});
+$('B').addEventListener('input',e=>{B=+e.target.value;update();});
+$('scen').addEventListener('change',e=>{scen=e.target.checked;update();});
+$('s').addEventListener('input',e=>{s=+e.target.value;update();});
+const setPlan=set=>{[0,1,2,3].forEach(j=>$('m'+(j+1)).checked=set.includes(j));update();};
+$('pEL').addEventListener('click',()=>setPlan([0,1]));
+$('pNoD').addEventListener('click',()=>setPlan([2,3]));
+$('pLow').addEventListener('click',()=>{let best=null;PLANS.forEach(p=>{const q=stats(p);if(!best||q.cost<best.c-1e-9)best={p,c:q.cost};});setPlan(best.p);});
+$('numTog').addEventListener('click',()=>{showNums=!showNums;$('numWrap').hidden=!showNums;$('numTog').setAttribute('aria-expanded',showNums);$('numTog').textContent=showNums?'Hide numbers':'Show numbers';update();});
+window.addEventListener('resize',update);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

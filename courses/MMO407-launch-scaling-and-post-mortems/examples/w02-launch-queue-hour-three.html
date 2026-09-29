@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The queue at hour three — MMO407 Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1200px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.1rem;margin:0}
+.lede b{font-variant-numeric:tabular-nums}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:290px}
+#cTot{cursor:ew-resize;touch-action:pan-y}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.box{height:10px;width:14px;opacity:.35}
+.cursorRow{margin-top:12px}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+@media (max-width:520px){.readout .stat b{font-size:1.12rem}}
+.facts{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.88rem;color:var(--ink-soft);margin:8px 0 0;padding:0;list-style:none;font-variant-numeric:tabular-nums}
+.facts b{color:var(--ink)}
+h2{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:18px 0 4px}
+.sub{font-size:.86rem;color:var(--ink-soft);margin:0 0 8px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:6px}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:4px}.tile{padding:4px 5px;font-size:.7rem}.tile b{font-size:.82rem}}
+.tile{border-radius:8px;padding:6px 8px;font-size:.78rem;line-height:1.3;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 14%,var(--paper));font-variant-numeric:tabular-nums}
+.tile b{display:block;font-size:.95rem}
+.tile span{color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
+@media (min-width:760px){.controls{grid-template-columns:1fr 1fr}}
+@media (min-width:1100px){.controls{grid-template-columns:1fr 1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:8px 12px 12px;margin:0;min-width:0}
+legend{font-weight:700;font-size:.92rem;padding:0 4px}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:2px 0}
+select{font:600 .9rem var(--sans);width:100%;padding:7px 8px;border-radius:8px;border:1.5px solid var(--steel);background:var(--paper);color:var(--ink);margin-top:4px}
+.check{justify-content:flex-start;align-items:center;gap:8px;margin-top:10px}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+@media (max-width:520px){table{font-size:.78rem}th,td{padding:4px 5px!important}}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO407 Launch, Scaling and Post-Mortems · Week 2 · Worked example</p>
+  <h1>The login queue peaks at hour three, not at the unlock</h1>
+  <p class="lede" id="lede" aria-live="polite"></p>
+</header>
+
+<section class="panel" aria-label="Launch night queue model, per world">
+  <div class="views">
+    <figure>
+      <figcaption>Rates: what the dashboard shows<small>Players per minute, per world. Arrivals λ(t) against admissions μ(t).</small></figcaption>
+      <canvas id="cRate" role="img" aria-label="Arrival and admission rates per minute"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>arrivals λ(t)</span>
+        <span><i style="background:var(--steel)"></i>admissions μ(t)</span>
+        <span><i class="box" style="background:var(--blood)"></i>queue growing</span>
+        <span><i class="box" style="background:var(--moss)"></i>queue shrinking</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Running totals: what the players feel<small>Arrived so far A(t) and admitted so far D(t). The vertical gap is the queue. Drag the cursor.</small></figcaption>
+      <canvas id="cTot" tabindex="0" role="slider" aria-label="Cursor time on the running totals chart" aria-valuemin="1" aria-valuemax="720"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>arrived A(t)</span>
+        <span><i style="background:var(--steel)"></i>admitted D(t)</span>
+        <span><i style="background:var(--ochre)"></i>queue and wait at the cursor</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="cursorRow">
+    <label for="cur">Cursor time <output id="oCur">+3 h 00 min</output></label>
+    <input id="cur" type="range" min="1" max="720" step="1" value="180">
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--blood)"><b id="rQ">—</b><span id="rQl">queue at the cursor</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rW">—</b><span>wait at the back, Q / (C / L)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rP">—</b><span>peak queue</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rE">—</b><span>queue empties</span></div>
+  </div>
+  <ul class="facts" id="facts"></ul>
+
+  <h2>Planning strip</h2>
+  <p class="sub" id="stripSub"></p>
+  <div class="tiles" id="tiles" aria-live="polite"></div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Worlds and servers</legend>
+      <label for="W">World count W <output id="oW"></output></label>
+      <input id="W" type="range" min="4" max="30" step="1" value="10">
+      <label for="C">Cap C (players per world) <output id="oC"></output></label>
+      <input id="C" type="range" min="1000" max="10000" step="250" value="4000">
+      <label for="a">Entry rate a (per minute) <output id="oa"></output></label>
+      <input id="a" type="range" min="25" max="500" step="25" value="100">
+      <label for="L">Session length L (minutes) <output id="oL"></output></label>
+      <input id="L" type="range" min="30" max="300" step="10" value="160">
+      <label for="model" style="margin-top:10px">How sessions end</label>
+      <select id="model">
+        <option value="full">At random, from the moment the world is full</option>
+        <option value="first">At random, from the first minute</option>
+        <option value="fixed">Every session lasts exactly L</option>
+      </select>
+      <label class="check" for="layer"><input type="checkbox" id="layer"> Layers for launch night (multiply C and a)</label>
+      <label for="lf">Layer factor <output id="olf"></output></label>
+      <input id="lf" type="range" min="1" max="3" step="0.1" value="1.5" disabled>
+    </fieldset>
+    <fieldset>
+      <legend>Arrivals across the whole game</legend>
+      <label for="rush">Rush rate (per minute) <output id="orush"></output></label>
+      <input id="rush" type="range" min="100" max="3000" step="50" value="1200">
+      <label for="rl">Rush length (minutes) <output id="orl"></output></label>
+      <input id="rl" type="range" min="10" max="180" step="5" value="60">
+      <label for="sh">Shoulder rate (per minute) <output id="osh"></output></label>
+      <input id="sh" type="range" min="0" max="2000" step="25" value="400">
+      <label for="se">Shoulder ends at minute <output id="ose"></output></label>
+      <input id="se" type="range" min="60" max="480" step="10" value="180">
+      <label for="night">Night rate (per minute) <output id="onight"></output></label>
+      <input id="night" type="range" min="0" max="1000" step="10" value="150">
+    </fieldset>
+    <fieldset>
+      <legend>Day 30</legend>
+      <label for="fc">Day-30 peak forecast (whole game) <output id="ofc"></output></label>
+      <input id="fc" type="range" min="5000" max="100000" step="1000" value="30000">
+      <label for="alive">A world feels alive at <output id="oalive"></output></label>
+      <input id="alive" type="range" min="500" max="5000" step="100" value="2500">
+      <p class="sub" style="margin-top:10px">Plans from the lecture</p>
+      <div class="presets" role="group" aria-label="Plan presets">
+        <button class="chip" data-w="10" data-layer="0" aria-pressed="true">10 worlds</button>
+        <button class="chip" data-w="15" data-layer="0" aria-pressed="false">15 worlds</button>
+        <button class="chip" data-w="20" data-layer="0" aria-pressed="false">20 worlds</button>
+        <button class="chip" data-w="10" data-layer="1" aria-pressed="false">10 worlds, layered ×1.5</button>
+      </div>
+    </fieldset>
+  </div>
+
+  <h2>Snapshot table (one world)</h2>
+  <p class="sub">Totals are after the minute ends (log index minute − 1). Rates are for the next minute. μ is the admission capacity: min(a, C − online).</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Minute</th><th>A(t) arrived</th><th>D(t) admitted</th><th>Queue Q</th><th>λ</th><th>μ</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>One-minute simulation per world, t = 0 … 719: queue += λ(t); sessions end (per the chosen model); admit = min(queue, a, C − online). Wait at the back = Q / (C / L). Day-30 per world = forecast / W. Cumulative-count diagrams after Newell, <i>Applications of Queueing Theory</i> (1982), ch. 2. All numbers are the lecture's teaching scenario, not data from any one game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const r1=n=>{const v=Math.round(n*10)/10;return Number.isInteger(v)?fmt(v):v.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});};
+const T=720;
+const ids=['W','C','a','L','lf','rush','rl','sh','se','night','fc','alive'];
+let P={},S=null,cursor=180;
+
+function read(){ids.forEach(i=>P[i]=+$(i).value);P.model=$('model').value;P.layer=$('layer').checked;}
+function hm(m){const h=Math.floor(m/60),mm=m%60;return (m===0?'unlock':'+'+h+' h '+String(mm).padStart(2,'0')+' min');}
+
+function simulate(p){
+  const f=p.layer?p.lf:1,C=p.C*f,a=p.a*f,L=p.L,W=p.W,se=Math.max(p.rl,p.se);
+  const lam=new Float64Array(T),mu=new Float64Array(T),adm=new Float64Array(T),q=new Float64Array(T),A=new Float64Array(T),D=new Float64Array(T);
+  let queue=0,online=0,cumA=0,cumD=0,fill=-1;
+  for(let t=0;t<T;t++){
+    const d=t<p.rl?p.rush:t<se?p.sh:p.night;
+    lam[t]=d/W;queue+=lam[t];cumA+=lam[t];
+    if(p.model==='full'){if(online>=C-1e-9)online-=C/L;}
+    else if(p.model==='first'){online-=online/L;}
+    else{if(t>=L)online-=adm[t-L];}
+    mu[t]=Math.max(0,Math.min(a,C-online));
+    const x=Math.max(0,Math.min(queue,mu[t]));
+    queue-=x;online+=x;adm[t]=x;cumD+=x;
+    if(queue<1e-9)queue=0;
+    q[t]=queue;A[t]=cumA;D[t]=cumD;
+    if(fill<0&&online>=C-1e-6)fill=t;
+  }
+  let pk=0;for(let t=1;t<T;t++)if(q[t]>q[pk]+1e-9)pk=t;
+  let empty=-1;if(q[pk]>0){for(let t=pk;t<T;t++)if(q[t]===0){empty=t;break;}}
+  const muP=new Float64Array(T);
+  // After the queue first empties, the 'logouts only while full' rule leaves a few-player sawtooth.
+  // The chart holds mu from that minute on so the picture shows the settled state.
+  const settle=empty>=0?empty:(q[pk]<=0&&fill>=0?fill:T);
+  for(let t=0;t<T;t++)muP[t]=t>settle?muP[settle]:mu[t];
+  return {settle,lam,mu,muP,adm,q,A,D,pk,empty,fill,C,a,L,W,se,muFull:C/L,day30:p.fc/W};
+}
+
+// ---------- charts
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function nice(v){if(v<=0)return 4;const q=v*1.001/4,mag=Math.pow(10,Math.floor(Math.log10(q)));return 4*([1,1.25,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=q)||q);}
+const kf=v=>v>=10000?(Math.round(v/100)/10).toLocaleString('en-US')+'k':fmt(v);
+const pad={l:46,r:12,t:14,b:32};
+function frame(g,w,h,yMax){
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  for(let i=0;i<=4;i++){const y=pad.t+ph*(1-i/4);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(kf(yMax*i/4),pad.l-6,y);}
+  const every=pw<420?3:pw<620?2:1;
+  g.textAlign='center';g.textBaseline='top';
+  for(let hr=0;hr<=12;hr+=every){const x=pad.l+pw*hr/12;g.fillStyle=css('--ink-soft');g.fillText(hr===0?'unlock':'+'+hr+' h',Math.max(pad.l+14,Math.min(w-pad.r-14,x)),h-pad.b+7);
+    g.strokeStyle=css('--grid');g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();}
+  return {pw,ph,X:t=>pad.l+pw*t/T,Y:v=>pad.t+ph*(1-v/yMax)};
+}
+function cursorLine(g,X,h){const x=X(cursor);g.strokeStyle=css('--ochre');g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.setLineDash([]);}
+
+function drawRate(){
+  const {g,w,h}=setup($('cRate'));
+  let ym=0;for(let t=0;t<T;t++)ym=Math.max(ym,S.lam[t],S.muP[t]);
+  const yMax=nice(ym*1.05),{X,Y}=frame(g,w,h,yMax);
+  // shading: growing where λ > μ, shrinking where λ < μ and a queue exists
+  for(let t=0;t<=Math.min(T-1,S.settle);t++){
+    const prev=t?S.q[t-1]:0,grow=S.q[t]>prev+1e-9,shrink=S.q[t]<prev-1e-9;
+    if(!grow&&!shrink)continue;
+    g.fillStyle=grow?css('--blood'):css('--moss');g.globalAlpha=.13;
+    g.fillRect(X(t),pad.t,X(t+1)-X(t)+.5,h-pad.t-pad.b);
+  }
+  g.globalAlpha=1;
+  // labels for the shaded regions
+  const firstGrow=[...S.q].findIndex((v,t)=>v>(t?S.q[t-1]:0)+1e-9),firstShrink=S.pk+1;
+  g.font='600 12px '+css('--sans');g.textBaseline='top';g.textAlign='left';
+  const runLen=(t0,fn)=>{let n=0;while(t0+n<T&&fn(t0+n))n++;return n;};
+  if(firstGrow>=0&&runLen(firstGrow,t=>S.q[t]>(t?S.q[t-1]:0)+1e-9)>=20){g.fillStyle=css('--blood');g.fillText('queue growing',X(firstGrow)+4,pad.t+4);}
+  if(S.q[S.pk]>0&&firstShrink<T&&X(firstShrink)+100<w&&runLen(firstShrink,t=>S.q[t]<S.q[t-1]-1e-9)>=20){g.fillStyle=css('--moss');g.fillText('queue shrinking',X(firstShrink)+4,pad.t+20);}
+  const step=(arr,col,wd)=>{g.strokeStyle=col;g.lineWidth=wd;g.beginPath();for(let t=0;t<T;t++){const y=Y(arr[t]);if(t===0)g.moveTo(X(0),y);else g.lineTo(X(t),y);g.lineTo(X(t+1),y);}g.stroke();};
+  step(S.muP,css('--steel'),2.5);step(S.lam,css('--blood'),2.5);
+  cursorLine(g,X,h);
+  const i=Math.min(T-1,cursor);
+  $('cRate').setAttribute('aria-label',`Rates per world. At ${hm(cursor)} arrivals are ${r1(S.lam[i])} per minute and admission capacity is ${r1(S.mu[i])} per minute, so the queue is ${S.lam[i]>S.mu[i]+1e-9?'growing':'not growing'}.`);
+}
+function drawTot(){
+  const {g,w,h}=setup($('cTot'));
+  const yMax=nice(S.A[T-1]*1.02),{X,Y}=frame(g,w,h,yMax);
+  const curve=(arr,col)=>{g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();g.moveTo(X(0),Y(0));for(let t=0;t<T;t++)g.lineTo(X(t+1),Y(arr[t]));g.stroke();};
+  // fill the gap lightly
+  g.fillStyle=css('--blood');g.globalAlpha=.1;g.beginPath();g.moveTo(X(0),Y(0));for(let t=0;t<T;t++)g.lineTo(X(t+1),Y(S.A[t]));for(let t=T-1;t>=0;t--)g.lineTo(X(t+1),Y(S.D[t]));g.closePath();g.fill();g.globalAlpha=1;
+  curve(S.A,css('--blood'));curve(S.D,css('--steel'));
+  cursorLine(g,X,h);
+  const i=cursor-1,xa=X(cursor),Q=S.q[i];
+  g.strokeStyle=css('--ochre');g.fillStyle=css('--ochre');g.lineWidth=2.5;
+  if(Q>0.5){
+    const ya=Y(S.A[i]),yd=Y(S.D[i]);
+    g.beginPath();g.moveTo(xa-5,ya);g.lineTo(xa+5,ya);g.moveTo(xa,ya);g.lineTo(xa,yd);g.moveTo(xa-5,yd);g.lineTo(xa+5,yd);g.stroke();
+    // horizontal wait bracket: from A at cursor to where D reaches the same total
+    let j=-1;for(let t=i;t<T;t++)if(S.D[t]>=S.A[i]-1e-6){j=t;break;}
+    const xe=j>=0?X(j+1):X(T);
+    g.setLineDash([2,3]);g.beginPath();g.moveTo(xa,ya);g.lineTo(xe,ya);g.stroke();g.setLineDash([]);
+    if(j>=0){g.beginPath();g.arc(xe,ya,3.5,0,Math.PI*2);g.fill();}
+    g.font='700 12px '+css('--sans');g.textBaseline='middle';
+    const qt='queue '+fmt(Q),wt='wait '+fmt(Q/S.muFull)+' min'+(j<0?' →':'');
+    const leftSide=xa>w*0.6;g.textAlign=leftSide?'right':'left';
+    const lx=leftSide?xa-8:xa+8;
+    halo(g,qt,lx,(ya+yd)/2+8);halo(g,wt,leftSide?lx:Math.min(lx+4,w-pad.r-g.measureText(wt).width),ya-10);
+  }
+  // peak dot
+  if(S.q[S.pk]>0){const xp=X(S.pk+1),yp=Y(S.A[S.pk]);g.fillStyle=css('--blood');g.beginPath();g.arc(xp,yp,5.5,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2;g.stroke();
+    g.font='600 11px '+css('--sans');g.textAlign='right';g.textBaseline='bottom';halo(g,'peak',xp-7,yp-4,css('--blood'));}
+  const c=$('cTot');c.setAttribute('aria-valuenow',cursor);c.setAttribute('aria-valuetext',`${hm(cursor)}: queue ${fmt(Q)}, wait ${fmt(Q/S.muFull)} minutes`);
+}
+function halo(g,txt,x,y,col){g.lineWidth=4;g.strokeStyle=css('--paper-2');g.strokeText(txt,x,y);g.fillStyle=col||css('--ink');g.fillText(txt,x,y);}
+
+// ---------- readouts
+function phaseSentence(){
+  const i=cursor-1,Q=S.q[i],rl=+P.rl,rush=S.lam[0];
+  const dropRush=1-S.lam[Math.min(T-1,rl)]/rush,ago=cursor-rl;
+  const fr=Math.abs(dropRush-2/3)<.005?'two thirds':Math.abs(dropRush-.5)<.005?'half':Math.round(dropRush*100)+'%';
+  const words={60:'an hour ago',120:'two hours ago',180:'three hours ago'};
+  const agoTxt=words[ago]||(ago%60===0?(ago/60)+' hours ago':ago+' minutes ago');
+  let s='';
+  if(ago<=0)s='The rush is still on. ';
+  else if(dropRush>0)s=`Arrivals dropped by ${fr} ${agoTxt}. `;
+  if(Q<=0.5)s+=`No queue at ${hm(cursor)}. `;
+  else{const tail=`<b>${fmt(Q)}</b> people, <b>${fmt(Q/S.muFull)}</b> minutes. `;
+    const rising=i>0&&Q>S.q[i-1]+1e-9;
+    s+=(i<S.pk||(i===S.pk&&rising))?`The queue is still growing: ${tail}`:i===S.pk?`The queue is at its peak: ${tail}`:`The queue is shrinking: ${tail}`;}
+  return s+'Drag the world count.';
+}
+function update(){
+  read();S=simulate(P);
+  const f=P.layer?P.lf:1;
+  $('oW').textContent=P.W;$('oC').textContent=fmt(P.C)+(P.layer?` → ${fmt(P.C*f)}`:'');$('oa').textContent=fmt(P.a)+(P.layer?` → ${r1(P.a*f)}`:'');$('oL').textContent=P.L;
+  $('olf').textContent='×'+P.lf.toFixed(1);$('lf').disabled=!P.layer;
+  $('orush').textContent=fmt(P.rush);$('orl').textContent=P.rl;$('osh').textContent=fmt(P.sh);$('ose').textContent=Math.max(P.rl,P.se);$('onight').textContent=fmt(P.night);
+  $('ofc').textContent=fmt(P.fc);$('oalive').textContent=fmt(P.alive);
+  $('oCur').textContent=hm(cursor)+` (minute ${cursor})`;$('cur').value=cursor;
+  const i=cursor-1,Q=S.q[i];
+  $('rQ').textContent=fmt(Q);$('rQl').textContent=`queue at ${hm(cursor)}`;
+  $('rW').textContent=fmt(Q/S.muFull)+' min';
+  $('rP').textContent=S.q[S.pk]>0?`${fmt(S.q[S.pk])} at min ${S.pk+1}`:'no queue';
+  $('rE').textContent=S.q[S.pk]<=0?'never forms':S.empty>=0?`minute ${S.empty+1}`:'not by +12 h';
+  const lr=S.lam[0],ls=S.lam[Math.min(T-1,P.rl)],ln=S.lam[Math.min(T-1,S.se)];
+  const alive=S.day30>=P.alive;
+  $('facts').innerHTML=[
+    `λ per world: rush <b>${r1(lr)}</b>, shoulder <b>${r1(ls)}</b>, night <b>${r1(ln)}</b> /min`,
+    `μ once full, C / L: <b>${r1(S.muFull)}</b> /min`,
+    `world fills: <b>${S.fill>=0?'minute '+(S.fill+1):'not by +12 h'}</b>`,
+    `day-30 per world: <b>${fmt(S.day30)}</b>, ${alive?'alive':'not alive'} (threshold ${fmt(P.alive)})`
+  ].map(x=>`<li>${x}</li>`).join('');
+  // tiles
+  const col=alive?'var(--moss)':'var(--ochre)';
+  $('tiles').innerHTML=Array.from({length:P.W},(_,k)=>`<div class="tile" style="--c:${col}"><span>World ${k+1}</span><b>${fmt(Q)}</b><span>in queue</span><b>${fmt(S.day30)}</b><span>day 30 ${alive?'✓':'✗'}</span></div>`).join('');
+  $('stripSub').textContent=`${P.W} worlds. Each tile: queue at ${hm(cursor)} and day-30 peak population. ${alive?'Green: every world clears the alive line of '+fmt(P.alive)+'.':'Ochre: each world falls under the alive line of '+fmt(P.alive)+'.'}`;
+  // table
+  const mins=[0,40,60,120,180,240];
+  if(S.pk+1>0&&S.q[S.pk]>0)mins.push(S.pk+1);
+  if(S.empty>=0)mins.push(S.empty+1);
+  if(!mins.includes(cursor))mins.push(cursor);
+  const uniq=[...new Set(mins)].sort((x,y)=>x-y);
+  $('tbody').innerHTML=uniq.map(m=>{const k=m-1,A=m?S.A[k]:0,D=m?S.D[k]:0,Qm=m?S.q[k]:0,ri=Math.min(T-1,m);
+    const tag=m===S.pk+1&&S.q[S.pk]>0?' (peak)':m===S.empty+1?' (empty)':'';
+    return `<tr class="${m===cursor?'here':''}"><td>${m}${tag}</td><td>${fmt(A)}</td><td>${fmt(D)}</td><td>${fmt(Qm)}</td><td>${r1(S.lam[ri])}</td><td>${r1(S.mu[ri])}</td></tr>`;}).join('');
+  $('lede').innerHTML=phaseSentence();
+  drawRate();drawTot();
+}
+
+// ---------- events
+ids.concat(['model']).forEach(id=>$(id).addEventListener('input',()=>{clearChips();update();}));
+$('layer').addEventListener('change',()=>{clearChips();update();});
+$('cur').addEventListener('input',e=>{cursor=+e.target.value;update();});
+function clearChips(){document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  const defs={C:4000,a:100,L:160,lf:1.5,rush:1200,rl:60,sh:400,se:180,night:150,fc:30000,alive:2500};
+  Object.entries(defs).forEach(([k,v])=>$(k).value=v);$('model').value='full';
+  $('W').value=b.dataset.w;$('layer').checked=b.dataset.layer==='1';
+  clearChips();b.setAttribute('aria-pressed','true');update();
+}));
+const tot=$('cTot');
+function fromX(e){const r=tot.getBoundingClientRect(),pw=r.width-pad.l-pad.r;const t=Math.round((e.clientX-r.left-pad.l)/pw*T);cursor=Math.max(1,Math.min(T,t));update();}
+let dragging=false;
+tot.addEventListener('pointerdown',e=>{dragging=true;tot.setPointerCapture(e.pointerId);fromX(e);});
+tot.addEventListener('pointermove',e=>{if(dragging)fromX(e);});
+tot.addEventListener('pointerup',()=>{dragging=false;});
+tot.addEventListener('pointercancel',()=>{dragging=false;});
+tot.addEventListener('keydown',e=>{
+  const s=e.shiftKey?10:1;let c=cursor;
+  if(e.key==='ArrowRight'||e.key==='ArrowUp')c+=s;else if(e.key==='ArrowLeft'||e.key==='ArrowDown')c-=s;
+  else if(e.key==='Home')c=1;else if(e.key==='End')c=T;else if(e.key==='PageUp')c+=60;else if(e.key==='PageDown')c-=60;else return;
+  e.preventDefault();cursor=Math.max(1,Math.min(T,c));update();
+});
+$('cur').addEventListener('keydown',e=>{if(e.shiftKey&&(e.key.startsWith('Arrow'))){e.preventDefault();const d=(e.key==='ArrowRight'||e.key==='ArrowUp')?10:-10;cursor=Math.max(1,Math.min(T,cursor+d));update();}});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The narrowest pipe wins — MMO407 Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.08rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1.1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cPipe{height:200px}
+#cHour{height:260px}
+.stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:6px}
+.stage{font-size:.8rem;text-align:center;border-top:3px solid var(--steel);padding-top:4px;min-width:0}
+.stage.wall{border-top-color:var(--blood)}
+.stage b{display:block;font-size:.95rem;font-variant-numeric:tabular-nums}
+.stage .nm{display:block;font-weight:600;line-height:1.2;min-height:2.4em}
+.stage .ut{display:block;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.stage.wall .ut{color:var(--blood);font-weight:700}
+.stage .btns{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.mini{font:600 .8rem var(--sans);padding:5px 8px;border-radius:6px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer;min-height:30px}
+.mini:hover{background:var(--paper)}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.readout .stat b{font-size:1.1rem}.stage{font-size:.72rem}.stage b{font-size:.8rem}.stage .nm{hyphens:manual}.mini{padding:4px 7px}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15;overflow-wrap:anywhere}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+.insight{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+.controls{display:grid;grid-template-columns:1fr;gap:18px;margin-top:16px}
+@media (min-width:760px){.controls{grid-template-columns:1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:10px 12px 12px;margin:0;min-width:0}
+legend{font-weight:700;font-size:.92rem;padding:0 4px}
+label{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+.check{display:flex;align-items:center;gap:8px;justify-content:flex-start;margin-top:10px}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.table-wrap{overflow-x:auto;margin-top:14px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:100%}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+caption{text-align:left;font-weight:600;font-size:.9rem;padding-bottom:4px}
+.note{font-size:.88rem;color:var(--ink-soft);margin:6px 0 0}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO407 Launch, Scaling and Post-Mortems · Week 1 · Worked example</p>
+  <h1>A launch passes only as many players as its narrowest pipe</h1>
+  <p class="lede" id="lede">Authentication is the wall. Try doubling character select, then authentication.</p>
+</header>
+
+<section class="panel" aria-label="Login pipeline model">
+  <div class="views">
+    <figure>
+      <figcaption>The pipeline<small>Pipe height is capacity (players per minute), same scale for all four. Dots enter at rate λ.</small></figcaption>
+      <canvas id="cPipe" role="img" aria-label="Four pipes in series with players queuing in front of the narrowest"></canvas>
+      <div class="stages" id="stages"></div>
+    </figure>
+    <figure>
+      <figcaption>The hour<small id="hourSub">Throughput (left axis) and players stuck waiting (right axis) over the first 60 minutes</small></figcaption>
+      <canvas id="cHour" role="img" aria-label="Throughput and backlog over the first hour"></canvas>
+      <div class="legend" id="hourLegend"></div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--moss)"><b id="rX">—</b><span id="rXl">throughput X (players/min)</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rB">—</b><span>bottleneck</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rN">—</b><span>next-narrowest stage</span></div>
+    <div class="stat" style="--c:var(--ochre)"><b id="rQ">—</b><span id="rQl">backlog at minute 60</span></div>
+  </div>
+  <p class="insight" id="insight" aria-live="polite"></p>
+
+  <div class="controls">
+    <fieldset>
+      <legend>Demand and capacity</legend>
+      <label for="lam">Arrival rate λ (players/min) <output id="oLam">1,000</output></label>
+      <input id="lam" type="range" min="100" max="3000" step="50" value="1000">
+      <div id="capSliders"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Plans and failure mode</legend>
+      <div class="presets" role="group" aria-label="Plan presets" id="presets">
+        <button class="chip" data-p="0" aria-pressed="true">As built</button>
+        <button class="chip" data-p="1" aria-pressed="false">2× character select</button>
+        <button class="chip" data-p="2" aria-pressed="false">2× authentication</button>
+        <button class="chip" data-p="3" aria-pressed="false">2× auth + 2× world entry</button>
+      </div>
+      <label class="check" for="retry"><input type="checkbox" id="retry"> Retries: the bottleneck rejects instead of queuing</label>
+      <div id="retryWrap" hidden>
+        <label for="rInt">Retry interval r (seconds) <output id="oR">30</output></label>
+        <input id="rInt" type="range" min="10" max="120" step="5" value="30">
+        <label for="kCost">Rejection cost k (share of a success) <output id="oK">0.10</output></label>
+        <input id="kCost" type="range" min="0" max="0.5" step="0.01" value="0.1">
+        <label class="check" for="qWorld"><input type="checkbox" id="qWorld"> Queue at world entry (hold players in line, no retries)</label>
+      </div>
+      <p class="note">With retries on, every rejected player comes back after r seconds. Each rejection still costs the stage k of a success worth of work.</p>
+    </fieldset>
+  </div>
+
+  <div class="table-wrap" id="retryTable" hidden>
+    <table>
+      <caption>Retry storm, minute by minute (bottleneck stage)</caption>
+      <thead><tr><th>Minute</th><th>Waiting to retry (start)</th><th>Attempts</th><th>Successes</th><th>Rejected</th></tr></thead>
+      <tbody id="rtBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Model from the lecture: X = min(λ, c<sub>patch</sub>, c<sub>auth</sub>, c<sub>select</sub>, c<sub>world</sub>), backlog B(t) = max(0, λ − X) × t. The retry model solves successes × 1 + rejected × k = c<sub>b</sub> for successes each minute. Capacities are teaching numbers, not measurements from any one game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const f1=n=>(Math.round(n*10)/10).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const NAMES=['Patch check','Authentication','Character select','World entry'];
+const SHORT=['patch check','authentication','character select','world entry'];
+const DEF=[5000,600,1500,900];
+const PRE=[[5000,600,1500,900],[5000,600,3000,900],[5000,1200,1500,900],[5000,1200,1500,1800]];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let caps=DEF.slice(),lam=1000,retry=false,qWorld=false,rInt=30,k=0.1;
+let ghost=null,msg='';
+
+// build capacity sliders and stage cells
+$('capSliders').innerHTML=NAMES.map((n,i)=>`<label for="c${i}">${n} capacity <output id="oc${i}">${fmt(DEF[i])}</output></label><input id="c${i}" type="range" min="100" max="6000" step="50" value="${DEF[i]}">`).join('');
+$('stages').innerHTML=NAMES.map((n,i)=>`<div class="stage" id="s${i}"><span class="nm">${n.replace('Authentication','Authen&shy;tication')}</span><b id="sc${i}">—</b><span class="ut" id="su${i}">—</span><div class="btns"><button class="mini" data-x2="${i}" aria-label="Double ${n} capacity">×2</button><button class="mini" data-rs="${i}" aria-label="Reset ${n} capacity">reset</button></div></div>`).join('');
+
+function model(c,l){
+  const X=Math.min(l,...c);
+  let b=-1,min=Infinity;c.forEach((v,i)=>{if(v<min){min=v;b=i;}});
+  if(l<=min) b=-1;
+  const order=c.map((v,i)=>i).sort((a,z)=>c[a]-c[z]);
+  const bi=b<0?order[0]:b;const next=order.find(i=>i!==bi);
+  return {X,b,next,B60:Math.max(0,l-X)*60};
+}
+function retrySim(){
+  const m=model(caps,lam),cb=Math.min(...caps);let W=0;const rows=[];
+  for(let t=1;t<=60;t++){
+    const att=lam+W*60/rInt;
+    const s=Math.max(0,Math.min(att,(cb-k*att)/(1-k)));
+    rows.push({t,W,att,s,rej:att-s});W=W+lam-s;
+  }
+  return rows;
+}
+function retriesActive(){return retry&&!qWorld;}
+
+// --------- charts
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function nice(v){if(v<=0)return 4;const q=v*1.001/4,mag=Math.pow(10,Math.floor(Math.log10(q)));return 4*([1,1.5,2,2.5,3,4,5,6,8,10].map(x=>x*mag).find(x=>x>=q)||q);}
+const kfmt=v=>v>=10000?(Math.round(v/100)/10).toLocaleString('en-US')+'k':fmt(v);
+
+function drawHour(){
+  const {g,w,h}=setup($('cHour')),pad={l:48,r:48,t:12,b:34};
+  const pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const m=model(caps,lam),R=retriesActive();
+  let thr,back;
+  if(R){const rows=retrySim();thr=[lam>0?rows[0].s:0].concat(rows.map(r=>r.s));back=[0].concat(rows.map(r=>r.W+lam-r.s));}
+  else{thr=Array.from({length:61},()=>m.X);back=Array.from({length:61},(_,t)=>Math.max(0,lam-m.X)*t);}
+  const yL=nice(Math.max(lam,...thr)),backMax=Math.max(1,...back,ghost?Math.max(...ghost):0),yR=nice(backMax);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+ph*(1-i/4);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();
+    g.fillStyle=css('--moss');g.textAlign='right';g.textBaseline='middle';g.fillText(kfmt(yL*i/4),pad.l-6,y);
+    g.fillStyle=css('--blood');g.textAlign='left';g.fillText(kfmt(yR*i/4),w-pad.r+6,y);}
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  for(let i=0;i<=6;i++){const x=pad.l+pw*i/6;g.fillText(i*10,x,h-pad.b+6);}
+  g.textAlign='right';g.fillText('minute',w-pad.r,h-14);
+  const X=t=>pad.l+pw*t/60;
+  const line=(arr,ymax,col,wd,alpha,dash)=>{g.globalAlpha=alpha||1;g.strokeStyle=col;g.lineWidth=wd||2.5;g.setLineDash(dash||[]);g.beginPath();arr.forEach((v,t)=>{const y=pad.t+ph*(1-Math.min(v,ymax*1.05)/ymax);t?g.lineTo(X(t),y):g.moveTo(X(t),y);});g.stroke();g.setLineDash([]);g.globalAlpha=1;};
+  if(!R){line(Array.from({length:61},()=>lam),yL,css('--ink-soft'),1.5,.8,[5,5]);}
+  if(ghost) line(ghost,yR,css('--blood'),2,.28);
+  line(back,yR,css('--blood'));
+  line(thr,yL,css('--moss'));
+  $('hourLegend').innerHTML=(R?'<span><i style="background:var(--moss)"></i>successes per minute (left)</span><span><i style="background:var(--blood)"></i>players waiting to retry (right)</span>':
+    '<span><i style="background:var(--moss)"></i>throughput X (left)</span><span><i style="background:var(--ink-soft)"></i>arrivals λ (left, dashed)</span><span><i style="background:var(--blood)"></i>backlog B(t) (right)</span>')+(ghost?'<span><i style="background:var(--blood);opacity:.3"></i>backlog before your last change</span>':'');
+  $('cHour').setAttribute('aria-label',R?`Successes per minute fall from ${f1(thr[1])} at minute 1 to ${f1(thr[60])} at minute 60 while players waiting to retry reach ${fmt(back[60])}.`:`Throughput is flat at ${fmt(m.X)} per minute. Backlog grows to ${fmt(back[60])} at minute 60.`);
+  return back;
+}
+
+// pipeline view with dots
+let dots=[],lastT=0,spawnAcc=0,geo=null;
+function pipeGeo(){
+  const {g,w,h}=setup($('cPipe'));
+  const scale=Math.max(6000,...caps),maxH=h-40,col=w/4,cy=h/2;
+  const pipes=caps.map((c,i)=>{const ph=Math.max(4,maxH*c/scale);const x0=col*i+col*0.34,x1=col*(i+1)-2;return {x0,x1,ph,top:cy-ph/2,bot:cy+ph/2};});
+  return {g,w,h,cy,col,pipes};
+}
+function drawPipes(){
+  geo=pipeGeo();const {g,w,h,cy,col,pipes}=geo;const m=model(caps,lam),R=retriesActive();
+  g.clearRect(0,0,w,h);
+  // connector line
+  g.strokeStyle=css('--grid');g.lineWidth=2;g.beginPath();g.moveTo(0,cy);g.lineTo(w,cy);g.stroke();
+  // heap in front of bottleneck
+  if(m.b>=0){
+    const p=pipes[m.b],frac=R?1:Math.min(1,m.B60/(lam*60)),n=Math.round(6+frac*70);
+    const baseX=p.x0-4,avail=col*0.3;g.fillStyle=css('--blood');
+    let placed=0,row=0;
+    while(placed<n&&row<14){const perRow=Math.max(1,Math.round(avail/7)-row);for(let j=0;j<perRow&&placed<n;j++){const x=baseX-4-j*7-(row%2)*3.5,y=h-12-row*7;g.beginPath();g.arc(x,y,3,0,Math.PI*2);g.fill();placed++;}row++;}
+  }
+  pipes.forEach((p,i)=>{
+    const wall=i===m.b;g.fillStyle=css('--paper');g.strokeStyle=wall?css('--blood'):css('--steel');g.lineWidth=wall?3:2;
+    g.beginPath();g.rect(p.x0,p.top,p.x1-p.x0,p.ph);g.fill();g.stroke();
+    g.fillStyle=css('--ink-soft');g.font='600 11px '+css('--sans');g.textAlign='center';g.textBaseline='bottom';
+    g.fillText(fmt(caps[i]),(p.x0+p.x1)/2,Math.min(p.top-3,h-2));
+  });
+  // dots
+  dots.forEach(d=>{g.fillStyle=d.rej?css('--blood'):css('--steel');g.beginPath();g.arc(d.x,d.y,2.6,0,Math.PI*2);g.fill();});
+  if(reduce){ // static stream: density shows rate
+        for(let i=0;i<4;i++){const p=pipes[i],rate=(m.b<0||i<=m.b)?lam:m.X;const n=Math.round(rate/150);const x0=i?pipes[i-1].x1:0;
+      for(let j=0;j<n;j++){const x=x0+(p.x1-x0)*(j+.5)/n,y=cy+((j*37)%9-4)*Math.min(1,p.ph/12);g.fillStyle=css('--steel');g.beginPath();g.arc(x,y,2.4,0,Math.PI*2);g.fill();}}
+  }
+  $('cPipe').setAttribute('aria-label',`Pipes with capacities ${caps.map((c,i)=>SHORT[i]+' '+fmt(c)).join(', ')} per minute. `+(m.b>=0?`Players pile up in front of ${SHORT[m.b]}.`:'No pile-up: every stage has room for all arrivals.'));
+}
+function step(ts){
+  if(!geo) return;
+  const dt=Math.min(.05,(ts-lastT)/1000||0);lastT=ts;
+  const m=model(caps,lam),R=retriesActive(),{pipes,cy,h}=geo;
+  spawnAcc+=dt*lam/40;
+  while(spawnAcc>=1){spawnAcc-=1;dots.push({x:-3,y:cy,off:Math.random()*2-1,pass:Math.random()<m.X/lam,rej:false,vx:110+Math.random()*30,vy:0});}
+  const wallX=m.b>=0?pipes[m.b].x0:Infinity;
+  dots.forEach(d=>{
+    if(d.rej){d.x+=d.vx*dt;d.y+=d.vy*dt;d.vy+=R?-40*dt:260*dt;if(!R&&d.y>h-12)d.dead=true;if(d.x<-5||d.y<-5)d.dead=true;return;}
+    d.x+=d.vx*dt;
+    const p=pipes.find(p=>d.x>=p.x0&&d.x<=p.x1);
+    const target=p?cy+d.off*Math.max(0,p.ph/2-3):cy;d.y+=(target-d.y)*Math.min(1,dt*8);
+    if(!d.pass&&d.x>=wallX-6){d.rej=true;if(R){d.vx=-160;d.vy=-60;}else{d.vx=-20-Math.random()*25;d.vy=-20;}}
+    if(d.x>geo.w+5)d.dead=true;
+  });
+  dots=dots.filter(d=>!d.dead);if(dots.length>600)dots.splice(0,dots.length-600);
+  drawPipes();
+  requestAnimationFrame(step);
+}
+
+// --------- readouts
+function update(){
+  lam=+$('lam').value;caps=caps.map((_,i)=>+$('c'+i).value);
+  $('oLam').textContent=fmt(lam);caps.forEach((c,i)=>{$('oc'+i).textContent=fmt(c);});
+  const m=model(caps,lam),R=retriesActive();
+  caps.forEach((c,i)=>{$('sc'+i).textContent=fmt(c)+'/min';$('su'+i).textContent=Math.round(100*m.X/c)+'% used';$('s'+i).classList.toggle('wall',i===m.b);});
+  $('rX').textContent=fmt(m.X);
+  $('rB').textContent=m.b>=0?SHORT[m.b]:'none (arrivals)';
+  $('rN').textContent=`${SHORT[m.next]}, ${fmt(caps[m.next])}`;
+  let rows=null;
+  if(R){rows=retrySim();
+    $('rXl').textContent='successes in minute 1 (players/min)';$('rX').textContent=f1(rows[0].s);
+    $('rQ').textContent=f1(rows[59].s)+'/min';$('rQl').textContent='successes in minute 60';
+    const zero=rows.find(r=>r.s<=0);
+    msg=`Retries on. Minute 1 lets in ${f1(rows[0].s)} of ${fmt(rows[0].att)} attempts. By minute 3 there are ${fmt(rows[2].att)} attempts and ${f1(rows[2].s)} successes. `+(zero?`From minute ${zero.t} (${fmt(zero.att)} attempts) nobody gets in: the stage spends its whole budget saying no.`:`Successes settle at ${f1(rows[59].s)} per minute.`);
+    $('rtBody').innerHTML=rows.slice(0,8).map(r=>`<tr><td>${r.t}</td><td>${fmt(r.W)}</td><td>${fmt(r.att)}</td><td>${f1(r.s)}</td><td>${fmt(r.rej)}</td></tr>`).join('');
+  }else{
+    $('rXl').textContent='throughput X (players/min)';$('rQ').textContent=fmt(m.B60);$('rQl').textContent='backlog at minute 60';
+    if(!msg) msg=m.b>=0?`${NAMES[m.b]} is the wall at ${fmt(caps[m.b])}/min. ${fmt(lam-m.X)} players a minute pile up in front of it.`:`Every stage has room for ${fmt(lam)} arrivals a minute. Nobody waits.`;
+  }
+  $('retryTable').hidden=!R;
+  $('insight').textContent=msg;msg='';
+  $('lede').textContent=m.b>=0?(R?`${NAMES[m.b]} rejects instead of queuing, and rejected players come back.`:(m.b===1&&caps.join()===DEF.join()&&lam===1000?'Authentication is the wall. Try doubling character select, then authentication.':`${NAMES[m.b]} is the wall. Widening any other stage changes nothing.`)):'No wall left: throughput equals arrivals.';
+  const back=drawHour();drawPipes();
+  return back;
+}
+let lastBack=null;
+function sentence(i,added,before,after){
+  const d=after.X-before.X;
+  return `You added ${fmt(added)}/min to ${SHORT[i]}. Throughput ${d===0?'changed by 0':(d>0?'rose by '+fmt(d)+'/min':'fell by '+fmt(-d)+'/min')}. `+(after.b>=0?`The bottleneck is ${after.b===before.b?'still':'now'} ${SHORT[after.b]}.`:'No bottleneck is left: arrivals are the limit.');
+}
+function clearPresets(){document.querySelectorAll('#presets .chip').forEach(x=>x.setAttribute('aria-pressed','false'));}
+
+document.querySelectorAll('[data-x2]').forEach(b=>b.addEventListener('click',()=>{
+  const i=+b.dataset.x2,s=$('c'+i),old=+s.value,nv=Math.min(6000,old*2);
+  const before=model(caps,lam);ghost=lastBack;s.value=nv;clearPresets();
+  caps[i]=nv;const after=model(caps,lam);
+  msg=sentence(i,nv-old,before,after)+(nv<old*2?' (Capped at the 6,000 slider maximum.)':'');
+  lastBack=update();
+}));
+document.querySelectorAll('[data-rs]').forEach(b=>b.addEventListener('click',()=>{
+  const i=+b.dataset.rs;ghost=lastBack;$('c'+i).value=DEF[i];clearPresets();lastBack=update();
+}));
+document.querySelectorAll('#presets .chip').forEach(b=>b.addEventListener('click',()=>{
+  clearPresets();b.setAttribute('aria-pressed','true');
+  const p=PRE[+b.dataset.p],base=model(DEF,lam);ghost=lastBack;
+  p.forEach((v,i)=>{$('c'+i).value=v;});caps=p.slice();const after=model(p,lam);const d=after.X-base.X;
+  msg=`Compared with as built, throughput ${d===0?'changed by 0':'rose by '+fmt(d)+'/min'}, to ${fmt(after.X)}/min. `+(after.b>=0?`The bottleneck is ${SHORT[after.b]}. Backlog at minute 60: ${fmt(after.B60)}.`:'No bottleneck is left: arrivals are the limit. Backlog at minute 60: 0.');
+  if(+b.dataset.p===0){msg='';ghost=null;}
+  lastBack=update();
+}));
+$('lam').addEventListener('input',()=>{ghost=null;lastBack=update();});
+for(let i=0;i<4;i++)$('c'+i).addEventListener('input',()=>{clearPresets();lastBack=update();});
+['c0','c1','c2','c3'].forEach(id=>$(id).addEventListener('pointerdown',()=>{ghost=lastBack;}));
+['c0','c1','c2','c3'].forEach(id=>$(id).addEventListener('keydown',()=>{if(!ghost)ghost=lastBack;}));
+$('retry').addEventListener('change',e=>{retry=e.target.checked;$('retryWrap').hidden=!retry;ghost=null;lastBack=update();});
+$('qWorld').addEventListener('change',e=>{qWorld=e.target.checked;ghost=null;lastBack=update();});
+$('rInt').addEventListener('input',e=>{rInt=+e.target.value;$('oR').textContent=rInt;lastBack=update();});
+$('kCost').addEventListener('input',e=>{k=+e.target.value;$('oK').textContent=k.toFixed(2);lastBack=update();});
+window.addEventListener('resize',()=>{lastBack=update();});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{lastBack=update();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{lastBack=update();});
+lastBack=update();
+if(!reduce)requestAnimationFrame(t=>{lastT=t;requestAnimationFrame(step);});
+})();
+</script>
+</body>
+</html>

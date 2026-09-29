@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patch or rebuild — MMO407 Week 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;--radius-sm:6px;--radius-lg:14px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1200px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:68ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.1rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:var(--radius-lg);padding:16px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.chip{font:600 .85rem var(--sans);padding:7px 11px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);color:var(--paper)}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1.25fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%;height:300px}
+#cMap{cursor:crosshair;touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;margin:6px 0 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.box{height:10px;width:14px;opacity:.3}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--ink-soft) 0 5px,transparent 5px 8px)!important}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:4px 0 4px 10px;min-width:0}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:.84rem;color:var(--ink-soft)}
+@media (max-width:520px){.readout .stat b{font-size:1.12rem}}
+.facts{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.88rem;color:var(--ink-soft);margin:8px 0 0;padding:0;list-style:none;font-variant-numeric:tabular-nums}
+.facts b{color:var(--ink)}
+.shadeNote{font-family:var(--serif);margin:12px 0 0;padding:10px 14px;border-radius:10px;background:var(--paper-2)}
+.controls{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px}
+@media (min-width:760px){.controls{grid-template-columns:1fr 1fr 1fr}}
+fieldset{border:1.5px solid var(--grid);border-radius:10px;padding:8px 12px 12px;margin:0;min-width:0}
+legend{font-weight:700;font-size:.92rem;padding:0 4px}
+label{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+label output{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--steel);height:26px;margin:2px 0}
+input:disabled{opacity:.45}
+.check{justify-content:flex-start;align-items:center;gap:8px;margin-top:10px}
+.check input{width:20px;height:20px;accent-color:var(--steel)}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:74ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO407 Launch, Scaling and Post-Mortems · Week 4 · Worked example</p>
+  <h1>Patch the old game, or rebuild it?</h1>
+  <p class="lede" id="lede" aria-live="polite"></p>
+</header>
+
+<section class="panel" aria-label="Patch or rebuild model">
+  <div class="presets" role="group" aria-label="Scenario presets">
+    <button class="chip" data-phi="0.1" data-m="3" data-s="0" data-c="0" aria-pressed="false">A, surface problems</button>
+    <button class="chip" data-phi="0.5" data-m="1.5" data-s="0" data-c="0" aria-pressed="false">B, deep but cheap</button>
+    <button class="chip" data-phi="0.5" data-m="4" data-s="0" data-c="0" aria-pressed="true">C, deep and taxing</button>
+    <button class="chip" data-phi="0.5" data-m="4" data-s="0.25" data-c="0.5" aria-pressed="false">C, run both</button>
+  </div>
+  <div class="views">
+    <figure>
+      <figcaption>The gap over time<small>Remaining gap in fix-units. Lower is better. Each tick marks when a path reaches zero.</small></figcaption>
+      <canvas id="cGap" role="img" aria-label="Remaining gap over time for the patch and rebuild paths"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--steel)"></i>patch the old game</span>
+        <span><i style="background:var(--moss)"></i>rebuild</span>
+        <span id="lgOld" hidden><i class="dash"></i>what players of the old game see</span>
+        <span><i class="box" style="background:var(--blood)"></i>patch path shows more progress</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>The decision map<small>x: structural share φ. y: structural penalty m. Drag the dot or focus it and use the arrow keys.</small></figcaption>
+      <canvas id="cMap" tabindex="0" role="slider" aria-roledescription="two-axis slider" aria-valuemin="0.05" aria-valuemax="0.95" aria-label="Decision map dot. Left and right change phi by 0.05, up and down change m by 0.1."></canvas>
+      <div class="legend">
+        <span><i style="background:var(--ink)"></i>m* = T<sub>r</sub> × F / (φ × G)</span>
+        <span><i class="box" style="background:var(--moss)"></i>rebuild faster</span>
+        <span><i class="box" style="background:var(--steel)"></i>patch faster</span>
+      </div>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="stat" style="--c:var(--steel)"><b id="rTp">—</b><span>T<sub>patch</sub>, months</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rTr">—</b><span>T<sub>rebuild</sub>, months</span></div>
+    <div class="stat" style="--c:var(--ink)"><b id="rMs">—</b><span>m*, the break-even penalty</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rWin">—</b><span>faster path and margin</span></div>
+  </div>
+  <ul class="facts" id="facts"></ul>
+  <p class="shadeNote" id="shadeNote"></p>
+
+  <div class="controls">
+    <fieldset>
+      <legend>The game</legend>
+      <label for="G">Gap G (fix-units) <output id="oG"></output></label>
+      <input id="G" type="range" min="100" max="600" step="10" value="300">
+      <label for="F">Team speed F (fix-units per month) <output id="oF"></output></label>
+      <input id="F" type="range" min="4" max="20" step="1" value="10">
+      <label for="Tr"><span>Rebuild time T<sub>r</sub> (months)</span> <output id="oTr"></output></label>
+      <input id="Tr" type="range" min="6" max="60" step="1" value="24">
+      <label class="check" for="pad"><input type="checkbox" id="pad"> <span>Pad T<sub>r</sub> by 50%</span></label>
+    </fieldset>
+    <fieldset>
+      <legend>The problem</legend>
+      <label for="phi">Structural share φ <output id="ophi"></output></label>
+      <input id="phi" type="range" min="0.05" max="0.95" step="0.05" value="0.5">
+      <label for="m">Structural penalty m <output id="om"></output></label>
+      <input id="m" type="range" min="1" max="6" step="0.1" value="4">
+      <p class="hint">m is how many times longer a structural fix takes in the old code than in the new one.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Run both</legend>
+      <label for="s">Share of team kept on the old game s <output id="os"></output></label>
+      <input id="s" type="range" min="0" max="0.5" step="0.05" value="0">
+      <label for="c">Share of that work carried into the rebuild c <output id="oc"></output></label>
+      <input id="c" type="range" min="0" max="1" step="0.1" value="0" disabled>
+      <p class="hint">c is off while s = 0. The decision-map curve assumes s = 0.</p>
+    </fieldset>
+  </div>
+</section>
+
+<footer>T<sub>patch</sub> = G × (φ × m + 1 − φ) / F. build = T<sub>r</sub> / (1 − s). carried = c × s × F × build. T<sub>rebuild</sub> = build + max(0, (1 − φ) × G − carried) / F. m* = T<sub>r</sub> × F / (φ × G). Scenarios A, B and C are the lecture's teaching cases, not measurements of Final Fantasy XIV or any other game.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f1=v=>(Math.round(v*10)/10).toFixed(1);
+const f2=v=>(Math.round(v*100)/100).toFixed(2);
+const tr=v=>String(Math.round(v*100)/100);
+const TMAX=90;
+let P={};
+
+function read(){['G','F','Tr','phi','m','s','c'].forEach(k=>P[k]=+$(k).value);P.pad=$('pad').checked;P.TrE=P.Tr*(P.pad?1.5:1);if(P.s===0)P.c=0;}
+function calc(p){
+  const Tp=p.G*(p.phi*p.m+1-p.phi)/p.F,build=p.TrE/(1-p.s),carried=p.c*p.s*p.F*build;
+  const after=Math.max(0,(1-p.phi)*p.G-carried),Trb=build+after/p.F,ms=p.TrE*p.F/(p.phi*p.G);
+  const gp=t=>p.G*Math.max(0,1-t/Tp);
+  const gr=t=>t<build?p.G:Math.max(0,after-p.F*(t-build));
+  const oldRate=p.s*p.F/(p.phi*p.m+1-p.phi);
+  const go=t=>Math.max(0,p.G-oldRate*t);
+  // months the rebuild line is above the patch line: midpoint samples at 0.1-month steps
+  const end=Math.max(Tp,Trb),iv=[];let above=0,open=null;
+  for(let k=0;k*0.1<end;k++){const t=k*0.1+0.05,up=gr(t)>gp(t)+1e-9;
+    if(up){above+=0.1;if(open===null)open=k*0.1;}else if(open!==null){iv.push([open,k*0.1]);open=null;}}
+  if(open!==null)iv.push([open,end]);
+  return {Tp,build,carried,after,Trb,ms,gp,gr,go,above,iv,faster:Tp<=Trb?'patch':'rebuild',margin:Math.abs(Tp-Trb)};
+}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return {g,w:r.width,h:r.height};}
+function halo(g,t,x,y,col){g.lineWidth=4;g.strokeStyle=css('--paper-2');g.strokeText(t,x,y);g.fillStyle=col||css('--ink');g.fillText(t,x,y);}
+const pad={l:46,r:14,t:26,b:34};
+
+function drawGap(R){
+  const {g,w,h}=setup($('cGap')),pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+  const X=t=>pad.l+pw*Math.min(t,TMAX)/TMAX,Y=v=>pad.t+ph*(1-v/P.G);
+  g.clearRect(0,0,w,h);g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Y(P.G*i/4);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(P.G*i/4),pad.l-6,y);}
+  const every=pw<420?30:15;
+  for(let t=0;t<=TMAX;t+=every){g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';g.fillText(t,X(t),h-pad.b+6);}
+  g.textAlign='right';g.fillText('months',w-pad.r,h-14);
+  // shaded region(s): rebuild above patch
+  g.fillStyle=css('--blood');g.globalAlpha=.14;
+  R.iv.forEach(([a,b])=>{if(a>=TMAX)return;g.beginPath();const n=60;
+    for(let i=0;i<=n;i++){const t=a+(Math.min(b,TMAX)-a)*i/n;const x=X(t),y=Y(R.gr(Math.min(t,b-1e-6)));i?g.lineTo(x,y):g.moveTo(x,y);}
+    for(let i=n;i>=0;i--){const t=a+(Math.min(b,TMAX)-a)*i/n;g.lineTo(X(t),Y(R.gp(t)));}
+    g.closePath();g.fill();});
+  g.globalAlpha=1;
+  if(R.iv.length&&R.iv[0][1]-R.iv[0][0]>4){const [a,b]=R.iv[0],tm=(a+Math.min(b,TMAX))/2;g.font='600 11px '+css('--sans');g.textBaseline='top';
+    const lines=pw<420?['patch path shows','more progress']:['players see more progress','on the patch path'];
+    const tw=Math.max(g.measureText(lines[0]).width,g.measureText(lines[1]).width);
+    const bh=30,T2=t=>(t-pad.l)/pw*TMAX;
+    const fits=(x0,y0)=>{for(let x=x0;x<=x0+tw;x+=3){const t=T2(x);if(t<a||t>Math.min(b,TMAX))return false;if(Y(R.gr(t))>y0-3||Y(R.gp(t))<y0+bh+3)return false;}return true;};
+    let spot=null,leader=false;
+    const tEnd=Math.min(b,TMAX);
+    for(let tt=a;tt<=tEnd&&!spot;tt+=0.5){const x0=X(tt);if(x0+tw>X(tEnd))break;
+      for(let y0=Y(R.gr(tt))+4;y0<h-pad.b-bh;y0+=4){if(fits(x0,y0)){spot=[x0,y0];break;}}}
+    if(!spot){const bt=Math.min(R.build,TMAX),yb=Math.min(h-pad.b-bh-4,Y(Math.min(R.after,R.gp(bt)))+14);
+      if(pad.l+6+tw<X(bt)-6){spot=[pad.l+6,yb];leader=true;}}
+    if(spot){g.textAlign='left';
+      if(leader){const tc=a+(tEnd-a)*0.35,cx=X(tc),cy=(Y(R.gr(tc))+Y(R.gp(tc)))/2;g.strokeStyle=css('--blood');g.lineWidth=1.2;g.beginPath();g.moveTo(spot[0]+12,spot[1]-2);g.lineTo(cx,cy);g.stroke();g.fillStyle=css('--blood');g.beginPath();g.arc(cx,cy,2.5,0,Math.PI*2);g.fill();}
+      halo(g,lines[0],spot[0],spot[1],css('--blood'));halo(g,lines[1],spot[0],spot[1]+14,css('--blood'));}}
+  // old servers line
+  if(P.s>0){g.strokeStyle=css('--ink-soft');g.lineWidth=1.8;g.setLineDash([6,4]);g.beginPath();g.moveTo(X(0),Y(R.go(0)));g.lineTo(X(Math.min(R.build,TMAX)),Y(R.go(Math.min(R.build,TMAX))));g.stroke();g.setLineDash([]);
+    if(R.build<=TMAX){const x=X(R.build),y=Y(R.go(R.build));g.fillStyle=css('--ink-soft');g.beginPath();g.arc(x,y,4,0,Math.PI*2);g.fill();g.font='600 11px '+css('--sans');g.textAlign='left';g.textBaseline='bottom';halo(g,'old servers close',x+6,y-4,css('--ink-soft'));}}
+  // patch line
+  const line=(f,col)=>{g.strokeStyle=col;g.lineWidth=2.8;g.beginPath();const n=900;for(let i=0;i<=n;i++){const t=TMAX*i/n;const y=Y(f(t));i?g.lineTo(X(t),y):g.moveTo(X(t),y);}g.stroke();};
+  line(R.gp,css('--steel'));
+  // rebuild line, with a true vertical drop at build
+  g.strokeStyle=css('--moss');g.lineWidth=2.8;g.beginPath();g.moveTo(X(0),Y(P.G));
+  if(R.build<TMAX){g.lineTo(X(R.build),Y(P.G));g.lineTo(X(R.build),Y(R.after));const tEnd=Math.min(R.Trb,TMAX);g.lineTo(X(tEnd),Y(R.gr(tEnd)));if(R.Trb<TMAX)g.lineTo(X(TMAX),Y(0));}
+  else g.lineTo(X(TMAX),Y(P.G));
+  g.stroke();
+  // finish ticks
+  const tick=(t,col,label,row)=>{g.font='700 11px '+css('--sans');g.textBaseline='top';
+    if(t>TMAX){g.textAlign='right';halo(g,label+' '+f1(t)+' →',w-pad.r,6+row*0,col);return;}
+    const x=X(t);g.strokeStyle=col;g.lineWidth=2.5;g.beginPath();g.moveTo(x,Y(0)-10);g.lineTo(x,Y(0)+6);g.stroke();
+    g.textAlign=x>w-60?'right':x<pad.l+40?'left':'center';halo(g,f1(t),x,4+row*12,col);};
+  const close=Math.abs(X(R.Tp)-X(R.Trb))<34;
+  tick(R.Tp,css('--steel'),'patch',0);tick(R.Trb,css('--moss'),'rebuild',close?1:0);
+  $('cGap').setAttribute('aria-label',`Patch path reaches zero at ${f1(R.Tp)} months, rebuild at ${f1(R.Trb)} months. The rebuild line sits above the patch line for ${f1(R.above)} months.`);
+}
+
+// decision map
+const mp={l:46,r:14,t:14,b:40};
+function mapGeo(w,h){const pw=w-mp.l-mp.r,ph=h-mp.t-mp.b;return {X:v=>mp.l+pw*(v-0.05)/0.9,Y:v=>mp.t+ph*(1-(v-1)/5),iX:x=>0.05+0.9*(x-mp.l)/pw,iY:y=>1+5*(1-(y-mp.t)/ph)};}
+function drawMap(R){
+  const {g,w,h}=setup($('cMap')),{X,Y}=mapGeo(w,h);
+  g.clearRect(0,0,w,h);
+  const k=P.TrE*P.F/P.G,curve=phi=>k/phi;
+  // shade below (patch) and above (rebuild)
+  const n=200,pts=[];for(let i=0;i<=n;i++){const phi=0.05+0.9*i/n;pts.push([X(phi),Y(Math.max(1,Math.min(6,curve(phi))))]);}
+  g.globalAlpha=.16;
+  g.fillStyle=css('--steel');g.beginPath();g.moveTo(X(0.05),Y(1));pts.forEach(p=>g.lineTo(p[0],p[1]));g.lineTo(X(0.95),Y(1));g.closePath();g.fill();
+  g.fillStyle=css('--moss');g.beginPath();g.moveTo(X(0.05),Y(6));pts.forEach(p=>g.lineTo(p[0],p[1]));g.lineTo(X(0.95),Y(6));g.closePath();g.fill();
+  g.globalAlpha=1;
+  g.font='12px '+css('--sans');g.lineWidth=1;
+  for(let v=1;v<=6;v++){const y=Y(v);g.strokeStyle=css('--grid');g.beginPath();g.moveTo(mp.l,y);g.lineTo(w-mp.r,y);g.stroke();g.fillStyle=css('--ink-soft');g.textAlign='right';g.textBaseline='middle';g.fillText(v,mp.l-6,y);}
+  [0.05,0.25,0.5,0.75,0.95].forEach(v=>{g.textAlign='center';g.textBaseline='top';g.fillStyle=css('--ink-soft');g.fillText(v,X(v),h-mp.b+6);});
+  g.textAlign='right';g.fillText('structural share φ',w-mp.r,h-16);
+  g.save();g.translate(12,mp.t+4);g.rotate(-Math.PI/2);g.textAlign='right';g.textBaseline='top';g.fillText('penalty m',0,0);g.restore();
+  // curve
+  g.save();g.beginPath();g.rect(mp.l,mp.t,w-mp.l-mp.r,h-mp.t-mp.b);g.clip();
+  g.strokeStyle=css('--ink');g.lineWidth=2.2;g.beginPath();for(let i=0;i<=n;i++){const phi=0.05+0.9*i/n,y=Y(curve(phi));i?g.lineTo(X(phi),y):g.moveTo(X(phi),y);}g.stroke();g.restore();
+  // region labels: put them where there is room
+  g.font='600 12px '+css('--sans');
+  const topFree=curve(0.95)<5.3,botFree=curve(0.95)>1.4||curve(0.5)>1.6;
+  if(topFree){g.textAlign='right';g.textBaseline='top';halo(g,'rebuild faster',w-mp.r-6,mp.t+6,css('--moss'));}
+  if(curve(0.95)>1.35){g.textAlign='right';g.textBaseline='bottom';halo(g,'patch faster',w-mp.r-6,h-mp.b-6,css('--steel'));}
+  else if(botFree){g.textAlign='left';g.textBaseline='bottom';halo(g,'patch faster',mp.l+6,h-mp.b-6,css('--steel'));}
+  // dot
+  const col=R.faster==='rebuild'?css('--moss'):css('--steel'),x=X(P.phi),y=Y(P.m);
+  g.fillStyle=col;g.beginPath();g.arc(x,y,8,0,Math.PI*2);g.fill();g.strokeStyle=css('--paper');g.lineWidth=2.5;g.stroke();
+  g.font='700 12px '+css('--sans');g.textBaseline='middle';const right=x<w-120;g.textAlign=right?'left':'right';
+  halo(g,`φ ${P.phi.toFixed(2)}, m ${P.m.toFixed(1)}`,right?x+13:x-13,y);
+  $('cMap').setAttribute('aria-valuenow',P.phi);$('cMap').setAttribute('aria-valuetext',`phi ${P.phi.toFixed(2)}, m ${P.m.toFixed(1)}: ${R.faster} faster. Break-even m* ${f2(R.ms)}.`);
+}
+
+function update(){
+  read();const R=calc(P);
+  $('oG').textContent=P.G;$('oF').textContent=P.F;$('oTr').textContent=P.pad?`${P.Tr} → ${f1(P.TrE)}`:P.Tr;
+  $('ophi').textContent=P.phi.toFixed(2);$('om').textContent=P.m.toFixed(1);$('os').textContent=P.s.toFixed(2);$('oc').textContent=(+$('c').value).toFixed(1);
+  $('c').disabled=P.s===0;$('lgOld').hidden=P.s===0;
+  $('rTp').textContent=f1(R.Tp);$('rTr').textContent=f1(R.Trb);$('rMs').textContent=f2(R.ms);
+  $('rWin').textContent=R.margin<0.05?'tie':`${R.faster} by ${f1(R.margin)}`;
+  $('facts').innerHTML=[`build <b>${f1(R.build)}</b> months`,`carried <b>${f1(R.carried)}</b> fix-units`,`gap left when the rebuild lands <b>${f1(R.after)}</b>`,`rebuild line above patch line <b>${f1(R.above)}</b> months`].map(x=>`<li>${x}</li>`).join('');
+  const ivTxt=R.iv.map(([a,b])=>`months ${f1(a)} to ${f1(b)}`).join(' and ');
+  $('shadeNote').textContent=R.iv.length?`Shaded region: during ${ivTxt}, the old game's players see a smaller gap on the patch path than the rebuild shows them. That is ${f1(R.above)} months of the rebuild looking worse.`:'No shaded region: the rebuild line never sits above the patch line.';
+  const mDir=R.faster==='rebuild'?'down':'up';
+  let lede;
+  if(R.faster==='rebuild'&&R.margin>=0.05){
+    lede=`The rebuild finishes ${tr(R.margin)} months sooner, and shows players nothing for ${tr(R.build)} months`+(P.s>0?` (the old servers get ${Math.round(P.s*100)}% of the team meanwhile)`:'')+`. Drag m ${mDir} and watch the answer flip at ${tr(R.ms)}.`;
+  }else if(R.margin<0.05){lede=`The two paths tie at ${tr(R.Tp)} months. Nudge m either way to break the tie.`;}
+  else lede=`Patching finishes ${tr(R.margin)} months sooner and shows progress from the first month. Drag m ${mDir} and watch the answer flip at ${tr(R.ms)}.`;
+  if(R.ms>6&&R.faster==='patch')lede=lede.replace(/Drag m up.*$/,`Even m = 6 cannot flip it: the break-even m* is ${f2(R.ms)}.`);
+  if(P.s>0&&R.faster==='patch')lede+=' With s above 0 the flip point moves off the curve.';
+  $('lede').textContent=lede;
+  drawGap(R);drawMap(R);
+}
+function clearChips(){document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));}
+
+['G','F','Tr','phi','m','s','c'].forEach(id=>$(id).addEventListener('input',()=>{clearChips();update();}));
+$('pad').addEventListener('change',update);
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{
+  $('G').value=300;$('F').value=10;$('Tr').value=24;$('pad').checked=false;
+  $('phi').value=b.dataset.phi;$('m').value=b.dataset.m;$('s').value=b.dataset.s;$('c').value=b.dataset.c;
+  clearChips();b.setAttribute('aria-pressed','true');update();
+}));
+const map=$('cMap');let drag=false;
+function setDot(phi,m){phi=Math.round(Math.max(0.05,Math.min(0.95,phi))*20)/20;m=Math.round(Math.max(1,Math.min(6,m))*10)/10;$('phi').value=phi;$('m').value=m;clearChips();update();}
+function fromPtr(e){const r=map.getBoundingClientRect(),{iX,iY}=mapGeo(r.width,r.height);setDot(iX(e.clientX-r.left),iY(e.clientY-r.top));}
+map.addEventListener('pointerdown',e=>{drag=true;map.setPointerCapture(e.pointerId);fromPtr(e);});
+map.addEventListener('pointermove',e=>{if(drag)fromPtr(e);});
+map.addEventListener('pointerup',()=>drag=false);map.addEventListener('pointercancel',()=>drag=false);
+map.addEventListener('keydown',e=>{let phi=+$('phi').value,m=+$('m').value;
+  if(e.key==='ArrowRight')phi+=0.05;else if(e.key==='ArrowLeft')phi-=0.05;else if(e.key==='ArrowUp')m+=0.1;else if(e.key==='ArrowDown')m-=0.1;else return;
+  e.preventDefault();setDot(phi,m);});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,60);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(update);
+update();
+})();
+</script>
+</body>
+</html>

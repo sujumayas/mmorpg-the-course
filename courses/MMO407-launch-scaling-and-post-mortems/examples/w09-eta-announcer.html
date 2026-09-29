@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ETA announcer — MMO407 Week 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2ea;--paper-2:#e2e8dc;--grid:#cfd9cc;--ink:#1f2a44;--ink-soft:#55607a;--steel:#3f6480;--blood:#b8322a;--ochre:#a8741a;--moss:#4d7a4a;--focus:#2f6fdd;
+--serif:'Literata',Georgia,'Times New Roman',serif;--sans:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}}
+:root[data-theme="dark"]{--paper:#172031;--paper-2:#1f2a3e;--grid:#2c3a52;--ink:#e6ebe3;--ink-soft:#a3adbf;--steel:#7fa8c8;--blood:#e2685f;--ochre:#d9a441;--moss:#83b27f;--focus:#7aa7ff}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+header{max-width:66ch;margin-bottom:18px}
+.course{font-size:.85rem;color:var(--ink-soft);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.8rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-family:var(--serif);font-size:1.05rem;margin:0}
+.panel{background:var(--paper);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.caption{font-family:var(--serif);font-size:1.2rem;font-weight:600;margin:0 0 14px;padding:10px 14px;border-left:5px solid var(--blood);background:var(--paper-2);border-radius:0 10px 10px 0}
+.views{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.views{grid-template-columns:1fr 1fr}}
+figure{margin:0;background:var(--paper-2);border-radius:10px;padding:12px 12px 8px;min-width:0}
+figcaption{font-family:var(--serif);font-size:1.05rem;margin:0 0 6px}
+figcaption small{display:block;font-family:var(--sans);color:var(--ink-soft);font-size:.82rem}
+canvas{display:block;width:100%}
+#cBars{height:270px;touch-action:pan-y;cursor:ns-resize}
+#cCost{height:110px}
+#cTime{height:270px}
+#cRes{height:110px}
+.mini{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.9rem;margin:2px 0 6px;font-variant-numeric:tabular-nums}
+.mini b{font-size:1.05rem}
+.sub{font-size:.8rem;color:var(--ink-soft);margin:8px 0 2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:6px 0 0}
+.legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 12px;margin:16px 0 4px}
+@media (max-width:760px){.readout{grid-template-columns:repeat(2,1fr)}}
+.stat{border-left:4px solid var(--c,var(--ink));padding:2px 0 2px 10px;min-width:0}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:.82rem;color:var(--ink-soft)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px 26px;margin-top:16px}
+@media (max-width:760px){.controls{grid-template-columns:1fr}}
+.ctl{min-width:0}
+label,.lbl{font-weight:600;font-size:.92rem;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+label output{font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:var(--steel);height:28px}
+select,input[type=text]{font:1rem var(--sans);color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:8px;padding:7px 9px;width:100%;max-width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.btn,.chip{font:600 .88rem var(--sans);padding:7px 12px;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover,.chip:hover{background:var(--paper-2)}
+.chip[aria-checked="true"]{background:var(--steel);color:var(--paper)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,[role=radio]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:4px 0 0}
+.err{font-size:.85rem;color:var(--blood);margin:4px 0 0;min-height:1.2em}
+.insight{margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-family:var(--serif)}
+details{margin-top:16px}
+summary{cursor:pointer;font-weight:600}
+.table-wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;min-width:480px}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+tr.here td{font-weight:700;background:var(--paper-2)}
+[hidden]{display:none!important}
+footer{margin-top:22px;font-size:.85rem;color:var(--ink-soft);max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="course">MMO407 Launch, Scaling and Post-mortems · Week 9 · Worked example</p>
+  <h1>Announce a quantile, not the median</h1>
+  <p class="lede">A promised end time is a bet on the outage log. When a late minute hurts more than an early one, the best promise sits past the median. After a miss, the outages still running are the long ones, so the next promise should be far later.</p>
+</header>
+
+<section class="panel" aria-label="Outage announcement model">
+  <p class="caption" id="caption">&nbsp;</p>
+
+  <div class="views">
+    <figure>
+      <figcaption>A. The log<small>20 past outages, sorted. Drag or tap to move the announced time T.</small></figcaption>
+      <div class="mini"><span>At T = <b id="mT">—</b> min</span><span>cost <b id="mCost">—</b></span><span>miss rate <b id="mMiss">—</b></span></div>
+      <canvas id="cCost" role="img" aria-label="Expected cost against announced time, with the minimum marked"></canvas>
+      <p class="sub">Outage length, minutes (square-root scale)</p>
+      <canvas id="cBars" role="img" aria-label="Sorted outage durations with the announced time as a horizontal line"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>late: outage ran past T</span>
+        <span><i style="background:var(--steel)"></i>over by T</span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>B. One outage, played out<small id="bSub">Each row is one announcement, made at the dot and promising the flag.</small></figcaption>
+      <canvas id="cTime" role="img" aria-label="Timeline of announcements for the picked outage"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--blood)"></i>promise broken</span>
+        <span><i style="background:var(--ink)"></i>promise</span>
+        <span><i style="background:var(--moss)"></i>service back</span>
+      </div>
+      <p class="sub">Average minutes still to go, for logged outages already this long</p>
+      <canvas id="cRes" role="img" aria-label="Mean residual time at each 30 minute mark"></canvas>
+    </figure>
+  </div>
+
+  <div class="readout" aria-live="polite" id="readout">
+    <div class="stat" style="--c:var(--ochre)"><b id="rRatio">—</b><span>critical ratio</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rBest">—</b><span>best T (minutes)</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rCost">—</b><span>cost at current T</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rMiss">—</b><span>miss rate at current T</span></div>
+    <div class="stat" style="--c:var(--ink-soft)"><b id="rRes">—</b><span>mean still to go at 0 / 60 / 120 / 240 min</span></div>
+    <div class="stat" style="--c:var(--blood)"><b id="rA">—</b><span id="rAl">broken, median then +30</span></div>
+    <div class="stat" style="--c:var(--moss)"><b id="rB">—</b><span>broken, re-forecast</span></div>
+    <div class="stat" style="--c:var(--steel)"><b id="rU">—</b><span id="rUl">broken, update times only</span></div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="ratio">Cost ratio c_late : c_early <output id="oRatio">2 : 1</output></label>
+      <input id="ratio" type="range" min="0" max="10" step="1" value="6" aria-describedby="ratioHint">
+      <p class="hint" id="ratioHint">Log scale from 1 : 4 to 6 : 1.</p>
+      <label for="tIn" style="margin-top:10px">Announced time T <output id="oT">105</output></label>
+      <input id="tIn" type="range" min="0" max="600" step="1" value="105" aria-describedby="tHint">
+      <p class="hint" id="tHint">Arrow keys move 1 minute, Shift + arrows 15.</p>
+      <div class="row"><button class="btn" id="snap" type="button">Snap to best</button></div>
+    </div>
+    <div class="ctl">
+      <label for="pick">Outage to play out</label>
+      <select id="pick"></select>
+      <span class="lbl" style="margin-top:12px" id="polLbl">Extension policy in view B</span>
+      <div class="row" role="radiogroup" aria-labelledby="polLbl" id="pol">
+        <button class="chip" role="radio" type="button" data-p="A" aria-checked="true" tabindex="0">Median, then +X</button>
+        <button class="chip" role="radio" type="button" data-p="B" aria-checked="false" tabindex="-1">Re-forecast</button>
+        <button class="chip" role="radio" type="button" data-p="U" aria-checked="false" tabindex="-1">Update times only</button>
+      </div>
+      <div style="margin-top:10px">
+        <label for="xIn">Extension X <output id="oX">30</output></label>
+        <input id="xIn" type="range" min="10" max="120" step="10" value="30">
+        <label for="uIn">Update every U minutes <output id="oU">30</output></label>
+        <input id="uIn" type="range" min="15" max="120" step="15" value="30">
+      </div>
+    </div>
+    <div class="ctl" style="grid-column:1/-1">
+      <label for="logIn">Outage log, minutes, comma-separated (5 to 100 positive numbers)</label>
+      <input id="logIn" type="text" inputmode="decimal" aria-describedby="logErr">
+      <p class="err" id="logErr" role="status"></p>
+      <div class="row"><button class="btn" id="logApply" type="button">Use this log</button><button class="btn" id="logReset" type="button">Reset to lecture log</button></div>
+    </div>
+  </div>
+
+  <div class="insight" id="insight"></div>
+
+  <details>
+    <summary>Log and cost table</summary>
+    <div class="table-wrap">
+      <table aria-label="Each logged duration with the cost of announcing it">
+        <thead><tr><th>Rank</th><th>Minutes</th><th>Share over by then</th><th>Cost if announced</th><th>Mean still to go</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<footer>Model and log from the MMO407 week 9 lecture, section 2. The log is invented. Cost: (1/N) &Sigma; [c_late &times; max(0, d &minus; T) + c_early &times; max(0, T &minus; d)]. Best T is the sorted log at position ceil(ratio &times; N). Re-forecast takes the same quantile of the logged outages still running.</footer>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const LECTURE=[15,20,25,30,30,35,40,45,50,60,60,75,90,105,120,150,180,240,360,600];
+const RATIOS=[[1,4],[1,3],[1,2],[2,3],[1,1],[3,2],[2,1],[3,1],[4,1],[5,1],[6,1]];
+const NUM=['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen','Twenty'];
+const f1=n=>(Math.round(n*10)/10).toFixed(1);
+const fm=n=>Number.isInteger(n)?String(n):f1(n);
+let log=LECTURE.slice(),cl=2,ce=1,T=105,D=600,pol='A',X=30,U=30,Tmax=600;
+
+// quantile at ratio cl/(cl+ce) with exact integer arithmetic: sorted[ceil(cl*n/(cl+ce)) - 1]
+function quant(arr){const s=arr.slice().sort((a,b)=>a-b),n=s.length;const k=Math.floor((cl*n+cl+ce-1)/(cl+ce));return s[Math.max(0,k-1)];}
+function median(arr){const s=arr.slice().sort((a,b)=>a-b);return s[Math.ceil(0.5*s.length)-1];}
+function cost(t){let c=0;for(const d of log)c+=cl*Math.max(0,d-t)+ce*Math.max(0,t-d);return c/log.length;}
+function miss(t){return log.filter(d=>d>t).length/log.length;}
+function meanLeft(t){const r=log.filter(d=>d>t);return r.length?r.reduce((a,d)=>a+d-t,0)/r.length:null;}
+function polA(d){let t=median(log),m=0;const an=[{at:0,to:t}];while(d>t){m++;an.push({at:t,to:t+X});t+=X;}return {m,an};}
+function polB(d){let t=quant(log),m=0;const an=[{at:0,to:t}];while(d>t){m++;const rest=log.filter(x=>x>t);if(!rest.length)break;const nt=quant(rest);an.push({at:t,to:nt});t=nt;}return {m,an};}
+function polU(d){const an=[];for(let t=0;t<d;t+=U)an.push({at:t,to:t+U,upd:true});return {m:0,an};}
+
+function setup(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,r.width,r.height);g.font='12px '+css('--sans');return {g,w:r.width,h:r.height};}
+function niceStep(range,target){const raw=range/target,mag=Math.pow(10,Math.floor(Math.log10(raw)));for(const m of [1,2,2.5,3,5,10]){if(m*mag>=raw)return m*mag;}return 10*mag;}
+
+// View A: sqrt-scaled bars
+const padB={l:40,r:10,t:10,b:26};
+function yOf(v,h){return padB.t+(h-padB.t-padB.b)*(1-Math.sqrt(Math.max(0,v))/Math.sqrt(Tmax));}
+function vOf(py,h){const f=1-(py-padB.t)/(h-padB.t-padB.b);return Math.pow(Math.max(0,Math.min(1,f))*Math.sqrt(Tmax),2);}
+function drawBars(){
+  const c=setup($('cBars')),g=c.g,w=c.w,h=c.h,s=log.slice().sort((a,b)=>a-b),n=s.length;
+  const ticks=[15,60,120,240,600].filter(v=>v<=Tmax);if(Tmax>600)ticks.push(Tmax);
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;g.textAlign='right';g.textBaseline='middle';
+  g.beginPath();g.moveTo(padB.l,yOf(0,h));g.lineTo(w-padB.r,yOf(0,h));g.stroke();
+  for(const v of ticks){const y=yOf(v,h);g.beginPath();g.moveTo(padB.l,y);g.lineTo(w-padB.r,y);g.stroke();g.fillText(fm(v),padB.l-6,y);}
+  const bw=(w-padB.l-padB.r)/n,gap=Math.min(3,bw*.2);
+  for(let i=0;i<n;i++){const x=padB.l+i*bw,y=yOf(s[i],h);g.fillStyle=s[i]>T?css('--blood'):css('--steel');g.fillRect(x+gap/2,y,bw-gap,yOf(0,h)-y);}
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  const every=n<=20?(w<420?5:1):Math.ceil(n/10);
+  for(let i=0;i<n;i++){if((i+1)%every===0||i===0)g.fillText(String(i+1),padB.l+(i+.5)*bw,h-padB.b+6);}
+  g.textAlign='left';g.fillText('rank',2,h-padB.b+6);
+  const y=yOf(T,h);g.strokeStyle=css('--ink');g.lineWidth=2.5;g.beginPath();g.moveTo(padB.l,y);g.lineTo(w-padB.r,y);g.stroke();
+  const lab='T = '+fm(T);g.font='600 12px '+css('--sans');const tw=g.measureText(lab).width+10;
+  const ly=Math.max(padB.t,y-20);g.fillStyle=css('--ink');g.fillRect(padB.l+4,ly,tw,17);g.fillStyle=css('--paper');g.textAlign='left';g.textBaseline='middle';g.fillText(lab,padB.l+9,ly+9);
+}
+// cost curve
+function drawCost(){
+  const c=setup($('cCost')),g=c.g,w=c.w,h=c.h,pad={l:40,r:10,t:14,b:20};
+  const pts=[];let hi=0;for(let t=0;t<=Tmax;t+=Tmax/300){const v=cost(t);pts.push([t,v]);hi=Math.max(hi,v);}
+  const lo=Math.min(...pts.map(p=>p[1]));hi=niceStep(hi,1);const bestT=quant(log),bestC=cost(bestT);
+  const X_=t=>pad.l+(w-pad.l-pad.r)*t/Tmax,Y_=v=>pad.t+(h-pad.t-pad.b)*(1-v/hi);
+  g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;g.textBaseline='middle';g.textAlign='right';
+  for(const v of [0,hi/2,hi]){const y=Y_(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(String(Math.round(v)),pad.l-6,y);}
+  g.textAlign='center';g.textBaseline='top';const st=niceStep(Tmax,w<420?4:6);for(let t=0;t<=Tmax+1e-9;t+=st)g.fillText(fm(t),X_(t),h-pad.b+4);
+  g.strokeStyle=css('--ochre');g.lineWidth=2.2;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(X_(p[0]),Y_(p[1])):g.moveTo(X_(p[0]),Y_(p[1])));g.stroke();
+  // current T
+  g.strokeStyle=css('--ink');g.globalAlpha=.4;g.setLineDash([4,4]);g.beginPath();g.moveTo(X_(T),pad.t);g.lineTo(X_(T),h-pad.b);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  // min
+  g.fillStyle=css('--moss');g.beginPath();g.arc(X_(bestT),Y_(bestC),5,0,Math.PI*2);g.fill();
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--ink');g.textBaseline='bottom';
+  const lab='best '+fm(bestT)+' (critical ratio)';const lw=g.measureText(lab).width;let lx=X_(bestT)+8;if(lx+lw>w-pad.r)lx=X_(bestT)-8-lw;g.textAlign='left';g.fillText(lab,Math.max(pad.l,lx),Math.max(pad.t+2,Y_(bestC)-4));
+  void lo;
+}
+// View B timeline
+function current(){return pol==='A'?polA(D):pol==='B'?polB(D):polU(D);}
+function drawTime(){
+  const c=setup($('cTime')),g=c.g,w=c.w,h=c.h,pad={l:12,r:14,t:10,b:26};
+  const res=current(),an=res.an;
+  let xMax=D+60;for(const a of an)if(!a.upd)xMax=Math.max(xMax,a.to+20);
+  const X_=t=>pad.l+(w-pad.l-pad.r)*t/xMax;
+  const st=niceStep(xMax,w<420?4:7);g.strokeStyle=css('--grid');g.fillStyle=css('--ink-soft');g.lineWidth=1;g.textAlign='center';g.textBaseline='top';
+  for(let t=0;t<=xMax;t+=st){const x=X_(t);g.beginPath();g.moveTo(x,pad.t);g.lineTo(x,h-pad.b);g.stroke();g.fillText(fm(t),x,h-pad.b+6);}
+  g.textAlign='right';g.fillText('min',w-2,h-pad.b+6);
+  const rowH=Math.min(18,(h-pad.t-pad.b-6)/an.length);
+  // outage end
+  g.strokeStyle=css('--moss');g.lineWidth=3;g.beginPath();g.moveTo(X_(D),pad.t);g.lineTo(X_(D),h-pad.b);g.stroke();
+  an.forEach((a,i)=>{
+    const y=pad.t+4+rowH*(i+.5),x0=X_(a.at),x1=X_(a.to),broken=!a.upd&&a.to<D;
+    g.strokeStyle=a.upd?css('--steel'):css('--ink');g.globalAlpha=a.upd?.9:.55;g.lineWidth=Math.max(1,Math.min(2,rowH/5));g.beginPath();g.moveTo(x0,y);g.lineTo(x1,y);g.stroke();g.globalAlpha=1;
+    g.fillStyle=a.upd?css('--steel'):css('--ink');g.beginPath();g.arc(x0,y,Math.max(1.5,Math.min(3.5,rowH/3)),0,Math.PI*2);g.fill();
+    if(broken){g.strokeStyle=css('--blood');g.lineWidth=Math.max(2,Math.min(3,rowH/4));g.beginPath();g.moveTo(x1,y-Math.max(3,rowH*.45));g.lineTo(x1,y+Math.max(3,rowH*.45));g.stroke();}
+    else if(!a.upd){const fh=Math.max(4,Math.min(9,rowH*.5));g.fillStyle=css('--ink');g.beginPath();g.moveTo(x1,y);g.lineTo(x1,y-fh*1.4);g.lineTo(x1+fh*1.1,y-fh*.9);g.lineTo(x1,y-fh*.4);g.fill();}
+    if(rowH>=14&&!a.upd){g.font='11px '+css('--sans');g.fillStyle=broken?css('--blood'):css('--ink');g.textBaseline='middle';const lab=fm(a.to);const tw=g.measureText(lab).width;
+      let lx=x1+6;if(!broken)lx=x1+12;if(lx+tw>w-2)lx=x0-6-tw;g.textAlign='left';if(lx<2)lx=2;g.fillText(lab,lx,y);}
+  });
+  g.font='600 12px '+css('--sans');g.fillStyle=css('--moss');g.textBaseline='top';const bl='back at '+fm(D);const bw=g.measureText(bl).width;
+  let bx=X_(D)+5;if(bx+bw>w-2)bx=X_(D)-bw-5;g.textAlign='left';g.fillText(bl,bx,pad.t);
+  return xMax;
+}
+function drawRes(xMax){
+  const c=setup($('cRes')),g=c.g,w=c.w,h=c.h,pad={l:12,r:14,t:14,b:18};
+  const X_=t=>pad.l+(w-pad.l-pad.r)*t/xMax;const marks=[];
+  for(let t=0;t<=xMax;t+=30){const m=meanLeft(t);if(m!==null)marks.push([t,m]);}
+  const hi=Math.max(1,...marks.map(m=>m[1]));const bw=Math.max(2,(w-pad.l-pad.r)*30/xMax*.6);
+  g.fillStyle=css('--ink-soft');g.textAlign='center';g.textBaseline='top';
+  const st=niceStep(xMax,w<420?4:7);for(let t=0;t<=xMax;t+=st)g.fillText(fm(t),X_(t),h-pad.b+3);
+  const base=h-pad.b;g.strokeStyle=css('--grid');g.beginPath();g.moveTo(pad.l,base);g.lineTo(w-pad.r,base);g.stroke();
+  for(const [t,m] of marks){const y=pad.t+(base-pad.t)*(1-m/hi);g.fillStyle=css('--ochre');g.fillRect(X_(t)-bw/2,y,bw,base-y);}
+  g.fillStyle=css('--ink');g.textAlign='left';g.textBaseline='top';g.font='600 11px '+css('--sans');
+  const mx=marks.reduce((a,b)=>b[1]>a[1]?b:a,marks[0]||[0,0]);g.fillText('peak '+f1(mx[1])+' min to go at '+mx[0],pad.l,0);
+}
+
+function fillPick(){
+  const s=log.slice().sort((a,b)=>a-b),sel=$('pick');sel.innerHTML='';
+  s.forEach((d,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=fm(d)+' minutes (rank '+(i+1)+' of '+s.length+')';sel.appendChild(o);});
+  let idx=s.lastIndexOf(D);if(idx<0)idx=s.length-1;sel.value=String(idx);D=s[idx];
+}
+function setTmax(){Tmax=Math.max(600,Math.max(...log));const t=$('tIn');t.max=Tmax;if(T>Tmax)T=Tmax;t.value=T;}
+
+function readouts(){
+  const q=quant(log);
+  $('oRatio').textContent=cl+' : '+ce;$('oT').textContent=fm(T);$('oX').textContent=X;$('oU').textContent=U;
+  $('rRatio').textContent=cl+'/'+(cl+ce)+' = '+(cl/(cl+ce)).toFixed(3);
+  $('rBest').textContent=fm(q);
+  $('rCost').textContent=f1(cost(T));$('rMiss').textContent=Math.round(miss(T)*100)+'%';
+  $('mT').textContent=fm(T);$('mCost').textContent=f1(cost(T));$('mMiss').textContent=Math.round(miss(T)*100)+'%';
+  $('rRes').textContent=[0,60,120,240].map(t=>{const m=meanLeft(t);return m===null?'—':f1(m);}).join(' / ');
+  const a=polA(D),b=polB(D),u=polU(D);
+  let sa=0,sb=0;for(const d of log){sa+=polA(d).m;sb+=polB(d).m;}
+  const avA=sa/log.length,avB=sb/log.length;
+  $('rA').textContent=a.m+' · avg '+avA.toFixed(2);$('rAl').textContent='broken, median then +'+X+' (this outage · log average)';
+  $('rB').textContent=b.m+' · avg '+avB.toFixed(2);
+  $('rU').textContent='0 · '+u.an.length+' updates';$('rUl').textContent='broken, update every '+U+' min (no end time given)';
+  // caption
+  const every=X===30?'half hour':X===60?'hour':X+' minutes';
+  let cap;
+  if(pol==='A'){cap=a.m===0?`The median promise (${fm(median(log))} min) held for this ${fm(D)}-minute outage. Pick a longer one.`:
+    `${a.m<=20?NUM[a.m]:a.m} broken promise${a.m===1?'':'s'}, one every ${every}. Switch to re-forecast.`;}
+  else if(pol==='B'){cap=`Re-forecasting gives ${b.m<=20?NUM[b.m].toLowerCase():b.m} broken promise${b.m===1?'':'s'} (announcing ${b.an.map(x=>fm(x.to)).join(', ')}), against ${a.m} for median then +${X}.`;}
+  else cap=`No end time means nothing to break. ${u.an.length} update${u.an.length===1?'':'s'}, one every ${U} minutes, until service returns at ${fm(D)}.`;
+  $('caption').textContent=cap;
+  $('caption').style.borderLeftColor=pol==='A'&&a.m>0?'var(--blood)':'var(--moss)';
+  $('bSub').textContent=pol==='U'?'Each row is one update, posted at the dot, naming the time of the next update.':'Each row is one announcement, made at the dot and promising the flag. A red tick marks a broken promise.';
+  $('uIn').disabled=pol!=='U';$('xIn').disabled=pol!=='A';
+  // insight
+  const med=median(log),r=cl/(cl+ce);
+  let s=`With c_late : c_early = ${cl} : ${ce}, the critical ratio is ${r.toFixed(3)}. Announce the ${fm(q)}-minute mark, rank ${Math.floor((cl*log.length+cl+ce-1)/(cl+ce))} of ${log.length}. `;
+  s+=`It misses ${Math.round(miss(q)*100)}% of the time at cost ${f1(cost(q))}. The median, ${fm(med)}, misses ${Math.round(miss(med)*100)}% at cost ${f1(cost(med))}. `;
+  const m0=meanLeft(0),m120=meanLeft(120);
+  if(m0!==null&&m120!==null)s+=`An outage has ${f1(m0)} minutes to go on average at the start and ${f1(m120)} after two hours. ${m120>m0?'The longer it lasts, the longer it lasts.':'This log thins out as it goes, so short extensions are fine here.'}`;
+  $('insight').textContent=s;
+  // table
+  const srt=log.slice().sort((a,b)=>a-b);
+  $('tbody').innerHTML=srt.map((d,i)=>{const ml=meanLeft(d);return `<tr class="${d===q&&(i===0||srt[i-1]!==d||srt.indexOf(d)===i)?'here':''}"><td>${i+1}</td><td>${fm(d)}</td><td>${Math.round((1-miss(d))*100)}%</td><td>${f1(cost(d))}</td><td>${ml===null?'—':f1(ml)}</td></tr>`;}).join('');
+}
+function draw(){drawCost();drawBars();const xm=drawTime();drawRes(xm);}
+function update(){readouts();draw();}
+
+// controls
+$('ratio').addEventListener('input',e=>{[cl,ce]=RATIOS[+e.target.value];update();});
+function setT(v){T=Math.max(0,Math.min(Tmax,Math.round(v)));$('tIn').value=T;update();}
+$('tIn').addEventListener('input',e=>setT(+e.target.value));
+$('tIn').addEventListener('keydown',e=>{if(!e.shiftKey)return;const k=e.key;let d=0;if(k==='ArrowRight'||k==='ArrowUp')d=15;else if(k==='ArrowLeft'||k==='ArrowDown')d=-15;if(d){e.preventDefault();setT(T+d);}});
+$('snap').addEventListener('click',()=>setT(quant(log)));
+$('pick').addEventListener('change',e=>{const s=log.slice().sort((a,b)=>a-b);D=s[+e.target.value];update();});
+$('xIn').addEventListener('input',e=>{X=+e.target.value;update();});
+$('uIn').addEventListener('input',e=>{U=+e.target.value;update();});
+const radios=[...document.querySelectorAll('#pol [role=radio]')];
+function selPol(b,focus){radios.forEach(x=>{const on=x===b;x.setAttribute('aria-checked',on);x.tabIndex=on?0:-1;});pol=b.dataset.p;if(focus)b.focus();update();}
+radios.forEach((b,i)=>{b.addEventListener('click',()=>selPol(b,false));b.addEventListener('keydown',e=>{let j=null;if(e.key==='ArrowRight'||e.key==='ArrowDown')j=(i+1)%radios.length;if(e.key==='ArrowLeft'||e.key==='ArrowUp')j=(i+radios.length-1)%radios.length;if(j!==null){e.preventDefault();selPol(radios[j],true);}});});
+function applyLog(){
+  const parts=$('logIn').value.split(/[\s,;]+/).filter(Boolean),vals=parts.map(Number);
+  let err='';
+  if(vals.some(v=>!isFinite(v)||v<=0))err='Every entry must be a positive number of minutes.';
+  else if(vals.length<5||vals.length>100)err='Enter between 5 and 100 durations (you have '+vals.length+').';
+  $('logErr').textContent=err;$('logIn').setAttribute('aria-invalid',err?'true':'false');
+  if(err)return;
+  log=vals;D=Math.max(...log);setTmax();fillPick();update();
+}
+$('logApply').addEventListener('click',applyLog);
+$('logIn').addEventListener('keydown',e=>{if(e.key==='Enter')applyLog();});
+$('logReset').addEventListener('click',()=>{$('logIn').value=LECTURE.join(', ');applyLog();});
+// drag on bars
+const cb=$('cBars');let dragging=false;
+function fromPtr(e){const r=cb.getBoundingClientRect();setT(vOf(e.clientY-r.top,r.height));}
+cb.addEventListener('pointerdown',e=>{dragging=true;try{cb.setPointerCapture(e.pointerId);}catch(_){}fromPtr(e);});
+cb.addEventListener('pointermove',e=>{if(dragging)fromPtr(e);});
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>cb.addEventListener(n,()=>{dragging=false;}));
+
+let raf=0;function redraw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(draw);}
+window.addEventListener('resize',redraw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+$('logIn').value=LECTURE.join(', ');
+setTmax();fillPick();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+update();
+})();
+</script>
+</body>
+</html>
